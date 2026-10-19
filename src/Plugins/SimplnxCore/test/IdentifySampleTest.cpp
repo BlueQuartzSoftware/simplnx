@@ -339,28 +339,28 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty X Non-Square {1,3,4}", "[
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: Geometry cell tuple count", "[SimplnxCore][IdentifySampleFilter][TupleCount]")
 {
-  using Filter = IdentifySampleFilter;
+  using FilterType = IdentifySampleFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
 
   // A matching array is valid outside Cell Data; short and long arrays must fail preflight.
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(DataArray<uint8>::Create(dataStructure, "Values", std::make_shared<DataStore<uint8>>(otherAM->getShape(), ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<uint8>::Create(dataStructure, "Values", std::make_shared<DataStore<uint8>>(otherAMPtr->getShape(), ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
   const DataPath inputPath({"Other Data", "Values"});
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_MaskArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(inputPath));
 
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
@@ -371,12 +371,12 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: Geometry cell tuple count", "[Simp
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -45463);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -45463);
     const DataPath expectedPath = inputPath;
     const usize expectedTuples = tuples;
-    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

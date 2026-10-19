@@ -547,15 +547,15 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Geometry cell tuple count", "[SimplnxCore][ScalarSegmentFeatures][TupleCount]")
 {
   UnitTest::LoadPlugins();
-  using Filter = ScalarSegmentFeaturesFilter;
+  using FilterType = ScalarSegmentFeaturesFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
 
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
@@ -565,21 +565,21 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Geometry cell tuple count", "[Sim
   const usize maskTuples = maskMode == 1 ? tuples : 5;
 
   // A matching input in another Attribute Matrix must remain valid.
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAM->getId()) != nullptr);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAMPtr->getId()) != nullptr);
   const DataPath inputPath({"Other Data", "Values"});
-  auto* maskAM = AttributeMatrix::Create(dataStructure, "Mask Data", ShapeType{maskTuples});
-  REQUIRE(maskAM != nullptr);
-  REQUIRE(DataArray<uint8>::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{maskTuples}, ShapeType{1}, 1), maskAM->getId()) != nullptr);
+  auto* maskAMPtr = AttributeMatrix::Create(dataStructure, "Mask Data", ShapeType{maskTuples});
+  REQUIRE(maskAMPtr != nullptr);
+  REQUIRE(DataArray<uint8>::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{maskTuples}, ShapeType{1}, 1), maskAMPtr->getId()) != nullptr);
   const DataPath maskPath({"Mask Data", "Mask"});
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_GridGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_InputArrayPathKey, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(Filter::k_UseMask_Key, std::make_any<bool>(maskMode != 0));
-  args.insertOrAssign(Filter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(FilterType::k_GridGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_InputArrayPathKey, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_UseMask_Key, std::make_any<bool>(maskMode != 0));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
 
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12 && maskMode != 2)
@@ -590,12 +590,12 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Geometry cell tuple count", "[Sim
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -654);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -654);
     const DataPath expectedPath = tuples == 12 ? maskPath : inputPath;
     const usize expectedTuples = tuples == 12 ? maskTuples : tuples;
-    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

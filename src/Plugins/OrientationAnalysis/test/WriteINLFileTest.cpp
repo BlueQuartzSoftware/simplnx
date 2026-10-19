@@ -1,4 +1,3 @@
-#include "simplnx/DataStructure/DataStore.hpp"
 #include <catch2/catch.hpp>
 
 #include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
@@ -8,6 +7,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -222,31 +222,31 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts",
   const int testCase = GENERATE(0, 1, 2, 3, 4, 5);
   CAPTURE(testCase);
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "TupleGeometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({2, 2, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "TupleGeometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   WriteINLFileFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({"TupleGeometry"})));
   const usize commonCount = testCase == 0 ? 4 : (testCase == 1 ? 12 : 8);
   const usize count0 = testCase == 3 ? 4 : commonCount;
-  auto* inputAM0 = AttributeMatrix::Create(dataStructure, "Input0", {count0});
-  REQUIRE(inputAM0 != nullptr);
-  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {count0}, {1}, inputAM0->getId()) != nullptr);
+  auto* inputAM0Ptr = AttributeMatrix::Create(dataStructure, "Input0", {count0});
+  REQUIRE(inputAM0Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {count0}, {1}, inputAM0Ptr->getId()) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input0", "FeatureIds"})));
   const usize count1 = testCase == 4 ? 4 : commonCount;
-  auto* inputAM1 = AttributeMatrix::Create(dataStructure, "Input1", {count1});
-  REQUIRE(inputAM1 != nullptr);
-  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1->getId()) != nullptr);
+  auto* inputAM1Ptr = AttributeMatrix::Create(dataStructure, "Input1", {count1});
+  REQUIRE(inputAM1Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1Ptr->getId()) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input1", "Phases"})));
   const usize count2 = testCase == 5 ? 4 : commonCount;
-  auto* inputAM2 = AttributeMatrix::Create(dataStructure, "Input2", {count2});
-  REQUIRE(inputAM2 != nullptr);
-  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "EulerAngles", {count2}, {3}, inputAM2->getId()) != nullptr);
+  auto* inputAM2Ptr = AttributeMatrix::Create(dataStructure, "Input2", {count2});
+  REQUIRE(inputAM2Ptr != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "EulerAngles", {count2}, {3}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "EulerAngles"})));
   REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
@@ -266,14 +266,14 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts",
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     {
-      const auto& error = result.outputActions.errors()[0];
-      CHECK(error.code == -78431);
+      const auto& errorRef = result.outputActions.errors()[0];
+      CHECK(errorRef.code == -78431);
       const std::vector<DataPath> inputPaths = {DataPath({"Input0", "FeatureIds"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "EulerAngles"})};
       const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;
-      CHECK(error.message.find(inputPaths[inputIndex].toString()) != std::string::npos);
-      CHECK(error.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
-      CHECK(error.message.find("8 cells") != std::string::npos);
-      CHECK(error.message.find("TupleGeometry") != std::string::npos);
+      CHECK(errorRef.message.find(inputPaths[inputIndex].toString()) != std::string::npos);
+      CHECK(errorRef.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
+      CHECK(errorRef.message.find("8 cells") != std::string::npos);
+      CHECK(errorRef.message.find("TupleGeometry") != std::string::npos);
     }
   }
 }

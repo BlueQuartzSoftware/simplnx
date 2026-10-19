@@ -777,30 +777,30 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[Plugins][PartitionGeometryFilter][TupleCount]")
 {
-  using Filter = PartitionGeometryFilter;
+  using FilterType = PartitionGeometryFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
-  auto* partitionGrid = ImageGeom::Create(dataStructure, "Existing Grid");
-  REQUIRE(partitionGrid != nullptr);
-  partitionGrid->setDimensions({1, 1, 1});
-  partitionGrid->setSpacing({2.0F, 3.0F, 2.0F});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
+  auto* partitionGridPtr = ImageGeom::Create(dataStructure, "Existing Grid");
+  REQUIRE(partitionGridPtr != nullptr);
+  partitionGridPtr->setDimensions({1, 1, 1});
+  partitionGridPtr->setSpacing({2.0F, 3.0F, 2.0F});
 
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
   // The selected matrix is intentionally empty and outside the geometry's Cell Data.
   REQUIRE(AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples}) != nullptr);
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_InputGeometryToPartition_Key, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_InputGeometryCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Data"})));
-  args.insertOrAssign(Filter::k_PartitioningMode_Key, std::make_any<ChoicesParameter::ValueType>(3));
-  args.insertOrAssign(Filter::k_ExistingPartitionGridPath_Key, std::make_any<DataPath>(DataPath({"Existing Grid"})));
+  args.insertOrAssign(FilterType::k_InputGeometryToPartition_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_InputGeometryCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Data"})));
+  args.insertOrAssign(FilterType::k_PartitioningMode_Key, std::make_any<ChoicesParameter::ValueType>(3));
+  args.insertOrAssign(FilterType::k_ExistingPartitionGridPath_Key, std::make_any<DataPath>(DataPath({"Existing Grid"})));
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
@@ -810,10 +810,10 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[P
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -3043);
-    REQUIRE(error.message.find("Other Data") != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -3043);
+    REQUIRE(errorRef.message.find("Other Data") != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

@@ -13,7 +13,6 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;

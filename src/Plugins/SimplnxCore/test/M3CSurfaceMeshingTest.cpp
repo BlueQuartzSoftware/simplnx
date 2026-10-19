@@ -1540,35 +1540,35 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Geometry cell tuple count", "[SimplnxCore][M3CSurfaceMeshingFilter][TupleCount]")
 {
-  using Filter = M3CSurfaceMeshingFilter;
+  using FilterType = M3CSurfaceMeshingFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
 
   // A matching array is valid outside Cell Data; short and long arrays must fail preflight.
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(otherAM->getShape(), ShapeType{1}, 0), otherAM->getId()) != nullptr);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(otherAMPtr->getShape(), ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
   const DataPath inputPath({"Other Data", "Values"});
   const bool shortSecondInput = GENERATE(false, true);
   CAPTURE(shortSecondInput);
-  auto* secondAM = AttributeMatrix::Create(dataStructure, "Second Data", ShapeType{1, 1, shortSecondInput ? usize{10} : tuples});
-  REQUIRE(secondAM != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Second Values", std::make_shared<DataStore<int32>>(secondAM->getShape(), ShapeType{1}, 0), secondAM->getId()) != nullptr);
+  auto* secondAMPtr = AttributeMatrix::Create(dataStructure, "Second Data", ShapeType{1, 1, shortSecondInput ? usize{10} : tuples});
+  REQUIRE(secondAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Second Values", std::make_shared<DataStore<int32>>(secondAMPtr->getShape(), ShapeType{1}, 0), secondAMPtr->getId()) != nullptr);
   const DataPath secondPath({"Second Data", "Second Values"});
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(Filter::k_SelectedDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{secondPath}));
+  args.insertOrAssign(FilterType::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_SelectedDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{secondPath}));
 
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12 && !shortSecondInput)
@@ -1579,12 +1579,12 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Geometry cell tuple count", "[S
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -90201);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -90201);
     const DataPath expectedPath = tuples != 12 ? inputPath : secondPath;
     const usize expectedTuples = tuples != 12 ? tuples : usize{10};
-    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

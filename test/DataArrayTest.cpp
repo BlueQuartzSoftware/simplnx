@@ -96,17 +96,17 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtil
 TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells", "[simplnx][DataArrayUtilities][TupleCount]")
 {
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
   const DataPath geometryPath({"Image"});
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{2}, 0), otherAM->getId()) != nullptr);
-  auto* strings = StringArray::Create(dataStructure, "Strings");
-  REQUIRE(strings != nullptr);
-  const auto resizeResult = strings->resizeTuples({tuples});
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{2}, 0), otherAMPtr->getId()) != nullptr);
+  auto* stringsPtr = StringArray::Create(dataStructure, "Strings");
+  REQUIRE(stringsPtr != nullptr);
+  const auto resizeResult = stringsPtr->resizeTuples({tuples});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   REQUIRE(NeighborList<int32>::Create(dataStructure, "Neighbors", ShapeType{tuples}) != nullptr);
   const DataPath path = GENERATE(DataPath({"Other Data", "Values"}), DataPath({"Strings"}), DataPath({"Neighbors"}));
@@ -130,9 +130,9 @@ TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells", "[s
 TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells first mismatch", "[simplnx][DataArrayUtilities][TupleCount]")
 {
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
   REQUIRE(Int32Array::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "Short", std::make_shared<DataStore<int32>>(ShapeType{11}, ShapeType{1}, 0)) != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "Long", std::make_shared<DataStore<int32>>(ShapeType{13}, ShapeType{1}, 0)) != nullptr);

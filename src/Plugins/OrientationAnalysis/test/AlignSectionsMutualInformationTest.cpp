@@ -1,10 +1,10 @@
-#include "simplnx/DataStructure/DataStore.hpp"
 #include <catch2/catch.hpp>
 
 #include "OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -252,31 +252,31 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Geometry c
   const int testCase = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
   CAPTURE(testCase);
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "TupleGeometry");
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({2, 2, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "TupleGeometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   AlignSectionsMutualInformationFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"TupleGeometry"})));
   const usize commonCount = testCase == 0 ? 4 : (testCase == 1 ? 12 : 8);
   const usize count0 = testCase == 3 ? 4 : commonCount;
-  auto* inputAM0 = AttributeMatrix::Create(dataStructure, "Input0", {count0});
-  REQUIRE(inputAM0 != nullptr);
-  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count0}, {4}, inputAM0->getId()) != nullptr);
+  auto* inputAM0Ptr = AttributeMatrix::Create(dataStructure, "Input0", {count0});
+  REQUIRE(inputAM0Ptr != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count0}, {4}, inputAM0Ptr->getId()) != nullptr);
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input0", "Quats"})));
   const usize count1 = testCase == 4 ? 4 : commonCount;
-  auto* inputAM1 = AttributeMatrix::Create(dataStructure, "Input1", {count1});
-  REQUIRE(inputAM1 != nullptr);
-  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1->getId()) != nullptr);
+  auto* inputAM1Ptr = AttributeMatrix::Create(dataStructure, "Input1", {count1});
+  REQUIRE(inputAM1Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1Ptr->getId()) != nullptr);
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input1", "Phases"})));
   const usize count2 = (testCase == 5 || testCase == 6) ? 4 : commonCount;
-  auto* inputAM2 = AttributeMatrix::Create(dataStructure, "Input2", {count2});
-  REQUIRE(inputAM2 != nullptr);
-  REQUIRE(DataArray<uint8>::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {count2}, {1}, inputAM2->getId()) != nullptr);
+  auto* inputAM2Ptr = AttributeMatrix::Create(dataStructure, "Input2", {count2});
+  REQUIRE(inputAM2Ptr != nullptr);
+  REQUIRE(DataArray<uint8>::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {count2}, {1}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "Mask"})));
   REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(AlignSectionsMutualInformationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
@@ -297,20 +297,20 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Geometry c
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
+    const auto& errorRef = result.outputActions.errors()[0];
     const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Quats"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Mask"})};
     if(testCase >= 3)
     {
-      CHECK(error.code == -3542);
-      CHECK(error.message.find(fmt::format("DataPath: {}    | Tuple Count: 4", inputPaths[static_cast<usize>(testCase - 3)].toString())) != std::string::npos);
+      CHECK(errorRef.code == -3542);
+      CHECK(errorRef.message.find(fmt::format("DataPath: {}    | Tuple Count: 4", inputPaths[static_cast<usize>(testCase - 3)].toString())) != std::string::npos);
     }
     else
     {
-      CHECK(error.code == -3543);
-      CHECK(error.message.find(inputPaths[0].toString()) != std::string::npos);
-      CHECK(error.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
-      CHECK(error.message.find("8 cells") != std::string::npos);
-      CHECK(error.message.find("TupleGeometry") != std::string::npos);
+      CHECK(errorRef.code == -3543);
+      CHECK(errorRef.message.find(inputPaths[0].toString()) != std::string::npos);
+      CHECK(errorRef.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
+      CHECK(errorRef.message.find("8 cells") != std::string::npos);
+      CHECK(errorRef.message.find("TupleGeometry") != std::string::npos);
     }
   }
 }

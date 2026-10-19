@@ -14,10 +14,9 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 

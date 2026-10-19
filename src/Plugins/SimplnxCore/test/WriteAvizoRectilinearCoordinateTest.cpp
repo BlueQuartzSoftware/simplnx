@@ -1,10 +1,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -122,30 +122,30 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: SIMPL Backwards C
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tuple count", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][TupleCount]")
 {
   UnitTest::LoadPlugins();
-  using Filter = WriteAvizoRectilinearCoordinateFilter;
+  using FilterType = WriteAvizoRectilinearCoordinateFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
 
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   CAPTURE(tuples);
 
   // A matching input in another Attribute Matrix must remain valid.
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAM->getId()) != nullptr);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAMPtr->getId()) != nullptr);
   const DataPath inputPath({"Other Data", "Values"});
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(Filter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountWriteAvizoRectilinearCoordinate.txt"));
+  args.insertOrAssign(FilterType::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountWriteAvizoRectilinearCoordinate.txt"));
 
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
@@ -156,12 +156,12 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tup
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -5834);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -5834);
     const DataPath expectedPath = inputPath;
     const usize expectedTuples = tuples;
-    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

@@ -8,10 +8,9 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 namespace nx::core
 {

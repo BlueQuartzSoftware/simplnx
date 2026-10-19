@@ -224,15 +224,15 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility",
 TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Geometry cell tuple count", "[SimplnxCore][WriteLosAlamosFFTFilter][TupleCount]")
 {
   UnitTest::LoadPlugins();
-  using Filter = WriteLosAlamosFFTFilter;
+  using FilterType = WriteLosAlamosFFTFilter;
   DataStructure dataStructure;
-  auto* geometry = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 3, 2});
-  geometry->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, geometry->getId());
-  REQUIRE(cellAM != nullptr);
-  geometry->setCellData(*cellAM);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
 
   // Equally sized siblings expose the missing geometry check; separate short inputs cover every parameter.
   const auto counts = GENERATE((std::array<usize, 3>{0, 0, 0}), (std::array<usize, 3>{11, 11, 11}), (std::array<usize, 3>{12, 12, 12}), (std::array<usize, 3>{13, 13, 13}),
@@ -241,26 +241,26 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Geometry cell tuple count", "[S
   CAPTURE(counts);
 
   // A matching input in another Attribute Matrix must remain valid.
-  auto* otherAM = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
-  REQUIRE(otherAM != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAM->getId()) != nullptr);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAMPtr->getId()) != nullptr);
   const DataPath inputPath({"Other Data", "Values"});
-  auto* eulerAM = AttributeMatrix::Create(dataStructure, "Euler Data", ShapeType{counts[1]});
-  auto* phaseAM = AttributeMatrix::Create(dataStructure, "Phase Data", ShapeType{counts[2]});
-  REQUIRE(eulerAM != nullptr);
-  REQUIRE(phaseAM != nullptr);
-  REQUIRE(DataArray<float32>::Create(dataStructure, "EulerAngles", std::make_shared<DataStore<float32>>(ShapeType{counts[1]}, ShapeType{3}, 0), eulerAM->getId()) != nullptr);
-  REQUIRE(DataArray<int32>::Create(dataStructure, "Phases", std::make_shared<DataStore<int32>>(ShapeType{counts[2]}, ShapeType{1}, 1), phaseAM->getId()) != nullptr);
+  auto* eulerAMPtr = AttributeMatrix::Create(dataStructure, "Euler Data", ShapeType{counts[1]});
+  auto* phaseAMPtr = AttributeMatrix::Create(dataStructure, "Phase Data", ShapeType{counts[2]});
+  REQUIRE(eulerAMPtr != nullptr);
+  REQUIRE(phaseAMPtr != nullptr);
+  REQUIRE(DataArray<float32>::Create(dataStructure, "EulerAngles", std::make_shared<DataStore<float32>>(ShapeType{counts[1]}, ShapeType{3}, 0), eulerAMPtr->getId()) != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Phases", std::make_shared<DataStore<int32>>(ShapeType{counts[2]}, ShapeType{1}, 1), phaseAMPtr->getId()) != nullptr);
   const DataPath eulerPath({"Euler Data", "EulerAngles"});
   const DataPath phasePath({"Phase Data", "Phases"});
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({"Image"})));
-  args.insertOrAssign(Filter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(Filter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerPath));
-  args.insertOrAssign(Filter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasePath));
-  args.insertOrAssign(Filter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountWriteLosAlamosFFT.txt"));
+  args.insertOrAssign(FilterType::k_ImageGeomPath, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerPath));
+  args.insertOrAssign(FilterType::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasePath));
+  args.insertOrAssign(FilterType::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountWriteLosAlamosFFT.txt"));
 
   const auto result = filter.preflight(dataStructure, args);
   if(counts[0] == 12 && counts[1] == 12 && counts[2] == 12)
@@ -271,12 +271,12 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Geometry cell tuple count", "[S
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -73461);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -73461);
     const DataPath expectedPath = counts[0] != 12 ? inputPath : (counts[1] != 12 ? eulerPath : phasePath);
     const usize expectedTuples = counts[0] != 12 ? counts[0] : (counts[1] != 12 ? counts[1] : counts[2]);
-    REQUIRE(error.message.find(expectedPath.toString()) != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
-    REQUIRE(error.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }

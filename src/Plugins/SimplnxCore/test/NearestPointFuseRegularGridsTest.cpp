@@ -398,40 +398,40 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Comp
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Geometry cell tuple count", "[SimplnxCore][NearestPointFuseRegularGridsFilter][TupleCount]")
 {
-  using Filter = NearestPointFuseRegularGridsFilter;
+  using FilterType = NearestPointFuseRegularGridsFilter;
   DataStructure dataStructure;
-  auto* samplingGeom = ImageGeom::Create(dataStructure, "Sampling");
-  auto* referenceGeom = ImageGeom::Create(dataStructure, "Reference");
-  REQUIRE(samplingGeom != nullptr);
-  REQUIRE(referenceGeom != nullptr);
-  samplingGeom->setDimensions({2, 3, 2});
-  referenceGeom->setDimensions({2, 5, 2});
-  samplingGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  referenceGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  auto* samplingCellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, samplingGeom->getId());
-  auto* referenceCellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{20}, referenceGeom->getId());
-  REQUIRE(samplingCellAM != nullptr);
-  REQUIRE(referenceCellAM != nullptr);
-  samplingGeom->setCellData(*samplingCellAM);
-  referenceGeom->setCellData(*referenceCellAM);
+  auto* samplingGeomPtr = ImageGeom::Create(dataStructure, "Sampling");
+  auto* referenceGeomPtr = ImageGeom::Create(dataStructure, "Reference");
+  REQUIRE(samplingGeomPtr != nullptr);
+  REQUIRE(referenceGeomPtr != nullptr);
+  samplingGeomPtr->setDimensions({2, 3, 2});
+  referenceGeomPtr->setDimensions({2, 5, 2});
+  samplingGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  referenceGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* samplingCellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, samplingGeomPtr->getId());
+  auto* referenceCellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{20}, referenceGeomPtr->getId());
+  REQUIRE(samplingCellAMPtr != nullptr);
+  REQUIRE(referenceCellAMPtr != nullptr);
+  samplingGeomPtr->setCellData(*samplingCellAMPtr);
+  referenceGeomPtr->setCellData(*referenceCellAMPtr);
 
   const auto counts = GENERATE((std::pair<usize, usize>{11, 20}), (std::pair<usize, usize>{12, 19}), (std::pair<usize, usize>{12, 20}), (std::pair<usize, usize>{13, 20}),
                                (std::pair<usize, usize>{12, 21}), (std::pair<usize, usize>{0, 20}), (std::pair<usize, usize>{12, 0}));
   const auto [samplingTuples, referenceTuples] = counts;
   CAPTURE(samplingTuples, referenceTuples);
   // Both selected matrices are outside their geometry's Cell Data; the reference matrix starts empty.
-  auto* sampleAM = AttributeMatrix::Create(dataStructure, "Other Sampling Data", ShapeType{samplingTuples});
-  REQUIRE(sampleAM != nullptr);
+  auto* sampleAMPtr = AttributeMatrix::Create(dataStructure, "Other Sampling Data", ShapeType{samplingTuples});
+  REQUIRE(sampleAMPtr != nullptr);
   REQUIRE(AttributeMatrix::Create(dataStructure, "Other Reference Data", ShapeType{referenceTuples}) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<Int32DataStore>(ShapeType{samplingTuples}, ShapeType{1}, 0), sampleAM->getId()) != nullptr);
-  REQUIRE(StringArray::CreateWithValues(dataStructure, "Strings", ShapeType{samplingTuples}, std::vector<std::string>(samplingTuples, "value"), sampleAM->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<Int32DataStore>(ShapeType{samplingTuples}, ShapeType{1}, 0), sampleAMPtr->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Strings", ShapeType{samplingTuples}, std::vector<std::string>(samplingTuples, "value"), sampleAMPtr->getId()) != nullptr);
 
-  Filter filter;
+  FilterType filter;
   Arguments args;
-  args.insertOrAssign(Filter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(DataPath({"Sampling"})));
-  args.insertOrAssign(Filter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(DataPath({"Reference"})));
-  args.insertOrAssign(Filter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Sampling Data"})));
-  args.insertOrAssign(Filter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Reference Data"})));
+  args.insertOrAssign(FilterType::k_SamplingGeometryPath_Key, std::make_any<DataPath>(DataPath({"Sampling"})));
+  args.insertOrAssign(FilterType::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(DataPath({"Reference"})));
+  args.insertOrAssign(FilterType::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Sampling Data"})));
+  args.insertOrAssign(FilterType::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Other Reference Data"})));
   const auto result = filter.preflight(dataStructure, args);
   if(samplingTuples == 12 && referenceTuples == 20)
   {
@@ -441,11 +441,11 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Geometry cell tuple 
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
-    REQUIRE(error.code == -5565);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -5565);
     const bool samplingMismatch = samplingTuples != 12;
-    REQUIRE(error.message.find(samplingMismatch ? "Other Sampling Data" : "Other Reference Data") != std::string::npos);
-    REQUIRE(error.message.find(fmt::format("has {} tuples", samplingMismatch ? samplingTuples : referenceTuples)) != std::string::npos);
-    REQUIRE(error.message.find(samplingMismatch ? "'Sampling' has 12 cells" : "'Reference' has 20 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find(samplingMismatch ? "Other Sampling Data" : "Other Reference Data") != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", samplingMismatch ? samplingTuples : referenceTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find(samplingMismatch ? "'Sampling' has 12 cells" : "'Reference' has 20 cells") != std::string::npos);
   }
 }

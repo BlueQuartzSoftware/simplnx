@@ -13,12 +13,11 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
-
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
