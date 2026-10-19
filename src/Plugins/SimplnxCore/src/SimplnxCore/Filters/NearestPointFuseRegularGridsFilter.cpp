@@ -14,6 +14,9 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <array>
+#include <tuple>
+
 using namespace nx::core;
 
 namespace nx::core
@@ -95,6 +98,21 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   auto pReferenceGeometryPathValue = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
   auto pSamplingCellAttributeMatrixPathValue = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
   auto pReferenceCellAttributeMatrixPathValue = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
+
+  const std::array<std::tuple<std::string_view, DataPath, DataPath>, 2> matrixGeometryPaths = {
+      std::make_tuple("Sampling Cell Attribute Matrix", pSamplingCellAttributeMatrixPathValue, pSamplingGeometryPathValue),
+      std::make_tuple("Reference Cell Attribute Matrix", pReferenceCellAttributeMatrixPathValue, pReferenceGeometryPathValue)};
+  for(const auto& [parameterName, matrixPath, geometryPath] : matrixGeometryPaths)
+  {
+    const usize tupleCount = dataStructure.getDataRefAs<AttributeMatrix>(matrixPath).getNumberOfTuples();
+    const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(geometryPath).getNumberOfCells();
+    if(tupleCount != cellCount)
+    {
+      return {MakeErrorResult<OutputActions>(-5565,
+                                             fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.",
+                                                         parameterName, matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
+    }
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
