@@ -62,6 +62,7 @@ class IGridGeometry;
  * @return Empty valid result if the counts match; otherwise, an error with both paths and counts.
  *
  * This check compares counts only. It does not read array values or require matching tuple shapes or a common parent.
+ * The error omits a filter-name prefix. The selected paths identify the geometry and data.
  */
 SIMPLNX_EXPORT Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath, int32 errorCode);
 
