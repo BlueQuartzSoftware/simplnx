@@ -26,6 +26,8 @@ Cell (1,1) has CI = 0.05, which is below a 0.1 minimum, so it is flagged. Its 4 
 
 In this example, cell (1,1) has a confidence index < 0.1. Its four neighbors are compared pairwise with each other: (13.0), (14.0), (12.0) and (15.0) are all within a few degrees of each other, so every neighbor participates in several similar pairs. The central cell (1,1) has all of its attributes replaced with those of the neighbor holding the highest similar-pair count. Note that the central cell's own orientation and phase play no role in choosing the replacement — only the mutual similarity of its neighbors matters.
 
+Confidence Index, Cell Phases and Cell Quaternions must each have one tuple per cell of the selected Image Geometry.
+
 ## Example Data
 
 |    Example Input/Output Images |
