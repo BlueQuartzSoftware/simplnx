@@ -41,7 +41,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   {
     return validateNumFeatResult;
   }
-  auto numFeatures = static_cast<int32>(numCells.getNumberOfTuples());
+  const usize numFeatures = numCells.getNumberOfTuples();
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
@@ -56,7 +56,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 
   // Multiple cells contribute to one feature, so accumulation stays local until
   // the cell scan is complete.
-  std::vector<float64> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0);
+  std::vector<float64> featureSurfaceArea(numFeatures, 0.0);
 
   // Flat offsets avoid repeated coordinate-to-index conversion for in-memory
   // six-neighbor reads.
@@ -138,7 +138,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     }
   }
 
-  for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
+  for(usize i = 1; i < numFeatures; i++)
   {
     const float64 featureVolume = voxelVol * numCells[i];
     surfaceAreaVolumeRatio[i] = static_cast<float32>(featureSurfaceArea[i] / featureVolume);
@@ -152,7 +152,7 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
     // Sphericity is one for a sphere and decreases as the surface becomes less compact.
-    for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
+    for(usize i = 1; i < numFeatures; i++)
     {
       const float64 featureVolume = voxelVol * numCells[i];
       sphericity[i] = static_cast<float32>((thirdRootPi * std::pow((6.0 * featureVolume), 2.0 / 3.0)) / featureSurfaceArea[i]);
