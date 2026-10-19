@@ -71,7 +71,9 @@ The surface area will be the surface area of the **Cells** in contact with the n
 
 Image-exterior faces are omitted, so a feature touching the image boundary can have an incomplete measured surface. This can reduce its surface-area-to-volume ratio and increase its sphericity, even above 1. In-image faces against Feature Id 0 are included.
 
-The filter does not reject zero or negative supplied cell counts or replace nonfinite results. For positive area and zero volume, the ratio is infinite and sphericity is zero. For positive volume and zero measured area, the ratio is zero and sphericity is infinite. Zero area with zero volume produces NaN (not a number). A negative volume can produce a negative ratio and NaN sphericity. Interpret these values as limitations of the supplied volume or measured surface.
+The filter does not reject zero or negative supplied cell counts or replace nonfinite results. For positive area and zero volume, the ratio is infinite and sphericity is zero. For positive volume and zero measured area, the ratio is zero and sphericity is infinite. Zero area with zero volume produces NaN (not a number). A negative volume can produce a negative ratio and NaN sphericity.
+
+Zero or negative supplied counts do not give a positive feature volume. Check **Number of Cells** against the feature labels before interpreting either metric. A zero measured area does not support a finite sphericity value, but it can result from omitted image-exterior faces even when the labels and counts are correct.
 
 ### Warning - 2D Image Geometry Results
 
