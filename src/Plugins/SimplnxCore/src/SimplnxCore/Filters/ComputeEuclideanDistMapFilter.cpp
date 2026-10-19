@@ -110,8 +110,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   auto pCalculateDistToQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
 
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto tupleCountResult =
-      ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Cell Feature Ids", pFeatureIdsArrayPathValue}}, -12803);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12805);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

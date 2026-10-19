@@ -89,7 +89,7 @@ IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(co
   auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Cell Feature Ids", inputArrayPath}}, -5834); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -5834); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

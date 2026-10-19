@@ -175,9 +175,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
         MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(
-         dataStructure, pImageGeomPathValue, {{"Confidence Index", pConfidenceIndexArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}, {"Cell Quaternions", pQuatsArrayPathValue}}, -580098);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, pImageGeomPathValue, {pConfidenceIndexArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -580098); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

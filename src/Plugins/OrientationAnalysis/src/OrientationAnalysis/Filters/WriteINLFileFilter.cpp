@@ -105,9 +105,7 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
   auto eulerAnglesPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeometryPath,
-                                                                    {{"Cell Feature Ids", featureIdsPath}, {"Cell Phases", cellPhasesPath}, {"Cell Euler Angles", eulerAnglesPath}}, -78431);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {featureIdsPath, cellPhasesPath, eulerAnglesPath}, -78431); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

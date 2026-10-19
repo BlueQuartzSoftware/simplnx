@@ -92,8 +92,9 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtil
   }
   CHECK(result.warnings().empty());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
-TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells", "[simplnx][DataArrayUtilities][TupleCount]")
+TEST_CASE("DataArrayUtilities::ValidateCellTupleCount arrays", "[simplnx][DataArrayUtilities][TupleCount]")
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -110,7 +111,8 @@ TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells", "[s
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   REQUIRE(NeighborList<int32>::Create(dataStructure, "Neighbors", ShapeType{tuples}) != nullptr);
   const DataPath path = GENERATE(DataPath({"Other Data", "Values"}), DataPath({"Strings"}), DataPath({"Neighbors"}));
-  const auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Input Values", path}}, -98765);
+  REQUIRE(Int32Array::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
+  const auto result = ValidateCellTupleCount(dataStructure, geometryPath, {DataPath({"Matching"}), path}, -98765);
   if(tuples == 12)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -121,13 +123,13 @@ TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells", "[s
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == -98765);
     REQUIRE(result.errors()[0].message ==
-            fmt::format("**Input Values** DataArray '{}' has {} tuples, but the selected geometry 'Image' has 12 cells. Select a DataArray with one tuple per cell.", path.toString(), tuples));
+            fmt::format("The selected data '{}' has {} tuples, but the selected grid geometry 'Image' has 12 cells. Select data with one tuple per geometry cell.", path.toString(), tuples));
   }
-  const auto emptyResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {}, -98765);
+  const auto emptyResult = ValidateCellTupleCount(dataStructure, geometryPath, {}, -98765);
   SIMPLNX_RESULT_REQUIRE_VALID(emptyResult);
 }
 
-TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells first mismatch", "[simplnx][DataArrayUtilities][TupleCount]")
+TEST_CASE("DataArrayUtilities::ValidateCellTupleCount arrays first mismatch", "[simplnx][DataArrayUtilities][TupleCount]")
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -136,12 +138,11 @@ TEST_CASE("DataArrayUtilities::ValidateArrayTupleCountMatchesGeometryCells first
   REQUIRE(Int32Array::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "Short", std::make_shared<DataStore<int32>>(ShapeType{11}, ShapeType{1}, 0)) != nullptr);
   REQUIRE(Int32Array::Create(dataStructure, "Long", std::make_shared<DataStore<int32>>(ShapeType{13}, ShapeType{1}, 0)) != nullptr);
-  const auto result =
-      ValidateArrayTupleCountMatchesGeometryCells(dataStructure, DataPath({"Image"}), {{"First", DataPath({"Matching"})}, {"Second", DataPath({"Short"})}, {"Third", DataPath({"Long"})}}, -98765);
+  const auto result = ValidateCellTupleCount(dataStructure, DataPath({"Image"}), {DataPath({"Matching"}), DataPath({"Short"}), DataPath({"Long"})}, -98765);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors()[0].code == -98765);
-  REQUIRE(result.errors()[0].message == "**Second** DataArray 'Short' has 11 tuples, but the selected geometry 'Image' has 12 cells. Select a DataArray with one tuple per cell.");
+  REQUIRE(result.errors()[0].message == "The selected data 'Short' has 11 tuples, but the selected grid geometry 'Image' has 12 cells. Select data with one tuple per geometry cell.");
 }
 
 TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUtilities]")

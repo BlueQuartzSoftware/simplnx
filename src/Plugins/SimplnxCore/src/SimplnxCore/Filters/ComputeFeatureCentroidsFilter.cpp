@@ -95,8 +95,7 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
   auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
   DataPath pCentroidsArrayPath = featureAttrMatrixPath.createChildPath(pCentroidsArrayName);
 
-  auto tupleCountResult =
-      ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Cell Feature Ids", pFeatureIdsArrayPathValue}}, -12701);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12701);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

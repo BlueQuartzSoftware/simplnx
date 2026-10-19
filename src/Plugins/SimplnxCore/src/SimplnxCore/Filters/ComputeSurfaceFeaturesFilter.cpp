@@ -92,8 +92,7 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
   auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto pSurfaceFeaturesArrayNameValue = filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key);
 
-  auto tupleCountResult =
-      ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pFeatureGeometryPathValue, {{"Cell Feature Ids", filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key)}}, -1099);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pFeatureGeometryPathValue, {filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key)}, -1099);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

@@ -172,12 +172,12 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
     return MakePreflightErrorResult(-3542, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  std::vector<std::pair<std::string_view, DataPath>> cellArrayPaths = {{"Cell Quaternions", pQuatsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}};
+  std::vector<DataPath> cellArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue};
   if(useMask)
   {
-    cellArrayPaths.emplace_back("Cell Mask Array", pGoodVoxelsArrayPathValue);
+    cellArrayPaths.emplace_back(pGoodVoxelsArrayPathValue);
   }
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeometryPath, cellArrayPaths, -3543); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, cellArrayPaths, -3543); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

@@ -115,7 +115,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   auto surfaceFeaturesName = filterArgs.value<std::string>(k_SurfaceFeaturesName_Key);
   auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesPath_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeomPath, {{"Cell Feature Ids", featureIdsPath}}, -24501);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, imageGeomPath, {featureIdsPath}, -24501);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

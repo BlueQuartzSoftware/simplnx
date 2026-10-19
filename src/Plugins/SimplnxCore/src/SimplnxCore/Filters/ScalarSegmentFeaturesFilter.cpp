@@ -113,12 +113,12 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
-  std::vector<std::pair<std::string_view, DataPath>> cellArrayPaths = {{"Scalar Array to Segment", inputDataPath}};
+  std::vector<DataPath> cellArrayPaths = {inputDataPath};
   if(filterArgs.value<bool>(k_UseMask_Key))
   {
-    cellArrayPaths.emplace_back("Cell Mask Array", filterArgs.value<DataPath>(k_MaskArrayPath_Key));
+    cellArrayPaths.emplace_back(filterArgs.value<DataPath>(k_MaskArrayPath_Key));
   }
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

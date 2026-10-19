@@ -143,7 +143,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   auto pStoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, inputImageGeometry, {{"Mask Array", pGoodVoxelsArrayPath}}, -68071);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pGoodVoxelsArrayPath}, -68071);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

@@ -104,9 +104,7 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
   auto pKernelAverageMisorientationsArrayNameValue = pCellPhasesArrayPathValue.replaceName(filterArgs.value<std::string>(k_KernelAverageMisorientationsArrayName_Key));
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(
-         dataStructure, inputImageGeometry, {{"Cell Feature Ids", pFeatureIdsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}, {"Cell Quaternions", pQuatsArrayPathValue}}, -67205);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -67205); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

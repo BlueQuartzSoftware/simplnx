@@ -87,7 +87,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Input Comparison Array", inputArrayPath}}, -15001); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -15001); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

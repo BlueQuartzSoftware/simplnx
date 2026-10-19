@@ -155,6 +155,20 @@ Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& g
   return {};
 }
 
+Result<> ValidateCellTupleCount(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& dataPaths, int32 errorCode)
+{
+  const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>(geometryPath);
+  for(const auto& dataPath : dataPaths)
+  {
+    const auto& array = dataStructure.getDataRefAs<IArray>(dataPath);
+    if(auto result = ValidateCellTupleCount(geometry, geometryPath, array.getNumberOfTuples(), dataPath, errorCode); result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
 bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix)
 {
   if(arrayPath.getLength() < 2)
@@ -259,22 +273,6 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
     types.insert(iArrayPtr->getNumberOfTuples());
   }
   return types.size() == 1;
-}
-
-Result<> ValidateArrayTupleCountMatchesGeometryCells(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<std::pair<std::string_view, DataPath>>& namedArrayPaths,
-                                                     int32 errorCode)
-{
-  const usize cellCount = dataStructure.getDataRefAs<IGridGeometry>(geometryPath).getNumberOfCells();
-  for(const auto& [parameterName, arrayPath] : namedArrayPaths)
-  {
-    const usize tupleCount = dataStructure.getDataRefAs<IArray>(arrayPath).getNumberOfTuples();
-    if(tupleCount != cellCount)
-    {
-      return MakeErrorResult(errorCode, fmt::format("**{}** DataArray '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select a DataArray with one tuple per cell.", parameterName,
-                                                    arrayPath.toString(), tupleCount, geometryPath.toString(), cellCount));
-    }
-  }
-  return {};
 }
 
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertMask)

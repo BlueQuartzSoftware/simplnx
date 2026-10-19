@@ -109,7 +109,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pImageGeometryPathValue, {{"Boundary Euclidean Distances", pGBEuclideanDistancesArrayPathValue}}, -76238);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, -76238);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

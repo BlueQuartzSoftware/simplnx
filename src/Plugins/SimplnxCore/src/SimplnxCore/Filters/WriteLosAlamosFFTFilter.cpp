@@ -94,9 +94,7 @@ IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStruct
   auto cellEulerAnglesPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto cellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath,
-                                                                    {{"Cell Feature Ids", inputArrayPath}, {"Cell Euler Angles", cellEulerAnglesPath}, {"Cell Phases", cellPhasesPath}}, -73461);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath, cellEulerAnglesPath, cellPhasesPath}, -73461); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

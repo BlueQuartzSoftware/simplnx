@@ -105,7 +105,7 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   auto pCustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
   auto pExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
 
-  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pInputImageGeometryPathValue, {{"Feature Ids", pFeatureIdsArrayPathValue}}, -1019); result.invalid())
+  if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }

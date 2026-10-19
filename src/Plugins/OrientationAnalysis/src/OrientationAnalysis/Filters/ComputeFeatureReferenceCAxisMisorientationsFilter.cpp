@@ -116,9 +116,7 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
     return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(
-         dataStructure, imageGeometryPath, {{"Cell Feature Ids", pFeatureIdsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}, {"Cell Quaternions", pQuatsArrayPathValue}}, -9805);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -9805); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

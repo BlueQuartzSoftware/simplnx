@@ -114,7 +114,7 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
     return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Cell Feature Ids", inputArrayPath}}, -1124); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -1124); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

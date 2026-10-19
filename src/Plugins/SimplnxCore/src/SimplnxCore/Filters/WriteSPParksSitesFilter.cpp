@@ -87,7 +87,7 @@ IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStruct
   auto geometryPath = filterArgs.value<DataPath>(k_ImageGeomPath);
   auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Cell Feature Ids", inputArrayPath}}, -77453); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -77453); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

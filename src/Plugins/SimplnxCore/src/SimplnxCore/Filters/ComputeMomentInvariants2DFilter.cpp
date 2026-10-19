@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   auto pOmega2ArrayNameValue = filterArgs.value<std::string>(k_Omega2ArrayName_Key);
   auto pSaveCentralMomentsValue = filterArgs.value<bool>(k_SaveCentralMoments_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pGeometryPathValue, {{"Cell Feature Ids", pFeatureIdsArrayPathValue}}, -9511);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pFeatureIdsArrayPathValue}, -9511);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

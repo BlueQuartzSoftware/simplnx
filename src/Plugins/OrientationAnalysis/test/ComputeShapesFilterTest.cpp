@@ -180,7 +180,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count",
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -12804);
+    REQUIRE(errorRef.code == -12806);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Grid' has 12 cells") != std::string::npos);

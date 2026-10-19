@@ -576,7 +576,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: Geometry cell tuple count
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -12803);
+    REQUIRE(errorRef.code == -12805);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);

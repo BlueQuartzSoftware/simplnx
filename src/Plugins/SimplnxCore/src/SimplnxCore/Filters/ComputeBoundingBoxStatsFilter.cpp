@@ -251,7 +251,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
 
   auto pCreateNewAMValue = filterArgs.value<bool>(k_CreateNewAM_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pGeometryPathValue, {{"Attribute Array to Compute Statistics", pInputArrayPathValue}}, -59204);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pInputArrayPathValue}, -59204);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

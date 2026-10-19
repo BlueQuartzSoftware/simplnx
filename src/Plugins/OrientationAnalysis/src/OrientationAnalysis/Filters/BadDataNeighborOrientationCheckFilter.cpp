@@ -123,9 +123,7 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  if(auto tupleResult = ValidateArrayTupleCountMatchesGeometryCells(
-         dataStructure, imageGeometryPath, {{"Cell Quaternions", pQuatsArrayPathValue}, {"Cell Phases", pCellPhasesArrayPathValue}, {"Cell Mask Array", pMaskArrayPathValue}}, -6810);
-     tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pMaskArrayPathValue}, -6810); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }

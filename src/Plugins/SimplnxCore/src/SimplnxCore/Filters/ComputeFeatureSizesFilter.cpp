@@ -101,7 +101,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   auto volumesName = filterArgs.value<std::string>(k_VolumesName_Key);
   auto equivalentDiametersName = filterArgs.value<std::string>(k_EquivalentDiametersName_Key);
   auto numElementsName = filterArgs.value<std::string>(k_NumElementsName_Key);
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, geometryPath, {{"Cell Feature Ids", featureIdsPath}}, -74771);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, geometryPath, {featureIdsPath}, -74771);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

@@ -173,13 +173,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
   auto initRangeVec = filterArgs.value<std::vector<float64>>(k_InitRange_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
-  std::vector<std::pair<std::string_view, DataPath>> namedArrayPaths;
-  for(const auto& path : cellArrayPaths)
-  {
-    namedArrayPaths.emplace_back("Cell Arrays", path);
-  }
-
-  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, imageGeomPath, namedArrayPaths, -3557); result.invalid())
+  if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, cellArrayPaths, -3557); result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }

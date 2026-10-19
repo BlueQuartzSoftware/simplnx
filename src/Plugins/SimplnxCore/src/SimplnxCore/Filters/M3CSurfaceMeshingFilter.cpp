@@ -144,13 +144,13 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
   auto pGridGeometryPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
 
-  std::vector<std::pair<std::string_view, DataPath>> namedArrayPaths = {{"Cell Feature Ids", pFeatureIdsArrayPath}};
+  std::vector<DataPath> cellArrayPaths = {pFeatureIdsArrayPath};
   for(const auto& path : pSelectedDataArrayPaths)
   {
-    namedArrayPaths.emplace_back("Cell Attribute Arrays to Transfer", path);
+    cellArrayPaths.emplace_back(path);
   }
 
-  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pGridGeometryPath, namedArrayPaths, -90201); result.invalid())
+  if(auto result = ValidateCellTupleCount(dataStructure, pGridGeometryPath, cellArrayPaths, -90201); result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }

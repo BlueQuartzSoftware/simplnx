@@ -28,9 +28,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <string_view>
 #include <type_traits>
-#include <utility>
 
 #if defined(_MSC_VER)
 /**
@@ -66,6 +64,19 @@ class IGridGeometry;
  * This check compares counts only. It does not read array values or require matching tuple shapes or a common parent.
  */
 SIMPLNX_EXPORT Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath, int32 errorCode);
+
+/**
+ * @brief Checks that each array has one tuple per geometry cell.
+ * @param dataStructure Owns the geometry and arrays.
+ * @param geometryPath Identifies the geometry that supplies the cell count.
+ * @param dataPaths Identifies the arrays to check in order.
+ * @param errorCode Error code to return if the counts differ.
+ * @return Empty valid result if all counts match; otherwise, the first error with both paths and counts.
+ * @pre geometryPath identifies an IGridGeometry and dataPaths identify IArray objects.
+ *
+ * This check compares counts only. It does not read array values or require matching tuple shapes or a common parent.
+ */
+SIMPLNX_EXPORT Result<> ValidateCellTupleCount(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& dataPaths, int32 errorCode);
 
 /**
  * @brief Tests whether a path's parent identifies the specified Attribute Matrix.
@@ -525,18 +536,6 @@ SIMPLNX_EXPORT bool CheckArraysAreSameType(const DataStructure& dataStructure, c
  * @pre dataArrayPaths identify IArray objects.
  */
 SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
-
-/**
- * @brief Checks that each array has one tuple per cell of a grid geometry.
- * @param dataStructure Data structure that owns the geometry and arrays.
- * @param geometryPath Selected grid geometry path.
- * @param namedArrayPaths Parameter display names paired with selected array paths.
- * @param errorCode Error code to return for a tuple-count mismatch.
- * @return The first mismatch naming the parameter, array path and tuple count, and geometry path and cell count.
- * @pre geometryPath identifies an IGridGeometry and namedArrayPaths identify IArray objects.
- */
-SIMPLNX_EXPORT Result<> ValidateArrayTupleCountMatchesGeometryCells(const DataStructure& dataStructure, const DataPath& geometryPath,
-                                                                    const std::vector<std::pair<std::string_view, DataPath>>& namedArrayPaths, int32 errorCode);
 
 /**
  * @brief Validates feature identifiers against a source array.

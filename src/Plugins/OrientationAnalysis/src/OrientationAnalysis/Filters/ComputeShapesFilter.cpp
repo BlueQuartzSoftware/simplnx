@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
   auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
   auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Cell Feature Ids", pFeatureIdsArrayPath}}, -12804);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPath}, -12806);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};

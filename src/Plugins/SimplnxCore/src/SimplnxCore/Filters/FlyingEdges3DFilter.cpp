@@ -93,7 +93,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
 
-  if(auto result = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, pImageGeomPath, {{"Data Array to Contour", pContouringArrayPath}}, -10510); result.invalid())
+  if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, -10510); result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }

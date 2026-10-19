@@ -94,7 +94,7 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
 
-  auto tupleCountResult = ValidateArrayTupleCountMatchesGeometryCells(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {{"Mask Array Path", pMaskArrayPathValue}}, -14702);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pMaskArrayPathValue}, -14702);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
