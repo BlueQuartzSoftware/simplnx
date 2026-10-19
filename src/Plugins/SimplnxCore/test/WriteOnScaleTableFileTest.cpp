@@ -3,13 +3,20 @@
 #include "SimplnxCore/Filters/WriteOnScaleTableFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -21,6 +28,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 
 #include <Eigen/Dense>
 
@@ -617,18 +625,18 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Selected cell tuple counts"
   {
     dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
   }
-  auto* selectedGroup = DataGroup::Create(dataStructure, "Selected");
-  REQUIRE(selectedGroup != nullptr);
+  auto* selectedGroupPtr = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedGroupPtr != nullptr);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IGridGeometry>(k_GeometryPath));
-  REQUIRE(dataStructure.setAdditionalParent(dataStructure.getDataRefAs<IGridGeometry>(k_GeometryPath).getId(), selectedGroup->getId()));
+  REQUIRE(dataStructure.setAdditionalParent(dataStructure.getDataRefAs<IGridGeometry>(k_GeometryPath).getId(), selectedGroupPtr->getId()));
   const DataPath geometryPath({"Selected", "Geometry"});
-  auto* storageGroup = DataGroup::Create(dataStructure, "Storage");
-  REQUIRE(storageGroup != nullptr);
-  auto* selectedCellData = AttributeMatrix::Create(dataStructure, "Cell Data", {tupleCount}, storageGroup->getId());
-  REQUIRE(selectedCellData != nullptr);
+  auto* storageGroupPtr = DataGroup::Create(dataStructure, "Storage");
+  REQUIRE(storageGroupPtr != nullptr);
+  auto* selectedCellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {tupleCount}, storageGroupPtr->getId());
+  REQUIRE(selectedCellDataPtr != nullptr);
   const DataPath featureIdsPath({"Storage", "Cell Data", "FeatureIds"});
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {tupleCount}, {1});
-  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, selectedCellData->getId()) != nullptr);
+  auto featureIdsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {tupleCount}, {1});
+  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStorePtr, selectedCellDataPtr->getId()) != nullptr);
 
   const WriteOnScaleTableFileFilter filter;
   Arguments args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Tuple_Mismatch");
@@ -652,6 +660,92 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Selected cell tuple counts"
     CHECK(error.message.find("has 4 cells") != std::string::npos);
     CHECK(error.message.find("one tuple per geometry cell") != std::string::npos);
   }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: All integer Feature Ids pass preflight", "[SimplnxCore][WriteOnScaleTableFileFilter]", int8, int16, int32, int64, uint8, uint16, uint32,
+                   uint64)
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreateImageDataStructure<TestType>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  const auto initialPaths = dataStructure.getAllDataPaths();
+  const auto args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Integer_Preflight");
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = WriteOnScaleTableFileFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  CHECK(dataStructure.getAllDataPaths() == initialPaths);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath));
+  CHECK(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath)[1] == "Phase1");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array kinds after output path errors", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool useStringArray = GENERATE(false, true);
+  const bool outputPathIsFile = GENERATE(false, true);
+  const bool rectilinear = GENERATE(false, true);
+  CAPTURE(useStringArray, outputPathIsFile, rectilinear);
+  DataStructure dataStructure;
+  if(rectilinear)
+  {
+    const std::array<std::vector<float32>, 3> bounds = {{{0.0F, 1.0F, 2.0F}, {0.0F, 1.0F, 2.0F}, {0.0F, 1.0F}}};
+    dataStructure = CreateRectGridDataStructure<int32>({2, 2, 1}, bounds, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  }
+  else
+  {
+    dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  }
+  const DataPath rejectedPath({"RejectedFeatureIds"});
+  if(useStringArray)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, rejectedPath.getTargetName(), {4}, {"1", "2", "3", "1"}) != nullptr);
+  }
+  else
+  {
+    auto* listsPtr = NeighborList<int32>::Create(dataStructure, rejectedPath.getTargetName(), {4});
+    REQUIRE(listsPtr != nullptr);
+    listsPtr->setLists({{1}, {2}, {3}, {1}});
+  }
+  const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("WriteOnScaleTableFile_ArrayKind_{}", uniqueSuffix);
+  REQUIRE_FALSE(fs::exists(outputPath));
+  if(outputPathIsFile)
+  {
+    fs::create_directories(outputPath.parent_path());
+    std::ofstream output(outputPath);
+    REQUIRE(output.is_open());
+    output << "Existing regular file";
+  }
+  auto args = CreateArguments(outputPath, "Rejected_Input");
+  args.insertOrAssign(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key, rejectedPath);
+  const auto initialPaths = dataStructure.getAllDataPaths();
+  const auto initialNextId = dataStructure.getNextId();
+  IFilter::PreflightResult preflightResult;
+  REQUIRE_NOTHROW(preflightResult = WriteOnScaleTableFileFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  const auto& error = preflightResult.outputActions.errors().front();
+  CHECK(error.code == (outputPathIsFile ? -12023 : -12042));
+  if(outputPathIsFile)
+  {
+    CHECK(ReadFile(outputPath) == "Existing regular file");
+    fs::remove(outputPath);
+  }
+  else
+  {
+    CHECK(error.message.find(rejectedPath.toString()) != std::string::npos);
+    CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
+    CHECK(error.message.find("scalar integer DataArray") != std::string::npos);
+    CHECK(error.message.find("Select a scalar integer DataArray") != std::string::npos);
+    CHECK_FALSE(fs::exists(outputPath));
+  }
+  CHECK(dataStructure.getAllDataPaths() == initialPaths);
+  CHECK(dataStructure.getNextId() == initialNextId);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  CHECK(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath)[0] == 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath));
+  CHECK(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath)[1] == "Phase1");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
