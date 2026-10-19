@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -1620,6 +1621,7 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
                                                             Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal)
 {
   const usize numTriangles = triangles.getNumberOfTuples();
+  const usize numVertices = verts.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)
   {
     return {};
@@ -1656,6 +1658,15 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
     for(usize triangle = 0; triangle < count; ++triangle)
     {
       const usize index = triangle * 3;
+      for(usize vertex = 0; vertex < 3; ++vertex)
+      {
+        const auto vertexIndex = triangleBuffer[index + vertex];
+        if(vertexIndex >= numVertices)
+        {
+          return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.",
+                                                                                     start + triangle, vertexIndex, numVertices, numVertices)));
+        }
+      }
       const auto normal = calculateNormal(vertices.data() + triangleBuffer[index] * 3, vertices.data() + triangleBuffer[index + 1] * 3, vertices.data() + triangleBuffer[index + 2] * 3);
       normalBuffer[index] = normal[0];
       normalBuffer[index + 1] = normal[1];

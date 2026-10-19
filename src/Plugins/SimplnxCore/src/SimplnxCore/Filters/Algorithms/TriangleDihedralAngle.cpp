@@ -7,6 +7,7 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -99,6 +100,7 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
   const auto& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const auto& verts = triangleGeom.getVertices()->getDataStoreRef();
   const usize numTriangles = triangles.getNumberOfTuples();
+  const usize numVertices = verts.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)
   {
     return {};
@@ -136,6 +138,15 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
     nx::core::Vec3<float64> vecBC = {0.0f, 0.0f, 0.0f};
     for(usize triangleIndex = 0; triangleIndex < count; triangleIndex++)
     {
+      for(usize vertex = 0; vertex < 3; ++vertex)
+      {
+        const auto vertexIndex = triangleBuffer[(triangleIndex * 3) + vertex];
+        if(vertexIndex >= numVertices)
+        {
+          return MergeResults(std::move(result), MakeErrorResult(-65823, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.",
+                                                                                     start + triangleIndex, vertexIndex, numVertices, numVertices)));
+        }
+      }
       std::array<Point3Df, 3> vertCoords;
       for(usize vertex = 0; vertex < 3; ++vertex)
       {
