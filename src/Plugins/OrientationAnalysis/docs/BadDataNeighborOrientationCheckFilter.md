@@ -57,6 +57,8 @@ The cells that flipped from false (black) to true (IPF-colored) had Confidence I
 
 % Auto generated parameter table will be inserted here
 
+Cell Quaternions, Cell Phases and Cell Mask Array must each have one tuple per cell of the selected Image Geometry.
+
 ## Example Pipelines
 
 + (02) Small IN100 Full Reconstruction
