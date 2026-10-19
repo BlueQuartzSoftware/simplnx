@@ -1180,17 +1180,17 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry c
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Confidence"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
     if(testCase >= 3)
     {
-      CHECK(result.outputActions.errors()[0].code == -580093);
+      CHECK(error.code == -580093);
+      CHECK(error.message.find(fmt::format("DataPath: {}    | Tuple Count: 4", inputPaths[static_cast<usize>(testCase - 3)].toString())) != std::string::npos);
     }
     else
     {
-      const auto& error = result.outputActions.errors()[0];
       CHECK(error.code == -580098);
-      const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Confidence"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
-      const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;
-      CHECK(error.message.find(inputPaths[inputIndex].toString()) != std::string::npos);
+      CHECK(error.message.find(inputPaths[0].toString()) != std::string::npos);
       CHECK(error.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
       CHECK(error.message.find("8 cells") != std::string::npos);
       CHECK(error.message.find("TupleGeometry") != std::string::npos);

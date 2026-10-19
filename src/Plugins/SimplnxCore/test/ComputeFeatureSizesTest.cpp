@@ -1292,6 +1292,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
   // A one-dimensional X extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 5});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1304,11 +1306,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Y extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 5, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1321,11 +1329,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Z extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 5}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({5, 1, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1338,11 +1352,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A single-cell geometry is also invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1355,6 +1375,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // The optional output supports manual inspection of the feature-size arrays.

@@ -142,7 +142,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: SIMPL Backwards Compatibili
   }
 }
 
-TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count", "[SimplnxCore][ComputeShapesFilter][TupleCount]")
+TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count", "[OrientationAnalysis][ComputeShapesFilter][TupleCount]")
 {
   using Filter = ComputeShapesFilter;
   DataStructure dataStructure;
