@@ -51,9 +51,11 @@ For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrie
 
 ## Bugs found and fixed
 
-<!-- Include only confirmed defects that are fixed in the verified branch. Use the stable `<FilterName>-D<N>` deviation IDs. Do not use `SC-*` labels. State all affected released versions. Use `docs/dream3d_nx_release_dates.md` to identify the DREAM3D-NX releases. If the next release number is not known, state that the fix will be in the release after the latest affected release. If the V&V found no defects, replace this table with `None.` -->
+<!-- Include every confirmed defect that the V&V of this filter found and fixed, also when an earlier PR fixed it. Use the stable `<FilterName>-D<N>` deviation IDs. Each ID has an entry in Part 2 of `vv/deviations/<FilterName>.md`, or in Part 1 when the defect is also a difference from DREAM.3D 6.5.171. Do not use `SC-*` labels. State all affected released versions. Use `docs/dream3d_nx_release_dates.md` to identify the DREAM3D-NX releases. If the next release number is not known, state that the fix will be in the release after the latest affected release. Put a confirmed defect that is not fixed in the `Bug flags` row, not in this table. If the V&V found no defects, replace this table with `None.` -->
 
 *This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX release after v<latest affected release>.*
+
+*If an earlier PR fixed some of the defects, add:* *PR #<N> fixed `<FilterName>-D<N>`, and DREAM3D-NX v<release> contains that fix.*
 
 | Deviation | Defect | Affected released versions | Resolution in this branch |
 |-----------|--------|----------------------------|---------------------------|
@@ -114,7 +116,7 @@ When a path is intentionally not covered, write `*Not directly tested. <one-line
 
 *Or:*
 
-See `vv/deviations/<FilterName>.md` for the root cause, affected users, and recommendation for each deviation.
+See `vv/deviations/<FilterName>.md` for the root cause, affected users, and recommendation for each deviation. List only the Part 1 entries of that file here. Part 2 entries are SIMPLNX defects and SIMPLNX behavior changes; the `Bugs found and fixed` table and the `Bug flags` row refer to them.
 
 | Deviation | Observed difference |
 |-----------|---------------------|

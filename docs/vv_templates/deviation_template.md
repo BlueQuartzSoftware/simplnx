@@ -1,12 +1,14 @@
 # Deviations from DREAM3D 6.5.171: <FilterName>
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
+This file has two parts. Part 1 lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent. Part 2 lists SIMPLNX defects and SIMPLNX behavior changes that are not differences from DREAM3D 6.5.171: defects fixed in SIMPLNX, SIMPLNX defects that are not fixed, and changes to SIMPLNX output between DREAM3D-NX releases. Omit a part that has no entries.
 
-Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
+Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report and from public migration guidance. Both parts use one ID sequence. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
 ---
 
-## <FilterName>-D1
+## Part 1 — Differences from DREAM3D 6.5.171
+
+### <FilterName>-D1
 
 | Field | Value |
 |---|---|
@@ -26,7 +28,7 @@ Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report an
 
 ---
 
-## <FilterName>-D2
+### <FilterName>-D2
 
 | Field | Value |
 |---|---|
@@ -41,6 +43,30 @@ Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report an
 **Affected users:** ...
 
 **Recommendation:** ...
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### <FilterName>-D3
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `<FilterName>-D3` |
+| **Filter UUID** | `<uuid>` |
+| **Status** | active *or* superseded by `<FilterName>-D<M>` *or* retired YYYY-MM-DD |
+| **Affected released versions** | *DREAM3D-NX v<first> through v<last>. State whether DREAM3D 6.5.171 was affected.* |
+| **Fixed in** | *PR #<N>, DREAM3D-NX v<release>* *or* *this branch, the release after v<latest affected release>* *or* *Not fixed* |
+
+**Symptom:** *<one-sentence user-visible symptom>*
+
+**Root cause:** *bug | behavior change*
+*One paragraph explaining the technical mechanism. Cite source files and line ranges where helpful.*
+
+**Affected users:** *<who actually sees this>*
+
+**Recommendation:** *trust SIMPLNX | <workaround for a defect that is not fixed>*
+*One sentence justifying the recommendation.*
 
 ---
 
