@@ -120,7 +120,15 @@ struct TriangleDihedralWorkingPlan
   usize PayloadBytes = 0;
 };
 
-/** @brief Plans named buffers after the caller checks addressable vertex and face shapes. */
+/**
+ * @brief Plans coordinate and face buffers within the supplied byte limit.
+ * @param triangles Supplies the face count for connectivity and angle buffers.
+ * @param vertices Supplies the vertex count for a coordinate cache or read page.
+ * @param availableBytes Limits the combined buffer payload in bytes.
+ * @return Plan with its total payload, or zero face capacity when no face fits.
+ * @pre The caller checks three-component shapes and addressable coordinate and face sizes.
+ * @note The caller must reserve working memory and plan again from the actual grant before allocating buffers.
+ */
 TriangleDihedralWorkingPlan planDihedralWorkingMemory(const AbstractDataStore<IGeometry::MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, usize availableBytes)
 {
   const usize maximumTriangles = std::min(k_DihedralBlockTriangles, triangles.getNumberOfTuples());
