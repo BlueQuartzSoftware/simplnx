@@ -142,6 +142,8 @@ target_compile_definitions(simplnx_test
 target_compile_options(simplnx_test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
+    # Test templates can exceed MSVC's default object section limit.
+    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
 
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
