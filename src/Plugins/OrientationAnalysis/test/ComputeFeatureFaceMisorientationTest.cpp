@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -626,6 +627,39 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(::CompareFloats(faceMisorientations[35], 30.0f)); // F41 (phi1=0) <-> F43 (phi1=90)
   REQUIRE(::CompareFloats(faceMisorientations[36], 60.0f)); // F41 (phi1=0) <-> F44 (phi1=180)
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: working headroom applies only to OOC computation", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  Arguments args = BuildPhaseBoundsFixture(dataStructure);
+  Int32Array* phasesPtr = nullptr;
+  REQUIRE_NOTHROW(phasesPtr = &dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
+  (*phasesPtr)[1] = 1;
+  (*phasesPtr)[2] = 1;
+  auto& budget = CacheMemoryBudgetManager::instance();
+  REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
+  auto pressure = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes());
+  REQUIRE(pressure.sizeBytes() == budget.maximumWorkingMemoryBytes());
+  ComputeFeatureFaceMisorientationFilter filter;
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors()[0].code == -98425);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const Float32Array* anglesPtr = nullptr;
+    REQUIRE_NOTHROW(anglesPtr = &dataStructure.getDataRefAs<Float32Array>(k_BoundsMisorientationsPath));
+    REQUIRE((*anglesPtr)[0] == 0.0F);
+  }
+  CHECK(budget.reservedWorkingMemoryBytes() == pressure.sizeBytes());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
