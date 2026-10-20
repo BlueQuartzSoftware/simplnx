@@ -20,11 +20,8 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
