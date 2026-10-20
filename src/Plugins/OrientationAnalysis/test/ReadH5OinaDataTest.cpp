@@ -65,6 +65,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -1327,11 +1328,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
     scan.bands.assign(k_ScanTuples, scanIdx == 0 ? 3 : 5);
     scan.error.assign(k_ScanTuples, scanIdx == 0 ? 0 : 2);
     scan.mad.assign(k_ScanTuples, scanIdx == 0 ? 0.125F : 1.125F);
-    scan.x.assign(k_ScanTuples, scanIdx == 0 ? 0.5F : 1.5F);
+    scan.x.resize(k_ScanTuples);
     scan.y.assign(k_ScanTuples, scanIdx == 0 ? 0.25F : 1.25F);
     scan.euler.resize(k_ScanTuples * 3);
+    // Each scan is one complete row with unit X spacing and a constant Y.
     for(usize cellIdx = 0; cellIdx < k_ScanTuples; cellIdx++)
     {
+      scan.x[cellIdx] = static_cast<float32>(cellIdx) + (scanIdx == 0 ? 0.5F : 1.5F);
       scan.euler[cellIdx * 3] = scanIdx == 0 ? 0.25F : 0.75F;
       scan.euler[cellIdx * 3 + 1] = scanIdx == 0 ? 0.5F : 1.0F;
       scan.euler[cellIdx * 3 + 2] = scanIdx == 0 ? 0.1F : 0.22F;
@@ -1342,8 +1345,6 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
     scan.bands.back() = scanIdx == 0 ? 4 : 6;
     scan.error.back() = scanIdx == 0 ? 1 : 3;
     scan.mad.back() = scanIdx == 0 ? 0.25F : 1.25F;
-    scan.x.back() = scanIdx == 0 ? 0.75F : 1.75F;
-    scan.y.back() = scanIdx == 0 ? 0.5F : 1.5F;
     scan.euler.back() = scanIdx == 0 ? 0.34F : 0.35F;
   }
   const auto inputFile = WriteH5OinaFixture("read_h5oina_vv_ooc_batch_tail.h5oina", scans);
@@ -1372,8 +1373,8 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
   checkScalar(ebsdlib::H5OINA::Bands, std::array<uint8, 4>{3, 4, 5, 6});
   checkScalar(ebsdlib::H5OINA::Error, std::array<uint8, 4>{0, 1, 2, 3});
   checkScalar(ebsdlib::H5OINA::MeanAngularDeviation, std::array<float32, 4>{0.125F, 0.25F, 1.125F, 1.25F});
-  checkScalar(ebsdlib::H5OINA::X, std::array<float32, 4>{0.5F, 0.75F, 1.5F, 1.75F});
-  checkScalar(ebsdlib::H5OINA::Y, std::array<float32, 4>{0.25F, 0.5F, 1.25F, 1.5F});
+  checkScalar(ebsdlib::H5OINA::X, std::array<float32, 4>{65535.5F, 65536.5F, 1.5F, 65537.5F});
+  checkScalar(ebsdlib::H5OINA::Y, std::array<float32, 4>{0.25F, 0.25F, 1.25F, 1.25F});
 
   const auto eulerPath = k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
