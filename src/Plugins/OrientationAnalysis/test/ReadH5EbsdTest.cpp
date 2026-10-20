@@ -21,6 +21,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
