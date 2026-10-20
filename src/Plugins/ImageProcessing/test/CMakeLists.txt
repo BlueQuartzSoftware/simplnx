@@ -157,13 +157,19 @@ endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-# Prefer the preset's Python3 interpreter for the test wrapper, preserving pybind11's
-# PYTHON_EXECUTABLE when no override is provided. Discover an interpreter if neither is set.
-if(NOT "${Python3_EXECUTABLE}" STREQUAL "")
+# Prefer a discovered Python3 interpreter for the test wrapper, preserving pybind11's
+# PYTHON_EXECUTABLE otherwise. Discover an interpreter if neither is set, and skip the test if none is found.
+if(Python3_Interpreter_FOUND)
   set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
 endif()
 if("${PYTHON_EXECUTABLE}" STREQUAL "")
-  find_package(Python3 COMPONENTS Interpreter REQUIRED)
-  set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  find_package(Python3 COMPONENTS Interpreter)
+  if(Python3_Interpreter_FOUND)
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  endif()
 endif()
-AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+if(NOT "${PYTHON_EXECUTABLE}" STREQUAL "")
+  AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+else()
+  message(STATUS "Skipping PY::ImageProcessing::VerifyExamplePipelineCitations because no Python 3 interpreter was found.")
+endif()
