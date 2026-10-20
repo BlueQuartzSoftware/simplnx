@@ -1,10 +1,10 @@
 # Oracle Classes — Detailed Reference
 
-The DREAM3D-NX V&V policy (see [`vv_policy.md`](./vv_policy.md)) names five oracle classes — five ways to establish what the *correct* output of a filter should be, independently of any DREAM3D implementation. The policy's table is a quick lookup. This document is the long-form explanation: what each class actually means in practice, what kinds of bugs it catches, what its weaknesses are, and how to choose between them when designing the oracle for a new (or retroactive) V&V pass.
+The DREAM3D-NX V&V policy (see [`vv_policy.md`](./vv_policy.md)) names five oracle classes — five ways to establish what the *correct* output of a filter should be, independently of any DREAM.3D or DREAM3D-NX implementation. The policy's table is a quick lookup. This document is the long-form explanation: what each class actually means in practice, what kinds of bugs it catches, what its weaknesses are, and how to choose between them when designing the oracle for a new (or retroactive) V&V pass.
 
 ## What an oracle is, and why this matters
 
-An **oracle** is the source of truth you compare the filter against. The policy's "one ordering rule" is to pick the oracle *before* running any DREAM3D 6.5.171 comparison — because if the oracle is wrong, you will happily confirm a buggy filter. The oracle must be independent of the implementation it validates: it cannot be the filter's own output, and it cannot be the legacy DREAM3D's output (which is "trusted by reputation, not by proof").
+An **oracle** is the source of truth you compare the filter against. The policy's "one ordering rule" is to pick the oracle *before* running any DREAM.3D v6.5.171 comparison — because if the oracle is wrong, you will happily confirm a buggy filter. The oracle must be independent of the implementation it validates: it cannot be the filter's own output, and it cannot be the legacy DREAM.3D's output (which is "trusted by reputation, not by proof").
 
 The five classes differ in **what they trust** (math, a library, a paper, properties, or a person) and **how durable** that trust is over time. The policy ranks them by trust durability, and prefers oracles that are stable, reproducible, and external to the code being tested.
 
@@ -217,9 +217,9 @@ until you find one.
 A common trap is to mistake one of the following for an oracle. None of these qualify:
 
 - **The filter's own output**, captured on a previous date and saved as a "golden" exemplar. This is circular: any bug present at capture time becomes the new "correct" answer, and the test then confirms the bug forever.
-- **The legacy DREAM3D 6.5.171's output.** Treated by reputation, not by proof. Useful for diff explanation (see [`vv_policy.md`](./vv_policy.md)), not for correctness.
+- **The legacy DREAM.3D v6.5.171's output.** Treated by reputation, not by proof. Useful for diff explanation (see [`vv_policy.md`](./vv_policy.md)), not for correctness.
 - **Another simplnx filter's output**, when both filters might share the same bug (e.g., both call into a buggy shared utility).
-- **A previous version of the same filter** ("my SIMPL implementation works, so I'll just diff against that"). Identical to the legacy DREAM3D trap.
+- **A previous version of the same filter** ("my SIMPL implementation works, so I'll just diff against that"). Identical to the legacy DREAM.3D trap.
 
 If the existing exemplar in the data archive was generated from one of the above, it should be regenerated from a real oracle as part of the V&V pass — this is the "circular oracle" pattern: a golden file captured from the filter's own (or legacy's) output, which then pins any bug present at capture time as the new "correct" answer.
 

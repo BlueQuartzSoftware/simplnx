@@ -1,6 +1,6 @@
 # DREAM3D-NX Filter V&V Policy (v2)
 
-This is the short-form policy for filter Verification & Validation (V&V) in DREAM3D-NX. It exists to support MTR SBIR deliverables and the public DREAM3D → DREAM3D-NX migration guide.
+This is the short-form policy for filter Verification & Validation (V&V) in DREAM3D-NX. It exists to support MTR SBIR deliverables and the public DREAM.3D → DREAM3D-NX migration guide.
 
 Read this once. The deliverable is a one-page report per filter; the working details live in the templates and gates docs alongside this file.
 
@@ -8,13 +8,13 @@ Read this once. The deliverable is a one-page report per filter; the working det
 
 ## Why
 
-DREAM3D 6.5.171 is trusted by reputation, not by proof. It has been in the field long enough that users rely on its numbers, but it was never subjected to V&V rigor. We therefore cannot treat "matches 6.5.171" as a correctness check — it is a **diff-explanation** check.
+DREAM.3D v6.5.171 is trusted by reputation, not by proof. It has been in the field long enough that users rely on its numbers, but it was never subjected to V&V rigor. We therefore cannot treat "matches 6.5.171" as a correctness check — it is a **diff-explanation** check.
 
 Each filter must first be shown correct **independently** of 6.5.171 against an oracle, and only then diffed against legacy to produce user-facing migration guidance.
 
 ## The one ordering rule
 
-> **Pick the oracle before running any DREAM3D 6.5.171 comparison.**
+> **Pick the oracle before running any DREAM.3D v6.5.171 comparison.**
 
 Everything else — code-path enumeration, test inventory, exemplar provenance, algorithm review, documentation — can be worked in any order.
 

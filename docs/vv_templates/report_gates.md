@@ -2,13 +2,14 @@
 
 A section of `src/Plugins/<P>/vv/<FilterName>.md` is "done" when all its gates pass. Sections may be worked in any order.
 
-**The only ordering rule:** the **Oracle** is chosen *before* any DREAM3D 6.5.171 comparison is run. 6.5.171 is never the source of truth — it is the *thing being compared against* the independently-established oracle.
+**The only ordering rule:** the **Oracle** is chosen *before* any DREAM.3D v6.5.171 comparison is run. 6.5.171 is never the source of truth — it is the *thing being compared against* the independently-established oracle.
 
 ---
 
 ## Header table
 
-- [ ] Plugin, SIMPLNX UUID, legacy DREAM3D equivalent (or "None") filled in
+- [ ] Plugin, SIMPLNX UUID, SIMPLNX Human Name, and legacy DREAM.3D v6.5.171 equivalent (or "None") filled in
+- [ ] No header rows other than the template rows; nothing after the Status value
 - [ ] Status reflects current state: `DRAFT` | `READY FOR REVIEW` | `COMPLETE`
 - [ ] Verified-commit field present (filled in at SBIR deliverable assembly)
 - [ ] Sign-off line has named engineer(s) and date at sign-off
@@ -24,7 +25,7 @@ The dashboard a reviewer reads first. Lets a reviewer decide in 30 seconds wheth
 - [ ] **Code paths enumerated** row states `N of M exercised` — agrees with the long-form `## Code path coverage` count
 - [ ] **Tests today** row gives the test-case count and a one-phrase shape of coverage (parameter sweep, positive/negative/conversion, etc.)
 - [ ] **Exemplar archive** row names the archive and flags retired/replaced archives (cross-reference the long-form `## Exemplar archive` SHA512)
-- [ ] **Legacy comparison** row is `Run` / `Not run` plus a one-sentence headline. The comparison is always framed as SIMPLNX vs DREAM3D 6.5.171. When a deviation's root cause was proven by surgically patching a local build of the legacy source, describe it exactly that way — the report must NOT name any other legacy version number (the patched build is internal proof tooling, not a shipping comparison target). "Not run" must include a brief reason ("design-by-inspection — pure port", "legacy binary unavailable", "deferred to Phase 9")
+- [ ] **Legacy comparison** row is `Run` / `Not run` plus a one-sentence headline. The comparison is always framed as SIMPLNX vs DREAM.3D v6.5.171. When a deviation's root cause was proven by surgically patching a local build of the legacy source, describe it exactly that way — the report must NOT name any other legacy version number (the patched build is internal proof tooling, not a shipping comparison target). "Not run" must include a brief reason ("design-by-inspection — pure port", "legacy binary unavailable", "deferred to Phase 9")
 - [ ] **Defect hunt** row gives the number of confirmed defects, `M of M modes value-asserted`, and `K of N mutants killed` — agrees with the long-form `## Defect hunt` section
 - [ ] **Bug flags** row is `None` or a list of deviation IDs flagged as suspected bugs (not all deviations are bugs; only those classified as bug under the root-cause taxonomy)
 - [ ] **V&V phase** row lists which phases of the workflow are complete and what is outstanding — drives the Status field in the header table
@@ -89,7 +90,7 @@ See [`defect_hunt.md`](./defect_hunt.md).
 
 - [ ] Every confirmed defect that the V&V found and fixed is listed, also when an earlier PR fixed it
 - [ ] Each row uses a stable `<FilterName>-D<N>` ID that has an entry in `vv/deviations/<FilterName>.md`
-- [ ] Affected released versions come from `docs/dream3d_nx_release_dates.md`, and state whether DREAM.3D 6.5.171 was affected
+- [ ] Affected released versions come from `docs/dream3d_nx_release_dates.md`, and state whether DREAM.3D v6.5.171 was affected
 - [ ] The lead sentence says which release contains each fix: the release after the latest affected release for this branch, or the named release for an earlier PR
 - [ ] A confirmed defect that is not fixed is in the `Bug flags` row, not in this table
 - [ ] `None.` when the V&V found no defects
@@ -113,7 +114,7 @@ See [`defect_hunt.md`](./defect_hunt.md).
   - what oracle output was canonical
 - [ ] If the archive was regenerated during V&V to fix a circular-oracle situation → documented in the sidecar
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
 - [ ] Comparison was run on at least one fixture (named in the report)
 - [ ] If no deviations: a one-line confirmation that 6.5.171 and SIMPLNX outputs matched within tolerance
