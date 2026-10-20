@@ -31,7 +31,7 @@ namespace nx::core
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -252;
-constexpr int32 k_FeatureIdsTupleCountMismatch = -55571;
+constexpr int32 k_FeatureIdsTupleCountMismatch = -59571;
 
 } // namespace
 
@@ -132,7 +132,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   if(featureIdsPtr == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featureIdsPath);
-    return MakePreflightErrorResult(-55574, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+    return MakePreflightErrorResult(-59574, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
                                                         featureIdsPath.toString(), selectedObject.getTypeName()));
   }
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -176,13 +176,13 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   if(dataStructure.getDataAs<Int32Array>(numNeighborsPath) == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(numNeighborsPath);
-    return MakePreflightErrorResult(-55575, fmt::format("The selected Number of Neighbors object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+    return MakePreflightErrorResult(-59575, fmt::format("The selected Number of Neighbors object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
                                                         numNeighborsPath.toString(), selectedObject.getTypeName()));
   }
   if(applyToSinglePhase && dataStructure.getDataAs<Int32Array>(featurePhasesPath) == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featurePhasesPath);
-    return MakePreflightErrorResult(-55576, fmt::format("The selected Feature Phases object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+    return MakePreflightErrorResult(-59576, fmt::format("The selected Feature Phases object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
                                                         featurePhasesPath.toString(), selectedObject.getTypeName()));
   }
 

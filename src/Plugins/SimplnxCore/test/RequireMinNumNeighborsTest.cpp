@@ -712,7 +712,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().size() == 1);
     const auto& error = preflightResult.outputActions.errors()[0];
-    CHECK(error.code == -55571);
+    CHECK(error.code == -59571);
     CHECK(error.message.find(featureIdsPath.toString()) != std::string::npos);
     CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
     CHECK(error.message.find(fmt::format("has {} tuples", tupleCount)) != std::string::npos);
@@ -759,7 +759,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
   CAPTURE(inputIndex, useStringArray);
   const std::array<StringLiteral, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
                                                   RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key};
-  constexpr std::array<int32, 3> expectedCodes = {-55574, -55575, -55576};
+  constexpr std::array<int32, 3> expectedCodes = {-59574, -59575, -59576};
   DataStructure dataStructure;
   DiscriminatingFixture::PopulateDataStructure(dataStructure);
   Arguments args = createArrayKindValidationArguments();
@@ -868,7 +868,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede featu
   REQUIRE_NOTHROW(preflightResult = RequireMinNumNeighborsFilter().preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  CHECK(preflightResult.outputActions.errors().front().code == (cellMismatch ? -55571 : -252));
+  CHECK(preflightResult.outputActions.errors().front().code == (cellMismatch ? -59571 : -252));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

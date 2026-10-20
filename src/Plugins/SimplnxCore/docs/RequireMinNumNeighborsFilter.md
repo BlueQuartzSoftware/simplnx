@@ -47,7 +47,7 @@ This **Filter** operates in place and does not create a new geometry or output a
 ## Validation and Failure Conditions
 
 - Preflight fails with `-55575` when *Cell Feature Ids* is not in the selected **Image Geometry**'s Cell Attribute Matrix.
-- Preflight fails with `-55571` when *Cell Feature Ids* does not contain exactly one tuple per **Image Geometry** cell.
+- Preflight fails with `-59571` when *Cell Feature Ids* does not contain exactly one tuple per **Image Geometry** cell.
 - Preflight fails with `-55573` when an array in *Cell Arrays to Ignore* is not in that Cell Attribute Matrix.
 - Preflight fails with `-55574` when the parent of *Number of Neighbors* is not an Attribute Matrix directly under the selected **Image Geometry**, or is its Cell Attribute Matrix.
 - Preflight fails with `-252` when *Number of Neighbors* and the enabled *Feature Phases* array do not have matching tuple counts.
