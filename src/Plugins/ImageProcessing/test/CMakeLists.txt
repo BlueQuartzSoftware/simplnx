@@ -157,14 +157,11 @@ endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-# Prefer a discovered Python3 interpreter (find_package honors a preset Python3_EXECUTABLE) for the test wrapper.
-# Keep pybind11's PYTHON_EXECUTABLE otherwise, and skip the test if no interpreter is found.
-find_package(Python3 COMPONENTS Interpreter)
-if(Python3_Interpreter_FOUND)
+# The citation check downloads DOI and publisher metadata over HTTPS. Windows Python builds fail
+# those requests too often to give a reliable result, so the test runs only on Linux.
+if(LINUX)
+  # Set the PYTHON_EXECUTABLE variable as that will get used when the stub shell script or batch file is created.
+  # The `Python3_EXECUTABLE` is usually set in the CMakePresets.json file
   set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-endif()
-if(NOT "${PYTHON_EXECUTABLE}" STREQUAL "")
   AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-else()
-  message(STATUS "Skipping PY::ImageProcessing::VerifyExamplePipelineCitations because no Python 3 interpreter was found.")
 endif()
