@@ -867,6 +867,37 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
       REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
     }
   }
+
+  SECTION("overflowing element count preserves the original state")
+  {
+    DataStore<int32> dataStore(ShapeType{4}, ShapeType{2}, 7);
+    const std::array<int32, 8> expectedValues = {10, 20, 30, 40, 50, 60, 70, 80};
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      dataStore[valueIndex] = expectedValues[valueIndex];
+    }
+    const int32* const originalDataPtr = dataStore.data();
+    const ShapeType originalTupleShape = dataStore.getTupleShape();
+    const ShapeType originalComponentShape = dataStore.getComponentShape();
+    const usize originalTupleCount = dataStore.getNumberOfTuples();
+    const usize originalComponentCount = dataStore.getNumberOfComponents();
+    const usize originalSize = dataStore.getSize();
+    // The tuple count fits usize, but multiplying by two components reaches the element-count overflow branch.
+    const Result<> resizeResult = dataStore.resizeTuples(ShapeType{(std::numeric_limits<usize>::max)() / 2 + 1});
+    REQUIRE(resizeResult.invalid());
+    REQUIRE_FALSE(resizeResult.errors().empty());
+    REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(dataStore.data() == originalDataPtr);
+    REQUIRE(dataStore.getTupleShape() == originalTupleShape);
+    REQUIRE(dataStore.getComponentShape() == originalComponentShape);
+    REQUIRE(dataStore.getNumberOfTuples() == originalTupleCount);
+    REQUIRE(dataStore.getNumberOfComponents() == originalComponentCount);
+    REQUIRE(dataStore.getSize() == originalSize);
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
+    }
+  }
 }
 
 TEST_CASE("DataStore caller-owned extent buffers preserve values and validate before writing", "[simplnx][DataStore]")

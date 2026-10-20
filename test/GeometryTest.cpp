@@ -392,8 +392,7 @@ TEST_CASE("CreateRectGridGeometryAction creates bounds in preflight and execute"
   const CreateRectGridGeometryAction action(path, xTuples, yTuples, zTuples, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
 
   const Result<> result = action.apply(dataStructure, mode);
-  // A valid Result has no errors; errors() is only accessible on an invalid Result.
-  REQUIRE(result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
   const auto* geom = dataStructure.getDataAs<RectGridGeom>(path);
   REQUIRE(geom != nullptr);
   REQUIRE(geom->getDimensions() == SizeVec3{xTuples - 1, yTuples - 1, zTuples - 1});
@@ -415,6 +414,20 @@ TEST_CASE("CreateRectGridGeometryAction creates bounds in preflight and execute"
   REQUIRE(cellData != nullptr);
   REQUIRE(geom->getCellData() == cellData);
   REQUIRE(cellData->getShape() == ShapeType{zTuples - 1, yTuples - 1, xTuples - 1});
+}
+
+TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be created", "[simplnx][CreateRectGridGeometryAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  INFO("mode = " << (mode == IDataAction::Mode::Preflight ? "Preflight" : "Execute"));
+  DataStructure dataStructure;
+  const DataPath path({"RectGrid"});
+  const CreateRectGridGeometryAction action(path, 4, 5, 6, "Cell Data", "Cell Data", "Y Bounds", "Z Bounds");
+
+  const Result<> result = action.apply(dataStructure, mode);
+  REQUIRE(result.invalid());
+  REQUIRE_FALSE(result.errors().empty());
+  REQUIRE(dataStructure.getDataAs<Float32Array>(path.createChildPath("Cell Data")) == nullptr);
 }
 
 TEST_CASE("RectGridGeomTest")
