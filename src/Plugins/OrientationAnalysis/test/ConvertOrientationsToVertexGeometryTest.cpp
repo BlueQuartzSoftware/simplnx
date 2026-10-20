@@ -7,7 +7,6 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -65,7 +64,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-      CHECK(dataStructure.getDataRefAs<VertexGeom>(k_OutputGeometry).getUnits() == IGeometry::LengthUnit::Unspecified);
+      const auto* geometry = dataStructure.getDataAs<VertexGeom>(k_OutputGeometry);
+      REQUIRE(geometry != nullptr);
+      CHECK(geometry->getUnits() == IGeometry::LengthUnit::Unspecified);
 
       // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -128,55 +129,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry: Phase Index
     args.insertOrAssign(ConvertOrientationsToVertexGeometryFilter::k_ConvertToFundamentalZone_Key, std::make_any<bool>(false));
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    CHECK(dataStructure.getDataRefAs<VertexGeom>(DataPath({"Bounds Vertices"})).getUnits() == IGeometry::LengthUnit::Unspecified);
+    const DataPath k_OutputGeometryPath({"Bounds Vertices"});
+    const auto* geometry = dataStructure.getDataAs<VertexGeom>(k_OutputGeometryPath);
+    REQUIRE(geometry != nullptr);
+    CHECK(geometry->getUnits() == IGeometry::LengthUnit::Unspecified);
   }
-}
-
-TEST_CASE("CreateVertexGeometryAction: units and cloning", "[OrientationAnalysis][CreateVertexGeometryAction]")
-{
-  const auto handling = GENERATE(ArrayHandlingType::Create, ArrayHandlingType::Copy, ArrayHandlingType::Move, ArrayHandlingType::Reference);
-  const auto units = GENERATE(IGeometry::LengthUnit::Meter, IGeometry::LengthUnit::Unspecified, IGeometry::LengthUnit::Millimeter);
-  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  const bool cloneAction = GENERATE(false, true);
-  CAPTURE(handling, units, mode, cloneAction);
-
-  DataStructure dataStructure;
-  const DataPath k_GeometryPath({"Vertices"});
-  const DataPath k_InputPath({"Input", "Coordinates"});
-  if(handling != ArrayHandlingType::Create)
-  {
-    REQUIRE(DataGroup::Create(dataStructure, "Input") != nullptr);
-    const auto result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {2}, {3}, k_InputPath, IDataAction::Mode::Execute);
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-  }
-
-  std::unique_ptr<CreateVertexGeometryAction> action;
-  if(handling == ArrayHandlingType::Create)
-  {
-    if(units == IGeometry::LengthUnit::Meter)
-    {
-      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, 2, "Vertex Data", "Coordinates");
-    }
-    else
-    {
-      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, 2, "Vertex Data", "Coordinates", units);
-    }
-  }
-  else
-  {
-    if(units == IGeometry::LengthUnit::Meter)
-    {
-      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, "Vertex Data", handling);
-    }
-    else
-    {
-      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, "Vertex Data", handling, units);
-    }
-  }
-  CHECK(action->units() == units);
-  const auto result = cloneAction ? action->clone()->apply(dataStructure, mode) : action->apply(dataStructure, mode);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const auto& geometry = dataStructure.getDataRefAs<VertexGeom>(k_GeometryPath);
-  CHECK(geometry.getUnits() == units);
-  CHECK(geometry.getNumberOfVertices() == 2);
 }

@@ -1,21 +1,31 @@
 #include "GeometryTestUtilities.hpp"
 
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <memory>
+#include <string>
 
 using namespace nx::core;
 
@@ -426,6 +436,109 @@ TEST_CASE("VertexGeomTest")
     REQUIRE(geom->getTypeName() == "VertexGeom");
   }
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVertexGeometryAction]")
+{
+  const auto handling = GENERATE(ArrayHandlingType::Create, ArrayHandlingType::Copy, ArrayHandlingType::Move, ArrayHandlingType::Reference);
+  const auto units = GENERATE(IGeometry::LengthUnit::Meter, IGeometry::LengthUnit::Unspecified, IGeometry::LengthUnit::Millimeter);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool cloneAction = GENERATE(false, true);
+  CAPTURE(handling, units, mode, cloneAction);
+
+  DataStructure dataStructure;
+  const DataPath k_GeometryPath({"Vertices"});
+  const std::string k_InputGroupName = "Input";
+  const std::string k_CoordinatesName = "Coordinates";
+  const std::string k_VertexDataName = "Vertex Data";
+  constexpr usize k_NumVertices = 2;
+  constexpr usize k_NumComponents = 3;
+  const DataPath k_InputPath({k_InputGroupName, k_CoordinatesName});
+  if(handling != ArrayHandlingType::Create)
+  {
+    REQUIRE(DataGroup::Create(dataStructure, k_InputGroupName) != nullptr);
+    const auto result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {k_NumVertices}, {k_NumComponents}, k_InputPath, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  std::unique_ptr<CreateVertexGeometryAction> action;
+  if(handling == ArrayHandlingType::Create)
+  {
+    if(units == IGeometry::LengthUnit::Meter)
+    {
+      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_NumVertices, k_VertexDataName, k_CoordinatesName);
+    }
+    else
+    {
+      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_NumVertices, k_VertexDataName, k_CoordinatesName, units);
+    }
+  }
+  else
+  {
+    if(units == IGeometry::LengthUnit::Meter)
+    {
+      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, k_VertexDataName, handling);
+    }
+    else
+    {
+      action = std::make_unique<CreateVertexGeometryAction>(k_GeometryPath, k_InputPath, k_VertexDataName, handling, units);
+    }
+  }
+  CHECK(action->units() == units);
+  IDataAction::UniquePointer clonedAction;
+  if(cloneAction)
+  {
+    clonedAction = action->clone();
+    REQUIRE(clonedAction != nullptr);
+    const auto* vertexAction = dynamic_cast<const CreateVertexGeometryAction*>(clonedAction.get());
+    REQUIRE(vertexAction != nullptr);
+    CHECK(vertexAction->units() == units);
+  }
+  const auto result = cloneAction ? clonedAction->apply(dataStructure, mode) : action->apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* geometry = dataStructure.getDataAs<VertexGeom>(k_GeometryPath);
+  REQUIRE(geometry != nullptr);
+  CHECK(geometry->getUnits() == units);
+  CHECK(geometry->getNumberOfVertices() == k_NumVertices);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("CreateImageGeometryAction: units and cloning", "[simplnx][CreateImageGeometryAction]")
+{
+  const auto units = GENERATE(IGeometry::LengthUnit::Unspecified, IGeometry::LengthUnit::Millimeter, IGeometry::LengthUnit::Micrometer);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  CAPTURE(units, mode);
+
+  const DataPath k_GeometryPath({"Image"});
+  const CreateImageGeometryAction::DimensionType k_Dimensions = {2, 3, 4};
+  const CreateImageGeometryAction::OriginType k_Origin = {0.0F, 0.0F, 0.0F};
+  const CreateImageGeometryAction::SpacingType k_Spacing = {1.0F, 1.0F, 1.0F};
+  const std::string k_CellDataName = "Cell Data";
+
+  std::unique_ptr<CreateImageGeometryAction> action;
+  if(units == IGeometry::LengthUnit::Micrometer)
+  {
+    action = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName);
+  }
+  else
+  {
+    action = std::make_unique<CreateImageGeometryAction>(k_GeometryPath, k_Dimensions, k_Origin, k_Spacing, k_CellDataName, units);
+  }
+  CHECK(action->units() == units);
+
+  const auto clonedAction = action->clone();
+  REQUIRE(clonedAction != nullptr);
+  const auto* imageAction = dynamic_cast<const CreateImageGeometryAction*>(clonedAction.get());
+  REQUIRE(imageAction != nullptr);
+  CHECK(imageAction->units() == units);
+
+  DataStructure dataStructure;
+  const auto result = clonedAction->apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* geometry = dataStructure.getDataAs<ImageGeom>(k_GeometryPath);
+  REQUIRE(geometry != nullptr);
+  CHECK(geometry->getUnits() == units);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
