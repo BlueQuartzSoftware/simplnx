@@ -429,7 +429,7 @@ struct IdentifySampleSliceBySliceFunctor
     auto sliceBuffer = std::make_unique<T[]>(sliceSize);
 
     ThrottledMessageHandler progressThrottle(messageHandler);
-    progressThrottle.reset(fixedDim, "Identifying Sample Slices");
+    progressThrottle.reset(static_cast<usize>(fixedDim), "Identifying Sample Slices");
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx)
     {
       if(shouldCancel)
@@ -508,10 +508,7 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
-      if(!shouldCancel)
-      {
-        progressThrottle.updateCount(fixedIdx + 1);
-      }
+      progressThrottle.updateCount(static_cast<usize>(fixedIdx) + 1);
     }
     return {};
   }

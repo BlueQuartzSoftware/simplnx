@@ -81,7 +81,7 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
 } // namespace
 
 // -----------------------------------------------------------------------------
-WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel,
+WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& /*mesgHandler*/, const std::atomic_bool& shouldCancel,
                                                        WriteNodesAndElementsFilesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)

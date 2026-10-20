@@ -893,7 +893,7 @@ Result<> FillBadDataCCL::operator()()
   }
   m_MessageHandler.sendProgressCount("Filling Bad Data", 1, 3, "Classifying region sizes");
 
-  // Phase 2: Relabeling based on region size classification
+  // Progress unit 2 of 3 (phaseThreeRelabeling): relabel by region size classification.
   // Reads provisional labels from featureIds store (written during Phase 1)
   auto phaseThreeResult = phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, startLabel, nextLabel, *equivalencesResult.value(), maxPhase);
   if(phaseThreeResult.invalid())
@@ -907,7 +907,7 @@ Result<> FillBadDataCCL::operator()()
   }
   m_MessageHandler.sendProgressCount("Filling Bad Data", 2, 3, "Filling small defects");
 
-  // Phase 3: Iterative morphological fill
+  // Progress unit 3 of 3 (phaseFourIterativeFill): iterative morphological fill.
   auto result = phaseFourIterativeFill(featureIdsStore, dims, numFeatures, allowInMemoryFallback);
   if(result.valid() && !m_ShouldCancel)
   {

@@ -22,6 +22,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -42,6 +43,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <type_traits>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -270,6 +272,16 @@ const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
  */
 namespace UnitTest
 {
+/**
+ * @brief Creates a message handler that appends every message to a vector.
+ * @param messages Receives each message in the order it was sent. Must outlive the handler.
+ * @return Handler that records messages for later inspection by a test.
+ */
+inline IFilter::MessageHandler RecordMessages(std::vector<IFilter::Message>& messages)
+{
+  return IFilter::MessageHandler{[&messages](const IFilter::Message& message) { messages.push_back(message); }};
+}
+
 /**
  * @brief Verifies that each numeric creation action requests automatic storage.
  * @param outputActions Contains the preflight actions to inspect.

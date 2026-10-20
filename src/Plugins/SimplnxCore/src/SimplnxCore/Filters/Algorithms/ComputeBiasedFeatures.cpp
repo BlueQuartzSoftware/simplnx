@@ -187,7 +187,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     }
     if(m_InputValues->CalcByPhase)
     {
-      m_MessageHandler.sendProgressCount("Computing Biased Features Phases", iter, numPhases);
+      m_MessageHandler.sendProgressCount("Computing Biased Features Phases", static_cast<usize>(iter), static_cast<usize>(numPhases));
     }
   }
 

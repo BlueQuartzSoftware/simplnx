@@ -53,11 +53,6 @@ DataStructure CreateIntegrationTypeTestDataStructure()
   return dataStructure;
 }
 
-IFilter::MessageHandler RecordMessages(std::vector<IFilter::Message>& messages)
-{
-  return IFilter::MessageHandler{[&messages](const IFilter::Message& message) { messages.push_back(message); }};
-}
-
 std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
@@ -408,7 +403,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   std::vector<IFilter::Message> messages;
-  const auto handler = RecordMessages(messages);
+  const auto handler = UnitTest::RecordMessages(messages);
   auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -452,12 +447,19 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
   CHECK(completedFiles == boundaries.size());
   CHECK(lastProgress[0] == 100);
   CHECK(lastProgress[1] == 100);
-  // AbaqusElementSets::write passes the throttle only to its resident grouping path; the OOC writers report no grouping progress.
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore || lastProgress[2] != -1)
+  // AbaqusElementSets::write passes the throttle only to its resident grouping path. The external-sort
+  // and repeated-scan writers used by the OOC algorithm report no "Grouping Element Sets" progress.
+  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     CHECK(lastProgress[2] == 100);
   }
+  else
+  {
+    CHECK(lastProgress[2] == -1);
+  }
   CHECK(lastOverallProgress == 100);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusHexahedronFilter][BackwardsCompatibility]")

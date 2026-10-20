@@ -784,7 +784,7 @@ struct IdentifySampleSliceCCLFunctor
     auto zBuffer = std::make_unique<T[]>(zSliceSize);
 
     ThrottledMessageHandler progressThrottle(messageHandler);
-    progressThrottle.reset(fixedDim, "Identifying Sample Slices");
+    progressThrottle.reset(static_cast<usize>(fixedDim), "Identifying Sample Slices");
     for(int64 fixed = 0; fixed < fixedDim; fixed++)
     {
       if(shouldCancel)
@@ -876,7 +876,7 @@ struct IdentifySampleSliceCCLFunctor
           }
         }
       }
-      progressThrottle.updateCount(fixed + 1);
+      progressThrottle.updateCount(static_cast<usize>(fixed) + 1);
     }
     return {};
   }

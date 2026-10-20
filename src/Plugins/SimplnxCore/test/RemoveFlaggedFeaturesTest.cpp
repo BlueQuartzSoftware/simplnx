@@ -83,11 +83,6 @@ constexpr int32 k_ParentNotAttributeMatrixError = -9892;
 constexpr int32 k_NeighborListRemovalWarning = -5558;
 constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
 
-IFilter::MessageHandler RecordMessages(std::vector<IFilter::Message>& messages)
-{
-  return IFilter::MessageHandler{[&messages](const IFilter::Message& message) { messages.push_back(message); }};
-}
-
 struct FixtureSpec
 {
   SizeVec3 dims;                 // (x, y, z)
@@ -719,7 +714,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress complet
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   std::vector<IFilter::Message> messages;
-  const auto handler = RecordMessages(messages);
+  const auto handler = UnitTest::RecordMessages(messages);
   auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -740,6 +735,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress complet
   CHECK(lastProgress == 100);
   CHECK(sawSuccess);
   CHECK(ReadInt32(dataStructure, k_NewFeatureIdsPath) == std::vector<int32>{3, 3});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does not complete after cancellation", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
@@ -758,7 +755,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
 
   std::atomic_bool cancel{false};
   std::vector<IFilter::Message> messages;
-  const auto recordingHandler = RecordMessages(messages);
+  const auto recordingHandler = UnitTest::RecordMessages(messages);
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
     recordingHandler.sendMessage(message);
     // reset() opens the throttle gate, so this callback deterministically precedes the last crop's preflight.
@@ -783,6 +780,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
     }
     CHECK(message.message != "All Features Successfully Extracted");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract crops the bounding box of each flagged feature", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")

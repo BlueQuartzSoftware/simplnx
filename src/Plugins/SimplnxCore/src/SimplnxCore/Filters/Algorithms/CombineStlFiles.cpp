@@ -107,6 +107,7 @@ Result<> CombineStlFiles::operator()()
   auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
 
   int32 currentIndex = 1;
+  m_MessageHandler.sendProgressCount("Reading STL Files", 0, paths.size());
   for(const auto& filePath : paths)
   {
     std::string stlFilePath = filePath.string();
@@ -127,7 +128,7 @@ Result<> CombineStlFiles::operator()()
     {
       return executeResult.result;
     }
-    m_MessageHandler.sendProgressCount("Reading STL Files", currentIndex, paths.size(), stlFilePath);
+    m_MessageHandler.sendProgressCount("Reading STL Files", static_cast<usize>(currentIndex), paths.size(), stlFilePath);
     currentIndex++;
   }
 
