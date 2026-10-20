@@ -157,16 +157,11 @@ endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-# Prefer a discovered Python3 interpreter for the test wrapper, preserving pybind11's
-# PYTHON_EXECUTABLE otherwise. Discover an interpreter if neither is set, and skip the test if none is found.
+# Prefer a discovered Python3 interpreter (find_package honors a preset Python3_EXECUTABLE) for the test wrapper.
+# Keep pybind11's PYTHON_EXECUTABLE otherwise, and skip the test if no interpreter is found.
+find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND)
   set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-endif()
-if("${PYTHON_EXECUTABLE}" STREQUAL "")
-  find_package(Python3 COMPONENTS Interpreter)
-  if(Python3_Interpreter_FOUND)
-    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-  endif()
 endif()
 if(NOT "${PYTHON_EXECUTABLE}" STREQUAL "")
   AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
