@@ -1,112 +1,147 @@
-# V&V Report: ComputeFeatureSizes
+# V&V Report: ComputeFeatureSizesFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
 | SIMPLNX UUID | `c666ee17-ca58-4969-80d0-819986c72485` |
-| DREAM3D 6.5.171 equivalent | `FindSizes` — UUID `656f144c-a120-5c3b-bee5-06deab438588` |
-| Verified commit | *pending* |
+| SIMPLNX Human Name | Compute Feature Sizes |
+| DREAM.3D v6.5.171 equivalent | `FindSizes` (Statistics plugin, UUID `656f144c-a120-5c3b-bee5-06deab438588`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
 | Sign-off | Nathan Young, June 10th, 2026. Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-07-28. |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm relationship | **Port** of both `FindSizes::findSizesImage()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
-| Oracle | **Class 1 (Analytical)** — all test data inlined, hand-derived |
-| Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |
-| Tests | **10 TEST_CASEs** — 9 pass; 1 (`[!shouldfail]`) fails-as-expected, pinning the open 2D divergence |
-| External archive | None |
-| Deviations | **2 active**, both A/B-verified 2026-06-27: `ComputeFeatureSizes-D1` (float64+Kahan vs naive summation → `Volumes`), `ComputeFeatureSizes-D2` (float64 `std::cbrt` vs float32 `powf` → `EquivalentDiameters`) — see deviations file |
-| Open bugs | **1 open, pending design decision** (`Bug-1`): the 2D area formula multiplies all 3 spacings (PR #1590 slab convention, consistent with `ImageGeom::findElementSizes`) and diverges from legacy 6.5.171 (2 non-flat spacings) when the flat dimension's spacing ≠ 1. A legacy-matching fix was applied then deliberately reverted pending a team decision on the NX-wide 2D convention (see PR #1638 discussion and the deviations file's OPEN entry). |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Port of `FindSizes` in DREAM.3D v6.5.171, with changes to precision, parallel execution, and 2D size calculation. |
+| Oracle (confirmed) | Class 1 analytical counts, areas, volumes, and equivalent diameters. Three base fixtures and three output-block variants encode expectations in `test/ComputeFeatureSizesTest.cpp`. All registered tests pass in CI at `01809c236`; the flat-spacing case is an expected failure (`ComputeFeatureSizes-D3`). |
+| Code paths enumerated | 24 of 44 paths have test assertions. Gaps include input read errors, count overflow, and several cancellation paths. |
+| Tests today | 16 test cases: 14 visible and 2 hidden OOC cases. Coverage includes analytical values, output writes, invalid inputs, archive regression, and SIMPL conversion. |
+| Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies the Small IN100 input and three regression arrays. Analytical fixtures are constructed in C++. |
+| Legacy comparison | Source comparison with DREAM.3D v6.5.171 confirms D1–D3. Runtime comparison artifacts are not available. |
+| Bug flags | `ComputeFeatureSizes-D3` |
+| V&V phase | Complete. `ComputeFeatureSizes-D3` remains open; its regression test is marked as an expected failure. |
 
 ## Summary
 
-`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — are documented below. A 2D-area divergence from legacy (`Bug-1`: the flat dimension's spacing is included in the per-voxel area, per the PR #1590 slab convention) was found during this V&V; a legacy-matching fix was applied and then deliberately reverted because it conflicted with the NX-wide 2D standardization from PR #1590 without a team decision. The divergence remains **open** and is pinned by a dedicated `[!shouldfail]` characterization test with a non-unit flat-dimension spacing; see the deviations file's OPEN entry for the two resolution options.
+`ComputeFeatureSizesFilter` calculates feature voxel counts, areas or volumes, and equivalent diameters for Image and RectGrid geometries. Class 1 fixtures check the formulas, and the Small IN100 archive supplies a regression comparison. The V&V fixed two implementation defects; the 2D flat-spacing defect is not fixed.
 
 ## Algorithm Relationship
 
-**Port** of `FindSizes` (both ImageGeom and RectGridGeom paths).
+*Classification:* Port
 
-- **ImageGeom** (`ProcessImageGeom`): voxel count × voxel volume/area → ESD/ECD. Port of `FindSizes::findSizesImage()` (legacy `execute()` dispatches to it via `findSizes()`). Formulas: `ESD = 2·∛(V / (4π/3))`; `ECD = 2·√(A / π)`.
-- **RectGridGeom** (`ProcessRectGridGeom`): per-cell `ΔxΔyΔz` sizes, summed per feature. Port of `FindSizes::findSizesUnstructured()`. SIMPLNX departs in precision: float32 element sizes are promoted to float64 and Kahan summation is applied at two levels (per-thread and post-reduction). See deviation `D1`.
-
-Port-time additions not in DREAM3D 6.5.171:
-- **Parallel execution** — `ParallelDataAlgorithm` + `tbb::combinable`; legacy was serial.
-- **Execute-time FeatureId bounds check** — `ValidateFeatureIdsToFeatureAttributeMatrixIndexing`; legacy accessed out-of-bounds silently.
-- **Preflight dimension guard** — rejects ImageGeom with two or more dimensions equal to 1. This is because a single empty dimension converts the calculation from Volume to Area and "1D" Images would not make sense to get an Area formula.
-- **Tighter overflow guard** — SIMPLNX errors when a feature exceeds `INT32_MAX` voxels on both geometry paths. Legacy `findSizesImage` errored only above 2⁵³ (so counts between 2³¹ and 2⁵³ silently overflowed the int32 `NumElements`), and legacy `findSizesUnstructured` had no guard at all.
-- **Narrower geometry scope** — the `GeometrySelectionParameter` allows only Image and RectGrid. Legacy `FindSizes` routed every non-image geometry (vertex/edge/triangle/quad/tet) through `findSizesUnstructured`; in SIMPLNX those are served by dedicated filters (e.g. `ComputeTriangleGeomVolumesFilter`).
+*Evidence:* `SimplnxCoreLegacyUUIDMapping.hpp` maps `FindSizes` to this filter; both retain cell counting and circle/sphere formulas, with precision and execution changes documented in the sidecars.
 
 ## Oracle
 
-**Class 1 (Analytical)** — all expected values are derived from first principles and asserted in `test/ComputeFeatureSizesTest.cpp`.
+*Class:* 1 (Analytical).
 
-| Fixture | Geometry | Derived quantity |
-|---|---|---|
-| `Create2DImageDataStructure()` | 5×5×1 ImageGeom, spacing 20.2×0.1×1.0 | `voxelArea = 20.2 × 0.1 = 2.02` (flat-Z spacing excluded); areas = count × 2.02; ECDs from circle formula |
-| `Create3DImageDataStructure()` | 5×5×5 ImageGeom, spacing 1.2×0.9×2.1 | `voxelVol = 1.2 × 0.9 × 2.1 = 2.268`; volumes = count × 2.268; ESDs from sphere formula |
-| `CreateRectGridDataStructure()` | 4×4×4 non-uniform RectGrid | Per-cell `ΔxΔyΔz` summed per feature; step-by-step trace in provenance sidecar |
+*Applied:* Count cells per feature, multiply by image cell size or sum RectGrid cell volumes, then use `2*sqrt(A/pi)` or `2*cbrt(3*V/(4*pi))`.
 
-Negative tests use degenerate inputs (out-of-bounds FeatureId; degenerate dims) and assert an error result is returned.
+*Encoded:* `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp::SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` and five companion `Valid:` cases use three base fixtures; `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` adds three variants; all registered tests pass in CI at `01809c236`. The flat-spacing case retains `[!shouldfail]` for `ComputeFeatureSizes-D3`.
 
-*Second-engineer review:* **Signed off by Michael A. Jackson, 2026-07-28** (PR #1638 review). Reviewed: the hand-derivations for all three fixtures and the tolerance choice (relative `1e-6` via Catch2 `Approx` — a few float32 ULPs of slack so the pins survive platform and TBB reduction-order differences). The V&V work was authored by Nathan Young, so the second-engineer review is independent of the author.
+*Second-engineer review:* Michael A. Jackson, 2026-07-28 (recorded sign-off).
+
+## Bugs found and fixed
+
+PR #1638 fixed `ComputeFeatureSizes-D4` and `ComputeFeatureSizes-D5`, and DREAM3D-NX v7.4.2 contains those fixes.
+
+| Deviation | Defect | Affected released versions | Resolution in this branch |
+|-----------|--------|----------------------------|---------------------------|
+| `ComputeFeatureSizes-D4` | RectGrid reduction applied Kahan compensation to the accumulated total instead of the incoming partial sum. | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. | Subtract the compensation from the incoming partial sum before adding it to the accumulated total. |
+| `ComputeFeatureSizes-D5` | Parallel workers could read nonresident FeatureIds without a store-residency scheduling guard. | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. | Direct execution checks FeatureIds residency before parallel scheduling. |
 
 ## Code path coverage
 
-14 of 19 paths exercised. Source: `Algorithms/ComputeFeatureSizes.cpp`.
+24 of 44 paths have test assertions. Gaps include input read errors, count overflow, and cancellation during input processing.
 
-| # | Path | Exercised by |
-|---|---|---|
-| 1 | Preflight: `emptyDimCount > 1` → error | `Invalid: Preflight Failure` (4 sub-checks) |
-| 2 | Preflight: valid dims → pass | All 6 positive tests |
-| 3 | Execute validate: FeatureId > numFeatures → error | `Invalid: Execution Failure` |
-| 4 | Execute validate: passes → geometry dispatch | All 6 positive tests |
-| 5 | Dispatch: ImageGeom → `ProcessImageGeom` | `Image 2D *`, `Image Stack 3D *` |
-| 6 | Dispatch: RectGridGeom → `ProcessRectGridGeom` | `Rectilinear Grid *` |
-| 7 | Dispatch: other geometry → no-op | *Not tested. `GeometrySelectionParameter` prevents this at runtime; gap acceptable.* |
-| 8 | Image: any dim == 1 → area + ECD | `Image 2D *` |
-| 9 | Image: all dims > 1 → volume + ESD | `Image Stack 3D *` |
-| 10 | Image: voxelCount > `k_MaxVoxelCount` → error | *Not tested. Requires >2³¹ voxels in one feature; impractical. Gap acceptable.* |
-| 11 | Image: `SaveElementSizes = false` | `Image 2D`, `Image Stack 3D` |
-| 12 | Image: `SaveElementSizes = true` | `Image 2D with Element Sizes`, `Image Stack 3D with Element Size` |
-| 13 | Image: `shouldCancel` in loop → early return | *Not tested. Cancel disregard would cause hangs in any test; low-value gap.* |
-| 14 | RectGrid: `findElementSizes` → per-cell volumes available | `Rectilinear Grid *` |
-| 15 | RectGrid: Kahan summation in `RectGridSummationImpl` + post-reduction | `Rectilinear Grid *` (non-uniform spacing exercises summation) |
-| 16 | RectGrid: voxelCount > `k_MaxVoxelCount` → error | *Not tested. Same rationale as path 10.* |
-| 17 | RectGrid: `SaveElementSizes = false` → `deleteElementSizes()` | `Rectilinear Grid` |
-| 18 | RectGrid: `SaveElementSizes = true` → element sizes retained | `Rectilinear Grid with Element Size` |
-| 19 | RectGrid: `shouldCancel` in loop → early return | *Not tested. Same rationale as path 13.* |
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizes.cpp` (25 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesDirect.cpp` (481 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesScanline.cpp` (449 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureSizesFilter.cpp` (199 lines).
+
+Test names below omit the `SimplnxCore::ComputeFeatureSizes: ` prefix, except where `ComputeFeatureSizesScanline` is stated. The scenario harness selects Direct or Scanline according to the test configuration.
+
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Two or more Image dimensions are less than 2 → error. | `Invalid: Preflight Failure` — four dimension combinations. |
+| 2 | Preflight | Valid Image dimensions → output actions. | `Valid: Image 2D`; `Valid: Image Stack 3D`. |
+| 3 | Direct validation | FeatureId ≥ feature tuple count → error. | `Invalid: Execution Failure` — ID 10 with four feature tuples. |
+| 4 | Direct validation | Valid FeatureIds → geometry dispatch. | `Valid: Image Stack 3D`; `Valid: Rectilinear Grid`. |
+| 5 | Direct dispatch | Image geometry. | `Valid: Image 2D`; `Valid: Image Stack 3D`. |
+| 6 | Direct dispatch | RectGrid geometry. | `Valid: Rectilinear Grid`. |
+| 7 | Direct dispatch | Other geometry → no operation. | *Not directly tested. The selection parameter accepts only Image and RectGrid.* |
+| 8 | Direct Image | One unit dimension → area and circular diameter. | `Valid: Image 2D` — flat spacing is 1. |
+| 9 | Direct Image | All dimensions greater than 1 → volume and spherical diameter. | `Valid: Image Stack 3D`. |
+| 10 | Direct Image | Feature count exceeds INT32_MAX in 2D or 3D → error. | *Not directly tested. No fixture supplies more than INT32_MAX cells in one feature.* |
+| 11 | Direct Image | SaveElementSizes=false → no new element-size array. | `Valid: Image 2D`; `Valid: Image Stack 3D`. |
+| 12 | Direct Image | SaveElementSizes=true → generate element sizes. | `Valid: Image 2D with Element Sizes`; `Valid: Image Stack 3D with Element Size`. |
+| 13 | Direct Image | Cancel during counting, reduction, or output → return. | *Not directly tested. No test injects cancellation into Direct Image execution.* |
+| 14 | Direct RectGrid | Generate cell volumes. | `Valid: Rectilinear Grid with Element Size`. |
+| 15 | Direct RectGrid | Count cells and combine float64 compensated sums. | `Valid: Rectilinear Grid` — asserts three feature volumes and diameters. |
+| 16 | Direct RectGrid | Feature count exceeds INT32_MAX → error. | *Not directly tested. No fixture supplies more than INT32_MAX cells in one feature.* |
+| 17 | Direct RectGrid | SaveElementSizes=false → delete element sizes. | `Valid: Rectilinear Grid`. |
+| 18 | Direct RectGrid | SaveElementSizes=true → retain element sizes. | `Valid: Rectilinear Grid with Element Size`. |
+| 19 | Direct RectGrid | Cancel during counting, reduction, or output → return. | *Not directly tested. No test injects cancellation into Direct RectGrid execution.* |
+| 20 | Direct validation | Negative FeatureId → error. | *Not directly tested. The invalid-ID fixture uses a positive ID above the limit.* |
+| 21 | Direct scheduling | Nonresident FeatureIds → serial scheduling. | *Not directly tested. The real OOC fixtures require Scanline execution.* |
+| 22 | Direct output | Background feature or unused feature → zero output. | *Not directly tested. The Direct analytical fixtures do not assert these entries.* |
+| 23 | Scanline Image | 2D area and circular diameter; SaveElementSizes=false. | `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` — Image 2D. |
+| 24 | Scanline Image | 3D volume and spherical diameter; SaveElementSizes=false. | `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` — Image 3D. |
+| 25 | Scanline RectGrid | Cell-volume sums and spherical diameter; SaveElementSizes=false. | `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` — RectGrid. |
+| 26 | Scanline element sizes | SaveElementSizes=true for 2D Image, 3D Image, and RectGrid. | `Valid: Image 2D with Element Sizes`; `Valid: Image Stack 3D with Element Size`; `Valid: Rectilinear Grid with Element Size`. |
+| 27 | Scanline validation | Image FeatureId ≥ feature tuple count → error. | `Invalid: Execution Failure`. |
+| 28 | Scanline validation | RectGrid FeatureId ≥ feature tuple count → error. | *Not directly tested. The invalid-ID fixture uses Image geometry only.* |
+| 29 | Scanline validation | Negative Image or RectGrid FeatureId → error. | *Not directly tested. No negative-ID fixture exists in this test file.* |
+| 30 | Scanline input | Image FeatureId bulk read fails → error. | *Not directly tested. The test stores inject output errors only.* |
+| 31 | Scanline input | RectGrid FeatureId or element-size bulk read fails → error. | *Not directly tested. The test stores inject output errors only.* |
+| 32 | Scanline input | Full 262,144-cell read followed by another input chunk. | *Not directly tested. The analytical fixtures expand feature outputs, not input cell counts.* |
+| 33 | Scanline input | Cancel during Image or RectGrid input scan → return. | *Not directly tested. Cancellation is injected after an output block.* |
+| 34 | Scanline output | Write a full block and a two-feature tail. | `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` — all three geometries. |
+| 35 | Scanline output | NumElements, Volumes, or EquivalentDiameters write fails → stop. | `SimplnxCore::ComputeFeatureSizesScanline: output write failures stop later writes` — one variant per array. |
+| 36 | Scanline output | Cancel after a completed block; empty flush → success. | `SimplnxCore::ComputeFeatureSizesScanline: cancellation preserves completed output blocks`. |
+| 37 | Scanline output | Cancel with a partially filled block → flush completed features. | *Not directly tested. The cancellation fixture stops at a block boundary.* |
+| 38 | Scanline output | Count exceeds INT32_MAX → flush then error. | *Not directly tested. No count-overflow fixture exists.* |
+| 39 | Scanline output | Background and unused features stay zero. | `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` — background arrays and unused-feature counts and sizes. |
+| 40 | Scanline stores | Real HDF5-OOC input and outputs; short and multiple output blocks. | `real OOC output writes preserve analytical values`; `real OOC multi-block output writes` — hidden cases. |
+| 41 | Scanline dispatch | Other geometry → no operation. | *Not directly tested. The selection parameter accepts only Image and RectGrid.* |
+| 42 | Element sizes | Image or RectGrid generation fails → return the error. | *Not directly tested. All geometry fixtures have valid element-size inputs.* |
+| 43 | Element sizes | Reuse an existing element-size array. | *Not directly tested. No fixture explicitly checks reuse of an existing array.* |
+| 44 | Output limits | No feature after background → empty output loop. | *Not directly tested. Every fixture has at least one non-background feature.* |
 
 ## Test inventory
 
-| Test case | Status | Notes |
-|---|---|---|
-| `Valid: Image 2D` | kept | Class 1; 5×5×1, spacing 20.2×0.1×1.0 (flat-Z spacing 1.0); SaveElementSizes=false |
-| `2D area excludes the flat-dimension spacing` | new-for-V&V | Class 1 characterization pin for the **open** Bug-1 divergence, tagged `[!shouldfail]`. 2×2 slab, non-flat spacings 2.0×3.0, flat-dimension spacing **5.0**; asserts the legacy value area == 24.0, while the current #1590 slab convention produces 120.0 — so it fails-as-expected until the 2D convention decision lands. `GENERATE`s all three flat orientations (X/Y/Z) so no axis-specific special case can satisfy it. |
-| `Valid: Image 2D with Element Sizes` | kept | Same fixture as `Valid: Image 2D`; SaveElementSizes=true |
-| `Valid: Image Stack 3D` | kept | Class 1; 5×5×5, spacing 1.2×0.9×2.1; SaveElementSizes=false |
-| `Valid: Image Stack 3D with Element Size` | kept | Same fixture; SaveElementSizes=true |
-| `Valid: Rectilinear Grid` | kept | Class 1; 4×4×4 non-uniform; SaveElementSizes=false; Kahan path exercised |
-| `Valid: Rectilinear Grid with Element Size` | kept | Same fixture; SaveElementSizes=true |
-| `Invalid: Execution Failure` | kept | FeatureId 10 in a 4-feature AM; asserts execute result invalid |
-| `Invalid: Preflight Failure` | kept | 4 degenerate dim configs; asserts preflight result invalid |
-| `SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5; validates UUID + arg-key + param-value decoding |
-| `Legacy: Small IN100 Test` | retired | Real-data comparison against legacy-produced `6_6_stats_test_v2.dream3d` arrays. Retired because it was a legacy-output regression check (not an independent oracle) and the D1/D2 precision deviations intentionally change those exact values; the RectGrid A/B (deviations file) now provides the legacy comparison and the inline Class 1 fixtures provide the correctness oracle. |
+All names are in `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp`. Dynamic variants are listed in Notes.
 
-9 of 10 TEST_CASEs pass; the `[!shouldfail]` characterization test fails-as-expected (ctest green) while Bug-1 is unresolved.
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` | kept | Variants: Image 2D, Image 3D, RectGrid. Checks analytical values, one 262,144-feature block plus a two-feature tail, and no scalar writes. The 2D variant pins the current slab formula, not true area. |
+| `SimplnxCore::ComputeFeatureSizesScanline: output write failures stop later writes` | kept | Variants: NumElements, Volumes, EquivalentDiameters. Injects each output write error and checks that later writes stop. |
+| `SimplnxCore::ComputeFeatureSizesScanline: cancellation preserves completed output blocks` | kept | Cancels after the first complete output block. Checks completed values and zero values in the unwritten tail. |
+| `SimplnxCore::ComputeFeatureSizes: real OOC output writes preserve analytical values` | kept | Hidden OOC case. Checks seven feature tuples on real HDF5-OOC stores; skips the body in an in-core build without that store. |
+| `SimplnxCore::ComputeFeatureSizes: real OOC multi-block output writes` | kept | Hidden OOC case. Requires HDF5-OOC and checks values across an output-block boundary. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` | kept | Checks counts, areas, and circular diameters for three features; confirms that element sizes are absent. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing` | new-for-V&V | Expected failure (`[!shouldfail]`). Variants: flat Z, flat X, flat Y. Expects area 24 with flat spacing 5; both algorithms calculate 120 (`ComputeFeatureSizes-D3`). |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes` | kept | Checks the same 2D values and the presence of the element-size array. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D` | kept | Checks counts, volumes, and spherical diameters for three features; confirms that element sizes are absent. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element Size` | kept | Checks the same 3D values and the presence of the element-size array. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid` | kept | Checks counts, volumes, and spherical diameters on a nonuniform grid; confirms deletion of element sizes. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Element Size` | kept | Checks the same RectGrid values and retention of element sizes. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure` | kept | Uses FeatureId 10 with four feature tuples. Expects an execution error. |
+| `SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure` | kept | Checks rejection of dimensions (5,1,1), (1,5,1), (1,1,5), and (1,1,1). |
+| `SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test` | kept | Loads `6_6_stats_test_v2.tar.gz` and compares all three generated arrays with archived arrays. This is a regression check, not an independent oracle. |
+| `SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility` | kept | Variants: `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)`. Checks filter identity, empty comments, and seven converted parameter values. |
 
 ## Exemplar archive
 
-None — all fixtures constructed in C++ at test time. Provenance in `vv/provenance/ComputeFeatureSizesFilter.md`.
+- **Archive:** `6_6_stats_test_v2.tar.gz`
+- **SHA512:** `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723`
+- **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/ComputeFeatureSizesFilter.md`
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Both deviations below were confirmed by a direct A/B run (2026-06-27), not source inspection alone: the exact RectGrid fixture was authored as a shared legacy `.dream3d` and run through stock DREAM3D 6.5.171, DREAM3D-NX, and a locally patched legacy build. Applying **both** the D1 (summation) and D2 (ESD-evaluation) changes to legacy `findSizesUnstructured` made `Volumes` and `EquivalentDiameters` **bit-identical** to SIMPLNX; each change alone closed only its corresponding array.
+See `vv/deviations/ComputeFeatureSizesFilter.md` for the root cause, affected users, and recommendation for each deviation. Part 1 contains the following entries.
 
-**`ComputeFeatureSizes-D1` (RectGridGeom → `Volumes`):** Per-feature volumes differ from `FindSizes::findSizesUnstructured()` output due to two precision improvements in SIMPLNX: (1) element sizes promoted from float32 to float64 before accumulation; (2) Kahan compensated summation. Note the Kahan compensator is a local reset on each TBB body invocation (the `combinable` per-thread volume persists, but the compensation term does not carry across chunk boundaries within a thread), so the accumulated-error reduction is per-chunk rather than the full O(ε_float64) a single continuous Kahan pass would give; the dominant improvement is the float64 accumulation. SIMPLNX is still more accurate than the legacy naive float32 sum. Users migrating from DREAM3D 6.5.171 should expect small shifts in per-feature volumes for RectGridGeom; largest for features with many cells on grids with high cell-volume variation.
-
-**`ComputeFeatureSizes-D2` (RectGridGeom → `EquivalentDiameters`):** Even with identical `Volumes`, the equivalent spherical diameter differs because legacy evaluates the cube root with `powf` (float32) on the float32-rounded volume, while SIMPLNX uses `std::cbrt` (float64) on the float64 volume. SIMPLNX is more accurate. The same `powf`/`sqrtf`-on-float32 pattern exists on the ImageGeom path; it was previously noted only as a non-flagged precision difference and is now captured by D2.
-
-Full entry in `vv/deviations/ComputeFeatureSizesFilter.md`.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeFeatureSizes-D1` | RectGrid feature volumes use float64 compensated sums instead of naive float32 sums. |
+| `ComputeFeatureSizes-D2` | Equivalent diameters use float64 roots and unrounded feature sizes instead of the stored float32 sizes. |
+| `ComputeFeatureSizes-D3` | A 2D image includes the flat spacing in its area value and then uses the circle diameter formula. DREAM.3D v6.5.171 excludes that spacing. |
