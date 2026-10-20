@@ -33,7 +33,16 @@ namespace detail
 SIMPLNX_EXPORT Result<> GatherVertexCoordinates(const Float32AbstractDataStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
                                                 nonstd::span<float32> gathered, nonstd::span<float32> page);
 
-/** @brief Reads temporary XYZ records with the same caller-buffer and ordering contract. */
+/**
+ * @brief Reads temporary XYZ records through caller-owned bounded buffers.
+ * @param vertices Supplies records of three float32 coordinates each.
+ * @param indexes Specifies vertex records in the required output order.
+ * @param order Supplies one permutation element per request.
+ * @param gathered Receives three coordinates per request, in the original order.
+ * @param page Supplies a whole-XYZ read page within the provider batch limit; nonempty when requests exist.
+ * @return Record shape, index, capacity, or read error, or success with backend warnings.
+ * @note Sorts only read requests. The caller owns admission and cancellation checkpoints.
+ */
 SIMPLNX_EXPORT Result<> GatherVertexCoordinates(const ITemporaryRecordStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order, nonstd::span<float32> gathered,
                                                 nonstd::span<float32> page);
 } // namespace detail

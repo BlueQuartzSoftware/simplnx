@@ -119,9 +119,9 @@ SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(
 using TriangleNormalCalculator = std::array<float64, 3> (*)(const float32* vertA, const float32* vertB, const float32* vertC);
 
 /**
- * @brief Computes normals with serial block I/O and a resident vertex buffer.
+ * @brief Computes normals with serial block I/O and admitted coordinate buffers.
  * @param triangles Provides three vertex indexes per triangle.
- * @param verts Provides XYZ coordinates, cached once using O(number of vertices) memory.
+ * @param verts Provides XYZ coordinates, cached when admitted or gathered through bounded pages.
  * @param normals Receives three normal components per triangle.
  * @param shouldCancel Stops before loading vertices or processing the next block.
  * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.

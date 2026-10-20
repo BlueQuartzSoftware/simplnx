@@ -56,7 +56,11 @@ struct SmoothingWorkspace
   bool CacheEdges = false;
 };
 
-/** @brief Releases all admitted compute buffers before their token, retaining disk records. */
+/**
+ * @brief Releases compute buffers before their memory reservation.
+ * @param work Owns compute buffers, the reservation, and temporary coordinate records.
+ * @note Retains temporary coordinate records for publication.
+ */
 void releaseSmoothingCompute(SmoothingWorkspace& work)
 {
   std::vector<float32>().swap(work.Vertices);
@@ -365,8 +369,14 @@ Result<> readPublicationCoordinates(ITemporaryRecordStore* temporaryPtr, std::sp
 }
 
 /**
- * @brief Publishes only after computation ends and releases compute admission before nested COW.
- * @note The moved pre-existing delta allocation is storage only after byte staging. Never read or resize its double elements.
+ * @brief Writes completed coordinates after releasing compute buffers and their reservation.
+ * @param work Supplies cached or temporary coordinates and the preferred publication page size.
+ * @param vertices Receives XYZ tuples in order; earlier writes remain if a later operation fails.
+ * @param terminalDelta Takes ownership of the completed delta buffer for cached-coordinate byte staging.
+ * @return Success with I/O warnings, or a staging, admission, read, or write error.
+ * @note Releasing compute admission lets the output store reserve its copy-on-write buffers.
+ * After byte staging, terminalDelta provides storage only. Do not read or resize its double elements.
+ * Publication does not check cancellation. Completed passes can still be published after cancellation.
  */
 Result<> publishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDataStore& vertices, std::vector<double> terminalDelta)
 {
