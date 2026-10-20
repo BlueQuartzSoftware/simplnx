@@ -80,7 +80,7 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
 
-**Input Comparison Array** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+**Input Comparison Array** must have one tuple per cell of the selected geometry. When **Loop Until Gone** is enabled, select a comparison array in the geometry's Cell Data Attribute Matrix. Otherwise, another Attribute Matrix is allowed.
 
 ## Algorithm
 

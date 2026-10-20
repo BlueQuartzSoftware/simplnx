@@ -254,7 +254,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts",
   REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "NumFeatures", {2}, {1}) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"Materials"})));
   args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"NumFeatures"})));
-  args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir) / "tuple-count.inl"));
+  args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "tuple-count.inl"));
 
   const auto result = filter.preflight(dataStructure, args);
   if(testCase == 2)
