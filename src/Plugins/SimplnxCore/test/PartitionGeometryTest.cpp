@@ -1264,9 +1264,10 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[P
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     const auto& errorRef = result.outputActions.errors()[0];
-    REQUIRE(errorRef.code == -3043);
-    REQUIRE(errorRef.message.find("Other Data") != std::string::npos);
+    REQUIRE(errorRef.code == -3045);
+    REQUIRE(errorRef.message.find("The selected data 'Other Data'") != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
-    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find("selected grid geometry 'Image' has 12 cells") != std::string::npos);
+    REQUIRE(errorRef.message.find("Select data with one tuple per geometry cell.") != std::string::npos);
   }
 }
