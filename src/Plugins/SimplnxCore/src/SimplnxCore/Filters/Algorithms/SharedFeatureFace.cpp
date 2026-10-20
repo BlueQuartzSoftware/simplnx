@@ -1,14 +1,18 @@
 #include "SharedFeatureFace.hpp"
 
+#include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <map>
 #include <random>
 #include <vector>
@@ -189,6 +193,10 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     return result;
   }
 
+  // Triangle transfers finish before metadata admission. Randomization recreates only its ID buffer below.
+  std::vector<int32>().swap(faceLabelsBuffer);
+  std::vector<int32>().swap(faceIdsBuffer);
+
   auto& faceFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(inputValues.GrainBoundaryAttributeMatrixPath);
   ShapeType tDims = {static_cast<usize>(index)};
   // Preserve the in-core resize sequence and its GCC false-positive suppression.
@@ -219,35 +227,80 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
   }
 
   {
-    // Cache only the per-feature outputs (12 bytes per feature face). Preserve any
-    // values left unwritten by the existing parallel functor when cancellation occurs.
-    DataStore<int32> featureLabelsBuffer(tDims, {2}, std::nullopt);
-    DataStore<int32> featureCountsBuffer(tDims, {1}, std::nullopt);
-    result = MergeResults(std::move(result), featureFaceLabels.copyIntoBuffer(0, featureLabelsBuffer.createSpan()));
-    if(result.invalid())
+    // Each admitted row holds both labels and its count. Cap rows before multiplying to keep byte arithmetic bounded.
+    constexpr usize kMetadataBytesPerRow = 3 * sizeof(int32);
+    constexpr usize kPreferredMetadataRows = 262144;
+    const usize requestedBytes = std::min(kPreferredMetadataRows, faceLabelVector.size()) * kMetadataBytesPerRow;
+    auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+    const usize blockRows = static_cast<usize>(reservation.sizeBytes() / kMetadataBytesPerRow);
+    if(blockRows == 0)
     {
-      return MergeResults(std::move(result), MakeErrorResult(-12912, "Error reading shared feature face labels before updating them."));
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-12918, fmt::format("Cannot allocate shared face metadata buffers for '{}': requested {} bytes but received {}. At least {} bytes are required. "
+                                                              "Release other working memory or increase the cache budget and retry.",
+                                                              inputValues.GrainBoundaryAttributeMatrixPath.toString(), requestedBytes, reservation.sizeBytes(), kMetadataBytesPerRow)));
     }
-    result = MergeResults(std::move(result), featureFaceNumTriangles.copyIntoBuffer(0, featureCountsBuffer.createSpan()));
-    if(result.invalid())
+    reservation.shrinkTo(blockRows * kMetadataBytesPerRow);
+    std::vector<int32> metadataBuffer(blockRows * 3);
+    const nonstd::span<int32> metadataValues(metadataBuffer.data(), metadataBuffer.size());
+    const auto& countsByFace = faceSizeMap;
+    const auto& labelsByFace = faceLabelVector;
+    for(usize start = 0; start < faceLabelVector.size();)
     {
-      return MergeResults(std::move(result), MakeErrorResult(-12913, "Error reading shared feature face triangle counts before updating them."));
-    }
+      const usize count = std::min(blockRows, faceLabelVector.size() - start);
+      const auto featureLabelsBuffer = metadataValues.first(count * 2);
+      const auto featureCountsBuffer = metadataValues.subspan(blockRows * 2, count);
+      // Pre-read both arrays so cancellation preserves every row that the fill loop does not compute.
+      result = MergeResults(std::move(result), featureFaceLabels.copyIntoBuffer(start * 2, featureLabelsBuffer));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12912, fmt::format("Error reading shared feature face labels '{}' at row {} ({} rows).",
+                                                                                   inputValues.FeatureFaceLabelsArrayPath.toString(), start, count)));
+      }
+      result = MergeResults(std::move(result), featureFaceNumTriangles.copyIntoBuffer(start, featureCountsBuffer));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12913, fmt::format("Error reading shared feature face triangle counts '{}' at row {} ({} rows).",
+                                                                                   inputValues.FeatureFaceNumTrianglesArrayPath.toString(), start, count)));
+      }
 
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setParallelizationEnabled(true);
-    dataAlg.setRange(0, index);
-    dataAlg.execute(SharedFeatureFaceImpl(faceLabelVector, featureLabelsBuffer, featureCountsBuffer, faceSizeMap, shouldCancel));
+      // Workers use stable resident buffers and read-only lookups. Existing cancellation permits one serial row before publication.
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setParallelizationEnabled(!shouldCancel.load());
+      dataAlg.setRange(0, count);
+      dataAlg.execute([&labelsByFace, &countsByFace, &featureLabelsBuffer, &featureCountsBuffer, &shouldCancel, start](const Range& range) {
+        for(usize row = range.min(); row < range.max(); ++row)
+        {
+          const auto& labels = labelsByFace[start + row];
+          featureLabelsBuffer[row * 2] = labels.first;
+          featureLabelsBuffer[(row * 2) + 1] = labels.second;
+          const auto found = countsByFace.find(ConvertToUInt64(labels.first, labels.second));
+          featureCountsBuffer[row] = found == countsByFace.end() ? 0 : found->second;
+          if(shouldCancel)
+          {
+            break;
+          }
+        }
+      });
 
-    result = MergeResults(std::move(result), featureFaceLabels.copyFromBuffer(0, nonstd::span<const int32>(featureLabelsBuffer.data(), featureLabelsBuffer.getSize())));
-    if(result.invalid())
-    {
-      return MergeResults(std::move(result), MakeErrorResult(-12914, "Error writing shared feature face labels."));
-    }
-    result = MergeResults(std::move(result), featureFaceNumTriangles.copyFromBuffer(0, nonstd::span<const int32>(featureCountsBuffer.data(), featureCountsBuffer.getSize())));
-    if(result.invalid())
-    {
-      return MergeResults(std::move(result), MakeErrorResult(-12915, "Error writing shared feature face triangle counts."));
+      // Publish both arrays before honoring cancellation; earlier successful writes are not rolled back after an I/O error.
+      result = MergeResults(std::move(result), featureFaceLabels.copyFromBuffer(start * 2, featureLabelsBuffer));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12914, fmt::format("Error writing shared feature face labels '{}' at row {} ({} rows).",
+                                                                                   inputValues.FeatureFaceLabelsArrayPath.toString(), start, count)));
+      }
+      result = MergeResults(std::move(result), featureFaceNumTriangles.copyFromBuffer(start, featureCountsBuffer));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12915, fmt::format("Error writing shared feature face triangle counts '{}' at row {} ({} rows).",
+                                                                                   inputValues.FeatureFaceNumTrianglesArrayPath.toString(), start, count)));
+      }
+      start += count;
+      if(shouldCancel)
+      {
+        break;
+      }
     }
   }
 
