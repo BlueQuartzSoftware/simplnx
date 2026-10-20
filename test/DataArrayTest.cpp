@@ -775,6 +775,7 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
     REQUIRE(resizeResult.invalid());
     REQUIRE_FALSE(resizeResult.errors().empty());
     REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("byte count") != std::string::npos);
     REQUIRE(dataStore.data() == originalDataPtr);
     REQUIRE(dataStore.getTupleShape() == originalTupleShape);
     REQUIRE(dataStore.getComponentShape() == originalComponentShape);
@@ -805,6 +806,7 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
     REQUIRE(resizeResult.invalid());
     REQUIRE_FALSE(resizeResult.errors().empty());
     REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("tuple count") != std::string::npos);
     REQUIRE(dataStore.data() == originalDataPtr);
     REQUIRE(dataStore.getTupleShape() == originalTupleShape);
     REQUIRE(dataStore.getComponentShape() == originalComponentShape);
@@ -836,6 +838,7 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
     REQUIRE(resizeResult.invalid());
     REQUIRE_FALSE(resizeResult.errors().empty());
     REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("element count") != std::string::npos);
     REQUIRE(dataStore.data() == originalDataPtr);
     REQUIRE(dataStore.getTupleShape() == originalTupleShape);
     REQUIRE(dataStore.getComponentShape() == originalComponentShape);
