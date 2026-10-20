@@ -107,7 +107,7 @@ Result<> FeatureFaceCurvature::operator()()
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
 
-  const usize nonEmptyCount = std::count_if(sharedFeatureFaces.begin(), sharedFeatureFaces.end(), [](const auto& featureFace) { return !featureFace.second.empty(); });
+  const auto nonEmptyCount = static_cast<usize>(std::count_if(sharedFeatureFaces.begin(), sharedFeatureFaces.end(), [](const auto& featureFace) { return !featureFace.second.empty(); }));
 
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all

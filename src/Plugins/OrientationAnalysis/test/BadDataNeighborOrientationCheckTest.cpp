@@ -1464,6 +1464,40 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight
   REQUIRE(preflightResult.outputActions.errors()[0].code == -6809);
 }
 
+TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight Error - Number of neighbors out of range (-6810)",
+          "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  const int32 numberOfNeighbors = GENERATE(7, 0, -1);
+  CAPTURE(numberOfNeighbors);
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeom->setDimensions({10, 1, 1});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {10}, {1}, cellAM->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, cellAM->getId());
+
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  BadDataNeighborOrientationCheckFilter filter;
+  Arguments args;
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(numberOfNeighbors));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "CellData", "Quats"})));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "CellData", "Mask"})));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "CellData", "Phases"})));
+  args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry", "CellEnsembleData", "CrystalStructures"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -6810);
+}
+
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

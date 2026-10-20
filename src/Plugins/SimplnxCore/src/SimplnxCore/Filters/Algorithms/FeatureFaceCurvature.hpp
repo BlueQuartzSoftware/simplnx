@@ -60,9 +60,11 @@ public:
   void sendThreadSafeProgressMessage(usize counter);
 
   /**
-   * @brief Thread-safe status text. Takes the same mutex as the per-feature-face workers, so the
-   * driver thread can send while workers are running.
-   * @param message Status text
+   * @brief Sends an Info message under the worker progress mutex.
+   * @param message Status text to send.
+   *
+   * The driver thread calls this while workers run, so it takes the same mutex as
+   * sendThreadSafeProgressMessage().
    */
   void sendThreadSafeStatusMessage(const std::string& message);
 

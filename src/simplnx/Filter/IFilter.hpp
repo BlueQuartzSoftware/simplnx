@@ -148,14 +148,13 @@ public:
      * @brief Sends progress as a count of completed items, rendered as "<label>: <current>/<max>".
      * Use this for units a user recognizes, such as iterations, phases, levels, files, scans,
      * slices, arrays, or outputs. Keep the total below a few thousand. For a short outer loop around
-     * a large inner loop, report the outer count. Add inner-loop percent progress only when one
-     * outer iteration is slow enough to make the progress bar look stuck.
-     * When outer units wrap an inner loop reporting percent, send only one of them as progress.
-     * Announce each outer unit with sendInfoMessage() and name the unit in the inner label.
-     * Alternatively, map the inner value into the outer total.
+     * a large inner loop, send the outer count as progress. If one outer unit is slow enough to make
+     * the progress bar look stuck, send the inner percent as progress instead: announce each outer
+     * unit with sendInfoMessage() and put the unit name in the inner label, or map the inner value
+     * into the outer total. Do not send both as progress.
      * Flush a ThrottledMessageHandler when its unit finishes, before the next unit starts.
      * @param label Describes the work being done, with no trailing punctuation
-     * @param current Items completed so far. Send k + 1 after unit k finishes, never at its start.
+     * @param current Number of units that are complete. Send the new count after a unit finishes, not when it starts. A count of 0 before the first unit is permitted.
      * @param max Total items
      * @param detail Optional note appended in parentheses, such as an estimate of the time
      * remaining. nx::core::ProgressEstimator produces one. An empty string appends nothing.

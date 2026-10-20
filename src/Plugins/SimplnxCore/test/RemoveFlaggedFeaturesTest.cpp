@@ -724,11 +724,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress complet
   {
     if(message.type == IFilter::Message::Type::Progress && message.message.find("Extracting Features:") == 0)
     {
+      CHECK_FALSE(sawSuccess);
       CHECK(message.progress >= lastProgress);
       lastProgress = message.progress;
     }
     if(message.type == IFilter::Message::Type::Info && message.message == "All Features Successfully Extracted")
     {
+      CHECK(lastProgress == 100);
       sawSuccess = true;
     }
   }

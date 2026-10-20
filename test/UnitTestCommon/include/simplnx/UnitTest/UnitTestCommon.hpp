@@ -274,6 +274,7 @@ namespace UnitTest
 {
 /**
  * @brief Creates a message handler that appends every message to a vector.
+ * The handler is not thread-safe. The filter must serialize its messages.
  * @param messages Receives each message in the order it was sent. Must outlive the handler.
  * @return Handler that records messages for later inspection by a test.
  */

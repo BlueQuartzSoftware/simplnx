@@ -726,6 +726,7 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
     }
 
     progressThrottle.updatePercent(featureEnd > 0 ? featureEnd - 1 : 0);
+    progressThrottle.flush();
     m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }
 

@@ -158,7 +158,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   // Descend from six face neighbors to the requested count. One-slice geometries cannot meet the top levels.
   constexpr int32 startLevel = static_cast<int32>(k_NumFaceNeighbors);
   const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
-  const usize levelTotal = static_cast<usize>(totalLevels);
+  const usize levelTotal = totalLevels > 0 ? static_cast<usize>(totalLevels) : 0;
   m_MessageHandler.sendProgressCount("Propagating Levels", 0, levelTotal);
 
   for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
