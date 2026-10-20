@@ -1,0 +1,123 @@
+{
+  "isDisabled": false,
+  "name": "save_over_input_rename.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "import_data_object": {
+          "value": {
+            "data_paths": [],
+            "file_path": "@SAVE_OVER_INPUT_FILE@",
+            "path_import_policy": 0
+          },
+          "version": 2
+        },
+        "parameters_version": 1
+      },
+      "comments": "Imports every object of the file this pipeline later writes over. With Force Out-of-Core storage the 96 MiB 'Generated/Data' array becomes a read-only store that reads this file.",
+      "filter": {
+        "name": "nx::core::ReadDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "allow_overwrite": {
+          "value": false,
+          "version": 1
+        },
+        "new_name": {
+          "value": "OldData",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "source_data_object_path": {
+          "value": "Generated/Data",
+          "version": 1
+        }
+      },
+      "comments": "Renames the imported array. Its store still reads dataset 'Generated/Data' of the input file.",
+      "filter": {
+        "name": "nx::core::RenameDataObjectFilter",
+        "uuid": "911a3aa9-d3c2-4f66-9451-8861c4b726d5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "7",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 8,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "Generated/Data",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              96.0,
+              512.0,
+              512.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Creates a different array at the renamed array's old path, every value 7, so the saved file distinguishes the old data from the new.",
+      "filter": {
+        "name": "nx::core::CreateDataArrayFilter",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 1,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "@SAVE_OVER_INPUT_FILE@",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": false,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Writes over the input file. The renamed array's store must be released (copied off the input file) before the file is replaced.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

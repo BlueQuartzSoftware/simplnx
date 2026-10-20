@@ -381,6 +381,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Numbers.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/NumericBounds.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/PathText.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range3D.hpp
@@ -670,6 +671,7 @@ set(SIMPLNX_GENERATED_HEADERS
 
 set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/PathText.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.cpp

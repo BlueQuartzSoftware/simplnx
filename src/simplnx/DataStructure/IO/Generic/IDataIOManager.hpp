@@ -45,6 +45,19 @@ enum class DataStoreInitializationMode : uint8
 };
 
 /**
+ * @enum FileWriteHookMode
+ * @brief Selects what IDataIOManager::onBeforeFileWrite() does with a store that reads the target file.
+ *
+ * A writer replaces the file at its target path. A store that reads that file keeps the path, so after the save it
+ * reads other data or holds a handle that blocks the write. The caller selects how a manager prevents this.
+ */
+enum class FileWriteHookMode : uint8
+{
+  ReleaseReaders, ///< Copies each store that reads the target to a session file before the write. Pipeline writers and APIs use this mode.
+  RefuseIfRead    ///< Copies nothing and returns an error if a store reads the target. The GUI Save File action uses this mode, because its recovery checkpoint still refers to those stores.
+};
+
+/**
  * @class IDataIOManager
  * @brief Defines factories and lifecycle hooks for one storage format.
  *
@@ -244,6 +257,50 @@ public:
    */
   virtual void onFinalizeStores([[maybe_unused]] DataStructure& dataStructure)
   {
+  }
+
+  /**
+   * @brief Prepares this manager's stores before a writer changes a file.
+   * @param dataStructure Structure that the writer writes. The manager examines only the stores in this structure.
+   * @param target Final path that the writer creates, truncates, opens for writing or renames over.
+   * @param mode Selects whether a store that reads target is copied to a session file or causes an error.
+   * @return Valid result, possibly with warnings, when no store in dataStructure reads target after the call.
+   * Otherwise an error. Its message contains target.
+   * - -6039: A store that reads target cannot be released, or the manager cannot prove that a store does not read target.
+   * - -6053: Mode is RefuseIfRead and a store reads target.
+   *
+   * A store that reads a file keeps the path of that file. If a writer replaces the file, the store reads other data
+   * or holds a handle that blocks the write. Each path-based writer calls DataIOCollection::beforeFileWrite() on every
+   * final path before it changes one of them. On error, the writer returns the error and changes none of them. The
+   * base implementation does nothing, because its stores do not read a file after import.
+   *
+   * A release changes the backing file of a store, not a value that dataStructure exposes. Thus the parameter is const.
+   * Stores are created as mutable objects and are owned through std::shared_ptr. Thus an override can cast const away
+   * from a store that it releases. Each store type must keep this mutable-pointee guarantee. The const parameter does
+   * not make the release safe to run concurrently.
+   *
+   * Concurrency contract:
+   * - Reads that can run during the call: numeric tuple, value and extent reads, and NeighborList list reads. The 3D
+   *   view, charts and spreadsheets use these reads.
+   * - Operations that the caller must not run during the call:
+   *   - Another hook call or save on the same structure.
+   *   - A write or other change to a store in the structure, including resize.
+   *   - Deep copies, recovery-metadata queries, file-path queries and handle closes on a store in the structure.
+   *   - Replacement of stores in the structure.
+   *
+   * Not covered:
+   * - Stores outside dataStructure that read target, for example earlier results, another window or a Python session.
+   *   On POSIX they keep the old file or read the new file by path. On Windows their open handle can make the final
+   *   rename fail. Then the file at target stays unchanged.
+   * - A rename, unlink or retarget of the source file of a store while the store exists.
+   * - A change of the working directory while a store reads a relative path.
+   * - Cancellation of a release. Stores released before an error or a cancellation stay released.
+   * - A recovery checkpoint that refers to a released store. The checkpoint refers to a session file, and the store
+   *   deletes that file when the store is destroyed. Recovery does not take ownership of that file.
+   */
+  virtual Result<> onBeforeFileWrite([[maybe_unused]] const DataStructure& dataStructure, [[maybe_unused]] const std::filesystem::path& target, [[maybe_unused]] FileWriteHookMode mode)
+  {
+    return {};
   }
 
   /**

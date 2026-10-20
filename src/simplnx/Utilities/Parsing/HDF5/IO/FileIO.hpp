@@ -36,11 +36,13 @@ public:
   static FileIO ReadFile(const std::filesystem::path& filepath);
 
   /**
-   * @brief Replaces an existing path and creates a new HDF5 file.
+   * @brief Replaces an existing file and creates a new HDF5 file.
    * @param filepath Identifies the file to replace or create.
-   * @return Valid wrapper on success, or an invalid wrapper on failure.
+   * @return Valid wrapper on success, or an invalid wrapper on failure, including when filepath (or the target of a link at
+   * filepath) is a directory or its status cannot be read.
    *
-   * Filesystem removal occurs before HDF5 creation and is not recoverable through this API.
+   * Filesystem removal of an existing file occurs before HDF5 creation and is not recoverable through this API. A directory is
+   * never removed.
    */
   static FileIO WriteFile(const std::filesystem::path& filepath);
 
@@ -48,6 +50,9 @@ public:
    * @brief Opens an existing HDF5 file for read and write.
    * @param filepath Identifies the HDF5 file.
    * @return Valid wrapper on success, or an invalid wrapper on failure.
+   *
+   * Uses the same file-access property list as ReadFile() and WriteFile(), so a configurator installed by SetFaplConfigurator() also
+   * reaches appends.
    */
   static FileIO AppendFile(const std::filesystem::path& filepath);
 
@@ -68,8 +73,9 @@ public:
    * @brief Sets the optional file-access property-list configurator.
    * @param configurator Receives a temporary HDF5 property-list ID. An empty callback clears the hook.
    *
-   * Benchmarks use this test hook to install a latency-simulating HDF5 virtual
-   * file driver. Production leaves it empty and uses H5P_DEFAULT.
+   * Tests use this hook to install an HDF5 virtual file driver (simulated latency,
+   * a failing close) for ReadFile(), WriteFile() and AppendFile(). Production leaves
+   * it empty and uses H5P_DEFAULT.
    *
    * Assignment and invocation run under Support::ApiLock(), so they cannot race.
    * The callback also runs under this non-recursive lock. It must not call a
@@ -94,6 +100,30 @@ public:
    * @brief Releases the HDF5 file ID.
    */
   ~FileIO() noexcept override;
+
+  /**
+   * @brief Closes the file and reports whether the physical file really closed.
+   * @return Success, or error -6056 naming the file path and the cause.
+   *
+   * With the default weak close degree, H5Fclose() succeeds while anything else keeps the physical file open and defers the real
+   * close (and its final flush) to the last holder, so a writer would report success for a file that is not complete on disk. This
+   * method first proves that this identifier is the file's only holder, then closes it. In one Support::ApiLock() scope it requires a
+   * reference count of 1 on this identifier, no other file identifier for the same physical file, and no open dataset, group, named
+   * datatype or attribute in the file through any identifier, and then calls H5Fclose().
+   *
+   * - A wrapper that holds no identifier succeeds without HDF5 calls.
+   * - An extra holder, or a failed query, returns -6056 and leaves the file open; the destructor closes it best-effort later.
+   * - A failed H5Fclose() returns -6056. When HDF5 keeps the identifier registered after the failure (a failing close callback
+   *   does), this wrapper keeps owning it, and the destructor's best-effort close releases it. When the failed close already reached
+   *   the file driver, that later close only frees HDF5's remaining records and does not close the driver again. An identifier that
+   *   HDF5 released is cleared.
+   * - Success releases the identifier, so isValid() returns false.
+   *
+   * close() and the destructor stay best-effort. Writers call this after a successful write, once every child handle of that write is
+   * closed.
+   * @pre The caller does not hold Support::ApiLock().
+   */
+  [[nodiscard]] Result<> closeChecked();
 
   /**
    * @brief Gets the file name.
