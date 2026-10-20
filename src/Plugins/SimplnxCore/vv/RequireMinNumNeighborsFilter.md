@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** - the NX port retains the legacy selection, coarsening, and feature-removal while incorporating bug fixes and minor code improvements. |
 | Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - two mode-specific 4x1x1 inputs and one common 6x6x6 input check exact cell copying, phase selection, iterative coarsening, and feature compaction. |
-| Code paths enumerated | 13 of 18 paths are assertion-covered; cancellation and defensive error paths are not covered. |
-| Tests today | 11 active test cases: two analytical oracle tests, four execute-error tests, negative-FeatureId reassignment, two preflight errors, the Small IN100 regression, and SIMPL 6.4/6.5 conversion; two stale disabled tests are retired. |
+| Code paths enumerated | 16 of 18 active paths are assertion-covered; cancellation and defensive error paths are not covered. |
+| Tests today | 14 active test cases: two analytical oracle tests, four execute-error tests, negative-FeatureId reassignment, three preflight errors, two strict/shared-path tests, the Small IN100 regression, and SIMPL 6.4/6.5 conversion; two stale disabled tests are retired. |
 | Exemplar archive | The inline oracle needs no output archive; retained input archive `6_5_test_data_1_v2.tar.gz` has SHA512 `585b51ba...3027d6c` and a provenance sidecar. |
 | Legacy comparison | **Complete (2026-07-31)** - DREAM3D 6.5.171 and SIMPLNX were run on the 4x1x1 and 6x6x6 analytical fixtures in all-phases and single-phase modes; all 22 array comparisons and 2,646 exact values matched the independent expectations. |
 | Bug flags | `RequireMinNumNeighborsFilter-D1`, `RequireMinNumNeighborsFilter-D2`, `RequireMinNumNeighborsFilter-D3` |
@@ -153,9 +153,11 @@ Because feature 5 owns no cells, both modes have identical final cell arrays eve
 
 ## Code path coverage
 
-13 of 18 paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
+16 of 18 active paths are assertion-covered. Cancellation and defensive infrastructure/error paths are documented gaps.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp` (362 lines), plus preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.cpp`, shared reassignment in `Algorithms/FillBadVoxels.cpp`, and preflight validation in `Filters/RequireMinNumNeighborsFilter.cpp`.
+
+Rows 4, 15, and 16 are retired and excluded from the active-path count; their former checks are absent from the current implementation.
 
 The filter selects features to retain, marks rejected-feature voxels, iteratively copies a dominant face neighbor into each rejected voxel, and removes inactive feature tuples.
 
@@ -164,7 +166,7 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 1 | Preflight | Feature-level `NumNeighbors` and, when enabled, `FeaturePhases` tuple counts disagree - return `-252`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple count mismatch (-252)` |
 | 2 | Preflight | FeatureIds is not in the selected Image Geometry's Cell Attribute Matrix - return `-55575`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)` |
 | 3 | Preflight | NeighborList-removal preflight warning is produced when feature NeighborLists are present. | `SimplnxCore::RequireMinNumNeighborsFilter` - asserts only one `-5558` warning. |
-| 4 | Setup | Cell-data array discovery fails - return `-5556`. | *Not directly tested. Defensive check.* |
+| 4 | Retired | The former cell-data discovery error check is absent. `FillBadVoxels` uses `GenerateDataArrayList` without this error return. | Not an active path. |
 | 5 | Selection | Single-phase mode names a phase absent from `FeaturePhases` - return `-5555`. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)` |
 | 6 | Selection | Every eligible feature is below the neighbor threshold - return `-55569` before mutation. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all features rejected (-55569)` |
 | 7 | Selection | All-phase or selected-phase feature meets threshold; nonselected phases remain active, including a zero-cell feature below the threshold. | `SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle` (`ApplyToSinglePhase=0/1`) and `SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analytical Fixture` |
@@ -175,11 +177,13 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | 12 | Reassignment | Negative Feature IDs skip initial marking and are reassigned from valid face neighbors. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned` |
 | 13 | Reassignment | Negative Feature IDs remain but an iteration finds no non-negative face neighbor to copy - return `-55572` instead of looping indefinitely. | `SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)` |
 | 14 | Copy | A rejected cell copies every nonignored cell-data tuple from its selected neighbor while ignored arrays remain unchanged. | Both analytical oracle tests; the 6x6x6 fixture checks scalar `int32`, three-component `float32`, ignored `int32`, and `FeatureIds` tuples for all 216 cells in both modes. |
-| 15 | Copy | A destination tuple index is outside the cell array, FeatureIds array, or neighbor map range - return `-55568` before indexing. | *Not directly tested. AttributeMatrix construction and the FeatureIds/Image Geometry tuple-count preflight reject mismatched tuple shapes before execution. Defensive check.* |
-| 16 | Copy | A source tuple index is outside the cell array or FeatureIds array range - return `-55573` before indexing. | *Not directly tested. Valid face-neighbor computation constrains source indexes to the Image Geometry cell range. Defensive check.* |
+| 15 | Retired | The former destination tuple-index check is absent from the current slice-based copy implementation. | Not an active path. |
+| 16 | Retired | No explicit source tuple-index range error exists in the current slice-based copy implementation. Face-neighbor selection constrains source indexes to valid cells. | Not an active path. Boundary copying is covered by `SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analytical Fixture`. |
 | 17 | Finalize | Inactive feature tuples are removed and remaining FeatureIds are remapped; NeighborLists are removed. | `SimplnxCore::RequireMinNumNeighborsFilter`, both analytical oracle tests, and their exact compacted `NumNeighbors`, `Phases`, and `FeatureIds` assertions. |
-| 18 | Finalize | Inactive-feature removal fails - return `-55570`. | *Not directly tested. Defensive check.* |
+| 18 | Finalize | Inactive-feature removal fails - propagate the error returned by `RemoveInactiveObjects`. | *Not directly tested. Defensive check.* |
 | 19 | Preflight | FeatureIds tuple count differs from the selected Image Geometry cell count - return `-55571`. | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` |
+| 20 | Preflight | A Cell Arrays to Ignore path is not a direct child of the selected geometry's Cell Attribute Matrix - return `-55573`. Membership uses the parent object's ID, so another path to the same matrix is accepted. | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` - `Ignored array in a second Attribute Matrix`; shared-path acceptance is covered by `SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix`. |
+| 21 | Preflight | The parent of Number of Neighbors is not an Attribute Matrix directly under the selected geometry, or is its Cell Attribute Matrix - return `-55574`. | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` - `Feature array outside the selected geometry`, `Feature array under a plain DataGroup`, and `Feature array in the Cell Attribute Matrix`. |
 
 ## Test inventory
 
@@ -203,8 +207,10 @@ The filter selects features to retain, marks rejected-feature voxels, iterativel
 | `SimplnxCore::RequireMinNumNeighborsFilter: Bad Phase Number` | retired | Removed from `#if 0`; it used stale parameter keys and could not compile. The active `unavailable phase (-5555)` test replaces its intended error coverage. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Phase Array` | retired | Removed from `#if 0`; it used stale parameter keys and could not compile. Current analytical variants cover the all-phase and single-phase selection behavior. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` | new-for-V&V | Creates a 5-cell geometry with four `FeatureIds` tuples in its Cell Attribute Matrix, then asserts invalid preflight and exact code `-55571`. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` | new-for-V&V | Checks valid Cell and Feature Attribute Matrices, shared Cell paths, and read-only phases in another matrix. Rejects misplaced Feature Ids (`-55575`), ignored arrays (`-55573`), and invalid Feature Attribute Matrix locations (`-55574`); checks each error code and affected paths. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix` | new-for-V&V | Alternates geometry and shared-parent paths for Feature Ids and ignored arrays. Checks geometry-based modification paths, reassigned IDs and cell values, unchanged ignored values, selected Feature Attribute Matrix compaction, unchanged external marker values, and inherited tuple dimensions. |
 
-There are 12 active `TEST_CASE`s: 3 kept and 9 new for this V&V cycle.
+There are 14 active `TEST_CASE`s: 3 kept and 11 new for this V&V cycle.
 
 ## Exemplar archive
 

@@ -117,9 +117,9 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
-  featureIdsPath = cellDataPath.createChildPath(featureIdsPath.getTargetName());
+  featureIdsPath = MapToGeometryCellDataPath(cellDataPath, featureIdsPath);
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -182,9 +182,9 @@ Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStruct
   inputValues.ApplySinglePhase = filterArgs.value<BoolParameter::ValueType>(k_ApplySinglePhase_Key);
   inputValues.PhaseNumber = filterArgs.value<Int32Parameter::ValueType>(k_SinglePhaseNumber_Key);
 
-  // Match the collection path for Feature Ids and its sibling Cell arrays.
+  // The algorithm finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsPath = cellDataPath.createChildPath(inputValues.FeatureIdsPath.getTargetName());
+  inputValues.FeatureIdsPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsPath);
 
   return RequireMinimumSizeFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

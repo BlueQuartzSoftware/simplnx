@@ -111,12 +111,9 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
     return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; exclusions must use the collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
-  for(auto& ignoredPath : ignoredDataArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  ignoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, ignoredDataArrayPaths);
 
   if(pMinAllowedDefectSizeValue < 1)
   {
@@ -151,13 +148,10 @@ Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  // Match the collection path for ignored arrays and the Feature Ids special case.
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.inputImageGeometry).getCellDataPath();
-  inputValues.featureIdsArrayPath = cellDataPath.createChildPath(inputValues.featureIdsArrayPath.getTargetName());
-  for(auto& ignoredPath : inputValues.ignoredDataArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  inputValues.featureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.featureIdsArrayPath);
+  inputValues.ignoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignoredDataArrayPaths);
 
   return FillBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

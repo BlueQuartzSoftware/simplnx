@@ -102,6 +102,30 @@ SIMPLNX_EXPORT Result<> ValidateArraysInGeometryCellData(const DataStructure& da
                                                          std::string_view parameterName);
 
 /**
+ * @brief Maps an array path onto the geometry's Cell Attribute Matrix path.
+ * @param cellDataPath Cell Attribute Matrix path returned by the geometry.
+ * @param arrayPath Array path whose target name is preserved.
+ * @return Child path under cellDataPath with the array's target name.
+ *
+ * The Cell Attribute Matrix can have more than one DataPath. Algorithms compare DataPaths with ==
+ * and find sibling Cell arrays through FeatureIdsArrayPath.getParent(). Feature Ids and ignored arrays
+ * must therefore use the geometry's Cell Attribute Matrix path. This function does not validate array membership.
+ */
+SIMPLNX_EXPORT DataPath MapToGeometryCellDataPath(const DataPath& cellDataPath, const DataPath& arrayPath);
+
+/**
+ * @brief Maps array paths onto the geometry's Cell Attribute Matrix path.
+ * @param cellDataPath Cell Attribute Matrix path returned by the geometry.
+ * @param arrayPaths Array paths whose target names and order are preserved.
+ * @return Child paths under cellDataPath with the arrays' target names, in input order.
+ *
+ * The Cell Attribute Matrix can have more than one DataPath. Algorithms compare DataPaths with ==
+ * and find sibling Cell arrays through FeatureIdsArrayPath.getParent(). Feature Ids and ignored arrays
+ * must therefore use the geometry's Cell Attribute Matrix path. This function does not validate array membership.
+ */
+SIMPLNX_EXPORT std::vector<DataPath> MapToGeometryCellDataPath(const DataPath& cellDataPath, const std::vector<DataPath>& arrayPaths);
+
+/**
  * @brief Validates a Feature Attribute Matrix directly under the selected grid geometry.
  * @param dataStructure Resolves the selected objects.
  * @param geometryPath Identifies the grid geometry.

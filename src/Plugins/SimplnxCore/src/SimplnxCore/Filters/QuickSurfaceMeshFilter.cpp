@@ -169,7 +169,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
   if(fixProblemVoxels)
   {
-    const auto featureIdsPath = gridGeom.getCellDataPath().createChildPath(pFeatureIdsArrayPathValue.getTargetName());
+    const auto featureIdsPath = MapToGeometryCellDataPath(gridGeom.getCellDataPath(), pFeatureIdsArrayPathValue);
     resultOutputActions.value().appendDataObjectModificationNotification(featureIdsPath, DataObjectModification::ModifiedType::Modified);
   }
 

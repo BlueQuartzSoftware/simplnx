@@ -129,7 +129,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
-  if((operationType == 0 || operationType == 2) && fillRemovedFeatures)
+  if((operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove)) && fillRemovedFeatures)
   {
     auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -9894, "Attribute Arrays to Ignore");
     if(ignoredArraysResult.invalid())
@@ -145,9 +145,9 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
-  pFeatureIdsArrayPathValue = cellDataPath.createChildPath(pFeatureIdsArrayPathValue.getTargetName());
+  pFeatureIdsArrayPathValue = MapToGeometryCellDataPath(cellDataPath, pFeatureIdsArrayPathValue);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -155,7 +155,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // If we are in any way removing features, inform the user
-  if(operationType == 0 || operationType == 2)
+  if(operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove))
   {
     // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
     nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
@@ -192,13 +192,10 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CreatedImageGeometryPrefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
   inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.replaceName(k_boundsName);
 
-  // Match the collection path for ignored arrays and the Feature Ids special case.
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = cellDataPath.createChildPath(inputValues.FeatureIdsArrayPath.getTargetName());
-  for(auto& ignoredPath : inputValues.IgnoredDataArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
+  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
 
   return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

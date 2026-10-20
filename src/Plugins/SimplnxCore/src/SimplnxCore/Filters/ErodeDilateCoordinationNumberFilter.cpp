@@ -105,12 +105,9 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
     return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; exclusions must use the collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
-  for(auto& ignoredPath : pIgnoredDataArrayPathsValue)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  pIgnoredDataArrayPathsValue = MapToGeometryCellDataPath(cellDataPath, pIgnoredDataArrayPathsValue);
 
   if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
   {
@@ -140,13 +137,10 @@ Result<> ErodeDilateCoordinationNumberFilter::executeImpl(DataStructure& dataStr
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  // Match the collection path for ignored arrays and the Feature Ids special case.
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = cellDataPath.createChildPath(inputValues.FeatureIdsArrayPath.getTargetName());
-  for(auto& ignoredPath : inputValues.IgnoredDataArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
+  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
 
   return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

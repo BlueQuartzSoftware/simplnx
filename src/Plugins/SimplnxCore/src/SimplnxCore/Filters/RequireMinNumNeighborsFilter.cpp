@@ -110,9 +110,9 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
     return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
-  featureIdsPath = cellDataPath.createChildPath(featureIdsPath.getTargetName());
+  featureIdsPath = MapToGeometryCellDataPath(cellDataPath, featureIdsPath);
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -188,13 +188,10 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.NumNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
   inputValues.IgnoredVoxelArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
 
-  // Match the collection path for ignored arrays and the Feature Ids special case.
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeomPath).getCellDataPath();
-  inputValues.FeatureIdsPath = cellDataPath.createChildPath(inputValues.FeatureIdsPath.getTargetName());
-  for(auto& ignoredPath : inputValues.IgnoredVoxelArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  inputValues.FeatureIdsPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsPath);
+  inputValues.IgnoredVoxelArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredVoxelArrayPaths);
 
   return RequireMinNumNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

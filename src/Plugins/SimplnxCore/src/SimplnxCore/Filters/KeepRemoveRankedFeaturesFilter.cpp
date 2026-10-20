@@ -156,9 +156,9 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
-  // Shared Attribute Matrices can have multiple paths; use the geometry's collection path.
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
-  pFeatureIdsArrayPathValue = cellDataPath.createChildPath(pFeatureIdsArrayPathValue.getTargetName());
+  pFeatureIdsArrayPathValue = MapToGeometryCellDataPath(cellDataPath, pFeatureIdsArrayPathValue);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -279,13 +279,10 @@ Result<> KeepRemoveRankedFeaturesFilter::executeImpl(DataStructure& dataStructur
   inputValues.RankingArrayPath = filterArgs.value<DataPath>(k_RankingArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
-  // Match the collection path for ignored arrays and the Feature Ids special case.
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = cellDataPath.createChildPath(inputValues.FeatureIdsArrayPath.getTargetName());
-  for(auto& ignoredPath : inputValues.IgnoredDataArrayPaths)
-  {
-    ignoredPath = cellDataPath.createChildPath(ignoredPath.getTargetName());
-  }
+  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
+  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
 
   return KeepRemoveRankedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

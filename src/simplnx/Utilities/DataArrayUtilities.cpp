@@ -202,6 +202,22 @@ Result<> ValidateArraysInGeometryCellData(const DataStructure& dataStructure, co
   return {};
 }
 
+DataPath MapToGeometryCellDataPath(const DataPath& cellDataPath, const DataPath& arrayPath)
+{
+  return cellDataPath.createChildPath(arrayPath.getTargetName());
+}
+
+std::vector<DataPath> MapToGeometryCellDataPath(const DataPath& cellDataPath, const std::vector<DataPath>& arrayPaths)
+{
+  std::vector<DataPath> mappedPaths;
+  mappedPaths.reserve(arrayPaths.size());
+  for(const auto& arrayPath : arrayPaths)
+  {
+    mappedPaths.push_back(MapToGeometryCellDataPath(cellDataPath, arrayPath));
+  }
+  return mappedPaths;
+}
+
 Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
                                                   std::string_view sourceParameterName, const DataPath& sourceArrayPath)
 {
