@@ -12,7 +12,9 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -263,6 +265,42 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
   // crispest signature of the wrong-Laue-operator bug.
   REQUIRE(second[0 * 3 + 0] == 0); // Face 0 hex second color, red channel
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: working headroom applies only to OOC computation", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  Arguments args = BuildPhaseBoundsFixture(dataStructure);
+  Int32Array* phasesPtr = nullptr;
+  REQUIRE_NOTHROW(phasesPtr = &dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
+  (*phasesPtr)[1] = 1;
+  auto& budget = CacheMemoryBudgetManager::instance();
+  REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
+  auto pressure = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes());
+  REQUIRE(pressure.sizeBytes() == budget.maximumWorkingMemoryBytes());
+  ComputeFaceIPFColoringFilter filter;
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors()[0].code == -24359);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const UInt8Array* firstPtr = nullptr;
+    REQUIRE_NOTHROW(firstPtr = &dataStructure.getDataRefAs<UInt8Array>(k_BoundsFaceLabelsPath.replaceName("First Bounds Colors")));
+    const std::array<uint8, 3> expected = {255, 0, 0};
+    for(usize component = 0; component < 3; ++component)
+    {
+      REQUIRE((*firstPtr)[component] == expected.at(component));
+    }
+  }
+  CHECK(budget.reservedWorkingMemoryBytes() == pressure.sizeBytes());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
