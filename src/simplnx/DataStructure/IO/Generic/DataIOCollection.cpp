@@ -10,6 +10,7 @@
 
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include <algorithm>
+#include <iterator>
 
 namespace nx::core
 {
@@ -178,6 +179,28 @@ void DataIOCollection::finalizeStores(DataStructure& dataStructure)
   {
     manager->onFinalizeStores(dataStructure);
   }
+}
+
+Result<> DataIOCollection::beforeFileWrite(const DataStructure& dataStructure, const std::filesystem::path& target, FileWriteHookMode mode)
+{
+  std::vector<Warning> warnings;
+  for(const auto& [ioType, ioManager] : m_ManagerMap)
+  {
+    Result<> managerResult = ioManager->onBeforeFileWrite(dataStructure, target, mode);
+    if(managerResult.invalid())
+    {
+      // Return the failing result itself. MergeResults derives validity from the error count. Thus it would turn an
+      // invalid result with an empty error collection into a success, and the write would continue.
+      std::vector<Warning>& failingWarnings = managerResult.warnings();
+      failingWarnings.insert(failingWarnings.begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
+      return managerResult;
+    }
+    std::vector<Warning>& managerWarnings = managerResult.warnings();
+    warnings.insert(warnings.end(), std::make_move_iterator(managerWarnings.begin()), std::make_move_iterator(managerWarnings.end()));
+  }
+  Result<> hookResult;
+  hookResult.warnings() = std::move(warnings);
+  return hookResult;
 }
 
 bool DataIOCollection::anyManagerFinalizesImport() const

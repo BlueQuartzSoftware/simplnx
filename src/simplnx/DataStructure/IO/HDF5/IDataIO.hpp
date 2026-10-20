@@ -84,12 +84,12 @@ protected:
   static Result<> WriteDataId(object_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
 
   /**
-   * @brief Writes common DataObject attributes (name, ID, etc.) to HDF5.
-   * @param dataStructureWriter The DataStructure writer
+   * @brief Writes common DataObject attributes (name, ID, etc.) to HDF5 and records the object's path for hard links.
+   * @param dataStructureWriter The DataStructure writer that records the object's path
    * @param dataObject The DataObject whose attributes to write
    * @param objectWriter The HDF5 object writer to write to
    * @param importable Whether the object is importable
-   * @return Result<> Result with any errors or warnings
+   * @return -6055 when the object's identifier is already recorded at a different path (see DataStructureWriter::addWriter()), otherwise success
    */
   static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable);
 

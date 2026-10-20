@@ -20,6 +20,7 @@
 
 #include <fmt/core.h>
 
+#include <atomic>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -27,6 +28,10 @@
 namespace
 {
 const std::string k_Delimiter = "|--";
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+std::atomic<nx::core::uint64> g_GetAllDataPathsCallCount = 0;
+#endif
 
 /**
  * @brief Returns the lazy process-wide storage-format resolver.
@@ -252,6 +257,9 @@ std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType identi
 
 std::vector<DataPath> DataStructure::getAllDataPaths() const
 {
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  g_GetAllDataPathsCallCount.fetch_add(1, std::memory_order_relaxed);
+#endif
   std::vector<DataPath> dataPaths;
   for(const auto& [identifier, weakPtr] : m_DataObjects)
   {
@@ -266,6 +274,13 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
   }
   return dataPaths;
 }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+uint64 DataStructure::GetAllDataPathsCallCountForTesting()
+{
+  return g_GetAllDataPathsCallCount.load(std::memory_order_relaxed);
+}
+#endif
 
 std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
 {

@@ -51,6 +51,7 @@ set(SIMPLNX_TEST_SRCS
   ExtentTest.cpp
   ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
+  FileWriteHookTest.cpp
   FilterTest.cpp
   GeometryTest.cpp
   GeometryBulkContractsTest.cpp

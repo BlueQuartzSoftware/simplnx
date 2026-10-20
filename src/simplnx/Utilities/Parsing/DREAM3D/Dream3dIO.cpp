@@ -2,6 +2,7 @@
 #include "Dream3dIOInternal.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/PathText.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
@@ -39,14 +40,18 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 #include <utility>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -2728,6 +2733,219 @@ Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& 
   return WriteDataStructure(fileWriter, dataStructure, options);
 }
 
+namespace
+{
+constexpr int32 k_XdmfDestinationRejectedError = -6057;
+constexpr int32 k_XdmfDestinationCheckFailedError = -6058;
+
+/**
+ * @brief Reports whether a path has the extension ".xdmf" in any letter case.
+ * @param path Path to inspect.
+ * @return True for ".xdmf", ".XDMF", ".XdMf" and so on.
+ *
+ * The comparison folds only ASCII letters, so it needs no locale and works on the native character type of every platform.
+ */
+bool HasXdmfExtension(const fs::path& path)
+{
+  constexpr std::string_view k_XdmfExtension = ".xdmf";
+  const fs::path::string_type extension = path.extension().native();
+  return std::equal(extension.begin(), extension.end(), k_XdmfExtension.begin(), k_XdmfExtension.end(), [](fs::path::value_type character, char expected) {
+    const bool isUpperAscii = character >= 'A' && character <= 'Z';
+    const auto folded = isUpperAscii ? static_cast<fs::path::value_type>(character - 'A' + 'a') : character;
+    return folded == static_cast<fs::path::value_type>(expected);
+  });
+}
+
+/**
+ * @brief Reports whether the file name of a path ends with a space or a period.
+ * @param path Path to inspect.
+ * @return True when the last character of the file name is ' ' or '.'.
+ *
+ * Windows removes trailing spaces and periods when it creates a file, so such a name and the name without them are one file.
+ */
+bool HasTrailingSpaceOrPeriod(const fs::path& path)
+{
+  const fs::path::string_type fileName = path.filename().native();
+  return !fileName.empty() && (fileName.back() == ' ' || fileName.back() == '.');
+}
+
+/**
+ * @brief Reports whether a status describes a symbolic link or, with the Microsoft library, a junction.
+ * @param status Status of the path itself, from std::filesystem::symlink_status().
+ * @return True for a link; a missing path is not a link.
+ */
+bool IsLinkStatus(const fs::file_status& status)
+{
+#ifdef _MSC_VER
+  if(status.type() == fs::file_type::junction)
+  {
+    return true;
+  }
+#endif
+  return status.type() == fs::file_type::symlink;
+}
+
+/**
+ * @brief Reads the status of a path itself, without following a final link.
+ * @param primary Primary path of the write, named in the error message.
+ * @param path Path to inspect: the primary path or its sidecar.
+ * @return The status, file_type::not_found for a missing path, or error -6058 for any other failure.
+ */
+Result<fs::file_status> ReadDestinationStatus(const fs::path& primary, const fs::path& path)
+{
+  std::error_code statusError;
+  const fs::file_status status = fs::symlink_status(path, statusError);
+  if(status.type() == fs::file_type::not_found)
+  {
+    return {status};
+  }
+  if(statusError || status.type() == fs::file_type::none)
+  {
+    return MakeErrorResult<fs::file_status>(k_XdmfDestinationCheckFailedError,
+                                            fmt::format("Cannot write '{}' with an XDMF file: the status of '{}' cannot be read ({}). Check that the folder is accessible.", PathToUtf8Text(primary),
+                                                        PathToUtf8Text(path), statusError.message()));
+  }
+  return {status};
+}
+
+/**
+ * @brief Checks that a DREAM3D file and its XDMF sidecar are two different files before either one changes.
+ * @param primary DREAM3D file path as the caller passed it.
+ * @param sidecar XDMF path derived from primary with replace_extension(".xdmf").
+ * @return Success, error -6057 when the two destinations can be one file, or error -6058 when the check itself fails.
+ *
+ * The check uses std::filesystem only. It rejects a primary with the ".xdmf" extension in any letter case, a primary file name that
+ * ends with a space or a period (Windows strips them, so "out.xdmf " and "out.xdmf" are one file even when neither exists yet), either
+ * path being a symbolic link or a junction (dangling or not; a link chain starts at such a path), and two existing paths that are the
+ * same file (a hard link). Parent directories are not checked: both paths share the parent path of primary, so they resolve into
+ * one directory, where different names are different entries. Windows device names and alternate data stream syntax are not
+ * supported and not checked.
+ */
+Result<> CheckXdmfDestinations(const fs::path& primary, const fs::path& sidecar)
+{
+  if(HasXdmfExtension(primary))
+  {
+    return MakeErrorResult(k_XdmfDestinationRejectedError, fmt::format("Cannot write '{}' with an XDMF file: the file has the .xdmf extension, so the XDMF file would replace it. "
+                                                                       "Choose a file name with the .dream3d extension.",
+                                                                       PathToUtf8Text(primary)));
+  }
+  if(HasTrailingSpaceOrPeriod(primary))
+  {
+    return MakeErrorResult(k_XdmfDestinationRejectedError, fmt::format("Cannot write '{}' with an XDMF file: the file name ends with a space or a period, which Windows removes, so the "
+                                                                       "file and its XDMF file '{}' can be one file. Remove the trailing character.",
+                                                                       PathToUtf8Text(primary), PathToUtf8Text(sidecar)));
+  }
+
+  Result<fs::file_status> primaryStatus = ReadDestinationStatus(primary, primary);
+  if(primaryStatus.invalid())
+  {
+    return ConvertResult(std::move(primaryStatus));
+  }
+  Result<fs::file_status> sidecarStatus = ReadDestinationStatus(primary, sidecar);
+  if(sidecarStatus.invalid())
+  {
+    return ConvertResult(std::move(sidecarStatus));
+  }
+  for(const auto& [path, status] : {std::pair{primary, primaryStatus.value()}, std::pair{sidecar, sidecarStatus.value()}})
+  {
+    if(IsLinkStatus(status))
+    {
+      return MakeErrorResult(k_XdmfDestinationRejectedError, fmt::format("Cannot write '{}' with an XDMF file: '{}' is a symbolic link or a junction, so the file and its XDMF file "
+                                                                         "can be one file. Write to a path that is not a link.",
+                                                                         PathToUtf8Text(primary), PathToUtf8Text(path)));
+    }
+  }
+
+  const bool bothExist = primaryStatus.value().type() != fs::file_type::not_found && sidecarStatus.value().type() != fs::file_type::not_found;
+  if(!bothExist)
+  {
+    return {};
+  }
+  std::error_code equivalenceError;
+  const bool isSameFile = fs::equivalent(primary, sidecar, equivalenceError);
+  if(equivalenceError)
+  {
+    return MakeErrorResult(k_XdmfDestinationCheckFailedError, fmt::format("Cannot write '{}' with an XDMF file: cannot check whether it and '{}' are the same file ({}).", PathToUtf8Text(primary),
+                                                                          PathToUtf8Text(sidecar), equivalenceError.message()));
+  }
+  if(isSameFile)
+  {
+    return MakeErrorResult(k_XdmfDestinationRejectedError, fmt::format("Cannot write '{}' with an XDMF file: it and its XDMF file '{}' are the same file (a hard link). Write to another file.",
+                                                                       PathToUtf8Text(primary), PathToUtf8Text(sidecar)));
+  }
+  return {};
+}
+
+/**
+ * @brief Runs the file-write hook on every final path of a write, in order, before the write changes any of them.
+ * @param dataStructure Structure that the writer writes.
+ * @param targets Final paths that the writer creates, truncates or opens for writing.
+ * @return Valid result with the warnings of every hook call, or the first hook error with the warnings collected before it.
+ *
+ * A hook error must be returned without a change to any target.
+ */
+Result<> RunFileWriteHooks(const DataStructure& dataStructure, const std::vector<fs::path>& targets)
+{
+  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
+  DataIOCollection& ioCollection = application->getIOCollection();
+  std::vector<Warning> warnings;
+  for(const fs::path& target : targets)
+  {
+    Result<> hookResult = ioCollection.beforeFileWrite(dataStructure, target);
+    if(hookResult.invalid())
+    {
+      PrependWarnings(hookResult, warnings);
+      return hookResult;
+    }
+    warnings.insert(warnings.end(), std::make_move_iterator(hookResult.warnings().begin()), std::make_move_iterator(hookResult.warnings().end()));
+  }
+  Result<> hooksResult;
+  hooksResult.warnings() = std::move(warnings);
+  return hooksResult;
+}
+
+/**
+ * @brief Creates a DREAM3D file, writes and closes it, then writes its XDMF sidecar.
+ * @param path DREAM3D file to create or replace.
+ * @param xdmfFilePath Sidecar path.
+ * @param dataStructure Structure to write.
+ * @param pipeline Pipeline metadata.
+ * @param writeXdmf Writes the sidecar when true.
+ * @param options Dataset encoding options.
+ * @return Creation, write or close error, or success.
+ * @pre The file-write hook has run on path and, with writeXdmf, on xdmfFilePath.
+ */
+Result<> WriteDream3dFileAfterHooks(const fs::path& path, const fs::path& xdmfFilePath, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
+                                    const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
+{
+  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
+  if(!fileWriter.isValid())
+  {
+    return MakeErrorResult(-9045, fmt::format("Failed to create DREAM3D file at path {}", PathToUtf8Text(path)));
+  }
+
+  auto result = DREAM3D::WriteFile(fileWriter, pipeline, dataStructure, options);
+  if(result.invalid())
+  {
+    // The first error wins; the destructor closes the file best-effort.
+    return result;
+  }
+  // Every child handle of the write is closed. A file that does not close completely is not reported as written.
+  result = MergeResults(std::move(result), fileWriter.closeChecked());
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  if(writeXdmf)
+  {
+    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, path.filename().string());
+  }
+
+  return result;
+}
+} // namespace
+
 Result<> DREAM3D::WriteFile(const fs::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
 {
   return WriteFile(path, dataStructure, pipeline, writeXdmf, nx::core::HDF5::DataStructureWriter::WriteOptions{});
@@ -2736,25 +2954,27 @@ Result<> DREAM3D::WriteFile(const fs::path& path, const DataStructure& dataStruc
 Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
                             const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
 {
-  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
-  if(!fileWriter.isValid())
-  {
-    return MakeErrorResult(-9045, fmt::format("Failed to create DREAM3D file at path {}", path.string()));
-  }
-
-  auto result = WriteFile(fileWriter, pipeline, dataStructure, options);
-  if(result.invalid())
-  {
-    return result;
-  }
-
+  const fs::path xdmfFilePath = fs::path(path).replace_extension(".xdmf");
+  std::vector<fs::path> targets = {path};
   if(writeXdmf)
   {
-    fs::path xdmfFilePath = fs::path(path).replace_extension(".xdmf");
-    WriteXdmf(xdmfFilePath, dataStructure, path.filename().string());
+    Result<> destinationResult = CheckXdmfDestinations(path, xdmfFilePath);
+    if(destinationResult.invalid())
+    {
+      return destinationResult;
+    }
+    targets.push_back(xdmfFilePath);
   }
 
-  return {};
+  // Both hooks run before either file changes, so a store that reads the file or its sidecar is released first.
+  Result<> hooksResult = RunFileWriteHooks(dataStructure, targets);
+  if(hooksResult.invalid())
+  {
+    return hooksResult;
+  }
+  Result<> writeResult = WriteDream3dFileAfterHooks(path, xdmfFilePath, dataStructure, pipeline, writeXdmf, options);
+  PrependWarnings(writeResult, hooksResult.warnings());
+  return writeResult;
 }
 
 Result<> DREAM3D::WriteRecoveryFile(const fs::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, std::optional<fs::path> userDataFilePath)
@@ -2775,7 +2995,13 @@ Result<> DREAM3D::WriteRecoveryFile(const fs::path& path, const DataStructure& d
     }
     // An absolute path keeps the redirect valid after a working-directory change.
     const fs::path absUserPath = fs::absolute(*userDataFilePath);
-    return fileWriter.writeStringAttribute(k_UserDataFilePathTag.str(), absUserPath.string());
+    Result<> attributeResult = fileWriter.writeStringAttribute(k_UserDataFilePathTag.str(), absUserPath.string());
+    if(attributeResult.invalid())
+    {
+      return attributeResult;
+    }
+    // The controller commits a redirect checkpoint on a valid result, so the file must have closed completely.
+    return MergeResults(MergeResults(std::move(versionResult), std::move(attributeResult)), fileWriter.closeChecked());
   }
 
   // Full recovery delegates OOC placeholder metadata to registered recovery writers.
@@ -2806,7 +3032,17 @@ Result<std::optional<fs::path>> DREAM3D::ReadUserDataFilePathAttribute(const fs:
   return {std::optional<fs::path>{fs::path(attrResult.value())}};
 }
 
-Result<> DREAM3D::AppendFile(const fs::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
+namespace
+{
+/**
+ * @brief Opens an existing DREAM3D file, appends one top-level object and closes the file.
+ * @param path Existing DREAM3D file.
+ * @param dataStructure Structure that holds the object.
+ * @param dataPath Top-level object to append.
+ * @return Open, version, append or close error, or success.
+ * @pre The file-write hook has run on path.
+ */
+Result<> AppendDream3dFileAfterHook(const fs::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
 {
   auto file = nx::core::HDF5::FileIO::AppendFile(path);
   if(!file.isValid())
@@ -2814,12 +3050,33 @@ Result<> DREAM3D::AppendFile(const fs::path& path, const DataStructure& dataStru
     return MakeErrorResult(-1, fmt::format("DREAM3D::AppendFile: Unable to open '{}' for appending", path.string()));
   }
 
-  const auto fileVersion = GetFileVersion(file);
-  if(fileVersion != k_CurrentFileVersion)
+  const auto fileVersion = DREAM3D::GetFileVersion(file);
+  if(fileVersion != DREAM3D::k_CurrentFileVersion)
   {
-    return MakeErrorResult(-2, fmt::format("DREAM3D::AppendFile: Incompatible file version '{}'. Expected '{}'", fileVersion, k_CurrentFileVersion));
+    return MakeErrorResult(-2, fmt::format("DREAM3D::AppendFile: Incompatible file version '{}'. Expected '{}'", fileVersion, DREAM3D::k_CurrentFileVersion));
   }
-  return HDF5::DataStructureWriter::AppendFile(file, dataStructure, dataPath);
+  // The FileIO& overload does not run the hook, so the append runs it once.
+  Result<> appendResult = HDF5::DataStructureWriter::AppendFile(file, dataStructure, dataPath);
+  if(appendResult.invalid())
+  {
+    // The first error wins; the destructor closes the file best-effort.
+    return appendResult;
+  }
+  // The file may already hold the appended object when the close fails; the error does not promise a rollback.
+  return MergeResults(std::move(appendResult), file.closeChecked());
+}
+} // namespace
+
+Result<> DREAM3D::AppendFile(const fs::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  Result<> hookResult = RunFileWriteHooks(dataStructure, {path});
+  if(hookResult.invalid())
+  {
+    return hookResult;
+  }
+  Result<> appendResult = AppendDream3dFileAfterHook(path, dataStructure, dataPath);
+  PrependWarnings(appendResult, hookResult.warnings());
+  return appendResult;
 }
 
 std::vector<nx::core::DataPath> DREAM3D::ExpandSelectedPathsToAncestors(const std::vector<nx::core::DataPath>& selectedPaths)

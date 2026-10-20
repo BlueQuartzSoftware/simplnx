@@ -243,6 +243,20 @@ public:
   void finalizeStores(DataStructure& dataStructure);
 
   /**
+   * @brief Runs the file-write hook of every registered manager before a writer changes target.
+   * @param dataStructure Structure that the writer writes.
+   * @param target Final path that the writer creates, truncates, opens for writing or renames over.
+   * @param mode Selects whether stores that read target are copied or cause an error.
+   * @return Valid result with the warnings of all managers, or the first error with the warnings collected up to and
+   * including the failing manager.
+   *
+   * Managers run in map order. The first error stops the fan-out, so a later manager does not run. The caller must
+   * return the error without a change to target. See IDataIOManager::onBeforeFileWrite() for the concurrency contract
+   * and the cases that the hook does not cover. In a build without an out-of-core manager the call does nothing.
+   */
+  Result<> beforeFileWrite(const DataStructure& dataStructure, const std::filesystem::path& target, FileWriteHookMode mode = FileWriteHookMode::ReleaseReaders);
+
+  /**
    * @brief Reports whether deferred DREAM3D import finalization is available.
    * @return True when a manager reports finalizesImport().
    *

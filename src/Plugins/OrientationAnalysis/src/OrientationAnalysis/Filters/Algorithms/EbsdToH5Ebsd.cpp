@@ -1,8 +1,10 @@
 #include "EbsdToH5Ebsd.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -15,7 +17,14 @@
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
 
+#include <memory>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_FilterCancelledError = -1;
+} // namespace
 
 // -----------------------------------------------------------------------------
 EbsdToH5Ebsd::EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EbsdToH5EbsdInputValues* inputValues)
@@ -58,6 +67,28 @@ Result<> EbsdToH5Ebsd::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
+  if(m_ShouldCancel)
+  {
+    return MakeErrorResult(k_FilterCancelledError, "Filter cancelled");
+  }
+  // The output is written through a temporary file, so the hook runs on the final path: a store of the pipeline that reads that file
+  // is released before the commit replaces it.
+  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
+  Result<> hookResult = application->getIOCollection().beforeFileWrite(m_DataStructure, absPath);
+  if(hookResult.invalid())
+  {
+    return hookResult;
+  }
+
+  // Stores released before a cancel stay released; the final file stays unchanged.
+  Result<> result = m_ShouldCancel ? MakeErrorResult(k_FilterCancelledError, "Filter cancelled") : writeAndCommit(atomicFile);
+  result.warnings().insert(result.warnings().begin(), hookResult.warnings().begin(), hookResult.warnings().end());
+  return result;
+}
+
+// -----------------------------------------------------------------------------
+Result<> EbsdToH5Ebsd::writeAndCommit(AtomicFile& atomicFile)
+{
   // Scope file writer in code block to get around file lock on Windows (enforce destructor order)
   {
     hid_t fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
@@ -315,7 +346,7 @@ Result<> EbsdToH5Ebsd::operator()()
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
   if(m_ShouldCancel)
   {
-    return MakeErrorResult(-1, "Filter cancelled");
+    return MakeErrorResult(k_FilterCancelledError, "Filter cancelled");
   }
   Result<> commitResult = atomicFile.commit();
   if(commitResult.invalid())
