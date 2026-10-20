@@ -75,15 +75,14 @@ These are the Class 2 oracle expected values. SIMPLNX cluster counts and sizes s
 ### What was done to resolve it
 
 1. ✅ **Independent oracle established** — scikit-learn 1.7.1 DBSCAN run on the same `.txt` input files via `dbscan_vv/run_sklearn_oracle.py`. Results in `dbscan_vv/oracle_results.json`.
-2. ✅ **SIMPLNX verified against oracle** (Phase 6) — 4/6 exact match; 2 deviations explained by DBSCAN-D1 and corroborated by Phase 9 legacy comparison.
+2. ✅ **SIMPLNX verified against oracle** (Phase 6) — 4/6 exact match; 2 deviations explained by DBSCAN-D1 and corroborated by the DREAM3D 6.5.171 comparison.
 3. ✅ **LDF exemplar arrays promoted to regression fixtures** — no regeneration needed.
 4. **3D exemplar not resolved** — no external oracle available for the 3D dataset. Remains circular; correctness claim rests on SIMPLNX's own output only.
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *pending*
-- **Date:** *pending*
-- **Skip reason** (if skipped): *To be filled in — record reason if second engineer is not available.*
+- **Reviewer:** Michael Jackson
+- **Date:** 2026-08-28
 
 ## Circular-oracle resolution (Phase 6, 2026-08-04)
 
@@ -94,24 +93,24 @@ The circular-oracle situation identified in Phase 2 was resolved in Phase 6 reco
 
 **Finding**: The Class 2 sklearn oracle independently confirmed that SIMPLNX is correct for 4/6 datasets (blobs, noisy_circles, noisy_moons, no_structure — exact cluster count and sizes). The 2 deviating datasets (ansio, varied) diverge from sklearn only in micro-clusters at or below the minPts threshold — consistent with Deviation DBSCAN-D1 (GDCF grid-cell vs. point-level core definition). These are not bugs.
 
-**Status change**: The LDF exemplar arrays in this archive are **promoted from "circular oracle" to "regression fixtures"** as of 2026-08-04. They remain in place — no regeneration required. The primary correctness proof is now the Class 2 sklearn oracle comparison recorded in the V&V working document (`src/Plugins/SimplnxCore/vv/DBSCANFilter.md`, Phase 6).
+**Status change**: The LDF exemplar arrays in this archive are **promoted from "circular oracle" to "regression fixtures"** as of 2026-08-04. They remain in place — no regeneration required. The primary correctness proof is now the Class 2 sklearn oracle comparison in the Class 2 oracle table above.
 
 This archive has **not** been regenerated. Regeneration is not needed because the independent oracle confirmed the existing arrays are correct.
 
-## Legacy comparison corroboration (Phase 9, 2026-08-05)
+## DREAM3D 6.5.171 comparison (2026-10-20)
 
-Script: `dbscan_vv/phase9_ab_test.py`
-Results: `dbscan_vv/phase9_comparison_results.json`
+Script: `dbscan_vv/ab_6_5_171.py`
+Results: `dbscan_vv/ab_6_5_171_comparison_results.json`
 
-The historical local legacy proof build (traditional DBSCAN, via `DREAM3DReview` plugin UUID `c2d4f1e8`) was run against the same 6 sklearn datasets. Three-way comparison (the local legacy proof build vs. sklearn 1.7.1 vs. SIMPLNX):
+The DREAM3D 6.5.171 `PipelineRunner` ran the `DBSCAN` filter (DREAM3DReview plugin, UUID `c2d4f1e8`) on the same 6 sklearn datasets. An earlier run on a local proof version (2026-08-05) gave the same label for every point. Three-way comparison (DREAM3D 6.5.171 vs. sklearn 1.7.1 vs. SIMPLNX):
 
-| Dataset | Legacy n_clusters | sklearn n_clusters | SIMPLNX n_clusters | Match |
+| Dataset | 6.5.171 n_clusters | sklearn n_clusters | SIMPLNX n_clusters | Match |
 |---|---|---|---|---|
-| ansio | 6 | 6 | 3 | Legacy = sklearn; SIMPLNX differs (DBSCAN-D1) |
+| ansio | 6 | 6 | 3 | 6.5.171 = sklearn; SIMPLNX differs (DBSCAN-D1) |
 | blobs | 2 | 2 | 2 | Exact three-way match |
 | noisy_circles | 2 | 2 | 2 | Exact three-way match |
 | noisy_moons | 2 | 2 | 2 | Exact three-way match |
 | no_structure | 1 | 1 | 1 | Exact three-way match |
-| varied | 11 | 11 | 3 | Legacy = sklearn; SIMPLNX differs (DBSCAN-D1) |
+| varied | 11 | 11 | 3 | 6.5.171 = sklearn; SIMPLNX differs (DBSCAN-D1) |
 
-**Conclusion**: The regression fixtures in this archive are consistent with both the Class 2 sklearn oracle (confirmed Phase 6) and the legacy comparison (confirmed Phase 9). The two deviating datasets (ansio, varied) are correctly attributed to DBSCAN-D1 (GDCF grid-cell core definition vs. traditional point-level core definition). The archive status remains **regression fixtures** — no regeneration required.
+**Conclusion**: The regression fixtures in this archive are consistent with both the Class 2 sklearn oracle (confirmed Phase 6) and the DREAM3D 6.5.171 comparison. The two deviating datasets (ansio, varied) are correctly attributed to DBSCAN-D1 (GDCF grid-cell core definition vs. traditional point-level core definition). The archive status remains **regression fixtures** — no regeneration required.
