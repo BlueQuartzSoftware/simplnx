@@ -21,12 +21,6 @@ ComputeKMeans::ComputeKMeans(DataStructure& dataStructure, const IFilter::Messag
 ComputeKMeans::~ComputeKMeans() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void ComputeKMeans::updateProgress(const std::string& message)
-{
-  m_MessageHandler.sendInfoMessage(message);
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMeans::getCancel()
 {
   return m_ShouldCancel;

@@ -14,6 +14,7 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -6809;
+constexpr int32 k_InvalidNumberOfNeighbors = -6810;
 } // namespace
 
 namespace nx::core
@@ -99,6 +100,12 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto pNumberOfNeighborsValue = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
+
+  if(pNumberOfNeighborsValue < 1 || pNumberOfNeighborsValue > 6)
+  {
+    return MakePreflightErrorResult(k_InvalidNumberOfNeighbors, fmt::format("Required Number of Neighbors must be between 1 and 6 (inclusive). Entered value: {}.", pNumberOfNeighborsValue));
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 

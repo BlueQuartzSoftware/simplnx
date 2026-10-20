@@ -1,5 +1,6 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <algorithm>
+#include <array>
 #include <catch2/catch.hpp>
 #include <chrono>
 #include <cmath>
@@ -375,6 +376,88 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCo
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/raw", unit_test::k_TestFilesDir));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before file boundaries", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  const WriteAbaqusHexahedronFilter filter;
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
+  Arguments args;
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_UseReducedIntegration_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key, std::make_any<int32>(250));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Progress_Test"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  std::vector<IFilter::Message> messages;
+  const auto handler = UnitTest::RecordMessages(messages);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::array<std::string, 5> boundaries = {"Wrote Nodes (File 1/5)", "Wrote Elements (File 2/5)", "Wrote Sections (File 3/5)", "Wrote Element Sets (File 4/5)", "Wrote Master (File 5/5)"};
+  const std::array<std::string, 3> labels = {"Writing Nodes (File 1/5)", "Writing Elements (File 2/5)", "Grouping Element Sets"};
+  const std::array<usize, 3> fileNumbers = {1, 2, 4};
+  std::array<int32, 3> lastProgress = {-1, -1, -1};
+  usize completedFiles = 0;
+  int32 lastOverallProgress = -1;
+  for(const auto& message : messages)
+  {
+    CAPTURE(message.message);
+    if(message.type == IFilter::Message::Type::Info)
+    {
+      for(usize fileIndex = 0; fileIndex < boundaries.size(); fileIndex++)
+      {
+        if(message.message == boundaries[fileIndex])
+        {
+          CHECK(fileIndex == completedFiles);
+          completedFiles++;
+        }
+      }
+    }
+    else if(message.type == IFilter::Message::Type::Progress)
+    {
+      bool recognizedLabel = false;
+      for(usize labelIndex = 0; labelIndex < labels.size(); labelIndex++)
+      {
+        if(message.message.find(labels[labelIndex] + ":") == 0)
+        {
+          recognizedLabel = true;
+          CHECK(fileNumbers[labelIndex] > completedFiles);
+          CHECK(message.progress >= lastProgress[labelIndex]);
+          lastProgress[labelIndex] = message.progress;
+        }
+      }
+      CHECK(recognizedLabel);
+      lastOverallProgress = message.progress;
+    }
+  }
+  CHECK(completedFiles == boundaries.size());
+  CHECK(lastProgress[0] == 100);
+  CHECK(lastProgress[1] == 100);
+  // AbaqusElementSets::write passes the throttle only to its resident grouping path. The external-sort
+  // and repeated-scan writers used by the OOC algorithm report no "Grouping Element Sets" progress.
+  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  {
+    CHECK(lastProgress[2] == 100);
+  }
+  else
+  {
+    CHECK(lastProgress[2] == -1);
+  }
+  CHECK(lastOverallProgress == 100);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

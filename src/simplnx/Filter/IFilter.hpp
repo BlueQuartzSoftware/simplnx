@@ -146,9 +146,15 @@ public:
 
     /**
      * @brief Sends progress as a count of completed items, rendered as "<label>: <current>/<max>".
-     * Use this when the counts are meaningful to a user, e.g. tuples or slices.
+     * Use this for units a user recognizes, such as iterations, phases, levels, files, scans,
+     * slices, arrays, or outputs. Keep the total below a few thousand. For a short outer loop around
+     * a large inner loop, send the outer count as progress. If one outer unit is slow enough to make
+     * the progress bar look stuck, send the inner percent as progress instead: announce each outer
+     * unit with sendInfoMessage() and put the unit name in the inner label, or map the inner value
+     * into the outer total. Do not send both as progress.
+     * Flush a ThrottledMessageHandler when its unit finishes, before the next unit starts.
      * @param label Describes the work being done, with no trailing punctuation
-     * @param current Items completed so far
+     * @param current Number of units that are complete. Send the new count after a unit finishes, not when it starts. A count of 0 before the first unit is permitted.
      * @param max Total items
      * @param detail Optional note appended in parentheses, such as an estimate of the time
      * remaining. nx::core::ProgressEstimator produces one. An empty string appends nothing.
@@ -156,13 +162,15 @@ public:
     void sendProgressCount(std::string label, usize current, usize max, std::string_view detail = {}) const;
 
     /**
-     * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this when the
-     * counts are too large to be readable, where a percentage with a decimal place or two conveys
-     * more than the raw numbers would.
+     * @brief Sends progress as a percentage, rendered as "<label>: <percent>%". Use this for
+     * elements nobody counts by eye, such as tuples, voxels, cells, faces, or features. Also use it
+     * for any total too large to read as a count. Use sendProgressCount() for iterations, files, or
+     * slices.
      * @param label Describes the work being done, with no trailing punctuation
      * @param current Items completed so far
      * @param max Total items
      * @param decimals Number of decimal places to display
+     * @param detail Optional note appended in parentheses; an empty string appends nothing.
      */
     void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2, std::string_view detail = {}) const;
 

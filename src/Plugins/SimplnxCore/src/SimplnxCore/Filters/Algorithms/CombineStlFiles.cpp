@@ -107,6 +107,7 @@ Result<> CombineStlFiles::operator()()
   auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
 
   int32 currentIndex = 1;
+  m_MessageHandler.sendProgressCount("Reading STL Files", 0, paths.size());
   for(const auto& filePath : paths)
   {
     std::string stlFilePath = filePath.string();
@@ -117,8 +118,6 @@ Result<> CombineStlFiles::operator()()
 
     fileListStrArray[currentIndex] = stlFilePath;
     activeArray[currentIndex] = 1;
-    m_MessageHandler.sendInfoMessage(fmt::format("({}/{}) Reading {}", currentIndex, paths.size(), stlFilePath));
-    currentIndex++;
 
     ReadStlFileFilter stlFileReader;
     Arguments args;
@@ -129,6 +128,8 @@ Result<> CombineStlFiles::operator()()
     {
       return executeResult.result;
     }
+    m_MessageHandler.sendProgressCount("Reading STL Files", static_cast<usize>(currentIndex), paths.size(), stlFilePath);
+    currentIndex++;
   }
 
   usize totalTriangles = 0;

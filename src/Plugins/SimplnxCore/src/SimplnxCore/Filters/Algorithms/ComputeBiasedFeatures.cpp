@@ -79,10 +79,6 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   }
   for(int32 iter = 1; iter <= numPhases; iter++)
   {
-    if(m_InputValues->CalcByPhase)
-    {
-      m_MessageHandler.sendInfoMessage(fmt::format("Working on Phase {} of {}", iter, numPhases));
-    }
     // reset boundBox for each phase
     const BoundingBox3D<float32> boundingBox = imageGeometry.getBoundingBoxf();
 
@@ -188,6 +184,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     if(getCancel())
     {
       return {};
+    }
+    if(m_InputValues->CalcByPhase)
+    {
+      m_MessageHandler.sendProgressCount("Computing Biased Features Phases", static_cast<usize>(iter), static_cast<usize>(numPhases));
     }
   }
 

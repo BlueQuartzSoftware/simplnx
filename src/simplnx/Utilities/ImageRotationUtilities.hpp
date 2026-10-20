@@ -339,26 +339,13 @@ public:
   }
 
   /**
-   * @brief Adds completed nodes and emits throttled aggregate progress.
-   * @param counter Specifies newly completed nodes.
+   * @brief Adds completed work units and emits throttled aggregate progress.
+   * @param counter Specifies newly completed work units.
    */
   void sendThreadSafeProgressMessage(usize counter)
   {
     const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
     m_Throttle.incrementPercent(counter);
-  }
-
-  /**
-   * @brief Formats and sends status text only when the throttle permits a message.
-   * @tparam Args Specifies the format argument types.
-   * @param format Specifies the message format.
-   * @param args Supplies the format arguments.
-   */
-  template <class... Args>
-  void sendThreadSafeProgressMessage(fmt::format_string<Args...> format, Args&&... args)
-  {
-    const std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
-    m_Throttle.queueMessage(format, std::forward<Args>(args)...);
   }
 
   /**
@@ -816,7 +803,6 @@ public:
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage("{}: Interpolating values for slice '{}'", m_SourceArray->getName(), k);
 
       // Source Z is linear across one output slice. Its four XY corners bound
       // the required source range before trilinear padding.
@@ -853,6 +839,7 @@ public:
           m_FilterCallback->storeResult(std::move(writeResult), fmt::format("Trilinear destination slice write failed for '{}' at destination Z {}", m_SourceArray->getName(), k));
           return;
         }
+        m_FilterCallback->sendThreadSafeProgressMessage(1);
         continue;
       }
 
@@ -995,6 +982,7 @@ public:
         m_FilterCallback->storeResult(std::move(writeResult), fmt::format("Trilinear destination slice write failed for '{}' at destination Z {}", m_SourceArray->getName(), k));
         return;
       }
+      m_FilterCallback->sendThreadSafeProgressMessage(1);
     }
     m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
@@ -1105,7 +1093,6 @@ public:
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage("{}: Interpolating values for slice '{}'", m_SourceArray->getName(), k);
 
       // Source Z is linear across one output slice. Its four XY corners bound
       // the required source range.
@@ -1154,6 +1141,7 @@ public:
           m_FilterCallback->storeResult(std::move(writeResult), fmt::format("Nearest-neighbor destination slice write failed for '{}' at destination Z {}", m_SourceArray->getName(), k));
           return;
         }
+        m_FilterCallback->sendThreadSafeProgressMessage(1);
         continue;
       }
       neededZMin = std::max(neededZMin, static_cast<int64>(0));
@@ -1246,6 +1234,7 @@ public:
         m_FilterCallback->storeResult(std::move(writeResult), fmt::format("Nearest-neighbor destination slice write failed for '{}' at destination Z {}", m_SourceArray->getName(), k));
         return;
       }
+      m_FilterCallback->sendThreadSafeProgressMessage(1);
     }
     m_FilterCallback->sendThreadSafeStatusMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
   }

@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <mutex>
+#include <string>
 
 namespace nx::core
 {
@@ -57,6 +58,15 @@ public:
    * @param counter Items completed since the previous call
    */
   void sendThreadSafeProgressMessage(usize counter);
+
+  /**
+   * @brief Sends an Info message under the worker progress mutex.
+   * @param message Status text to send.
+   *
+   * The driver thread calls this while workers run, so it takes the same mutex as
+   * sendThreadSafeProgressMessage().
+   */
+  void sendThreadSafeStatusMessage(const std::string& message);
 
 private:
   DataStructure& m_DataStructure;

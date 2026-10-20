@@ -99,7 +99,13 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
   usize zShift = 0;
   // int32 fileIndex = 1;
 
+  usize totalSlices = 0;
+  for(const auto& dataFileInput : inputValues->DataFilePaths)
+  {
+    totalSlices += dataFileInput.second;
+  }
   ThrottledMessageHandler progressThrottle(messageHandler);
+  progressThrottle.reset(totalSlices, "Importing Slices");
 
   for(const auto& dataFileInput : inputValues->DataFilePaths)
   {
@@ -128,6 +134,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
     // One row buffer makes each destination write contiguous.
     std::vector<float32> buffer(deltaX);
 
+    messageHandler.sendInfoMessage(fmt::format("Importing data file '{}'", dataFilePath.string()));
     for(usize z = zShift; z < (zShift + dataFileInput.second); z++)
     {
       if(shouldCancel)
@@ -138,9 +145,9 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
       if(inputValues->ImportSubvolume && (z < inputValues->StartVoxelCoord[2] || z > inputValues->EndVoxelCoord[2]))
       {
         fileZSlice++;
+        progressThrottle.updateCount(z + 1);
         continue;
       }
-      progressThrottle.queueMessage([&]() { return fmt::format("Importing Data || Data File: {} || Importing Slice {}", dataFileInput.first.string(), z); });
       for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
       {
         if(inputValues->ImportSubvolume && (y < inputValues->StartVoxelCoord[1] || y > inputValues->EndVoxelCoord[1]))
@@ -170,6 +177,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         }
       }
       fileZSlice++;
+      progressThrottle.updateCount(z + 1);
     }
     zShift += dataFileInput.second;
     // fileIndex++;

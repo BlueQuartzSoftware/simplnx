@@ -405,7 +405,7 @@ Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, Abstra
         }
       }
 
-      progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed for slice {}", ++completedIterations, z + 1);
+      ++completedIterations;
     }
 
     for(usize i = 0; i < slice; ++i)
@@ -799,7 +799,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
       changed = changed || stepChanged;
     }
 
-    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
+    ++completedIterations;
   }
 
   progressThrottle.reset(volumeValues, "Writing Binary Thinning Output");
@@ -1162,7 +1162,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       std::swap(source, destination);
     }
 
-    progressThrottle.queueMessage("Thinning Binary Image: {} iterations completed", ++completedIterations);
+    ++completedIterations;
   }
 
   {

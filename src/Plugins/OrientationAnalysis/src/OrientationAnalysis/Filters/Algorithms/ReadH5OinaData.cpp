@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/ProgressEstimator.hpp"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
@@ -205,6 +206,9 @@ Result<> ReadH5OinaData::operator()()
   }
 
   const usize scanCount = orderedScanNames.size();
+  ProgressEstimator progressEstimator;
+  progressEstimator.restart();
+  m_MessageHandler.sendProgressCount("Reading Scans", 0, scanCount);
   for(usize scanIdx = 0; scanIdx < scanCount; scanIdx++)
   {
     if(m_ShouldCancel)
@@ -213,7 +217,6 @@ Result<> ReadH5OinaData::operator()()
     }
 
     m_CurrentScanName = orderedScanNames[scanIdx];
-    m_MessageHandler.sendInfoMessage(fmt::format("Reading scan '{}' ({} of {})", m_CurrentScanName, scanIdx + 1, scanCount));
     Result<> readResults = readData(m_CurrentScanName);
     if(readResults.invalid())
     {
@@ -225,12 +228,18 @@ Result<> ReadH5OinaData::operator()()
       return {};
     }
 
-    m_MessageHandler.sendInfoMessage(fmt::format("Copying the cell data of scan '{}' ({} of {})", m_CurrentScanName, scanIdx + 1, scanCount));
     Result<> copyDataResults = copyRawEbsdData(static_cast<int>(scanIdx));
     if(copyDataResults.invalid())
     {
       return copyDataResults;
     }
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const std::string estimate = progressEstimator.estimate(scanIdx + 1, scanCount);
+    const std::string detail = estimate.empty() ? m_CurrentScanName : fmt::format("{}, {}", m_CurrentScanName, estimate);
+    m_MessageHandler.sendProgressCount("Reading Scans", scanIdx + 1, scanCount, detail);
   }
   return {};
 }

@@ -152,9 +152,14 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
     }
   }
 
+  progressThrottle.updatePercent(totalPoints);
+  progressThrottle.flush();
+
   // Descend from six face neighbors to the requested count. One-slice geometries cannot meet the top levels.
   constexpr int32 startLevel = static_cast<int32>(k_NumFaceNeighbors);
   const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
+  const usize levelTotal = totalLevels > 0 ? static_cast<usize>(totalLevels) : 0;
+  m_MessageHandler.sendProgressCount("Propagating Levels", 0, levelTotal);
 
   for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
   {
@@ -163,7 +168,6 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       return {};
     }
 
-    m_MessageHandler.sendInfoMessage(fmt::format("Propagating Level {} of {}", (startLevel - currentLevel) + 1, totalLevels));
     std::deque<usize> worklist;
     for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
@@ -250,6 +254,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
         }
       }
     }
+    m_MessageHandler.sendProgressCount("Propagating Levels", static_cast<usize>((startLevel - currentLevel) + 1), levelTotal);
   }
 
   return {};

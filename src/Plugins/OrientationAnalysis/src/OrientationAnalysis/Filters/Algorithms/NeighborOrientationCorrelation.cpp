@@ -166,8 +166,7 @@ Result<> NeighborOrientationCorrelation::operator()()
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
     usize processedVoxels = 0;
-    const std::string progressLabel = fmt::format("Processing Level {} of {}", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level);
-    m_MessageHandler.sendInfoMessage(progressLabel);
+    const std::string progressLabel = fmt::format("Processing Level {}/{}", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level);
     progressThrottle.reset(totalVoxels, progressLabel);
 
     // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
@@ -351,13 +350,10 @@ Result<> NeighborOrientationCorrelation::operator()()
     {
       return {};
     }
+    // Every voxel of this level is processed, so the level ends at 100% instead of the last multiple of 10000.
+    progressThrottle.updatePercent(totalVoxels);
+    progressThrottle.flush();
   }
 
   return {};
-}
-
-void NeighborOrientationCorrelation::sendThreadSafeProgressMessage(const std::string& message)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  m_Throttle.trySendMessage(message);
 }
