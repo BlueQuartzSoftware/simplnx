@@ -75,7 +75,7 @@ These are the Class 2 oracle expected values. SIMPLNX cluster counts and sizes s
 ### What was done to resolve it
 
 1. ✅ **Independent oracle established** — scikit-learn 1.7.1 DBSCAN run on the same `.txt` input files via `dbscan_vv/run_sklearn_oracle.py`. Results in `dbscan_vv/oracle_results.json`.
-2. ✅ **SIMPLNX verified against oracle** (Phase 6) — 4/6 exact match; 2 deviations explained by DBSCAN-D1 and corroborated by the DREAM3D 6.5.171 comparison.
+2. ✅ **SIMPLNX verified against oracle** (Phase 6) — 4/6 exact match; 2 deviations explained by DBSCAN-D1 and corroborated by the DREAM.3D v6.5.171 comparison.
 3. ✅ **LDF exemplar arrays promoted to regression fixtures** — no regeneration needed.
 4. **3D exemplar not resolved** — no external oracle available for the 3D dataset. Remains circular; correctness claim rests on SIMPLNX's own output only.
 
@@ -97,12 +97,12 @@ The circular-oracle situation identified in Phase 2 was resolved in Phase 6 reco
 
 This archive has **not** been regenerated. Regeneration is not needed because the independent oracle confirmed the existing arrays are correct.
 
-## DREAM3D 6.5.171 comparison (2026-10-20)
+## DREAM.3D v6.5.171 comparison (2026-10-20)
 
 Script: `dbscan_vv/ab_6_5_171.py`
 Results: `dbscan_vv/ab_6_5_171_comparison_results.json`
 
-The DREAM3D 6.5.171 `PipelineRunner` ran the `DBSCAN` filter (DREAM3DReview plugin, UUID `c2d4f1e8`) on the same 6 sklearn datasets. An earlier run on a local proof version (2026-08-05) gave the same label for every point. Three-way comparison (DREAM3D 6.5.171 vs. sklearn 1.7.1 vs. SIMPLNX):
+The DREAM.3D v6.5.171 `PipelineRunner` ran the `DBSCAN` filter (DREAM3DReview plugin, UUID `c2d4f1e8`) on the same 6 sklearn datasets. An earlier run on a local proof version (2026-08-05) gave the same label for every point. Three-way comparison (DREAM.3D v6.5.171 vs. sklearn 1.7.1 vs. SIMPLNX):
 
 | Dataset | 6.5.171 n_clusters | sklearn n_clusters | SIMPLNX n_clusters | Match |
 |---|---|---|---|---|
@@ -113,4 +113,4 @@ The DREAM3D 6.5.171 `PipelineRunner` ran the `DBSCAN` filter (DREAM3DReview plug
 | no_structure | 1 | 1 | 1 | Exact three-way match |
 | varied | 11 | 11 | 3 | 6.5.171 = sklearn; SIMPLNX differs (DBSCAN-D1) |
 
-**Conclusion**: The regression fixtures in this archive are consistent with both the Class 2 sklearn oracle (confirmed Phase 6) and the DREAM3D 6.5.171 comparison. The two deviating datasets (ansio, varied) are correctly attributed to DBSCAN-D1 (GDCF grid-cell core definition vs. traditional point-level core definition). The archive status remains **regression fixtures** — no regeneration required.
+**Conclusion**: The regression fixtures in this archive are consistent with both the Class 2 sklearn oracle (confirmed Phase 6) and the DREAM.3D v6.5.171 comparison. The two deviating datasets (ansio, varied) are correctly attributed to DBSCAN-D1 (GDCF grid-cell core definition vs. traditional point-level core definition). The archive status remains **regression fixtures** — no regeneration required.

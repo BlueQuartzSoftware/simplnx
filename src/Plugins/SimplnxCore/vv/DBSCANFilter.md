@@ -6,7 +6,8 @@
 |--------|--------------|
 | Plugin | SimplnxCore |
 | SIMPLNX UUID | `763dad44-fad7-4606-808f-617867257b98` |
-| DREAM3D 6.5.171 equivalent | `DBSCAN` (DREAM3DReview plugin, SIMPL UUID `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e`) |
+| SIMPLNX Human Name | DBSCAN |
+| DREAM.3D v6.5.171 equivalent | `DBSCAN` (DREAM3DReview plugin, SIMPL UUID `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
 | Sign-off | *Nathan Young, 2026-08-07; second engineer: Michael Jackson, 2026-08-28* |
@@ -15,12 +16,12 @@
 
 | Aspect   | Current state|
 |----------|--------------|
-| Algorithm Relationship | Rewrite. The legacy equivalent is `DBSCAN` in DREAM3D 6.5.171. SIMPLNX uses grid-based DBSCAN (GDCF), so a core object is a grid cell, not a point. |
+| Algorithm Relationship | Rewrite. The legacy equivalent is `DBSCAN` in DREAM.3D v6.5.171. SIMPLNX uses grid-based DBSCAN (GDCF), so a core object is a grid cell, not a point. |
 | Oracle (confirmed)     | Class 2 (scikit-learn 1.7.1 DBSCAN), with Class 1 and Class 4 companions. Encoded in 15 test cases in `test/DBSCANTest.cpp`, plus 1 hidden OOC test. All 15 pass in CI at `65a3038e`. |
 | Code paths enumerated  | 20 of 23 exercised. The 3 uncovered paths are guarded by preflight or by a forest check, or have no isolating fixture. |
 | Tests today            | 15 registered test cases plus 1 hidden OOC test: 6 two-dimensional sklearn datasets, 1 three-dimensional regression case, 4 analytical fixtures, 3 preflight rejections, 1 preflight allocation check and 1 SIMPL conversion test. |
 | Exemplar archive       | `dbscan_test.tar.gz` gives inputs and outputs. The six 2D label arrays are regression fixtures that the sklearn oracle confirms. The 3D label array has no external oracle. |
-| Legacy comparison      | Run against DREAM3D 6.5.171 on the six 2D sklearn datasets. Four datasets match exactly. Two datasets differ as `DBSCAN-D1` predicts. |
+| Legacy comparison      | Run against DREAM.3D v6.5.171 on the six 2D sklearn datasets. Four datasets match exactly. Two datasets differ as `DBSCAN-D1` predicts. |
 | Bug flags| `DBSCAN-D4`. Open: `upgradeParametersImpl()` is not implemented, so SIMPLNX v1 pipelines lose a non-default parse order. |
 | V&V phase| Complete. The OOC test suite was not run, because CI does not build the OOC configuration. |
 
@@ -50,10 +51,10 @@ This branch fixes all defects in this table. PR #1702 fixed `DBSCAN-D5`, `DBSCAN
 
 | Deviation | Defect | Affected released versions | Resolution in this branch |
 |-----------|--------|----------------------------|---------------------------|
-| `DBSCAN-D5` | The `SeededRandom` shuffle was biased. It never selected the last index, and it drew partners from the full range. | DREAM3D-NX v7.2.2 through v7.4.1. DREAM.3D 6.5.171 was not affected. | `std::shuffle` replaces the hand-written shuffle. |
+| `DBSCAN-D5` | The `SeededRandom` shuffle was biased. It never selected the last index, and it drew partners from the full range. | DREAM3D-NX v7.2.2 through v7.4.1. DREAM.3D v6.5.171 was not affected. | `std::shuffle` replaces the hand-written shuffle. |
 | `DBSCAN-D6` | The filter accepted a multi-component mask or a mask with fewer tuples than the input. The in-core algorithm then read wrong mask values or read past the end of the mask. | DREAM3D-NX v7.0.0 through v7.4.2. | Preflight rejects a mask with a component shape other than `{1}` (`-208`) and a mask with a different tuple count (`-7587`). |
-| `DBSCAN-D7` | The `Random` parse order used the user seed, not a time-based seed. `Random` gave the same result as `SeededRandom` with the default seed. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D 6.5.171 was not affected. | The filter gives the generated seed to the algorithm. |
-| `DBSCAN-D8` | A mask with no true values left the grid bounds as NaN. The algorithm then cast NaN to `usize`, which is undefined behavior. | DREAM3D-NX v7.2.2 through v7.4.1. DREAM.3D 6.5.171 was not affected. | An explicit check returns warning `-85640` with a message about the mask. |
+| `DBSCAN-D7` | The `Random` parse order used the user seed, not a time-based seed. `Random` gave the same result as `SeededRandom` with the default seed. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The filter gives the generated seed to the algorithm. |
+| `DBSCAN-D8` | A mask with no true values left the grid bounds as NaN. The algorithm then cast NaN to `usize`, which is undefined behavior. | DREAM3D-NX v7.2.2 through v7.4.1. DREAM.3D v6.5.171 was not affected. | An explicit check returns warning `-85640` with a message about the mask. |
 
 ## Code path coverage
 
@@ -116,9 +117,9 @@ The phases are (p) preflight, (a) grid construction, (b) core identification, (c
 - **SHA512:** `77d7886e2550b63176b564e827d7de320b5a28b1c8a55bf107d53acd6962757275bc86b3382ff789f612a6838f55ab8f4af29435aec83a7a804b9487e57a6386`
 - **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/dbscan_test.md`
 
-## Deviations from DREAM.3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-See `vv/deviations/DBSCANFilter.md` for the root cause, affected users, and recommendation for each deviation. DREAM3D 6.5.171 ran on the six 2D sklearn datasets in `dbscan_test.tar.gz`.
+See `vv/deviations/DBSCANFilter.md` for the root cause, affected users, and recommendation for each deviation. DREAM.3D v6.5.171 ran on the six 2D sklearn datasets in `dbscan_test.tar.gz`.
 
 | Deviation | Observed difference |
 |-----------|---------------------|
