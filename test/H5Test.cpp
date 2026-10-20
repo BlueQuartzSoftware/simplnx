@@ -1,3 +1,4 @@
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -41,6 +42,10 @@
 
 #include <hdf5.h>
 
+#include <algorithm>
+#include <atomic>
+#include <cstdio>
+#include <cstring>
 #include <mutex>
 #include <numeric>
 #include <string>
@@ -1500,4 +1505,200 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
 #else
   SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
 #endif
+}
+
+TEST_CASE("DataStructureWriter: an object written after a NeighborList keeps its own dataset", "[DataStructureWriter][ReviewFinding1]")
+{
+  auto app = Application::GetOrCreateInstance();
+  constexpr usize k_TupleCount = 5;
+  const std::vector<int32> sharedValues = {1001, 1002, 1003, 1004, 1005};
+
+  DataStructure dataStructure;
+  // Created first, so it has object id 1: the same id that NeighborListIO gives its temporary counts array.
+  auto* sharedArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Shared", ShapeType{k_TupleCount}, ShapeType{1});
+  REQUIRE(sharedArray != nullptr);
+  REQUIRE(sharedArray->getId() == 1);
+  for(usize index = 0; index < k_TupleCount; ++index)
+  {
+    sharedArray->getDataStoreRef()[index] = sharedValues[index];
+  }
+
+  auto* listGroup = DataGroup::Create(dataStructure, "A_Lists");
+  REQUIRE(listGroup != nullptr);
+  auto* neighborList = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{k_TupleCount}, listGroup->getId());
+  REQUIRE(neighborList != nullptr);
+  neighborList->setLists({{1}, {2, 2}, {3}, {4, 4, 4}, {5}});
+
+  // The writer reaches "Shared" a second time after the NeighborList and writes it as a hard link.
+  auto* copyGroup = DataGroup::Create(dataStructure, "Z_Copy");
+  REQUIRE(copyGroup != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(sharedArray->getId(), copyGroup->getId()));
+
+  const fs::path filePath = GetDataDir() / "WriterIdMapNeighborList.dream3d";
+  fs::create_directories(filePath.parent_path());
+  {
+    auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  // Read the dataset at the second path directly, as any HDF5 reader of the file does.
+  auto fileReader = HDF5::FileIO::ReadFile(filePath);
+  REQUIRE(fileReader.isValid());
+  auto dataStructureGroup = fileReader.openGroup("DataStructure");
+  REQUIRE(dataStructureGroup.isValid());
+  auto copyGroupReader = dataStructureGroup.openGroup("Z_Copy");
+  REQUIRE(copyGroupReader.isValid());
+  auto linkedDataset = copyGroupReader.openDataset("Shared");
+  REQUIRE(linkedDataset.isValid());
+  const std::vector<int32> linkedValues = linkedDataset.readAsVector<int32>();
+  CHECK(linkedValues == sharedValues);
+}
+
+namespace
+{
+// A minimal read/write HDF5 driver whose close callback reports a failure when armed, as a final flush that hits a full disk does.
+struct FailCloseFile
+{
+  H5FD_t pub{};
+  std::FILE* fp = nullptr;
+  haddr_t eoa = 0;
+  haddr_t eof = 0;
+};
+
+std::atomic<bool> s_FailCloseArmed{false};
+std::atomic<int> s_FailCloseCount{0};
+
+void FailCloseSeek(std::FILE* fp, haddr_t addr)
+{
+#ifdef _WIN32
+  _fseeki64(fp, static_cast<int64_t>(addr), SEEK_SET);
+#else
+  fseeko(fp, static_cast<off_t>(addr), SEEK_SET);
+#endif
+}
+
+H5FD_t* FailCloseOpen(const char* name, unsigned flags, hid_t /*fapl*/, haddr_t /*maxaddr*/)
+{
+  const char* mode = (flags & H5F_ACC_TRUNC) != 0 ? "w+b" : ((flags & H5F_ACC_RDWR) != 0 ? "r+b" : "rb");
+  std::FILE* fp = std::fopen(name, mode);
+  if(fp == nullptr)
+  {
+    return nullptr;
+  }
+  auto* file = new FailCloseFile();
+  file->fp = fp;
+#ifdef _WIN32
+  _fseeki64(fp, 0, SEEK_END);
+  file->eof = static_cast<haddr_t>(_ftelli64(fp));
+#else
+  fseeko(fp, 0, SEEK_END);
+  file->eof = static_cast<haddr_t>(ftello(fp));
+#endif
+  return reinterpret_cast<H5FD_t*>(file);
+}
+
+herr_t FailCloseClose(H5FD_t* fdt)
+{
+  auto* file = reinterpret_cast<FailCloseFile*>(fdt);
+  std::fclose(file->fp);
+  delete file;
+  if(s_FailCloseArmed.load())
+  {
+    s_FailCloseCount.fetch_add(1);
+    return -1;
+  }
+  return 0;
+}
+
+haddr_t FailCloseGetEoa(const H5FD_t* fdt, H5FD_mem_t /*type*/)
+{
+  return reinterpret_cast<const FailCloseFile*>(fdt)->eoa;
+}
+
+herr_t FailCloseSetEoa(H5FD_t* fdt, H5FD_mem_t /*type*/, haddr_t addr)
+{
+  reinterpret_cast<FailCloseFile*>(fdt)->eoa = addr;
+  return 0;
+}
+
+haddr_t FailCloseGetEof(const H5FD_t* fdt, H5FD_mem_t /*type*/)
+{
+  return reinterpret_cast<const FailCloseFile*>(fdt)->eof;
+}
+
+herr_t FailCloseRead(H5FD_t* fdt, H5FD_mem_t /*type*/, hid_t /*dxpl*/, haddr_t addr, size_t size, void* buf)
+{
+  auto* file = reinterpret_cast<FailCloseFile*>(fdt);
+  FailCloseSeek(file->fp, addr);
+  const size_t got = std::fread(buf, 1, size, file->fp);
+  if(got < size)
+  {
+    std::memset(static_cast<char*>(buf) + got, 0, size - got);
+  }
+  return 0;
+}
+
+herr_t FailCloseWrite(H5FD_t* fdt, H5FD_mem_t /*type*/, hid_t /*dxpl*/, haddr_t addr, size_t size, const void* buf)
+{
+  auto* file = reinterpret_cast<FailCloseFile*>(fdt);
+  FailCloseSeek(file->fp, addr);
+  if(std::fwrite(buf, 1, size, file->fp) != size)
+  {
+    return -1;
+  }
+  file->eof = std::max(file->eof, static_cast<haddr_t>(addr + size));
+  return 0;
+}
+
+hid_t RegisterFailCloseVfd()
+{
+  static const hid_t driverId = []() {
+    static H5FD_class_t cls{};
+    cls.version = H5FD_CLASS_VERSION;
+    cls.value = static_cast<H5FD_class_value_t>(4243);
+    cls.name = "simplnx_fail_close";
+    cls.maxaddr = HADDR_MAX - 1;
+    cls.fc_degree = H5F_CLOSE_WEAK;
+    cls.open = FailCloseOpen;
+    cls.close = FailCloseClose;
+    cls.get_eoa = FailCloseGetEoa;
+    cls.set_eoa = FailCloseSetEoa;
+    cls.get_eof = FailCloseGetEof;
+    cls.read = FailCloseRead;
+    cls.write = FailCloseWrite;
+    return H5FDregister(&cls);
+  }();
+  return driverId;
+}
+} // namespace
+
+TEST_CASE("DREAM3D::WriteFile reports a failure while the file closes", "[DataStructureWriter][ReviewFinding11]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const hid_t driverId = RegisterFailCloseVfd();
+  REQUIRE(driverId >= 0);
+
+  DataStructure dataStructure;
+  auto* array = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Values", ShapeType{4}, ShapeType{1});
+  REQUIRE(array != nullptr);
+
+  const fs::path filePath = GetDataDir() / "WriteFileCloseFailure.dream3d";
+  fs::create_directories(filePath.parent_path());
+
+  HDF5::FileIO::SetFaplConfigurator([driverId](hid_t faplId) { H5Pset_driver(faplId, driverId, nullptr); });
+  s_FailCloseCount.store(0);
+  s_FailCloseArmed.store(true);
+  Result<> writeResult;
+  {
+    // The driver must stay armed only for this write; reset everything even if the write throws.
+    auto restore = MakeScopeGuard([]() noexcept {
+      s_FailCloseArmed.store(false);
+      HDF5::FileIO::SetFaplConfigurator({});
+    });
+    writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+  }
+
+  // The close failure happened, so the write must not report success.
+  REQUIRE(s_FailCloseCount.load() >= 1);
+  CHECK(writeResult.invalid());
 }
