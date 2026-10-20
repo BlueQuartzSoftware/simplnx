@@ -3,6 +3,10 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
+#include <EbsdLib/IO/TSL/AngConstants.h>
+
+#include <fmt/format.h>
+
 #include <array>
 #include <memory>
 #include <string>
