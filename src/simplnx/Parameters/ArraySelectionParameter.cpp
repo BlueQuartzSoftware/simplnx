@@ -1,4 +1,7 @@
 #include "ArraySelectionParameter.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/IParameter.hpp"
+#include <memory>
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
@@ -207,28 +210,28 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
           (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
       if(storeType != IDataStore::StoreType::Empty && !matches)
       {
-        const char* actualLocationName = "unsupported";
+        const char* actualLocationNamePtr = "unsupported";
         if(storeType == IDataStore::StoreType::InMemory)
         {
-          actualLocationName = "in-memory";
+          actualLocationNamePtr = "in-memory";
         }
         else if(storeType == IDataStore::StoreType::OutOfCore)
         {
-          actualLocationName = "out-of-core";
+          actualLocationNamePtr = "out-of-core";
         }
 
-        const char* requestedLocationName = "unsupported";
+        const char* requestedLocationNamePtr = "unsupported";
         if(m_Location == DataLocation::InMemory)
         {
-          requestedLocationName = "in-memory";
+          requestedLocationNamePtr = "in-memory";
         }
         else if(m_Location == DataLocation::OutOfCore)
         {
-          requestedLocationName = "out-of-core";
+          requestedLocationNamePtr = "out-of-core";
         }
 
         return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
-                               fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationName, requestedLocationName));
+                               fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationNamePtr, requestedLocationNamePtr));
       }
     }
   }
