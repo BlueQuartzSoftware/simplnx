@@ -27,6 +27,14 @@ namespace nx::core
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
+  /**
+   * @brief Creates an action that allocates a new vertex coordinate array.
+   * @param geometryPath Path of the VertexGeom to create.
+   * @param numVertices Number of vertices to allocate.
+   * @param vertexAttributeMatrixName Name of the vertex attribute matrix.
+   * @param sharedVertexListName Name of the vertex coordinate array.
+   * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
+   */
   CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
@@ -37,6 +45,14 @@ public:
   {
   }
 
+  /**
+   * @brief Creates an action that uses an existing Float32 vertex coordinate array.
+   * @param geometryPath Path of the VertexGeom to create.
+   * @param inputVerticesArrayPath Path of the existing vertex coordinate array.
+   * @param vertexAttributeMatrixName Name of the vertex attribute matrix.
+   * @param arrayType Copy, Move, or Reference handling of the input array.
+   * @param units Length unit of the vertex coordinates. The default is Meter. Use Unspecified when the coordinates are not lengths.
+   */
   CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
                              IGeometry::LengthUnit units = IGeometry::LengthUnit::Meter)
   : IDataCreationAction(geometryPath)
