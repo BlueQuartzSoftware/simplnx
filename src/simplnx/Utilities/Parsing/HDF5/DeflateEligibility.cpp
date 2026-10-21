@@ -1,5 +1,6 @@
 #include "simplnx/Utilities/Parsing/HDF5/DeflateEligibility.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/ParallelChunkCodec.hpp"
+#include <array>
 
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 
@@ -37,10 +38,10 @@ bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t mem
   {
     unsigned int flags = 0;
     size_t cdNelmts = 16; // Input capacity and output client-value count.
-    unsigned int cdValues[16] = {0};
-    char name[64] = {0};
+    std::array<unsigned int, 16> cdValues{};
+    std::array<char, 64> name{};
     unsigned int filterConfig = 0;
-    const H5Z_filter_t filterId = SIMPLNX_OBSERVE_METADATA_CALL(MetadataFilterCall, H5Pget_filter2(dcpl, 0, &flags, &cdNelmts, cdValues, sizeof(name), name, &filterConfig));
+    const H5Z_filter_t filterId = SIMPLNX_OBSERVE_METADATA_CALL(MetadataFilterCall, H5Pget_filter2(dcpl, 0, &flags, &cdNelmts, cdValues.data(), name.size(), name.data(), &filterConfig));
     deflateOnly = (filterId == H5Z_FILTER_DEFLATE);
     if(deflateOnly && cdNelmts >= 1 && deflateLevelOut != nullptr)
     {

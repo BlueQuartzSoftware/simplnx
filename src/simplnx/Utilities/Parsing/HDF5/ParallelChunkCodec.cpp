@@ -1,5 +1,11 @@
 #include "simplnx/Utilities/Parsing/HDF5/ParallelChunkCodec.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
+#include <H5Tpublic.h>
+#include <H5public.h>
+#include <cstddef>
+#include <filesystem>
+#include <vector>
 
 #include "simplnx/Utilities/Parsing/HDF5/ChunkIndex.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/DeflateEligibility.hpp"
@@ -38,19 +44,19 @@ namespace nx::core::HDF5
 #if SIMPLNX_BUILD_TESTS
 namespace
 {
-CodecIoObserverForTesting s_CodecIoObserver;
+CodecIoObserverForTesting CodecIoObserver;
 }
 
 namespace
 {
-std::atomic<uint64> s_LegacyOutstanding{0};
-std::atomic<uint64> s_LegacyTasks{0};
-std::atomic<uint64> s_LegacyErrorAggregations{0};
-std::atomic<uint64> s_LegacyIntegrityFailures{0};
-std::atomic<uint64> s_LegacyUnobservedReturns{0};
-thread_local testing_detail::LegacyPayloadRecordForTesting s_PendingLegacyPayload;
-thread_local LegacyPayloadTicketForTesting* s_LegacyAdmissionTicket = nullptr;
-thread_local uint64 s_LegacyThreadOutstanding = 0;
+std::atomic<uint64> LegacyOutstanding{0};
+std::atomic<uint64> LegacyTasks{0};
+std::atomic<uint64> LegacyErrorAggregations{0};
+std::atomic<uint64> LegacyIntegrityFailures{0};
+std::atomic<uint64> LegacyUnobservedReturns{0};
+thread_local testing_detail::LegacyPayloadRecordForTesting PendingLegacyPayload;
+thread_local LegacyPayloadTicketForTesting* LegacyAdmissionTicket = nullptr;
+thread_local uint64 LegacyThreadOutstanding = 0;
 
 /**
  * @brief Discharges a recorded receipt without touching its former byte storage.
@@ -62,8 +68,8 @@ void releaseLegacyRecord(testing_detail::LegacyPayloadRecordForTesting& record, 
   if(record.charged)
   {
     ObserveCodecIoForTesting(*record.file, record.dataset, event, record.capacity, static_cast<uint64>(record.kind));
-    s_LegacyOutstanding.fetch_sub(1, std::memory_order_relaxed);
-    --s_LegacyThreadOutstanding;
+    LegacyOutstanding.fetch_sub(1, std::memory_order_relaxed);
+    --LegacyThreadOutstanding;
     record = {};
   }
 }
@@ -73,26 +79,26 @@ void releaseLegacyRecord(testing_detail::LegacyPayloadRecordForTesting& record, 
  */
 void settleStrandedLegacyReceipt() noexcept
 {
-  if(s_PendingLegacyPayload.charged)
+  if(PendingLegacyPayload.charged)
   {
-    s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
-    releaseLegacyRecord(s_PendingLegacyPayload, CodecIoEventForTesting::LegacyReleased);
+    LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+    releaseLegacyRecord(PendingLegacyPayload, CodecIoEventForTesting::LegacyReleased);
   }
 }
 } // namespace
 
 CodecOwnershipStateForTesting GetCodecOwnershipStateForTesting() noexcept
 {
-  return {s_LegacyOutstanding.load(std::memory_order_relaxed), s_LegacyTasks.load(std::memory_order_relaxed), s_LegacyIntegrityFailures.load(std::memory_order_relaxed),
-          s_LegacyUnobservedReturns.load(std::memory_order_relaxed), s_LegacyErrorAggregations.load(std::memory_order_relaxed)};
+  return {LegacyOutstanding.load(std::memory_order_relaxed), LegacyTasks.load(std::memory_order_relaxed), LegacyIntegrityFailures.load(std::memory_order_relaxed),
+          LegacyUnobservedReturns.load(std::memory_order_relaxed), LegacyErrorAggregations.load(std::memory_order_relaxed)};
 }
 
 BoundedReadTaskScopeForTesting::BoundedReadTaskScopeForTesting() noexcept
-: m_Active(s_CodecIoObserver.callback != nullptr || s_CodecIoObserver.boundedFault != nullptr)
+: m_Active(CodecIoObserver.callback != nullptr || CodecIoObserver.boundedFault != nullptr)
 {
   if(m_Active)
   {
-    s_LegacyTasks.fetch_add(1, std::memory_order_relaxed);
+    LegacyTasks.fetch_add(1, std::memory_order_relaxed);
   }
 }
 
@@ -100,13 +106,13 @@ BoundedReadTaskScopeForTesting::~BoundedReadTaskScopeForTesting() noexcept
 {
   if(m_Active)
   {
-    s_LegacyTasks.fetch_sub(1, std::memory_order_relaxed);
+    LegacyTasks.fetch_sub(1, std::memory_order_relaxed);
   }
 }
 
 bool InjectCodecFaultForTesting(const std::filesystem::path& file, std::string_view dataset, BoundedFaultPointForTesting point) noexcept
 {
-  return s_CodecIoObserver.boundedFault != nullptr && s_CodecIoObserver.boundedFault(s_CodecIoObserver.context, file, dataset, point);
+  return CodecIoObserver.boundedFault != nullptr && CodecIoObserver.boundedFault(CodecIoObserver.context, file, dataset, point);
 }
 
 LegacyPayloadTicketForTesting::~LegacyPayloadTicketForTesting() noexcept
@@ -121,18 +127,18 @@ LegacyPayloadTicketForTesting::LegacyPayloadTicketForTesting(LegacyPayloadTicket
 
 void LegacyPayloadTicketForTesting::acquire(const std::filesystem::path& file, std::string_view dataset, const std::vector<std::byte>& bytes, LegacyPayloadKindForTesting kind) noexcept
 {
-  if(s_CodecIoObserver.callback == nullptr || bytes.capacity() == 0)
+  if(CodecIoObserver.callback == nullptr || bytes.capacity() == 0)
   {
     return;
   }
   if(m_Record.charged)
   {
-    s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+    LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return;
   }
   m_Record = {&file, dataset, bytes.data(), bytes.capacity(), kind, true};
-  s_LegacyOutstanding.fetch_add(1, std::memory_order_relaxed);
-  ++s_LegacyThreadOutstanding;
+  LegacyOutstanding.fetch_add(1, std::memory_order_relaxed);
+  ++LegacyThreadOutstanding;
   ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::LegacyAcquired, bytes.capacity(), static_cast<uint64>(kind));
 }
 
@@ -140,23 +146,23 @@ void LegacyPayloadTicketForTesting::consumeReturn(const std::vector<std::byte>& 
 {
   if(m_Record.charged)
   {
-    s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+    LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return;
   }
-  if(!s_PendingLegacyPayload.charged)
+  if(!PendingLegacyPayload.charged)
   {
-    if(s_CodecIoObserver.callback != nullptr && !bytes.empty())
+    if(CodecIoObserver.callback != nullptr && !bytes.empty())
     {
-      (allowUnobserved ? s_LegacyUnobservedReturns : s_LegacyIntegrityFailures).fetch_add(1, std::memory_order_relaxed);
+      (allowUnobserved ? LegacyUnobservedReturns : LegacyIntegrityFailures).fetch_add(1, std::memory_order_relaxed);
     }
     return;
   }
-  if(s_PendingLegacyPayload.data != bytes.data() || s_PendingLegacyPayload.capacity != bytes.capacity())
+  if(PendingLegacyPayload.data != bytes.data() || PendingLegacyPayload.capacity != bytes.capacity())
   {
     settleStrandedLegacyReceipt();
     return;
   }
-  m_Record = std::exchange(s_PendingLegacyPayload, {});
+  m_Record = std::exchange(PendingLegacyPayload, {});
 }
 
 void LegacyPayloadTicketForTesting::replaceDestroyedFromReturn(const std::vector<std::byte>& bytes, bool allowUnobserved) noexcept
@@ -172,9 +178,9 @@ void LegacyPayloadTicketForTesting::forwardReturn() noexcept
   {
     return;
   }
-  if(s_PendingLegacyPayload.charged)
+  if(PendingLegacyPayload.charged)
   {
-    s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+    LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return;
   }
   if(m_Record.kind != LegacyPayloadKindForTesting::Returned)
@@ -182,7 +188,7 @@ void LegacyPayloadTicketForTesting::forwardReturn() noexcept
     ObserveCodecIoForTesting(*m_Record.file, m_Record.dataset, CodecIoEventForTesting::LegacyToReturned, m_Record.capacity, static_cast<uint64>(m_Record.kind));
     m_Record.kind = LegacyPayloadKindForTesting::Returned;
   }
-  s_PendingLegacyPayload = std::exchange(m_Record, {});
+  PendingLegacyPayload = std::exchange(m_Record, {});
 }
 
 void LegacyPayloadTicketForTesting::releaseDestroyed() noexcept
@@ -206,15 +212,15 @@ bool LegacyPayloadTicketForTesting::charged() const noexcept
 }
 
 LegacyPayloadTaskScopeForTesting::LegacyPayloadTaskScopeForTesting() noexcept
-: m_Active(s_CodecIoObserver.callback != nullptr)
-, m_ThreadOutstandingAtEntry(s_LegacyThreadOutstanding)
-, m_AdmissionAtEntry(s_LegacyAdmissionTicket)
+: m_Active(CodecIoObserver.callback != nullptr)
+, m_ThreadOutstandingAtEntry(LegacyThreadOutstanding)
+, m_AdmissionAtEntry(LegacyAdmissionTicket)
 {
   if(m_Active)
   {
     settleStrandedLegacyReceipt();
-    m_ThreadOutstandingAtEntry = s_LegacyThreadOutstanding;
-    s_LegacyTasks.fetch_add(1, std::memory_order_relaxed);
+    m_ThreadOutstandingAtEntry = LegacyThreadOutstanding;
+    LegacyTasks.fetch_add(1, std::memory_order_relaxed);
   }
 }
 
@@ -223,12 +229,12 @@ LegacyPayloadTaskScopeForTesting::~LegacyPayloadTaskScopeForTesting() noexcept
   if(m_Active)
   {
     settleStrandedLegacyReceipt();
-    if(s_LegacyThreadOutstanding != m_ThreadOutstandingAtEntry || s_LegacyAdmissionTicket != m_AdmissionAtEntry)
+    if(LegacyThreadOutstanding != m_ThreadOutstandingAtEntry || LegacyAdmissionTicket != m_AdmissionAtEntry)
     {
-      s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
-      s_LegacyAdmissionTicket = m_AdmissionAtEntry;
+      LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+      LegacyAdmissionTicket = m_AdmissionAtEntry;
     }
-    s_LegacyTasks.fetch_sub(1, std::memory_order_relaxed);
+    LegacyTasks.fetch_sub(1, std::memory_order_relaxed);
   }
 }
 
@@ -236,72 +242,72 @@ void LegacyPayloadTaskScopeForTesting::observeExceptionAggregation() noexcept
 {
   if(m_Active)
   {
-    s_LegacyErrorAggregations.fetch_add(1, std::memory_order_relaxed);
-    if(s_LegacyThreadOutstanding != m_ThreadOutstandingAtEntry)
+    LegacyErrorAggregations.fetch_add(1, std::memory_order_relaxed);
+    if(LegacyThreadOutstanding != m_ThreadOutstandingAtEntry)
     {
-      s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+      LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     }
   }
 }
 
 namespace
 {
-thread_local const std::filesystem::path* s_MetadataFile = nullptr;
-thread_local std::string_view s_MetadataDataset;
+thread_local const std::filesystem::path* MetadataFile = nullptr;
+thread_local std::string_view MetadataDataset;
 } // namespace
 
 MetadataIdentityForTesting::MetadataIdentityForTesting(const std::filesystem::path& file, std::string_view dataset) noexcept
-: m_PreviousFile(std::exchange(s_MetadataFile, &file))
-, m_PreviousDataset(std::exchange(s_MetadataDataset, dataset))
+: m_PreviousFile(std::exchange(MetadataFile, &file))
+, m_PreviousDataset(std::exchange(MetadataDataset, dataset))
 {
 }
 
 MetadataIdentityForTesting::~MetadataIdentityForTesting() noexcept
 {
-  s_MetadataFile = m_PreviousFile;
-  s_MetadataDataset = m_PreviousDataset;
+  MetadataFile = m_PreviousFile;
+  MetadataDataset = m_PreviousDataset;
 }
 
 void ObserveMetadataCallForTesting(CodecIoEventForTesting event) noexcept
 {
-  if(s_MetadataFile != nullptr)
+  if(MetadataFile != nullptr)
   {
-    ObserveCodecIoForTesting(*s_MetadataFile, s_MetadataDataset, event, 1, 0);
+    ObserveCodecIoForTesting(*MetadataFile, MetadataDataset, event, 1, 0);
   }
 }
 
 LegacyPayloadAdmissionScopeForTesting::LegacyPayloadAdmissionScopeForTesting(LegacyPayloadTicketForTesting& ticket) noexcept
-: m_Previous(std::exchange(s_LegacyAdmissionTicket, &ticket))
+: m_Previous(std::exchange(LegacyAdmissionTicket, &ticket))
 {
 }
 
 LegacyPayloadAdmissionScopeForTesting::~LegacyPayloadAdmissionScopeForTesting() noexcept
 {
-  s_LegacyAdmissionTicket = m_Previous;
+  LegacyAdmissionTicket = m_Previous;
 }
 
 LegacyPayloadTicketForTesting* MatchLegacyAdmissionForTesting(const std::vector<std::byte>& bytes) noexcept
 {
-  return s_LegacyAdmissionTicket != nullptr && s_LegacyAdmissionTicket->matches(bytes) ? s_LegacyAdmissionTicket : nullptr;
+  return LegacyAdmissionTicket != nullptr && LegacyAdmissionTicket->matches(bytes) ? LegacyAdmissionTicket : nullptr;
 }
 
 CodecIoObserverForTesting SetCodecIoObserverForTesting(CodecIoObserverForTesting observer) noexcept
 {
-  const CodecIoObserverForTesting previous = s_CodecIoObserver;
-  if(s_LegacyOutstanding.load(std::memory_order_relaxed) != 0 || s_LegacyTasks.load(std::memory_order_relaxed) != 0)
+  const CodecIoObserverForTesting previous = CodecIoObserver;
+  if(LegacyOutstanding.load(std::memory_order_relaxed) != 0 || LegacyTasks.load(std::memory_order_relaxed) != 0)
   {
-    s_LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
+    LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return previous;
   }
-  s_CodecIoObserver = observer;
+  CodecIoObserver = observer;
   return previous;
 }
 
 void ObserveCodecIoForTesting(const std::filesystem::path& filePath, std::string_view datasetPath, CodecIoEventForTesting event, uint64 inputBytes, uint64 outputBytes) noexcept
 {
-  if(s_CodecIoObserver.callback != nullptr)
+  if(CodecIoObserver.callback != nullptr)
   {
-    s_CodecIoObserver.callback(s_CodecIoObserver.context, filePath, datasetPath, event, inputBytes, outputBytes);
+    CodecIoObserver.callback(CodecIoObserver.context, filePath, datasetPath, event, inputBytes, outputBytes);
   }
 }
 #endif
@@ -364,7 +370,7 @@ ParallelChunkCodec::ChunkInfo peekChunkInfoUnlocked(hid_t datasetId, const Exten
  */
 ParallelChunkCodec::ChunkInfo peekChunkInfo(hid_t datasetId, const Extent& bounds, usize componentRank)
 {
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   return peekChunkInfoUnlocked(datasetId, bounds, componentRank);
 }
 
@@ -439,7 +445,7 @@ ParallelChunkCodec::ParallelChunkCodec(std::filesystem::path filePath, std::stri
 , m_DatasetId(datasetId)
 {
 #if SIMPLNX_BUILD_TESTS
-  MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
+  const MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
 #endif
   m_NumComponents = product(m_ComponentShape);
   m_NominalChunkElements = product(m_ChunkShape) * m_NumComponents;
@@ -448,7 +454,7 @@ ParallelChunkCodec::ParallelChunkCodec(std::filesystem::path filePath, std::stri
   m_Eligible = probeSingleDeflateEligibility(m_DatasetId, m_ElementSize, memoryTypeId, &m_DeflateLevel);
   // This independent tag does not change ordinary eligibility or decoder policy.
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     const std::array<hid_t, 10> nativeTypes = {H5T_NATIVE_INT8,   H5T_NATIVE_UINT8, H5T_NATIVE_INT16,  H5T_NATIVE_UINT16, H5T_NATIVE_INT32,
                                                H5T_NATIVE_UINT32, H5T_NATIVE_INT64, H5T_NATIVE_UINT64, H5T_NATIVE_FLOAT,  H5T_NATIVE_DOUBLE};
     for(const hid_t nativeType : nativeTypes)
@@ -520,7 +526,7 @@ std::vector<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfos(non
   chunkInfos.reserve(flatChunkIndices.size());
   const std::vector<uint64> chunksPerDimension = getChunksPerDimension(m_TupleShape, m_ChunkShape);
   std::vector<hsize_t> offset(m_TupleShape.size() + m_ComponentShape.size(), 0);
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   for(uint64 flatChunkIndex : flatChunkIndices)
   {
     uint64 remaining = flatChunkIndex;
@@ -581,7 +587,7 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
   }
   uint32 ignoredReadFilterMask = 0;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 #if SIMPLNX_BUILD_TESTS
     ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, storedSize, 0);
 #endif
@@ -635,7 +641,7 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
     if(got != static_cast<std::ptrdiff_t>(storedSize))
     {
       {
-        std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+        const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
         if(H5Fflush(m_DatasetId, H5F_SCOPE_LOCAL) < 0)
         {
           throw std::runtime_error(
@@ -843,9 +849,9 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
 
     {
 #if SIMPLNX_BUILD_TESTS
-      MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
+      const MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
 #endif
-      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
       const hid_t fileSpace = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Dget_space(m_DatasetId));
       const hid_t memSpace = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Screate_simple(static_cast<int>(fullRank), memDims.data(), nullptr));
       const hid_t dtype = SIMPLNX_OBSERVE_METADATA_CALL(MetadataTypeCall, H5Dget_type(m_DatasetId));
@@ -1044,7 +1050,7 @@ bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd:
 
   // Bit zero marks raw storage. Support::ApiLock() guards only the leaf write.
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if(H5Dwrite_chunk(m_DatasetId, H5P_DEFAULT, filterMask, offset.data(), storedBytes.size(), storedBytes.data()) >= 0)
     {
 #if SIMPLNX_BUILD_TESTS
