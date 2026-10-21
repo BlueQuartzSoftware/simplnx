@@ -15,6 +15,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeAvgOrientationsTest.cpp
   ComputeBoundaryStrengthsTest.cpp
   ComputeCAxisLocationsTest.cpp
+  ComputeCAxisMisorientationsTest.cpp
   ComputeFaceIPFColoringTest.cpp
   ComputeFeatureFaceMisorientationTest.cpp
   ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
