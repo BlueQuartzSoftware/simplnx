@@ -373,11 +373,15 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     }
   }
 
-  if(m_InputValues->ConvertIPFColors && nameToDataTypeMap[GM3DConst::k_IPF001Name] == DataType::float32)
+  if(m_InputValues->ConvertIPFColors)
   {
-    std::vector<std::string> ipfDataSets = {GM3DConst::k_IPF001Name, GM3DConst::k_IPF010Name, GM3DConst::k_IPF100Name};
-    for(const auto& dataSetName : ipfDataSets)
+    for(const auto& dataSetName : dctDataSets)
     {
+      const auto dataTypeIter = nameToDataTypeMap.find(dataSetName);
+      if(!IsIpfColorDataset(dataSetName) || dataTypeIter == nameToDataTypeMap.end() || dataTypeIter->second != DataType::float32)
+      {
+        continue;
+      }
       floatDataSets.erase(dataSetName);
       DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
       auto& ipfUint8 = m_DataStructure.getDataRefAs<UInt8Array>(dataArrayPath).getDataStoreRef();

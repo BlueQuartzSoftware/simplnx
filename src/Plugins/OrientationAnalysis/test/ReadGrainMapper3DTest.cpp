@@ -10,6 +10,7 @@
 #include "OrientationAnalysis/Filters/Algorithms/ReadGrainMapper3D.hpp"
 #include "OrientationAnalysis/Filters/ReadGrainMapper3DFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysis/utilities/GrainMapper3DUtilities.hpp"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5Utilities.h"
@@ -30,12 +31,22 @@ const std::string k_LabDCTGeometryName("LabDCT");
 const std::string k_AbsorptionCTGeometryName("AbsorptionCT");
 const std::string k_CellAttributeMatrixName("Cell Data");
 const std::string k_CellEnsembleAttributeMatrixName("Cell Ensemble Data");
+const std::array<std::string, 3> k_IpfDatasetNames = {GrainMapper3DUtilities::Constants::k_IPF001Name, GrainMapper3DUtilities::Constants::k_IPF010Name,
+                                                      GrainMapper3DUtilities::Constants::k_IPF100Name};
+
+enum class IpfStorage
+{
+  Absent,
+  Float32,
+  UInt8
+};
 
 struct GrainMapperFixtureSpec
 {
   std::array<usize, 3> dimensions = {1, 1, 1}; // X, Y, Z
   usize rodriguesComponentCount = 3;
   usize phaseTupleCount = 0;
+  std::array<IpfStorage, 3> ipfStorage = {IpfStorage::Float32, IpfStorage::Float32, IpfStorage::Float32};
 };
 
 template <typename T>
@@ -145,9 +156,6 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
   std::vector<float32> completeness(tupleCount);
   std::vector<uint8> phases(phaseTupleCount);
   std::vector<float32> rodrigues(tupleCount * spec.rodriguesComponentCount);
-  std::vector<float32> ipf001(tupleCount * 3);
-  std::vector<float32> ipf010(tupleCount * 3);
-  std::vector<float32> ipf100(tupleCount * 3);
   std::vector<float32> quaternions(tupleCount * 4);
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
@@ -155,12 +163,6 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
     for(usize componentIndex = 0; componentIndex < spec.rodriguesComponentCount; componentIndex++)
     {
       rodrigues[tupleIndex * spec.rodriguesComponentCount + componentIndex] = RodriguesValue(tupleIndex, componentIndex);
-    }
-    for(usize componentIndex = 0; componentIndex < 3; componentIndex++)
-    {
-      ipf001[tupleIndex * 3 + componentIndex] = static_cast<float32>(IpfValue(0, tupleIndex, componentIndex)) / 255.0F;
-      ipf010[tupleIndex * 3 + componentIndex] = static_cast<float32>(IpfValue(1, tupleIndex, componentIndex)) / 255.0F;
-      ipf100[tupleIndex * 3 + componentIndex] = static_cast<float32>(IpfValue(2, tupleIndex, componentIndex)) / 255.0F;
     }
     for(usize componentIndex = 0; componentIndex < 4; componentIndex++)
     {
@@ -179,9 +181,31 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
   vectorDimensions.push_back(spec.rodriguesComponentCount);
   WriteVector<float32>(dataGroupId, "Rodrigues", vectorDimensions, rodrigues);
   vectorDimensions.back() = 3;
-  WriteVector<float32>(dataGroupId, "IPF001", vectorDimensions, ipf001);
-  WriteVector<float32>(dataGroupId, "IPF010", vectorDimensions, ipf010);
-  WriteVector<float32>(dataGroupId, "IPF100", vectorDimensions, ipf100);
+  for(usize directionIndex = 0; directionIndex < k_IpfDatasetNames.size(); directionIndex++)
+  {
+    if(spec.ipfStorage[directionIndex] == IpfStorage::Absent)
+    {
+      continue;
+    }
+    if(spec.ipfStorage[directionIndex] == IpfStorage::UInt8)
+    {
+      std::vector<uint8> colors(tupleCount * 3);
+      for(usize index = 0; index < colors.size(); index++)
+      {
+        colors[index] = IpfValue(directionIndex, index / 3, index % 3);
+      }
+      WriteVector<uint8>(dataGroupId, k_IpfDatasetNames[directionIndex], vectorDimensions, colors);
+    }
+    else
+    {
+      std::vector<float32> colors(tupleCount * 3);
+      for(usize index = 0; index < colors.size(); index++)
+      {
+        colors[index] = static_cast<float32>(IpfValue(directionIndex, index / 3, index % 3)) / 255.0F;
+      }
+      WriteVector<float32>(dataGroupId, k_IpfDatasetNames[directionIndex], vectorDimensions, colors);
+    }
+  }
   vectorDimensions.back() = 4;
   WriteVector<float32>(dataGroupId, "Quaternion", vectorDimensions, quaternions);
 
@@ -430,6 +454,85 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
   UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
                                                      computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  GrainMapperFixtureSpec spec{{7, 3, 1}};
+  spec.ipfStorage = {IpfStorage::Absent, IpfStorage::Absent, IpfStorage::Absent};
+  bool convertIpfColors = true;
+
+  SECTION("IPF001 only is converted")
+  {
+    spec.ipfStorage[0] = IpfStorage::Float32;
+  }
+  SECTION("IPF010 only is converted")
+  {
+    spec.ipfStorage[1] = IpfStorage::Float32;
+  }
+  SECTION("Float32 IPF001 is converted and uint8 IPF100 is copied verbatim")
+  {
+    spec.ipfStorage[0] = IpfStorage::Float32;
+    spec.ipfStorage[2] = IpfStorage::UInt8;
+  }
+  SECTION("IPF001 stays float32 when conversion is disabled")
+  {
+    spec.ipfStorage[0] = IpfStorage::Float32;
+    convertIpfColors = false;
+  }
+
+  const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_PartialIpf.h5", spec);
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Partial IPF"});
+  const DataPath cellDataPath = geometryPath.createChildPath(k_CellAttributeMatrixName);
+  ReadGrainMapper3DFilter filter;
+  Arguments args = GrainMapperArguments(inputFile, geometryPath);
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertIPFColorData_Key, std::make_any<bool>(convertIpfColors));
+  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
+  auto executeResult = filter.execute(dataStructure, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
+
+  const usize tupleCount = spec.dimensions[0] * spec.dimensions[1] * spec.dimensions[2];
+  for(usize directionIndex = 0; directionIndex < k_IpfDatasetNames.size(); directionIndex++)
+  {
+    CAPTURE(directionIndex);
+    const DataPath arrayPath = cellDataPath.createChildPath(k_IpfDatasetNames[directionIndex]);
+    if(spec.ipfStorage[directionIndex] == IpfStorage::Absent)
+    {
+      REQUIRE_FALSE(dataStructure.containsData(arrayPath));
+    }
+    else if(convertIpfColors || spec.ipfStorage[directionIndex] == IpfStorage::UInt8)
+    {
+      const auto& colors = RequireDataArray<uint8>(dataStructure, arrayPath);
+      REQUIRE(colors.getComponentShape() == ShapeType({3}));
+      const auto values = ReadAllValues(colors);
+      REQUIRE(values.size() == tupleCount * 3);
+      for(usize index = 0; index < values.size(); index++)
+      {
+        const uint8 expected = spec.ipfStorage[directionIndex] == IpfStorage::UInt8 ? IpfValue(directionIndex, index / 3, index % 3) : ConvertedIpfValue(directionIndex, index / 3, index % 3);
+        REQUIRE(values[index] == expected);
+      }
+    }
+    else
+    {
+      const auto& colors = RequireDataArray<float32>(dataStructure, arrayPath);
+      REQUIRE(colors.getComponentShape() == ShapeType({3}));
+      const auto values = ReadAllValues(colors);
+      REQUIRE(values.size() == tupleCount * 3);
+      for(usize index = 0; index < values.size(); index++)
+      {
+        REQUIRE(values[index] == static_cast<float32>(IpfValue(directionIndex, index / 3, index % 3)) / 255.0F);
+      }
+    }
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
