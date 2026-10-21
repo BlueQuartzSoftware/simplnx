@@ -86,6 +86,7 @@ SIMPLNX_EXPORT bool IsChildOfAttributeMatrix(const DataStructure& dataStructure,
  * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
  * @param parameterName Parameter display name used in the error.
  * @return Success for a direct child of the Cell Attribute Matrix, or an error.
+ * @note Checks parent membership only. The caller must validate that each selected leaf exists and is a DataArray.
  */
 SIMPLNX_EXPORT Result<> ValidateArrayInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& arrayPath, int32 errorCode, std::string_view parameterName);
 
@@ -97,6 +98,7 @@ SIMPLNX_EXPORT Result<> ValidateArrayInGeometryCellData(const DataStructure& dat
  * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
  * @param parameterName Parameter display name used in the error.
  * @return Error for the first invalid path or missing Cell Attribute Matrix; otherwise success.
+ * @note Checks parent membership only. The caller must validate that each selected leaf exists and is a DataArray.
  */
 SIMPLNX_EXPORT Result<> ValidateArraysInGeometryCellData(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& arrayPaths, int32 errorCode,
                                                          std::string_view parameterName);

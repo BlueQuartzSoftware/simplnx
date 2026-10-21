@@ -774,17 +774,17 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Strict Feature Ids"
   const DataPath featureIdsPath = cellPath.createChildPath("Feature Ids");
   const DataPath otherPath = geometryPath.createChildPath("Other Data").createChildPath("Other Values");
   const ShapeType shape{1, 2, 2};
-  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({2, 2, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", shape, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(*cells);
-  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, geometry->getId()) != nullptr);
-  auto* other = AttributeMatrix::Create(dataStructure, "Other Data", shape, geometry->getId());
-  REQUIRE(other != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cells->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), other->getId()) != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cell Data", shape, imageGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imageGeomPtr->setCellData(*cellsPtr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId()) != nullptr);
+  auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Data", shape, imageGeomPtr->getId());
+  REQUIRE(otherPtr != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
+  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
 
   ErodeDilateCoordinationNumberFilter filter;
   auto args = filter.getDefaultArguments();
@@ -832,25 +832,25 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Ignored Array Cell 
   const DataPath ignoredPath = cellPath.createChildPath("Ignored");
   const DataPath aliasCellPath({"Alternate Parent", "Cells"});
   const ShapeType shape{1, 1, 4};
-  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({4, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(*cells);
-  auto* alternateParent = DataGroup::Create(dataStructure, "Alternate Parent");
-  REQUIRE(alternateParent != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(cells->getId(), alternateParent->getId()));
-  REQUIRE(geometry->getCellDataPath() == cellPath);
-  auto* ids = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cells->getId());
-  auto* ignored = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cells->getId());
-  REQUIRE(ids != nullptr);
-  REQUIRE(ignored != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, imageGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imageGeomPtr->setCellData(*cellsPtr);
+  auto* alternateParentPtr = DataGroup::Create(dataStructure, "Alternate Parent");
+  REQUIRE(alternateParentPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), alternateParentPtr->getId()));
+  REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
+  auto* idsPtr = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  auto* ignoredPtr = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  REQUIRE(idsPtr != nullptr);
+  REQUIRE(ignoredPtr != nullptr);
   const std::vector<int32> originalIds{1, 0, 0, 1};
   for(usize index = 0; index < 4; index++)
   {
-    (*ids)[index] = originalIds[index];
-    (*ignored)[index] = static_cast<int32>(10 * (index + 1));
+    (*idsPtr)[index] = originalIds[index];
+    (*ignoredPtr)[index] = static_cast<int32>(10 * (index + 1));
   }
   ErodeDilateCoordinationNumberFilter filter;
   auto args = filter.getDefaultArguments();
@@ -870,8 +870,8 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Ignored Array Cell 
   bool idsChanged = false;
   for(usize index = 0; index < 4; index++)
   {
-    CHECK((*ignored)[index] == static_cast<int32>(10 * (index + 1)));
-    idsChanged = idsChanged || (*ids)[index] != originalIds[index];
+    CHECK((*ignoredPtr)[index] == static_cast<int32>(10 * (index + 1)));
+    idsChanged = idsChanged || (*idsPtr)[index] != originalIds[index];
   }
   CHECK(idsChanged);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

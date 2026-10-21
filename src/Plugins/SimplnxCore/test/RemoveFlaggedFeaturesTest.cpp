@@ -670,10 +670,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - Feature Ids
 
   // Cell membership does not validate the geometry dimensions against the Cell Attribute Matrix shape.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
-  auto& geometry = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  auto dimensions = geometry.getDimensions();
+  auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  auto dimensions = imageGeomRef.getDimensions();
   dimensions[0]++;
-  geometry.setDimensions(dimensions);
+  imageGeomRef.setDimensions(dimensions);
 
   REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, false), scope) == k_TupleCountMismatchError);
   REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == FixtureA().featureIds);
@@ -1483,25 +1483,25 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   const DataPath idsPath = cellPath.createChildPath("Ids");
   const DataPath otherPath = geometryPath.createChildPath("Other Cells").createChildPath("Other Values");
   const ShapeType shape{1, 1, 4};
-  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({4, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(*cells);
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {4}, geometry->getId());
-  REQUIRE(features != nullptr);
-  auto* other = AttributeMatrix::Create(dataStructure, "Other Cells", shape, geometry->getId());
-  REQUIRE(other != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cells->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, other->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, features->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Cell Feature Values", shape, {1}, cells->getId()) != nullptr);
-  auto* elsewhere = DataGroup::Create(dataStructure, "Elsewhere");
-  REQUIRE(elsewhere != nullptr);
-  auto* externalFeatures = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewhere->getId());
-  REQUIRE(externalFeatures != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, externalFeatures->getId()) != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, imageGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imageGeomPtr->setCellData(*cellsPtr);
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {4}, imageGeomPtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Cells", shape, imageGeomPtr->getId());
+  REQUIRE(otherPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
+  auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
+  REQUIRE(elsewherePtr != nullptr);
+  auto* externalFeaturesPtr = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewherePtr->getId());
+  REQUIRE(externalFeaturesPtr != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
 
   RemoveFlaggedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -1531,7 +1531,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   }
   SECTION("Feature array under a plain DataGroup")
   {
-    REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Ungrouped Features", {4}, {1}, elsewhere->getId()) != nullptr);
+    REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
     offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
     args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(offendingPath));
     expectedCode = -9895;
@@ -1544,7 +1544,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   }
   SECTION("Feature Ids through a shared Cell Attribute Matrix")
   {
-    REQUIRE(dataStructure.setAdditionalParent(cells->getId(), elsewhere->getId()));
+    REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), elsewherePtr->getId()));
     args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere", "Cells", "Ids"})));
   }
   SECTION("Ignored array in a second Attribute Matrix")
@@ -1593,48 +1593,48 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   const DataPath aliasCellPath({"Earlier Parent", "Cells"});
   const DataPath featurePath = geometryPath.createChildPath("Features");
   const ShapeType shape{1, 1, 4};
-  auto* earlierParent = DataGroup::Create(dataStructure, "Earlier Parent");
-  REQUIRE(earlierParent != nullptr);
-  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  geometry->setDimensions({4, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
-  REQUIRE(cells != nullptr);
-  geometry->setCellData(*cells);
-  REQUIRE(dataStructure.setAdditionalParent(cells->getId(), earlierParent->getId()));
-  REQUIRE(geometry->getCellDataPath() == cellPath);
-  auto* ids = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cells->getId());
-  auto* values = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cells->getId());
-  auto* ignored = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cells->getId());
-  REQUIRE(ids != nullptr);
-  REQUIRE(values != nullptr);
-  REQUIRE(ignored != nullptr);
+  auto* earlierParentPtr = DataGroup::Create(dataStructure, "Earlier Parent");
+  REQUIRE(earlierParentPtr != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, imageGeomPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imageGeomPtr->setCellData(*cellsPtr);
+  REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), earlierParentPtr->getId()));
+  REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
+  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
+  auto* ignoredPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
+  REQUIRE(idsPtr != nullptr);
+  REQUIRE(valuesPtr != nullptr);
+  REQUIRE(ignoredPtr != nullptr);
   const std::vector<int32> originalIds{1, 2, 1, 1};
   for(usize index = 0; index < 4; index++)
   {
-    (*ids)[index] = originalIds[index];
-    (*values)[index] = static_cast<int32>(10 + index);
-    (*ignored)[index] = static_cast<int32>(100 + index);
+    (*idsPtr)[index] = originalIds[index];
+    (*valuesPtr)[index] = static_cast<int32>(10 + index);
+    (*ignoredPtr)[index] = static_cast<int32>(100 + index);
   }
 
   // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
-  auto* featureValues = UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {3}, {1}, earlierParent->getId());
-  auto* externalMarker = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParent->getId());
-  REQUIRE(featureValues != nullptr);
-  REQUIRE(externalMarker != nullptr);
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {3}, geometry->getId());
-  REQUIRE(features != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(featureValues->getId(), features->getId()));
-  auto* marker = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, features->getId());
-  REQUIRE(marker != nullptr);
+  auto* featureValuesPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
+  auto* externalMarkerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
+  REQUIRE(featureValuesPtr != nullptr);
+  REQUIRE(externalMarkerPtr != nullptr);
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imageGeomPtr->getId());
+  REQUIRE(featuresPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(featureValuesPtr->getId(), featuresPtr->getId()));
+  auto* markerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
+  REQUIRE(markerPtr != nullptr);
   for(usize index = 0; index < 3; index++)
   {
-    (*marker)[index] = static_cast<int32>(11 * index);
-    (*externalMarker)[index] = static_cast<int32>(90 + index);
+    (*markerPtr)[index] = static_cast<int32>(11 * index);
+    (*externalMarkerPtr)[index] = static_cast<int32>(90 + index);
   }
-  (*featureValues)[0] = false;
-  (*featureValues)[1] = false;
-  (*featureValues)[2] = true;
+  (*featureValuesPtr)[0] = false;
+  (*featureValuesPtr)[1] = false;
+  (*featureValuesPtr)[2] = true;
 
   RemoveFlaggedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -1659,22 +1659,22 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   for(usize index = 0; index < 4; index++)
   {
-    CHECK((*ids)[index] == 1);
-    CHECK((*ignored)[index] == static_cast<int32>(100 + index));
+    CHECK((*idsPtr)[index] == 1);
+    CHECK((*ignoredPtr)[index] == static_cast<int32>(100 + index));
     if(index != 1)
     {
-      CHECK((*values)[index] == static_cast<int32>(10 + index));
+      CHECK((*valuesPtr)[index] == static_cast<int32>(10 + index));
     }
   }
-  CHECK(((*values)[1] == 10 || (*values)[1] == 12));
-  CHECK(features->getNumberOfTuples() == 2);
-  REQUIRE(marker->getNumberOfTuples() == 2);
-  CHECK((*marker)[0] == 0);
-  CHECK((*marker)[1] == 11);
-  REQUIRE(externalMarker->getNumberOfTuples() == 3);
+  CHECK(((*valuesPtr)[1] == 10 || (*valuesPtr)[1] == 12));
+  CHECK(featuresPtr->getNumberOfTuples() == 2);
+  REQUIRE(markerPtr->getNumberOfTuples() == 2);
+  CHECK((*markerPtr)[0] == 0);
+  CHECK((*markerPtr)[1] == 11);
+  REQUIRE(externalMarkerPtr->getNumberOfTuples() == 3);
   for(usize index = 0; index < 3; index++)
   {
-    CHECK((*externalMarker)[index] == static_cast<int32>(90 + index));
+    CHECK((*externalMarkerPtr)[index] == static_cast<int32>(90 + index));
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -148,7 +148,8 @@ Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
+  // Both algorithms discover Cell arrays through the geometry's Cell Attribute Matrix path.
+  // Normalize Feature Ids and ignored paths so their comparisons match those discovered paths.
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.inputImageGeometry).getCellDataPath();
   inputValues.featureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.featureIdsArrayPath);
   inputValues.ignoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignoredDataArrayPaths);

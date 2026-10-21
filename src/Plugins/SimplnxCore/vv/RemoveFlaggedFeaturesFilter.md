@@ -14,9 +14,9 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Minor changes** - SIMPLNX merges legacy `RemoveFlaggedFeatures` (Processing) and `ExtractFlaggedFeatures` (Sampling) into one filter with an operation selector. The removal and fill loop is a port that now lives in the shared `FeatureRemovalUtilities`; the extract path is rebuilt on the `ComputeFeatureRect` and `CropImageGeometry` sub-filters. |
-| Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - three hand-derived fixtures (5x2x1, 4x4x1, 3x3x3) pin every filled cell to the exact neighbor it was copied from, plus a Small IN100 invariant test that fills 8,535 cells. Encoded in `test/RemoveFlaggedFeaturesTest.cpp`; all 18 test cases pass in `simplnx-Rel` and `simplnx-ooc-Rel`. |
-| Code paths enumerated | 26 of 34 paths are assertion-covered. The 8 uncovered paths are cancellation and defensive sub-filter failure paths. |
-| Tests today | 18 test cases: 8 Class 1 analytical (remove, fill, extract, extract-then-remove), 4 execute-error, 1 preflight-error, 1 preflight-warning, 1 fill-ignore-list warning, 1 empty-feature warning, 1 Class 4 Small IN100 invariant, 1 SIMPL 6.4/6.5 conversion. The 3 original tests are retired. **OOC caveat:** the `simplnx-ooc-Rel` preset registers no OOC backend, so that pass certifies compile and run in that configuration, not out-of-core data-path behavior. |
+| Oracle (confirmed) | **Class 1 analytical + Class 4 invariants** - three hand-derived fixtures (5x2x1, 4x4x1, 3x3x3) pin every filled cell to the exact neighbor it was copied from, plus a Small IN100 invariant test that fills 8,535 cells. Encoded in `test/RemoveFlaggedFeaturesTest.cpp`; all 28 test cases pass in `simplnx-Rel` and `simplnx-ooc-Rel`. |
+| Code paths enumerated | 25 of 34 paths are assertion-covered. The 9 uncovered paths are cancellation and defensive failure paths. |
+| Tests today | 28 test cases: 8 Class 1 analytical (remove, fill, extract, extract-then-remove), 4 execute-error, 1 preflight-error, 1 preflight-warning, 1 fill-ignore-list warning, 1 empty-feature warning, 1 Class 4 Small IN100 invariant, 2 strict Feature Ids (preflight placement, shared Cell paths), 1 SIMPL 6.4/6.5 conversion, 5 kept from #1568, #1748 and #1760, and 3 original algorithm tests. The 3 original algorithm tests are kept next to their Class 1 replacements. **OOC caveat:** the `simplnx-ooc-Rel` preset registers no OOC backend, so that pass certifies compile and run in that configuration, not out-of-core data-path behavior. |
 | Exemplar archive | No output archive. The inline oracle needs none. The Class 4 test reads the shared input archive `6_5_test_data_1_v2.tar.gz` (SHA512 `585b51ba...3027d6c`, sidecar exists). |
 | Legacy comparison | **Run (2026-09-02)** - DREAM3D 6.5.171 and SIMPLNX were run on the 5x2x1, 4x4x1 and 3x3x3 fixtures with fill on and off, and on the 4x4x1 extract. Every removal array (25 array comparisons) matched the oracle and each other exactly. The extract geometry, origin and cell arrays matched. Seven deviations are documented. Six are bugs, all present in SIMPLNX before this branch and three (D3, D4, D6) shared with 6.5.171. D7 is an algorithmic choice. |
 | Bug flags | `RemoveFlaggedFeaturesFilter-D1` through `-D6`. D1 and D2 are hangs that only SIMPLNX had; D3 and D4 are shared with 6.5.171; D5 is SIMPLNX only; D6 affects both differently. All are fixed in SIMPLNX on this branch (D1 was fixed in v7.4.2). |
@@ -95,7 +95,7 @@ Five review passes were run on the change set only (adversarial, nit-picky senio
 
 ## Code path coverage
 
-26 of 34 paths are assertion-covered. The uncovered paths are cancellation and defensive failure paths of the sub-filters and the compaction helper.
+25 of 34 paths are assertion-covered. The uncovered paths are cancellation paths and defensive failure paths of the sub-filters, the marking step and the compaction helper.
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RemoveFlaggedFeatures.cpp` and `src/Plugins/SimplnxCore/src/SimplnxCore/utils/FeatureRemovalUtilities.cpp`, plus preflight in `Filters/RemoveFlaggedFeaturesFilter.cpp`.
 
