@@ -1,4 +1,7 @@
 #include "AbstractPipelineNode.hpp"
+#include "simplnx/Common/Result.hpp"
+#include <nonstd/expected.hpp>
+#include <utility>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
@@ -139,7 +142,7 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
   auto result = dataStructure.flushChecked();
   if(result.invalid() && result.errors().empty())
   {
-    result.errors().push_back({-6071, fmt::format("Node '{}' checked flush failed without an error diagnostic.", getName())});
+    result.errors().push_back({.code = -6071, .message = fmt::format("Node '{}' checked flush failed without an error diagnostic.", getName())});
   }
   ErrorCollection snapshotErrors;
   try
@@ -147,13 +150,13 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
     setDataStructure(dataStructure);
   } catch(const std::bad_alloc&)
   {
-    snapshotErrors.push_back({-272, fmt::format("Node '{}' completion snapshot failed because memory allocation failed.", getName())});
+    snapshotErrors.push_back({.code = -272, .message = fmt::format("Node '{}' completion snapshot failed because memory allocation failed.", getName())});
   } catch(const std::exception& exception)
   {
-    snapshotErrors.push_back({-6071, fmt::format("Node '{}' completion snapshot failed: {}", getName(), exception.what())});
+    snapshotErrors.push_back({.code = -6071, .message = fmt::format("Node '{}' completion snapshot failed: {}", getName(), exception.what())});
   } catch(...)
   {
-    snapshotErrors.push_back({-6071, fmt::format("Node '{}' completion snapshot failed with an unknown exception.", getName())});
+    snapshotErrors.push_back({.code = -6071, .message = fmt::format("Node '{}' completion snapshot failed with an unknown exception.", getName())});
   }
   if(!snapshotErrors.empty())
   {
