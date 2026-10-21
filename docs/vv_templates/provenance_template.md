@@ -17,6 +17,8 @@ One sidecar per archive. The archive name and SHA512 must match `download_test_d
 | **Generated on** | *YYYY-MM-DD* |
 | **Generated at commit** | *<commit hash where the generating pipeline / script lived>* |
 
+<!-- If no record shows who generated the archive or when, use the author of the PR that added the archive and the dates that PR was open. Write it as "<Name> (inferred from PR #<N>)" and "YYYY-MM-DD to YYYY-MM-DD (inferred from PR #<N>)". -->
+
 ## How it was generated
 
 *Describe in 2–4 sentences how the archive's contents were produced. Reference any pipeline (`.d3dpipeline`) or script (`.py`, `.m`) by file path. State whether inputs were from a public dataset, synthetic generation, or hand-construction.*

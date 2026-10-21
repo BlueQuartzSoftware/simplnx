@@ -13,6 +13,7 @@
   - Test inventory status values other than `kept`, `new-for-V&V`, and `retired`. Put the reason for a change in Notes.
   - Emoji, check marks, or strike-through text.
   - Any legacy version other than DREAM.3D v6.5.171. A comparison on a non-stock legacy build is "a local proof version".
+  - A Legacy comparison result from a run on SIMPLNX code older than the current algorithm. Run the comparison again with a current `nxrunner` build when the algorithm changes.
   - The name "DREAM3D" for the legacy application. Write "DREAM.3D v6.5.171", or "DREAM.3D" for short. "DREAM3D-NX" is the new application.
 -->
 
@@ -24,7 +25,9 @@
 | DREAM.3D v6.5.171 equivalent | <LegacyName> *or* None (new filter) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | DRAFT *or* READY FOR REVIEW *or* COMPLETE |
-| Sign-off | *<engineer(s), date>* |
+| Sign-off | *<Name>, YYYY-MM-DD; second engineer: <Name>, YYYY-MM-DD* |
+
+<!-- Sign-off: the first engineer is the person who did the V&V work. The second engineer is the person who approved the PR that contains the V&V work for the filter, with the approval date. A documentation-only PR, such as a template cleanup, does not change the sign-off. Use full names and ISO dates. Do not add email addresses. -->
 
 ## At a glance
 
