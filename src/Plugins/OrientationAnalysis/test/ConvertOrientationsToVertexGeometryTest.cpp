@@ -64,9 +64,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-      const auto* geometry = dataStructure.getDataAs<VertexGeom>(k_OutputGeometry);
-      REQUIRE(geometry != nullptr);
-      CHECK(geometry->getUnits() == IGeometry::LengthUnit::Unspecified);
+      const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_OutputGeometry);
+      REQUIRE(vertexGeomPtr != nullptr);
+      CHECK(vertexGeomPtr->getUnits() == IGeometry::LengthUnit::Unspecified);
 
       // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -130,8 +130,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry: Phase Index
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const DataPath k_OutputGeometryPath({"Bounds Vertices"});
-    const auto* geometry = dataStructure.getDataAs<VertexGeom>(k_OutputGeometryPath);
-    REQUIRE(geometry != nullptr);
-    CHECK(geometry->getUnits() == IGeometry::LengthUnit::Unspecified);
+    const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_OutputGeometryPath);
+    REQUIRE(vertexGeomPtr != nullptr);
+    CHECK(vertexGeomPtr->getUnits() == IGeometry::LengthUnit::Unspecified);
   }
 }

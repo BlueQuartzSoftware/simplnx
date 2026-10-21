@@ -114,6 +114,11 @@ public:
     }
 
     VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+    if(vertexGeom == nullptr)
+    {
+      return MakeErrorResult(-6108,
+                             fmt::format("{}Vertex Geometry could not be created at path '{}'. Choose an unused path under a DataGroup or another geometry.", prefix, getCreatedPath().toString()));
+    }
     vertexGeom->setUnits(m_Units);
 
     ShapeType tupleShape = {m_NumVertices};

@@ -167,7 +167,9 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({geomName})));
     CHECK(dataStructure.getDataRefAs<ImageGeom>(DataPath({geomName})).getUnits() == IGeometry::LengthUnit::Unspecified);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({intensityName})));
     CHECK(dataStructure.getDataRefAs<ImageGeom>(DataPath({intensityName})).getUnits() == IGeometry::LengthUnit::Unspecified);
 
     ConvSnapshot snap;
