@@ -1,4 +1,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/ChunkShapePolicy.hpp"
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Types.hpp"
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -46,7 +49,7 @@ bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, 
   {
     return true;
   }
-  std::copy(dims.begin(), dims.end(), chunk.begin());
+  std::ranges::copy(dims, chunk.begin());
 
   // Fold the full component extent into one tuple so tuple-only dimensions still
   // produce a physical-byte target.
