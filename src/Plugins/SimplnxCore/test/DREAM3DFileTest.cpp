@@ -40,6 +40,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
+#include "simplnx/UnitTest/ScopedDefaultFormatResolver.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -2221,6 +2222,58 @@ void WriteC8FilterLegacyWarningFile(const fs::path& path)
 }
 } // namespace
 
+TEST_CASE("Scoped default format resolver preserves ownership and nested restoration", "[Core][FormatResolver]")
+{
+  UnitTest::LoadPlugins();
+  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  const bool throwFromNestedScope = GENERATE(false, true);
+  CAPTURE(throwFromNestedScope);
+  auto outerResolver = std::make_shared<InMemoryFormatResolver>();
+  const auto* outerResolverPtr = outerResolver.get();
+  const std::weak_ptr<const IDataStoreFormatResolver> outerLifetime = outerResolver;
+  {
+    const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(std::move(outerResolver));
+    REQUIRE(outerResolver == nullptr);
+    CHECK(&DataStructure{}.formatResolver() == outerResolverPtr);
+    bool caughtException = false;
+    try
+    {
+      auto innerResolver = std::make_shared<InMemoryFormatResolver>();
+      const auto* innerResolverPtr = innerResolver.get();
+      const auto restoreOuter = UnitTest::SetDefaultFormatResolverForScope(std::move(innerResolver));
+      REQUIRE(innerResolver == nullptr);
+      REQUIRE_FALSE(outerLifetime.expired());
+      CHECK(&DataStructure{}.formatResolver() == innerResolverPtr);
+      if(throwFromNestedScope)
+      {
+        throw std::runtime_error("resolver scope unwind");
+      }
+    } catch(const std::runtime_error&)
+    {
+      caughtException = true;
+    }
+    CHECK(caughtException == throwFromNestedScope);
+    REQUIRE_FALSE(outerLifetime.expired());
+    CHECK(&DataStructure{}.formatResolver() == outerResolverPtr);
+  }
+  CHECK(outerLifetime.expired());
+  CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+  const auto restoredResolver = DataStructure::getDefaultFormatResolver();
+  CHECK_FALSE(restoredResolver.owner_before(incomingResolver));
+  CHECK_FALSE(incomingResolver.owner_before(restoredResolver));
+}
+
+TEST_CASE("Scoped null default format resolver preserves the active policy", "[Core][FormatResolver]")
+{
+  UnitTest::LoadPlugins();
+  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  {
+    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(nullptr);
+    CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+  }
+  CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+}
+
 TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context", "[C8][ReadDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
@@ -2233,10 +2286,8 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
-  const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
-  const auto cleanup = MakeScopeGuard([&cache, &path, memoryResolver]() noexcept {
+  const auto cleanup = MakeScopeGuard([&cache, &path]() noexcept {
     cache.clear();
-    DataStructure::setDefaultFormatResolver(memoryResolver);
     std::error_code error;
     fs::remove(path, error);
   });
@@ -2248,7 +2299,7 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   }
   auto processResolver = std::make_shared<C8FilterResolver>();
   processResolver->reject = true;
-  DataStructure::setDefaultFormatResolver(processResolver);
+  const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(processResolver);
   auto destinationResolver = std::make_shared<C8FilterResolver>();
   destinationResolver->requireContext = true;
   destinationResolver->reject = rejectDestination;
@@ -2301,44 +2352,44 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
     return;
   }
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const auto* selected = destination.getDataAs<Int32Array>(selectedPath);
-  const auto* lists = destination.getDataAs<NeighborList<int32>>(listsPath);
-  const auto* labels = destination.getDataAs<StringArray>(labelsPath);
-  const auto* imageGeom = destination.getDataAs<ImageGeom>(DataPath({"Image"}));
-  const auto* cells = destination.getDataAs<AttributeMatrix>(DataPath({"Image", "Cells"}));
-  REQUIRE(selected != nullptr);
-  REQUIRE(lists != nullptr);
-  REQUIRE(labels != nullptr);
-  REQUIRE(imageGeom != nullptr);
-  REQUIRE(cells != nullptr);
-  CHECK(imageGeom->getCellData() == cells);
-  CHECK(imageGeom->getCellDataId() == cells->getId());
-  CHECK(imageGeom->getDimensions() == SizeVec3{2, 2, 1});
-  CHECK(imageGeom->getOrigin() == FloatVec3{-2.0F, -1.0F, 0.0F});
-  CHECK(imageGeom->getSpacing() == FloatVec3{1.0F, 2.0F, 3.0F});
+  const Int32Array* selectedPtr = nullptr;
+  REQUIRE_NOTHROW(selectedPtr = &destination.getDataRefAs<Int32Array>(selectedPath));
+  const NeighborList<int32>* listsPtr = nullptr;
+  REQUIRE_NOTHROW(listsPtr = &destination.getDataRefAs<NeighborList<int32>>(listsPath));
+  const StringArray* labelsPtr = nullptr;
+  REQUIRE_NOTHROW(labelsPtr = &destination.getDataRefAs<StringArray>(labelsPath));
+  const ImageGeom* imageGeomPtr = nullptr;
+  REQUIRE_NOTHROW(imageGeomPtr = &destination.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  const AttributeMatrix* cellsPtr = nullptr;
+  REQUIRE_NOTHROW(cellsPtr = &destination.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cells"})));
+  CHECK(imageGeomPtr->getCellData() == cellsPtr);
+  CHECK(imageGeomPtr->getCellDataId() == cellsPtr->getId());
+  CHECK(imageGeomPtr->getDimensions() == SizeVec3{2, 2, 1});
+  CHECK(imageGeomPtr->getOrigin() == FloatVec3{-2.0F, -1.0F, 0.0F});
+  CHECK(imageGeomPtr->getSpacing() == FloatVec3{1.0F, 2.0F, 3.0F});
   CHECK_FALSE(destination.containsData(DataPath({"Image", "Cells", "Excluded"})));
   if(execute)
   {
-    CHECK(selected->getStoreType() == IDataStore::StoreType::InMemory);
-    REQUIRE(selected->size() == 4);
-    CHECK((*selected)[0] == 4);
-    CHECK((*selected)[1] == -7);
-    CHECK((*selected)[2] == 12);
-    CHECK((*selected)[3] == 29);
-    CHECK(lists->getList(0) == std::vector<int32>{1, 2});
-    CHECK(lists->getList(1).empty());
-    CHECK(lists->getList(2) == std::vector<int32>{-3});
-    CHECK(lists->getList(3) == std::vector<int32>{4, 5, 6});
-    REQUIRE_FALSE(labels->isPlaceholder());
-    REQUIRE(labels->getNumberOfTuples() == 2);
-    CHECK((*labels)[0] == "first");
-    CHECK((*labels)[1] == "second");
+    CHECK(selectedPtr->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(selectedPtr->size() == 4);
+    CHECK((*selectedPtr)[0] == 4);
+    CHECK((*selectedPtr)[1] == -7);
+    CHECK((*selectedPtr)[2] == 12);
+    CHECK((*selectedPtr)[3] == 29);
+    CHECK(listsPtr->getList(0) == std::vector<int32>{1, 2});
+    CHECK(listsPtr->getList(1).empty());
+    CHECK(listsPtr->getList(2) == std::vector<int32>{-3});
+    CHECK(listsPtr->getList(3) == std::vector<int32>{4, 5, 6});
+    REQUIRE_FALSE(labelsPtr->isPlaceholder());
+    REQUIRE(labelsPtr->getNumberOfTuples() == 2);
+    CHECK((*labelsPtr)[0] == "first");
+    CHECK((*labelsPtr)[1] == "second");
   }
   else
   {
-    REQUIRE(selected->getStoreType() == IDataStore::StoreType::Empty);
-    REQUIRE(dynamic_cast<const EmptyListStore<int32>*>(lists->getStore().get()) != nullptr);
-    CHECK(labels->isPlaceholder());
+    REQUIRE(selectedPtr->getStoreType() == IDataStore::StoreType::Empty);
+    REQUIRE(dynamic_cast<const EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr);
+    CHECK(labelsPtr->isPlaceholder());
   }
   UnitTest::CheckArraysInheritTupleDims(destination);
 }

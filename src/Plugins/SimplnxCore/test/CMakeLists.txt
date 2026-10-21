@@ -235,6 +235,13 @@ if(DREAM3DNX_USE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
   set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+
+  # One process must retain the OOC resolver after the C8 test changes the default policy.
+  add_test(NAME SimplnxCoreC8ResolverIsolation
+    COMMAND ${PLUGIN_NAME}UnitTest
+      "C8 ReadDREAM3DFilter plans selected data in the destination context,SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle"
+      --order lex --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreC8ResolverIsolation PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
 endif()
 
 # ------------------------------------------------------------------------------
