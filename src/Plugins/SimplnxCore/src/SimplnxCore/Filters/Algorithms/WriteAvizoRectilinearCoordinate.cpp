@@ -1,10 +1,14 @@
 #include "WriteAvizoRectilinearCoordinate.hpp"
 
 #include "simplnx/Common/Bit.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <array>
+#include <fmt/format.h>
 #include <limits>
 #include <utility>
 
@@ -240,13 +244,13 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 
   if(m_InputValues->WriteBinaryFile)
   {
-    constexpr char k_AxisNames[] = "XYZ";
+    constexpr std::array<char, 3> axisNames = {'X', 'Y', 'Z'};
     for(int d = 0; d < 3; ++d)
     {
       if(dims[d] > std::numeric_limits<usize>::max() / sizeof(float32))
       {
         auto overflowError = MakeErrorResult(
-            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", k_AxisNames[d], m_InputValues->OutputFile.string(), dims[d]));
+            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", axisNames[d], m_InputValues->OutputFile.string(), dims[d]));
         return MergeResults(std::move(result), std::move(overflowError));
       }
       const usize axisBytes = dims[d] * sizeof(float32);

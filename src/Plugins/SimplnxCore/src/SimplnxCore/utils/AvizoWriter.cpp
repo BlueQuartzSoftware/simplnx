@@ -1,11 +1,16 @@
 #include "AvizoWriter.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <cerrno>
+#include <cstdarg>
+#include <cstdio>
 #include <exception>
+#include <fmt/format.h>
 #include <limits>
 #include <new>
 #include <string>
@@ -87,11 +92,11 @@ int AvizoWriter::closeOutput(FILE* stream) const
 
 Result<> AvizoWriter::printOutput(FILE* stream, const char* format, ...) const
 {
-  std::va_list args;
-  va_start(args, format);
-  const auto endArgs = MakeScopeGuard([&args]() noexcept { va_end(args); });
+  std::va_list argsPtr;
+  va_start(argsPtr, format);
+  const auto endArgs = MakeScopeGuard([&argsPtr]() noexcept { va_end(argsPtr); });
   errno = 0;
-  const int printed = printOutputV(stream, format, args);
+  const int printed = printOutputV(stream, format, argsPtr);
   const int errorNumber = errno;
   if(printed < 0)
   {
@@ -134,44 +139,44 @@ Result<> AvizoWriter::execute()
 
   const std::string outputPath = m_InputValues->OutputFile.string();
   errno = 0;
-  FILE* outputFile = std::fopen(outputPath.c_str(), "wb");
+  FILE* outputFilePtr = std::fopen(outputPath.c_str(), "wb");
   const int openErrorNumber = errno;
-  if(outputFile == nullptr)
+  if(outputFilePtr == nullptr)
   {
     auto openError = MakeErrorResult(-5830, fmt::format("Cannot open Avizo output '{}'. Check the directory and write permissions. {}.", outputPath, SystemErrorText(openErrorNumber)));
     return MergeResults(std::move(result), std::move(openError));
   }
 
-  const auto closeOnExit = MakeScopeGuard([this, &outputFile]() noexcept {
-    if(outputFile != nullptr)
+  const auto closeOnExit = MakeScopeGuard([this, &outputFilePtr]() noexcept {
+    if(outputFilePtr != nullptr)
     {
       // A close attempt consumes the stream even if the operation reports failure.
-      FILE* ownedFile = std::exchange(outputFile, nullptr);
+      FILE* ownedFilePtr = std::exchange(outputFilePtr, nullptr);
       try
       {
-        (void)closeOutput(ownedFile);
+        (void)closeOutput(ownedFilePtr);
       } catch(...)
       {
       }
     }
   });
 
-  const char* stage = "header";
+  const char* stagePtr = "header";
   try
   {
-    auto headerResult = generateHeader(outputFile);
+    auto headerResult = generateHeader(outputFilePtr);
     result = MergeResults(std::move(result), std::move(headerResult));
     if(result.valid())
     {
-      stage = "data";
-      auto dataResult = writeData(outputFile);
+      stagePtr = "data";
+      auto dataResult = writeData(outputFilePtr);
       result = MergeResults(std::move(result), std::move(dataResult));
     }
     if(result.valid())
     {
-      stage = "flush";
+      stagePtr = "flush";
       errno = 0;
-      const int flushStatus = flushOutput(outputFile);
+      const int flushStatus = flushOutput(outputFilePtr);
       const int flushErrorNumber = errno;
       if(flushStatus != 0)
       {
@@ -184,20 +189,20 @@ Result<> AvizoWriter::execute()
     throw;
   } catch(const std::exception& exception)
   {
-    auto stageError = MakeErrorResult(-5836, fmt::format("Cannot write Avizo output '{}' during {}: {}.", outputPath, stage, exception.what()));
+    auto stageError = MakeErrorResult(-5836, fmt::format("Cannot write Avizo output '{}' during {}: {}.", outputPath, stagePtr, exception.what()));
     result = MergeResults(std::move(result), std::move(stageError));
   } catch(...)
   {
-    auto stageError = MakeErrorResult(-5837, fmt::format("Cannot write Avizo output '{}' during {}: an unknown error occurred.", outputPath, stage));
+    auto stageError = MakeErrorResult(-5837, fmt::format("Cannot write Avizo output '{}' during {}: an unknown error occurred.", outputPath, stagePtr));
     result = MergeResults(std::move(result), std::move(stageError));
   }
 
   // The owner releases FILE before close because fclose can fail after consuming it.
-  FILE* closingFile = std::exchange(outputFile, nullptr);
+  FILE* closingFilePtr = std::exchange(outputFilePtr, nullptr);
   try
   {
     errno = 0;
-    const int closeStatus = closeOutput(closingFile);
+    const int closeStatus = closeOutput(closingFilePtr);
     const int closeErrorNumber = errno;
     if(closeStatus != 0)
     {
