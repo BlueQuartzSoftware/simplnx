@@ -1,6 +1,22 @@
+#include "simplnx/Common/BoundedRead.hpp"
+#include "simplnx/Common/Extent.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/ParallelChunkCodec.hpp"
+#include "simplnx/Utilities/PositionalFileIO.hpp"
+#include <H5Ipublic.h>
+#include <H5Zpublic.h>
+#include <H5public.h>
+#include <cstddef>
+#include <filesystem>
+#include <mutex>
+#include <nonstd/expected.hpp>
+#include <nonstd/span.hpp>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 #include <H5Dpublic.h>
 #include <H5Fpublic.h>
@@ -14,7 +30,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <memory>
 #include <new>
 
 namespace nx::core::HDF5
@@ -36,13 +51,13 @@ enum class BoundedCarrier : uint64
 /** @brief Carries allocation identity without copying a path or dataset. */
 struct BoundedIdentity
 {
-  const std::filesystem::path& file;
-  const std::string& dataset;
+  const std::filesystem::path& File;
+  const std::string& Dataset;
 
 #if SIMPLNX_BUILD_TESTS
   void observe(CodecIoEventForTesting event, uint64 bytes, BoundedCarrier carrier) const noexcept
   {
-    ObserveCodecIoForTesting(file, dataset, event, bytes, static_cast<uint64>(carrier));
+    ObserveCodecIoForTesting(File, Dataset, event, bytes, static_cast<uint64>(carrier));
   }
 #endif
 };
@@ -50,17 +65,17 @@ struct BoundedIdentity
 /** @brief Stores each zlib allocation's admitted size in its own aligned header. */
 struct DecoderHeader
 {
-  alignas(std::max_align_t) uint64 bytes = 0;
+  alignas(std::max_align_t) uint64 Bytes = 0;
 };
 
 /** @brief Bounds zlib-owned storage; this state outlives inflateEnd and every zfree. */
 struct DecoderQuota
 {
-  const BoundedIdentity* identity = nullptr;
-  uint64 allowance = 0;
-  uint64 live = 0;
-  bool quotaFailed = false;
-  bool allocationFailed = false;
+  const BoundedIdentity* Identity = nullptr;
+  uint64 Allowance = 0;
+  uint64 Live = 0;
+  bool QuotaFailed = false;
+  bool AllocationFailed = false;
 
   /**
    * @brief Services a zlib request only after charging its payload and aligned header.
@@ -74,33 +89,33 @@ struct DecoderQuota
     auto& quota = *static_cast<DecoderQuota*>(opaque);
     uint64 payload = 0;
     uint64 bytes = 0;
-    if(!BoundedRead::Multiply(count, size, payload) || !BoundedRead::Add(payload, sizeof(DecoderHeader), bytes) || bytes > quota.allowance - quota.live || bytes > std::numeric_limits<usize>::max())
+    if(!BoundedRead::Multiply(count, size, payload) || !BoundedRead::Add(payload, sizeof(DecoderHeader), bytes) || bytes > quota.Allowance - quota.Live || bytes > std::numeric_limits<usize>::max())
     {
-      quota.quotaFailed = true;
+      quota.QuotaFailed = true;
       return nullptr;
     }
 #if SIMPLNX_BUILD_TESTS
-    quota.identity->observe(CodecIoEventForTesting::BoundedRequested, bytes, BoundedCarrier::Decoder);
+    quota.Identity->observe(CodecIoEventForTesting::BoundedRequested, bytes, BoundedCarrier::Decoder);
 #endif
 #if SIMPLNX_BUILD_TESTS
-    if(InjectCodecFaultForTesting(quota.identity->file, quota.identity->dataset, BoundedFaultPointForTesting::DecoderAllocation))
+    if(InjectCodecFaultForTesting(quota.Identity->File, quota.Identity->Dataset, BoundedFaultPointForTesting::DecoderAllocation))
     {
-      quota.allocationFailed = true;
+      quota.AllocationFailed = true;
       return nullptr;
     }
 #endif
-    auto* header = static_cast<DecoderHeader*>(std::malloc(static_cast<usize>(bytes)));
-    if(header == nullptr)
+    auto* headerPtr = static_cast<DecoderHeader*>(std::malloc(static_cast<usize>(bytes)));
+    if(headerPtr == nullptr)
     {
-      quota.allocationFailed = true;
+      quota.AllocationFailed = true;
       return nullptr;
     }
-    header->bytes = bytes;
-    quota.live += bytes;
+    headerPtr->Bytes = bytes;
+    quota.Live += bytes;
 #if SIMPLNX_BUILD_TESTS
-    quota.identity->observe(CodecIoEventForTesting::BoundedAcquired, bytes, BoundedCarrier::Decoder);
+    quota.Identity->observe(CodecIoEventForTesting::BoundedAcquired, bytes, BoundedCarrier::Decoder);
 #endif
-    return header + 1;
+    return headerPtr + 1;
   }
 
   /**
@@ -115,12 +130,12 @@ struct DecoderQuota
       return;
     }
     auto& quota = *static_cast<DecoderQuota*>(opaque);
-    auto* header = static_cast<DecoderHeader*>(address) - 1;
-    const uint64 bytes = header->bytes;
-    std::free(header);
-    quota.live -= bytes;
+    auto* headerPtr = static_cast<DecoderHeader*>(address) - 1;
+    const uint64 bytes = headerPtr->Bytes;
+    std::free(headerPtr);
+    quota.Live -= bytes;
 #if SIMPLNX_BUILD_TESTS
-    quota.identity->observe(CodecIoEventForTesting::BoundedReleased, bytes, BoundedCarrier::Decoder);
+    quota.Identity->observe(CodecIoEventForTesting::BoundedReleased, bytes, BoundedCarrier::Decoder);
 #endif
   }
 };
@@ -128,18 +143,29 @@ struct DecoderQuota
 /** @brief Owns one exact requested byte allocation, without vector growth. */
 struct BoundedBytes
 {
-  const BoundedIdentity& identity;
-  BoundedCarrier carrier;
-  std::byte* data = nullptr;
-  uint64 size = 0;
+  explicit BoundedBytes(const BoundedIdentity& identityValue, BoundedCarrier carrierValue) noexcept
+  : Identity(identityValue)
+  , Carrier(carrierValue)
+  {
+  }
+
+  BoundedBytes(const BoundedBytes&) = delete;
+  BoundedBytes& operator=(const BoundedBytes&) = delete;
+  BoundedBytes(BoundedBytes&&) = delete;
+  BoundedBytes& operator=(BoundedBytes&&) = delete;
+
+  const BoundedIdentity& Identity;
+  BoundedCarrier Carrier;
+  std::byte* Data = nullptr;
+  uint64 Size = 0;
 
   ~BoundedBytes() noexcept
   {
-    if(data != nullptr)
+    if(Data != nullptr)
     {
-      ::operator delete(data);
+      ::operator delete(Data);
 #if SIMPLNX_BUILD_TESTS
-      identity.observe(CodecIoEventForTesting::BoundedReleased, size, carrier);
+      Identity.observe(CodecIoEventForTesting::BoundedReleased, Size, Carrier);
 #endif
     }
   }
@@ -157,99 +183,104 @@ struct BoundedBytes
       return true;
     }
 #if SIMPLNX_BUILD_TESTS
-    identity.observe(CodecIoEventForTesting::BoundedRequested, bytes, carrier);
+    Identity.observe(CodecIoEventForTesting::BoundedRequested, bytes, Carrier);
 #endif
 #if SIMPLNX_BUILD_TESTS
-    if(InjectCodecFaultForTesting(identity.file, identity.dataset, carrier == BoundedCarrier::Stored ? BoundedFaultPointForTesting::StoredAllocation : BoundedFaultPointForTesting::NominalAllocation))
+    if(InjectCodecFaultForTesting(Identity.File, Identity.Dataset, Carrier == BoundedCarrier::Stored ? BoundedFaultPointForTesting::StoredAllocation : BoundedFaultPointForTesting::NominalAllocation))
     {
       return false;
     }
 #endif
-    data = static_cast<std::byte*>(::operator new(static_cast<usize>(bytes), std::nothrow));
-    if(data == nullptr)
+    Data = static_cast<std::byte*>(::operator new(static_cast<usize>(bytes), std::nothrow));
+    if(Data == nullptr)
     {
       return false;
     }
-    size = bytes;
+    Size = bytes;
 #if SIMPLNX_BUILD_TESTS
-    identity.observe(CodecIoEventForTesting::BoundedAcquired, size, carrier);
+    Identity.observe(CodecIoEventForTesting::BoundedAcquired, Size, Carrier);
 #endif
     return true;
   }
 };
 
+static_assert(!std::is_copy_constructible_v<BoundedBytes>);
+static_assert(!std::is_copy_assignable_v<BoundedBytes>);
+static_assert(!std::is_move_constructible_v<BoundedBytes>);
+static_assert(!std::is_move_assignable_v<BoundedBytes>);
+
 /** @brief Holds constant-rank metadata for two physical-record passes and scatter. */
 struct BoundedChunkReadMetadata
 {
   explicit BoundedChunkReadMetadata(const BoundedIdentity& identity)
-  : stored{identity, BoundedCarrier::Stored}
-  , nominal{identity, BoundedCarrier::Nominal}
+  : Stored{identity, BoundedCarrier::Stored}
+  , Nominal{identity, BoundedCarrier::Nominal}
   {
   }
 
-  BoundedBytes stored;
-  BoundedBytes nominal;
-  std::array<hsize_t, H5S_MAX_RANK> shape{};
-  std::array<hsize_t, H5S_MAX_RANK> chunks{};
-  std::array<hsize_t, H5S_MAX_RANK> origin{};
-  std::array<hsize_t, H5S_MAX_RANK> first{};
-  std::array<hsize_t, H5S_MAX_RANK> last{};
-  std::array<hsize_t, H5S_MAX_RANK> counts{};
-  std::array<uint64, H5S_MAX_RANK> nominalStrides{};
-  std::array<uint64, H5S_MAX_RANK> outputStrides{};
-  std::array<uint64, H5S_MAX_RANK> low{};
-  std::array<uint64, H5S_MAX_RANK> high{};
-  std::array<uint64, H5S_MAX_RANK> cursor{};
-  std::array<uint64, H5S_MAX_RANK> selected{};
-  ParallelChunkCodec::ChunkInfo record;
-  z_stream stream{};
-  DecoderQuota quota;
-  std::array<std::byte, 16> fill{};
-  uint64 nominalBytes = 0;
-  uint64 maximumStored = 0;
-  usize rank = 0;
-  bool hasDeflate = false;
-  bool needsDecoder = false;
-  bool hasSparse = false;
+  BoundedBytes Stored;
+  BoundedBytes Nominal;
+  std::array<hsize_t, H5S_MAX_RANK> Shape{};
+  std::array<hsize_t, H5S_MAX_RANK> Chunks{};
+  std::array<hsize_t, H5S_MAX_RANK> Origin{};
+  std::array<hsize_t, H5S_MAX_RANK> First{};
+  std::array<hsize_t, H5S_MAX_RANK> Last{};
+  std::array<hsize_t, H5S_MAX_RANK> Counts{};
+  std::array<uint64, H5S_MAX_RANK> NominalStrides{};
+  std::array<uint64, H5S_MAX_RANK> OutputStrides{};
+  std::array<uint64, H5S_MAX_RANK> Low{};
+  std::array<uint64, H5S_MAX_RANK> High{};
+  std::array<uint64, H5S_MAX_RANK> Cursor{};
+  std::array<uint64, H5S_MAX_RANK> Selected{};
+  ParallelChunkCodec::ChunkInfo Record;
+  z_stream Stream{};
+  DecoderQuota Quota;
+  std::array<std::byte, 16> Fill{};
+  uint64 NominalBytes = 0;
+  uint64 MaximumStored = 0;
+  usize Rank = 0;
+  bool HasDeflate = false;
+  bool NeedsDecoder = false;
+  bool HasSparse = false;
 };
 static_assert(H5S_MAX_RANK <= BoundedRead::k_MaxRank);
 
 /** @brief Bounds a cleanup guard's two-reference capture and active flag on the compiling ABI. */
 struct BoundedCleanupControl
 {
-  std::array<void*, 2> captures{};
-  bool active = false;
+  std::array<void*, 2> Captures{};
+  bool Active = false;
 };
 
 /** @brief Inventories the fixed native-query carriers that coexist with chunk metadata. */
 struct BoundedNativeQueryControls
 {
-  std::array<hid_t, 3> identifiers{};
-  std::array<int, 6> statuses{};
-  std::array<unsigned, 6> filterValuesAndFlags{};
-  std::array<usize, 2> countsAndSize{};
-  H5D_layout_t layout = H5D_LAYOUT_ERROR;
-  H5D_fill_value_t fill = H5D_FILL_VALUE_ERROR;
-  haddr_t address = HADDR_UNDEF;
-  hsize_t storedSize = 0;
-  unsigned mask = 0;
+  std::array<hid_t, 3> Identifiers{};
+  std::array<int, 6> Statuses{};
+  std::array<unsigned, 6> FilterValuesAndFlags{};
+  std::array<usize, 2> CountsAndSize{};
+  H5D_layout_t Layout = H5D_LAYOUT_ERROR;
+  H5D_fill_value_t Fill = H5D_FILL_VALUE_ERROR;
+  haddr_t Address = HADDR_UNDEF;
+  hsize_t StoredSize = 0;
+  unsigned Mask = 0;
 };
 
 /** @brief Keeps all scatter loop state in one admitted fixed-size control. */
 struct BoundedScatterControl
 {
-  uint64 runValues = 1;
-  uint64 joinedValues = 0;
-  uint64 sourceIndex = 0;
-  uint64 outputIndex = 0;
-  usize firstRunDimension = 0;
-  usize dimension = 0;
-  usize reverse = 0;
+  uint64 RunValues = 1;
+  uint64 JoinedValues = 0;
+  uint64 SourceIndex = 0;
+  uint64 OutputIndex = 0;
+  usize FirstRunDimension = 0;
+  usize Dimension = 0;
+  usize Reverse = 0;
 };
 
 // Scatter borrows two references and two byte pointers, plus scalar width and sparse mode.
 // Multiply borrows one result reference and accepts two scalar operands.
-constexpr uint64 k_BoundedScatterArgumentBytes = 4 * sizeof(void*) + sizeof(usize) + sizeof(bool) + sizeof(void*) + 2 * sizeof(uint64);
+constexpr uint64 k_BoundedScatterArgumentBytes = (4 * sizeof(void*)) + sizeof(usize) + sizeof(bool) + sizeof(void*) + (2 * sizeof(uint64));
 constexpr uint64 k_BoundedScatterBytes = sizeof(BoundedScatterControl) + k_BoundedScatterArgumentBytes;
 
 // ScopeGuard has one captured callable and an active flag. The two additional
@@ -258,8 +289,8 @@ constexpr uint64 k_BoundedScatterBytes = sizeof(BoundedScatterControl) + k_Bound
 constexpr uint64 k_BoundedCleanupBytes = 4 * (sizeof(BoundedCleanupControl) + 2 * sizeof(std::array<void*, 2>));
 constexpr uint64 k_BoundedReadClosureBytes = 5 * sizeof(void*);
 constexpr uint64 k_BoundedControlBytes = sizeof(BoundedIdentity) + sizeof(hid_t) + sizeof(bool) + sizeof(detail::FileHandle) + sizeof(BoundedNativeQueryControls) +
-                                         2 * sizeof(std::lock_guard<std::mutex>) + k_BoundedCleanupBytes + k_BoundedReadClosureBytes + 2 * sizeof(nonstd::span<std::byte>) +
-                                         sizeof(nonstd::span<const hsize_t>) + 2 * sizeof(Status) + k_BoundedScatterBytes
+                                         (2 * sizeof(std::lock_guard<std::mutex>)) + k_BoundedCleanupBytes + k_BoundedReadClosureBytes + (2 * sizeof(nonstd::span<std::byte>)) +
+                                         sizeof(nonstd::span<const hsize_t>) + (2 * sizeof(Status)) + k_BoundedScatterBytes
 #if SIMPLNX_BUILD_TESTS
                                          + sizeof(BoundedReadTaskScopeForTesting) + sizeof(MetadataIdentityForTesting)
 #endif
@@ -286,7 +317,7 @@ Status queryRecord(hid_t dataset, const hsize_t* origin, ParallelChunkCodec::Chu
     return diagnostic.set(BoundedRead::MetadataFailure, "Bounded chunk metadata query failed.");
   }
 #if SIMPLNX_BUILD_TESTS
-  if(InjectCodecFaultForTesting(identity.file, identity.dataset, BoundedFaultPointForTesting::ContradictoryRecord))
+  if(InjectCodecFaultForTesting(identity.File, identity.Dataset, BoundedFaultPointForTesting::ContradictoryRecord))
   {
     address = HADDR_UNDEF;
     bytes = 1;
@@ -310,18 +341,18 @@ Status queryRecord(hid_t dataset, const hsize_t* origin, ParallelChunkCodec::Chu
  */
 bool nextChunk(BoundedChunkReadMetadata& metadata, const Extent& extent) noexcept
 {
-  for(usize reverse = metadata.rank; reverse != 0; --reverse)
+  for(usize reverse = metadata.Rank; reverse != 0; --reverse)
   {
     const usize dimension = reverse - 1;
-    const uint64 end = metadata.origin[dimension] + std::min(metadata.chunks[dimension], metadata.shape[dimension] - metadata.origin[dimension]) - 1;
-    const uint64 nextSelected = (end - extent.min[dimension]) / extent.stride[dimension] + 1;
-    if(nextSelected < metadata.counts[dimension])
+    const uint64 end = metadata.Origin[dimension] + std::min(metadata.Chunks[dimension], metadata.Shape[dimension] - metadata.Origin[dimension]) - 1;
+    const uint64 nextSelected = ((end - extent.min[dimension]) / extent.stride[dimension]) + 1;
+    if(nextSelected < metadata.Counts[dimension])
     {
-      const uint64 coordinate = extent.min[dimension] + nextSelected * extent.stride[dimension];
-      metadata.origin[dimension] = (coordinate / metadata.chunks[dimension]) * metadata.chunks[dimension];
+      const uint64 coordinate = extent.min[dimension] + (nextSelected * extent.stride[dimension]);
+      metadata.Origin[dimension] = (coordinate / metadata.Chunks[dimension]) * metadata.Chunks[dimension];
       return true;
     }
-    metadata.origin[dimension] = metadata.first[dimension];
+    metadata.Origin[dimension] = metadata.First[dimension];
   }
   return false;
 }
@@ -334,21 +365,21 @@ bool nextChunk(BoundedChunkReadMetadata& metadata, const Extent& extent) noexcep
  */
 bool intersect(BoundedChunkReadMetadata& metadata, const Extent& extent) noexcept
 {
-  for(usize dimension = 0; dimension < metadata.rank; ++dimension)
+  for(usize dimension = 0; dimension < metadata.Rank; ++dimension)
   {
-    const uint64 chunkEnd = metadata.origin[dimension] + std::min(metadata.chunks[dimension], metadata.shape[dimension] - metadata.origin[dimension]) - 1;
-    const uint64 difference = metadata.origin[dimension] > extent.min[dimension] ? metadata.origin[dimension] - extent.min[dimension] : 0;
-    metadata.low[dimension] = difference / extent.stride[dimension] + (difference % extent.stride[dimension] != 0 ? 1 : 0);
+    const uint64 chunkEnd = metadata.Origin[dimension] + std::min(metadata.Chunks[dimension], metadata.Shape[dimension] - metadata.Origin[dimension]) - 1;
+    const uint64 difference = metadata.Origin[dimension] > extent.min[dimension] ? metadata.Origin[dimension] - extent.min[dimension] : 0;
+    metadata.Low[dimension] = difference / extent.stride[dimension] + (difference % extent.stride[dimension] != 0 ? 1 : 0);
     if(chunkEnd < extent.min[dimension])
     {
       return false;
     }
-    metadata.high[dimension] = (std::min(chunkEnd, extent.max[dimension]) - extent.min[dimension]) / extent.stride[dimension];
-    if(metadata.low[dimension] > metadata.high[dimension])
+    metadata.High[dimension] = (std::min(chunkEnd, extent.max[dimension]) - extent.min[dimension]) / extent.stride[dimension];
+    if(metadata.Low[dimension] > metadata.High[dimension])
     {
       return false;
     }
-    metadata.cursor[dimension] = metadata.low[dimension];
+    metadata.Cursor[dimension] = metadata.Low[dimension];
   }
   return true;
 }
@@ -367,17 +398,17 @@ Status validateRecord(const BoundedChunkReadMetadata& metadata, const ParallelCh
   {
     return Status::Complete;
   }
-  if((record.filterMask & ~(metadata.hasDeflate ? 1U : 0U)) != 0)
+  if((record.filterMask & ~(metadata.HasDeflate ? 1U : 0U)) != 0)
   {
     return diagnostic.set(BoundedRead::MetadataFailure, "Bounded chunk has a filter mask outside its declared pipeline.");
   }
-  const bool compressed = metadata.hasDeflate && record.filterMask == 0;
-  if(!compressed && record.storedSize != metadata.nominalBytes)
+  const bool compressed = metadata.HasDeflate && record.filterMask == 0;
+  if(!compressed && record.storedSize != metadata.NominalBytes)
   {
-    return diagnostic.counts(BoundedRead::MetadataFailure, "Bounded raw chunk byte length does not match nominal storage.", metadata.nominalBytes, record.storedSize);
+    return diagnostic.counts(BoundedRead::MetadataFailure, "Bounded raw chunk byte length does not match nominal storage.", metadata.NominalBytes, record.storedSize);
   }
   if(record.storedSize > std::numeric_limits<usize>::max() || record.storedSize > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()) ||
-     (compressed && (record.storedSize > std::numeric_limits<uInt>::max() || metadata.nominalBytes > std::numeric_limits<uInt>::max())))
+     (compressed && (record.storedSize > std::numeric_limits<uInt>::max() || metadata.NominalBytes > std::numeric_limits<uInt>::max())))
   {
     return diagnostic.set(BoundedRead::InvalidExtent, "Bounded chunk exceeds the supported raw or zlib length.");
   }
@@ -397,51 +428,51 @@ void scatter(BoundedChunkReadMetadata& metadata, const Extent& extent, usize ele
 {
   BoundedScatterControl control;
   static_assert(sizeof(control) + k_BoundedScatterArgumentBytes <= k_BoundedScatterBytes);
-  control.firstRunDimension = metadata.rank;
-  if(!sparse && extent.stride[metadata.rank - 1] == 1)
+  control.FirstRunDimension = metadata.Rank;
+  if(!sparse && extent.stride[metadata.Rank - 1] == 1)
   {
-    control.firstRunDimension = metadata.rank - 1;
-    control.runValues = metadata.high[control.firstRunDimension] - metadata.low[control.firstRunDimension] + 1;
-    while(control.firstRunDimension != 0)
+    control.FirstRunDimension = metadata.Rank - 1;
+    control.RunValues = metadata.High[control.FirstRunDimension] - metadata.Low[control.FirstRunDimension] + 1;
+    while(control.FirstRunDimension != 0)
     {
-      control.dimension = control.firstRunDimension - 1;
+      control.Dimension = control.FirstRunDimension - 1;
       // Nominal strides retain edge padding. Output strides retain gaps from split components and partial rows.
-      if(extent.stride[control.dimension] != 1 || metadata.nominalStrides[control.dimension] != control.runValues || metadata.outputStrides[control.dimension] != control.runValues ||
-         !BoundedRead::Multiply(control.runValues, metadata.high[control.dimension] - metadata.low[control.dimension] + 1, control.joinedValues))
+      if(extent.stride[control.Dimension] != 1 || metadata.NominalStrides[control.Dimension] != control.RunValues || metadata.OutputStrides[control.Dimension] != control.RunValues ||
+         !BoundedRead::Multiply(control.RunValues, metadata.High[control.Dimension] - metadata.Low[control.Dimension] + 1, control.JoinedValues))
       {
         break;
       }
-      control.runValues = control.joinedValues;
-      --control.firstRunDimension;
+      control.RunValues = control.JoinedValues;
+      --control.FirstRunDimension;
     }
   }
   // Each run stays within checked nominal/output products, so its scalar-to-byte conversion fits usize.
   // Sparse fills remain scalar copies from the fixed primitive fill buffer.
   for(;;)
   {
-    control.sourceIndex = 0;
-    control.outputIndex = 0;
-    for(control.dimension = 0; control.dimension < metadata.rank; ++control.dimension)
+    control.SourceIndex = 0;
+    control.OutputIndex = 0;
+    for(control.Dimension = 0; control.Dimension < metadata.Rank; ++control.Dimension)
     {
-      control.sourceIndex +=
-          (extent.min[control.dimension] + metadata.cursor[control.dimension] * extent.stride[control.dimension] - metadata.origin[control.dimension]) * metadata.nominalStrides[control.dimension];
-      control.outputIndex += metadata.cursor[control.dimension] * metadata.outputStrides[control.dimension];
+      control.SourceIndex +=
+          (extent.min[control.Dimension] + metadata.Cursor[control.Dimension] * extent.stride[control.Dimension] - metadata.Origin[control.Dimension]) * metadata.NominalStrides[control.Dimension];
+      control.OutputIndex += metadata.Cursor[control.Dimension] * metadata.OutputStrides[control.Dimension];
     }
-    std::memcpy(destination + static_cast<usize>(control.outputIndex) * elementSize, sparse ? metadata.fill.data() : source + static_cast<usize>(control.sourceIndex) * elementSize,
-                static_cast<usize>(control.runValues) * elementSize);
-    control.reverse = control.firstRunDimension;
-    while(control.reverse != 0)
+    std::memcpy(destination + (static_cast<usize>(control.OutputIndex) * elementSize), sparse ? metadata.Fill.data() : source + (static_cast<usize>(control.SourceIndex) * elementSize),
+                static_cast<usize>(control.RunValues) * elementSize);
+    control.Reverse = control.FirstRunDimension;
+    while(control.Reverse != 0)
     {
-      control.dimension = control.reverse - 1;
-      if(metadata.cursor[control.dimension] < metadata.high[control.dimension])
+      control.Dimension = control.Reverse - 1;
+      if(metadata.Cursor[control.Dimension] < metadata.High[control.Dimension])
       {
-        ++metadata.cursor[control.dimension];
+        ++metadata.Cursor[control.Dimension];
         break;
       }
-      metadata.cursor[control.dimension] = metadata.low[control.dimension];
-      --control.reverse;
+      metadata.Cursor[control.Dimension] = metadata.Low[control.Dimension];
+      --control.Reverse;
     }
-    if(control.reverse == 0)
+    if(control.Reverse == 0)
     {
       return;
     }
@@ -452,8 +483,8 @@ void scatter(BoundedChunkReadMetadata& metadata, const Extent& extent, usize ele
 #if SIMPLNX_BUILD_TESTS
 uint64 ParallelChunkCodec::boundedMetadataCapacityBytesForTesting() const noexcept
 {
-  return (m_FilePath.native().capacity() + 1) * sizeof(std::filesystem::path::value_type) + m_DatasetPath.capacity() + 1 +
-         (m_TupleShape.capacity() + m_ChunkShape.capacity() + m_ComponentShape.capacity()) * sizeof(uint64);
+  return ((m_FilePath.native().capacity() + 1) * sizeof(std::filesystem::path::value_type)) + m_DatasetPath.capacity() + 1 +
+         ((m_TupleShape.capacity() + m_ChunkShape.capacity() + m_ComponentShape.capacity()) * sizeof(uint64));
 }
 #endif
 
@@ -472,7 +503,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
     return {{nonstd::make_unexpected(ErrorCollection{})}};
   }
 #if SIMPLNX_BUILD_TESTS
-  MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
+  const MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
 #endif
   Diagnostic diagnostic;
   ChunkInfo info;
@@ -486,7 +517,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
   }
   else
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     const hid_t space = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Dget_space(m_DatasetId));
     const hid_t properties = SIMPLNX_OBSERVE_METADATA_CALL(MetadataLayoutCall, H5Dget_create_plist(m_DatasetId));
     auto closeMetadata = MakeScopeGuard([space, properties]() noexcept {
@@ -535,7 +566,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
 #if SIMPLNX_BUILD_TESTS
           ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
-          status = queryRecord(m_DatasetId, offset.data(), info, diagnostic, BoundedIdentity{m_FilePath, m_DatasetPath});
+          status = queryRecord(m_DatasetId, offset.data(), info, diagnostic, BoundedIdentity{.File = m_FilePath, .Dataset = m_DatasetPath});
         }
       }
     }
@@ -572,9 +603,9 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
   {
     return diagnostic.counts(BoundedRead::Insufficient, "Bounded chunk read cannot admit fixed metadata and controls.", k_BoundedFixedBytes, payloadBudgetBytes);
   }
-  const BoundedIdentity identity{m_FilePath, m_DatasetPath};
+  const BoundedIdentity identity{.File = m_FilePath, .Dataset = m_DatasetPath};
 #if SIMPLNX_BUILD_TESTS
-  BoundedReadTaskScopeForTesting taskObservation;
+  const BoundedReadTaskScopeForTesting taskObservation;
   auto metadataRelease = MakeScopeGuard([&identity]() noexcept { identity.observe(CodecIoEventForTesting::BoundedReleased, sizeof(BoundedChunkReadMetadata), BoundedCarrier::Metadata); });
   identity.observe(CodecIoEventForTesting::BoundedRequested, sizeof(BoundedChunkReadMetadata), BoundedCarrier::Metadata);
 #endif
@@ -585,21 +616,21 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
   BoundedChunkReadMetadata metadata(identity);
 #if SIMPLNX_BUILD_TESTS
   identity.observe(CodecIoEventForTesting::BoundedAcquired, sizeof(metadata), BoundedCarrier::Metadata);
-  MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
+  const MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
 #endif
   const uint64 available = payloadBudgetBytes - k_BoundedFixedBytes;
-  metadata.quota.identity = &identity;
+  metadata.Quota.Identity = &identity;
   hid_t properties = H5I_INVALID_HID;
   auto closeProperties = MakeScopeGuard([&properties]() noexcept {
     if(properties >= 0)
     {
-      std::lock_guard<std::mutex> lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> lock(Support::ApiLock());
       H5Pclose(properties);
     }
   });
   static_assert(sizeof(closeProperties) <= sizeof(BoundedCleanupControl));
   {
-    std::lock_guard<std::mutex> lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> lock(Support::ApiLock());
     if(m_BoundedTypeQueryFailed)
     {
       return diagnostic.set(BoundedRead::MetadataFailure, "Bounded native type capture failed.");
@@ -683,7 +714,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
         diagnostic.number(values[0]);
         return Status::Unavailable;
       }
-      metadata.hasDeflate = true;
+      metadata.HasDeflate = true;
     }
     const hid_t space = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Dget_space(m_DatasetId));
     if(space < 0)
@@ -691,7 +722,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
       return diagnostic.set(BoundedRead::MetadataFailure, "Bounded chunk dataspace query failed.");
     }
     const int rank = H5Sget_simple_extent_ndims(space);
-    const int dimensions = rank > 0 && rank <= H5S_MAX_RANK ? H5Sget_simple_extent_dims(space, metadata.shape.data(), nullptr) : -1;
+    const int dimensions = rank > 0 && rank <= H5S_MAX_RANK ? H5Sget_simple_extent_dims(space, metadata.Shape.data(), nullptr) : -1;
     H5Sclose(space);
     if(rank < 0 || (rank > 0 && rank <= H5S_MAX_RANK && dimensions < 0))
     {
@@ -701,8 +732,8 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
     {
       return diagnostic.set(BoundedRead::Unsupported, "Bounded chunk read does not support this rank.");
     }
-    metadata.rank = static_cast<usize>(rank);
-    if(H5Pget_chunk(properties, rank, metadata.chunks.data()) != rank)
+    metadata.Rank = static_cast<usize>(rank);
+    if(H5Pget_chunk(properties, rank, metadata.Chunks.data()) != rank)
     {
       return diagnostic.set(BoundedRead::MetadataFailure, "Bounded physical chunk shape query failed.");
     }
@@ -713,32 +744,32 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
     return diagnostic.set(BoundedRead::InvalidExtent, "Bounded byte destination is not a scalar multiple.");
   }
   const auto extentStatus =
-      BoundedRead::ValidateExtent(extent, nonstd::span<const hsize_t>(metadata.shape.data(), metadata.rank), 1, destination.size() / m_ElementSize, selectedValues, diagnostic, m_ElementSize);
+      BoundedRead::ValidateExtent(extent, nonstd::span<const hsize_t>(metadata.Shape.data(), metadata.Rank), 1, destination.size() / m_ElementSize, selectedValues, diagnostic, m_ElementSize);
   if(extentStatus != Status::Complete)
   {
     return extentStatus;
   }
   uint64 nominalValues = 1;
   uint64 outputStride = 1;
-  for(usize reverse = metadata.rank; reverse != 0; --reverse)
+  for(usize reverse = metadata.Rank; reverse != 0; --reverse)
   {
     const usize dimension = reverse - 1;
-    if(metadata.chunks[dimension] == 0)
+    if(metadata.Chunks[dimension] == 0)
     {
       return diagnostic.set(BoundedRead::MetadataFailure, "Bounded physical chunk shape has a zero dimension.");
     }
-    metadata.nominalStrides[dimension] = nominalValues;
-    metadata.outputStrides[dimension] = outputStride;
-    metadata.counts[dimension] = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
-    if(!BoundedRead::Multiply(nominalValues, metadata.chunks[dimension], nominalValues) || !BoundedRead::Multiply(outputStride, metadata.counts[dimension], outputStride))
+    metadata.NominalStrides[dimension] = nominalValues;
+    metadata.OutputStrides[dimension] = outputStride;
+    metadata.Counts[dimension] = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
+    if(!BoundedRead::Multiply(nominalValues, metadata.Chunks[dimension], nominalValues) || !BoundedRead::Multiply(outputStride, metadata.Counts[dimension], outputStride))
     {
       return diagnostic.set(BoundedRead::InvalidExtent, "Bounded chunk strides overflow uint64.");
     }
-    metadata.first[dimension] = (extent.min[dimension] / metadata.chunks[dimension]) * metadata.chunks[dimension];
-    metadata.last[dimension] = (extent.max[dimension] / metadata.chunks[dimension]) * metadata.chunks[dimension];
-    metadata.origin[dimension] = metadata.first[dimension];
+    metadata.First[dimension] = (extent.min[dimension] / metadata.Chunks[dimension]) * metadata.Chunks[dimension];
+    metadata.Last[dimension] = (extent.max[dimension] / metadata.Chunks[dimension]) * metadata.Chunks[dimension];
+    metadata.Origin[dimension] = metadata.First[dimension];
   }
-  if(!BoundedRead::Multiply(nominalValues, m_ElementSize, metadata.nominalBytes) || metadata.nominalBytes > std::numeric_limits<usize>::max())
+  if(!BoundedRead::Multiply(nominalValues, m_ElementSize, metadata.NominalBytes) || metadata.NominalBytes > std::numeric_limits<usize>::max())
   {
     return diagnostic.set(BoundedRead::InvalidExtent, "Bounded nominal chunk bytes overflow addressable storage.");
   }
@@ -750,7 +781,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
       continue;
     }
     {
-      std::lock_guard<std::mutex> lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> lock(Support::ApiLock());
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
@@ -760,30 +791,30 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
         return diagnostic.set(BoundedRead::MetadataFailure, "Injected bounded metadata query failure.");
       }
 #endif
-      const auto status = queryRecord(m_DatasetId, metadata.origin.data(), metadata.record, diagnostic, identity);
+      const auto status = queryRecord(m_DatasetId, metadata.Origin.data(), metadata.Record, diagnostic, identity);
       if(status != Status::Complete)
       {
         return status;
       }
     }
-    const auto recordStatus = validateRecord(metadata, metadata.record, diagnostic);
+    const auto recordStatus = validateRecord(metadata, metadata.Record, diagnostic);
     if(recordStatus != Status::Complete)
     {
       return recordStatus;
     }
-    if(metadata.record.allocated)
+    if(metadata.Record.allocated)
     {
-      metadata.maximumStored = std::max(metadata.maximumStored, metadata.record.storedSize);
-      metadata.needsDecoder = metadata.needsDecoder || (metadata.hasDeflate && metadata.record.filterMask == 0);
+      metadata.MaximumStored = std::max(metadata.MaximumStored, metadata.Record.storedSize);
+      metadata.NeedsDecoder = metadata.NeedsDecoder || (metadata.HasDeflate && metadata.Record.filterMask == 0);
     }
     else
     {
-      metadata.hasSparse = true;
+      metadata.HasSparse = true;
     }
   } while(nextChunk(metadata, extent));
-  if(metadata.hasSparse)
+  if(metadata.HasSparse)
   {
-    std::lock_guard<std::mutex> lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> lock(Support::ApiLock());
     H5D_fill_value_t fillStatus = H5D_FILL_VALUE_ERROR;
     if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataFillCall, H5Pfill_value_defined(properties, &fillStatus)) < 0 || fillStatus == H5D_FILL_VALUE_ERROR)
     {
@@ -793,14 +824,14 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
     {
       return diagnostic.set(BoundedRead::UndefinedFill, "Bounded sparse chunk has an undefined fill value.");
     }
-    if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataFillCall, H5Pget_fill_value(properties, m_BoundedNativeType, metadata.fill.data())) < 0)
+    if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataFillCall, H5Pget_fill_value(properties, m_BoundedNativeType, metadata.Fill.data())) < 0)
     {
       return diagnostic.set(BoundedRead::MetadataFailure, "Bounded fill-value conversion failed.");
     }
   }
   uint64 carrierBytes = 0;
-  const uint64 nominalAllocation = metadata.needsDecoder ? metadata.nominalBytes : 0;
-  if(!BoundedRead::Add(metadata.maximumStored, nominalAllocation, carrierBytes))
+  const uint64 nominalAllocation = metadata.NeedsDecoder ? metadata.NominalBytes : 0;
+  if(!BoundedRead::Add(metadata.MaximumStored, nominalAllocation, carrierBytes))
   {
     return diagnostic.set(BoundedRead::InvalidExtent, "Bounded raw and nominal carrier byte sum overflows uint64.");
   }
@@ -808,41 +839,41 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
   {
     return diagnostic.counts(BoundedRead::Insufficient, "Bounded raw and nominal carrier bytes exceed the allowance.", carrierBytes, available);
   }
-  metadata.quota.allowance = available - carrierBytes;
-  metadata.stream.zalloc = &DecoderQuota::Allocate;
-  metadata.stream.zfree = &DecoderQuota::Free;
-  metadata.stream.opaque = &metadata.quota;
+  metadata.Quota.Allowance = available - carrierBytes;
+  metadata.Stream.zalloc = &DecoderQuota::Allocate;
+  metadata.Stream.zfree = &DecoderQuota::Free;
+  metadata.Stream.opaque = &metadata.Quota;
   bool initialized = false;
   auto finishDecoder = MakeScopeGuard([&metadata, &initialized]() noexcept {
     if(initialized)
     {
-      inflateEnd(&metadata.stream);
+      inflateEnd(&metadata.Stream);
     }
   });
   static_assert(sizeof(finishDecoder) <= sizeof(BoundedCleanupControl));
-  if(metadata.needsDecoder)
+  if(metadata.NeedsDecoder)
   {
-    const int status = inflateInit(&metadata.stream);
+    const int status = inflateInit(&metadata.Stream);
     initialized = status == Z_OK;
     if(!initialized)
     {
-      return diagnostic.set(metadata.quota.quotaFailed ? BoundedRead::Insufficient : BoundedRead::AllocationFailure, "Bounded zlib initialization cannot acquire admitted state.");
+      return diagnostic.set(metadata.Quota.QuotaFailed ? BoundedRead::Insufficient : BoundedRead::AllocationFailure, "Bounded zlib initialization cannot acquire admitted state.");
     }
     constexpr uint64 windowBytes = 32768 + sizeof(DecoderHeader);
-    if(windowBytes > metadata.quota.allowance - metadata.quota.live)
+    if(windowBytes > metadata.Quota.Allowance - metadata.Quota.Live)
     {
-      return diagnostic.counts(BoundedRead::Insufficient, "Bounded zlib state and maximum-window bytes exceed the allowance.", metadata.quota.live + windowBytes, metadata.quota.allowance);
+      return diagnostic.counts(BoundedRead::Insufficient, "Bounded zlib state and maximum-window bytes exceed the allowance.", metadata.Quota.Live + windowBytes, metadata.Quota.Allowance);
     }
   }
-  auto& stored = metadata.stored;
-  auto& nominal = metadata.nominal;
-  if(!stored.acquire(metadata.maximumStored) || !nominal.acquire(nominalAllocation))
+  auto& stored = metadata.Stored;
+  auto& nominal = metadata.Nominal;
+  if(!stored.acquire(metadata.MaximumStored) || !nominal.acquire(nominalAllocation))
   {
     return diagnostic.set(BoundedRead::AllocationFailure, "Bounded chunk carrier allocation failed within its allowance.");
   }
 #ifndef _WIN32
   // Borrow the POSIX native string; opening this independent descriptor allocates no C++ path carrier.
-  const auto readHandle = metadata.maximumStored == 0 ? detail::invalidFileHandle() : detail::openFileForRead(m_FilePath.native());
+  const auto readHandle = metadata.MaximumStored == 0 ? detail::invalidFileHandle() : detail::openFileForRead(m_FilePath.native());
   auto closeReadHandle = MakeScopeGuard([readHandle]() noexcept {
     if(detail::isValidFileHandle(readHandle))
     {
@@ -850,7 +881,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
     }
   });
   static_assert(sizeof(closeReadHandle) <= sizeof(BoundedCleanupControl));
-  if(metadata.maximumStored != 0 && !detail::isValidFileHandle(readHandle))
+  if(metadata.MaximumStored != 0 && !detail::isValidFileHandle(readHandle))
   {
     return diagnostic.set(BoundedRead::ReadFailure, "Bounded positional source could not open.");
   }
@@ -863,7 +894,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
       continue;
     }
     {
-      std::lock_guard<std::mutex> lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> lock(Support::ApiLock());
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
@@ -873,7 +904,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
         return diagnostic.set(BoundedRead::MetadataFailure, "Injected bounded metadata query failure.");
       }
 #endif
-      const auto status = queryRecord(m_DatasetId, metadata.origin.data(), metadata.record, diagnostic, identity);
+      const auto status = queryRecord(m_DatasetId, metadata.Origin.data(), metadata.Record, diagnostic, identity);
       if(status != Status::Complete)
       {
         return status;
@@ -881,56 +912,56 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
 #if SIMPLNX_BUILD_TESTS
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::SecondPassUnpreparedDecoder))
       {
-        metadata.record.filterMask = 0;
+        metadata.Record.filterMask = 0;
       }
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::SecondPassLargerRecord))
       {
-        metadata.record.storedSize = metadata.maximumStored + 1;
+        metadata.Record.storedSize = metadata.MaximumStored + 1;
       }
 #endif
-      if(metadata.record.storedSize > metadata.maximumStored || (metadata.record.allocated && metadata.hasDeflate && metadata.record.filterMask == 0 && !initialized) ||
-         (!metadata.record.allocated && !metadata.hasSparse))
+      if(metadata.Record.storedSize > metadata.MaximumStored || (metadata.Record.allocated && metadata.HasDeflate && metadata.Record.filterMask == 0 && !initialized) ||
+         (!metadata.Record.allocated && !metadata.HasSparse))
       {
-        diagnostic.counts(BoundedRead::MetadataChanged, "Bounded second-pass record requires unadmitted stored bytes or decoder/fill state.", metadata.record.storedSize, metadata.maximumStored);
+        diagnostic.counts(BoundedRead::MetadataChanged, "Bounded second-pass record requires unadmitted stored bytes or decoder/fill state.", metadata.Record.storedSize, metadata.MaximumStored);
         diagnostic.append(", filter mask=");
-        diagnostic.number(metadata.record.filterMask);
+        diagnostic.number(metadata.Record.filterMask);
         diagnostic.append(", decoder prepared=");
         diagnostic.number(initialized ? 1 : 0);
         diagnostic.append(", fill prepared=");
-        diagnostic.number(metadata.hasSparse ? 1 : 0);
+        diagnostic.number(metadata.HasSparse ? 1 : 0);
         return Status::Failed;
       }
-      const auto recordStatus = validateRecord(metadata, metadata.record, diagnostic);
+      const auto recordStatus = validateRecord(metadata, metadata.Record, diagnostic);
       if(recordStatus != Status::Complete)
       {
         return recordStatus;
       }
 #ifdef _WIN32
-      if(metadata.record.allocated)
+      if(metadata.Record.allocated)
       {
         unsigned ignoredMask = 0;
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.record.storedSize, 0);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.storedSize, 0);
 #endif
         // H5Dread_chunk has no capacity argument. Query, length check, and read share this lock.
         bool injectedFailure = false;
 #if SIMPLNX_BUILD_TESTS
         injectedFailure = InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::RawRead);
 #endif
-        if(injectedFailure || H5Dread_chunk(m_DatasetId, H5P_DEFAULT, metadata.origin.data(), &ignoredMask, stored.data) < 0)
+        if(injectedFailure || H5Dread_chunk(m_DatasetId, H5P_DEFAULT, metadata.Origin.data(), &ignoredMask, stored.Data) < 0)
         {
 #if SIMPLNX_BUILD_TESTS
-          ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadFailed, metadata.record.storedSize, 0);
+          ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadFailed, metadata.Record.storedSize, 0);
 #endif
           return diagnostic.set(BoundedRead::ReadFailure, "Bounded raw HDF5 chunk read failed.");
         }
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredRead, metadata.record.storedSize, 0);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredRead, metadata.Record.storedSize, 0);
 #endif
       }
 #endif
     }
-    if(!metadata.record.allocated)
+    if(!metadata.Record.allocated)
     {
       scatter(metadata, extent, m_ElementSize, nullptr, true, destination.data());
       continue;
@@ -938,32 +969,32 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
 #ifndef _WIN32
     auto readStored = [&]() {
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.record.storedSize, 0);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.storedSize, 0);
 #endif
       bool injectedFailure = false;
 #if SIMPLNX_BUILD_TESTS
       injectedFailure = InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::RawRead);
 #endif
-      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::positionalRead(readHandle, stored.data, static_cast<usize>(metadata.record.storedSize), metadata.record.storedAddress);
+      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::positionalRead(readHandle, stored.Data, static_cast<usize>(metadata.Record.storedSize), metadata.Record.storedAddress);
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath,
-                               got == static_cast<std::ptrdiff_t>(metadata.record.storedSize) ? CodecIoEventForTesting::StoredRead :
+                               got == static_cast<std::ptrdiff_t>(metadata.Record.storedSize) ? CodecIoEventForTesting::StoredRead :
                                got < 0                                                        ? CodecIoEventForTesting::StoredReadFailed :
                                                                                                 CodecIoEventForTesting::StoredReadShort,
-                               got >= 0 ? static_cast<uint64>(got) : metadata.record.storedSize, metadata.record.storedSize);
+                               got >= 0 ? static_cast<uint64>(got) : metadata.Record.storedSize, metadata.Record.storedSize);
 #endif
       return got;
     };
     static_assert(sizeof(readStored) <= k_BoundedReadClosureBytes);
     auto got = readStored();
-    if(got != static_cast<std::ptrdiff_t>(metadata.record.storedSize))
+    if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
     {
       std::lock_guard<std::mutex> recoveryLock(m_PositionalReadRecoveryMutex);
       got = readStored();
-      if(got != static_cast<std::ptrdiff_t>(metadata.record.storedSize))
+      if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
       {
         {
-          std::lock_guard<std::mutex> lock(Support::ApiLock());
+          const std::lock_guard<std::mutex> lock(Support::ApiLock());
           if(H5Fflush(m_DatasetId, H5F_SCOPE_LOCAL) < 0)
           {
             return diagnostic.set(BoundedRead::ReadFailure, "Bounded short-read recovery flush failed.");
@@ -972,24 +1003,24 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
         got = readStored();
       }
     }
-    if(got != static_cast<std::ptrdiff_t>(metadata.record.storedSize))
+    if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
     {
       return diagnostic.set(BoundedRead::ReadFailure, "Bounded positional chunk read was short or failed.");
     }
 #endif
-    const std::byte* decoded = stored.data;
-    if(metadata.hasDeflate && metadata.record.filterMask == 0)
+    const std::byte* decodedPtr = stored.Data;
+    if(metadata.HasDeflate && metadata.Record.filterMask == 0)
     {
-      if(inflateReset(&metadata.stream) != Z_OK)
+      if(inflateReset(&metadata.Stream) != Z_OK)
       {
         return diagnostic.set(BoundedRead::DecodeFailure, "Bounded decoder reset failed.");
       }
-      metadata.stream.next_in = reinterpret_cast<Bytef*>(stored.data);
-      metadata.stream.avail_in = static_cast<uInt>(metadata.record.storedSize);
-      metadata.stream.next_out = reinterpret_cast<Bytef*>(nominal.data);
-      metadata.stream.avail_out = static_cast<uInt>(metadata.nominalBytes);
+      metadata.Stream.next_in = reinterpret_cast<Bytef*>(stored.Data);
+      metadata.Stream.avail_in = static_cast<uInt>(metadata.Record.storedSize);
+      metadata.Stream.next_out = reinterpret_cast<Bytef*>(nominal.Data);
+      metadata.Stream.avail_out = static_cast<uInt>(metadata.NominalBytes);
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateAttempt, metadata.record.storedSize, metadata.nominalBytes);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateAttempt, metadata.Record.storedSize, metadata.NominalBytes);
 #endif
       int status = Z_OK;
 #if SIMPLNX_BUILD_TESTS
@@ -997,37 +1028,37 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
       {
         // Withhold the last checksum byte to exercise zlib's real window request.
         // This deterministic fault changes only the admitted test allocator limit.
-        metadata.quota.allowance = metadata.quota.live;
-        --metadata.stream.avail_in;
-        status = inflate(&metadata.stream, Z_NO_FLUSH);
+        metadata.Quota.Allowance = metadata.Quota.Live;
+        --metadata.Stream.avail_in;
+        status = inflate(&metadata.Stream, Z_NO_FLUSH);
       }
       else
 #endif
       {
-        status = inflate(&metadata.stream, Z_FINISH);
+        status = inflate(&metadata.Stream, Z_FINISH);
       }
-      if(status != Z_STREAM_END || metadata.stream.total_out != metadata.nominalBytes || metadata.stream.avail_in != 0)
+      if(status != Z_STREAM_END || metadata.Stream.total_out != metadata.NominalBytes || metadata.Stream.avail_in != 0)
       {
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateFailed, metadata.record.storedSize, metadata.stream.total_out);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateFailed, metadata.Record.storedSize, metadata.Stream.total_out);
 #endif
-        return diagnostic.set(metadata.quota.quotaFailed      ? BoundedRead::DecoderQuotaFailure :
-                              metadata.quota.allocationFailed ? BoundedRead::AllocationFailure :
+        return diagnostic.set(metadata.Quota.QuotaFailed      ? BoundedRead::DecoderQuotaFailure :
+                              metadata.Quota.AllocationFailed ? BoundedRead::AllocationFailure :
                                                                 BoundedRead::DecodeFailure,
                               "Bounded decoder did not consume one complete nominal stream.");
       }
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::Inflated, metadata.record.storedSize, metadata.stream.total_out);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::Inflated, metadata.Record.storedSize, metadata.Stream.total_out);
 #endif
-      decoded = nominal.data;
+      decodedPtr = nominal.Data;
     }
-    else if(metadata.hasDeflate)
+    else if(metadata.HasDeflate)
     {
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::SkippedDeflate, metadata.record.storedSize, metadata.nominalBytes);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::SkippedDeflate, metadata.Record.storedSize, metadata.NominalBytes);
 #endif
     }
-    scatter(metadata, extent, m_ElementSize, decoded, false, destination.data());
+    scatter(metadata, extent, m_ElementSize, decodedPtr, false, destination.data());
   } while(nextChunk(metadata, extent));
   return Status::Complete;
 }
