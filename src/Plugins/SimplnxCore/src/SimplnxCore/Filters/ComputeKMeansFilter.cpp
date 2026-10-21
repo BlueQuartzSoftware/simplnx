@@ -21,6 +21,7 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
+#include <memory>
 
 #include <random>
 
