@@ -14,6 +14,7 @@
   - Emoji, check marks, or strike-through text.
   - Any legacy version other than DREAM.3D v6.5.171. A comparison on a non-stock legacy build is "a local proof version".
   - A Legacy comparison result from a run on SIMPLNX code older than the current algorithm. Run the comparison again with a current `nxrunner` build when the algorithm changes.
+  - Git terms: branch names, "this branch", commit hashes, and PR numbers. A reader runs develop or a released DREAM3D-NX, so name DREAM3D-NX release versions instead. The Verified commit row is the only commit in a report. The provenance sidecar can cite commits and PRs as evidence.
   - The name "DREAM3D" for the legacy application. Write "DREAM.3D v6.5.171", or "DREAM.3D" for short. "DREAM3D-NX" is the new application.
 -->
 
@@ -71,14 +72,14 @@ For a worked instance see `src/Plugins/SimplnxCore/vv/DBSCANFilter.md`.
 
 <!-- Include every confirmed defect that the V&V of this filter found and fixed, also when an earlier PR fixed it. Use the stable `<FilterName>-D<N>` deviation IDs. Each ID has an entry in Part 2 of `vv/deviations/<FilterName>.md`, or in Part 1 when the defect is also a difference from DREAM.3D v6.5.171. Do not use `SC-*` labels. State all affected released versions. Use `docs/dream3d_nx_release_dates.md` to identify the DREAM3D-NX releases. If the next release number is not known, state that the fix will be in the release after the latest affected release. Put a confirmed defect that is not fixed in the `Bug flags` row, not in this table. If the V&V found no defects, replace this table with `None.` -->
 
-*This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX release after v<latest affected release>.*
+*All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v<latest affected release>.*
 
-*If an earlier PR fixed some of the defects, add:* *PR #<N> fixed `<FilterName>-D<N>`, and DREAM3D-NX v<release> contains that fix.*
+*If a released version already contains some of the fixes, add:* *DREAM3D-NX v<release> contains the fix for `<FilterName>-D<N>`.*
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|-----------|--------|----------------------------|---------------------------|
-| `<FilterName>-D1` | *State the defect and its effect.* | *DREAM.3D v6.5.171; DREAM3D-NX v<first> through v<last>.* | *State how the verified branch fixes the defect.* |
-| `<FilterName>-D2` | *State the defect and its effect.* | *DREAM.3D v6.5.171 only. DREAM3D-NX was not affected.* | *State how the verified branch fixes or prevents the defect.* |
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `<FilterName>-D1` | *State the defect and its effect.* | *DREAM.3D v6.5.171; DREAM3D-NX v<first> through v<last>.* | *State what the filter does now.* |
+| `<FilterName>-D2` | *State the defect and its effect.* | *DREAM.3D v6.5.171 only. DREAM3D-NX was not affected.* | *State what the filter does now.* |
 
 ## Defect hunt
 

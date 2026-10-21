@@ -94,7 +94,7 @@ See [`defect_hunt.md`](./defect_hunt.md).
 - [ ] Every confirmed defect that the V&V found and fixed is listed, also when an earlier PR fixed it
 - [ ] Each row uses a stable `<FilterName>-D<N>` ID that has an entry in `vv/deviations/<FilterName>.md`
 - [ ] Affected released versions come from `docs/dream3d_nx_release_dates.md`, and state whether DREAM.3D v6.5.171 was affected
-- [ ] The lead sentence says which release contains each fix: the release after the latest affected release for this branch, or the named release for an earlier PR
+- [ ] The lead sentence says which release contains each fix: a named DREAM3D-NX release, or the release after the latest affected release. No branch, commit, or PR wording
 - [ ] A confirmed defect that is not fixed is in the `Bug flags` row, not in this table
 - [ ] `None.` when the V&V found no defects
 

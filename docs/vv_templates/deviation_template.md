@@ -56,7 +56,7 @@ Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report an
 | **Filter UUID** | `<uuid>` |
 | **Status** | active *or* superseded by `<FilterName>-D<M>` *or* retired YYYY-MM-DD |
 | **Affected released versions** | *DREAM3D-NX v<first> through v<last>. State whether DREAM.3D v6.5.171 was affected.* |
-| **Fixed in** | *PR #<N>, DREAM3D-NX v<release>* *or* *this branch, the release after v<latest affected release>* *or* *Not fixed* |
+| **Fixed in** | *DREAM3D-NX v<release>* *or* *The DREAM3D-NX release after v<latest affected release>* *or* *Not fixed* |
 
 **Symptom:** *<one-sentence user-visible symptom>*
 
