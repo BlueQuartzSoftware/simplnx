@@ -125,6 +125,13 @@ public:
     }
   }
 
+  ~GeometryReferenceRemapper() noexcept = default;
+
+  GeometryReferenceRemapper(const GeometryReferenceRemapper&) = delete;
+  GeometryReferenceRemapper(GeometryReferenceRemapper&&) = delete;
+  GeometryReferenceRemapper& operator=(const GeometryReferenceRemapper&) = delete;
+  GeometryReferenceRemapper& operator=(GeometryReferenceRemapper&&) = delete;
+
   /**
    * @brief Selects a local dependency without changing the external or ambiguous-reference policy.
    * @param geometryPath Identifies the exact geometry placement.
