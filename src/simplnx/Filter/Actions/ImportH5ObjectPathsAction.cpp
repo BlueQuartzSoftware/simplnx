@@ -352,15 +352,15 @@ namespace nx::core
 struct ImportH5ObjectPathsAction::TestState
 {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-  PublicationFault fault = PublicationFault::None;
-  bool consumed = false;
-  bool refuseCleanup = false;
-  bool cleanupConsumed = false;
-  std::shared_ptr<DataObject> retainedOwner;
-  std::vector<DataStructure::ImportPublicationRecord> retainedRecords;
-  DataStructure* destination = nullptr;
-  DataObject::IdType savedNextId = 0;
-  DataObject::IdType reservedNextId = 0;
+  PublicationFault Fault = PublicationFault::None;
+  bool Consumed = false;
+  bool RefuseCleanup = false;
+  bool CleanupConsumed = false;
+  std::shared_ptr<DataObject> RetainedOwner;
+  std::vector<DataStructure::ImportPublicationRecord> RetainedRecords;
+  DataStructure* Destination = nullptr;
+  DataObject::IdType SavedNextId = 0;
+  DataObject::IdType ReservedNextId = 0;
 #endif
 };
 
@@ -382,43 +382,43 @@ bool ImportH5ObjectPathsAction::rollbackPublication(DataStructure& destination, 
   for(usize index = records.size(); index > 0; --index)
   {
     auto& record = records[index - 1];
-    if(record.owner == nullptr)
+    if(record.Owner == nullptr)
     {
       continue;
     }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-    if(allowRefusal && m_TestState != nullptr && m_TestState->refuseCleanup && index == 2 && record.stage != DataStructure::ImportInsertionStage::None)
+    if(allowRefusal && m_TestState != nullptr && m_TestState->RefuseCleanup && index == 2 && record.Stage != DataStructure::ImportInsertionStage::None)
     {
-      m_TestState->cleanupConsumed = true;
-      record.cleanup = DataStructure::ImportCleanupStatus::Refused;
+      m_TestState->CleanupConsumed = true;
+      record.Cleanup = DataStructure::ImportCleanupStatus::Refused;
       complete = false;
       continue;
     }
 #endif
-    record.cleanup = destination.rollbackImportedObject(record);
-    complete = complete && record.cleanup == DataStructure::ImportCleanupStatus::Complete;
+    record.Cleanup = destination.rollbackImportedObject(record);
+    complete = complete && record.Cleanup == DataStructure::ImportCleanupStatus::Complete;
   }
   for(auto iter = records.rbegin(); iter != records.rend(); ++iter)
   {
     auto& record = *iter;
-    if(record.cleanup == DataStructure::ImportCleanupStatus::Complete && record.notifyRemoval && !record.notificationAttempted)
+    if(record.Cleanup == DataStructure::ImportCleanupStatus::Complete && record.NotifyRemoval && !record.NotificationAttempted)
     {
-      record.notificationAttempted = true;
+      record.NotificationAttempted = true;
       try
       {
-        destination.notify(record.removalMessage);
+        destination.notify(record.RemovalMessage);
       } catch(...)
       {
-        record.notificationFailed = true;
+        record.NotificationFailed = true;
       }
     }
   }
   for(auto& record : records)
   {
-    if(record.cleanup == DataStructure::ImportCleanupStatus::Complete)
+    if(record.Cleanup == DataStructure::ImportCleanupStatus::Complete)
     {
-      record.owner.reset();
-      record.parent.reset();
+      record.Owner.reset();
+      record.Parent.reset();
     }
   }
   // A removal observer can create unrelated objects. Preserve its advanced counter.
@@ -482,12 +482,12 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   std::unordered_set<const DataObject*> countedSources;
   for(const auto& path : selectedPaths)
   {
-    const auto* object = sourceStructure.getData(path);
-    if(object == nullptr)
+    const auto* objectPtr = sourceStructure.getData(path);
+    if(objectPtr == nullptr)
     {
       continue;
     }
-    if(!countedSources.insert(object).second)
+    if(!countedSources.insert(objectPtr).second)
     {
       if(extraPlacementCount == maximumId - startId - sourceCount)
       {
@@ -512,9 +512,9 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   std::unordered_set<const DataObject*> visitedObjects;
   while(!pendingMaps.empty())
   {
-    const auto* map = pendingMaps.back();
+    const auto* mapPtr = pendingMaps.back();
     pendingMaps.pop_back();
-    for(const auto& [id, owner] : *map)
+    for(const auto& [id, owner] : *mapPtr)
     {
       occupiedIds.insert(id);
       if(owner == nullptr)
@@ -524,9 +524,9 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       occupiedIds.insert(owner->getId());
       if(visitedObjects.insert(owner.get()).second)
       {
-        if(const auto* group = dynamic_cast<const BaseGroup*>(owner.get()); group != nullptr)
+        if(const auto* groupPtr = dynamic_cast<const BaseGroup*>(owner.get()); groupPtr != nullptr)
         {
-          pendingMaps.push_back(&group->getDataMap());
+          pendingMaps.push_back(&groupPtr->getDataMap());
         }
       }
     }
@@ -649,11 +649,11 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   // Policy sees all selected shells and the original destination context before ordinary values are read.
   for(const auto& path : preparedPaths)
   {
-    auto* object = preparedStructure.getData(path);
-    if(auto* array = dynamic_cast<IDataArray*>(object); array != nullptr)
+    auto* objectPtr = preparedStructure.getData(path);
+    if(auto* arrayPtr = dynamic_cast<IDataArray*>(objectPtr); arrayPtr != nullptr)
     {
       const bool eagerStatistics = legacy && path.getLength() >= 2 && path[1] == "Statistics";
-      auto planResult = applyPreflightStoragePlan(preparedStructure, path, *array, eagerStatistics);
+      auto planResult = applyPreflightStoragePlan(preparedStructure, path, *arrayPtr, eagerStatistics);
       if(planResult.invalid())
       {
         return MergeResults(std::move(importResult), std::move(planResult));
@@ -662,7 +662,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       importResult.warnings().insert(importResult.warnings().end(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
       importedLeafPaths.push_back(path);
     }
-    else if(dynamic_cast<INeighborList*>(object) != nullptr || dynamic_cast<StringArray*>(object) != nullptr)
+    else if(dynamic_cast<INeighborList*>(objectPtr) != nullptr || dynamic_cast<StringArray*>(objectPtr) != nullptr)
     {
       importedLeafPaths.push_back(path);
     }
@@ -694,28 +694,28 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       continue;
     }
     DataStructure::ImportPublicationRecord record;
-    record.owner = DataStructure::makeImportPublicationCopy(*object);
-    record.id = object->getId();
-    record.path = path;
-    if(record.owner == nullptr || record.id == 0 || record.id == maximumId || dataStructure.m_DataObjects.contains(record.id))
+    record.Owner = DataStructure::makeImportPublicationCopy(*object);
+    record.Id = object->getId();
+    record.Path = path;
+    if(record.Owner == nullptr || record.Id == 0 || record.Id == maximumId || dataStructure.m_DataObjects.contains(record.Id))
     {
       return MergeResults(std::move(importResult),
-                          MakeErrorResult(-6213, fmt::format("Cannot publish '{}' from '{}': identifier {} or its prepared owner is invalid.", path.toString(), m_H5FilePath.string(), record.id)));
+                          MakeErrorResult(-6213, fmt::format("Cannot publish '{}' from '{}': identifier {} or its prepared owner is invalid.", path.toString(), m_H5FilePath.string(), record.Id)));
     }
     const auto parentPath = path.getParent();
     if(!parentPath.empty())
     {
       auto parent = publicationGroups.find(parentPath);
-      record.parent = parent == publicationGroups.end() ? std::dynamic_pointer_cast<BaseGroup>(dataStructure.getSharedData(parentPath)) : parent->second;
-      if(record.parent == nullptr)
+      record.Parent = parent == publicationGroups.end() ? std::dynamic_pointer_cast<BaseGroup>(dataStructure.getSharedData(parentPath)) : parent->second;
+      if(record.Parent == nullptr)
       {
         return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot publish '{}': destination parent '{}' is unavailable.", path.toString(), parentPath.toString())));
       }
-      record.parentId = record.parent->getId();
+      record.ParentId = record.Parent->getId();
     }
-    record.removalMessage = std::make_shared<DataRemovedMessage>(&dataStructure, record.id, record.owner->getName());
-    reservedNextId = std::max(reservedNextId, record.id + 1);
-    if(auto group = std::dynamic_pointer_cast<BaseGroup>(record.owner); group != nullptr)
+    record.RemovalMessage = std::make_shared<DataRemovedMessage>(&dataStructure, record.Id, record.Owner->getName());
+    reservedNextId = std::max(reservedNextId, record.Id + 1);
+    if(auto group = std::dynamic_pointer_cast<BaseGroup>(record.Owner); group != nullptr)
     {
       publicationGroups.emplace(path, std::move(group));
     }
@@ -734,35 +734,37 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
     if(m_TestState != nullptr)
     {
-      m_TestState->destination = &dataStructure;
-      m_TestState->savedNextId = savedNextId;
-      m_TestState->reservedNextId = reservedNextId;
-      m_TestState->retainedRecords = std::move(records);
+      m_TestState->Destination = &dataStructure;
+      m_TestState->SavedNextId = savedNextId;
+      m_TestState->ReservedNextId = reservedNextId;
+      m_TestState->RetainedRecords = std::move(records);
     }
 #endif
   };
   const auto appendCleanupDiagnostics = [&]() {
     for(const auto& record : records)
     {
-      if(record.cleanup != DataStructure::ImportCleanupStatus::Complete)
+      if(record.Cleanup != DataStructure::ImportCleanupStatus::Complete)
       {
         importResult.errors().push_back(
-            {-6215, fmt::format("Import rollback retained '{}' (identifier {}) from '{}': {}. The destination ID counter remains advanced.", record.path.toString(), record.id, m_H5FilePath.string(),
-                                record.cleanup == DataStructure::ImportCleanupStatus::Children ? "selected children remain attached" : "exact placement cleanup did not complete")});
+            {.code = -6215,
+             .message =
+                 fmt::format("Import rollback retained '{}' (identifier {}) from '{}': {}. The destination ID counter remains advanced.", record.Path.toString(), record.Id, m_H5FilePath.string(),
+                             record.Cleanup == DataStructure::ImportCleanupStatus::Children ? "selected children remain attached" : "exact placement cleanup did not complete")});
       }
-      if(record.notificationFailed)
+      if(record.NotificationFailed)
       {
-        importResult.errors().push_back({-6216, fmt::format("Import rollback removed '{}' (identifier {}), but a removal notification failed.", record.path.toString(), record.id)});
+        importResult.errors().push_back({.code = -6216, .message = fmt::format("Import rollback removed '{}' (identifier {}), but a removal notification failed.", record.Path.toString(), record.Id)});
       }
     }
   };
   try
   {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-    if(m_TestState != nullptr && m_TestState->fault == PublicationFault::BeforePublication)
+    if(m_TestState != nullptr && m_TestState->Fault == PublicationFault::BeforePublication)
     {
-      m_TestState->consumed = true;
-      m_TestState->fault = PublicationFault::None;
+      m_TestState->Consumed = true;
+      m_TestState->Fault = PublicationFault::None;
       throw std::runtime_error("injected import failure before publication");
     }
 #endif
@@ -773,19 +775,19 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
       if(m_TestState != nullptr && insertionIndex == 1)
       {
-        m_TestState->retainedOwner = records[insertionIndex].owner;
-        if(m_TestState->fault == PublicationFault::AfterHierarchy)
+        m_TestState->RetainedOwner = records[insertionIndex].Owner;
+        if(m_TestState->Fault == PublicationFault::AfterHierarchy)
         {
           failAfter = DataStructure::ImportInsertionStage::Hierarchy;
         }
-        else if(m_TestState->fault == PublicationFault::BeforeTracking)
+        else if(m_TestState->Fault == PublicationFault::BeforeTracking)
         {
           failAfter = DataStructure::ImportInsertionStage::Parent;
         }
-        else if(m_TestState->fault == PublicationFault::ReturnFalse)
+        else if(m_TestState->Fault == PublicationFault::ReturnFalse)
         {
-          m_TestState->consumed = true;
-          m_TestState->fault = PublicationFault::None;
+          m_TestState->Consumed = true;
+          m_TestState->Fault = PublicationFault::None;
           rejectBeforeInsert = true;
         }
       }
@@ -795,11 +797,11 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
         throw std::runtime_error("destination insertion rejected the prepared object");
       }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-      if(m_TestState != nullptr && insertionIndex == 1 && (m_TestState->fault == PublicationFault::AfterSecondInsert || m_TestState->fault == PublicationFault::AllocationAfterSecond))
+      if(m_TestState != nullptr && insertionIndex == 1 && (m_TestState->Fault == PublicationFault::AfterSecondInsert || m_TestState->Fault == PublicationFault::AllocationAfterSecond))
       {
-        const bool allocation = m_TestState->fault == PublicationFault::AllocationAfterSecond;
-        m_TestState->fault = PublicationFault::None;
-        m_TestState->consumed = true;
+        const bool allocation = m_TestState->Fault == PublicationFault::AllocationAfterSecond;
+        m_TestState->Fault = PublicationFault::None;
+        m_TestState->Consumed = true;
         if(allocation)
         {
           throw std::bad_alloc();
@@ -817,17 +819,17 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
     if(m_TestState != nullptr && insertionIndex < records.size() &&
-       ((m_TestState->fault == PublicationFault::AfterHierarchy && records[insertionIndex].stage == DataStructure::ImportInsertionStage::Hierarchy) ||
-        (m_TestState->fault == PublicationFault::BeforeTracking && records[insertionIndex].stage == DataStructure::ImportInsertionStage::Parent)))
+       ((m_TestState->Fault == PublicationFault::AfterHierarchy && records[insertionIndex].Stage == DataStructure::ImportInsertionStage::Hierarchy) ||
+        (m_TestState->Fault == PublicationFault::BeforeTracking && records[insertionIndex].Stage == DataStructure::ImportInsertionStage::Parent)))
     {
-      m_TestState->consumed = true;
-      m_TestState->fault = PublicationFault::None;
+      m_TestState->Consumed = true;
+      m_TestState->Fault = PublicationFault::None;
     }
 #endif
     rollbackPublication(dataStructure, records, savedNextId, reservedNextId, true);
     const auto& failed = records[std::min(insertionIndex, records.size() - 1)];
     importResult = MergeResults(std::move(importResult),
-                                MakeErrorResult(-6214, fmt::format("Cannot publish '{}' (identifier {}) from '{}': {}", failed.path.toString(), failed.id, m_H5FilePath.string(), error.what())));
+                                MakeErrorResult(-6214, fmt::format("Cannot publish '{}' (identifier {}) from '{}': {}", failed.Path.toString(), failed.Id, m_H5FilePath.string(), error.what())));
     appendCleanupDiagnostics();
     retainFailure();
     return importResult;
@@ -847,32 +849,32 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 void ImportH5ObjectPathsAction::setPublicationFaultForTesting(PublicationFault fault, bool refuseCleanup) const
 {
   m_TestState = std::make_shared<TestState>();
-  m_TestState->fault = fault;
-  m_TestState->refuseCleanup = refuseCleanup;
+  m_TestState->Fault = fault;
+  m_TestState->RefuseCleanup = refuseCleanup;
 }
 
 bool ImportH5ObjectPathsAction::publicationFaultConsumedForTesting() const
 {
-  return m_TestState != nullptr && m_TestState->consumed;
+  return m_TestState != nullptr && m_TestState->Consumed;
 }
 
 bool ImportH5ObjectPathsAction::cleanupFaultConsumedForTesting() const
 {
-  return m_TestState != nullptr && m_TestState->cleanupConsumed;
+  return m_TestState != nullptr && m_TestState->CleanupConsumed;
 }
 
 std::shared_ptr<DataObject> ImportH5ObjectPathsAction::retainedOwnerForTesting() const
 {
-  return m_TestState == nullptr ? nullptr : m_TestState->retainedOwner;
+  return m_TestState == nullptr ? nullptr : m_TestState->RetainedOwner;
 }
 
 Result<> ImportH5ObjectPathsAction::cleanupFailedImportForTesting(DataStructure& destination) const
 {
-  if(m_TestState == nullptr || m_TestState->destination != &destination)
+  if(m_TestState == nullptr || m_TestState->Destination != &destination)
   {
     return MakeErrorResult(-6215, "The selected import has no retained rollback records for this destination.");
   }
-  if(!rollbackPublication(destination, m_TestState->retainedRecords, m_TestState->savedNextId, m_TestState->reservedNextId, false))
+  if(!rollbackPublication(destination, m_TestState->RetainedRecords, m_TestState->SavedNextId, m_TestState->ReservedNextId, false))
   {
     return MakeErrorResult(-6215, "The selected import still has an exact-object cleanup conflict.");
   }

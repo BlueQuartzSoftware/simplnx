@@ -1,5 +1,7 @@
 #include "Dream3dIO.hpp"
 #include "Dream3dIOInternal.hpp"
+#include "simplnx/Common/Result.hpp"
+#include <fmt/format.h>
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Core/Application.hpp"

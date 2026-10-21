@@ -12,6 +12,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace
 {

@@ -1,5 +1,8 @@
 #include "DataStructure.hpp"
+#include "simplnx/Common/Result.hpp"
 #include <memory>
+#include <nonstd/expected.hpp>
+#include <utility>
 
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -20,7 +23,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <exception>
 #include <new>
@@ -680,86 +683,86 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
 
 std::shared_ptr<DataObject> DataStructure::makeImportPublicationCopy(DataObject& source)
 {
-  auto* association = source.m_DataStructure;
+  auto* associationPtr = source.m_DataStructure;
   source.DataObject::setDataStructure(nullptr);
-  const auto restore = MakeScopeGuard([&source, association]() noexcept { source.DataObject::setDataStructure(association); });
+  const auto restore = MakeScopeGuard([&source, associationPtr]() noexcept { source.DataObject::setDataStructure(associationPtr); });
   std::unique_ptr<DataObject> copy(source.shallowCopy());
   if(copy == nullptr)
   {
     return {};
   }
-  if(auto* group = dynamic_cast<BaseGroup*>(copy.get()); group != nullptr)
+  if(auto* groupPtr = dynamic_cast<BaseGroup*>(copy.get()); groupPtr != nullptr)
   {
-    group->clear();
+    groupPtr->clear();
   }
   copy->DataObject::setDataStructure(nullptr);
   copy->m_ParentList.clear();
-  return std::shared_ptr<DataObject>(std::move(copy));
+  return {std::move(copy)};
 }
 
 bool DataStructure::insertImportedObject(ImportPublicationRecord& record, ImportInsertionStage failAfter, bool rejectBeforeInsert)
 {
-  if(rejectBeforeInsert || record.owner == nullptr || record.owner->getId() != record.id || m_DataObjects.contains(record.id))
+  if(rejectBeforeInsert || record.Owner == nullptr || record.Owner->getId() != record.Id || m_DataObjects.contains(record.Id))
   {
     return false;
   }
-  if(record.parent != nullptr && (record.parent->getId() != record.parentId || !record.parent->canInsert(record.owner.get())))
+  if(record.Parent != nullptr && (record.Parent->getId() != record.ParentId || !record.Parent->canInsert(record.Owner.get())))
   {
     return false;
   }
-  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
-  if(map.find(record.id) != map.end() || !map.insert(record.owner))
+  auto& map = record.Parent == nullptr ? m_RootGroup : record.Parent->getDataMap();
+  if(map.find(record.Id) != map.end() || !map.insert(record.Owner))
   {
     return false;
   }
-  record.stage = ImportInsertionStage::Hierarchy;
-  if(failAfter == record.stage)
+  record.Stage = ImportInsertionStage::Hierarchy;
+  if(failAfter == record.Stage)
   {
     throw std::runtime_error("injected import failure after hierarchy placement");
   }
-  if(record.parent != nullptr)
+  if(record.Parent != nullptr)
   {
-    record.owner->addParent(record.parent.get());
+    record.Owner->addParent(record.Parent.get());
   }
-  record.stage = ImportInsertionStage::Parent;
-  if(failAfter == record.stage)
+  record.Stage = ImportInsertionStage::Parent;
+  if(failAfter == record.Stage)
   {
     throw std::runtime_error("injected import failure before weak-index registration");
   }
-  trackDataObject(record.owner);
-  record.stage = ImportInsertionStage::Registered;
+  trackDataObject(record.Owner);
+  record.Stage = ImportInsertionStage::Registered;
   return true;
 }
 
 DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportPublicationRecord& record) noexcept
 {
-  auto& object = *record.owner;
-  if(object.getId() != record.id || (record.parent != nullptr && record.parent->getId() != record.parentId))
+  auto& object = *record.Owner;
+  if(object.getId() != record.Id || (record.Parent != nullptr && record.Parent->getId() != record.ParentId))
   {
     return ImportCleanupStatus::Conflict;
   }
-  auto& map = record.parent == nullptr ? m_RootGroup : record.parent->getDataMap();
-  const auto placement = map.find(record.id);
+  auto& map = record.Parent == nullptr ? m_RootGroup : record.Parent->getDataMap();
+  const auto placement = map.find(record.Id);
   if(placement != map.end() && placement->second.get() != &object)
   {
     return ImportCleanupStatus::Conflict;
   }
   for(const auto parentId : object.m_ParentList)
   {
-    if(record.parent == nullptr || parentId != record.parentId)
+    if(record.Parent == nullptr || parentId != record.ParentId)
     {
       return ImportCleanupStatus::Conflict;
     }
   }
-  if(record.parent != nullptr && m_RootGroup.find(record.id) != m_RootGroup.end())
+  if(record.Parent != nullptr && m_RootGroup.find(record.Id) != m_RootGroup.end())
   {
     return ImportCleanupStatus::Conflict;
   }
-  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr && !group->empty())
+  if(const auto* groupPtr = dynamic_cast<const BaseGroup*>(&object); groupPtr != nullptr && !groupPtr->empty())
   {
     return ImportCleanupStatus::Children;
   }
-  const auto indexed = m_DataObjects.find(record.id);
+  const auto indexed = m_DataObjects.find(record.Id);
   if(indexed != m_DataObjects.end() && indexed->second.lock().get() != &object)
   {
     // A foreign weak entry must survive. A locally unowned shell must still leave scope without a stale callback.
@@ -773,15 +776,15 @@ DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportP
   {
     map.erase(placement);
   }
-  if(record.parent != nullptr)
+  if(record.Parent != nullptr)
   {
-    object.m_ParentList.remove(record.parentId);
+    object.m_ParentList.remove(record.ParentId);
   }
   if(indexed != m_DataObjects.end())
   {
     m_DataObjects.erase(indexed);
   }
-  record.notifyRemoval = object.m_DataStructure == this;
+  record.NotifyRemoval = object.m_DataStructure == this;
   object.DataObject::setDataStructure(nullptr);
   return ImportCleanupStatus::Complete;
 }
@@ -1133,7 +1136,7 @@ Result<> DataStructure::flushChecked() const
     }
     if(objectResult.invalid() && objectResult.errors().empty())
     {
-      objectResult.errors().push_back({-6070, "Checked flush failed without an error diagnostic."});
+      objectResult.errors().push_back({.code = -6070, .message = "Checked flush failed without an error diagnostic."});
     }
     if(objectResult.valid() && objectResult.warnings().empty())
     {
