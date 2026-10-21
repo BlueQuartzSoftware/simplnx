@@ -1,20 +1,31 @@
 #include "FlushFailureFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/ExecutionContext.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 
 #include <fmt/format.h>
 
+#include <atomic>
 #include <memory>
 #include <new>
+#include <nod/nod.hpp>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 using namespace nx::core;
 
@@ -48,7 +59,7 @@ public:
     if(m_Mode == 1 || m_Mode == 2 || m_Mode == 3)
     {
       auto result = MakeErrorResult(m_Mode == 3 ? -272 : -76402, "C2-final-flush-error: cli-backing.h5:/Values");
-      result.warnings().push_back({76403, "C2-final-flush-warning"});
+      result.warnings().push_back({.code = 76403, .message = "C2-final-flush-warning"});
       return result;
     }
     return {};
@@ -64,9 +75,9 @@ private:
  */
 struct CliSnapshotControl
 {
-  bool armed = false;
-  bool allocation = false;
-  nod::scoped_connection endConnection;
+  bool Armed = false;
+  bool Allocation = false;
+  nod::scoped_connection EndConnection;
 };
 
 /**
@@ -91,11 +102,11 @@ public:
    * @brief Preserves the control in an unarmed shallow copy.
    * @param other Supplies identity and the shared control.
    */
-  CliSnapshotGroup(const CliSnapshotGroup& other)
-  : DataGroup(other)
-  , m_Control(other.m_Control)
-  {
-  }
+  CliSnapshotGroup(const CliSnapshotGroup& other) = default;
+  CliSnapshotGroup(CliSnapshotGroup&&) = delete;
+  CliSnapshotGroup& operator=(const CliSnapshotGroup&) = delete;
+  CliSnapshotGroup& operator=(CliSnapshotGroup&&) = delete;
+  ~CliSnapshotGroup() override = default;
 
   /**
    * @brief Copies the group or raises the selected snapshot exception.
@@ -105,9 +116,9 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    if(m_Control->armed)
+    if(m_Control->Armed)
     {
-      if(m_Control->allocation)
+      if(m_Control->Allocation)
       {
         throw std::bad_alloc{};
       }
@@ -171,7 +182,7 @@ IFilter::PreflightResult FlushFailureFilter::preflightImpl([[maybe_unused]] cons
     return MakePreflightErrorResult(-76409, fmt::format("Completion Test Mode {} is outside the fixture range [0, 6].", mode));
   }
   PreflightResult result{};
-  result.outputValues.push_back({"Completion value", "preserved"});
+  result.outputValues.push_back({.name = "Completion value", .value = "preserved"});
   return result;
 }
 
@@ -188,29 +199,29 @@ Result<> FlushFailureFilter::executeImpl(DataStructure& dataStructure, const Arg
   if(mode >= 4)
   {
     auto control = std::make_shared<CliSnapshotControl>();
-    control->allocation = mode == 6;
-    control->armed = mode != 5;
+    control->Allocation = mode == 6;
+    control->Armed = mode != 5;
     if(!dataStructure.insert(std::make_shared<CliSnapshotGroup>(dataStructure, control), DataPath{}))
     {
       return MakeErrorResult(-76409, "Cannot insert CLI completion fixture group 'CompletionSnapshot'.");
     }
     if(mode == 5)
     {
-      auto* parent = pipelineNode == nullptr ? nullptr : pipelineNode->getParentPipeline();
+      auto* parentPtr = pipelineNode == nullptr ? nullptr : pipelineNode->getParentPipeline();
       bool connected = false;
-      if(parent != nullptr)
+      if(parentPtr != nullptr)
       {
-        for(const auto& node : *parent)
+        for(const auto& node : *parentPtr)
         {
           if(node.get() == pipelineNode)
           {
             const std::weak_ptr<CliSnapshotControl> weakControl = control;
-            control->endConnection = node->getFilterUpdateSignal().connect([weakControl](AbstractPipelineNode*, int32, const std::string& message) {
+            control->EndConnection = node->getFilterUpdateSignal().connect([weakControl](AbstractPipelineNode*, int32, const std::string& message) {
               if(message == "End")
               {
                 if(auto state = weakControl.lock())
                 {
-                  state->armed = true;
+                  state->Armed = true;
                 }
               }
             });
@@ -226,6 +237,6 @@ Result<> FlushFailureFilter::executeImpl(DataStructure& dataStructure, const Arg
     }
   }
   auto result = mode == 2 ? MakeErrorResult(-76401, "C2-original-execute-error") : Result<>{};
-  result.warnings().push_back({76400, "C2-original-execute-warning"});
+  result.warnings().push_back({.code = 76400, .message = "C2-original-execute-warning"});
   return result;
 }
