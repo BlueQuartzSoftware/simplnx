@@ -79,12 +79,12 @@ public:
       }
       else
       {
-        std::vector<float64> dihedralAnglesVec;
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC))));
+        std::array<float64, 3> dihedralAnglesVec{};
+        dihedralAnglesVec[0] = k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC)));
 
         // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC)))));
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC))));
+        dihedralAnglesVec[1] = 180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC))));
+        dihedralAnglesVec[2] = k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC)));
 
         m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
       }
@@ -279,12 +279,12 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
         }
         else
         {
-          std::vector<float64> dihedralAnglesVec;
-          dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC))));
+          std::array<float64, 3> dihedralAnglesVec{};
+          dihedralAnglesVec[0] = k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC)));
 
           // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-          dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC)))));
-          dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC))));
+          dihedralAnglesVec[1] = 180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC))));
+          dihedralAnglesVec[2] = k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC)));
 
           angleBuffer[triangleIndex] = *std::ranges::min_element(dihedralAnglesVec);
         }
