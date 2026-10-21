@@ -630,8 +630,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
   }
 
-  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edgeDataStore = nodeGeom1DRef.getEdges()->getDataStoreRef();
-  IGeometry::MeshIndexType numEdges = edgeDataStore.getNumberOfTuples();
+  const AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edgeDataStore = nodeGeom1DRef.getEdges()->getDataStoreRef();
+  const IGeometry::MeshIndexType numEdges = edgeDataStore.getNumberOfTuples();
 
   // Cache coordinates and edges once to avoid per-element OOC I/O in every iteration.
   // The edge list adds 2 * numEdges * sizeof(MeshIndexType) bytes; scratch memory remains O(mesh size), like the existing vertex arrays.
@@ -687,12 +687,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
 #if 0
-        Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
-        Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
+        Q_ASSERT(static_cast<size_t>((3 * in1) + j) < static_cast<size_t>(numberOfVertices * 3));
+        Q_ASSERT(static_cast<size_t>((3 * in2) + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-        dlta = static_cast<double>(vertices[3 * in2 + j] - vertices[3 * in1 + j]);
-        deltaArray[3 * in1 + j] += dlta;
-        deltaArray[3 * in2 + j] += -1.0 * dlta;
+        dlta = static_cast<double>(vertices[(3 * in2) + j] - vertices[(3 * in1) + j]);
+        deltaArray[(3 * in1) + j] += dlta;
+        deltaArray[(3 * in2) + j] += -1.0 * dlta;
       }
       numConnections[in1] += 1;
       numConnections[in2] += 1;
@@ -703,12 +703,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     {
       for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
-        IGeometry::MeshIndexType in0 = 3 * i + j;
+        const IGeometry::MeshIndexType in0 = (3 * i) + j;
         dlta = deltaArray[in0] / numConnections[i];
 
         float ll = lambdas[i];
         // ValueProxy::operator+= converts the displacement to float before the addition.
-        vertices[3 * i + j] += static_cast<float>(ll * dlta);
+        vertices[(3 * i) + j] += static_cast<float>(ll * dlta);
         deltaArray[in0] = 0.0; // reset for next iteration
       }
       numConnections[i] = 0; // reset for next iteration
@@ -734,12 +734,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         for(int32_t j = 0; j < 3; j++)
         {
 #if 0
-          Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
-          Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
+          Q_ASSERT(static_cast<size_t>((3 * in1) + j) < static_cast<size_t>(numberOfVertices * 3));
+          Q_ASSERT(static_cast<size_t>((3 * in2) + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-          dlta = vertices[3 * in2 + j] - vertices[3 * in1 + j];
-          deltaArray[3 * in1 + j] += dlta;
-          deltaArray[3 * in2 + j] += -1.0 * dlta;
+          dlta = vertices[(3 * in2) + j] - vertices[(3 * in1) + j];
+          deltaArray[(3 * in1) + j] += dlta;
+          deltaArray[(3 * in2) + j] += -1.0 * dlta;
         }
         numConnections[in1] += 1;
         numConnections[in2] += 1;
@@ -750,11 +750,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       {
         for(IGeometry::MeshIndexType j = 0; j < 3; j++)
         {
-          IGeometry::MeshIndexType in0 = 3 * i + j;
+          const IGeometry::MeshIndexType in0 = (3 * i) + j;
           dlta = deltaArray[in0] / numConnections[i];
 
           float ll = lambdas[i] * m_InputValues->pMuFactor;
-          vertices[3 * i + j] += static_cast<float>(ll * dlta);
+          vertices[(3 * i) + j] += static_cast<float>(ll * dlta);
           deltaArray[in0] = 0.0; // reset for next iteration
         }
         numConnections[i] = 0; // reset for next iteration

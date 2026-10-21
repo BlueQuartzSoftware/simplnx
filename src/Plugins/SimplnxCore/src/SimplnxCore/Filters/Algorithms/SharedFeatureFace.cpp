@@ -1,6 +1,9 @@
 #include "SharedFeatureFace.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -10,6 +13,7 @@
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
+#include <utility>
 
 #include <algorithm>
 #include <atomic>
@@ -52,7 +56,7 @@ public:
       m_SurfaceMeshFeatureFaceLabels[2 * i + 1] = faceLabelMapEntry.second;
 
       // get feature triangle count
-      uint64 faceId64 = ConvertToUInt64(faceLabelMapEntry.first, faceLabelMapEntry.second);
+      const uint64 faceId64 = ConvertToUInt64(faceLabelMapEntry.first, faceLabelMapEntry.second);
       m_SurfaceMeshFeatureFaceNumTriangles[i] = m_FaceSizeMap[faceId64];
       if(m_ShouldCancel)
       {
@@ -133,14 +137,14 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
   faceLabelVector.emplace_back(0, 0);
 
   // Two labels and one ID per triangle use at most 3 MiB of transfer buffers.
-  constexpr usize k_BlockTriangles = 262144;
-  const usize bufferTriangles = std::min(k_BlockTriangles, totalPoints);
+  constexpr usize blockTriangles = 262144;
+  const usize bufferTriangles = std::min(blockTriangles, totalPoints);
   std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
   std::vector<int32> faceIdsBuffer(bufferTriangles);
   auto& faceIdsStore = featureFaceIds.getDataStoreRef();
   for(usize start = 0; start < totalPoints;)
   {
-    const usize count = std::min(k_BlockTriangles, totalPoints - start);
+    const usize count = std::min(blockTriangles, totalPoints - start);
     result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
     if(result.invalid())
     {
@@ -152,8 +156,8 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     {
       uint32 high = 0;
       uint32 low = 0;
-      int32 fl0 = faceLabelsBuffer[t * 2];
-      int32 fl1 = faceLabelsBuffer[t * 2 + 1];
+      const int32 fl0 = faceLabelsBuffer[t * 2];
+      const int32 fl1 = faceLabelsBuffer[(t * 2) + 1];
       if(fl0 < fl1)
       {
         high = fl0;
@@ -164,7 +168,7 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
         high = fl1;
         low = fl0;
       }
-      uint64 faceId64 = ConvertToUInt64(high, low);
+      const uint64 faceId64 = ConvertToUInt64(high, low);
       if(faceSizeMap.find(faceId64) == faceSizeMap.end())
       {
         faceSizeMap[faceId64] = 1;
@@ -198,7 +202,7 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
   std::vector<int32>().swap(faceIdsBuffer);
 
   auto& faceFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(inputValues.GrainBoundaryAttributeMatrixPath);
-  ShapeType tDims = {static_cast<usize>(index)};
+  const ShapeType tDims = {static_cast<usize>(index)};
   // Preserve the in-core resize sequence and its GCC false-positive suppression.
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 15 && (__GNUC__ > 12 || (__GNUC__ == 12 && __GNUC_MINOR__ >= 4))
 #pragma GCC diagnostic push
@@ -330,10 +334,10 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     // The original randomization visits the entire ID array, even if it has more
     // tuples than the geometry. Read each block before applying the permutation.
     const usize totalIds = featureFaceIds.getNumberOfTuples();
-    faceIdsBuffer.resize(std::min(k_BlockTriangles, totalIds));
+    faceIdsBuffer.resize(std::min(blockTriangles, totalIds));
     for(usize start = 0; start < totalIds;)
     {
-      const usize count = std::min(k_BlockTriangles, totalIds - start);
+      const usize count = std::min(blockTriangles, totalIds - start);
       result = MergeResults(std::move(result), faceIdsStore.copyIntoBuffer(start, nonstd::span<int32>(faceIdsBuffer.data(), count)));
       if(result.invalid())
       {
@@ -406,8 +410,8 @@ Result<> SharedFeatureFace::operator()()
   {
     uint32 high = 0;
     uint32 low = 0;
-    int32 fl0 = surfaceMeshFaceLabels[t * 2];
-    int32 fl1 = surfaceMeshFaceLabels[t * 2 + 1];
+    const int32 fl0 = surfaceMeshFaceLabels[t * 2];
+    const int32 fl1 = surfaceMeshFaceLabels[(t * 2) + 1];
     if(fl0 < fl1)
     {
       high = fl0;
@@ -418,7 +422,7 @@ Result<> SharedFeatureFace::operator()()
       high = fl1;
       low = fl0;
     }
-    uint64 faceId64 = ConvertToUInt64(high, low);
+    const uint64 faceId64 = ConvertToUInt64(high, low);
     if(faceSizeMap.find(faceId64) == faceSizeMap.end())
     {
       faceSizeMap[faceId64] = 1;
@@ -440,7 +444,7 @@ Result<> SharedFeatureFace::operator()()
   // resize + update pointers
   // Grain Boundary Attribute Matrix
   auto& faceFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->GrainBoundaryAttributeMatrixPath);
-  ShapeType tDims = {static_cast<usize>(index)};
+  const ShapeType tDims = {static_cast<usize>(index)};
   // This line has a Wstringop-overflow warning starting in gcc 12.4 in release configuration
   // This is a false positive that eventually disappears in gcc 15
   // Likely related to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94335
