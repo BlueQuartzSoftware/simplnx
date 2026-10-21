@@ -189,6 +189,13 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
     }
   };
 
+  CHECK(MapToGeometryCellDataPath(cellPath, DataPath({"Elsewhere", "Cells", "Ids"})) == arrayPath);
+  CHECK(MapToGeometryCellDataPath(cellPath, otherPath) == arrayPath);
+  CHECK(MapToGeometryCellDataPath(cellPath, arrayPath) == arrayPath);
+  const std::vector<DataPath> mappedPaths = MapToGeometryCellDataPath(cellPath, std::vector<DataPath>{DataPath({"Elsewhere", "Cells", "Phases"}), otherPath});
+  CHECK(mappedPaths == std::vector<DataPath>{cellPath.createChildPath("Phases"), arrayPath});
+  CHECK(MapToGeometryCellDataPath(cellPath, std::vector<DataPath>{}).empty());
+
   CHECK(ValidateArrayInGeometryCellData(dataStructure, geometryPath, arrayPath, -12345, "Cell Feature Ids").valid());
   checkError(ValidateArrayInGeometryCellData(dataStructure, geometryPath, otherPath, -12345, "Cell Feature Ids"),
              {otherPath.toString(), cellPath.toString(), geometryPath.toString(), "**Cell Feature Ids**"});
