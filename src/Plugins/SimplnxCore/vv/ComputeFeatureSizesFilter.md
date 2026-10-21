@@ -20,7 +20,7 @@
 | Tests today | 16 test cases: 14 visible and 2 hidden OOC cases. Coverage includes analytical values, output writes, invalid inputs, archive regression, and SIMPL conversion. |
 | Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies the Small IN100 input and three regression arrays. Analytical fixtures are constructed in C++. |
 | Legacy comparison | Source comparison with DREAM.3D v6.5.171 confirms D1–D3. Runtime comparison artifacts are not available. |
-| Bug flags | `ComputeFeatureSizes-D3` |
+| Bug flags | `ComputeFeatureSizes-D3` (issue #1857) |
 | V&V phase | Complete. `ComputeFeatureSizes-D3` remains open; its regression test is marked as an expected failure. |
 
 ## Summary

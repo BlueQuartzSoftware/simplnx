@@ -56,7 +56,7 @@ Entries use the stable ID sequence `ComputeFeatureSizes-D<N>`. The Filter UUID i
 | **Filter UUID** | `c666ee17-ca58-4969-80d0-819986c72485` |
 | **Status** | active |
 | **Affected released versions** | DREAM3D-NX v7.4.2. DREAM.3D v6.5.171 was not affected. |
-| **Fixed in** | Not fixed. |
+| **Fixed in** | Not fixed. Tracked in issue #1857. |
 
 **Symptom:** For a 2D image, the reported area includes the flat dimension's spacing, and the circular diameter uses that value.
 
