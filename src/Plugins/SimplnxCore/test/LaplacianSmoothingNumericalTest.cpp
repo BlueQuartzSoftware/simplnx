@@ -1,10 +1,14 @@
 #include "SimplnxCore/Filters/LaplacianSmoothingFilter.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -18,6 +22,28 @@ using namespace nx::core;
 
 namespace
 {
+// The four-vertex cache fits without a temporary record-store provider.
+class SmoothingBudgetScope
+{
+public:
+  SmoothingBudgetScope()
+  : m_OriginalBudget(CacheMemoryBudgetManager::instance().budgetBytes())
+  {
+    CacheMemoryBudgetManager::instance().setBudgetBytes(1 << 20);
+  }
+  ~SmoothingBudgetScope()
+  {
+    CacheMemoryBudgetManager::instance().setBudgetBytes(m_OriginalBudget);
+  }
+  SmoothingBudgetScope(const SmoothingBudgetScope&) = delete;
+  SmoothingBudgetScope(SmoothingBudgetScope&&) = delete;
+  SmoothingBudgetScope& operator=(const SmoothingBudgetScope&) = delete;
+  SmoothingBudgetScope& operator=(SmoothingBudgetScope&&) = delete;
+
+private:
+  uint64 m_OriginalBudget;
+};
+
 /** @brief Stores all three coordinates of the four analytic vertices. */
 using Coordinates = std::array<float32, 12>;
 /** @brief Stores one classification for each analytic vertex. */
@@ -87,7 +113,7 @@ struct IterationCase
   Coordinates expected;
 };
 
-// Two lambda=1/4 passes have centroid factor 4/9. One Taubin pair with mu=-1 has factor 8/9.
+// Two lambda=1/4 passes have centroid factor 4/9. One Taubin pair with a mu factor of -1 has a centroid factor of 8/9.
 constexpr std::array<IterationCase, 4> k_IterationCases{{
     {"zero plain iterations", 0, false, k_InputCoordinates},
     {"zero Taubin iterations", 0, true, k_InputCoordinates},
@@ -153,10 +179,10 @@ void BuildGraph(DataStructure& dataStructure, GeometryKind kind, const NodeTypes
   if(kind == GeometryKind::Triangle)
   {
     auto* facesPtr = CreateInputArray(dataStructure, k_ConnectivityPath, geometryPtr->getId(), 4, 3, k_Faces);
-    auto* trianglePtr = dataStructure.getDataAs<TriangleGeom>(k_GeometryPath);
-    REQUIRE(trianglePtr != nullptr);
-    trianglePtr->setFaceList(*facesPtr);
-    REQUIRE(trianglePtr->getEdges() == nullptr);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath));
+    auto& triangle = dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath);
+    triangle.setFaceList(*facesPtr);
+    REQUIRE(triangle.getEdges() == nullptr);
   }
   else
   {
@@ -174,19 +200,20 @@ void RequireResidentInputs(const DataStructure& dataStructure)
   for(const auto& path : {k_VerticesPath, k_NodeTypesPath, k_ConnectivityPath})
   {
     CAPTURE(path.toString());
-    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
-    REQUIRE(arrayPtr != nullptr);
-    REQUIRE(arrayPtr->getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(path));
+    const auto& array = dataStructure.getDataRefAs<IDataArray>(path);
+    REQUIRE(array.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
   }
 }
 
 /**
  * @brief Runs the public filter with distinct weights for all supported node classes.
+ * @param scope Proves the selected algorithm and resident stores.
  * @param dataStructure Contains the mutable fixture.
  * @param iterations Supplies the number of smoothing iterations.
  * @param useTaubin Enables the second pass with mu factor -1.
  */
-void ExecuteSmoothing(DataStructure& dataStructure, int32 iterations, bool useTaubin)
+void ExecuteSmoothing(UnitTest::AlgorithmTestScope& scope, DataStructure& dataStructure, int32 iterations, bool useTaubin)
 {
   LaplacianSmoothingFilter filter;
   Arguments args;
@@ -203,8 +230,7 @@ void ExecuteSmoothing(DataStructure& dataStructure, int32 iterations, bool useTa
   args.insertOrAssign(LaplacianSmoothingFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(k_GeometryPath));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // Smoothing has one shared implementation, so no dispatch counter is expected.
-  auto executeResult = filter.execute(dataStructure, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -219,27 +245,27 @@ void ExecuteSmoothing(DataStructure& dataStructure, int32 iterations, bool useTa
 void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const NodeTypes& nodeTypes, const Coordinates& expected, bool exact = false)
 {
   RequireResidentInputs(dataStructure);
-  const auto* verticesPtr = dataStructure.getDataAs<Float32Array>(k_VerticesPath);
-  const auto* nodesPtr = dataStructure.getDataAs<Int8Array>(k_NodeTypesPath);
-  const auto* connectivityPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(k_ConnectivityPath);
-  const auto* geometryPtr = dataStructure.getDataAs<INodeGeometry1D>(k_GeometryPath);
-  REQUIRE(verticesPtr != nullptr);
-  REQUIRE(nodesPtr != nullptr);
-  REQUIRE(connectivityPtr != nullptr);
-  REQUIRE(geometryPtr != nullptr);
-  CHECK(geometryPtr->getVertices() == verticesPtr);
-  REQUIRE(verticesPtr->getTupleShape() == ShapeType{4});
-  REQUIRE(verticesPtr->getComponentShape() == ShapeType{3});
-  REQUIRE(nodesPtr->getTupleShape() == ShapeType{4});
-  REQUIRE(nodesPtr->getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
+  const auto& vertices = dataStructure.getDataRefAs<Float32Array>(k_VerticesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
+  const auto& nodes = dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_ConnectivityPath));
+  const auto& connectivity = dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_ConnectivityPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<INodeGeometry1D>(k_GeometryPath));
+  const auto& geometry = dataStructure.getDataRefAs<INodeGeometry1D>(k_GeometryPath);
+  CHECK(geometry.getVertices() == &vertices);
+  REQUIRE(vertices.getTupleShape() == ShapeType{4});
+  REQUIRE(vertices.getComponentShape() == ShapeType{3});
+  REQUIRE(nodes.getTupleShape() == ShapeType{4});
+  REQUIRE(nodes.getComponentShape() == ShapeType{1});
   for(usize vertexIdx = 0; vertexIdx < 4; ++vertexIdx)
   {
     CAPTURE(vertexIdx);
-    CHECK(nodesPtr->getValue(vertexIdx) == nodeTypes[vertexIdx]);
+    CHECK(nodes.getValue(vertexIdx) == nodeTypes[vertexIdx]);
     for(usize compIdx = 0; compIdx < 3; ++compIdx)
     {
       const usize valueIdx = vertexIdx * 3 + compIdx;
-      const float32 actual = verticesPtr->getValue(valueIdx);
+      const float32 actual = vertices.getValue(valueIdx);
       CAPTURE(compIdx, actual, expected[valueIdx]);
       if(exact)
       {
@@ -251,25 +277,25 @@ void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const No
       }
     }
   }
-  REQUIRE(connectivityPtr->getTupleShape() == ShapeType{kind == GeometryKind::Triangle ? usize{4} : usize{6}});
-  REQUIRE(connectivityPtr->getComponentShape() == ShapeType{kind == GeometryKind::Triangle ? usize{3} : usize{2}});
+  REQUIRE(connectivity.getTupleShape() == ShapeType{kind == GeometryKind::Triangle ? usize{4} : usize{6}});
+  REQUIRE(connectivity.getComponentShape() == ShapeType{kind == GeometryKind::Triangle ? usize{3} : usize{2}});
   const auto& expectedConnectivity = kind == GeometryKind::Triangle ? k_Faces : k_Edges;
   for(usize valueIdx = 0; valueIdx < expectedConnectivity.size(); ++valueIdx)
   {
     CAPTURE(valueIdx);
-    CHECK(connectivityPtr->getValue(valueIdx) == expectedConnectivity[valueIdx]);
+    CHECK(connectivity.getValue(valueIdx) == expectedConnectivity[valueIdx]);
   }
   if(kind == GeometryKind::Triangle)
   {
-    const auto* trianglePtr = dataStructure.getDataAs<TriangleGeom>(k_GeometryPath);
-    REQUIRE(trianglePtr != nullptr);
-    CHECK(trianglePtr->getFaces() == connectivityPtr);
-    CHECK(trianglePtr->getEdges() == nullptr);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath));
+    const auto& triangle = dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath);
+    CHECK(triangle.getFaces() == &connectivity);
+    CHECK(triangle.getEdges() == nullptr);
     CHECK(dataStructure.getData(k_GeometryPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName)) == nullptr);
   }
   else
   {
-    CHECK(geometryPtr->getEdges() == connectivityPtr);
+    CHECK(geometry.getEdges() == &connectivity);
   }
 }
 } // namespace
@@ -277,17 +303,22 @@ void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const No
 TEST_CASE("SimplnxCore::LaplacianSmoothing: every node type uses its analytic lambda", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
   const auto testCase = GENERATE(Catch::Generators::from_range(k_NodeTypeCases));
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION(testCase.name << " on " << (kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    const SmoothingBudgetScope budget;
+    // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
     NodeTypes nodeTypes;
     nodeTypes.fill(testCase.nodeType);
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
-    ExecuteSmoothing(dataStructure, 1, false);
+    ExecuteSmoothing(scope, dataStructure, 1, false);
     CheckResult(dataStructure, kind, nodeTypes, testCase.expected);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -296,16 +327,21 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: every node type uses its analytic la
 TEST_CASE("SimplnxCore::LaplacianSmoothing: iterations and Taubin match analytic coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
   const auto testCase = GENERATE(Catch::Generators::from_range(k_IterationCases));
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION(testCase.name << " on " << (kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    const SmoothingBudgetScope budget;
+    // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
     const NodeTypes nodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
-    ExecuteSmoothing(dataStructure, testCase.iterations, testCase.useTaubin);
+    ExecuteSmoothing(scope, dataStructure, testCase.iterations, testCase.useTaubin);
     CheckResult(dataStructure, kind, nodeTypes, testCase.expected, testCase.iterations == 0);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -314,16 +350,21 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: iterations and Taubin match analytic
 TEST_CASE("SimplnxCore::LaplacianSmoothing: mixed node classes use input-pass coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION((kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    const SmoothingBudgetScope budget;
+    // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
     const NodeTypes nodeTypes{NodeType::Unused, NodeType::Default, NodeType::TriplePoint, NodeType::Unused};
     const Coordinates expected{0.0F, 0.0F, 0.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 0.0F, 0.0F, 2.0F};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
-    ExecuteSmoothing(dataStructure, 1, false);
+    ExecuteSmoothing(scope, dataStructure, 1, false);
     CheckResult(dataStructure, kind, nodeTypes, expected);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }

@@ -604,7 +604,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   const auto* surfacePtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
   const bool usesOutOfCoreStore = AnyOutOfCore({nodeGeom1DRef.getVertices(), nodeGeom1DRef.getEdges(), surfacePtr == nullptr ? nullptr : surfacePtr->getFaces(),
                                                 m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)});
-  if(usesOutOfCoreStore)
+  const bool useOutOfCoreAlgorithm = ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
   {
     return smoothOutOfCoreMesh(m_DataStructure, *m_InputValues, m_ShouldCancel, m_MessageHandler);
   }
