@@ -30,6 +30,7 @@ set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   AppTest.cpp
   ArgumentsTest.cpp
+  AtomicFileTest.cpp
   BitTest.cpp
   ChunkAlignedTransferTest.cpp
   ChunkIndexTest.cpp

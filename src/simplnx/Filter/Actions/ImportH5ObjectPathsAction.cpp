@@ -45,7 +45,9 @@ struct PlanImportedArrayStoreFunctor
    * The plan is resolved against the destination because that is where the array will live. A
    * placeholder receives a planned placeholder. A materialized store that already has the selected
    * format is kept: an out-of-core store then keeps reading the source file instead of copying the
-   * whole array, and its first write moves it to a session file. A materialized store in another
+   * whole array, and its first write moves it to a session file. (The out-of-core import already
+   * copied into a session file any dataset it cannot read in place, such as one whose raw data
+   * lives in another file.) A materialized store in another
    * format is copied into the selected one so both routes honor the same decision. Kept stores are
    * never shared: execution loads its own, and preflight-cache handouts are isolated copies.
    */

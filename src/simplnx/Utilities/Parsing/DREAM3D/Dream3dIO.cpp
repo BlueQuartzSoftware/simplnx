@@ -2939,7 +2939,8 @@ Result<> WriteDream3dFileAfterHooks(const fs::path& path, const fs::path& xdmfFi
 
   if(writeXdmf)
   {
-    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, path.filename().string());
+    // The XDMF file is UTF-8 XML, so the HDF5 file name is written as UTF-8 text.
+    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, PathToUtf8Text(path.filename()));
   }
 
   return result;
