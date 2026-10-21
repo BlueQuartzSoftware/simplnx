@@ -2,6 +2,7 @@
 
 #include "ComputeKMeans.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
