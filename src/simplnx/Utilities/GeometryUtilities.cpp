@@ -1,4 +1,5 @@
 #include "GeometryUtilities.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
