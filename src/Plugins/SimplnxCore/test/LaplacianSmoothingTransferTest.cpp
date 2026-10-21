@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -288,14 +289,14 @@ void CheckPayload(const std::vector<float32>& actual, const Coordinates& expecte
  */
 void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, const Coordinates& expected, bool exact)
 {
-  const auto* geometryPtr = dataStructure.getDataAs<EdgeGeom>(k_GeometryPath);
-  const auto* verticesPtr = dataStructure.getDataAs<Float32Array>(k_VerticesPath);
-  const auto* nodesPtr = dataStructure.getDataAs<Int8Array>(k_NodeTypesPath);
-  const auto* edgesPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(k_EdgesPath);
-  REQUIRE(geometryPtr != nullptr);
-  REQUIRE(verticesPtr != nullptr);
-  REQUIRE(nodesPtr != nullptr);
-  REQUIRE(edgesPtr != nullptr);
+  const EdgeGeom* geometryPtr = nullptr;
+  REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<EdgeGeom>(k_GeometryPath));
+  const Float32Array* verticesPtr = nullptr;
+  REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
+  const Int8Array* nodesPtr = nullptr;
+  REQUIRE_NOTHROW(nodesPtr = &dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
+  const IGeometry::MeshIndexArrayType* edgesPtr = nullptr;
+  REQUIRE_NOTHROW(edgesPtr = &dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_EdgesPath));
   CHECK(geometryPtr->getVertices() == verticesPtr);
   CHECK(geometryPtr->getEdges() == edgesPtr);
   CHECK(&verticesPtr->getDataStoreRef() == stores.vertices.get());
@@ -303,8 +304,8 @@ void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, c
   CHECK(&edgesPtr->getDataStoreRef() == stores.edges.get());
   for(const auto& path : {k_VerticesPath, k_NodeTypesPath, k_EdgesPath})
   {
-    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
-    REQUIRE(arrayPtr != nullptr);
+    const IDataArray* arrayPtr = nullptr;
+    REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<IDataArray>(path));
     REQUIRE(arrayPtr->getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
   }
   REQUIRE(verticesPtr->getTupleShape() == ShapeType{4});

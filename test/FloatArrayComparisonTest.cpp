@@ -242,7 +242,8 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: infinity pairs", "[Uni
 {
   const int pairIndex = GENERATE(0, 1, 2, 3, 4, 5);
   const TestType infinity = std::numeric_limits<TestType>::infinity();
-  const std::vector<std::pair<TestType, TestType>> pairs = {{infinity, infinity}, {-infinity, -infinity}, {infinity, -infinity}, {-infinity, infinity}, {2, infinity}, {infinity, 2}};
+  const std::vector<std::pair<TestType, TestType>> pairs = {{infinity, infinity},  {-infinity, -infinity},  {infinity, -infinity},
+                                                            {-infinity, infinity}, {TestType{2}, infinity}, {infinity, TestType{2}}};
   CAPTURE(pairIndex);
   FloatComparisonFixture<TestType> fixture({pairs[pairIndex].first}, {pairs[pairIndex].second});
   auto result = fixture.evaluate(TestType{0.5}, true);
