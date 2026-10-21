@@ -478,7 +478,7 @@ Result<> VerifyTriangleWinding::operator()()
   const auto& vertices = triGeom.getVertices()->getDataStoreRef();
   const bool usesOutOfCoreStore =
       triangles.getStoreType() == IDataStore::StoreType::OutOfCore || vertices.getStoreType() == IDataStore::StoreType::OutOfCore || idsStore.getStoreType() == IDataStore::StoreType::OutOfCore;
-  const bool useOutOfCoreAlgorithm = usesOutOfCoreStore || (!ForceInCoreAlgorithm() && ForceOocAlgorithm());
+  const bool useOutOfCoreAlgorithm = ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   if(useOutOfCoreAlgorithm)
   {
