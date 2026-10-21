@@ -1632,7 +1632,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
     (*marker)[index] = static_cast<int32>(11 * index);
     (*externalMarker)[index] = static_cast<int32>(90 + index);
   }
-  (*featureValues)[0] = 0;
+  (*featureValues)[0] = false;
   (*featureValues)[1] = false;
   (*featureValues)[2] = true;
 
