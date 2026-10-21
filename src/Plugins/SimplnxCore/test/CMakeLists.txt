@@ -242,6 +242,10 @@ if(DREAM3DNX_USE_OOC)
       "C8 ReadDREAM3DFilter plans selected data in the destination context,SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle"
       --order lex --reporter compact --warn NoTests)
   set_tests_properties(SimplnxCoreC8ResolverIsolation PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+  add_test(NAME SimplnxCoreLaplacianOocNumerical
+    COMMAND ${PLUGIN_NAME}UnitTest "[.LaplacianSmoothingOoc]" --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreLaplacianOocNumerical PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
 endif()
 
 # ------------------------------------------------------------------------------
