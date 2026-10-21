@@ -24,7 +24,7 @@ class SharedFeatureFaceImpl
 {
 public:
   SharedFeatureFaceImpl(const std::vector<std::pair<int32, int32>>& faceLabelVector, Int32AbstractDataStore& surfaceMeshFeatureFaceLabels, Int32AbstractDataStore& surfaceMeshFeatureFaceNumTriangles,
-                        std::map<uint64, int32>& faceSizeMap, const std::atomic_bool& shouldCancel)
+                        const std::map<uint64, int32>& faceSizeMap, const std::atomic_bool& shouldCancel)
   : m_FaceLabelVector(faceLabelVector)
   , m_SurfaceMeshFeatureFaceLabels(surfaceMeshFeatureFaceLabels)
   , m_SurfaceMeshFeatureFaceNumTriangles(surfaceMeshFeatureFaceNumTriangles)
@@ -44,8 +44,11 @@ public:
       m_SurfaceMeshFeatureFaceLabels[2 * i + 1] = faceLabelMapEntry.second;
 
       // get feature triangle count
-      uint64 faceId64 = ConvertToUInt64(faceLabelMapEntry.first, faceLabelMapEntry.second);
-      m_SurfaceMeshFeatureFaceNumTriangles[i] = m_FaceSizeMap[faceId64];
+      // Worker threads share the map, so only read it. Row 0 is the reserved (0,0) boundary, which has no
+      // entry unless a triangle uses that pair; a missing entry has no triangles.
+      const uint64 faceId64 = ConvertToUInt64(faceLabelMapEntry.first, faceLabelMapEntry.second);
+      const auto faceSizeIter = m_FaceSizeMap.find(faceId64);
+      m_SurfaceMeshFeatureFaceNumTriangles[i] = faceSizeIter == m_FaceSizeMap.end() ? 0 : faceSizeIter->second;
       if(m_ShouldCancel)
       {
         break;
@@ -57,7 +60,7 @@ private:
   const std::vector<std::pair<int32, int32>>& m_FaceLabelVector;
   Int32AbstractDataStore& m_SurfaceMeshFeatureFaceLabels;
   Int32AbstractDataStore& m_SurfaceMeshFeatureFaceNumTriangles;
-  std::map<uint64, int32>& m_FaceSizeMap;
+  const std::map<uint64, int32>& m_FaceSizeMap;
   const std::atomic_bool& m_ShouldCancel;
 };
 

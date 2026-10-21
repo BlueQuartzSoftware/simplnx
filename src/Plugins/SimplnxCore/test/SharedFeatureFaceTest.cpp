@@ -6,7 +6,12 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include <array>
 #include <catch2/catch.hpp>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -27,6 +32,78 @@ const std::string k_FeatureFaceLabelsArrayName = "FaceLabels [NX Computed]";
 const DataPath k_GeometryPath = DataPath({k_TriangleGeometryName});
 const DataPath k_FeatureAttributeMatrixPath = k_GeometryPath.createChildPath(k_FaceFeatureName);
 const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FaceLabelsName);
+
+/**
+ * @brief Builds one disjoint triangle per label pair, runs the filter without randomization, and checks every output.
+ * @param pairs Face label pair for each triangle.
+ * @param expectedIds Expected shared feature face ID for each triangle.
+ * @param expectedLabels Expected label pair for each boundary row, including the reserved row 0.
+ * @param expectedCounts Expected triangle count for each boundary row, including the reserved row 0.
+ */
+void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>& pairs, const std::vector<int32>& expectedIds, const std::vector<std::pair<int32, int32>>& expectedLabels,
+                               const std::vector<int32>& expectedCounts)
+{
+  DataStructure ds;
+  auto* meshGeomPtr = TriangleGeom::Create(ds, "Mesh");
+  REQUIRE(meshGeomPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {pairs.size() * 3}, {3}, meshGeomPtr->getId());
+  auto* trianglesPtr = UnitTest::CreateTestDataArray<uint64>(ds, "Triangles", {pairs.size()}, {3}, meshGeomPtr->getId());
+  auto* faceDataPtr = AttributeMatrix::Create(ds, "Faces", ShapeType{pairs.size()}, meshGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(trianglesPtr != nullptr);
+  REQUIRE(faceDataPtr != nullptr);
+  meshGeomPtr->setVertices(*verticesPtr);
+  meshGeomPtr->setFaceList(*trianglesPtr);
+  meshGeomPtr->setFaceDataId(faceDataPtr->getId());
+  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(ds, "Labels", {pairs.size()}, {2}, faceDataPtr->getId());
+  REQUIRE(labelsPtr != nullptr);
+  for(usize tupleIdx = 0; tupleIdx < pairs.size(); ++tupleIdx)
+  {
+    const auto x = static_cast<float32>(2 * tupleIdx);
+    const std::array<float32, 9> xyz{x, 0, 0, x + 1, 0, 0, x, 1, 0};
+    for(usize compIdx = 0; compIdx < xyz.size(); ++compIdx)
+    {
+      (*verticesPtr)[9 * tupleIdx + compIdx] = xyz[compIdx];
+    }
+    for(usize compIdx = 0; compIdx < 3; ++compIdx)
+    {
+      (*trianglesPtr)[3 * tupleIdx + compIdx] = 3 * tupleIdx + compIdx;
+    }
+    (*labelsPtr)[2 * tupleIdx] = pairs[tupleIdx].first;
+    (*labelsPtr)[2 * tupleIdx + 1] = pairs[tupleIdx].second;
+  }
+  SharedFeatureFaceFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(SharedFeatureFaceFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Mesh"})));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"Mesh", "Faces", "Labels"})));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureFaceIdsArrayName_Key, std::make_any<std::string>("Ids"));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_GrainBoundaryAttributeMatrixName_Key, std::make_any<std::string>("Boundaries"));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureFaceLabelsArrayName_Key, std::make_any<std::string>("Labels"));
+  args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureNumTrianglesArrayName_Key, std::make_any<std::string>("Counts"));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"})));
+  const auto& idsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"}));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"})));
+  const auto& outLabelsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"}));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"})));
+  const auto& countsRef = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"}));
+  REQUIRE(idsRef.getNumberOfTuples() == expectedIds.size());
+  REQUIRE(outLabelsRef.getNumberOfTuples() == expectedLabels.size());
+  REQUIRE(countsRef.getNumberOfTuples() == expectedCounts.size());
+  for(usize tupleIdx = 0; tupleIdx < expectedIds.size(); ++tupleIdx)
+  {
+    CHECK(idsRef[tupleIdx] == expectedIds[tupleIdx]);
+  }
+  for(usize row = 0; row < expectedLabels.size(); ++row)
+  {
+    CHECK(outLabelsRef[2 * row] == expectedLabels[row].first);
+    CHECK(outLabelsRef[2 * row + 1] == expectedLabels[row].second);
+    CHECK(countsRef[row] == expectedCounts[row]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
 
 } // namespace SharedFeatureFaceFilterTest
 
@@ -102,4 +179,32 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SharedFeatureFace: Missing zero pair rotation race", "[SimplnxCore][SharedFeatureFaceFilter][Regression]")
+{
+  UnitTest::LoadPlugins();
+  // The first distinct pairs create map keys 2 and 1. Key zero is absent, so the reserved row must receive
+  // count zero without changing the shared map.
+  const std::vector<std::pair<int32, int32>> pairs{{0, 2}, {0, 2}, {0, 1}};
+  const std::vector<int32> expectedIds{1, 1, 2};
+  const std::vector<std::pair<int32, int32>> expectedLabels{{0, 0}, {0, 2}, {0, 1}};
+  const std::vector<int32> expectedCounts{0, 2, 1};
+  for(usize repetition = 0; repetition < 300; ++repetition)
+  {
+    CAPTURE(repetition);
+    ExecuteAndCheckLabelPairs(pairs, expectedIds, expectedLabels, expectedCounts);
+  }
+}
+
+TEST_CASE("SimplnxCore::SharedFeatureFace: Real zero pair counts", "[SimplnxCore][SharedFeatureFaceFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Pair (0,0) creates map key zero, so the reserved row and boundary row 1 share that key and both report
+  // its two triangles.
+  const std::vector<std::pair<int32, int32>> pairs{{0, 0}, {0, 2}, {0, 0}};
+  const std::vector<int32> expectedIds{1, 2, 1};
+  const std::vector<std::pair<int32, int32>> expectedLabels{{0, 0}, {0, 0}, {0, 2}};
+  const std::vector<int32> expectedCounts{2, 2, 1};
+  ExecuteAndCheckLabelPairs(pairs, expectedIds, expectedLabels, expectedCounts);
 }
