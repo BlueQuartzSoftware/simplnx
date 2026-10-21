@@ -1,11 +1,19 @@
 #include "ImportH5ObjectPathsAction.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/DataMap.hpp"
+#include <utility>
 
 #include "simplnx/Common/StringLiteralFormatting.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -19,7 +27,7 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <cstdio>
 
@@ -27,17 +35,144 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <memory>
 #include <new>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
 
 namespace
 {
+/**
+ * @struct PlacementPlan
+ * @brief Records each selected path's source owner and reserved destination ID.
+ */
+struct PlacementPlan
+{
+  DataPath Path;
+  std::shared_ptr<DataObject> SourcePtr;
+  DataObject::IdType SourceId = 0;
+  DataObject::IdType AssignedId = 0;
+  bool ExtraPlacement = false;
+};
+
+/**
+ * @struct PlacementPathLess
+ * @brief Orders path components so all descendants of one path form a contiguous range.
+ */
+struct PlacementPathLess
+{
+  bool operator()(const DataPath& left, const DataPath& right) const
+  {
+    const auto commonLength = std::min(left.getLength(), right.getLength());
+    for(usize component = 0; component < commonLength; ++component)
+    {
+      if(left[component] != right[component])
+      {
+        return left[component] < right[component];
+      }
+    }
+    return left.getLength() < right.getLength();
+  }
+};
+
+bool IsStrictDescendant(const DataPath& candidate, const DataPath& parent)
+{
+  if(candidate.getLength() <= parent.getLength())
+  {
+    return false;
+  }
+  for(usize component = 0; component < parent.getLength(); ++component)
+  {
+    if(candidate[component] != parent[component])
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * @class GeometryReferenceRemapper
+ * @brief Maps geometry references through selected placement paths without reading array values.
+ *
+ * The finalized placement vector must outlive this index and remain unchanged.
+ */
+class GeometryReferenceRemapper
+{
+public:
+  /**
+   * @brief Indexes the complete selection after all placement IDs are assigned.
+   * @param placements Supplies stable entries that must outlive this index.
+   */
+  explicit GeometryReferenceRemapper(const std::vector<PlacementPlan>& placements)
+  {
+    m_PlacementsBySourceId.reserve(placements.size());
+    for(const auto& placement : placements)
+    {
+      m_PlacementsByPath.emplace(placement.Path, &placement);
+      m_PlacementsBySourceId[placement.SourceId].push_back(&placement);
+    }
+    for(auto& sourceEntry : m_PlacementsBySourceId)
+    {
+      auto& candidates = sourceEntry.second;
+      std::ranges::sort(candidates, PlacementPathLess{}, &PlacementPlan::Path);
+    }
+  }
+
+  /**
+   * @brief Selects a local dependency without changing the external or ambiguous-reference policy.
+   * @param geometryPath Identifies the exact geometry placement.
+   * @param sourceId Supplies a retained reference after source-wide ID reassignment.
+   * @return The direct-child or unique descendant ID, or the unchanged reference when neither rule selects a target.
+   */
+  DataObject::OptionalId mapReference(const DataPath& geometryPath, DataObject::OptionalId sourceId) const
+  {
+    if(!sourceId.has_value())
+    {
+      return sourceId;
+    }
+    const auto candidates = m_PlacementsBySourceId.find(*sourceId);
+    if(candidates == m_PlacementsBySourceId.end())
+    {
+      return sourceId;
+    }
+    const auto direct = m_PlacementsByPath.find(geometryPath.createChildPath(candidates->second.front()->SourcePtr->getName()));
+    if(direct != m_PlacementsByPath.end() && direct->second->SourceId == *sourceId)
+    {
+      return direct->second->AssignedId;
+    }
+    const auto& sourcePlacements = candidates->second;
+    auto first = std::ranges::lower_bound(sourcePlacements, geometryPath, PlacementPathLess{}, &PlacementPlan::Path);
+    if(first != sourcePlacements.end() && (*first)->Path == geometryPath)
+    {
+      ++first;
+    }
+    if(first == sourcePlacements.end() || !IsStrictDescendant((*first)->Path, geometryPath))
+    {
+      // A selected external target can be shared when this geometry has no selected local copy.
+      return sourceId;
+    }
+    // Component ordering keeps descendants contiguous, so two candidates establish ambiguity without a scan.
+    const auto second = std::next(first);
+    if(second != sourcePlacements.end() && IsStrictDescendant((*second)->Path, geometryPath))
+    {
+      // An ID does not identify a preferred alias. Keep the canonical reference when local paths are ambiguous.
+      return sourceId;
+    }
+    return (*first)->AssignedId;
+  }
+
+private:
+  std::map<DataPath, const PlacementPlan*, PlacementPathLess> m_PlacementsByPath;
+  std::unordered_map<DataObject::IdType, std::vector<const PlacementPlan*>> m_PlacementsBySourceId;
+};
+
 /**
  * @struct PlanImportedArrayStoreFunctor
  * @brief Replaces an imported array store with a resolver-planned placeholder.
@@ -132,11 +267,58 @@ Result<> applyPreflightStoragePlan(DataStructure& dataStructure, const DataPath&
 {
   return ExecuteDataFunction(PlanImportedArrayStoreFunctor{}, dataArray.getDataType(), dataStructure, targetPath, &dataArray, allowPopulated);
 }
+
+/**
+ * @brief Applies one ID transformation to every serialized geometry reference.
+ * @tparam Transform Maps an optional source ID to its retained or replacement ID.
+ * @param geometry Receives the transformed references.
+ * @param transform Preserves, clears, or replaces each reference without reading array values.
+ */
+template <typename Transform>
+void TransformGeometryReferences(IGeometry& geometry, const Transform& transform)
+{
+  geometry.setElementSizesId(transform(geometry.getElementSizesId()));
+  if(auto* gridPtr = dynamic_cast<IGridGeometry*>(&geometry); gridPtr != nullptr)
+  {
+    gridPtr->setCellData(transform(gridPtr->getCellDataId()));
+  }
+  if(auto* nodePtr = dynamic_cast<INodeGeometry0D*>(&geometry); nodePtr != nullptr)
+  {
+    nodePtr->setVertexListId(transform(nodePtr->getVertexListId()));
+    nodePtr->setVertexDataId(transform(nodePtr->getVertexAttributeMatrixId()));
+  }
+  if(auto* nodePtr = dynamic_cast<INodeGeometry1D*>(&geometry); nodePtr != nullptr)
+  {
+    nodePtr->setEdgeListId(transform(nodePtr->getEdgeListId()));
+    nodePtr->setEdgeDataId(transform(nodePtr->getEdgeAttributeMatrixId()));
+    nodePtr->setElementContainingVertId(transform(nodePtr->getElementContainingVertId()));
+    nodePtr->setElementNeighborsId(transform(nodePtr->getElementNeighborsId()));
+    nodePtr->setElementCentroidsId(transform(nodePtr->getElementCentroidsId()));
+  }
+  if(auto* nodePtr = dynamic_cast<INodeGeometry2D*>(&geometry); nodePtr != nullptr)
+  {
+    nodePtr->setFaceListId(transform(nodePtr->getFaceListId()));
+    nodePtr->setFaceDataId(transform(nodePtr->getFaceAttributeMatrixId()));
+    nodePtr->setUnsharedEdgesId(transform(nodePtr->getUnsharedEdgesId()));
+  }
+  if(auto* nodePtr = dynamic_cast<INodeGeometry3D*>(&geometry); nodePtr != nullptr)
+  {
+    nodePtr->setPolyhedronListId(transform(nodePtr->getPolyhedronListId()));
+    nodePtr->setPolyhedraDataId(transform(nodePtr->getPolyhedraAttributeMatrixId()));
+    nodePtr->setUnsharedFacedId(transform(nodePtr->getUnsharedFacesId()));
+  }
+  if(auto* rectGridPtr = dynamic_cast<RectGridGeom*>(&geometry); rectGridPtr != nullptr)
+  {
+    rectGridPtr->setXBoundsId(transform(rectGridPtr->getXBoundsId()));
+    rectGridPtr->setYBoundsId(transform(rectGridPtr->getYBoundsId()));
+    rectGridPtr->setZBoundsId(transform(rectGridPtr->getZBoundsId()));
+  }
+}
+
 /**
  * @brief Clears geometry references to objects outside the exact import selection.
  * @param sourceStructure Owns the imported object copies.
- * @param paths Specifies the objects that the action
- * inserts.
+ * @param paths Specifies the objects that the action inserts.
  *
  * Metadata and selected loaders can retain unselected objects. Their IDs must not survive renumbering as geometry references.
  */
@@ -160,42 +342,7 @@ void clearExcludedGeometryReferences(DataStructure& sourceStructure, const std::
     {
       continue;
     }
-    geometry->setElementSizesId(selectedReference(geometry->getElementSizesId()));
-    if(auto* grid = dynamic_cast<IGridGeometry*>(geometry); grid != nullptr)
-    {
-      grid->setCellData(selectedReference(grid->getCellDataId()));
-    }
-    if(auto* node = dynamic_cast<INodeGeometry0D*>(geometry); node != nullptr)
-    {
-      node->setVertexListId(selectedReference(node->getVertexListId()));
-      node->setVertexDataId(selectedReference(node->getVertexAttributeMatrixId()));
-    }
-    if(auto* node = dynamic_cast<INodeGeometry1D*>(geometry); node != nullptr)
-    {
-      node->setEdgeListId(selectedReference(node->getEdgeListId()));
-      node->setEdgeDataId(selectedReference(node->getEdgeAttributeMatrixId()));
-      node->setElementContainingVertId(selectedReference(node->getElementContainingVertId()));
-      node->setElementNeighborsId(selectedReference(node->getElementNeighborsId()));
-      node->setElementCentroidsId(selectedReference(node->getElementCentroidsId()));
-    }
-    if(auto* node = dynamic_cast<INodeGeometry2D*>(geometry); node != nullptr)
-    {
-      node->setFaceListId(selectedReference(node->getFaceListId()));
-      node->setFaceDataId(selectedReference(node->getFaceAttributeMatrixId()));
-      node->setUnsharedEdgesId(selectedReference(node->getUnsharedEdgesId()));
-    }
-    if(auto* node = dynamic_cast<INodeGeometry3D*>(geometry); node != nullptr)
-    {
-      node->setPolyhedronListId(selectedReference(node->getPolyhedronListId()));
-      node->setPolyhedraDataId(selectedReference(node->getPolyhedraAttributeMatrixId()));
-      node->setUnsharedFacedId(selectedReference(node->getUnsharedFacesId()));
-    }
-    if(auto* rectGrid = dynamic_cast<RectGridGeom*>(geometry); rectGrid != nullptr)
-    {
-      rectGrid->setXBoundsId(selectedReference(rectGrid->getXBoundsId()));
-      rectGrid->setYBoundsId(selectedReference(rectGrid->getYBoundsId()));
-      rectGrid->setZBoundsId(selectedReference(rectGrid->getZBoundsId()));
-    }
+    TransformGeometryReferences(*geometry, selectedReference);
   }
 }
 } // namespace
@@ -385,14 +532,6 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     }
   }
 
-  struct PlacementPlan
-  {
-    DataPath path;
-    std::shared_ptr<DataObject> source;
-    DataObject::IdType sourceId = 0;
-    DataObject::IdType assignedId = 0;
-    bool extraPlacement = false;
-  };
   auto sortedPaths = m_Paths;
   std::sort(sortedPaths.begin(), sortedPaths.end(), [](const DataPath& a, const DataPath& b) { return a.getLength() < b.getLength(); });
   std::vector<PlacementPlan> placements;
@@ -435,8 +574,10 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot import '{}' from '{}': identifier {} conflicts with an existing or selected object.", path.toString(),
                                                                                       m_H5FilePath.string(), assignedId)));
     }
-    placements.push_back({path, std::move(sourceObject), sourceId, assignedId, extraPlacement});
+    placements.push_back({.Path = path, .SourcePtr = std::move(sourceObject), .SourceId = sourceId, .AssignedId = assignedId, .ExtraPlacement = extraPlacement});
   }
+
+  const GeometryReferenceRemapper referenceRemapper(placements);
 
   DataStructure preparedStructure = dataStructure;
   if(extraPlacementCount != 0)
@@ -448,38 +589,42 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   preparedPaths.reserve(placements.size());
   for(const auto& placement : placements)
   {
-    const auto& path = placement.path;
+    const auto& path = placement.Path;
     if(preparedStructure.containsData(path))
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6203, fmt::format("Cannot import '{}' from '{}': the destination path already exists. Rename it or exclude this path.",
                                                                                       path.toString(), m_H5FilePath.string())));
     }
-    auto* collision = preparedStructure.getData(placement.sourceId);
-    if(placement.extraPlacement)
+    auto* collisionPtr = preparedStructure.getData(placement.SourceId);
+    if(placement.ExtraPlacement)
     {
-      const auto first = firstStagedCopies.find(placement.source.get());
-      if(first == firstStagedCopies.end() || collision != first->second.get() || first->second->getId() != placement.sourceId || preparedStructure.getNextId() != placement.assignedId)
+      const auto first = firstStagedCopies.find(placement.SourcePtr.get());
+      if(first == firstStagedCopies.end() || collisionPtr != first->second.get() || first->second->getId() != placement.SourceId || preparedStructure.getNextId() != placement.AssignedId)
       {
         return MergeResults(std::move(importResult),
                             MakeErrorResult(-6213, fmt::format("Cannot stage alias '{}' from '{}': source identifier {} or prepared next identifier {} does not match planned clone {}.",
-                                                               path.toString(), m_H5FilePath.string(), placement.sourceId, preparedStructure.getNextId(), placement.assignedId)));
+                                                               path.toString(), m_H5FilePath.string(), placement.SourceId, preparedStructure.getNextId(), placement.AssignedId)));
       }
     }
-    else if(collision != nullptr)
+    else if(collisionPtr != nullptr)
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': source identifier {} already belongs to another prepared object.", path.toString(),
-                                                                                      m_H5FilePath.string(), placement.sourceId)));
+                                                                                      m_H5FilePath.string(), placement.SourceId)));
     }
-    auto shell = DataStructure::makeImportPublicationCopy(*placement.source);
+    auto shell = DataStructure::makeImportPublicationCopy(*placement.SourcePtr);
     if(shell == nullptr)
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot prepare an independent copy of '{}' from '{}'.", path.toString(), m_H5FilePath.string())));
     }
-    if(shell->getId() != placement.sourceId || shell.get() == collision)
+    if(shell->getId() != placement.SourceId || shell.get() == collisionPtr)
     {
       return MergeResults(std::move(importResult),
                           MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': detached copy identifier {} must equal source identifier {} and its owner must be independent.",
-                                                             path.toString(), m_H5FilePath.string(), shell->getId(), placement.sourceId)));
+                                                             path.toString(), m_H5FilePath.string(), shell->getId(), placement.SourceId)));
+    }
+    if(auto* geometryPtr = dynamic_cast<IGeometry*>(shell.get()); geometryPtr != nullptr)
+    {
+      TransformGeometryReferences(*geometryPtr, [&](DataObject::OptionalId referenceId) { return referenceRemapper.mapReference(path, referenceId); });
     }
     // Only an exact known first copy can trigger insert's one-ID assignment in this unpublished structure.
     if(!preparedStructure.insert(shell, path.getParent()))
@@ -487,14 +632,14 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot stage '{}' from '{}': parent '{}' is missing or rejects the object.", path.toString(),
                                                                                       m_H5FilePath.string(), path.getParent().toString())));
     }
-    if(shell->getId() != placement.assignedId || preparedStructure.getData(path) != shell.get() || preparedStructure.getData(placement.assignedId) != shell.get())
+    if(shell->getId() != placement.AssignedId || preparedStructure.getData(path) != shell.get() || preparedStructure.getData(placement.AssignedId) != shell.get())
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': assigned identifier {} or its lookups do not match planned identifier {}.",
-                                                                                      path.toString(), m_H5FilePath.string(), shell->getId(), placement.assignedId)));
+                                                                                      path.toString(), m_H5FilePath.string(), shell->getId(), placement.AssignedId)));
     }
-    if(!placement.extraPlacement)
+    if(!placement.ExtraPlacement)
     {
-      firstStagedCopies.emplace(placement.source.get(), shell);
+      firstStagedCopies.emplace(placement.SourcePtr.get(), shell);
     }
     preparedPaths.push_back(path);
   }

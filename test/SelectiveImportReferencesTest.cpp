@@ -1,5 +1,7 @@
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -11,10 +13,13 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp"
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
@@ -26,6 +31,7 @@
 #include <H5Spublic.h>
 #include <H5Tpublic.h>
 #include <array>
+#include <atomic>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -159,7 +165,385 @@ std::vector<ReferenceLink> PopulateReferences(DataStructure& dataStructure, IGeo
   }
   return links;
 }
+
+class GeometryAliasResolver : public IDataStoreFormatResolver
+{
+public:
+  mutable std::atomic<usize> Calls{0};
+
+  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, [[maybe_unused]] DataType dataType, [[maybe_unused]] uint64 byteSize) const override
+  {
+    ++Calls;
+    const auto geometryPath = path.getParent();
+    const auto* geometryPtr = dataStructure.getDataAs<TriangleGeom>(geometryPath);
+    const auto* verticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath("Vertices"));
+    const auto* facesPtr = dataStructure.getDataAs<DataArray<IGeometry::MeshIndexType>>(geometryPath.createChildPath("Faces"));
+    REQUIRE(geometryPtr != nullptr);
+    REQUIRE(verticesPtr != nullptr);
+    REQUIRE(facesPtr != nullptr);
+    CAPTURE(path.toString());
+    CHECK(geometryPtr->getVertexListId() == verticesPtr->getId());
+    CHECK(geometryPtr->getFaceListId() == facesPtr->getId());
+    CHECK(geometryPtr->getVertices() == verticesPtr);
+    CHECK(geometryPtr->getFaces() == facesPtr);
+    CHECK(verticesPtr->getStoreType() == IDataStore::StoreType::Empty);
+    CHECK(facesPtr->getStoreType() == IDataStore::StoreType::Empty);
+    return {};
+  }
+};
 } // namespace
+
+TEST_CASE("Selective import references: geometry aliases use their own child arrays", "[SelectiveImportReferences][GeometryAliases]")
+{
+  UnitTest::LoadPlugins();
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool bothPlacements = GENERATE(false, true);
+  const bool reverse = GENERATE(false, true);
+  const bool warm = GENERATE(false, true);
+  CAPTURE(static_cast<int>(mode), bothPlacements, reverse, warm);
+  const std::array<float32, 9> expectedVertices{0, 0, 0, 1, 0, 0, 0, 1, 0};
+  const std::array<IGeometry::MeshIndexType, 3> expectedFaces{0, 1, 2};
+  DataStructure source;
+  auto* firstPtr = DataGroup::Create(source, "First");
+  auto* secondPtr = DataGroup::Create(source, "Second");
+  REQUIRE(firstPtr != nullptr);
+  REQUIRE(secondPtr != nullptr);
+  auto* meshPtr = TriangleGeom::Create(source, "Mesh", firstPtr->getId());
+  REQUIRE(meshPtr != nullptr);
+  auto vertexStore = std::make_shared<DataStore<float32>>(ShapeType{3}, ShapeType{3}, 0.0F);
+  auto faceStore = std::make_shared<DataStore<IGeometry::MeshIndexType>>(ShapeType{1}, ShapeType{3}, IGeometry::MeshIndexType{0});
+  const auto writeVertices = vertexStore->copyFromBuffer(0, expectedVertices);
+  const auto writeFaces = faceStore->copyFromBuffer(0, expectedFaces);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeVertices);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeFaces);
+  auto* verticesPtr = Float32Array::Create(source, "Vertices", vertexStore, meshPtr->getId());
+  auto* facesPtr = DataArray<IGeometry::MeshIndexType>::Create(source, "Faces", faceStore, meshPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  meshPtr->setVertices(*verticesPtr);
+  meshPtr->setFaceList(*facesPtr);
+  REQUIRE(source.setAdditionalParent(meshPtr->getId(), secondPtr->getId()));
+  const ImportReferenceFile file(source, "GeometryAliases");
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto handout = cache.fetchNeutralMetadata(file.path);
+  SIMPLNX_RESULT_REQUIRE_VALID(handout);
+  const auto* cachedMeshPtr = handout.value().dataStructure.getDataAs<TriangleGeom>(DataPath({"First", "Mesh"}));
+  REQUIRE(cachedMeshPtr != nullptr);
+  const auto cachedVertexId = cachedMeshPtr->getVertexListId();
+  const auto cachedFaceId = cachedMeshPtr->getFaceListId();
+  cache.invalidate(file.path);
+  if(warm)
+  {
+    auto warmResult = cache.fetchNeutralMetadata(file.path);
+    SIMPLNX_RESULT_REQUIRE_VALID(warmResult);
+  }
+  cache.resetStats();
+  const std::string selectedParent = reverse ? "First" : "Second";
+  std::vector<DataPath> paths{DataPath({selectedParent}), DataPath({selectedParent, "Mesh"}), DataPath({selectedParent, "Mesh", "Vertices"}), DataPath({selectedParent, "Mesh", "Faces"})};
+  if(bothPlacements)
+  {
+    const std::string otherParent = reverse ? "Second" : "First";
+    paths.insert(paths.end(), {DataPath({otherParent}), DataPath({otherParent, "Mesh"}), DataPath({otherParent, "Mesh", "Vertices"}), DataPath({otherParent, "Mesh", "Faces"})});
+  }
+  DataStructure destination;
+  const auto resolver = std::make_shared<GeometryAliasResolver>();
+  destination.setFormatResolver(resolver);
+  const auto result = ImportH5ObjectPathsAction(file.path, paths).apply(destination, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(resolver->Calls.load() == (bothPlacements ? 4 : 2));
+  CHECK(cache.hitCount() == (warm ? 1 : 0));
+  CHECK(cache.missCount() == (warm ? 0 : 1));
+  for(const auto& parent : {std::string("First"), std::string("Second")})
+  {
+    if(!bothPlacements && parent != selectedParent)
+    {
+      CHECK_FALSE(destination.containsData(DataPath({parent})));
+      continue;
+    }
+    const DataPath meshPath({parent, "Mesh"});
+    const auto* importedPtr = destination.getDataAs<TriangleGeom>(meshPath);
+    const auto* importedVerticesPtr = destination.getDataAs<Float32Array>(meshPath.createChildPath("Vertices"));
+    const auto* importedFacesPtr = destination.getDataAs<DataArray<IGeometry::MeshIndexType>>(meshPath.createChildPath("Faces"));
+    REQUIRE(importedPtr != nullptr);
+    REQUIRE(importedVerticesPtr != nullptr);
+    REQUIRE(importedFacesPtr != nullptr);
+    CAPTURE(meshPath.toString());
+    CHECK(importedPtr->getVertexListId() == importedVerticesPtr->getId());
+    CHECK(importedPtr->getFaceListId() == importedFacesPtr->getId());
+    CHECK(importedPtr->getVertices() == importedVerticesPtr);
+    CHECK(importedPtr->getFaces() == importedFacesPtr);
+    CHECK(importedVerticesPtr->getTupleShape() == ShapeType{3});
+    CHECK(importedVerticesPtr->getComponentShape() == ShapeType{3});
+    CHECK(importedFacesPtr->getTupleShape() == ShapeType{1});
+    CHECK(importedFacesPtr->getComponentShape() == ShapeType{3});
+    if(mode == IDataAction::Mode::Preflight)
+    {
+      CHECK(importedVerticesPtr->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
+      CHECK(importedFacesPtr->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
+    }
+    else
+    {
+      std::array<float32, 9> actualVertices{};
+      std::array<IGeometry::MeshIndexType, 3> actualFaces{};
+      const auto readVertices = importedVerticesPtr->getDataStoreRef().copyIntoBuffer(0, actualVertices);
+      const auto readFaces = importedFacesPtr->getDataStoreRef().copyIntoBuffer(0, actualFaces);
+      SIMPLNX_RESULT_REQUIRE_VALID(readVertices);
+      SIMPLNX_RESULT_REQUIRE_VALID(readFaces);
+      CHECK(actualVertices == expectedVertices);
+      CHECK(actualFaces == expectedFaces);
+    }
+  }
+  if(bothPlacements)
+  {
+    CHECK(destination.getData(DataPath({"First", "Mesh"})) != destination.getData(DataPath({"Second", "Mesh"})));
+    for(const auto* namePtr : {"Vertices", "Faces"})
+    {
+      const auto* firstArrayPtr = destination.getDataAs<IDataArray>(DataPath({"First", "Mesh", namePtr}));
+      const auto* secondArrayPtr = destination.getDataAs<IDataArray>(DataPath({"Second", "Mesh", namePtr}));
+      REQUIRE(firstArrayPtr != nullptr);
+      REQUIRE(secondArrayPtr != nullptr);
+      CHECK(firstArrayPtr != secondArrayPtr);
+      CHECK(firstArrayPtr->getId() != secondArrayPtr->getId());
+      CHECK(firstArrayPtr->getIDataStore() != secondArrayPtr->getIDataStore());
+    }
+  }
+  CHECK(cachedMeshPtr->getVertexListId() == cachedVertexId);
+  CHECK(cachedMeshPtr->getFaceListId() == cachedFaceId);
+  CHECK(handout.value().dataStructure.getData(DataPath({"First", "Mesh"})) == handout.value().dataStructure.getData(DataPath({"Second", "Mesh"})));
+  CHECK(meshPtr->getVertexListId() == verticesPtr->getId());
+  CHECK(meshPtr->getFaceListId() == facesPtr->getId());
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("Selective import references: omitted local alias keeps a selected shared target", "[SelectiveImportReferences][GeometryAliases]")
+{
+  UnitTest::LoadPlugins();
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool selectRoot = GENERATE(false, true);
+  DataStructure source;
+  auto* geometryPtr = ImageGeom::Create(source, "Geometry");
+  auto* aliasPtr = DataGroup::Create(source, "Alias");
+  REQUIRE(geometryPtr != nullptr);
+  REQUIRE(aliasPtr != nullptr);
+  auto* cellsPtr = AttributeMatrix::Create(source, "Cells", {1}, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(cellsPtr->getId());
+  REQUIRE(source.setAdditionalParent(geometryPtr->getId(), aliasPtr->getId()));
+  const ImportReferenceFile file(source, "PartialGeometryAlias");
+  const DataPath rootPath({"Geometry"});
+  const DataPath aliasPath({"Alias", "Geometry"});
+  const auto selectedCellsPath = (selectRoot ? rootPath : aliasPath).createChildPath("Cells");
+  const auto omittedCellsPath = (selectRoot ? aliasPath : rootPath).createChildPath("Cells");
+  DataStructure destination;
+  const auto result = ImportH5ObjectPathsAction(file.path, {rootPath, DataPath({"Alias"}), aliasPath, selectedCellsPath}).apply(destination, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* selectedCellsPtr = destination.getDataAs<AttributeMatrix>(selectedCellsPath);
+  REQUIRE(selectedCellsPtr != nullptr);
+  CHECK_FALSE(destination.containsData(omittedCellsPath));
+  CHECK(destination.getAllDataPaths().size() == 4);
+  for(const auto& path : {rootPath, aliasPath})
+  {
+    const auto* importedPtr = destination.getDataAs<ImageGeom>(path);
+    REQUIRE(importedPtr != nullptr);
+    CHECK(importedPtr->getCellDataId() == selectedCellsPtr->getId());
+    CHECK(destination.getData(importedPtr->getCellDataId()) == selectedCellsPtr);
+  }
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("Selective import references: nested targets preserve explicit alias rules", "[SelectiveImportReferences][GeometryAliases]")
+{
+  UnitTest::LoadPlugins();
+  enum class Scenario
+  {
+    UniqueNested,
+    AmbiguousNested,
+    WrongDirectName,
+    PrefixSibling,
+    DirectChild
+  };
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const auto scenario = GENERATE(Scenario::UniqueNested, Scenario::AmbiguousNested, Scenario::WrongDirectName, Scenario::PrefixSibling, Scenario::DirectChild);
+  const bool reverse = GENERATE(false, true);
+  CAPTURE(static_cast<int>(mode), static_cast<int>(scenario), reverse);
+  DataStructure source;
+  auto* sizesPtr = Float32Array::Create(source, "Sizes", std::make_unique<DataStore<float32>>(ShapeType{1}, ShapeType{1}, 7.0F));
+  auto* geometryPtr = VertexGeom::Create(source, "Mesh");
+  REQUIRE(sizesPtr != nullptr);
+  REQUIRE(geometryPtr != nullptr);
+  geometryPtr->setElementSizesId(sizesPtr->getId());
+  DataPath expectedPath({"Mesh", "Nested", "Sizes"});
+  if(scenario == Scenario::PrefixSibling)
+  {
+    auto* siblingPtr = DataGroup::Create(source, "MeshExtra");
+    REQUIRE(siblingPtr != nullptr);
+    REQUIRE(source.setAdditionalParent(sizesPtr->getId(), siblingPtr->getId()));
+    expectedPath = DataPath({"Sizes"});
+  }
+  else
+  {
+    auto* nestedPtr = DataGroup::Create(source, "Nested", geometryPtr->getId());
+    REQUIRE(nestedPtr != nullptr);
+    REQUIRE(source.setAdditionalParent(sizesPtr->getId(), nestedPtr->getId()));
+    if(scenario == Scenario::AmbiguousNested || scenario == Scenario::DirectChild)
+    {
+      auto* otherPtr = DataGroup::Create(source, "Other", geometryPtr->getId());
+      REQUIRE(otherPtr != nullptr);
+      REQUIRE(source.setAdditionalParent(sizesPtr->getId(), otherPtr->getId()));
+      expectedPath = DataPath({"Sizes"});
+    }
+    if(scenario == Scenario::WrongDirectName)
+    {
+      const auto wrongId = CreateReferenceArray<float32>(source, "Sizes", geometryPtr->getId());
+      REQUIRE(wrongId != sizesPtr->getId());
+    }
+    if(scenario == Scenario::DirectChild)
+    {
+      REQUIRE(source.setAdditionalParent(sizesPtr->getId(), geometryPtr->getId()));
+      expectedPath = DataPath({"Mesh", "Sizes"});
+    }
+  }
+  REQUIRE(source.getData(DataPath({"Sizes"})) == sizesPtr);
+  const ImportReferenceFile file(source, "NestedGeometryAliases");
+  auto paths = source.getAllDataPaths();
+  // Parent-based path enumeration omits the root placement of this shared array.
+  paths.emplace_back(std::vector<std::string>{"Sizes"});
+  if(reverse)
+  {
+    std::ranges::reverse(paths);
+  }
+  DataStructure destination;
+  const auto result = ImportH5ObjectPathsAction(file.path, paths).apply(destination, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* importedPtr = destination.getDataAs<VertexGeom>(DataPath({"Mesh"}));
+  const auto* expectedPtr = destination.getDataAs<Float32Array>(expectedPath);
+  REQUIRE(importedPtr != nullptr);
+  REQUIRE(expectedPtr != nullptr);
+  CHECK(importedPtr->getElementSizesId() == expectedPtr->getId());
+  CHECK(importedPtr->getElementSizes() == expectedPtr);
+  if(mode == IDataAction::Mode::Execute)
+  {
+    CHECK((*expectedPtr)[0] == 7.0F);
+  }
+  if(scenario == Scenario::WrongDirectName)
+  {
+    const auto* wrongPtr = destination.getData(DataPath({"Mesh", "Sizes"}));
+    REQUIRE(wrongPtr != nullptr);
+    CHECK(importedPtr->getElementSizesId() != wrongPtr->getId());
+  }
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("Selective import references: many geometry aliases keep unique nested targets", "[SelectiveImportReferences][GeometryAliases]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize k_AliasCount = 128;
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure source;
+  auto* firstParentPtr = DataGroup::Create(source, "Alias_0");
+  REQUIRE(firstParentPtr != nullptr);
+  auto* geometryPtr = VertexGeom::Create(source, "Mesh", firstParentPtr->getId());
+  REQUIRE(geometryPtr != nullptr);
+  auto* nestedPtr = DataGroup::Create(source, "Nested", geometryPtr->getId());
+  REQUIRE(nestedPtr != nullptr);
+  const auto sizesId = CreateReferenceArray<float32>(source, "Sizes", nestedPtr->getId());
+  geometryPtr->setElementSizesId(sizesId);
+  for(usize index = 1; index < k_AliasCount; ++index)
+  {
+    auto* parentPtr = DataGroup::Create(source, "Alias_" + std::to_string(index));
+    REQUIRE(parentPtr != nullptr);
+    REQUIRE(source.setAdditionalParent(geometryPtr->getId(), parentPtr->getId()));
+  }
+  const ImportReferenceFile file(source, "ManyGeometryAliases");
+  DataStructure destination;
+  const auto result = ImportH5ObjectPathsAction(file.path, source.getAllDataPaths()).apply(destination, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(destination.getAllDataPaths().size() == 4 * k_AliasCount);
+  std::set<DataObject::IdType> geometryIds;
+  std::set<DataObject::IdType> targetIds;
+  for(usize index = 0; index < k_AliasCount; ++index)
+  {
+    const DataPath geometryPath({"Alias_" + std::to_string(index), "Mesh"});
+    const auto* importedPtr = destination.getDataAs<VertexGeom>(geometryPath);
+    const auto* targetPtr = destination.getDataAs<Float32Array>(geometryPath.createChildPath("Nested").createChildPath("Sizes"));
+    REQUIRE(importedPtr != nullptr);
+    REQUIRE(targetPtr != nullptr);
+    CAPTURE(geometryPath.toString());
+    CHECK(importedPtr->getElementSizesId() == targetPtr->getId());
+    CHECK(importedPtr->getElementSizes() == targetPtr);
+    CHECK(geometryIds.insert(importedPtr->getId()).second);
+    CHECK(targetIds.insert(targetPtr->getId()).second);
+  }
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+TEST_CASE("Selective import references: geometry alias publication rolls back and retries", "[SelectiveImportReferences][GeometryAliases]")
+{
+  UnitTest::LoadPlugins();
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure source;
+  auto* firstPtr = DataGroup::Create(source, "First");
+  auto* secondPtr = DataGroup::Create(source, "Second");
+  REQUIRE(firstPtr != nullptr);
+  REQUIRE(secondPtr != nullptr);
+  auto* geometryPtr = ImageGeom::Create(source, "Geometry", firstPtr->getId());
+  REQUIRE(geometryPtr != nullptr);
+  auto* cellsPtr = AttributeMatrix::Create(source, "Cells", {1}, geometryPtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  geometryPtr->setCellData(cellsPtr->getId());
+  REQUIRE(source.setAdditionalParent(geometryPtr->getId(), secondPtr->getId()));
+  const ImportReferenceFile file(source, "GeometryAliasRollback");
+  DataStructure destination;
+  REQUIRE(DataGroup::Create(destination, "First") != nullptr);
+  REQUIRE(DataGroup::Create(destination, "Second") != nullptr);
+  auto* markerPtr = DataGroup::Create(destination, "Existing");
+  REQUIRE(markerPtr != nullptr);
+  const auto beforeIds = destination.getAllDataObjectIds();
+  const auto beforePaths = destination.getAllDataPaths();
+  const auto beforeNextId = destination.getNextId();
+  const std::vector<DataPath> selected{DataPath({"First", "Geometry"}), DataPath({"Second", "Geometry"}), DataPath({"First", "Geometry", "Cells"}), DataPath({"Second", "Geometry", "Cells"})};
+  const ImportH5ObjectPathsAction action(file.path, selected);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterSecondInsert);
+  const auto failed = action.apply(destination, mode);
+  REQUIRE(failed.invalid());
+  REQUIRE_FALSE(failed.errors().empty());
+  CHECK(failed.errors().front().code == -6214);
+  CHECK(action.publicationFaultConsumedForTesting());
+  CHECK(destination.getAllDataObjectIds() == beforeIds);
+  CHECK(destination.getAllDataPaths() == beforePaths);
+  CHECK(destination.getNextId() == beforeNextId);
+  CHECK(destination.getData(DataPath({"Existing"})) == markerPtr);
+  const auto retained = std::dynamic_pointer_cast<ImageGeom>(action.retainedOwnerForTesting());
+  REQUIRE(retained != nullptr);
+  CHECK(retained->getDataStructure() == nullptr);
+  REQUIRE(retained->getCellDataId().has_value());
+  CHECK(destination.getData(retained->getCellDataId()) == nullptr);
+  const auto retried = ImportH5ObjectPathsAction(file.path, selected).apply(destination, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(retried);
+  for(const auto* parentPtr : {"First", "Second"})
+  {
+    const auto* importedPtr = destination.getDataAs<ImageGeom>(DataPath({parentPtr, "Geometry"}));
+    const auto* importedCellsPtr = destination.getDataAs<AttributeMatrix>(DataPath({parentPtr, "Geometry", "Cells"}));
+    REQUIRE(importedPtr != nullptr);
+    REQUIRE(importedCellsPtr != nullptr);
+    CHECK(importedPtr->getCellDataId() == importedCellsPtr->getId());
+    CHECK(destination.getData(importedPtr->getCellDataId()) == importedCellsPtr);
+  }
+  CHECK(destination.getData(DataPath({"Existing"})) == markerPtr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+#endif
 
 TEST_CASE("Selective import references: overlapping ElementSizes reset", "[SelectiveImportReferences][DataStructure]")
 {
@@ -243,6 +627,7 @@ TEST_CASE("Selective import references: field matrix and full selection", "[Sele
   const auto application = Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool aliases = GENERATE(false, true);
   const auto type = GENERATE(IGeometry::Type::Image, IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Tetrahedral, IGeometry::Type::RectGrid);
   DataStructure source;
   IGeometry* geometry = nullptr;
@@ -271,40 +656,59 @@ TEST_CASE("Selective import references: field matrix and full selection", "[Sele
   }
   REQUIRE(geometry != nullptr);
   const auto links = PopulateReferences(source, *geometry);
+  std::vector<DataPath> geometryPaths{DataPath({"Geometry"})};
+  if(aliases)
+  {
+    auto* aliasParentPtr = DataGroup::Create(source, "Alias");
+    REQUIRE(aliasParentPtr != nullptr);
+    REQUIRE(source.setAdditionalParent(geometry->getId(), aliasParentPtr->getId()));
+    geometryPaths.emplace_back(std::vector<std::string>{"Alias", "Geometry"});
+  }
   const ImportReferenceFile file(source, "FieldMatrix");
   // The final case retains all references with overlapping source and destination ID ranges.
   for(usize omitted = 0; omitted <= links.size(); ++omitted)
   {
-    DYNAMIC_SECTION("type " << static_cast<int>(type) << " mode " << static_cast<int>(mode) << " omitted " << omitted)
+    DYNAMIC_SECTION("type " << static_cast<int>(type) << " mode " << static_cast<int>(mode) << " omitted " << omitted << " aliases " << aliases)
     {
-      std::vector<DataPath> paths{DataPath({"Geometry"})};
-      for(usize field = 0; field < links.size(); ++field)
+      auto paths = geometryPaths;
+      if(aliases)
       {
-        if(field != omitted)
+        paths.emplace_back(std::vector<std::string>{"Alias"});
+      }
+      for(const auto& geometryPath : geometryPaths)
+      {
+        for(usize field = 0; field < links.size(); ++field)
         {
-          paths.push_back(links[field].targetPath);
+          if(field != omitted)
+          {
+            paths.push_back(geometryPath.createChildPath(links[field].targetPath.getTargetName()));
+          }
         }
       }
       DataStructure destination;
       destination.setNextId(omitted == links.size() ? 3 : 100);
       auto result = ImportH5ObjectPathsAction(file.path, paths).apply(destination, mode);
       SIMPLNX_RESULT_REQUIRE_VALID(result);
-      const auto* imported = destination.getDataAs<IGeometry>(DataPath({"Geometry"}));
-      REQUIRE(imported != nullptr);
-      for(usize field = 0; field < links.size(); ++field)
+      for(const auto& geometryPath : geometryPaths)
       {
-        CAPTURE(links[field].targetPath.toString());
-        if(field == omitted)
+        const auto* importedPtr = destination.getDataAs<IGeometry>(geometryPath);
+        REQUIRE(importedPtr != nullptr);
+        for(usize field = 0; field < links.size(); ++field)
         {
-          REQUIRE_FALSE(links[field].getId(*imported).has_value());
-          REQUIRE_FALSE(destination.containsData(links[field].targetPath));
-        }
-        else
-        {
-          const auto* target = destination.getData(links[field].targetPath);
-          REQUIRE(target != nullptr);
-          REQUIRE(links[field].getId(*imported) == target->getId());
-          REQUIRE(destination.getData(links[field].getId(*imported)) == target);
+          const auto targetPath = geometryPath.createChildPath(links[field].targetPath.getTargetName());
+          CAPTURE(targetPath.toString());
+          if(field == omitted)
+          {
+            REQUIRE_FALSE(links[field].getId(*importedPtr).has_value());
+            REQUIRE_FALSE(destination.containsData(targetPath));
+          }
+          else
+          {
+            const auto* targetPtr = destination.getData(targetPath);
+            REQUIRE(targetPtr != nullptr);
+            REQUIRE(links[field].getId(*importedPtr) == targetPtr->getId());
+            REQUIRE(destination.getData(links[field].getId(*importedPtr)) == targetPtr);
+          }
         }
       }
       UnitTest::CheckArraysInheritTupleDims(destination);
@@ -352,6 +756,7 @@ TEST_CASE("Selective import references: cached selections and shared targets sta
 {
   const auto application = Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure source;
   auto* first = ImageGeom::Create(source, "First");
   auto* second = ImageGeom::Create(source, "Second");
@@ -368,7 +773,7 @@ TEST_CASE("Selective import references: cached selections and shared targets sta
   const auto initialHits = cache.hitCount();
 
   DataStructure partial;
-  auto result = ImportH5ObjectPathsAction(file.path, {DataPath({"First"})}).apply(partial, IDataAction::Mode::Preflight);
+  auto result = ImportH5ObjectPathsAction(file.path, {DataPath({"First"})}).apply(partial, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const auto* partialFirst = partial.getDataAs<ImageGeom>(DataPath({"First"}));
   REQUIRE(partialFirst != nullptr);
@@ -377,7 +782,7 @@ TEST_CASE("Selective import references: cached selections and shared targets sta
 
   DataStructure full;
   full.setNextId(100);
-  result = ImportH5ObjectPathsAction(file.path, {DataPath({"First"}), DataPath({"Second"}), DataPath({"Cells"})}).apply(full, IDataAction::Mode::Preflight);
+  result = ImportH5ObjectPathsAction(file.path, {DataPath({"First"}), DataPath({"Second"}), DataPath({"Cells"})}).apply(full, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(cache.hitCount() >= initialHits + 2);
   const auto* importedFirst = full.getDataAs<ImageGeom>(DataPath({"First"}));
