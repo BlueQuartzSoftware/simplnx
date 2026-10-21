@@ -8,7 +8,7 @@
 | DREAM.3D v6.5.171 equivalent | `FindSizes` (Statistics plugin, UUID `656f144c-a120-5c3b-bee5-06deab438588`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Nathan Young, June 10th, 2026. Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-07-28. |
+| Sign-off | Nathan Young, 2026-06-10; second engineer: Michael Jackson, 2026-07-28 |
 
 ## At a glance
 
@@ -41,7 +41,7 @@
 
 *Encoded:* `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp::SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` and five companion `Valid:` cases use three base fixtures; `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` adds three variants; all registered tests pass in CI at `01809c236`. The flat-spacing case retains `[!shouldfail]` for `ComputeFeatureSizes-D3`.
 
-*Second-engineer review:* Michael A. Jackson, 2026-07-28 (recorded sign-off).
+*Second-engineer review:* Michael Jackson, 2026-07-28 (recorded sign-off).
 
 ## Bugs found and fixed
 

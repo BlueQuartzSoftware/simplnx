@@ -9,8 +9,8 @@
 | SIMPLNX Human Name | Erode/Dilate Mask |
 | DREAM.3D v6.5.171 equivalent | `ErodeDilateMask` (Processing plugin, SIMPL UUID `4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *delegated to the PR reviewer (requester decision 2026-08-19)* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-08-20; second engineer: Nathan Young, 2026-08-25 |
 
 ## At a glance
 
@@ -23,11 +23,11 @@
 | Exemplar archive | `6_6_erode_dilate_test.tar.gz` supplies inputs and expected outputs for the two exemplar comparisons. It does not establish parity with DREAM.3D v6.5.171. |
 | Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-08-18: 28 of 28 mask cases match on a 5×5×1 centre seed and a 3×3×3 hollow cube. |
 | Bug flags | None. |
-| V&V phase | Analytical fixtures and regressions for both fixed defects are encoded. All registered tests pass in CI at `01809c236`. PR-reviewer sign-off remains outstanding. |
+| V&V phase | Analytical fixtures and regressions for both fixed defects are encoded. All registered tests pass in CI at `01809c236`. |
 
 ## Summary
 
-`ErodeDilateMaskFilter` grows or shrinks a boolean cell mask by one face-neighbour layer per iteration on the selected axes. Class 1 fixtures check exact masks, and two archive tests compare reconstruction data with stored exemplars. The branch fixes ignored direction flags and acceptance of non-positive iteration counts. All registered tests pass in CI at `01809c236`, and all 28 legacy comparison cases match.
+`ErodeDilateMaskFilter` grows or shrinks a boolean cell mask by one face-neighbour layer per iteration on the selected axes. Class 1 fixtures check exact masks, and two archive tests compare reconstruction data with stored exemplars. SIMPLNX fixes ignored direction flags and acceptance of non-positive iteration counts. All registered tests pass in CI at `01809c236`, and all 28 legacy comparison cases match.
 
 ## Algorithm Relationship
 
@@ -43,13 +43,13 @@
 
 *Encoded:* `src/Plugins/SimplnxCore/test/ErodeDilateMaskTest.cpp` — seven `Class 1` cases use three fixture layouts; `SimplnxCore::ErodeDilateMaskFilter: Literal One-Dimensional Morphology` adds two axis layouts and ten sections with exact mask and unchanged-sibling checks. All pass in CI at `01809c236`.
 
-*Second-engineer review:* *delegated to the PR reviewer (requester decision 2026-08-19); sign-off pending.*
+*Second-engineer review:* Nathan Young, 2026-08-25, as the approving reviewer of PR #1717.
 
 ## Bugs found and fixed
 
-This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX release after v7.4.2. PR #1568 fixed `ErodeDilateMaskFilter-D2`, and PR #1717 fixed `ErodeDilateMaskFilter-D1`.
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2. PR #1568 fixed `ErodeDilateMaskFilter-D2`, and PR #1717 fixed `ErodeDilateMaskFilter-D1`.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
+| Deviation | Defect | Affected released versions | Resolution |
 |-----------|--------|----------------------------|---------------------------|
 | `ErodeDilateMaskFilter-D1` | A non-positive iteration count returned success without changing the mask. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. | Preflight rejects values below 1 with error `-14701`. |
 | `ErodeDilateMaskFilter-D2` | Disabled X, Y or Z directions still participated in morphology. | DREAM3D-NX v7.4.1 through v7.4.2. DREAM.3D v6.5.171 was not affected. | The algorithm applies each direction flag to its two face neighbours. |

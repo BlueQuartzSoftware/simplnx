@@ -8,7 +8,7 @@
 | DREAM.3D v6.5.171 equivalent | `BadDataNeighborOrientationCheck` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | *Nathan Young, 2026-02-02; Michael Jackson, 2026-06-01* |
+| Sign-off | Nathan Young, 2026-02-02; second engineer: Michael Jackson, 2026-06-01 |
 
 ## At a glance
 

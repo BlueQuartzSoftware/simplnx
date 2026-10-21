@@ -10,7 +10,7 @@
 | DREAM.3D v6.5.171 equivalent | `DBSCAN` (DREAM3DReview plugin, SIMPL UUID `c2d4f1e8-2b04-5d82-b90f-2191e8f4262e`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | *Nathan Young, 2026-08-07; second engineer: Michael Jackson, 2026-08-28* |
+| Sign-off | Nathan Young, 2026-08-07; second engineer: Michael Jackson, 2026-08-28 |
 
 ## At a glance
 
