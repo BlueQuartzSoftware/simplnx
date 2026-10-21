@@ -28,7 +28,7 @@
 | Status | DRAFT *or* READY FOR REVIEW *or* COMPLETE |
 | Sign-off | *<Name>, YYYY-MM-DD; second engineer: <Name>, YYYY-MM-DD* |
 
-<!-- Sign-off: the first engineer is the person who did the V&V work. The second engineer is the person who approved the PR that contains the V&V work for the filter, with the approval date. A documentation-only PR, such as a template cleanup, does not change the sign-off. Use full names and ISO dates. Do not add email addresses. -->
+<!-- Sign-off: the first engineer is the person who did the V&V work. The second engineer is the person who approved the PR that contains the V&V work for the filter, with the approval date. A documentation-only PR, such as a template cleanup, does not change the sign-off. Use full names and ISO dates. Do not add email addresses. If no second engineer has approved the V&V work, write "second engineer: pending" and set Status to READY FOR REVIEW. -->
 
 ## At a glance
 
