@@ -94,12 +94,14 @@ namespace nx::core::HDF5
 FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 {
   s_ReadOpenCount++;
-  // Keep the property-list lifecycle and file open in one HDF5 critical section.
+  // The narrow name can throw on Windows, so it is built before the property list exists. Keep the property-list lifecycle and file
+  // open in one HDF5 critical section.
+  const std::string pathText = filepath.string();
   hid_t fileId = H5I_INVALID_HID;
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     hid_t faplId = MakeFaplId();
-    fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, faplId);
+    fileId = H5Fopen(pathText.c_str(), H5F_ACC_RDONLY, faplId);
     CloseFaplId(faplId);
   }
   return FileIO(filepath, fileId);
@@ -150,11 +152,13 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
     }
   }
 
+  // The narrow name can throw on Windows, so it is built before the property list exists.
+  const std::string pathText = filepath.string();
   hid_t fileId = H5I_INVALID_HID;
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     hid_t faplId = MakeFaplId();
-    fileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, faplId);
+    fileId = H5Fcreate(pathText.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, faplId);
     CloseFaplId(faplId);
   }
   if(fileId > 0)
@@ -166,12 +170,14 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
 
 FileIO FileIO::AppendFile(const std::filesystem::path& filepath)
 {
-  // Keep the property-list lifecycle and file open in one HDF5 critical section; the constructor does not call HDF5.
+  // The narrow name can throw on Windows, so it is built before the property list exists. Keep the property-list lifecycle and file
+  // open in one HDF5 critical section; the constructor does not call HDF5.
+  const std::string pathText = filepath.string();
   hid_t fileId = H5I_INVALID_HID;
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     hid_t faplId = MakeFaplId();
-    fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDWR, faplId);
+    fileId = H5Fopen(pathText.c_str(), H5F_ACC_RDWR, faplId);
     CloseFaplId(faplId);
   }
   return FileIO(filepath, fileId);

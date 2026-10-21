@@ -1,5 +1,6 @@
 #include "AtomicFile.hpp"
 
+#include "simplnx/Common/PathText.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
@@ -80,13 +81,14 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
   // If the path is relative, then make it absolute
   if(!atomicFile.m_FilePath.is_absolute())
   {
-    try
+    std::error_code absoluteError;
+    fs::path absolutePath = fs::absolute(atomicFile.m_FilePath, absoluteError);
+    if(absoluteError)
     {
-      atomicFile.m_FilePath = fs::absolute(atomicFile.m_FilePath);
-    } catch(const std::filesystem::filesystem_error& error)
-    {
-      return MakeErrorResult<AtomicFile>(-15780, fmt::format("AtomicFile Error: When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what()));
+      return MakeErrorResult<AtomicFile>(-15780, fmt::format("AtomicFile Error: When attempting to create an absolute path for '{}', AtomicFile encountered the following error: '{}'",
+                                                             PathToUtf8Text(atomicFile.m_FilePath), absoluteError.message()));
     }
+    atomicFile.m_FilePath = std::move(absolutePath);
   }
 
   // Validate write permissions
@@ -98,7 +100,9 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     }
   }
 
-  atomicFile.m_TempFilePath = fs::path(fmt::format("{}/{}/{}", atomicFile.m_FilePath.parent_path().string(), ::CreateRandomDirName(), atomicFile.m_FilePath.filename().string()));
+  // Path composition keeps the native encoding. A narrow string() conversion would throw on Windows for a name that the active code page
+  // cannot represent.
+  atomicFile.m_TempFilePath = atomicFile.m_FilePath.parent_path() / ::CreateRandomDirName() / atomicFile.m_FilePath.filename();
 
   {
     auto parentPath = atomicFile.m_TempFilePath.parent_path();
@@ -134,10 +138,8 @@ AtomicFile::~AtomicFile() noexcept
     return;
   }
 
-  if(fs::exists(m_TempFilePath) || fs::exists(m_TempFilePath.parent_path()))
-  {
-    removeTempFile();
-  }
+  // removeTempFile() reports its own failures and an absent directory is not one, so no existence check (which can throw) is needed.
+  removeTempFile();
 }
 
 fs::path AtomicFile::tempFilePath() const
@@ -147,18 +149,20 @@ fs::path AtomicFile::tempFilePath() const
 
 Result<> AtomicFile::commit()
 {
-  if(!fs::exists(m_TempFilePath))
+  // The error_code overloads report failures without exceptions, and PathToUtf8Text() renders any path without a narrow conversion.
+  std::error_code statusError;
+  if(!fs::exists(m_TempFilePath, statusError))
   {
-    return MakeErrorResult(-15781, fmt::format("AtomicFile Commit Error: {} does not exist", m_TempFilePath.string()));
+    return MakeErrorResult(-15781, statusError ? fmt::format("AtomicFile Commit Error: cannot check whether '{}' exists: {}", PathToUtf8Text(m_TempFilePath), statusError.message()) :
+                                                 fmt::format("AtomicFile Commit Error: {} does not exist", PathToUtf8Text(m_TempFilePath)));
   }
 
-  try
+  std::error_code renameError;
+  fs::rename(m_TempFilePath, m_FilePath, renameError);
+  if(renameError)
   {
-    fs::rename(m_TempFilePath, m_FilePath);
-  } catch(const std::filesystem::filesystem_error& error)
-  {
-    return MakeErrorResult(
-        -15782, fmt::format("AtomicFile Commit Error: When attempting to move the temp file to the end absolute path, AtomicFile encountered the following error on rename(): '{}'", error.what()));
+    return MakeErrorResult(-15782, fmt::format("AtomicFile Commit Error: When attempting to move the temp file '{}' to '{}', AtomicFile encountered the following error on rename(): '{}'",
+                                               PathToUtf8Text(m_TempFilePath), PathToUtf8Text(m_FilePath), renameError.message()));
   }
 
   return {};
