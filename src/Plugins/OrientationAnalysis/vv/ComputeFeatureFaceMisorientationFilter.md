@@ -29,7 +29,7 @@
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite** ~~| Port | Minor changes | New filter~~
+*Classification:* **Rewrite**
 
 *Evidence:* Deliberate rewrite of legacy `GenerateFaceMisorientationColoring::CalculateFaceMisorientationColorsImpl` (DREAM3D 6.5.171). Same SIMPL UUID retained; SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/ComputeFeatureFaceMisorientationFilter.json`. Legacy control-flow structure is preserved (parallel per-triangle, two-face phase + Laue-class lookup, fall-through for mismatches) but every interior choice differs — see deltas below.
 
