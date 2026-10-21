@@ -371,7 +371,8 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
   const bool usesOutOfCoreStore = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
   const auto* inMemoryInput = dynamic_cast<const DataStore<T>*>(&inStore);
   auto* inMemoryOutput = dynamic_cast<DataStore<uint8>*>(&outStore);
-  const bool direct = !usesOutOfCoreStore && inMemoryInput != nullptr && inMemoryOutput != nullptr && !ForceOocAlgorithm();
+  // Direct spans require concrete resident stores even when a test requests the in-core route.
+  const bool direct = !usesOutOfCoreStore && inMemoryInput != nullptr && inMemoryOutput != nullptr && !ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(direct ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
   if(shouldCancel)
   {
