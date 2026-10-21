@@ -109,9 +109,16 @@ public:
   const IDataStoreFormatResolver& formatResolver() const;
 
   /**
+   * @brief Retains the current process-wide storage-format resolver.
+   * @return Shared owner that keeps the resolver alive after the default changes.
+   * @pre Do not call while another thread changes the default resolver.
+   */
+  static std::shared_ptr<const IDataStoreFormatResolver> getDefaultFormatResolver();
+
+  /**
    * @brief Sets the process-wide storage-format resolver.
    * @param resolver Has no effect when null.
-   * @pre Install the resolver before concurrent DataStructure use.
+   * @pre Do not replace the resolver during concurrent resolver access.
    */
   static void setDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver);
 

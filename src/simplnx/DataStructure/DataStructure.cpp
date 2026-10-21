@@ -1,4 +1,5 @@
 #include "DataStructure.hpp"
+#include <memory>
 
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -111,6 +112,11 @@ const IDataStoreFormatResolver& DataStructure::formatResolver() const
     return *m_FormatResolver;
   }
   return *DefaultFormatResolverRef();
+}
+
+std::shared_ptr<const IDataStoreFormatResolver> DataStructure::getDefaultFormatResolver()
+{
+  return DefaultFormatResolverRef();
 }
 
 void DataStructure::setDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver)
