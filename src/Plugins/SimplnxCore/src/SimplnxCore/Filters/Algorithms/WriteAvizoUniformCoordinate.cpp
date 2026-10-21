@@ -1,5 +1,6 @@
 #include "WriteAvizoUniformCoordinate.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
