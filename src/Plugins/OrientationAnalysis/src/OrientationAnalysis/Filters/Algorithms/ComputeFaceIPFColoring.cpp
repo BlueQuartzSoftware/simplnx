@@ -22,6 +22,7 @@
 #include <EbsdLib/LaueOps/TriclinicOps.h>
 #include <EbsdLib/LaueOps/TrigonalLowOps.h>
 #include <EbsdLib/LaueOps/TrigonalOps.h>
+#include <fmt/format.h>
 
 #include <nonstd/span.hpp>
 
@@ -164,20 +165,20 @@ public:
           dEuler[1] = m_FeatureEulerAngles[3 * firstFeatureIdx + 1];
           dEuler[2] = m_FeatureEulerAngles[3 * firstFeatureIdx + 2];
           refDir[0] = m_FaceNormals[3 * faceIdx];
-          refDir[1] = m_FaceNormals[3 * faceIdx + 1];
-          refDir[2] = m_FaceNormals[3 * faceIdx + 2];
+          refDir[1] = m_FaceNormals[(3 * faceIdx) + 1];
+          refDir[2] = m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_FirstColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_FirstColors[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          m_FirstColors[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          m_FirstColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          m_FirstColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else // A face side without a positive Phase receives black.
       {
         m_FirstColors[3 * faceIdx] = 0;
-        m_FirstColors[3 * faceIdx + 1] = 0;
-        m_FirstColors[3 * faceIdx + 2] = 0;
+        m_FirstColors[(3 * faceIdx) + 1] = 0;
+        m_FirstColors[(3 * faceIdx) + 2] = 0;
       }
 
       // The second face side uses the opposite normal direction.
@@ -190,20 +191,20 @@ public:
           dEuler[1] = m_FeatureEulerAngles[3 * secondFeatureIdx + 1];
           dEuler[2] = m_FeatureEulerAngles[3 * secondFeatureIdx + 2];
           refDir[0] = -m_FaceNormals[3 * faceIdx];
-          refDir[1] = -m_FaceNormals[3 * faceIdx + 1];
-          refDir[2] = -m_FaceNormals[3 * faceIdx + 2];
+          refDir[1] = -m_FaceNormals[(3 * faceIdx) + 1];
+          refDir[2] = -m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_SecondColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_SecondColors[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          m_SecondColors[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          m_SecondColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          m_SecondColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else
       {
         m_SecondColors[3 * faceIdx] = 0;
-        m_SecondColors[3 * faceIdx + 1] = 0;
-        m_SecondColors[3 * faceIdx + 2] = 0;
+        m_SecondColors[(3 * faceIdx) + 1] = 0;
+        m_SecondColors[(3 * faceIdx) + 2] = 0;
       }
     }
   }
@@ -366,20 +367,20 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
           dEuler[1] = featureEulerAngles[firstEuler + 1];
           dEuler[2] = featureEulerAngles[firstEuler + 2];
           refDir[0] = faceNormalsBuffer[3 * faceIdx];
-          refDir[1] = faceNormalsBuffer[3 * faceIdx + 1];
-          refDir[2] = faceNormalsBuffer[3 * faceIdx + 2];
+          refDir[1] = faceNormalsBuffer[(3 * faceIdx) + 1];
+          refDir[2] = faceNormalsBuffer[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
           firstColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
-          firstColorsBuffer[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          firstColorsBuffer[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          firstColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          firstColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else // A face side without a positive Phase receives black.
       {
         firstColorsBuffer[3 * faceIdx] = 0;
-        firstColorsBuffer[3 * faceIdx + 1] = 0;
-        firstColorsBuffer[3 * faceIdx + 2] = 0;
+        firstColorsBuffer[(3 * faceIdx) + 1] = 0;
+        firstColorsBuffer[(3 * faceIdx) + 2] = 0;
       }
 
       // The second face side uses the opposite normal direction.
@@ -393,20 +394,20 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
           dEuler[1] = featureEulerAngles[secondEuler + 1];
           dEuler[2] = featureEulerAngles[secondEuler + 2];
           refDir[0] = -faceNormalsBuffer[3 * faceIdx];
-          refDir[1] = -faceNormalsBuffer[3 * faceIdx + 1];
-          refDir[2] = -faceNormalsBuffer[3 * faceIdx + 2];
+          refDir[1] = -faceNormalsBuffer[(3 * faceIdx) + 1];
+          refDir[2] = -faceNormalsBuffer[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
           secondColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
-          secondColorsBuffer[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          secondColorsBuffer[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          secondColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          secondColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else
       {
         secondColorsBuffer[3 * faceIdx] = 0;
-        secondColorsBuffer[3 * faceIdx + 1] = 0;
-        secondColorsBuffer[3 * faceIdx + 2] = 0;
+        secondColorsBuffer[(3 * faceIdx) + 1] = 0;
+        secondColorsBuffer[(3 * faceIdx) + 2] = 0;
       }
     }
     result = MergeResults(std::move(result), firstColors.getDataStoreRef().copyFromBuffer(start * 3, nonstd::span<const uint8>(firstColorsBuffer.data(), count * 3)));
