@@ -1,4 +1,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp"
+#include <memory>
+#include <utility>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
