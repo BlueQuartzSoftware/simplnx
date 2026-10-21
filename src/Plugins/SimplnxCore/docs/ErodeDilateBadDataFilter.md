@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** grows or shrinks regions of *bad data* (cells with *Feature Id = 0*) by one cell-layer per iteration, using standard image-morphology operations. It is a building block for cleaning up isolated noise or for compensating for boundaries that were systematically under- or over-measured by the experiment.
 
+**Cell Feature Ids** and every array in **Attribute Arrays to Ignore** must be in the selected geometry's Cell Attribute Matrix.
+
 ![Fig. 1: Dilate grows the bad-data (Feature Id 0) region outward by one cell layer per iteration; Erode shrinks it, reassigning each bad cell to its majority neighbor. The Number of Iterations sets the layer count.](Images/ErodeDilateBadData_IterationSequence.png)
 
 ### Dilation
@@ -47,8 +49,11 @@ slice.
 
 ### Preflight Errors
 
-The Filter refuses to run in two cases:
+The Filter refuses to run in four cases:
 
+- **-14605**: *Cell Feature Ids* is not in the selected **Image Geometry**'s Cell Attribute Matrix, or the geometry has no
+  Cell Attribute Matrix.
+- **-14604**: an array in *Attribute Arrays to Ignore* is not in the selected **Image Geometry**'s Cell Attribute Matrix.
 - **-14601**: all three of *X Direction*, *Y Direction*, and *Z Direction* are disabled. At least one direction is
   required, otherwise there are no neighbors to erode or dilate across.
 - **-14602**: the selected **Image Geometry** has a dimension of *0* **Cells**. All three dimensions must be non-zero.

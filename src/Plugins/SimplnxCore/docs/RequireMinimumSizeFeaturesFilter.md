@@ -8,6 +8,8 @@ Processing (Cleanup)
 
 This **Filter** removes small **Features** from a segmented dataset and fills in the space they leave behind by expanding their neighbors. Features whose cell count is below the user-specified *Minimum Allowed Features Size* are erased; the remaining features grow outward into the erased cells until every cell is reassigned to a surviving feature.
 
+Cell Feature Ids must be in the selected Image Geometry's Cell Attribute Matrix. The parent of Feature Num. Cells must be a different Attribute Matrix directly under the selected Image Geometry.
+
 This is typically used immediately after segmentation ([Segment Features (Misorientation)](../OrientationAnalysis/EBSDSegmentFeaturesFilter.md) or similar) to discard spurious single-cell or few-cell "grains" that are almost always noise rather than real features.
 
 ### How This Filter Works

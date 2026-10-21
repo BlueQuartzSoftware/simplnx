@@ -7,12 +7,14 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
@@ -24,7 +26,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_ParentNotAttributeMatrix = -78100;
 constexpr int32 k_NotEnoughFeatures = -78101;
 constexpr int32 k_PercentOutOfRange = -78102;
 constexpr int32 k_ZeroNumFeatures = -78103;
@@ -129,18 +130,40 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   auto pCriterionValue = filterArgs.value<ChoicesParameter::ValueType>(k_Criterion_Key);
   auto pNumFeaturesValue = filterArgs.value<uint64>(k_NumFeatures_Key);
   auto pPercentValue = filterArgs.value<float64>(k_Percent_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto fillRemovedFeatures = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
+  auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -78125, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
+
+  if(fillRemovedFeatures)
+  {
+    auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -78126, "Attribute Arrays to Ignore");
+    if(ignoredArraysResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    }
+  }
+
+  auto featureAttributeMatrixResult =
+      ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, pRankingArrayPathValue.getParent(), -78127, "Feature Ranking Array", pRankingArrayPathValue);
+  if(featureAttributeMatrixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+  }
+
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
+  pFeatureIdsArrayPathValue = MapToGeometryCellDataPath(cellDataPath, pFeatureIdsArrayPathValue);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   const DataPath featureAttributeMatrixPath = pRankingArrayPathValue.getParent();
   const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
-  if(featureAmPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_ParentNotAttributeMatrix,
-                                           fmt::format("The parent of the Feature Ranking Array at path '{}' must be an Attribute Matrix, but no Attribute Matrix was found at '{}'.",
-                                                       pRankingArrayPathValue.toString(), featureAttributeMatrixPath.toString()))};
-  }
-
   const auto& rankingArray = dataStructure.getDataRefAs<IDataArray>(pRankingArrayPathValue);
   const usize numTuples = rankingArray.getNumberOfTuples();
   if(numTuples < 2)
@@ -221,7 +244,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     }
   }
 
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pRankingArrayPathValue.getParent(), {});
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -255,6 +278,11 @@ Result<> KeepRemoveRankedFeaturesFilter::executeImpl(DataStructure& dataStructur
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.RankingArrayPath = filterArgs.value<DataPath>(k_RankingArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();
+  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
+  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
 
   return KeepRemoveRankedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

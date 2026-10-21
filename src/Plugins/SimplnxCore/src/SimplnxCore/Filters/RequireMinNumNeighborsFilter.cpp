@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -101,21 +102,44 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   auto numNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
   auto minNumNeighbors = filterArgs.value<uint64>(k_MinNumNeighbors_Key);
+  auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
 
-  nx::core::Result<OutputActions> resultOutputActions;
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -55575, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
 
-  std::vector<PreflightValue> preflightUpdatedValues;
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
+  featureIdsPath = MapToGeometryCellDataPath(cellDataPath, featureIdsPath);
 
-  std::vector<DataPath> dataArrayPaths;
-
-  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
   {
     return MakePreflightErrorResult(k_FeatureIdsTupleCountMismatch,
                                     fmt::format("FeatureIds array '{}' contains {} tuples, but Image Geometry '{}' contains {} cells. Select a FeatureIds array that matches the Image Geometry.",
                                                 featureIdsPath.toString(), featureIds.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
   }
+
+  auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeomPath, ignoredDataArrayPaths, -55573, "Cell Arrays to Ignore");
+  if(ignoredArraysResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+  }
+
+  auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, numNeighborsPath.getParent(), -55574, "Number of Neighbors", numNeighborsPath);
+  if(featureAttributeMatrixResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+  }
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  std::vector<DataPath> dataArrayPaths;
 
   dataArrayPaths.push_back(numNeighborsPath);
 
@@ -132,7 +156,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
   // Feature Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
 
@@ -163,6 +187,11 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   inputValues.NumNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
   inputValues.IgnoredVoxelArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
+
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeomPath).getCellDataPath();
+  inputValues.FeatureIdsPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsPath);
+  inputValues.IgnoredVoxelArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredVoxelArrayPaths);
 
   return RequireMinNumNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

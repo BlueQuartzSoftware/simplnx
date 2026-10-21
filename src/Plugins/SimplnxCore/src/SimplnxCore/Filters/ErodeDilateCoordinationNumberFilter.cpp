@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/ErodeDilateCoordinationNumber.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -10,6 +11,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -89,6 +91,23 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   auto pCoordinationNumberValue = filterArgs.value<int32>(k_CoordinationNumber_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -16801, "Cell Feature Ids");
+  if(featureIdsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+  }
+
+  auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -16802, "Attribute Arrays to Ignore");
+  if(ignoredArraysResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+  }
+
+  // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath).getCellDataPath();
+  pIgnoredDataArrayPathsValue = MapToGeometryCellDataPath(cellDataPath, pIgnoredDataArrayPathsValue);
 
   if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
   {
@@ -100,7 +119,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), pIgnoredDataArrayPathsValue);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -117,6 +136,11 @@ Result<> ErodeDilateCoordinationNumberFilter::executeImpl(DataStructure& dataStr
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry).getCellDataPath();
+  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
+  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
 
   return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
