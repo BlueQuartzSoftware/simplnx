@@ -4,6 +4,8 @@ This file has two parts. Part 1 lists every documented behavioral difference bet
 
 Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report and from public migration guidance. Both parts use one ID sequence. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
+A user reads this file. Each entry has only the fields shown below: the table, Symptom, Root cause, Affected users, Recommendation, and an optional Evidence paragraph. Do not add other fields. Outside the Evidence paragraph, name DREAM3D-NX release versions, not branches, commits, or PRs.
+
 ---
 
 ## Part 1 — Differences from DREAM.3D v6.5.171
@@ -67,6 +69,8 @@ Entries are referenced by stable ID (`<FilterName>-D<N>`) from the V&V report an
 
 **Recommendation:** *trust SIMPLNX | <workaround for a defect that is not fixed>*
 *One sentence justifying the recommendation.*
+
+**Evidence:** *Optional. One short paragraph for engineers: the tests, release sources, legacy source, or comparison artifacts (`vv_work:<FilterName>/<file>`) that confirm this entry. Only this paragraph can cite PR numbers, commits, or release branches.*
 
 ---
 
