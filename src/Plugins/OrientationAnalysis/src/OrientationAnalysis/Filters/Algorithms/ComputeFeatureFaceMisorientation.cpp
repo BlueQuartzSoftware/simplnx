@@ -10,6 +10,8 @@
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/Quaternion.hpp>
+#include <fmt/format.h>
 
 #include <nonstd/span.hpp>
 
@@ -153,12 +155,12 @@ public:
           float32 quat1 = m_FeatureAvgQuats[frontFeatureIdx * 4 + 1];
           float32 quat2 = m_FeatureAvgQuats[frontFeatureIdx * 4 + 2];
           float32 quat3 = m_FeatureAvgQuats[frontFeatureIdx * 4 + 3];
-          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
+          const ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
           quat0 = m_FeatureAvgQuats[backFeatureIdx * 4];
           quat1 = m_FeatureAvgQuats[backFeatureIdx * 4 + 1];
           quat2 = m_FeatureAvgQuats[backFeatureIdx * 4 + 2];
           quat3 = m_FeatureAvgQuats[backFeatureIdx * 4 + 3];
-          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+          const ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
           ebsdlib::AxisAngleDType axisAngle = m_LaueOrientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
           m_Misorientations.setValue(triangleIdx, static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD));
           continue;
@@ -311,13 +313,13 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
           float32 quat1 = featureAvgQuats[frontQuat + 1];
           float32 quat2 = featureAvgQuats[frontQuat + 2];
           float32 quat3 = featureAvgQuats[frontQuat + 3];
-          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
+          const ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
           const usize backQuat = 4 * (wholeTables ? static_cast<usize>(backFeatureIdx) : (2 * triangleIdx) + 1);
           quat0 = featureAvgQuats[backQuat];
           quat1 = featureAvgQuats[backQuat + 1];
           quat2 = featureAvgQuats[backQuat + 2];
           quat3 = featureAvgQuats[backQuat + 3];
-          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+          const ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
           ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
           misorientationsBuffer[triangleIdx] = static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD);
           continue;
