@@ -1,4 +1,7 @@
 #include "Dream3dPreflightCache.hpp"
+#include "simplnx/Common/Result.hpp"
+#include <memory>
+#include <utility>
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
@@ -16,7 +19,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <iterator>

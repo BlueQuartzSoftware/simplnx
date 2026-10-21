@@ -721,17 +721,17 @@ private:
    */
   struct ImportPublicationRecord
   {
-    std::shared_ptr<DataObject> owner;
-    std::shared_ptr<BaseGroup> parent;
-    DataObject::IdType id = 0;
-    DataObject::IdType parentId = 0;
-    DataPath path;
-    std::shared_ptr<AbstractDataStructureMessage> removalMessage;
-    ImportInsertionStage stage = ImportInsertionStage::None;
-    ImportCleanupStatus cleanup = ImportCleanupStatus::Complete;
-    bool notifyRemoval = false;
-    bool notificationAttempted = false;
-    bool notificationFailed = false;
+    std::shared_ptr<DataObject> Owner;
+    std::shared_ptr<BaseGroup> Parent;
+    DataObject::IdType Id = 0;
+    DataObject::IdType ParentId = 0;
+    DataPath Path;
+    std::shared_ptr<AbstractDataStructureMessage> RemovalMessage;
+    ImportInsertionStage Stage = ImportInsertionStage::None;
+    ImportCleanupStatus Cleanup = ImportCleanupStatus::Complete;
+    bool NotifyRemoval = false;
+    bool NotificationAttempted = false;
+    bool NotificationFailed = false;
   };
 
   /**
