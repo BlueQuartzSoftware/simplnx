@@ -1,114 +1,113 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeatureFaceMisorientationFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeatureFaceMisorientationFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`GenerateFaceMisorientationColoring`, source at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceMisorientationColoring.{h,cpp}` in DREAM3D 6.5.171).
-
-Entries are referenced by stable ID (`ComputeFeatureFaceMisorientations-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-All four entries below are **deliberate design changes** made during the rewrite (Nathan Young, 2026-05-19), not bugs in either implementation. D4 additionally documents a related precision fix made in EbsdLib during this V&V cycle (2026-05-28).
+Part 1 lists differences from `GenerateFaceMisorientationColoring` in DREAM.3D v6.5.171. Part 2 lists the SIMPLNX phase-bounds defect. D1–D4 keep the existing `ComputeFeatureFaceMisorientations-D<N>` IDs; D5 continues the sequence under the current filter name. The Filter UUID is the permanent cross-reference anchor.
 
 ---
 
-## ComputeFeatureFaceMisorientations-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
+### ComputeFeatureFaceMisorientations-D1
+
+| Field | Value |
+|---|---|
 | **Deviation ID** | `ComputeFeatureFaceMisorientations-D1` |
-| **Filter UUID**  | `f3473af9-db77-43db-bd25-60df7230ea73` |
-| **Status**       | active                                 |
+| **Filter UUID** | `f3473af9-db77-43db-bd25-60df7230ea73` |
+| **Status** | active |
 
-**Symptom:** For faces between two features whose shared phase has a Laue class other than `Hexagonal_High` (m-3m) or `Cubic_High` (6/mmm), SIMPLNX computes a real misorientation value; legacy DREAM3D 6.5.171 wrote `0` (implicit, via the fall-through to the else branch). The nine "new" Laue classes that SIMPLNX now handles are: `Hexagonal_Low` (6/m), `Cubic_Low` (m-3), `Triclinic` (-1), `Monoclinic` (2/m), `OrthoRhombic` (mmm), `Tetragonal_Low` (4/m), `Tetragonal_High` (4/mmm), `Trigonal_Low` (-3), and `Trigonal_High` (-3m).
+**Symptom:** SIMPLNX computes angles for all 11 Laue classes. DREAM.3D v6.5.171 leaves zero vectors for classes other than Hexagonal_High and Cubic_High.
 
-**Root cause:** **Library** + **algorithmic choice**. Legacy `GenerateFaceMisorientationColoring.cpp` line 127 explicitly checks `if((m_CrystalStructures[phase1] == Ebsd::CrystalStructure::Hexagonal_High) || (m_CrystalStructures[phase1] == Ebsd::CrystalStructure::Cubic_High))` and only computes the misorientation under that guard. The legacy `OrientationLib` of that era did not have `calculateMisorientation` (or its predecessor `getMisoQuat`) implementations for the other nine Laue classes — they would have returned undefined behavior had the guard been removed. The modern EbsdLib (`vcpkg-installed/.../EbsdLib`) has `calculateMisorientation` implementations for every Laue class, so SIMPLNX dispatches by `laueIndex < m_LaueOrientationOps.size()` instead of hard-coding the two-class enumeration.
+**Root cause:** Algorithmic choice. The DREAM.3D v6.5.171 source `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceMisorientationColoring.cpp` selects only the two high-symmetry classes. Current `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp` accepts every index in `LaueOps::GetAllOrientationOps()`.
 
-**Affected users:** Any user with surface-mesh face data spanning grain boundaries between non-hexagonal, non-cubic-high phases. Common cases: orthorhombic systems (alpha-uranium, many minerals), monoclinic systems (gypsum, many metals at low symmetry phases), tetragonal systems (TiO2, ZrO2 below transition), trigonal systems (quartz, alpha-corundum). Users running the legacy filter on these systems received silent zeros for every triangle between matched-phase non-hex-high/non-cubic-high features.
+**Affected users:** Users with Hexagonal_Low, Cubic_Low, Triclinic, Monoclinic, OrthoRhombic, Tetragonal_Low, Tetragonal_High, Trigonal_Low or Trigonal_High phases.
 
-**Recommendation:** **Trust SIMPLNX.** The legacy filter's silent zero for unsupported Laue classes was indistinguishable from "genuine zero misorientation" (a real possibility for aligned grains) — a serious correctness ambiguity that the new explicit handling resolves. Combined with D3 (NaN for invalid faces), users get unambiguous values for every triangle.
+**Recommendation:** Trust SIMPLNX. Its analytical tests distinguish valid angles from the zero vectors left by the legacy filter.
+
+**Evidence:** `Curated Data` checks three analytical angles for each of the 11 Laue classes.
 
 ---
 
-## ComputeFeatureFaceMisorientations-D2
+### ComputeFeatureFaceMisorientations-D2
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
+| Field | Value |
+|---|---|
 | **Deviation ID** | `ComputeFeatureFaceMisorientations-D2` |
-| **Filter UUID**  | `f3473af9-db77-43db-bd25-60df7230ea73` |
-| **Status**       | active                                 |
+| **Filter UUID** | `f3473af9-db77-43db-bd25-60df7230ea73` |
+| **Status** | active |
 
-**Symptom:** SIMPLNX output is a 1-component `float32` array — the misorientation angle in degrees per triangle. Legacy DREAM3D 6.5.171 wrote a 3-component `float32` array — the rotation axis (3 components) multiplied componentwise by the angle in degrees, i.e., `(w·n1, w·n2, w·n3)`. The 3-component form encodes both the rotation magnitude AND the axis direction; the 1-component form keeps only the magnitude.
+**Symptom:** SIMPLNX returns one float32 angle in degrees per face. DREAM.3D v6.5.171 returns three float32 components: the unit rotation axis multiplied by that angle.
 
-**Root cause:** **Algorithmic choice** during the rewrite. Decision attributed to Michael Jackson: "bring the output in line with other Misorientation filters in `simplnx`". Most modern misorientation filters in simplnx (KAM, Reference Misorientations, Feature Neighbor Misorientations) return a 1-component magnitude; the legacy 3-component axis·angle form was the outlier. The new form also halves the output memory footprint and simplifies most downstream uses (binning, histogram, threshold).
+**Root cause:** Algorithmic choice. SIMPLNX changes the output component shape from `{3}` to `{1}`. The scalar preserves the magnitude and omits the axis direction. Its array storage is one third of the former size for the same face count. The filter's `parametersVersion()` is 2; it also changes the output-name parameter key to `misorientation_array_name` and supplies no automatic migration for the former SIMPLNX key.
 
-**Affected users:** Any user porting a 6.5.171 pipeline that consumed the 3-component output. Common downstream uses:
-- **Magnitude-only consumers** (binning for histograms, comparison against a threshold): trivial migration — read component 0 (which used to be `w·n1`) → must change to read the new 1-component (now just `w`). Many pipelines did this by extracting component 0 anyway, which would have been mathematically incorrect for the old format.
-- **Axis-and-angle consumers** (visualization with the axis direction encoded in color, downstream filters that need the misorientation rotation axis): not a clean migration — they need the axis explicitly. Workaround: regenerate the axis-angle by running `LaueOps::calculateMisorientation` directly in a custom filter; or back-out the axis from the (legacy) 3-component output by dividing by the angle magnitude.
+The legacy UUID `7cd30864-7bcf-5c10-aea7-d107373e2d40` maps to SIMPLNX UUID `f3473af9-db77-43db-bd25-60df7230ea73`. The conversion preserves the filter's angle-computation purpose, but consumers must adapt to the changed representation. The legacy vector norm can be compared with the new scalar on supported same-phase faces. The archived comparison uses this mapping.
 
-**Recommendation:** **Either acceptable per use case.** Neither output is wrong, just different representations of the same calculation. For users needing the rotation axis: open an issue requesting a separate axis output array (could be added as a v3 of the filter via the version-bump mechanism).
+**Affected users:** Users who consume the three-component output or load a SIMPLNX version-1 pipeline. Magnitude consumers must use the scalar angle; axis consumers need a separate axis calculation. Version-1 pipelines must use the new output-name key.
+
+**Recommendation:** Trust SIMPLNX for angle magnitudes. Preserve a separate axis output when a downstream operation needs direction.
+
+**Evidence:** PR #1618 (`7cff7f2ea`) changes the output to one component and changes the output-name parameter key. `SIMPL Backwards Compatibility` checks SIMPL 6.4 and 6.5 conversion.
 
 ---
 
-## ComputeFeatureFaceMisorientations-D3
+### ComputeFeatureFaceMisorientations-D3
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
+| Field | Value |
+|---|---|
 | **Deviation ID** | `ComputeFeatureFaceMisorientations-D3` |
-| **Filter UUID**  | `f3473af9-db77-43db-bd25-60df7230ea73` |
-| **Status**       | active                                 |
+| **Filter UUID** | `f3473af9-db77-43db-bd25-60df7230ea73` |
+| **Status** | active |
 
-**Symptom:** For faces where the algorithm cannot compute a meaningful misorientation — `frontFeature == 0` (background voxel on the front side), `backFeature == 0` (background on the back side), `frontPhase != backPhase` (mixed-phase boundary), or the shared phase's Laue class is out of EbsdLib's supported range — SIMPLNX writes **`NaN`**. Legacy DREAM3D 6.5.171 wrote `0` for all these cases (in the legacy code: explicit zeros for the mismatched-phase case at lines 143–145; implicit zeros for the unsupported-Laue case via fall-through).
+**Symptom:** Background faces, mixed-phase faces and faces with unsupported Laue indices give NaN in SIMPLNX. DREAM.3D v6.5.171 gives zero vectors.
 
-**Root cause:** **Bug in 6.5.171** (loose categorization), fixed by **algorithmic choice** in SIMPLNX. In 6.5.171 there is no way to differentiate between a true zero misorientation (two grains in perfect crystallographic alignment, mathematically possible) and an unprocessed face. SIMPLNX's explicit NaN makes the distinction unambiguous:
+**Root cause:** Algorithmic choice. SIMPLNX explicitly writes NaN when the face cannot enter the angle calculation. The legacy output is initialized to zero and remains zero for these faces. Both filters use a positive shared phase for a valid calculation. NaN distinguishes a missing angle from a genuine zero angle; it is a representation change, not a failed zero-angle calculation.
 
-| Output value | Meaning                                                                  |
-|--------------|--------------------------------------------------------------------------|
-| `0.0`        | Genuine zero misorientation — the two features are crystallographically aligned (or the misorientation lies on a symmetry op of the shared Laue class) |
-| Positive     | Computed misorientation angle in degrees                                 |
-| `NaN`        | The algorithm did not compute a value for this face (any of the four reasons above) |
+**Affected users:** Users who aggregate angles across faces. Including legacy zero vectors changes the aggregate; SIMPLNX consumers must decide whether to exclude NaN values or propagate them.
 
-**Affected users:** Anyone running pipelines that aggregated misorientation values across all faces (mean, median, histogram). In the legacy filter, the implicit zeros from unprocessed faces silently dragged the aggregate toward zero. SIMPLNX's NaN propagates correctly under standard aggregation rules (NaN-aware aggregations skip NaN; non-aware aggregations propagate to NaN).
+**Recommendation:** Trust SIMPLNX. Select faces with finite angles before calculating an aggregate that must exclude missing values.
 
-**Recommendation:** **Trust SIMPLNX.** The clear distinction between genuine zero and "no value" is a significant correctness improvement. Downstream consumers should use NaN-aware aggregation (`std::isnan`, `numpy.nanmean`, etc.) or pre-filter faces with NaN before aggregating.
+**Evidence:** `Curated Data` checks the two background and two mixed-phase cases; unsupported Laue indices have no direct fixture.
 
 ---
 
-## ComputeFeatureFaceMisorientations-D4
+### ComputeFeatureFaceMisorientations-D4
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
+| Field | Value |
+|---|---|
 | **Deviation ID** | `ComputeFeatureFaceMisorientations-D4` |
-| **Filter UUID**  | `f3473af9-db77-43db-bd25-60df7230ea73` |
-| **Status**       | active                                 |
+| **Filter UUID** | `f3473af9-db77-43db-bd25-60df7230ea73` |
+| **Status** | active |
 
-**Symptom:** For cubic-phase boundaries whose true misorientation lies exactly on a cubic symmetry operator (e.g., 90° rotation about the c-axis is a 4-fold sym op of m-3m), legacy DREAM3D 6.5.171 and pre-fix SIMPLNX returned a small residual misorientation (~0.02°) instead of exactly 0°. Post-fix SIMPLNX returns exactly 0° for these cases.
+**Symptom:** Cubic angles lose precision near zero. Before the EbsdLib fix, the SIMPLNX fixture for a 90° c-axis symmetry rotation returned about 0.0212° instead of zero.
 
-The hand-built V&V dataset exposes this at F5↔F7 (Cubic_High features with φ1=0° and φ1=90° about c): expected exactly 0° by symmetry; pre-fix observed 0.0212°; post-fix observed 0.0°.
+**Root cause:** Precision. EbsdLib computed a reduced quaternion scalar from `(qco.z() + qco.w()) / sqrt(2)` and extracted the angle with `acos`. Float32 quaternion inputs promoted to double can put this scalar slightly below one. The fix forms the reduced quaternion's vector components explicitly and uses `2*atan2(|v|, w)`. Equal components subtract to zero without amplifying the scalar rounding error.
 
-**Root cause:** **Precision** in EbsdLib's `CubicOps::calculateMisorientationInternal` (NOT in this filter's code). The algorithm computed `cos(half-angle)` candidates as:
+DREAM.3D v6.5.171 uses float intermediates and `acos` in `Source/OrientationLib/LaueOps/CubicOps.cpp`. This calculation loses precision near zero.
 
-```cpp
-double w_candidate_2 = (qco.z() + qco.w()) / sqrt(2);   // type-2 sym op
-```
+**Affected users:** Users of DREAM3D-NX v7.0.0 through v7.4.1 or DREAM.3D v6.5.171 who compute cubic angles close to a symmetry-equivalent orientation or apply thresholds sensitive to small numerical differences.
 
-then extracted the angle via `acos(w_candidate)`. When `AvgQuats` are stored as **float32** in the input data (the standard SIMPLNX/EbsdLib convention) and promoted to double inside the calculation:
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 contains the fix. The filter uses stable cubic angle extraction near zero.
 
-1. The float32 truncation of `sqrt(2)/2` is `0.7071068f` ≈ `0.70710676908...` as double (off from true `sqrt(2)/2` by ~6e-8).
-2. After the symmetry-op reduction, `qco.z` and `qco.w` end up at this float32 value.
-3. `(qco.z + qco.w) / sqrt(2)` (where the divisor is the precise double `sqrt(2)`) computes to `1.0 − ~1.71e-8`, NOT exactly 1.0.
-4. `acos(1.0 − 1.71e-8)` is in the catastrophic-cancellation regime: the derivative `−1/sqrt(1−x²)` is unbounded as `x → 1`, so a 1.71e-8 perturbation amplifies to ~`1.85e-4` rad in the result.
-5. Doubled to full angle and converted to degrees: `~0.0212°` ≈ the observed residual.
-
-**Fix:** Patch in EbsdLib (`Source/EbsdLib/LaueOps/CubicOps.cpp`). Compute the explicit reduced-quaternion vector components for each of the three sym-op candidates ("type 1/2/3"); pick the candidate with the largest `w`; extract the angle as `2 · atan2(|v|, w)` using `|v|` computed from the explicit reduced-quaternion components, NOT from `sqrt(1 − w²)`. The cancellation that loses precision in the legacy form is *recovered* in the new form because the explicit `v` components include subtractions of identical floats (e.g., `qco.z − qco.w` when `qco.z == qco.w`), which yield exactly 0 in IEEE 754 — regardless of the underlying float32 precision.
-
-The fix is mathematically equivalent for non-sym-op-aligned misorientations (both forms compute the same angle within ULP for inputs far from the cancellation boundary). It strictly improves precision for inputs on or near a sym op.
-
-**Affected users:** Anyone who computes misorientations on cubic phases where some grain boundaries land on or near a 4-fold (90° about c), 3-fold (120° about [111]), 2-fold (180° about face), or other cubic symmetry op. These are not pathological — many real-world cubic textures have these as systematic features (e.g., {100} fiber textures align all grains' [001] directions, so 90° about [001] is a frequent boundary). The 0.02° pre-fix residual would have caused:
-- Misorientation histograms to have a spurious peak at ~0.02° that should be at 0°.
-- Threshold-based grain boundary classification (e.g., "low-angle boundaries < 5°") to silently misclassify some sym-op-aligned boundaries.
-- Downstream KAM and GOS calculations to include the residual.
-
-**Recommendation:** **Trust the fixed SIMPLNX (post-2026-05-28).** The fix is a strict improvement; all 306 EbsdLib unit tests pass post-fix; 181/189 OrientationAnalysis unit tests pass post-fix (the 8 failures are exemplar-based regression tests against pre-fix-generated exemplars, with diffs in the `1e-4` to `1e-3` range — see the V&V doc's "Downstream impact note"). Exemplar files for the 8 affected downstream tests will be regenerated at the engineer's discretion to lock in the post-fix values as the new reference.
+**Evidence:** EbsdLib commit `5c8c993`, included by SIMPLNX PR #1631 (`ec22ac375`), fixes the calculation. That PR replaces the 0.021200536° expectation in `Curated Data` with zero, with an absolute error limit of 0.000012°. The dependency declarations on `upstream/release/v7.0.0` through `upstream/release/v7.4.1` specify EbsdLib 1.0.35, 1.0.37, 1.0.38, 1.0.39, 1.0.40 or 2.1.0; their `Source/EbsdLib/LaueOps/CubicOps.cpp` uses `acos`. DREAM3D-NX v7.4.2 requires EbsdLib 3.1.2, which contains the explicit-component `atan2` fix; EbsdLib v2.4.1 also contains it. The archived comparison in `vv_work:ComputeFeatureFaceMisorientationFilter/comparison/summary.md` and `vv_work:ComputeFeatureFaceMisorientationFilter/comparison/difference_report.md` has all six comparable curated faces within 0.0001°, without the 0.0212° residual. The production cubic comparison has 1,238 of 636,474 faces outside that tolerance, with a maximum difference of 0.001925168°.
 
 ---
 
-## Comparison build & library nuance
+## Part 2 — SIMPLNX defects and behavior changes
 
-This filter's V&V did NOT run a direct A/B comparison against legacy DREAM3D 6.5.171's `GenerateFaceMisorientationColoring`. The output structure is incompatible by design (D2: 3-component axis·angle vs 1-component angle), making a per-array comparison meaningless. The Class 1 oracle (hand-derived from symmetry-group analysis) serves as the verification floor; the deviation entries above document the design choices that distinguish the new filter from the legacy.
+### ComputeFeatureFaceMisorientationFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureFaceMisorientationFilter-D5` |
+| **Filter UUID** | `f3473af9-db77-43db-bd25-60df7230ea73` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** A positive phase outside the Crystal Structures array can cause an out-of-bounds read.
+
+**Root cause:** Bug. DREAM3D-NX v7.0.0 through v7.4.2 read Crystal Structures through a positive phase without checking its upper bound. DREAM.3D v6.5.171 does the same in `GenerateFaceMisorientationColoring.cpp`. The v7.4.2 algorithm also reads the front phase before checking whether the two phases match. Current `ValidateParticipatingFeaturePhases()` checks shared positive phases in blocks of 65,536 faces and returns `-98412` before the lookup. The per-face calculation now reads Crystal Structures only after the positive, same-phase condition succeeds.
+
+**Affected users:** Users whose referenced feature phases exceed the Crystal Structures tuple count. In v7.4.2, an invalid front phase on a mixed-phase face can also reach the lookup.
+
+**Recommendation:** Trust SIMPLNX. Correct an invalid participating phase or supply its ensemble entry.
+
+**Evidence:** `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp` on the ten release branches from `upstream/release/v7.0.0` through `upstream/release/v7.4.2` omits the participating-phase bounds validation. PR #1568 (`4ec21e93f`) adds it. `Phase Index Bounds` checks the error for shared phase 2 with only two ensemble tuples; its second section checks that phases 2 and 1 give NaN without an error. The legacy evidence is the `v6.5.171` tag's `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceMisorientationColoring.cpp`.
