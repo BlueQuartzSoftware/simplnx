@@ -1,106 +1,110 @@
 # V&V Report: RegularizeZSpacingFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
 | SIMPLNX UUID | `d6599986-1932-4bfc-993d-71eafefe6db0` |
-| DREAM3D 6.5.171 equivalent | `RegularizeZSpacing` — `Source/Plugins/Sampling/SamplingFilters/RegularizeZSpacing.{h,cpp}` (legacy UUID `bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce`) |
+| SIMPLNX Human Name | Regularize Z Spacing |
+| DREAM.3D v6.5.171 equivalent | `RegularizeZSpacing` (Sampling plugin, UUID `bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | *Michael Jackson <mike.jackson@bluequartz.net> (port + V&V cycle, 2026-07-08); |
+| Sign-off | Michael Jackson, 2026-07-08; second engineer: Jared Duffey, 2026-07-14 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port** of legacy `RegularizeZSpacing::execute()` — identical Z-plane mapping rule and `floor(extent/newZRes)` dim math (independently hand-traced, including the strict-`>` boundary and clamp cases). Five port-time deltas (bulk copy, new-geometry output mode, preflight validation, parallelization, cell-AM binding); none change output for valid input. |
-| Oracle (confirmed)     | **Class 1 (Analytical)** primary + **Class 4 (Invariant)** companion — closed-form indirection map `out[i] = in[map[i]]`. Element-wise Class 1 assertions in 2 fixtures (`Valid Execution (New Geometry)`, `Valid Execution (Spacing Exceeds Extent)`); Class 4 invariants across the valid fixtures. All pass in-core + OOC. |
-| Code paths enumerated  | 13 of 15 exercised; the 2 uncovered are the redundant file-open guard and the cancel check (reasons below).                  |
-| Tests today | 5 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 5/5. |
-| Exemplar archive       | **None** — inline analytical fixtures (no `download_test_data`; avoids a circular oracle per project policy).                 |
-| Legacy comparison      | **Run** vs DREAM3D 6.5.171 on a synthetic multi-type fixture (int32 + bool + 3-component float). Bit-identical: legacy == SIMPLNX == Class-1 oracle on every array and on geometry (dims/spacing/origin). |
-| Bug flags              | None.              |
-| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Port of `RegularizeZSpacing` in DREAM.3D v6.5.171. The plane mapping is unchanged; SIMPLNX adds validation and an optional separate output geometry. |
+| Oracle (confirmed) | Class 1 plane maps and Class 4 geometry invariants are encoded in `test/RegularizeZSpacingTest.cpp`. All pass in CI. |
+| Code paths enumerated | 13 of 22 exercised by the ordinary tests. Gaps include defensive guards, cancellation, grouped child copying and additional array types. |
+| Tests today | 6 test cases: 3 valid executions, 1 input-validation case, 1 SIMPL conversion case and 1 hidden HDF5 case. The five ordinary cases cover analytical values, geometry properties and error codes. |
+| Exemplar archive | None. The test source constructs inputs and defines analytical expected values. |
+| Legacy comparison | Not run — comparison artifacts are not available. |
+| Bug flags | None |
+| V&V phase | Analytical checks, input-validation checks and second-engineer review are complete. |
 
 ## Summary
 
-`RegularizeZSpacingFilter` resamples an Image Geometry with irregular Z slice spacing onto a uniform Z spacing: it reads the physical Z position of each original slice boundary from a text file (`ZPoints + 1` values), computes `newZ = floor(totalZExtent / newZSpacing)` (min 1), and copies each new plane's cell data from the original plane whose boundary interval contains it. Verification used a **Class 1 (Analytical)** oracle — the algorithm is a closed-form indirection lookup `output[i] = input[map[i]]` — with **Class 4 (Invariant)** companions (X/Y dims and spacing preserved, origin preserved, Z spacing becomes the requested value). A direct A/B against DREAM3D 6.5.171 on a synthetic multi-type dataset is **bit-identical** (0 deviations); legacy, SIMPLNX, and the analytical oracle agree exactly.
+`RegularizeZSpacingFilter` copies image planes onto a uniform Z spacing from a file of slice-boundary positions. Class 1 fixtures check exact output values, and Class 4 checks cover geometry properties and loose child data. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Port** ~~| Minor changes | Rewrite | New filter~~
+*Classification:* Port
 
-*Evidence:* Near line-by-line translation of legacy `RegularizeZSpacing::execute()`. Same SIMPL UUID retained and mapped in `SimplnxCoreLegacyUUIDMapping.hpp`. The new→old Z-plane mapping loop (`plane` = largest `iter` in `[1, origZ)` with `i*newZRes > zBound[iter]`, else 0) and the `newZ = (size_t)(lastZBound / newZRes)` (min 1) computation are reproduced exactly; an independent hand-trace confirmed the arithmetic types match legacy expression-by-expression (float32 throughout, no double promotion), so even float-boundary cases agree.
-
-*Port-time deltas (none change output for valid input — confirmed bit-identical in the legacy A/B):*
-
-1. **Data copy**: legacy per-tuple `memcpy` via a rebuilt `newindicies` table → SIMPLNX bulk `AbstractDataStore::copyFrom` of one contiguous plane-slab per destination plane. Same bytes moved; more efficient and out-of-core friendly.
-2. **Output mode**: legacy replaces the cell AttributeMatrix in place → SIMPLNX uses the modern new-geometry pattern (`CreateImageGeometryAction` + rename + deferred delete) with a "Perform In Place" toggle (default true). In-place mode is behaviorally equivalent to legacy.
-3. **Preflight validation added**: positive `new_z_spacing`; input file has ≥ `ZPoints + 1` parseable values; values monotonically non-decreasing; positive total Z extent; only DataArray members in the cell AM. These reject bad input that legacy silently consumed (short files reused the last-read value; non-monotonic files produced a garbage mapping; zero extent produced a clamped 1-plane output) but do not alter valid-input output. The `.txt` extension is a dialog hint only (`acceptAllExtensions`), so converted legacy pipelines referencing `.dat`/`.csv`/extensionless files still validate.
-4. **Parallelization**: per-array parallel task runner (one task per cell array, distinct stores) vs legacy serial loop. No output effect.
-5. **Cell-AM binding**: legacy took an explicit AttributeMatrix path; SIMPLNX takes the geometry and uses its assigned cell AttributeMatrix. `FromSIMPLJson` keeps only the DataContainer name from the legacy `CellAttributeMatrixPath` (the AM name is discarded). For the overwhelmingly common single-cell-AM case this is identity; corner-case consequences for converted pipelines are documented in the deviations file's scope note. Related accept/reject divergences: a geometry with no cell AM now errors (`-5560`, impossible to express in legacy), and a stale AM name that legacy rejected converts to the geometry's actual cell AM and proceeds.
-
-*Material PRs since baseline:* new filter port (this branch); no prior history.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; both implementations use the strict `>` plane-boundary comparison and truncate the output Z dimension with a minimum of one plane.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary + **4 (Invariant)** companion.
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-*Applied (Class 1):* The output cell data is a closed-form indirection lookup `output_tuple[t] = input_tuple[map[t]]`, where `map` is derived by hand from the Z-positions file and `new_z_spacing`. Primary fixture (origZ=4, zBound `{0,1,3,6,10}`, newZRes 2.0): new→old plane map `[0,1,2,2,3]`, giving a fully hand-derived 10-tuple expected output. Clamp fixture (same bounds, newZRes 20.0): `newZ = floor(10/20) = 0 → 1`, expected output = source plane 0. Both derivations are embedded as comments beside the `REQUIRE`s.
+*Applied:* Bounds `[0,1,3,6,10]` give source-plane map `[0,1,2,2,3]` at spacing 2 and `[0]` at spacing 20; invariant checks require preserved X/Y dimensions and spacing, origin, and loose child values.
 
-*Applied (Class 4):* X and Y dimensions and spacing preserved, origin preserved, Z spacing equals `new_z_spacing`, `newZ == max(1, floor(lastZBound / newZRes))`, and loose (non-cell-AM) children are carried over intact. Asserted in the valid-execution fixtures.
+*Encoded:* `src/Plugins/SimplnxCore/test/RegularizeZSpacingTest.cpp::SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)` and `Valid Execution (Spacing Exceeds Extent)` contain 2 analytical fixtures; `Valid Execution (In Place)` adds geometry checks. All pass in CI.
 
-*Encoded:* `test/RegularizeZSpacingTest.cpp::SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)` (element-wise Class 1 + invariants), `...::Valid Execution (Spacing Exceeds Extent)` (clamp-path Class 1), `...::Valid Execution (In Place)` (in-place invariants) — all pass in-core (`NX-Com-Qt69-Vtk95-Rel`) and out-of-core (`NX-OOC-Qt69-Vtk95-Rel`).
-
-*Second-engineer review:* **Pending.** The oracle is a deterministic index remap (lowest-risk oracle class); review still recommended before promotion to COMPLETE.
+*Second-engineer review:* Jared Duffey, 2026-07-14.
 
 ## Bugs found and fixed
 
-No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+None.
 
 ## Code path coverage
 
-`13 of 15 paths exercised.` The 2 uncovered are a redundant file-open guard and the cancel check, listed with reasons.
+13 of 22 paths exercised. Each uncovered row states the missing fixture or required injection.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZSpacing.cpp` (217 lines) + `Filters/RegularizeZSpacingFilter.cpp` (309 lines, preflight). Logical phases: **(a) preflight validation**, **(b) output-geometry construction**, **(c) mapping + copy**.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZSpacing.cpp` (208 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RegularizeZSpacingFilter.cpp` (310 lines), and `src/simplnx/Utilities/FilterUtilities.cpp` (156 lines, copied-AttributeMatrix warning).
 
-| #  | Phase | Path | Test case |
-|----|-------|------|-----------|
-| 1  | (a) | `new_z_spacing <= 0` → error `-5555` | `Invalid Parameters` / "Non-positive Z spacing" (code asserted) |
-| 2  | (a) | input file cannot be opened → error `-5556` | *Not directly tested. File existence is validated by the `FileSystemPathParameter` before preflight; this is a redundant safety net reachable only by a filesystem race.* |
-| 3  | (a) | file has fewer than `ZPoints + 1` parseable values → error `-5557` | `Invalid Parameters` / "File with too few values" (code asserted) |
-| 4  | (a) | Z boundary values not monotonically non-decreasing → error `-5558` | `Invalid Parameters` / "Non-monotonic Z boundary values" (code asserted) |
-| 5  | (a) | total Z extent (last value) `<= 0` → error `-5559` | `Invalid Parameters` / "Zero total Z extent" (code asserted) |
-| 6  | (b) | geometry has no cell AttributeMatrix → error `-5560` | `Invalid Parameters` / "Missing cell Attribute Matrix" (code asserted) |
-| 7  | (b) | cell AM member is not a DataArray → error `-5561` | `Invalid Parameters` / "Non-DataArray member in cell Attribute Matrix" (code asserted) |
-| 8  | (b) | `remove_original_geometry == true` → rename src, create temp geom, deferred delete + rename | `Valid Execution (In Place)` |
-| 9  | (b) | `remove_original_geometry == false` → create new geometry | `Valid Execution (New Geometry)` |
-| 10 | (b) | copy loose child data objects from source geometry (component-wise path rebase) | `Valid Execution (New Geometry)` — `LooseData` presence + values asserted |
-| 11 | (c) | `newZ == 0` → clamp to 1 (`ComputeRegularizedZDim`) | `Valid Execution (Spacing Exceeds Extent)` — Class 1 expected output asserted |
-| 12 | (c) | build `newToOldZPlane` mapping (nearest-below, strict `>`) | `Valid Execution (New Geometry)` — verified against oracle map `[0,1,2,2,3]` |
-| 13 | (c) | per-array bulk `copyFrom` of each plane slab | all three valid fixtures + legacy A/B (int32/bool/float3) |
-| 14 | (c) | cancel check (per-array, per-plane) | *Not directly tested. Requires cancel-signal injection; branch is a simple early return.* |
-| 15 | OOC boundary | slice-copy oracle | `real HDF5 slice-copy oracle` — independent expected outputs on actual HDF5 stores |
+Test names below omit the common `SimplnxCore::RegularizeZSpacingFilter: ` prefix.
+
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Non-positive Z spacing returns `-5555` | `Invalid Parameters` / `Non-positive Z spacing` |
+| 2 | Preflight | Boundary file cannot be opened; return `-5556` | *Not directly tested. Requires a file-open failure after parameter validation or a direct helper call.* |
+| 3 | Preflight | Fewer than `ZPoints + 1` parseable values return `-5557` | `Invalid Parameters` / `File with too few values` |
+| 4 | Preflight | Decreasing boundary values return `-5558` | `Invalid Parameters` / `Non-monotonic Z boundary values` |
+| 5 | Preflight | Non-positive final boundary returns `-5559` | `Invalid Parameters` / `Zero total Z extent` |
+| 6 | Geometry | Missing assigned cell AttributeMatrix returns `-5560` | `Invalid Parameters` / `Missing cell Attribute Matrix` |
+| 7 | Geometry | Non-DataArray cell member returns `-5561` | `Invalid Parameters` / `Non-DataArray member in cell Attribute Matrix` |
+| 8 | Geometry | In-place mode replaces the source geometry through deferred actions | `Valid Execution (In Place)` checks the resulting name, Z dimension and spacing |
+| 9 | Geometry | Separate-output mode retains the source geometry | `Valid Execution (New Geometry)` checks geometry properties and all output cell values |
+| 10 | Geometry | Copy a loose array with its values intact | `Valid Execution (New Geometry)` checks all four `LooseData` values |
+| 11 | Mapping | Output Z dimension truncates to zero; clamp to one plane | `Valid Execution (Spacing Exceeds Extent)` checks dimensions and values `[0,1]` |
+| 12 | Mapping | Strict `>` comparison selects source planes, including an exact boundary | `Valid Execution (New Geometry)` checks map `[0,1,2,2,3]` |
+| 13 | Copy | Copy each mapped int32 plane as a contiguous slab | `Valid Execution (New Geometry)` and `Valid Execution (Spacing Exceeds Extent)` check every output value |
+| 14 | Cancellation | Stop before an array or before a plane copy | *Not directly tested. Requires cancellation injection.* |
+| 15 | Copy | Copy planes and loose data through HDF5 stores | *Not directly tested. Requires the hidden `real HDF5 slice-copy oracle`; the cited CI evidence covers in-memory execution.* |
+| 16 | Execution | Propagate an error when the boundary file is read again | *Not directly tested. Requires a file change between preflight and execution or a direct algorithm call.* |
+| 17 | Execution | Reject a non-DataArray cell member with `-5561` | *Not directly tested. Preflight rejects the same member before execution.* |
+| 18 | Geometry | Copy a loose group and rebase descendant paths | *Not directly tested. The fixtures contain a loose array, not a loose group.* |
+| 19 | Preflight | Warn `-4015` when an additional AttributeMatrix is copied unchanged | *Not directly tested. No fixture contains an additional AttributeMatrix.* |
+| 20 | Copy | Dispatch boolean and other numeric types, or copy multiple components | *Not directly tested. The fixtures use scalar int32 arrays.* |
+| 21 | Parameters | Accept a readable boundary file without a `.txt` extension | *Not directly tested. Every boundary-file fixture uses `.txt`.* |
+| 22 | Conversion | Convert legacy geometry selection, file, spacing and in-place default | `SIMPL Backwards Compatibility` / `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` |
 
 ## Test inventory
 
+All six cases are in `src/Plugins/SimplnxCore/test/RegularizeZSpacingTest.cpp`. The five ordinary cases run in Linux, macOS and Windows in-core builds. All pass in CI.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Valid Execution (New Geometry)` | new-for-V&V | Class 1 oracle: asserts output Z dim (5), preserved X/Y dims + spacing, preserved origin, Z spacing = 2.0, the 10-tuple expected `Data` array element-wise, loose-child (`LooseData`) copy with values, and source-geometry retention. |
-| `Valid Execution (In Place)` | new-for-V&V | Asserts in-place result replaces the source geometry (same name), no output-name geometry created, output Z dim + Z spacing correct. |
-| `Valid Execution (Spacing Exceeds Extent)` | new-for-V&V | Class 1 clamp fixture: `newZRes` (20) > extent (10) → 1 output plane sourced from plane 0; dims (2,1,1), Z spacing 20, `Data` = {0,1} asserted. |
-| `Invalid Parameters` | new-for-V&V | 6 SECTIONs — non-positive spacing (`-5555`), too-few file values (`-5557`), non-monotonic values (`-5558`), zero total extent (`-5559`), missing cell AM (`-5560`), non-DataArray cell member (`-5561`); each asserts the specific error code. |
-| `SIMPL Backwards Compatibility` | new-for-V&V | 2 DYNAMIC_SECTIONs — converts the 6.5 (UUID-keyed) and 6.4 (Filter_Name-keyed) fixtures in `test/simpl_conversion/`; asserts converted geometry path, input file, Z spacing, and the in-place default. The 6.4 path exercises the `k_LegacySimplFilterUuidMap` name resolution. |
-| `real HDF5 slice-copy oracle` | new-for-V&V | 67 assertions; The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. |
-
-OOC recertification (2026-09-21): serial CTest passed 5/5 target entries in each DREAM3DNX build. The hidden `real HDF5 slice-copy oracle` passed 67 assertions in the OOC binary. The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
+| `SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)` | new-for-V&V | Checks all 10 output values against `[0,1,2,3,4,5,4,5,6,7]`, geometry dimensions, spacing, origin, four loose child values and source retention. |
+| `SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Exceeds Extent)` | new-for-V&V | Checks the one-plane minimum at spacing 20, output dimensions `(2,1,1)` and values `[0,1]`. |
+| `SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)` | new-for-V&V | Checks replacement under the original name, absence of the separate output name, Z dimension 5 and Z spacing 2. Does not assert cell values. |
+| `SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters` | new-for-V&V | Six sections check exact codes `-5555`, `-5557`, `-5558`, `-5559`, `-5560` and `-5561`. |
+| `SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle` | new-for-V&V | Hidden. Requires HDF5 input and output stores; both in-place settings check all 10 cell values, four loose child values and tuple dimensions. |
+| `SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility` | new-for-V&V | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check the filter UUID, geometry path, input file, spacing and in-place default. |
 
 ## Exemplar archive
 
 - **Archive:** None — inline analytical fixtures.
-- **SHA512:** N/A (no `download_test_data`).
-- **Provenance:** N/A — Class 1/4 oracles live in the test source directly; no exemplar archive to provenance.
+- **SHA512:** Not applicable. `src/Plugins/SimplnxCore/test/CMakeLists.txt` registers no archive for this filter.
+- **Provenance:** Not applicable. The Class 1 and Class 4 oracles are in `src/Plugins/SimplnxCore/test/RegularizeZSpacingTest.cpp`.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-No deviations observed. Comparison run on a synthetic Image Geometry (dims 3×2×4; int32 `Data`, `DataArray<bool>` `Mask`, 3-component float `Vec`) authored in legacy v7 format so both runners read identical input; Z-positions `{0,1,3,6,10}`, `new_z_spacing = 2.0`. Legacy 6.5.171 output, SIMPLNX output, and the Class-1 oracle are bit-identical on every cell array and on geometry (dimensions, spacing, origin). A conversion-semantics scope note (cell-AM binding, delta 5) is recorded in `vv/deviations/RegularizeZSpacingFilter.md`.
+See `vv/deviations/RegularizeZSpacingFilter.md` for the source comparison and migration guidance. These Part 1 entries describe parameter and validation differences.
+
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `RegularizeZSpacingFilter-D1` | SIMPLNX selects the geometry's assigned cell AttributeMatrix; legacy conversion discards the explicitly selected AttributeMatrix name. |
+| `RegularizeZSpacingFilter-D2` | SIMPLNX rejects incomplete or nonnumeric boundary files, decreasing boundaries and a non-positive final boundary. DREAM.3D v6.5.171 lacks these checks. |
+| `RegularizeZSpacingFilter-D3` | SIMPLNX can retain the input geometry and create a separate output. DREAM.3D v6.5.171 replaces the selected cell data in place. |
