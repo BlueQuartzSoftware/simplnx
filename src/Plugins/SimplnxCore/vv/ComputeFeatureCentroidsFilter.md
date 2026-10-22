@@ -19,7 +19,7 @@
 | Code paths enumerated | 16 of 26 exercised by the five ordinary test cases. The table identifies validation, cancellation, I/O and periodic-axis gaps. |
 | Tests today | 6 test cases: analytical centroids, periodic centroids, invalid IDs, bulk reads, SIMPL conversion and a hidden storage-contract fixture. |
 | Exemplar archive | None. The tests construct inputs and expected values in C++. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 3 cases match; the differences come from `ComputeFeatureCentroidsFilter-D1` and `ComputeFeatureCentroidsFilter-D2`. A local proof version with the D1 fix matches DREAM3D-NX in 2 of 3 cases; the remaining case uses the DREAM3D-NX-only periodic option (D2). |
 | Bug flags | None. |
 | V&V phase | COMPLETE. |
 

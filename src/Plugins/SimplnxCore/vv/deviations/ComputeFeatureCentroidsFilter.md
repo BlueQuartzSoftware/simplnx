@@ -22,7 +22,7 @@ Part 1 records the coordinate-precision difference and the added periodic mode. 
 
 **Recommendation:** Trust SIMPLNX. Its coordinate calculation avoids the earlier float32 rounding; compare numerical results with a tolerance appropriate to the data.
 
-**Evidence:** `Source/Plugins/Generic/GenericFilters/FindFeatureCentroids.cpp` at the DREAM.3D `v6.5.171` tag contains the float coordinate buffer and Kahan kernel. The current SIMPLNX algorithm contains explicit double-precision coordinate expressions. Both sources divide each accumulated coordinate by its cell count.
+**Evidence:** `Source/Plugins/Generic/GenericFilters/FindFeatureCentroids.cpp` in DREAM.3D v6.5.171 contains the float coordinate buffer and Kahan kernel. The current SIMPLNX algorithm contains explicit double-precision coordinate expressions. Both sources divide each accumulated coordinate by its cell count. The 2026-10-22 comparison records an exact match across all three versions for `neutral_B` and feature 1 X = 16777216 in DREAM.3D v6.5.171 versus 16777218 in DREAM3D-NX and a local proof version with the D1 fix for `precision_D1` (`vv_work:ComputeFeatureCentroidsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeFeatureCentroidsFilter/notes/proof_commits.md`).
 
 ---
 
@@ -42,7 +42,7 @@ Part 1 records the coordinate-precision difference and the added periodic mode. 
 
 **Recommendation:** Trust SIMPLNX. Enable periodic mode for periodic geometry; keep it disabled for ordinary arithmetic centroids. D3 and D4 describe corrections to this added mode.
 
-**Evidence:** `ComputeFeatureCentroidsFilter::parameters()` defines the false default, and `FromSIMPLJson()` starts from default arguments. DREAM.3D `v6.5.171` `FindFeatureCentroids` has no periodic parameter or calculation. Fixtures D–F in `src/Plugins/SimplnxCore/test/ComputeFeatureCentroidsTest.cpp` check the periodic behavior independently.
+**Evidence:** `ComputeFeatureCentroidsFilter::parameters()` defines the false default, and `FromSIMPLJson()` starts from default arguments. DREAM.3D v6.5.171 `FindFeatureCentroids` has no periodic parameter or calculation. Fixtures D–F in `src/Plugins/SimplnxCore/test/ComputeFeatureCentroidsTest.cpp` check the periodic behavior independently. The 2026-10-22 case `periodic_E_D2` gives feature 1 X = 13.666666984558105 in both DREAM.3D v6.5.171 and a local proof version versus 11 in DREAM3D-NX because only DREAM3D-NX has the periodic option; no D2 proof patch is needed (`vv_work:ComputeFeatureCentroidsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeFeatureCentroidsFilter/notes/proof_commits.md`).
 
 ---
 
@@ -88,4 +88,4 @@ Part 1 records the coordinate-precision difference and the added periodic mode. 
 
 **Recommendation:** Trust SIMPLNX. Use the DREAM3D-NX release after v7.4.2 for the corrected periodic calculation. Disable periodic mode only when an ordinary arithmetic centroid is appropriate.
 
-**Evidence:** The periodic implementation in `upstream/release/v7.2.1` through `upstream/release/v7.4.2` calls the constant-offset image helper. PR #1670 (`4a7b71e5f`) replaces that model with the circular mean and removes the image helper. Current fixtures D and E independently unwrap coordinates to obtain X = 3.5 and X = 11; fixture F requires the arithmetic fallback X = 2.
+**Evidence:** The periodic implementation in DREAM3D-NX v7.2.1 through v7.4.2 calls the constant-offset image helper. PR #1670 (`4a7b71e5f`) replaces that model with the circular mean and removes the image helper. Current fixtures D and E independently unwrap coordinates to obtain X = 3.5 and X = 11; fixture F requires the arithmetic fallback X = 2.
