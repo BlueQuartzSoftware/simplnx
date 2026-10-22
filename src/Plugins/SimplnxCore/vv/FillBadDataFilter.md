@@ -1,123 +1,137 @@
 # V&V Report: FillBadDataFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID                | `a59eb864-9e6b-40bb-9292-e5281b0b4f3e`                                   |
-| SIMPLNX Human Name          | Fill Bad Data       |
-| DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
-| Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | COMPLETE — 2026-07-16 |
-| Sign-off                    | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `a59eb864-9e6b-40bb-9292-e5281b0b4f3e` |
+| SIMPLNX Human Name | Fill Bad Data |
+| DREAM.3D v6.5.171 equivalent | `FillBadData` (Processing plugin, SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Nathan Young, 2026-07-03; second engineer: Michael Jackson, 2026-07-10 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Rewrite** — 4-phase chunk-sequential CCL+Union-Find (OOC support); legacy used a simpler in-memory approach. Functional behavior preserved. |
-| Oracle (confirmed) | **Class 2** for `FillBadData_SmallIN100` (`6_5_exemplar.dream3d` from legacy 6.5 pipeline). **Class 1** for Tests 01–13 (hand-authored expected values serialized by a format-conversion script that never runs `FillBadDataFilter`). Circular-oracle concern resolved. |
-| Code paths enumerated | 20 of 21 exercised; cancellation remains outside the scope. |
-| Tests today | 18 registered cases plus two hidden ones: the real-HDF5 slice-boundary oracle with the new-phase option off/on, and the test-data generator, which is a fixture-generation utility, not an oracle. |
-| Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–07, 11, 13 (Class 1). *(Tests 08–10 and 12 have no fixtures — the numbering is non-contiguous.)* |
-| Legacy comparison      | SmallIN100 in-test (Class 2) — SIMPLNX matches the 6.5.x exemplar element-wise. A separate Test 08 three-way binary A/B was cited by an earlier revision but its working files are unrecoverable, so that claim is **withdrawn** (see deviations). Per-code-path correctness is pinned by the Class 1 analytical fixtures. |
-| Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Resolved: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
-| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds real-HDF5 analytical boundary evidence and paired runtime checks. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Rewrite of `FillBadData` in DREAM.3D v6.5.171. SIMPLNX selects BFS or slice-based connected-component labeling (CCL). |
+| Oracle (confirmed) | Class 1 expected arrays cover nine synthetic archive fixtures in `test/FillBadDataTest.cpp`. All pass in CI. |
+| Code paths enumerated | 24 of 40 exercised. Cancellation, failure injection, large-index limits and the no-progress guard lack direct coverage. |
+| Tests today | 20 test cases: 18 ordinary cases, one hidden HDF5 fixture and one hidden data generator. Ordinary cases cover analytical outputs, exemplar regressions, validation, ignored arrays and SIMPL conversion. |
+| Exemplar archive | `6_5_fill_bad_data.tar.gz` supplies nine analytical input/output pairs and the Small IN100 regression pair. |
+| Legacy comparison | Not run on the current algorithm. The comparison record is dated 2026-07-03; algorithm changes followed that run. |
+| Bug flags | None |
+| V&V phase | Analytical fixtures and regression tests are encoded. All pass in CI. |
 
 ## Summary
 
-`FillBadDataFilter` fills voxels with `FeatureId == 0` ("bad data") by assigning them to the most-common positive-feature neighbor. Connected regions below `minAllowedDefectSize` are filled; larger regions are preserved (optionally relabeled as a new phase). SIMPLNX uses a four-phase CCL+Union-Find architecture to support OOC datasets — a structural departure from legacy DREAM3D 6.5.171. Output equivalence is supported by the `FillBadData_SmallIN100` unit test (passes against `6_5_exemplar.dream3d`). A previously cited manual A/B run on a custom dataset across DREAM3D 6.5.171, a locally patched legacy build, and DREAM3D-NX is withdrawn because its working files are unrecoverable (see deviations). One bug surfaced during V&V (B1 — dead error-return path for `minAllowedDefectSize < 1`) has been fixed and is now covered by a dedicated test.
+`FillBadDataFilter` fills connected zero-FeatureId regions smaller than the selected threshold by copying positive face-neighbor tuples. It preserves larger regions and can assign them a new phase. Class 1 expected arrays check the output; all ordinary tests pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite** ~~| Port | Minor changes | New filter~~
+*Classification:* Rewrite
 
-The SIMPLNX algorithm (`Algorithms/FillBadData.cpp`, ~765 lines) introduces a 4-phase architecture to support OOC datasets stored in chunked Zarr format:
-
-1. **Phase 1 — Chunk-sequential CCL:** Assigns provisional negative labels to connected components of bad data using a scanline algorithm. `ChunkAwareUnionFind` tracks cross-chunk label equivalences.
-2. **Phase 2 — Global resolution:** Flattens the Union-Find tree (path compression + size accumulation to roots). No equivalent in legacy.
-3. **Phase 3 — Region classification:** Compares each component's voxel count to `minAllowedDefectSize`; small → mark -1 for fill, large → keep as 0 or assign new phase.
-4. **Phase 4 — Iterative fill:** Assigns each -1 voxel to its most-common positive-feature face neighbor, iterating until none remain. Propagates all cell-data arrays via `FillBadDataUpdateTuplesFunctor`.
-
-SIMPL UUID mapping is preserved via `SimplnxCoreLegacyUUIDMapping.hpp` and SIMPL conversion fixtures (`test/simpl_conversion/6_5/` and `6_4/FillBadDataFilter.json`).
-
-*Behavioral equivalence evidence:* `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, threshold=1000). (A separate Test 08 three-way A/B was previously cited but its working files are unrecoverable; that claim is withdrawn — see deviations.)
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; BFS and CCL replace the single legacy flood-fill implementation while retaining the size rule and neighbor voting.
 
 ## Oracle
 
-*Class:* **Class 2 (Reference implementation)** for `FillBadData_SmallIN100`. **Class 1 (Analytically derived)** for Tests 01–13.
+*Class:* 1 (Analytical).
 
-**Class 2:** `6_5_fill_bad_data/6_5_exemplar.dream3d` was generated by running a DREAM3D 6.5.x `FillBadData` pipeline against the Small IN100 dataset (`MinAllowedDefectSize=1000`, `StoreAsNewPhase=false`). The legacy filter is the independent reference.
+*Applied:* Hand-derived FeatureIds and Phases define component retention, filling and the first-to-maximum neighbor vote rule; the archive script only serializes these arrays.
 
-**Class 1:** `test_NN_expected_featureids.txt` files were hand-authored by tracing the algorithm specification phase-by-phase. `generate_dream3d_files.py` serializes these arrays to HDF5 without running `FillBadDataFilter`. Evidence of independent derivation: Test 11 explicitly traces neighbor scan order and identifies Feature 1 as the tie-break winner by count — reasoning that cannot originate from a simulation.
+*Encoded:* `src/Plugins/SimplnxCore/test/FillBadDataTest.cpp` — `Test01_SingleSmallDefect` through `Test07_DefectsAtBoundaries`, `Test11_NeighborTieBreaking` and `Test13_StoreAsNewPhase`: nine fixtures. All pass in CI.
 
-**Encoded tests:**
-
-- Class 2: `"SimplnxCore::FillBadData_SmallIN100"` — `UnitTest::CompareExemplarToGeneratedData` against `6_5_exemplar.dream3d`. Passes.
-- Class 1: `"SimplnxCore::FillBadData::Test01"` through `Test13` — `UnitTest::CompareExemplarToGeneratedData` against `test_NN_expected.dream3d`. Pass.
-- SIMPL compat: `"SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility"` — UUID + arg-key + value assertions only. Not an oracle test.
-
-*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
+*Second-engineer review:* Michael Jackson, 2026-07-16, is named in the oracle review record.
 
 ## Bugs found and fixed
 
-No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `FillBadDataFilter-D1` through `FillBadDataFilter-D5`. The fixes for `FillBadDataFilter-D6` and `FillBadDataFilter-D7` will be in the DREAM3D-NX release after v7.4.2.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `FillBadDataFilter-D1` | Preflight discarded the error for a minimum defect size below 1. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Return error -16500 before execution. |
+| `FillBadDataFilter-D2` | Unfillable negative cells could keep the fill loop running forever. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Stop with a warning when no cell has a fill source. |
+| `FillBadDataFilter-D3` | Negative input FeatureIds could corrupt the vote-array allocation size through unsigned conversion. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Use only positive FeatureIds to determine the maximum ID. |
+| `FillBadDataFilter-D4` | A component size above INT32_MAX could become negative and be classified as small. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Compare component sizes without narrowing to Int32. |
+| `FillBadDataFilter-D5` | A neighbor index above INT32_MAX could overflow and select an invalid tuple. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Keep neighbor indices in 64-bit storage. |
+| `FillBadDataFilter-D6` | FeatureIds from another geometry could be processed with the selected image dimensions. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. | Require FeatureIds in the selected geometry's Cell Attribute Matrix (-16501). |
+| `FillBadDataFilter-D7` | An ignored array selected through an alias could still be modified. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. | Normalize array paths to the geometry's Cell Attribute Matrix before filtering the ignored arrays. |
 
 ## Code path coverage
 
-20 of 21 paths exercised. Cancellation is not directly tested.
+24 of 40 paths exercised. Each uncovered row states the missing fixture.
 
-Source: `Algorithms/FillBadData.cpp` (49 lines), `FillBadDataBFS.cpp` (378 lines), and `FillBadDataCCL.cpp` (903 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadData.cpp` (49 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadDataBFS.cpp` (378 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadDataCCL.cpp` (917 lines), and `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/FillBadDataFilter.cpp` (194 lines).
+
+Test names below omit the common plugin and filter prefixes. BFS visits connected cells in memory; CCL labels slices and resolves component sizes before filling.
 
 | # | Phase | Path | Test case |
 |---|-------|------|-----------|
-| 1 | Phase 1 — CCL | Non-bad voxel (`featureId ≠ 0`) → skip | All tests |
-| 2 | Phase 1 — CCL | Bad voxel, no bad backward neighbors → new negative label | `Test01_SingleSmallDefect` |
-| 3 | Phase 1 — CCL | Bad voxel, one bad backward neighbor → inherit label | `Test01`, `Test02`, `Test03` |
-| 4 | Phase 1 — CCL | Bad voxel, bad backward neighbors from different labels → `unionFind.unite()` | `Test04`, `Test07` |
-| 5 | Phase 2 — Resolution | `flatten()` — always executes | All tests |
-| 6 | Phase 3 — Relabeling | Region < threshold → mark -1 | `Test01`, `Test06`, `FillBadData_SmallIN100` |
-| 7 | Phase 3 — Relabeling | Region ≥ threshold, `storeAsNewPhase=false` → keep as 0 | `Test02`, `Test03` |
-| 8 | Phase 3 — Relabeling | Region > threshold, `storeAsNewPhase=true`, `cellPhasesPtr ≠ nullptr` → `phase[i] = maxPhase+1` | `Test13_StoreAsNewPhase` |
-| 9 | Phase 4 — Fill | FeatureId ≥ 0 → skip | All tests |
-| 10 | Phase 4 — Fill | FeatureId = -1, ≥1 positive neighbor → vote and assign | `Test01`, `Test06`, `FillBadData_SmallIN100` |
-| 11 | Phase 4 — Fill | FeatureId = -1, no positive neighbor this iteration → deferred to next iteration | `Test04` (interior voxels) |
-| 12 | Phase 4 — Fill | Neighbor tie-break → first-encountered wins by scan order | `Test11_NeighborTieBreaking` |
-| 13 | `operator()` | `storeAsNewPhase=false` → `cellPhasesPtr = nullptr`, phases loop skipped | Tests 01–07, 11, SmallIN100 |
-| 14 | `operator()` | `m_ShouldCancel` in Phase 4 while-loop | *Not covered.* No test exercises mid-fill cancellation. |
-| 15 | Preflight | `minAllowedDefectSize < 1` → `MakePreflightErrorResult(-16500, …)` | `"SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size"` — inline DataStructure, `minAllowedDefectSize=0`; asserts error code `-16500`. |
-| 16 | Phase 4 | no fillable neighbor for any remaining bad voxel → no-progress break (warning) | `AllBadData_TerminatesWithoutHang` — all-bad-data slab; asserts the filter returns instead of looping forever. |
-| 17 | CCL storage | A threshold-sized defect spans rolling slices, and a smaller defect copies a multi-component tuple | `real HDF5 cross-slice defect oracle` — exact full-volume FeatureIds, Phases, and payload |
-| 18 | Preflight | Cell Feature Ids is not in the selected geometry's Cell Attribute Matrix → error `-16501` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16501`. |
-| 19 | Preflight | Store Defects as New Phase is on and Cell Phases is not in the selected geometry's Cell Attribute Matrix → error `-16502` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16502`; also checks valid Cell Phases and unused external Cell Phases. |
-| 20 | Preflight | An Attribute Arrays to Ignore entry is not in the selected geometry's Cell Attribute Matrix → error `-16503` | `SimplnxCore::FillBadDataFilter: Strict Feature Ids` — asserts invalid preflight and exact code `-16503`. |
-| 21 | Phase 4 — Fill | An ignored array selected through an alias of the Cell Attribute Matrix is excluded from modification | `SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias` — checks unchanged ignored values for each in-memory algorithm scenario. |
+| 1 | Dispatch | Select BFS for resident arrays | `Test01_SingleSmallDefect` through `Test13_StoreAsNewPhase` — algorithm scenarios |
+| 2 | Dispatch | Select CCL for resident arrays | `Test01_SingleSmallDefect` through `Test13_StoreAsNewPhase` — algorithm scenarios |
+| 3 | Dispatch | Select CCL for external arrays | *Not directly tested. The hidden `real HDF5 cross-slice defect oracle` requires external-store execution.* |
+| 4 | Components | Skip nonzero FeatureIds | `Test01_SingleSmallDefect` |
+| 5 | Components | Start a component with no labeled backward neighbor | `Test06_SingleVoxelDefects` |
+| 6 | Components | Inherit a backward neighbor label or visit a connected BFS neighbor | `Test02_SingleLargeDefect` |
+| 7 | Components | Merge distinct CCL labels | *Not directly tested. No fixture isolates a merge of distinct labels.* |
+| 8 | Classification | Region is smaller than the threshold; mark it for filling | `Test01_SingleSmallDefect`; `Test05_MixedSmallAndLarge` |
+| 9 | Classification | Region is at or above the threshold; keep FeatureIds zero | `Test02_SingleLargeDefect`; `Test03_ThresholdBoundary` |
+| 10 | Classification | Store Defects as New Phase is enabled; assign maximum phase plus one | `Test13_StoreAsNewPhase`; `200x200x200 Correctness` / `Variant: NewPhase` |
+| 11 | Fill | Skip nonnegative FeatureIds and out-of-image neighbors | `Test07_DefectsAtBoundaries` |
+| 12 | Fill | Copy the selected positive neighbor into a small defect | `Test01_SingleSmallDefect`; `FillBadData_SmallIN100` |
+| 13 | Fill | Defer interior cells until a later iteration | `Test04_MultipleSmallDefects` |
+| 14 | Fill | Break equal vote totals by the first feature to reach that total | `Test11_NeighborTieBreaking` |
+| 15 | Setup | Store Defects as New Phase is disabled; omit the maximum-phase scan | `Test01_SingleSmallDefect`; `200x200x200 Correctness` / `Variant: NoNewPhase` |
+| 16 | Cancellation | Stop component labeling, classification, fill or tuple transfer | *Not directly tested. No fixture injects cancellation.* |
+| 17 | Preflight | Reject a minimum defect size below 1 with -16500 | `Invalid Preflight Min Defect Size` |
+| 18 | Fill | Stop with a warning when remaining negative cells have no positive neighbor | *Not directly tested. `AllBadData_TerminatesWithoutHang` retains its nine-cell region at threshold 1, so it does not reach this guard.* |
+| 19 | Setup | Exclude negative input FeatureIds from maximum-ID allocation sizing | *Not directly tested. No fixture supplies negative input FeatureIds.* |
+| 20 | Classification | Compare a region size above INT32_MAX without narrowing | *Not directly tested. The fixtures contain fewer than INT32_MAX cells.* |
+| 21 | Fill | Store a neighbor index above INT32_MAX without narrowing | *Not directly tested. The fixtures contain fewer than INT32_MAX cells.* |
+| 22 | Preflight | Reject FeatureIds outside the selected Cell Attribute Matrix with -16501 | `Strict Feature Ids` |
+| 23 | Preflight | Reject modified Phases outside the selected Cell Attribute Matrix with -16502 | `Strict Feature Ids` |
+| 24 | Preflight | Reject an ignored array outside the selected Cell Attribute Matrix with -16503 | `Strict Feature Ids` |
+| 25 | Paths | Normalize aliases before modification reporting and ignored-array selection | `Ignored Array Cell AM Alias` |
+| 26 | Preflight | Warn that feature data must be recomputed | `Preflight Feature Data Modification Warning` — -14600 and output-value name |
+| 27 | Fill | Leave ignored arrays unchanged | `200x200x200 Ignored Arrays` |
+| 28 | I/O | Propagate array, candidate-pair or equivalence read/write failures | *Not directly tested. No fixture injects storage failures.* |
+| 29 | Storage | Fall back to an in-memory temporary store after provider failure | *Not directly tested. No fixture forces provider failure.* |
+| 30 | Storage | Reject a null temporary store with -87021 or -87023 | *Not directly tested. No fixture supplies a null provider result.* |
+| 31 | Capacity | Reject equivalence or candidate capacity overflow with -87020, -87022 or -87029 | *Not directly tested. These limits require synthetic capacity injection.* |
+| 32 | Capacity | Reject an empty image with -87027 | *Not directly tested. All fixtures contain cells.* |
+| 33 | Capacity | Reject label-range exhaustion with -87028 or -87030 | *Not directly tested. No fixture reaches the Int32 label limit.* |
+| 34 | Transfer | Reject zero or overflowing slice buffers with -87024 | *Not directly tested. All fixtures have valid slice and component sizes.* |
+| 35 | Transfer | Reject a short candidate read with -87025 | *Not directly tested. No fixture supplies a short read.* |
+| 36 | Transfer | Reject a candidate from a nonadjacent slice with -87026 | *Not directly tested. Normal candidate generation uses face neighbors.* |
+| 37 | Transfer | Process full candidate batches and a final partial batch | `200x200x200 Correctness` |
+| 38 | Conversion | Convert SIMPL parameters, with the ignored-array key present or absent | `SIMPL Backwards Compatibility` / `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` |
+| 39 | Transfer | Copy every component of a cell tuple | `FillBadData_SmallIN100` — compares the three-component EulerAngles array |
+| 40 | Preflight | Accept an unused Phases path outside the Cell Attribute Matrix | `Strict Feature Ids` / `Unused Cell Phases in another Attribute Matrix` |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `SimplnxCore::FillBadData_SmallIN100` | kept | Class 2 oracle. Both algorithms on resident stores. threshold=1000, storeAsNewPhase=false. |
-| `SimplnxCore::FillBadData::Test01_SingleSmallDefect` | kept | Resident-store algorithm-equivalence test. threshold=20. Single small region — primary fill path. Class 1. |
-| `SimplnxCore::FillBadData::Test02_SingleLargeDefect` | kept | Resident-store algorithm-equivalence test. threshold=20. Single large region kept as 0. Class 1. |
-| `SimplnxCore::FillBadData::Test03_ThresholdBoundary` | kept | Resident-store algorithm-equivalence test. threshold=25. Exact-threshold boundary (≥ kept, < filled). Class 1. |
-| `SimplnxCore::FillBadData::Test04_MultipleSmallDefects` | kept | Resident-store algorithm-equivalence test. threshold=50. Multiple disconnected small regions — multi-iteration fill. Class 1. |
-| `SimplnxCore::FillBadData::Test05_MixedSmallAndLarge` | kept | Resident-store algorithm-equivalence test. threshold=50. Mixed small (filled) and large (kept). Class 1. |
-| `SimplnxCore::FillBadData::Test06_SingleVoxelDefects` | kept | Resident-store algorithm-equivalence test. threshold=10. Single-voxel bad-data islands. Class 1. |
-| `SimplnxCore::FillBadData::Test07_DefectsAtBoundaries` | kept | Resident-store algorithm-equivalence test. threshold=20. Regions at image boundary — exercises Phase 1 CCL boundary handling. Class 1. |
-| `SimplnxCore::FillBadData::Test11_NeighborTieBreaking` | kept | Resident-store algorithm-equivalence test. threshold=10. Tie-break via scan order. Class 1. |
-| `SimplnxCore::FillBadData::Test13_StoreAsNewPhase` | kept | Resident-store algorithm-equivalence test. threshold=20, storeAsNewPhase=true. Only test for `cellPhasesPtr ≠ nullptr` path (Path 8). Class 1. |
-| `SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification Warning` | kept | Inline 2×2×2 DataStructure, threshold=1, storeAsNewPhase=false, no ignored arrays. Asserts a valid preflight, warning `-14600`, a `Feature Data Modification Warning` preflight value, and no `Stale Arrays` preflight value. Not an oracle test. |
-| `SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size` | kept | Inline DataStructure (no file load). `minAllowedDefectSize=0` → asserts invalid **and** error code `-16500`. Covers Path 15. |
-| `SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang` | kept | Inline 3×3×1 all-bad-data slab (no good neighbor). Asserts the filter returns rather than looping forever. Covers Path 16 (no-progress guard). |
-| `SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility` | kept | SIMPL 6.4 + 6.5 via `DYNAMIC_SECTION`. UUID + arg-key + value assertions only. Not an oracle test. |
-| `real HDF5 cross-slice defect oracle` | new-for-V&V | Independent HDF5 boundary outputs; 1053 assertions across the configured options. |
-| `200x200x200 Correctness` | kept | Existing large generated-data correctness test; algorithm scopes keep its stores resident. |
-| `200x200x200 Ignored Arrays` | kept | Existing ignored-array preservation regression on resident stores. |
-| `SimplnxCore::FillBadDataFilter: Strict Feature Ids` | new-for-V&V | Six SECTIONs: correct Cell Attribute Matrix; Feature Ids in another Attribute Matrix (`-16501`); ignored array in another Attribute Matrix (`-16503`); modified Cell Phases in another Attribute Matrix (`-16502`); unused Cell Phases in another Attribute Matrix; modified Cell Phases in the Cell Attribute Matrix. Checks preflight validity, exact error codes, and diagnostic paths. Covers Paths 18–20. |
-| `SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias` | new-for-V&V | Cell Attribute Matrix reachable by two paths. Selects the ignored array through the alias path and runs each in-memory algorithm scenario. Checks that Feature Ids change while the ignored array remains unchanged. Covers Path 21. |
-| `Generate Test Data` | kept | Hidden (`[.GenerateTestData]`). Creates a 200×200×200 fixture with a full-plane defect and writes `generated_test_data/fill_bad_data/input.dream3d` under the binary test-output directory. Checks that buffer writes and file output succeed. Does not execute FillBadData or compare algorithm output. |
-
-OOC recertification (2026-09-21): 15/15 target CTest entries pass in both DREAM3DNX builds. The hidden `real HDF5 cross-slice defect oracle` passes 1053 assertions in the OOC binary. A three-cell defect spans three Z slices and equals the retention threshold. A disconnected one-cell defect must be filled. Exact FeatureIds, Phases, and a two-component payload are checked for every voxel, with StoreAsNewPhase off and on. HDF5 input stores and target-only OOC dispatch counters verify the CCL path. The expected preflight warning -14600 remains present. Existing upstream/develop oracles and tolerances are preserved. No production algorithm or historical sign-off is changed, and no fresh legacy binary run is claimed.
+| `SimplnxCore::FillBadData_SmallIN100` | kept | Compares Small IN100 cell arrays with the stored legacy exemplar at threshold 1000. This is a regression comparison, not an independent correctness oracle. |
+| `SimplnxCore::FillBadData::Test01_SingleSmallDefect` | kept | Class 1. Fills one small component at threshold 20; compares cell arrays with the analytical file. |
+| `SimplnxCore::FillBadData::Test02_SingleLargeDefect` | kept | Class 1. Retains a large component at threshold 20. |
+| `SimplnxCore::FillBadData::Test03_ThresholdBoundary` | kept | Class 1. Retains a component whose size equals threshold 25. |
+| `SimplnxCore::FillBadData::Test04_MultipleSmallDefects` | kept | Class 1. Fills multiple small components at threshold 50. |
+| `SimplnxCore::FillBadData::Test05_MixedSmallAndLarge` | kept | Class 1. Fills small components and retains a large component at threshold 50. |
+| `SimplnxCore::FillBadData::Test06_SingleVoxelDefects` | kept | Class 1. Fills isolated single-cell defects at threshold 10. |
+| `SimplnxCore::FillBadData::Test07_DefectsAtBoundaries` | kept | Class 1. Checks defects at image boundaries at threshold 20. |
+| `SimplnxCore::FillBadData::Test11_NeighborTieBreaking` | kept | Class 1. Expects FeatureId 1 at the center of a three-vote tie. |
+| `SimplnxCore::FillBadData::Test13_StoreAsNewPhase` | kept | Class 1. Retains 50 defect cells and changes their phase to 2 at threshold 20. |
+| `SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification Warning` | kept | Checks warning -14600, the Feature Data Modification Warning output and the absence of a Stale Arrays output. |
+| `SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size` | kept | Checks error -16500 for minimum size zero (FillBadDataFilter-D1). |
+| `SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang` | kept | Checks successful return for nine bad cells at threshold 1. The region is retained; this does not exercise the no-progress guard. |
+| `SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle` | new-for-V&V | Hidden. Defines a 5×5×5 fixture with a retained three-cell component across slices and one filled cell; asserts FeatureIds, Phases and a two-component payload with the new-phase option off and on. |
+| `SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility` | kept | Checks converted UUID and arguments in dynamic sections SIMPL 6.5 (UUID) and SIMPL 6.4 (Filter_Name). |
+| `SimplnxCore::FillBadData: 200x200x200 Correctness` | kept | Compares FeatureIds and Phases with `fill_bad_data_exemplars.tar.gz` in dynamic sections Variant: NoNewPhase and Variant: NewPhase. |
+| `SimplnxCore::FillBadData: 200x200x200 Ignored Arrays` | kept | Checks that bad FeatureIds change and that every ignored sentinel value remains unchanged. |
+| `SimplnxCore::FillBadDataFilter: Strict Feature Ids` | new-for-V&V | Six sections check valid cell selection, errors -16501/-16502/-16503, unused external Phases and valid modified Phases. |
+| `SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias` | new-for-V&V | Checks that aliased FeatureIds change, ignored values remain unchanged and ignored paths are absent from modification actions. |
+| `SimplnxCore::FillBadData: Generate Test Data` | kept | Hidden utility. Writes a synthetic 200×200×200 input file; does not execute FillBadData or assert filter output. |
 
 ## Exemplar archive
 
@@ -125,12 +139,14 @@ OOC recertification (2026-09-21): 15/15 target CTest entries pass in both DREAM3
 - **SHA512:** `73b6835252135619325d9b02b48286ca95f0235820610bddcc43ec0a3f075337481bace00bf20e9d59744f1d4024cc18be624ec522922a6461b55ae8dbb0e628`
 - **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/FillBadDataFilter.md`
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-No deviations observed. The legacy comparison is the SmallIN100 in-test check:
+See `vv/deviations/FillBadDataFilter.md` for the root cause, affected users and recommendation. These Part 1 entries describe source-confirmed differences on invalid or extreme inputs.
 
-1. `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, MinAllowedDefectSize=1000) — SIMPLNX matches the 6.5.x exemplar element-wise.
-
-Per-code-path correctness is pinned independently by the Class 1 analytical fixtures (Tests 01–07, 11, 13). (An earlier revision also cited a Test 08 three-way binary A/B; its working files are unrecoverable, so that claim is withdrawn.)
-
-See `vv/deviations/FillBadDataFilter.md` for the full comparison record.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `FillBadDataFilter-D1` | SIMPLNX rejects a minimum size below 1; DREAM.3D v6.5.171 accepts it. |
+| `FillBadDataFilter-D2` | SIMPLNX stops with a warning when no fill source exists; DREAM.3D v6.5.171 can keep looping. |
+| `FillBadDataFilter-D3` | SIMPLNX excludes negative input IDs when sizing vote storage; DREAM.3D v6.5.171 converts them to unsigned values. |
+| `FillBadDataFilter-D4` | SIMPLNX compares full-width component sizes; DREAM.3D v6.5.171 narrows them to Int32. |
+| `FillBadDataFilter-D5` | SIMPLNX stores 64-bit neighbor indices; DREAM.3D v6.5.171 stores Int32 indices. |
