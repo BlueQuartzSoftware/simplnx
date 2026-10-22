@@ -68,7 +68,6 @@ public:
 
   friend class DataMap;
   friend class DataObject;
-  friend class ImportH5ObjectPathsAction;
 
   DataStructure();
 
@@ -673,6 +672,86 @@ public:
 
   Result<> validateAttributeMatrices() const;
 
+  /**
+   * @class ImportPublicationCheckpoint
+   * @brief Captures the destination identity and next ID before import preparation.
+   *
+   * The checkpoint owns no destination and reserves no IDs. Publication rejects
+   * a foreign destination or a changed counter. A complete rollback permits reuse.
+   * The destination must remain alive at the same address. Explicit counter
+   * rewrites or destination replacement end the checkpoint lifetime.
+   */
+  class SIMPLNX_EXPORT ImportPublicationCheckpoint
+  {
+  public:
+    /**
+     * @brief Captures the current destination counter without changing it.
+     * @param destination Remains alive through publication and any explicit cleanup.
+     * @pre The caller excludes concurrent destination mutation.
+     */
+    explicit ImportPublicationCheckpoint(const DataStructure& destination) noexcept;
+    ~ImportPublicationCheckpoint() noexcept = default;
+    ImportPublicationCheckpoint(const ImportPublicationCheckpoint&) = default;
+    ImportPublicationCheckpoint(ImportPublicationCheckpoint&&) noexcept = default;
+    ImportPublicationCheckpoint& operator=(const ImportPublicationCheckpoint&) = default;
+    ImportPublicationCheckpoint& operator=(ImportPublicationCheckpoint&&) noexcept = default;
+
+    /**
+     * @brief Checks the captured destination address without dereferencing it.
+     * @param destination Supplies the live publication target.
+     * @return True when the target has the captured address.
+     */
+    [[nodiscard]] bool belongsTo(const DataStructure& destination) const noexcept;
+    [[nodiscard]] DataObject::IdType nextId() const noexcept;
+
+  private:
+    const DataStructure* m_Destination = nullptr;
+    DataObject::IdType m_NextId = 0;
+  };
+
+  class ImportPublicationTestControl;
+
+  /**
+   * @brief Counts live weak-index entries without counting hierarchy aliases twice.
+   * @return Number of nonexpired entries that resetIds renumbers.
+   * @pre The caller excludes concurrent mutations and object destruction.
+   */
+  [[nodiscard]] DataObject::IdType getLiveObjectCount() const;
+
+  /**
+   * @brief Collects IDs occupied by the weak index or actual hierarchy placements.
+   * @return Independent set containing expired index keys, hierarchy keys, and owner IDs.
+   * @pre The caller excludes concurrent mutations and object destruction.
+   */
+  [[nodiscard]] std::set<DataObject::IdType> getOccupiedObjectIds() const;
+
+  /**
+   * @brief Creates a detached shell whose failed construction cannot notify through the source association.
+   * @param source Supplies an object whose children remain strongly owned.
+   *
+   * @return Independent object shell sharing only its value store.
+   * @pre The caller excludes concurrent access to the source structure.
+   */
+  [[nodiscard]] static std::shared_ptr<DataObject> makeImportPublicationCopy(DataObject& source);
+
+  /**
+   * @brief Publishes selected prepared shells and rolls back exact placements on failure.
+   * @param prepared Owns completed import values; publication shares their stores.
+   * @param paths Lists selected paths in parent-before-child order.
+   * @param sourceFile Identifies the import in diagnostics; this method does not read it.
+   * @param checkpoint Captures this destination before preparation starts.
+   * @return Import diagnostics; -6217 rejects a foreign checkpoint and -6218 rejects a stale counter.
+   * @throws std::bad_alloc After rollback when publication allocation fails.
+   * @pre The caller serializes access to both structures and preserves the checkpoint lifetime.
+   * @post Rejected checkpoints leave both structures and test fault state unchanged.
+   * @post The returned Result contains no warnings; the caller retains warnings from import preparation.
+   *
+   * All publication owners and removal messages exist before destination mutation.
+   * Structural cleanup precedes removal notifications. Callback-created objects
+   * retain their advanced counter. Incomplete cleanup keeps reserved IDs and reports -6215.
+   */
+  [[nodiscard]] Result<> publishImportedObjects(DataStructure& prepared, const std::vector<DataPath>& paths, const std::filesystem::path& sourceFile, const ImportPublicationCheckpoint& checkpoint);
+
 protected:
   /**
    * @brief Returns and advances the next object identifier.
@@ -735,15 +814,6 @@ private:
   };
 
   /**
-   * @brief Creates a detached shell whose failed construction cannot notify through the source association.
-   * @param source Supplies one unpublished object with strongly owned children.
-   *
-   * @return Independent object shell sharing only its value store.
-   * @pre The caller excludes concurrent access to the source structure.
-   */
-  static std::shared_ptr<DataObject> makeImportPublicationCopy(DataObject& source);
-
-  /**
    * @brief Inserts one prechecked import object without ordinary add notifications.
    * @param record Supplies exact owners and receives the completed mutation stage.
    * @param failAfter
@@ -760,6 +830,62 @@ private:
    * no notification or diagnostic allocation occurs here.
    */
   ImportCleanupStatus rollbackImportedObject(ImportPublicationRecord& record) noexcept;
+
+  struct ImportPublicationTestState;
+
+  /**
+   * @brief Builds exact publication records without changing the destination.
+   * @param prepared Owns completed import shells.
+   * @param paths Lists selected paths in parent-before-child order.
+   * @param sourceFile Supplies diagnostic context.
+   * @param records Receives exact owners and preallocated removal messages.
+   * @param reservedNextId Receives the checked high-water counter.
+   * @return Failure when an owner, ID, or parent is invalid.
+   */
+  Result<> prepareImportPublicationRecords(DataStructure& prepared, const std::vector<DataPath>& paths, const std::filesystem::path& sourceFile, std::vector<ImportPublicationRecord>& records,
+                                           DataObject::IdType& reservedNextId);
+
+  /**
+   * @brief Runs publication with optional action-local test instrumentation.
+   * @param prepared Owns completed import shells.
+   * @param paths Lists selected paths in parent-before-child order.
+   * @param sourceFile Supplies diagnostic context.
+   * @param checkpoint Supplies the destination identity and original counter.
+   * @param testState Supplies private fault state, or null for ordinary publication.
+   * @return Publication or cleanup diagnostics.
+   */
+  Result<> publishImportedObjectsImpl(DataStructure& prepared, const std::vector<DataPath>& paths, const std::filesystem::path& sourceFile, const ImportPublicationCheckpoint& checkpoint,
+                                      ImportPublicationTestState* testState);
+
+  /**
+   * @brief Cleans exact placements before callbacks and conditionally restores the counter.
+   * @param records Keeps exact shells and removal messages alive.
+   * @param savedNextId Supplies the counter before reservation.
+   * @param reservedNextId Supplies the transaction high-water counter.
+   * @param testState Supplies private fault state, or null for ordinary publication.
+   * @param allowRefusal Enables the armed deterministic cleanup refusal.
+   * @return True when every transaction placement and index entry is removed.
+   */
+  bool rollbackImportPublication(std::vector<ImportPublicationRecord>& records, DataObject::IdType savedNextId, DataObject::IdType reservedNextId, ImportPublicationTestState* testState,
+                                 bool allowRefusal);
+
+  /**
+   * @brief Appends retained-placement and notification failures to an invalid Result.
+   * @param result Receives diagnostics after the primary publication error.
+   * @param records Supplies completed cleanup and notification states.
+   * @param sourceFile Supplies diagnostic context.
+   * @pre result is invalid.
+   */
+  static void appendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const std::filesystem::path& sourceFile);
+
+  /**
+   * @brief Transfers failed transaction observations into action-local test storage.
+   * @param testState Receives observations, or null to leave records local.
+   * @param records Transfers ownership only when test instrumentation is active.
+   * @param savedNextId Supplies the original destination counter.
+   * @param reservedNextId Supplies the transaction high-water counter.
+   */
+  void retainImportFailure(ImportPublicationTestState* testState, std::vector<ImportPublicationRecord>& records, DataObject::IdType savedNextId, DataObject::IdType reservedNextId);
 
   bool insertTopLevel(const std::shared_ptr<DataObject>& obj);
 
@@ -784,4 +910,81 @@ private:
   DataObject::IdType m_NextId = 1;
   std::shared_ptr<const IDataStoreFormatResolver> m_FormatResolver; // Null selects the process default resolver.
 };
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+/**
+ * @class ImportPublicationTestControl
+ * @brief Owns action-local faults and exact failed-publication observations.
+ *
+ * The control never exposes transaction records or destination mutation fields.
+ * A retained destination must remain alive until explicit cleanup completes.
+ * Destruction releases observations and does not retry cleanup.
+ */
+class SIMPLNX_EXPORT DataStructure::ImportPublicationTestControl
+{
+public:
+  /**
+   * @enum Fault
+   * @brief Selects one deterministic publication failure.
+   */
+  enum class Fault : uint8
+  {
+    None,                  ///< Runs without injection.
+    BeforePublication,     ///< Fails after ID reservation and before insertion.
+    AfterSecondInsert,     ///< Fails after two complete real insertions.
+    AfterHierarchy,        ///< Fails after the second hierarchy placement, before its parent list.
+    BeforeTracking,        ///< Fails after the second parent list, before its weak entry.
+    AllocationAfterSecond, ///< Throws bad_alloc after two complete insertions.
+    ReturnFalse            ///< Makes the second insertion fail before mutation.
+  };
+
+  /**
+   * @brief Creates a control with no armed fault or retained transaction.
+   */
+  ImportPublicationTestControl();
+  /**
+   * @brief Releases retained observations without retrying cleanup.
+   */
+  ~ImportPublicationTestControl() noexcept;
+  ImportPublicationTestControl(const ImportPublicationTestControl&) = delete;
+  ImportPublicationTestControl(ImportPublicationTestControl&&) = delete;
+  ImportPublicationTestControl& operator=(const ImportPublicationTestControl&) = delete;
+  ImportPublicationTestControl& operator=(ImportPublicationTestControl&&) = delete;
+
+  /**
+   * @brief Replaces prior observations and arms one publication fault.
+   * @param fault Selects the failure boundary.
+   * @param refuseCleanup Retains the second exact placement during automatic cleanup.
+   * @pre The caller excludes publication and explicit cleanup through this control.
+   */
+  void setFault(Fault fault, bool refuseCleanup);
+  bool publicationFaultConsumed() const;
+  bool cleanupFaultConsumed() const;
+  std::shared_ptr<DataObject> retainedOwner() const;
+
+  /**
+   * @brief Runs the ordinary publication operation with this control's fault state.
+   * @param destination Receives selected shells.
+   * @param prepared Owns completed import values.
+   * @param paths Lists selected paths in parent-before-child order.
+   * @param sourceFile Supplies diagnostic context.
+   * @param checkpoint Captures destination before preparation.
+   * @return The same diagnostics as publishImportedObjects, including -6217 and -6218.
+   * @pre The caller meets publishImportedObjects preconditions and excludes concurrent control access.
+   * @post Checkpoint rejection does not consume faults or replace retained observations.
+   */
+  Result<> publish(DataStructure& destination, DataStructure& prepared, const std::vector<DataPath>& paths, const std::filesystem::path& sourceFile, const ImportPublicationCheckpoint& checkpoint);
+
+  /**
+   * @brief Retries structural cleanup of this control's retained transaction.
+   * @param destination Supplies the same live destination used by the failed publication.
+   * @return Error -6215 when the destination differs or an exact-object conflict remains.
+   * @pre The caller excludes concurrent destination mutation and control access.
+   */
+  Result<> cleanup(DataStructure& destination);
+
+private:
+  std::unique_ptr<ImportPublicationTestState> m_State;
+};
+#endif
 } // namespace nx::core

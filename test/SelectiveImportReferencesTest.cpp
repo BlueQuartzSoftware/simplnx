@@ -514,7 +514,7 @@ TEST_CASE("Selective import references: geometry alias publication rolls back an
   const auto beforeNextId = destination.getNextId();
   const std::vector<DataPath> selected{DataPath({"First", "Geometry"}), DataPath({"Second", "Geometry"}), DataPath({"First", "Geometry", "Cells"}), DataPath({"Second", "Geometry", "Cells"})};
   const ImportH5ObjectPathsAction action(file.path, selected);
-  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterSecondInsert);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::AfterSecondInsert);
   const auto failed = action.apply(destination, mode);
   REQUIRE(failed.invalid());
   REQUIRE_FALSE(failed.errors().empty());
@@ -1426,7 +1426,7 @@ TEST_CASE("C8 alias clone IDs preserve live expired and hierarchy-only occupants
     REQUIRE(retained->getId() == cloneId);
     retainedFile = std::make_unique<ImportReferenceFile>(retentionSource, "AliasHierarchyOnlyId");
     retainingAction = std::make_unique<ImportH5ObjectPathsAction>(retainedFile->path, std::vector<DataPath>{DataPath({"Earlier"}), occupiedPath});
-    retainingAction->setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterHierarchy, true);
+    retainingAction->setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::AfterHierarchy, true);
     const auto retainedResult = retainingAction->apply(destination, IDataAction::Mode::Preflight);
     REQUIRE(retainedResult.invalid());
     REQUIRE(retainingAction->publicationFaultConsumedForTesting());
@@ -1516,7 +1516,7 @@ TEST_CASE("C8 alias publication rollback removes both copies and restores identi
   }));
   const std::vector<DataPath> leaves{firstArrayPath, secondArrayPath};
   ImportH5ObjectPathsAction action(file.path, leaves);
-  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterSecondInsert);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::AfterSecondInsert);
   const auto result = action.apply(destination, mode);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
@@ -1555,7 +1555,7 @@ TEST_CASE("C8 alias publication rollback removes both copies and restores identi
   RequireAliasPlans(*resolver, {{firstArrayPath, 16}, {secondArrayPath, 16}});
   const auto removalCount = removals.size();
   retained.reset();
-  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::None);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::None);
   CHECK(removals.size() == removalCount);
   const auto nextId = destination.getNextId();
   REQUIRE(nextId == cloneId + 1);

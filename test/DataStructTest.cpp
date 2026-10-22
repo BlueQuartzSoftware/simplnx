@@ -1,6 +1,7 @@
 #include "DataStructObserver.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -12,6 +13,8 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Messaging/DataAddedMessage.hpp"
+#include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -20,10 +23,15 @@
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
+#include <nod/nod.hpp>
 
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <set>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -1675,3 +1683,890 @@ TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
 
   UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
 }
+
+namespace
+{
+/**
+ * @brief Creates a small resident fixture with explicit IDs and literal values.
+ * @param structure Owns the array.
+ * @param name Identifies the root array.
+ * @param objectId Supplies the fixture ID.
+ * @param values Supplies the independent expected values.
+ * @return The exact inserted array owner.
+ */
+std::shared_ptr<Int32Array> createImportPublicationArray(DataStructure& structure, const std::string& name, DataObject::IdType objectId, const std::array<int32, 2>& values)
+{
+  auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+  (*store)[0] = values[0];
+  (*store)[1] = values[1];
+  REQUIRE(Int32Array::Import(structure, name, objectId, store) != nullptr);
+  auto owner = std::dynamic_pointer_cast<Int32Array>(structure.getSharedData(objectId));
+  REQUIRE(owner != nullptr);
+  return owner;
+}
+
+/**
+ * @class ImportCopyFailureGroup
+ * @brief Throws during detached-copy construction to exercise association restoration.
+ */
+class ImportCopyFailureGroup : public DataGroup
+{
+public:
+  /**
+   * @brief Creates a group whose shallow copy fails.
+   * @param structure Supplies the source association.
+   */
+  explicit ImportCopyFailureGroup(DataStructure& structure)
+  : DataGroup(structure, "CopyFailure")
+  {
+  }
+
+  ~ImportCopyFailureGroup() noexcept override = default;
+  ImportCopyFailureGroup(const ImportCopyFailureGroup&) = default;
+  ImportCopyFailureGroup(ImportCopyFailureGroup&&) = delete;
+  ImportCopyFailureGroup& operator=(const ImportCopyFailureGroup&) = delete;
+  ImportCopyFailureGroup& operator=(ImportCopyFailureGroup&&) = delete;
+
+  /**
+   * @brief Throws before a new owner is constructed.
+   * @return Does not return.
+   * @throws std::runtime_error Always, as the fixture's copy failure.
+   */
+  DataObject* shallowCopy() override
+  {
+    throw std::runtime_error("import detached-copy failure witness");
+  }
+};
+} // namespace
+
+TEST_CASE("Import publication: group acceptance queries preserve state and virtual rules", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure destination;
+  auto* parentPtr = DataGroup::Create(destination, "Parent");
+  REQUIRE(parentPtr != nullptr);
+  auto* childPtr = DataGroup::Create(destination, "Child", parentPtr->getId());
+  REQUIRE(childPtr != nullptr);
+  auto* matrixPtr = AttributeMatrix::Create(destination, "Matrix", ShapeType{2});
+  REQUIRE(matrixPtr != nullptr);
+  DataStructure candidates;
+  auto matching = createImportPublicationArray(candidates, "Matching", 10, std::array<int32, 2>{31, -7});
+  auto mismatchStore = std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 0);
+  auto* mismatchPtr = Int32Array::Create(candidates, "Mismatch", mismatchStore);
+  REQUIRE(mismatchPtr != nullptr);
+  auto* duplicateNamePtr = DataGroup::Create(candidates, "Child");
+  REQUIRE(duplicateNamePtr != nullptr);
+  const auto paths = destination.getAllDataPaths();
+  const auto ids = destination.getAllDataObjectIds();
+  const auto nextId = destination.getNextId();
+  const auto parents = childPtr->getParentIds();
+  const auto candidatePaths = candidates.getAllDataPaths();
+  const auto candidateNextId = candidates.getNextId();
+  usize notifications = 0;
+  const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const BaseGroup& parentView = *parentPtr;
+  const BaseGroup& matrixView = *matrixPtr;
+  CHECK_FALSE(parentView.acceptsChild(nullptr));
+  CHECK_FALSE(parentView.acceptsChild(childPtr));
+  CHECK_FALSE(parentView.acceptsChild(duplicateNamePtr));
+  CHECK_FALSE(childPtr->acceptsChild(parentPtr));
+  CHECK(parentView.acceptsChild(matching.get()));
+  CHECK_FALSE(matrixView.acceptsChild(parentPtr));
+  CHECK_FALSE(matrixView.acceptsChild(mismatchPtr));
+  CHECK(matrixView.acceptsChild(matching.get()));
+  CHECK(destination.getAllDataPaths() == paths);
+  CHECK(destination.getAllDataObjectIds() == ids);
+  CHECK(destination.getNextId() == nextId);
+  CHECK(childPtr->getParentIds() == parents);
+  CHECK(candidates.getAllDataPaths() == candidatePaths);
+  CHECK(candidates.getNextId() == candidateNextId);
+  CHECK(matching->getParentIds().empty());
+  CHECK(notifications == 0);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(candidates);
+}
+
+TEST_CASE("Import publication: occupied IDs include expired entries and hierarchy-only aliases", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure destination;
+  auto* markerPtr = DataGroup::Create(destination, "Marker");
+  REQUIRE(markerPtr != nullptr);
+  auto* expiredPtr = DataGroup::Create(destination, "Expired");
+  REQUIRE(expiredPtr != nullptr);
+  REQUIRE(markerPtr->getId() == 1);
+  REQUIRE(expiredPtr->getId() == 2);
+  REQUIRE(destination.removeData(DataObject::IdType{2}));
+  REQUIRE(destination.getData(DataObject::IdType{2}) == nullptr);
+  DataStructure prepared;
+  auto* sourcePtr = DataGroup::Import(prepared, "HierarchyOnly", 7);
+  REQUIRE(sourcePtr != nullptr);
+  auto shell = DataStructure::makeImportPublicationCopy(*sourcePtr);
+  REQUIRE(shell != nullptr);
+  // Raw hierarchy placement models the same unregistered stage as a partial import.
+  REQUIRE(destination.getRootGroup().insert(shell));
+  REQUIRE(markerPtr->getDataMap().insert(shell));
+  CHECK(destination.getData(DataObject::IdType{7}) == nullptr);
+  const auto nextId = destination.getNextId();
+  CHECK(destination.getLiveObjectCount() == 1);
+  CHECK((destination.getOccupiedObjectIds() == std::set<DataObject::IdType>{1, 2, 7}));
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK(destination.getNextId() == nextId);
+  const auto rootPlacement = destination.getRootGroup().find(7);
+  REQUIRE(rootPlacement != destination.getRootGroup().end());
+  CHECK(rootPlacement->second == shell);
+  const auto childPlacement = markerPtr->getDataMap().find(7);
+  REQUIRE(childPlacement != markerPtr->getDataMap().end());
+  CHECK(childPlacement->second == shell);
+  REQUIRE(markerPtr->getDataMap().remove(DataObject::IdType{7}));
+  REQUIRE(destination.getRootGroup().remove(DataObject::IdType{7}));
+  CHECK(shell->getDataStructure() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("Import publication: detached copies preserve the source and share only value storage", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure source;
+  auto* parentPtr = DataGroup::Create(source, "Parent");
+  REQUIRE(parentPtr != nullptr);
+  auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+  (*store)[0] = 31;
+  (*store)[1] = -7;
+  auto* arrayPtr = Int32Array::Create(source, "Values", store, parentPtr->getId());
+  REQUIRE(arrayPtr != nullptr);
+  const auto arrayId = arrayPtr->getId();
+  const auto parentIds = arrayPtr->getParentIds();
+  const auto paths = source.getAllDataPaths();
+  const auto nextId = source.getNextId();
+  usize notifications = 0;
+  const nod::scoped_connection connection(source.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  {
+    const auto groupCopy = std::dynamic_pointer_cast<BaseGroup>(DataStructure::makeImportPublicationCopy(*parentPtr));
+    REQUIRE(groupCopy != nullptr);
+    CHECK(groupCopy.get() != parentPtr);
+    CHECK(groupCopy->getId() == parentPtr->getId());
+    CHECK(groupCopy->empty());
+    CHECK(groupCopy->getDataStructure() == nullptr);
+    CHECK(groupCopy->getParentIds().empty());
+    const auto arrayCopy = std::dynamic_pointer_cast<Int32Array>(DataStructure::makeImportPublicationCopy(*arrayPtr));
+    REQUIRE(arrayCopy != nullptr);
+    CHECK(arrayCopy.get() != arrayPtr);
+    CHECK(arrayCopy->getId() == arrayId);
+    CHECK(arrayCopy->getDataStructure() == nullptr);
+    CHECK(arrayCopy->getParentIds().empty());
+    CHECK(arrayCopy->getIDataStore() == store.get());
+    CHECK((*arrayCopy)[0] == 31);
+    CHECK((*arrayCopy)[1] == -7);
+  }
+  CHECK(parentPtr->getDataStructure() == &source);
+  CHECK(arrayPtr->getDataStructure() == &source);
+  CHECK(arrayPtr->getParentIds() == parentIds);
+  CHECK(parentPtr->getSize() == 1);
+  CHECK(source.getData(arrayId) == arrayPtr);
+  CHECK(source.getAllDataPaths() == paths);
+  CHECK(source.getNextId() == nextId);
+  CHECK(notifications == 0);
+  auto failing = std::make_shared<ImportCopyFailureGroup>(source);
+  REQUIRE(source.insert(failing, DataPath{}));
+  const auto failureId = failing->getId();
+  const auto failurePaths = source.getAllDataPaths();
+  const auto failureNextId = source.getNextId();
+  const auto beforeFailure = notifications;
+  REQUIRE_THROWS_AS(DataStructure::makeImportPublicationCopy(*failing), std::runtime_error);
+  CHECK(failing->getDataStructure() == &source);
+  CHECK(source.getData(failureId) == failing.get());
+  CHECK(source.getAllDataPaths() == failurePaths);
+  CHECK(source.getNextId() == failureNextId);
+  CHECK(notifications == beforeFailure);
+  UnitTest::CheckArraysInheritTupleDims(source);
+}
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+
+TEST_CASE("Import publication: existing root names reject the complete selection before publication", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto marker = createImportPublicationArray(destination, "Marker", 1, std::array<int32, 2>{51, 52});
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "Candidate", 2, std::array<int32, 2>{31, -7});
+  auto conflict = createImportPublicationArray(prepared, "Marker", 3, std::array<int32, 2>{81, 82});
+  const auto* markerStorePtr = marker->getIDataStore();
+  const auto* candidateStorePtr = candidate->getIDataStore();
+  const auto* conflictStorePtr = conflict->getIDataStore();
+  const std::vector<DataPath> selected{DataPath({"Candidate"}), DataPath({"Marker"})};
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("root-name-conflict.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("root-name-conflict.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6203);
+  CHECK(result.errors().front().message.find("'Marker'") != std::string::npos);
+  CHECK(result.errors().front().message.find("root-name-conflict.dream3d") != std::string::npos);
+  CHECK(result.errors().front().message.find("destination path already exists") != std::string::npos);
+  CHECK(result.warnings().empty());
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"})}));
+  CHECK(destination.getData(DataObject::IdType{1}) == marker.get());
+  CHECK(destination.getData(DataPath({"Marker"})) == marker.get());
+  CHECK(destination.getData(DataObject::IdType{2}) == nullptr);
+  CHECK(destination.getData(DataObject::IdType{3}) == nullptr);
+  CHECK(destination.getNextId() == 2);
+  CHECK(marker->getIDataStore() == markerStorePtr);
+  CHECK((*marker)[0] == 51);
+  CHECK((*marker)[1] == 52);
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{2, 3}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Candidate"}), DataPath({"Marker"})}));
+  CHECK(prepared.getData(DataObject::IdType{2}) == candidate.get());
+  CHECK(prepared.getData(DataObject::IdType{3}) == conflict.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(conflict->getDataStructure() == &prepared);
+  CHECK(candidate->getParentIds().empty());
+  CHECK(conflict->getParentIds().empty());
+  CHECK(candidate->getIDataStore() == candidateStorePtr);
+  CHECK(conflict->getIDataStore() == conflictStorePtr);
+  CHECK((*candidate)[0] == 31);
+  CHECK((*candidate)[1] == -7);
+  CHECK((*conflict)[0] == 81);
+  CHECK((*conflict)[1] == 82);
+  CHECK(prepared.getNextId() == 4);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+
+  if(instrumented)
+  {
+    const auto fault = control.publish(destination, prepared, {DataPath({"Candidate"})}, fs::path("root-name-conflict.dream3d"), checkpoint);
+    SIMPLNX_RESULT_REQUIRE_INVALID(fault);
+    REQUIRE(fault.errors().size() == 1);
+    CHECK(fault.errors().front().code == -6214);
+    REQUIRE(control.publicationFaultConsumed());
+    CHECK(destination.getNextId() == 2);
+    CHECK(destination.getData(DataObject::IdType{2}) == nullptr);
+    CHECK(notifications == 0);
+  }
+  const auto retry = instrumented ? control.publish(destination, prepared, {DataPath({"Candidate"})}, fs::path("root-name-conflict.dream3d"), checkpoint) :
+                                    destination.publishImportedObjects(prepared, {DataPath({"Candidate"})}, fs::path("root-name-conflict.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_VALID(retry);
+  auto published = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  REQUIRE(published != nullptr);
+  CHECK(published.get() != candidate.get());
+  CHECK(published->getIDataStore() == candidateStorePtr);
+  CHECK((*published)[0] == 31);
+  CHECK((*published)[1] == -7);
+  CHECK(destination.getData(DataPath({"Marker"})) == marker.get());
+  CHECK(destination.getData(DataPath({"Candidate"})) == published.get());
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK(destination.getNextId() == 3);
+  CHECK(prepared.getData(DataObject::IdType{2}) == candidate.get());
+  CHECK(prepared.getData(DataObject::IdType{3}) == conflict.get());
+  CHECK(prepared.getNextId() == 4);
+  CHECK(notifications == 0);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: hierarchy-only IDs in another parent reject before publication", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto* parentPtr = DataGroup::Import(destination, "Parent", 1);
+  REQUIRE(parentPtr != nullptr);
+  DataStructure source;
+  auto* sourcePtr = DataGroup::Import(source, "HierarchyOnly", 7);
+  REQUIRE(sourcePtr != nullptr);
+  auto occupied = DataStructure::makeImportPublicationCopy(*sourcePtr);
+  REQUIRE(occupied != nullptr);
+  // The child map owns ID 7, but the weak registry and the destination root do not.
+  REQUIRE(parentPtr->getDataMap().insert(occupied));
+  REQUIRE(destination.getData(DataObject::IdType{7}) == nullptr);
+  REQUIRE(destination.getRootGroup().find(7) == destination.getRootGroup().end());
+  REQUIRE(destination.getData(DataPath({"Parent", "HierarchyOnly"})) == occupied.get());
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "Candidate", 7, std::array<int32, 2>{31, -7});
+  const auto* candidateStorePtr = candidate->getIDataStore();
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, {DataPath({"Candidate"})}, fs::path("hierarchy-id-conflict.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, {DataPath({"Candidate"})}, fs::path("hierarchy-id-conflict.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6213);
+  CHECK(result.errors().front().message.find("'Candidate'") != std::string::npos);
+  CHECK(result.errors().front().message.find("identifier 7") != std::string::npos);
+  CHECK(result.errors().front().message.find("hierarchy-id-conflict.dream3d") != std::string::npos);
+  CHECK(result.warnings().empty());
+  CHECK(destination.getData(DataObject::IdType{1}) == parentPtr);
+  CHECK(destination.getData(DataObject::IdType{7}) == nullptr);
+  CHECK(destination.getData(DataPath({"Parent"})) == parentPtr);
+  CHECK(destination.getData(DataPath({"Parent", "HierarchyOnly"})) == occupied.get());
+  CHECK(destination.getData(DataPath({"Candidate"})) == nullptr);
+  CHECK(destination.getRootGroup().getSize() == 1);
+  CHECK(parentPtr->getSize() == 1);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Parent"})}));
+  CHECK((destination.getOccupiedObjectIds() == std::set<DataObject::IdType>{1, 7}));
+  CHECK(destination.getNextId() == 2);
+  CHECK(occupied->getId() == 7);
+  CHECK(occupied->getDataStructure() == nullptr);
+  CHECK(occupied->getParentIds().empty());
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{7}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Candidate"})}));
+  CHECK(prepared.getData(DataObject::IdType{7}) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(candidate->getParentIds().empty());
+  CHECK(candidate->getIDataStore() == candidateStorePtr);
+  CHECK((*candidate)[0] == 31);
+  CHECK((*candidate)[1] == -7);
+  CHECK(prepared.getNextId() == 8);
+  CHECK(source.getData(DataObject::IdType{7}) == sourcePtr);
+  CHECK(sourcePtr->getDataStructure() == &source);
+  CHECK(source.getNextId() == 8);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  REQUIRE(parentPtr->getDataMap().remove(DataObject::IdType{7}));
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: duplicate selected paths reject before publication", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto* markerPtr = DataGroup::Import(destination, "Marker", 1);
+  REQUIRE(markerPtr != nullptr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "Candidate", 2, std::array<int32, 2>{31, -7});
+  const auto* storePtr = candidate->getIDataStore();
+  const std::vector<DataPath> selected{DataPath({"Candidate"}), DataPath({"Candidate"})};
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("duplicate-path.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("duplicate-path.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6203);
+  CHECK(result.errors().front().message.find("'Candidate'") != std::string::npos);
+  CHECK(result.errors().front().message.find("duplicate-path.dream3d") != std::string::npos);
+  CHECK(result.errors().front().message.find("same path is selected more than once") != std::string::npos);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"})}));
+  CHECK(destination.getData(DataObject::IdType{1}) == markerPtr);
+  CHECK(destination.getData(DataObject::IdType{2}) == nullptr);
+  CHECK(destination.getNextId() == 2);
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{2}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Candidate"})}));
+  CHECK(prepared.getData(DataObject::IdType{2}) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(candidate->getParentIds().empty());
+  CHECK(candidate->getIDataStore() == storePtr);
+  CHECK((*candidate)[0] == 31);
+  CHECK((*candidate)[1] == -7);
+  CHECK(prepared.getNextId() == 3);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: distinct selected alias paths cannot publish the same ID twice", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto* leftPtr = DataGroup::Import(destination, "Left", 1);
+  auto* rightPtr = DataGroup::Import(destination, "Right", 2);
+  REQUIRE(leftPtr != nullptr);
+  REQUIRE(rightPtr != nullptr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto* preparedLeftPtr = DataGroup::Import(prepared, "Left", 1);
+  auto* preparedRightPtr = DataGroup::Import(prepared, "Right", 2);
+  REQUIRE(preparedLeftPtr != nullptr);
+  REQUIRE(preparedRightPtr != nullptr);
+  auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+  (*store)[0] = 31;
+  (*store)[1] = -7;
+  REQUIRE(Int32Array::Import(prepared, "Candidate", 3, store, DataObject::IdType{1}) != nullptr);
+  auto candidate = std::dynamic_pointer_cast<Int32Array>(prepared.getSharedData(DataObject::IdType{3}));
+  REQUIRE(candidate != nullptr);
+  REQUIRE(prepared.setAdditionalParent(3, 2));
+  const std::vector<DataPath> selected{DataPath({"Left", "Candidate"}), DataPath({"Right", "Candidate"})};
+  REQUIRE(prepared.getData(selected[0]) == candidate.get());
+  REQUIRE(prepared.getData(selected[1]) == candidate.get());
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("duplicate-id.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("duplicate-id.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6213);
+  CHECK(result.errors().front().message.find("Right/Candidate") != std::string::npos);
+  CHECK(result.errors().front().message.find("identifier 3") != std::string::npos);
+  CHECK(result.errors().front().message.find("duplicate-id.dream3d") != std::string::npos);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Left"}), DataPath({"Right"})}));
+  CHECK(destination.getData(DataObject::IdType{1}) == leftPtr);
+  CHECK(destination.getData(DataObject::IdType{2}) == rightPtr);
+  CHECK(destination.getData(DataObject::IdType{3}) == nullptr);
+  CHECK(leftPtr->empty());
+  CHECK(rightPtr->empty());
+  CHECK(destination.getNextId() == 3);
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Left"}), DataPath({"Right"}), DataPath({"Left", "Candidate"}), DataPath({"Right", "Candidate"})}));
+  CHECK(prepared.getData(DataObject::IdType{1}) == preparedLeftPtr);
+  CHECK(prepared.getData(DataObject::IdType{2}) == preparedRightPtr);
+  CHECK(prepared.getData(DataObject::IdType{3}) == candidate.get());
+  CHECK(prepared.getData(selected[0]) == candidate.get());
+  CHECK(prepared.getData(selected[1]) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK((candidate->getParentIds() == DataObject::ParentCollectionType{1, 2}));
+  CHECK(candidate->getIDataStore() == store.get());
+  CHECK((*candidate)[0] == 31);
+  CHECK((*candidate)[1] == -7);
+  CHECK(prepared.getNextId() == 4);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: distinct parent aliases reject duplicate destination placements", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto* leftPtr = DataGroup::Import(destination, "Left", 1);
+  auto* rightPtr = DataGroup::Import(destination, "Right", 2);
+  REQUIRE(leftPtr != nullptr);
+  REQUIRE(rightPtr != nullptr);
+  auto* sharedParentPtr = DataGroup::Import(destination, "Shared", 3, DataObject::IdType{1});
+  REQUIRE(sharedParentPtr != nullptr);
+  REQUIRE(destination.setAdditionalParent(3, 2));
+  REQUIRE(destination.getData(DataPath({"Left", "Shared"})) == sharedParentPtr);
+  REQUIRE(destination.getData(DataPath({"Right", "Shared"})) == sharedParentPtr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto* preparedLeftPtr = DataGroup::Import(prepared, "Left", 1);
+  auto* preparedRightPtr = DataGroup::Import(prepared, "Right", 2);
+  REQUIRE(preparedLeftPtr != nullptr);
+  REQUIRE(preparedRightPtr != nullptr);
+  auto* firstParentPtr = DataGroup::Import(prepared, "Shared", 3, DataObject::IdType{1});
+  auto* secondParentPtr = DataGroup::Import(prepared, "Shared", 4, DataObject::IdType{2});
+  REQUIRE(firstParentPtr != nullptr);
+  REQUIRE(secondParentPtr != nullptr);
+  REQUIRE(firstParentPtr != secondParentPtr);
+  auto firstStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+  (*firstStore)[0] = 31;
+  (*firstStore)[1] = -7;
+  auto secondStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+  (*secondStore)[0] = 81;
+  (*secondStore)[1] = 82;
+  auto* firstPtr = Int32Array::Import(prepared, "Candidate", 5, firstStore, DataObject::IdType{3});
+  auto* secondPtr = Int32Array::Import(prepared, "Candidate", 6, secondStore, DataObject::IdType{4});
+  REQUIRE(firstPtr != nullptr);
+  REQUIRE(secondPtr != nullptr);
+  const std::vector<DataPath> selected{DataPath({"Left", "Shared", "Candidate"}), DataPath({"Right", "Shared", "Candidate"})};
+  REQUIRE(prepared.getData(selected[0]) == firstPtr);
+  REQUIRE(prepared.getData(selected[1]) == secondPtr);
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("aliased-parent.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("aliased-parent.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6203);
+  CHECK(result.errors().front().message.find("Right/Shared/Candidate") != std::string::npos);
+  CHECK(result.errors().front().message.find("aliased-parent.dream3d") != std::string::npos);
+  CHECK(result.errors().front().message.find("destination placement is selected more than once") != std::string::npos);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Left"}), DataPath({"Right"}), DataPath({"Left", "Shared"}), DataPath({"Right", "Shared"})}));
+  CHECK(destination.getData(DataObject::IdType{1}) == leftPtr);
+  CHECK(destination.getData(DataObject::IdType{2}) == rightPtr);
+  CHECK(destination.getData(DataObject::IdType{3}) == sharedParentPtr);
+  CHECK(destination.getData(DataObject::IdType{5}) == nullptr);
+  CHECK(destination.getData(DataObject::IdType{6}) == nullptr);
+  CHECK(destination.getData(selected[0]) == nullptr);
+  CHECK(destination.getData(selected[1]) == nullptr);
+  CHECK(sharedParentPtr->empty());
+  CHECK((sharedParentPtr->getParentIds() == DataObject::ParentCollectionType{1, 2}));
+  CHECK(destination.getNextId() == 4);
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3, 4, 5, 6}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Left"}), DataPath({"Right"}), DataPath({"Left", "Shared"}), DataPath({"Right", "Shared"}),
+                                                             DataPath({"Left", "Shared", "Candidate"}), DataPath({"Right", "Shared", "Candidate"})}));
+  CHECK(prepared.getData(DataObject::IdType{1}) == preparedLeftPtr);
+  CHECK(prepared.getData(DataObject::IdType{2}) == preparedRightPtr);
+  CHECK(prepared.getData(DataObject::IdType{3}) == firstParentPtr);
+  CHECK(prepared.getData(DataObject::IdType{4}) == secondParentPtr);
+  CHECK(prepared.getData(DataObject::IdType{5}) == firstPtr);
+  CHECK(prepared.getData(DataObject::IdType{6}) == secondPtr);
+  CHECK(prepared.getData(selected[0]) == firstPtr);
+  CHECK(prepared.getData(selected[1]) == secondPtr);
+  CHECK(firstPtr->getDataStructure() == &prepared);
+  CHECK(secondPtr->getDataStructure() == &prepared);
+  CHECK((firstPtr->getParentIds() == DataObject::ParentCollectionType{3}));
+  CHECK((secondPtr->getParentIds() == DataObject::ParentCollectionType{4}));
+  CHECK(firstPtr->getIDataStore() == firstStore.get());
+  CHECK(secondPtr->getIDataStore() == secondStore.get());
+  CHECK((*firstPtr)[0] == 31);
+  CHECK((*firstPtr)[1] == -7);
+  CHECK((*secondPtr)[0] == 81);
+  CHECK((*secondPtr)[1] == 82);
+  CHECK(prepared.getNextId() == 7);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: checkpoint errors precede conflicting selection admission", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool foreign = GENERATE(false, true);
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(foreign, instrumented);
+  const DataStructure original;
+  DataStructure destination;
+  auto* markerPtr = DataGroup::Import(destination, "Marker", 1);
+  REQUIRE(markerPtr != nullptr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(foreign ? original : destination);
+  auto* laterPtr = DataGroup::Import(destination, "Later", 2);
+  REQUIRE(laterPtr != nullptr);
+  DataStructure prepared;
+  auto* conflictPtr = DataGroup::Import(prepared, "Marker", 1);
+  REQUIRE(conflictPtr != nullptr);
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, {DataPath({"Marker"}), DataPath({"Marker"})}, fs::path("checkpoint-priority.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, {DataPath({"Marker"}), DataPath({"Marker"})}, fs::path("checkpoint-priority.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == (foreign ? -6217 : -6218));
+  CHECK(destination.getData(DataObject::IdType{1}) == markerPtr);
+  CHECK(destination.getData(DataObject::IdType{2}) == laterPtr);
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"}), DataPath({"Later"})}));
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK(destination.getNextId() == 3);
+  CHECK(prepared.getData(DataObject::IdType{1}) == conflictPtr);
+  CHECK(prepared.getNextId() == 2);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: empty and fully recovered selections preserve pending faults", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool empty = GENERATE(false, true);
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(empty, instrumented);
+  DataStructure destination;
+  auto* markerPtr = DataGroup::Import(destination, "Marker", 1);
+  REQUIRE(markerPtr != nullptr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  const std::vector<DataPath> selected = empty ? std::vector<DataPath>{} : std::vector<DataPath>{DataPath({"Missing"}), DataPath({"Marker"}), DataPath({"Missing"})};
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("empty-recovery.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("empty-recovery.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(result.warnings().empty());
+  CHECK(destination.getData(DataObject::IdType{1}) == markerPtr);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"})}));
+  CHECK(destination.getNextId() == 2);
+  CHECK(prepared.getAllDataObjectIds().empty());
+  CHECK(prepared.getAllDataPaths().empty());
+  CHECK(prepared.getNextId() == 1);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: missing recovered paths are skipped before admission", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(instrumented);
+  DataStructure destination;
+  auto* markerPtr = DataGroup::Import(destination, "Marker", 1);
+  REQUIRE(markerPtr != nullptr);
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "Candidate", 2, std::array<int32, 2>{31, -7});
+  const std::vector<DataPath> selected{DataPath({"Missing"}), DataPath({"Marker"}), DataPath({"Missing"}), DataPath({"Candidate"})};
+  DataStructure::ImportPublicationTestControl control;
+  usize notifications = 0;
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection preparedConnection(prepared.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const auto result = instrumented ? control.publish(destination, prepared, selected, fs::path("recovered-paths.dream3d"), checkpoint) :
+                                     destination.publishImportedObjects(prepared, selected, fs::path("recovered-paths.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(result.warnings().empty());
+  auto published = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  REQUIRE(published != nullptr);
+  CHECK(published.get() != candidate.get());
+  CHECK(published->getIDataStore() == candidate->getIDataStore());
+  CHECK((*published)[0] == 31);
+  CHECK((*published)[1] == -7);
+  CHECK(destination.getData(DataObject::IdType{1}) == markerPtr);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"}), DataPath({"Candidate"})}));
+  CHECK(destination.getNextId() == 3);
+  CHECK(prepared.getData(DataObject::IdType{2}) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(candidate->getParentIds().empty());
+  CHECK((prepared.getAllDataObjectIds() == std::vector<DataObject::IdType>{2}));
+  CHECK((prepared.getAllDataPaths() == std::vector<DataPath>{DataPath({"Candidate"})}));
+  CHECK(prepared.getNextId() == 3);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: foreign checkpoints reject before fault consumption", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool instrumented = GENERATE(false, true);
+  DataStructure originalDestination;
+  auto originalMarker = createImportPublicationArray(originalDestination, "OriginalMarker", 1, std::array<int32, 2>{41, 42});
+  const DataStructure::ImportPublicationCheckpoint checkpoint(originalDestination);
+  DataStructure destination;
+  auto marker = createImportPublicationArray(destination, "Marker", 1, std::array<int32, 2>{51, 52});
+  const auto* markerStorePtr = marker->getIDataStore();
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "Candidate", 2, std::array<int32, 2>{31, -7});
+  const auto* candidateStorePtr = candidate->getIDataStore();
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection originalConnection(originalDestination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  const nod::scoped_connection destinationConnection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  Result<> result;
+  if(instrumented)
+  {
+    result = control.publish(destination, prepared, {DataPath({"Candidate"})}, fs::path("foreign-checkpoint.dream3d"), checkpoint);
+  }
+  else
+  {
+    result = destination.publishImportedObjects(prepared, {DataPath({"Candidate"})}, fs::path("foreign-checkpoint.dream3d"), checkpoint);
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6217);
+  CHECK(result.errors().front().message.find("foreign-checkpoint.dream3d") != std::string::npos);
+  CHECK((originalDestination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK((originalDestination.getAllDataPaths() == std::vector<DataPath>{DataPath({"OriginalMarker"})}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"})}));
+  CHECK(originalDestination.getNextId() == 2);
+  CHECK(destination.getNextId() == 2);
+  CHECK(originalDestination.getData(DataObject::IdType{1}) == originalMarker.get());
+  CHECK(destination.getData(DataObject::IdType{1}) == marker.get());
+  CHECK(marker->getIDataStore() == markerStorePtr);
+  CHECK((*marker)[0] == 51);
+  CHECK((*marker)[1] == 52);
+  CHECK(prepared.getData(DataObject::IdType{2}) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(candidate->getIDataStore() == candidateStorePtr);
+  CHECK(prepared.getNextId() == 3);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(originalDestination);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: stale checkpoints preserve successful imports and ordinary insertions", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  const bool previousPublication = GENERATE(false, true);
+  const bool instrumented = GENERATE(false, true);
+  CAPTURE(previousPublication, instrumented);
+  DataStructure destination;
+  auto marker = createImportPublicationArray(destination, "Marker", 1, std::array<int32, 2>{51, 52});
+  const auto* markerStorePtr = marker->getIDataStore();
+  const DataStructure::ImportPublicationCheckpoint originalCheckpoint(destination);
+  const auto checkpoint = originalCheckpoint;
+  const std::string retainedName = previousPublication ? "ImportedA" : "Unrelated";
+  if(previousPublication)
+  {
+    DataStructure firstPrepared;
+    createImportPublicationArray(firstPrepared, retainedName, 2, std::array<int32, 2>{61, 62});
+    const auto first = destination.publishImportedObjects(firstPrepared, {DataPath({retainedName})}, fs::path("first-publication.dream3d"), originalCheckpoint);
+    SIMPLNX_RESULT_REQUIRE_VALID(first);
+  }
+  else
+  {
+    auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
+    (*store)[0] = 61;
+    (*store)[1] = 62;
+    REQUIRE(Int32Array::Create(destination, retainedName, store) != nullptr);
+  }
+  auto retained = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  REQUIRE(retained != nullptr);
+  const auto* retainedStorePtr = retained->getIDataStore();
+  REQUIRE(destination.getNextId() == 3);
+  DataStructure prepared;
+  auto candidate = createImportPublicationArray(prepared, "ImportedB", 3, std::array<int32, 2>{31, -7});
+  const auto* candidateStorePtr = candidate->getIDataStore();
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::BeforePublication, false);
+  usize notifications = 0;
+  const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
+  Result<> result;
+  if(instrumented)
+  {
+    result = control.publish(destination, prepared, {DataPath({"ImportedB"})}, fs::path("stale-checkpoint.dream3d"), checkpoint);
+  }
+  else
+  {
+    result = destination.publishImportedObjects(prepared, {DataPath({"ImportedB"})}, fs::path("stale-checkpoint.dream3d"), checkpoint);
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -6218);
+  CHECK(result.errors().front().message.find("next identifier is 3") != std::string::npos);
+  CHECK(result.errors().front().message.find("checkpoint recorded 2") != std::string::npos);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2}));
+  CHECK((destination.getAllDataPaths() == std::vector<DataPath>{DataPath({"Marker"}), DataPath({retainedName})}));
+  CHECK(destination.getNextId() == 3);
+  CHECK(destination.getData(DataObject::IdType{1}) == marker.get());
+  CHECK(destination.getData(DataObject::IdType{2}) == retained.get());
+  CHECK(destination.getData(DataPath({retainedName})) == retained.get());
+  CHECK_FALSE(destination.containsData(DataPath({"ImportedB"})));
+  CHECK(marker->getIDataStore() == markerStorePtr);
+  CHECK(retained->getIDataStore() == retainedStorePtr);
+  CHECK((*marker)[0] == 51);
+  CHECK((*marker)[1] == 52);
+  CHECK((*retained)[0] == 61);
+  CHECK((*retained)[1] == 62);
+  CHECK(prepared.getData(DataObject::IdType{3}) == candidate.get());
+  CHECK(candidate->getDataStructure() == &prepared);
+  CHECK(candidate->getIDataStore() == candidateStorePtr);
+  CHECK(prepared.getNextId() == 4);
+  CHECK(notifications == 0);
+  CHECK_FALSE(control.publicationFaultConsumed());
+  CHECK_FALSE(control.cleanupFaultConsumed());
+  CHECK(control.retainedOwner() == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+
+TEST_CASE("Import publication: complete rollback permits checkpoint reuse without stale-owner deletion", "[ImportPublication][DataStructure]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure destination;
+  auto marker = createImportPublicationArray(destination, "Marker", 1, std::array<int32, 2>{51, 52});
+  const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
+  DataStructure prepared;
+  auto firstSource = createImportPublicationArray(prepared, "First", 2, std::array<int32, 2>{31, -7});
+  auto secondSource = createImportPublicationArray(prepared, "Second", 3, std::array<int32, 2>{81, 82});
+  const std::vector<DataPath> selected{DataPath({"First"}), DataPath({"Second"})};
+  std::vector<DataObject::IdType> removals;
+  usize additions = 0;
+  const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
+    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    {
+      removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
+    }
+    else if(message->getMsgType() == DataAddedMessage::MsgType)
+    {
+      ++additions;
+    }
+  }));
+  DataStructure::ImportPublicationTestControl control;
+  control.setFault(DataStructure::ImportPublicationTestControl::Fault::AfterSecondInsert, false);
+  const auto failed = control.publish(destination, prepared, selected, fs::path("complete-rollback.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_INVALID(failed);
+  REQUIRE(failed.errors().size() == 1);
+  CHECK(failed.errors().front().code == -6214);
+  REQUIRE(control.publicationFaultConsumed());
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+  CHECK(destination.getData(DataObject::IdType{1}) == marker.get());
+  CHECK(destination.getNextId() == 2);
+  CHECK((removals == std::vector<DataObject::IdType>{3, 2}));
+  auto detachedOwner = control.retainedOwner();
+  REQUIRE(detachedOwner != nullptr);
+  CHECK(detachedOwner->getId() == 3);
+  CHECK(detachedOwner->getDataStructure() == nullptr);
+  CHECK(detachedOwner->getParentIds().empty());
+  const auto retry = control.publish(destination, prepared, selected, fs::path("complete-rollback.dream3d"), checkpoint);
+  SIMPLNX_RESULT_REQUIRE_VALID(retry);
+  CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3}));
+  CHECK(destination.getNextId() == 4);
+  auto first = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  auto second = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{3}));
+  REQUIRE(first != nullptr);
+  REQUIRE(second != nullptr);
+  CHECK(first.get() != firstSource.get());
+  CHECK(second.get() != secondSource.get());
+  CHECK(second.get() != detachedOwner.get());
+  CHECK(first->getIDataStore() == firstSource->getIDataStore());
+  CHECK(second->getIDataStore() == secondSource->getIDataStore());
+  CHECK((*first)[0] == 31);
+  CHECK((*first)[1] == -7);
+  CHECK((*second)[0] == 81);
+  CHECK((*second)[1] == 82);
+  detachedOwner.reset();
+  CHECK(destination.getData(DataObject::IdType{3}) == second.get());
+  CHECK((removals == std::vector<DataObject::IdType>{3, 2}));
+  CHECK(additions == 0);
+  UnitTest::CheckArraysInheritTupleDims(destination);
+  UnitTest::CheckArraysInheritTupleDims(prepared);
+}
+#endif

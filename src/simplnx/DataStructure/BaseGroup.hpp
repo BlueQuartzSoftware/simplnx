@@ -27,8 +27,6 @@ namespace nx::core
  */
 class SIMPLNX_EXPORT BaseGroup : public DataObject
 {
-  friend class DataStructure;
-
 public:
   using Iterator = typename DataMap::Iterator;
   using ConstIterator = typename DataMap::ConstIterator;
@@ -255,6 +253,15 @@ public:
    * @return True if the object was inserted successfully, false otherwise
    */
   bool insert(const std::weak_ptr<DataObject>& obj);
+
+  /**
+   * @brief Checks the group's insertion rules without changing the group or object.
+   * @param object Supplies the candidate; null is rejected.
+   * @return True when the current virtual insertion rules accept the object.
+   * @pre The caller excludes concurrent changes to this group and the candidate.
+   * @note This query does not reserve a placement or prevent later insertion failure.
+   */
+  [[nodiscard]] bool acceptsChild(const DataObject* object) const;
 
   /**
    * @brief Attempts to remove the specified DataObject from the container. Returns

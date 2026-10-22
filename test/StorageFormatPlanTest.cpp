@@ -1,3 +1,4 @@
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
@@ -50,6 +51,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -975,8 +977,10 @@ TEST_CASE("C8 later destination planning failure preserves destination and alloc
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 TEST_CASE("C8 publication faults remove exact objects and permit immediate ID reuse", "[C8][SelectedImportPublication]")
 {
-  using Fault = ImportH5ObjectPathsAction::PublicationFault;
-  const auto fault = GENERATE(Fault::BeforePublication, Fault::AfterSecondInsert, Fault::AfterHierarchy, Fault::BeforeTracking, Fault::AllocationAfterSecond, Fault::ReturnFalse);
+  UnitTest::LoadPlugins();
+  using FaultType = ImportH5ObjectPathsAction::PublicationFaultType;
+  const auto fault =
+      GENERATE(FaultType::BeforePublication, FaultType::AfterSecondInsert, FaultType::AfterHierarchy, FaultType::BeforeTracking, FaultType::AllocationAfterSecond, FaultType::ReturnFalse);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   CAPTURE(static_cast<int>(fault), static_cast<int>(mode));
   SelectedImportTestContext context("selected_import_publication_faults.dream3d");
@@ -1000,7 +1004,7 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   }));
   ImportH5ObjectPathsAction action(context.file.path, {k_ImportPolicyGroup, k_ImportPolicyFirst, k_ImportPolicySecond});
   action.setPublicationFaultForTesting(fault);
-  if(fault == Fault::AllocationAfterSecond)
+  if(fault == FaultType::AllocationAfterSecond)
   {
     REQUIRE_THROWS_AS(action.apply(destination, mode), std::bad_alloc);
   }
@@ -1016,8 +1020,24 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
   CHECK(destination.getNextId() == savedNextId);
   CheckImportPolicyMarker(destination, marker, markerStore);
-  const usize expectedRemovals = fault == Fault::BeforePublication ? 0 : (fault == Fault::AfterSecondInsert || fault == Fault::AllocationAfterSecond ? 2 : 1);
+  usize expectedRemovals = 1;
+  if(fault == FaultType::BeforePublication)
+  {
+    expectedRemovals = 0;
+  }
+  else if(fault == FaultType::AfterSecondInsert || fault == FaultType::AllocationAfterSecond)
+  {
+    expectedRemovals = 2;
+  }
   CHECK(removals.size() == expectedRemovals);
+  if(expectedRemovals == 2)
+  {
+    CHECK((removals == std::vector<DataObject::IdType>{savedNextId + 1, savedNextId}));
+  }
+  else if(expectedRemovals == 1)
+  {
+    CHECK((removals == std::vector<DataObject::IdType>{savedNextId}));
+  }
   CHECK(additions == 0);
   auto retained = action.retainedOwnerForTesting();
   if(retained != nullptr)
@@ -1037,7 +1057,7 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   CHECK(destination.getData(DataPath({"AfterRetry"})) == later);
   const auto beforeRelease = removals.size();
   retained.reset();
-  action.setPublicationFaultForTesting(Fault::None);
+  action.setPublicationFaultForTesting(FaultType::None);
   CHECK(removals.size() == beforeRelease);
   CHECK(additions == 1);
   REQUIRE(destination.removeData(nextId));
@@ -1050,8 +1070,8 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
 
 TEST_CASE("C8 refused partial publication retains ownership and reserves identifiers", "[C8][SelectedImportPublication]")
 {
-  using Fault = ImportH5ObjectPathsAction::PublicationFault;
-  const auto fault = GENERATE(Fault::AfterHierarchy, Fault::BeforeTracking, Fault::AfterSecondInsert);
+  using FaultType = ImportH5ObjectPathsAction::PublicationFaultType;
+  const auto fault = GENERATE(FaultType::AfterHierarchy, FaultType::BeforeTracking, FaultType::AfterSecondInsert);
   CAPTURE(static_cast<int>(fault));
   SelectedImportTestContext context("selected_import_refused_cleanup.dream3d");
   DataStructure destination;
@@ -1072,7 +1092,7 @@ TEST_CASE("C8 refused partial publication retains ownership and reserves identif
   const DataPath retainedPath({k_ImportPolicyGroup.getTargetName(), retained->getName()});
   REQUIRE(destination.getData(retainedPath) == retained.get());
   REQUIRE(destination.getData(k_ImportPolicyGroup) != nullptr);
-  CHECK(destination.getData(retained->getId()) == (fault == Fault::AfterSecondInsert ? retained.get() : nullptr));
+  CHECK(destination.getData(retained->getId()) == (fault == FaultType::AfterSecondInsert ? retained.get() : nullptr));
   CHECK(destination.getNextId() > retained->getId());
   CHECK(destination.getNextId() > savedNextId);
   auto* unrelated = DataGroup::Create(destination, "AfterRefusal");
@@ -1127,7 +1147,7 @@ TEST_CASE("C8 rollback settles all objects before callbacks and preserves callba
     }
   }));
   const ImportH5ObjectPathsAction action(context.file.path, {k_ImportPolicyGroup, k_ImportPolicyFirst, k_ImportPolicySecond});
-  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterSecondInsert);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::AfterSecondInsert);
   const auto result = action.apply(destination, IDataAction::Mode::Execute);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
@@ -1198,7 +1218,7 @@ TEST_CASE("C8 rollback preserves an existing destination parent and its other ch
   const auto nextId = destination.getNextId();
   const auto ids = destination.getAllDataObjectIds();
   const ImportH5ObjectPathsAction action(context.file.path, {k_ImportPolicyFirst, k_ImportPolicySecond});
-  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFault::AfterHierarchy);
+  action.setPublicationFaultForTesting(ImportH5ObjectPathsAction::PublicationFaultType::AfterHierarchy);
   const auto failed = action.apply(destination, IDataAction::Mode::Execute);
   REQUIRE(failed.invalid());
   REQUIRE(action.publicationFaultConsumedForTesting());
@@ -1522,6 +1542,137 @@ TEST_CASE("C8 single active finalizer observes complete plans and exact leaves o
   CHECK(destination.getAllDataObjectIds() == idsBeforeDuplicate);
   UnitTest::CheckArraysInheritTupleDims(destination);
 }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+TEST_CASE("C8 publication handoff preserves warning order and exact destination state", "[C8][SelectedImportPublication][SelectedImportFinalizer]")
+{
+  UnitTest::LoadPlugins();
+  static_assert(noexcept(std::declval<WarningCollection&>().swap(std::declval<WarningCollection&>())));
+  static_assert(std::is_nothrow_move_constructible_v<WarningCollection>);
+  enum class Outcome : uint8
+  {
+    OrdinarySuccess,
+    InstrumentedSuccess,
+    PublicationFailure,
+    AllocationFailure
+  };
+  const auto outcome = GENERATE(Outcome::OrdinarySuccess, Outcome::InstrumentedSuccess, Outcome::PublicationFailure, Outcome::AllocationFailure);
+  CAPTURE(static_cast<uint8>(outcome));
+  const auto application = Application::GetOrCreateInstance();
+  const SelectedImportTestContext context("c8_publication_warning_handoff.dream3d");
+  WriteC8LegacyPlanWarningFile(context.file.path);
+  auto& collection = application->getIOCollection();
+  REQUIRE_FALSE(collection.anyManagerFinalizesImport());
+  const auto manager = std::make_shared<C8SingleImportFinalizer>();
+  const auto disable = MakeScopeGuard([manager]() noexcept { manager->active = false; });
+  auto registration = collection.addIOManager(manager);
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
+  manager->expectedLeaves = {k_C8LegacyFirst, k_C8LegacySecond};
+  manager->numericPaths = manager->expectedLeaves;
+  manager->ancestors = {k_C8LegacyContainer, k_C8LegacyMatrix};
+  manager->active = true;
+  DataStructure destination;
+  const auto markerOwner = CreateSelectedImportMarker(destination);
+  const auto* markerStorePtr = dynamic_cast<const Int32Array*>(markerOwner.get())->getIDataStore();
+  REQUIRE(markerOwner->getId() == 1);
+  REQUIRE(destination.getNextId() == 2);
+  const auto resolver = std::make_shared<C8WarningPlanResolver>();
+  destination.setFormatResolver(resolver);
+  const ImportH5ObjectPathsAction action(context.file.path, {k_C8LegacySecond, k_C8LegacyContainer, k_C8LegacyFirst, k_C8LegacyMatrix});
+  using FaultType = ImportH5ObjectPathsAction::PublicationFaultType;
+  if(outcome != Outcome::OrdinarySuccess)
+  {
+    auto fault = FaultType::None;
+    if(outcome == Outcome::AllocationFailure)
+    {
+      fault = FaultType::AllocationAfterSecond;
+    }
+    else if(outcome == Outcome::PublicationFailure)
+    {
+      fault = FaultType::AfterSecondInsert;
+    }
+    action.setPublicationFaultForTesting(fault);
+  }
+  std::vector<DataObject::IdType> removals;
+  usize additions = 0;
+  const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
+    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    {
+      removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
+    }
+    else if(message->getMsgType() == DataAddedMessage::MsgType)
+    {
+      ++additions;
+    }
+  }));
+  if(outcome == Outcome::AllocationFailure)
+  {
+    REQUIRE_THROWS_AS(action.apply(destination, IDataAction::Mode::Execute), std::bad_alloc);
+  }
+  else
+  {
+    const auto result = action.apply(destination, IDataAction::Mode::Execute);
+    if(outcome == Outcome::PublicationFailure)
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(result);
+      REQUIRE(result.errors().size() == 1);
+      CHECK(result.errors()[0].code == -6214);
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+    }
+    REQUIRE(result.warnings().size() == 2);
+    CHECK(result.warnings()[0].code == -298012);
+    CHECK(result.warnings()[0].message.find("WarningSource") != std::string::npos);
+    CHECK(result.warnings()[1].code == k_C8FinalizerWarning);
+    CHECK(result.warnings()[1].message == "first selected leaf materialized");
+  }
+  CHECK(manager->calls == 1);
+  CHECK(manager->completeEmptyContext);
+  CHECK(manager->leafAttempts == 2);
+  CHECK(manager->numericReads == 2);
+  CHECK(manager->completedLeaves == std::vector<DataPath>{k_C8LegacyFirst, k_C8LegacySecond});
+  CHECK(resolver->completeEmptyCalls == 2);
+  CHECK(additions == 0);
+  CheckImportPolicyMarker(destination, markerOwner, markerStorePtr);
+  if(outcome == Outcome::PublicationFailure || outcome == Outcome::AllocationFailure)
+  {
+    REQUIRE(action.publicationFaultConsumedForTesting());
+    CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1}));
+    CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
+    CHECK(destination.getNextId() == 2);
+    CHECK((removals == std::vector<DataObject::IdType>{3, 2}));
+    const auto retained = action.retainedOwnerForTesting();
+    REQUIRE(retained != nullptr);
+    CHECK(retained->getId() == 3);
+    CHECK(retained->getDataStructure() == nullptr);
+    CHECK(retained->getParentIds().empty());
+  }
+  else
+  {
+    CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3, 4, 5}));
+    CHECK(destination.getNextId() == 6);
+    const auto* containerPtr = destination.getDataAs<BaseGroup>(k_C8LegacyContainer);
+    const auto* matrixPtr = destination.getDataAs<BaseGroup>(k_C8LegacyMatrix);
+    const auto* firstPtr = destination.getDataAs<Int32Array>(k_C8LegacyFirst);
+    const auto* secondPtr = destination.getDataAs<Int32Array>(k_C8LegacySecond);
+    REQUIRE(containerPtr != nullptr);
+    REQUIRE(matrixPtr != nullptr);
+    REQUIRE(firstPtr != nullptr);
+    REQUIRE(secondPtr != nullptr);
+    CHECK(destination.getData(DataObject::IdType{2}) == containerPtr);
+    CHECK(destination.getData(DataObject::IdType{3}) == matrixPtr);
+    CHECK(destination.getData(DataObject::IdType{4}) == firstPtr);
+    CHECK(destination.getData(DataObject::IdType{5}) == secondPtr);
+    CheckImportPolicyArray(destination, k_C8LegacyFirst, std::array<int32, 3>{11, -4, 6}, IDataAction::Mode::Execute);
+    CheckImportPolicyArray(destination, k_C8LegacySecond, std::array<int32, 3>{27, 0, -19}, IDataAction::Mode::Execute);
+    CHECK(removals.empty());
+    CHECK_FALSE(action.publicationFaultConsumedForTesting());
+  }
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+#endif
 
 TEST_CASE("C8 planning and second leaf failures retain earlier warnings without publication", "[C8][SelectedImportFinalizer]")
 {
