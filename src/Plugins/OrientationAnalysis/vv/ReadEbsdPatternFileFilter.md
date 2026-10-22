@@ -4,43 +4,44 @@
 |---|---|
 | Plugin | OrientationAnalysis |
 | SIMPLNX UUID | `cd975a45-53de-4ace-ac16-d99638a44d6a` |
-| DREAM3D 6.5.171 equivalent | None. This is a new filter. |
+| SIMPLNX Human Name | Read EBSD Pattern File |
+| DREAM.3D v6.5.171 equivalent | None (new filter) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | DRAFT |
-| Sign-off | Pending second-engineer review. |
+| Sign-off | Michael Jackson, 2026-08-27; second engineer: Jared Duffey, 2026-09-15 |
 
 ## At a glance
 
 | Aspect | Current state |
 |---|---|
-| Algorithm Relationship | **New filter.** No DREAM3D 6.5.171 filter reads EDAX UP pattern stacks into a general DataArray. |
-| Oracle (confirmed) | **Class 1 (Analytical) primary and Class 4 (Invariant) companion.** The test writes fixed little-endian headers and payload values. It checks the parsed metadata, output shapes, output types, and exact pixel values. |
-| Code paths enumerated | 17 of 19 paths are exercised. The out-of-core store fallback and execution-time short-read recovery path need an OOC build or a file-mutation harness. |
-| Tests today | 14 test cases cover UP versions 1 and 3, `.up1` and `.up2`, output placement, warnings, malformed files, extension mismatches, and cancellation. All pass in the full 1,753-test in-core run. |
-| Exemplar archive | None. The Class 1 fixtures are small files that the test creates from independent literal bytes. The test does not use a saved output from SIMPLNX or DREAM3D. |
-| Legacy comparison | Not run. The filter is new and has no DREAM3D 6.5.171 equivalent. |
-| Bug flags | None. |
-| V&V phase | Oracle reconciliation, the full in-core build, all 1,753 in-core tests, and the clang-format gate are complete. OOC evidence and second-engineer review are pending. |
+| Algorithm Relationship | New filter. DREAM.3D v6.5.171 has no equivalent EDAX UP pattern-file reader. |
+| Oracle (confirmed) | Class 1 byte fixtures and Class 4 shape checks are encoded in `test/ReadEbsdPatternFileTest.cpp`. All pass in CI. |
+| Code paths enumerated | 19 of 42 exercised. Gaps include input guards, warnings, file changes, chunk boundaries, and pixel assertions for two format combinations. |
+| Tests today | 14 test cases cover headers, output shapes, selected pixel values, malformed inputs, warnings, and cancellation. All pass in CI. |
+| Exemplar archive | None. Tests construct synthetic files and expected values in C++. |
+| Legacy comparison | Not run — comparison artifacts are not available. DREAM.3D v6.5.171 has no equivalent filter. |
+| Bug flags | None |
+| V&V phase | Analytical and invariant checks are encoded and pass in CI. Second-engineer review is complete. |
 
 ## Summary
 
-This filter reads EDAX `.up1` and `.up2` EBSD detector patterns into a SIMPLNX DataArray. Class 1 fixtures verify exact header and payload behavior. Class 4 checks verify tuple-count and shape contracts. No legacy comparison applies because this is a new filter.
+`ReadEbsdPatternFileFilter` reads EDAX `.up1` and `.up2` EBSD patterns into a DataArray. Class 1 fixtures check metadata, errors, warnings, and selected endpoint pixels; Class 4 checks verify tuple and component shapes. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **New filter**
+*Classification:* New filter
 
-*Evidence:* Search of the available DREAM3D 6.5.171 source trees found no filter or utility that reads `.up1` or `.up2` pattern files. This filter has a new SIMPLNX UUID and no SIMPL conversion mapping.
+*Evidence:* The DREAM.3D v6.5.171 source and corresponding SIMPL and plugin sources contain no EDAX UP reader; `ReadEbsdPatternFileFilter.hpp` declares the new UUID above.
 
 ## Oracle
 
-*Class:* **1 (Analytical) primary and 4 (Invariant) companion**
+*Class:* 1 (Analytical), with 4 (Invariant) checks.
 
-*Applied:* The test writes each integer and floating-point header field as fixed little-endian bytes. It writes deterministic pixel literals after the header. Expected metadata, shapes, types, warnings, error branches, and output pixels are derived directly from those bytes.
+*Applied:* Independent little-endian writers define header fields and pixel sequences; assertions check metadata, shapes, diagnostics, and the first and last pixels for version 1 `.up2` and version 3 `.up1`.
 
-*Encoded:* `src/Plugins/OrientationAnalysis/test/ReadEbsdPatternFileTest.cpp` contains 14 test cases. The suite checks version 1 and 3 headers, both pixel widths, exact payload values, AttributeMatrix tuple rules, manual version 1 dimensions, extra-pattern exclusion, future-version and unknown-step warnings, malformed inputs, both extension-mismatch directions, case-insensitive extensions, and cancellation. All 14 tests pass in the full 1,753-test in-core run.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/ReadEbsdPatternFileTest.cpp::OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 UP2 Manual Scan Dimensions` and 13 companion cases use three valid import layouts plus invalid-input and warning variants. All pass in CI.
 
-*Second-engineer review:* Pending.
+*Second-engineer review:* Jared Duffey, 2026-09-15.
 
 ## Bugs found and fixed
 
@@ -48,16 +49,15 @@ None.
 
 ## Code path coverage
 
-17 of 19 paths are exercised.
+19 of 42 paths exercised. Each uncovered row states the missing fixture or assertion.
 
-Sources:
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadEbsdPatternFile.cpp` (72 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ReadEbsdPatternFileFilter.cpp` (223 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/EdaxUpPatternFileReader.cpp` (351 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/EbsdPatternFileReaderFactory.cpp` (21 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/EbsdPatternFileUtilities.cpp` (90 lines).
 
-- `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadEbsdPatternFile.cpp` (72 lines).
-- `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/EdaxUpPatternFileReader.cpp` (354 lines).
+Test names below omit their `OrientationAnalysis::ReadEbsdPatternFileFilter: ` or `OrientationAnalysis::EBSD Pattern Reader: ` prefix. The tests use square patterns and square scan grids; they do not distinguish swapped axes.
 
 | # | Phase | Path | Test case |
 |---:|---|---|---|
-| 1 | Factory | `.up1` or `.up2` selects the EDAX reader | `Case Insensitive Extension`; all valid filter cases |
+| 1 | Factory | `.up1` or `.up2` selects the EDAX reader | `Version 1 UP2 Manual Scan Dimensions`; `Version 3 Header Geometry` |
 | 2 | Factory | Unsupported extension returns an error | `Factory Rejects Unsupported Extension` |
 | 3 | Header | Version 1 derives a flat pattern count from file size | `Version 1 Flat Preflight` |
 | 4 | Header | Version 3 reads packed fields at unaligned offsets | `Version 3 Metadata` |
@@ -67,39 +67,70 @@ Sources:
 | 8 | Header | Residual version 1 payload bytes return an error | `Malformed Files` — residual-byte section |
 | 9 | Header | Version 3 grid payload is incomplete | `Malformed Files` — truncated-grid section |
 | 10 | Header | Pixel width conflicts with `.up1` or `.up2` | `Probable Extension Mismatch`; `Probable Wide Payload Extension Mismatch` |
-| 11 | Header | Extra patterns are present and match the trailing payload | `Version 3 Extra Patterns Are Skipped` |
+| 11 | Header | Extra patterns are present and match the trailing payload | `Version 3 Extra Patterns Are Skipped` — warning and output size only |
 | 12 | Header | Extra-pattern count and trailing payload disagree | `Version 3 Warnings` — extra-count section |
 | 13 | Preflight | Existing AttributeMatrix has the required tuple count | `Attribute Matrix Tuple Contract` — matching section |
 | 14 | Preflight | Existing AttributeMatrix has the wrong tuple count | `Attribute Matrix Tuple Contract` — mismatch section |
 | 15 | Preflight | Version 1 manual rows and columns match or mismatch | `Version 1 UP2 Manual Scan Dimensions`; `Invalid Version 1 Scan Dimensions` |
-| 16 | Execute | Read `uint8` and `uint16` payloads in file order | `Version 1 Flat Preflight`; `Version 1 UP2 Manual Scan Dimensions`; `Version 3 Header Geometry` |
+| 16 | Execute | Read `uint8` and `uint16` payloads in file order | `Version 1 UP2 Manual Scan Dimensions`; `Version 3 Header Geometry` — first and last pixels only |
 | 17 | Execute | Cancellation occurs before payload transfer | `Cancellation Before Payload Read` |
-| 18 | Execute | Non-contiguous or out-of-core store uses sequential `setValue` writes | *Not directly tested. No DREAM3D-NX OOC build is available in this workspace.* |
+| 18 | Execute | A store other than `DataStore<T>` uses sequential `setValue` writes | *Not directly tested. The tests do not select this store path.* |
 | 19 | Execute | File becomes short after preflight and before a chunk read | *Not directly tested. This needs deterministic file mutation during the execution read.* |
+| 20 | Header | Zero scan steps produce absent step values and a warning | `Version 3 Warnings` — zero-step section |
+| 21 | Preflight | Manual row-column multiplication overflows | `Malformed Files` — overflowing manual dimensions section |
+| 22 | Preflight | Manual rows or columns are zero | *Not directly tested. No fixture supplies zero manual dimensions.* |
+| 23 | Preflight | An AttributeMatrix overrides supplied manual dimensions and warns | *Not directly tested. No fixture enables manual dimensions inside an AttributeMatrix.* |
+| 24 | Preflight | Version 3 overrides supplied manual dimensions and warns | *Not directly tested. No fixture supplies manual dimensions for a version 3 file.* |
+| 25 | Header I/O | File-size lookup, open, or seek fails | *Not directly tested. The tests create readable files and do not inject I/O failures.* |
+| 26 | Header I/O | The initial header is too short or an exact header read fails | *Not directly tested. No fixture truncates a header or changes a file during header reading.* |
+| 27 | Header | Version 0 is rejected; the later unsupported-version guard is unreachable | *Not directly tested. No version 0 fixture exists; the earlier check handles 0 and 2, leaving 1 or values of at least 3.* |
+| 28 | Header | Data offset is at or beyond the end of the file | *Not directly tested. The offset fixture only overlaps the header.* |
+| 29 | Header | A valid nonstandard data offset produces a warning | *Not directly tested. No fixture pads the header before a valid payload.* |
+| 30 | Header | Version 1 has zero complete patterns | *Not directly tested. The earlier offset and residual-byte checks reject such files.* |
+| 31 | Header | A scan step is negative or not finite | *Not directly tested. Step fixtures contain only positive values or zero.* |
+| 32 | Header | Version 3 has an empty grid | *Not directly tested. No fixture sets a stored row or column count to zero.* |
+| 33 | Header | Undeclared trailing bytes do not match the opposite pixel width | *Not directly tested. The trailing-byte fixture only tests the opposite-width error.* |
+| 34 | Size checks | Header size arithmetic overflows or metadata cannot fit the platform array size | *Not directly tested. Only manual-dimension multiplication overflow has a fixture; dimension limits prevent some header overflows.* |
+| 35 | Execute | Current metadata requires a different output tuple shape | *Not directly tested. No test changes metadata after preflight or calls the algorithm with a mismatched tuple shape.* |
+| 36 | Execute | Output type, tuple count, or component shape fails the reader contract | *Not directly tested. No test calls the reader with an incompatible destination.* |
+| 37 | Payload I/O | Opening or seeking the payload fails | *Not directly tested. No test injects failure after metadata validation.* |
+| 38 | Execute | Cancellation occurs at a payload chunk boundary | *Not directly tested. The cancellation test returns before the reader is created.* |
+| 39 | Execute | Import spans multiple chunks | *Not directly tested. All synthetic payloads fit in one 4 MiB chunk.* |
+| 40 | Execute | A valid version 3 `.up2` file imports `uint16` pixels | *Not directly tested. The version 3 wide-pixel fixture is used only with an incorrect `.up1` extension.* |
+| 41 | Execute | A valid version 1 `.up1` file imports `uint8` pixels | *Not directly tested. The tests execute this mode but assert type and shape, not pixel values.* |
+| 42 | Header | A nonzero grid flag identifies hexagonal metadata | *Not directly tested. All version 3 fixtures write a zero grid flag.* |
 
 ## Test inventory
 
+All 14 cases are in `src/Plugins/OrientationAnalysis/test/ReadEbsdPatternFileTest.cpp`. All pass in CI.
+
 | Test case | Status | Notes |
 |---|---|---|
-| `Version 1 UP2 Manual Scan Dimensions` | new-for-V&V | Checks little-endian `uint16` values and `{2, 2}` manual tuple shape. |
-| `Version 3 Header Geometry` | new-for-V&V | Checks file-derived tuple shape and exact `uint8` values. |
-| `Version 3 Metadata` | new-for-V&V | Checks packed fields, steps, grid counts, type, and pattern size. |
-| `Version 3 Extra Patterns Are Skipped` | new-for-V&V | Checks warning propagation and excludes two appended patterns. |
-| `Attribute Matrix Tuple Contract` | new-for-V&V | Checks matching shape inheritance and mismatch rejection. |
-| `Invalid Version 1 Scan Dimensions` | new-for-V&V | Checks row-column product validation. |
-| `Malformed Files` | new-for-V&V | Checks version 2, residual bytes, offsets, dimensions, truncation, and overflow. |
-| `Factory Rejects Unsupported Extension` | new-for-V&V | Checks the extension-only factory contract. |
-| `Probable Extension Mismatch` | new-for-V&V | Checks `.up2` with a one-byte payload. |
-| `Probable Wide Payload Extension Mismatch` | new-for-V&V | Checks `.up1` with a two-byte payload. |
-| `Cancellation Before Payload Read` | new-for-V&V | Checks prompt pre-cancel return and unchanged output. |
-| `Version 3 Warnings` | new-for-V&V | Checks future version, zero step, and extra-size warnings. |
-| `Case Insensitive Extension` | new-for-V&V | Checks uppercase `.UP1`. |
-| `Version 1 Flat Preflight` | new-for-V&V | Checks default flat shape, type, component shape, and payload import. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 UP2 Manual Scan Dimensions` | new-for-V&V | Checks `uint16` type, `{2, 2}` tuple shape, `{12, 12}` component shape, and endpoint pixels 1000 and 1575. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Header Geometry` | new-for-V&V | Checks file-derived shapes, `uint8` type, and first and last pixel values. |
+| `OrientationAnalysis::EBSD Pattern Reader: Version 3 Metadata` | new-for-V&V | Checks version, pixel type, dimensions, pattern count, distinct X/Y steps, and square-grid flag. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Extra Patterns Are Skipped` | new-for-V&V | Checks warnings, four output tuples, and 576 elements after two extra patterns; does not assert pixels. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tuple Contract` | new-for-V&V | Checks AttributeMatrix shape inheritance and mismatch rejection with `-78040`. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Invalid Version 1 Scan Dimensions` | new-for-V&V | Checks rejection of a manual row-column product that differs from the pattern count (`-78043`). |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Malformed Files` | new-for-V&V | Checks version 2 rejection, residual bytes, overlapping data offset, invalid width, truncated grid, and manual-dimension overflow. |
+| `OrientationAnalysis::EBSD Pattern Reader: Factory Rejects Unsupported Extension` | new-for-V&V | Checks rejection of `.ebsp` by the reader factory. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Extension Mismatch` | new-for-V&V | Checks rejection of a one-byte version 3 payload named `.up2`. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Wide Payload Extension Mismatch` | new-for-V&V | Checks rejection of a two-byte version 3 payload named `.up1`. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Cancellation Before Payload Read` | new-for-V&V | Calls the algorithm with cancellation already set; checks success and zero endpoint pixels. |
+| `OrientationAnalysis::EBSD Pattern Reader: Version 3 Warnings` | new-for-V&V | Checks future-version warning, absent zero-valued steps, and inconsistent extra-pattern count warnings. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Case Insensitive Extension` | new-for-V&V | Checks uppercase `.UP1` acceptance and output type; does not assert pixels. |
+| `OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 Flat Preflight` | new-for-V&V | Checks flat tuple shape, component shape, type, tuple count, and component count; does not assert pixels. |
 
 ## Exemplar archive
 
-No archive is required. The test creates all Class 1 inputs from literal bytes and stores all expected values in the test source. A supplementary local ctest imported all 25 patterns from a version 1, 480 x 480 file and confirmed its first and last bytes. The same test parsed a 60 x 60 version 3 file with 1,001 columns, 854 rows, and 854,854 patterns without loading its 3.1 GB payload. The machine-specific test was removed after it passed. These files are not oracle data.
+- **Archive:** None. The tests create all input files in C++.
+- **SHA512:** Not applicable. `src/Plugins/OrientationAnalysis/test/CMakeLists.txt` registers no archive for these tests.
+- **Provenance:** `src/Plugins/OrientationAnalysis/test/ReadEbsdPatternFileTest.cpp` contains the fixture writers and expected values; no archive sidecar is required.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Not applicable. DREAM3D 6.5.171 has no equivalent filter.
+Not applicable. DREAM.3D v6.5.171 has no equivalent filter. There are no Part 1 entries in `vv/deviations/ReadEbsdPatternFileFilter.md`.
+
+| Deviation | Observed difference |
+|---|---|
+| None | No equivalent filter exists in DREAM.3D v6.5.171. |
