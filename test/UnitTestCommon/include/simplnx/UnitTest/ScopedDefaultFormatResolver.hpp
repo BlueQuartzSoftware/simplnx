@@ -17,7 +17,7 @@ namespace nx::core::UnitTest
 [[nodiscard]] inline auto SetDefaultFormatResolverForScope(std::shared_ptr<const IDataStoreFormatResolver> resolver)
 {
   auto previousResolver = DataStructure::getDefaultFormatResolver();
-  auto restoreResolver = MakeScopeGuard([previousResolver = std::move(previousResolver)]() noexcept { DataStructure::setDefaultFormatResolver(previousResolver); });
+  auto restoreResolver = MakeScopeGuard([savedResolver = std::move(previousResolver)]() noexcept { DataStructure::setDefaultFormatResolver(savedResolver); });
   DataStructure::setDefaultFormatResolver(std::move(resolver));
   return restoreResolver;
 }
