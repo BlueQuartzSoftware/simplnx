@@ -3,82 +3,106 @@
 |        |              |
 |--------|--------------|
 | Plugin | SimplnxCore |
-| SIMPLNX UUID | 074c0523-ab7a-4097-b0c3-c4dcbfb9a05e |
-| DREAM3D 6.5.171 equivalent | FindTriangleGeomCentroids (DREAM3DReview) — no `FromSIMPLJson` conversion in SimplnxCore |
+| SIMPLNX UUID | `074c0523-ab7a-4097-b0c3-c4dcbfb9a05e` |
+| SIMPLNX Human Name | Compute Feature Centroids from Triangle Geometry |
+| DREAM.3D v6.5.171 equivalent | `FindTriangleGeomCentroids` (SurfaceMeshing plugin) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *pending second-engineer review* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-07-13; second engineer: Jared Duffey, 2026-10-06 |
 
 ## At a glance
 
-A scannable dashboard for reviewers. Each row is one sentence to one short paragraph — enough that a reader can decide whether they need to read the long-form sections below.
-
-| Aspect                 | Current state                                                                                                                |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Algorithm Relationship | **Minor changes** — Port of the non-periodic core from legacy `FindTriangleGeomCentroids` (DREAM3DReview); `Is Periodic` is a SIMPLNX-only addition, now reimplemented as a minimum-image mean. |
-| Oracle (confirmed)     | **Class 1 + Class 4** — hand-built wrapping mesh with closed-form minimum-image centroids; encoded in `ComputeTriangleGeomCentroidsTest.cpp::"Periodic Minimum-Image Oracle"`, passes in-core **and out-of-core**. |
-| Code paths enumerated  | **8 of 9 exercised**; the feature-AM resize guard (path 9) is left untested (pre-sized AM, low risk). |
-| Tests today            | **2 test cases** — the kept `12_IN625_GBCD` exemplar (non-periodic) + the new Class 1/4 periodic oracle (`GENERATE` over `IsPeriodic`). |
-| Exemplar archive       | `12_IN625_GBCD.tar.gz` — non-periodic exemplar inputs+output (kept). Periodic oracle is inline (no archive). |
-| Legacy comparison      | **Not run yet** — legacy `FindTriangleGeomCentroids` has no periodic mode; non-periodic diff pending Step 8. |
-| Bug flags              | **2 SIMPLNX bugs found & fixed:** (1) constant half-domain periodic offset (issue #1665) → minimum-image mean; (2) `m_MessageHandler.m_Callback()` direct call → `std::bad_function_call` when periodic branch fired. |
-| V&V phase              | **All Triangle-filter V&V work complete:** discovery, Class 1/4 oracle, SIMPLNX-vs-oracle reconciliation + 2 bug fixes, algorithm review, dual-build (in-core + OOC) test pass, legacy diff (2 deviations), docs, provenance. **Status:** READY FOR REVIEW, pending second-engineer sign-off at PR. The sibling `ComputeFeatureCentroids` `ImageGeom` overload carried the same constant-offset defect; it was reimplemented as a circular mean and the overload removed in the same branch (see `vv/ComputeFeatureCentroidsFilter.md` Follow-up). |
-
-For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrientationCheckFilter.md` and `src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md` (on `topic/vv/compute_avg_caxis`).
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes. SIMPLNX retains the unique-vertex mean from `FindTriangleGeomCentroids` in DREAM.3D v6.5.171 and adds periodic adjustment and feature-matrix growth. |
+| Oracle (confirmed) | Classes 1 and 4: analytical centroids and geometry bounds on one constructed mesh in `test/ComputeTriangleGeomCentroidsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 11 of 22 exercised. Gaps include resize, cancellation, invalid matrix selection, Y/Z periodic adjustment, and defensive helper paths. |
+| Tests today | 2 test cases: one non-periodic archive comparison and one analytical mesh with periodic mode off and on. All pass in CI. |
+| Exemplar archive | `12_IN625_GBCD.tar.gz` supplies a surface mesh and non-periodic reference centroids. The independent oracle is constructed in the test code. |
+| Legacy comparison | Not run — comparison artifacts are not available. |
+| Bug flags | None |
+| V&V phase | Source review, analytical verification, and regressions for both fixed defects are complete. Second-engineer review is complete. |
 
 ## Summary
 
-`ComputeTriangleGeomCentroids` computes the centroid of each surface-mesh feature as the mean position of the unique vertices of the triangles carrying that feature's face label, with an optional `Is Periodic` mode for features that wrap the domain boundary. V&V used a **Class 1 (Analytical)** hand-built wrapping mesh (four features: non-wrapping, symmetric wrap, asymmetric wrap, domain-filling) with closed-form minimum-image centroids, plus a **Class 4 (Invariant)** in-domain bound. The periodic path was found to use a **constant half-domain offset** that is only correct for mass symmetric about the seam (issue #1665); it was reimplemented as a largest-empty-gap minimum-image mean. A second latent bug — an unguarded `m_Callback` invocation that threw `std::bad_function_call` when the periodic branch fired — was also fixed.
+`ComputeTriangleGeomCentroidsFilter` calculates each feature's centroid from its unique triangle vertices, with optional periodic adjustment. Analytical centroid values and geometry-bound invariants verify both mode settings, and an archive supplies a non-periodic regression comparison. The V&V fixed two periodic defects; all pass in CI.
 
 ## Algorithm Relationship
 
-**Minor changes** (Port of the non-periodic core + SIMPLNX-only periodic addition)
+*Classification:* Minor changes
 
-*Evidence:* No `FromSIMPLJson` conversion / not in `SimplnxCoreLegacyUUIDMapping`; the non-periodic centroid (arithmetic mean of a feature's unique vertices) mirrors legacy `FindTriangleGeomCentroids` (DREAM3DReview). The `Is Periodic` option and its wrap adjustment are SIMPLNX-only, so there is no legacy periodic behavior to preserve — the periodic path is judged on correctness alone. *(Legacy inspection pending Step 8.)*
+*Evidence:* Both implementations average the unique vertices of positive face labels; SIMPLNX adds periodic adjustment and grows the feature Attribute Matrix when a label needs another tuple.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** + **4 (Invariant)**
+*Class:* 1 (Analytical) and 4 (Invariant).
 
-*Applied:* A hand-built triangle mesh on periodic domain X∈[0,4] (all z=0, one distinct y per feature, so only X trips the periodic condition). Expected minimum-image centroids derived by hand via the largest-empty-gap method: F1 non-wrapping (2,1,0); F2 symmetric wrap (0,2,0); F3 asymmetric wrap (3.625,3,0) — **the discriminating case: the old constant offset yields 4.625, outside the domain**; F4 domain-filling → arithmetic-mean fallback (2,1,0). Class 4: every non-empty centroid lies within the geometry bounding box.
+*Applied:* One mesh has four features with hand-derived non-periodic and periodic centroids; every non-empty centroid must remain inside the geometry bounds.
 
-*Encoded:* `test/ComputeTriangleGeomCentroidsTest.cpp::"Periodic Minimum-Image Oracle"` — `GENERATE(false, true)` over `IsPeriodic`, 4 features × 3 components + in-bounds invariant. Passes **in-core and out-of-core** (`simplnx-ooc-Rel`).
+*Encoded:* `src/Plugins/SimplnxCore/test/ComputeTriangleGeomCentroidsTest.cpp::SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Oracle` — one fixture, four populated features and one empty feature, with `IsPeriodic = false` and `IsPeriodic = true`. All pass in CI.
 
-*Second-engineer review:* *pending — the oracle design + hand-derived F3=3.625 value were confirmed with the requesting engineer before encoding; formal second-engineer review at PR.*
+*Second-engineer review:* Jared Duffey, 2026-10-06.
+
+## Bugs found and fixed
+
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeTriangleGeomCentroidsFilter-D3` | A constant half-domain offset gave incorrect periodic centroids and could put them outside the geometry bounds. | DREAM3D-NX v7.2.1 through v7.4.2. DREAM.3D v6.5.171 was not affected. | The filter calculates a minimum-image mean from vertex coordinates and uses the arithmetic mean when the largest gaps tie. |
+| `ComputeTriangleGeomCentroidsFilter-D4` | Periodic adjustment could throw `std::bad_function_call` when no message callback was installed. | DREAM3D-NX v7.2.1 through v7.4.2. DREAM.3D v6.5.171 was not affected. | The filter sends the message through a handler that checks whether a callback exists. |
 
 ## Code path coverage
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeTriangleGeomCentroids.cpp` (~108 lines) + the `AdjustCentroidsForPeriodicFaces` `BoundingBox` overload in `src/simplnx/Utilities/GeometryHelpers.cpp`. Phases: (a) gather per-feature vertex sets from face labels, (b) per-feature arithmetic centroid, (c) optional periodic minimum-image adjustment.
+11 of 22 paths exercised. Each uncovered row states the missing input or the guard that prevents entry.
+
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeTriangleGeomCentroids.cpp` (121 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeTriangleGeomCentroidsFilter.cpp` (131 lines), and `src/simplnx/Utilities/GeometryHelpers.cpp` (351 lines).
+
+`Oracle` below means `SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Oracle`. `Exemplar` means `SimplnxCore::ComputeTriangleGeomCentroids`.
 
 | # | Phase | Path | Test case |
 |---|-------|------|-----------|
-| 1 | (a) gather | `faceLabel > 0` inserts triangle vertices into the feature set | both oracle sections (all features) |
-| 2 | (a) gather | `faceLabel == 0/negative` ignored | Oracle — second label 0 on every triangle; feature 0 stays empty |
-| 3 | (b) finalize | non-empty feature → arithmetic mean | `IsPeriodic=false` section (F1–F4) |
-| 4 | (b) finalize | empty feature set → default (0,0,0) | Oracle — F0 asserted (0,0,0) |
-| 5 | (c) periodic | axis spans both faces → minimum-image mean | `IsPeriodic=true` — F2 (unique wrap gap), F3 (unique interior gap) |
-| 6 | (c) periodic | axis does not span → component unchanged | `IsPeriodic=true` — F1, and y/z of F2–F4 |
-| 7 | (c) periodic | domain-filling (no dominant gap) → arithmetic fallback | `IsPeriodic=true` — F4 |
-| 8 | (c) periodic | any axis adjusted → emit info message | Exercised by F2–F4 (regression pin for the `bad_function_call` fix) |
-| 9 | resize | feature AM smaller than maxFeatureId+1 → resize | *Not directly tested — the exemplar test's AM is pre-sized; low-risk resize guard.* |
+| 1 | Gather | A positive first face label adds the triangle's vertices to its feature set | Oracle — F1 through F4 |
+| 2 | Gather | Ignore zero or negative face labels | Oracle — second label 0; Exemplar — first label -1 |
+| 3 | Finalize | A non-empty feature gets its arithmetic mean with periodic mode disabled | Oracle — `IsPeriodic = false`, F1 through F4 |
+| 4 | Finalize | An empty feature keeps `(0,0,0)`; periodic-face detection returns no faces | Oracle — F0 |
+| 5 | Periodic | X touches both opposing faces; a unique largest gap gives the minimum-image mean | Oracle — `IsPeriodic = true`, F2 and F3 |
+| 6 | Periodic | An axis does not touch both opposing faces; keep its component | Oracle — F1 and all Y/Z components |
+| 7 | Periodic | Multiple largest gaps tie; use the arithmetic mean | Oracle — `IsPeriodic = true`, F4 |
+| 8 | Message | Periodic adjustment requests an information message with no installed callback | Oracle — `IsPeriodic = true`, F2 through F4 |
+| 9 | Resize | Grow the feature Attribute Matrix to `maxFeatureId + 1` tuples | *Not directly tested. Both fixtures already have enough feature tuples.* |
+| 10 | Resize | Return a feature-matrix resize error | *Not directly tested. Requires an injected resize failure.* |
+| 11 | Gather | Return when cancellation is requested during triangle traversal | *Not directly tested. Neither test requests cancellation.* |
+| 12 | Finalize | Return when cancellation is requested during feature traversal | *Not directly tested. Neither test requests cancellation.* |
+| 13 | Preflight | Missing or wrong-type feature Attribute Matrix returns `-12901` | *Not directly tested. Both fixtures select a valid Attribute Matrix.* |
+| 14 | Preflight | Valid feature Attribute Matrix creates a float32 centroid array with three components | Oracle; Exemplar |
+| 15 | Periodic | Y touches both opposing faces; adjust its centroid component | *Not directly tested. Each oracle feature has a single Y coordinate.* |
+| 16 | Periodic | Z touches both opposing faces; adjust its centroid component | *Not directly tested. All oracle vertices have Z = 0.* |
+| 17 | Helper | An empty coordinate list returns the domain minimum | *Not directly tested. The filter calls the adjustment only for non-empty feature sets.* |
+| 18 | Helper | A non-positive domain length returns the arithmetic mean | *Not directly tested. Periodic-face detection cannot select both faces of a zero-length axis.* |
+| 19 | Helper | Normalize a negative coordinate remainder into the domain | *Not directly tested. The geometry minimum bounds every feature coordinate.* |
+| 20 | Helper | Normalize a negative final mean remainder into the domain | *Not directly tested. Normalized coordinates and a positive domain length give a non-negative sum.* |
+| 21 | Gather | A positive second face label adds the triangle's vertices to its feature set | Exemplar — positive second labels and full centroid-array comparison |
+| 22 | Resize | Keep the existing feature-matrix size when it is sufficient | Oracle; Exemplar |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `SimplnxCore::ComputeTriangleGeomCentroids` (exemplar, `12_IN625_GBCD`) | kept | Non-periodic exemplar comparison; unchanged. |
-| `SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Oracle` | new-for-V&V | Class 1 + Class 4; covers periodic + non-periodic; pins both bug fixes. |
+| `SimplnxCore::ComputeTriangleGeomCentroids` | kept | Loads `12_IN625_GBCD.tar.gz`, compares the full non-periodic centroid array with the stored array, and checks tuple dimensions. |
+| `SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Oracle` | new-for-V&V | `IsPeriodic = false` and `IsPeriodic = true` each check 15 centroid components within absolute tolerance `1e-4`, bounds for four populated features, and tuple dimensions. Covers D3 and D4. |
 
 ## Exemplar archive
 
-- **Archive:** `12_IN625_GBCD.tar.gz` (pre-existing; declared in `src/Plugins/OrientationAnalysis/test/CMakeLists.txt`, shared with several surface-mesh tests). Not regenerated by this V&V.
+- **Archive:** `12_IN625_GBCD.tar.gz`
 - **SHA512:** `f696a8af181505947e6fecfdb1a11fda6c762bba5e85fea8d484b1af00bf18643e1d930d48f092ee238d1c19c9ce7c4fb5a8092d17774bda867961a1400e9cea`
 - **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/12_IN625_GBCD.md`
-- **Note:** The archive's `Centroids` reference array is a legacy-derived regression pin (circular oracle) for the non-periodic path only. The authoritative oracle is the inline Class 1 + Class 4 fixture; the periodic branch is not exercised by this archive.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Comparison method: source inspection against legacy `FindTriangleGeomCentroids` (SurfaceMeshing plugin). The non-periodic path is a line-for-line match (identical `> 0` label guard, identical float32 arithmetic-mean of set-ordered vertices), so it is bit-identical; two behavioral deviations are documented.
+See `vv/deviations/ComputeTriangleGeomCentroidsFilter.md` for the source-based differences in Part 1.
 
-- `ComputeTriangleGeomCentroidsFilter-D1` — `Is Periodic` is a SIMPLNX-only mode; its wrapped centroid (minimum-image mean) has no 6.5.171 analog — see `vv/deviations/ComputeTriangleGeomCentroidsFilter.md`
-- `ComputeTriangleGeomCentroidsFilter-D2` — out-of-range face label: 6.5.171 errors (`-99500`), SIMPLNX resizes the Feature Attribute Matrix — see `vv/deviations/ComputeTriangleGeomCentroidsFilter.md`
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeTriangleGeomCentroidsFilter-D1` | SIMPLNX provides periodic centroid adjustment; DREAM.3D v6.5.171 has no periodic mode. |
+| `ComputeTriangleGeomCentroidsFilter-D2` | SIMPLNX grows an undersized feature Attribute Matrix. DREAM.3D v6.5.171 rejects labels above its tuple count and omits the centroid for a label equal to that count. |
