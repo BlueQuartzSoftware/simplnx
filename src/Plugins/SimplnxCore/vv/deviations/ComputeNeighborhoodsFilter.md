@@ -1,14 +1,12 @@
-# Deviations from DREAM3D 6.5.171: ComputeNeighborhoodsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeNeighborhoodsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`FindNeighborhoods`).
-
-Entries are referenced by stable ID (`ComputeNeighborhoodsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-Comparison fixture: `6_6_stats_test_v2.dream3d` (Small IN100, 620 features), `MultiplesOfAverage = 1.0`, run through DREAM3D 6.5.171 `PipelineRunner` and DREAM3D-NX `nxrunner`.
+Part 1 lists differences from `FindNeighborhoods` in DREAM.3D v6.5.171 (D1–D3). Part 2 lists fixed SIMPLNX defects (D4–D5). All entries use one stable ID sequence and the filter UUID as the permanent cross-reference anchor.
 
 ---
 
-## ComputeNeighborhoodsFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ComputeNeighborhoodsFilter-D1
 
 | Field | Value |
 |---|---|
@@ -16,26 +14,19 @@ Comparison fixture: `6_6_stats_test_v2.dream3d` (Small IN100, 620 features), `Mu
 | **Filter UUID** | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
 | **Status** | active |
 
-**Symptom:** For the same input and `MultiplesOfAverage` value, SIMPLNX reports fewer neighbors per feature than 6.5.171 — on Small IN100 (mult=1) the mean is 5.55 (SIMPLNX) vs 10.93 (6.5.171), i.e. ~52%, with a per-feature correlation of 0.894.
+**Symptom:** The same centroids, diameters, and multiplier can give different neighbor counts and lists in SIMPLNX and DREAM.3D v6.5.171.
 
-**Root cause:** *Algorithmic choice.* Both implementations scale each feature's search reach by that feature's own Equivalent Sphere Diameter times the multiplier. They differ in the **shape** of the neighborhood region:
+**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 converts centroids to integer bins using the average diameter. It requires each absolute bin difference to be strictly less than `equivalentDiameter[i] * multiplier / averageDiameter`. SIMPLNX compares squared Euclidean distance with `(equivalentDiameter[i] * multiplier)^2` and includes equality. The average diameter controls the SIMPLNX search grid, not the distance limit. SIMPLNX also offers an absolute-radius mode without Equivalent Diameters; DREAM.3D v6.5.171 has no such mode.
 
-- **6.5.171** compares the per-axis integer bin difference against a per-feature `criticalDistance` (`|Δbinₓ| < cd && |Δbin_y| < cd && |Δbin_z| < cd`), which tests membership in an **axis-aligned box** in a space normalized by the average diameter. This over-counts: it accepts features in the box corners that lie beyond the nominal reach.
-- **SIMPLNX** computes the true **Euclidean distance** between centroids and compares it against the radius (`distSq ≤ radius²`), i.e. a **sphere**.
+**Affected users:** Users who migrate `FindNeighborhoods` pipelines and compare neighbor counts or lists. Bin quantization and the different inclusion rules prevent a fixed count ratio between implementations.
 
-A sphere of radius `r` has ~0.52× the volume of a cube of half-width `r`, which quantitatively explains the ~52% ratio observed. The SIMPLNX result is the geometrically correct interpretation of "features within a search radius."
+**Recommendation:** Trust SIMPLNX for centroid-distance neighborhoods. The sphere implements the stated search radius, and both radius modes have independent analytical fixtures. The UUID mapping preserves pipeline conversion but does not promise identical output from the different neighborhood definitions.
 
-The comparison operator also differs: 6.5.171 used a **strict** `<` on bin differences, while SIMPLNX uses an **inclusive** `distSq ≤ radius²`, so a centroid lying exactly on the sphere surface is counted as a neighbor. This boundary is measure-zero for real data but is an intentional, pinned choice (see the boundary-inclusion assertion in `test/ComputeNeighborhoodsTest.cpp`).
-
-**Affected users:** Anyone migrating a `FindNeighborhoods` pipeline from 6.5.171 and comparing `Neighborhoods` / `NeighborhoodList` values. Absolute counts will be lower under SIMPLNX; relative structure is preserved (corr 0.894).
-
-**Recommendation:** *Trust SIMPLNX.* The Euclidean sphere is the correct region for a centroid-distance neighborhood; the 6.5.171 box test was a bin-scan approximation. Users needing an exact reproduction of a specific physical search size should use the new "Search Radius (microns)" mode with an explicit radius.
-
-> **Note (SIMPLNX-internal regression, fixed in the V&V PR — not a 6.5.171 deviation):** Between the original NX port and this V&V, PR #1485 correctly switched to a Euclidean distance test but also introduced a `÷2` factor and a single **global** radius (`avgDiameter·mult÷2`) in place of the per-feature radius. At the default `mult=1` this found ~37× fewer neighbors than 6.5.171 (mean 0.29 vs 10.93). The V&V restored the per-feature radius `equivalentDiameter[i]·mult`; the numbers above are post-fix.
+**Evidence:** `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.cpp` at the DREAM.3D `v6.5.171` tag contains the strict bin comparisons. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` contains the inclusive distance comparison. `SimplnxCore::ComputeNeighborhoods_SyntheticOracle` checks the exact-radius boundary, and `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` checks per-feature asymmetry in `src/Plugins/SimplnxCore/test/ComputeNeighborhoodsTest.cpp`.
 
 ---
 
-## ComputeNeighborhoodsFilter-D2
+### ComputeNeighborhoodsFilter-D2
 
 | Field | Value |
 |---|---|
@@ -43,17 +34,19 @@ The comparison operator also differs: 6.5.171 used a **strict** `<` on bin diffe
 | **Filter UUID** | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
 | **Status** | active |
 
-**Symptom:** The SIMPLNX filter has no "Feature Phases" input parameter; 6.5.171 `FindNeighborhoods` required one.
+**Symptom:** SIMPLNX has no Feature Phases input; DREAM.3D v6.5.171 requires that array.
 
-**Root cause:** *Algorithmic choice (API).* `FindNeighborhoods` declared `FeaturePhases` as a required array in `dataCheck()` but never referenced it in the neighbor computation (`execute()` / `FindNeighborhoodsImpl`). SIMPLNX removes the unused parameter. Output arrays are unaffected.
+**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 validates Feature Phases in `FindNeighborhoods::dataCheck()` but does not read its values in the neighborhood calculation. SIMPLNX removes the parameter and its conversion mapping. Removing this unused input does not change neighborhood values.
 
-**Affected users:** Anyone converting a 6.5.171/SIMPL pipeline — the `FeaturePhasesArrayPath` key is dropped during conversion. No change to computed `Neighborhoods` / `NeighborhoodList` values.
+**Affected users:** Users who convert a DREAM.3D v6.5.171 pipeline. The `FeaturePhasesArrayPath` setting is no longer used.
 
-**Recommendation:** *Trust SIMPLNX.* The removed input had no effect on output; dropping it removes a confusing required selection (and it was never needed by the absolute "Search Radius (microns)" mode either).
+**Recommendation:** Trust SIMPLNX. Select Centroids and, for multiples mode, Equivalent Diameters; no phase array is required.
+
+**Evidence:** The tagged legacy `FindNeighborhoods.cpp` requires Feature Phases only during input validation. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeNeighborhoodsFilter.cpp` has no phase parameter or `FromSIMPLJson()` mapping. The two analytical fixtures create no phase array, and the SIMPL conversion test checks the remaining argument values.
 
 ---
 
-## ComputeNeighborhoodsFilter-D3
+### ComputeNeighborhoodsFilter-D3
 
 | Field | Value |
 |---|---|
@@ -61,10 +54,58 @@ The comparison operator also differs: 6.5.171 used a **strict** `<` on bin diffe
 | **Filter UUID** | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
 | **Status** | active |
 
-**Symptom:** SIMPLNX rejects non-positive radius parameters at preflight; 6.5.171 accepted any value. A converted pipeline with `MultiplesOfAverage ≤ 0` now fails preflight with error `-5732` (multiples mode) and a non-positive search radius fails with `-5733` (microns mode).
+**Symptom:** SIMPLNX rejects a non-positive multiplier with error `-5732`; DREAM.3D v6.5.171 accepts it. SIMPLNX also rejects a non-positive absolute radius with `-5733`.
 
-**Root cause:** *Intentional hardening.* A non-positive multiplier/radius produces an empty or degenerate search region — under 6.5.171 it silently produced all-zero `Neighborhoods` output. SIMPLNX surfaces the misconfiguration at preflight instead of silently returning meaningless results.
+**Root cause:** Algorithmic choice. SIMPLNX validates the active radius parameter before creating outputs. DREAM.3D v6.5.171 has no multiplier positivity check. With positive feature diameters, its strict comparison cannot accept a neighbor when the multiplier is zero or negative.
 
-**Affected users:** Only pipelines carrying a zero or negative `MultiplesOfAverage` value, which produced no useful output in 6.5.171 anyway.
+**Affected users:** Users whose converted pipelines contain a zero or negative `MultiplesOfAverage` value, or who supply a non-positive absolute radius in SIMPLNX.
 
-**Recommendation:** *Trust SIMPLNX.* Set a positive multiplier/radius. Both error paths are pinned by `ComputeNeighborhoods_InvalidSearchRadius`.
+**Recommendation:** Trust SIMPLNX. Supply a positive value for the selected radius mode.
+
+**Evidence:** Current `ComputeNeighborhoodsFilter::preflightImpl()` contains both positivity checks. `SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius` asserts both error codes with zero values. DREAM.3D v6.5.171 `FindNeighborhoods::dataCheck()` contains no equivalent check and has no absolute-radius mode.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### ComputeNeighborhoodsFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeNeighborhoodsFilter-D4` |
+| **Filter UUID** | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Multiples mode used the same radius for every feature and changed neighbor membership relative to each feature's own diameter.
+
+**Root cause:** Bug. The Euclidean rewrite used `averageDiameter * multiplier / 2` for every feature. It removed the per-feature reach and introduced a division by two. The corrected algorithm uses `equivalentDiameter[i] * multiplier`; average diameter sizes the search grid only.
+
+**Affected users:** Users of multiples mode in DREAM3D-NX v7.4.1. Large features could lose neighbors because the radius no longer followed their own diameter.
+
+**Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2 or later. Recompute neighborhood arrays produced by the affected release.
+
+**Evidence:** Direct inspection of `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` on all release branches finds per-feature bin limits in `upstream/release/v7.0.0` through `upstream/release/v7.4.0`, the global half-diameter radius in `upstream/release/v7.4.1`, and per-feature radii in `upstream/release/v7.4.2`. PR #1485 (`f34c38916`) introduced the regression; PR #1652 (`d967a166a`) fixed it. DREAM.3D tag `v6.5.171`, `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.cpp`, uses per-feature limits. `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` asserts counts `{0,3,0,0,1,0}` and asymmetric membership. All ordinary tests pass in CI at `419f9db35`.
+
+---
+
+### ComputeNeighborhoodsFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeNeighborhoodsFilter-D5` |
+| **Filter UUID** | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Background feature 0 could have a nonzero neighborhood count while its output neighbor list stayed empty.
+
+**Root cause:** Bug. The Euclidean rewrite started the source range at 0 without the earlier worker guard that skipped background. It could find real features near the background centroid. Final list writes still started at feature 1. The corrected algorithm starts source searches at feature 1 and writes an explicit empty list for feature 0. Candidate insertion also excludes feature 0.
+
+**Affected users:** Users of DREAM3D-NX v7.4.1 whose background centroid is near a real feature. Background counts could disagree with the corresponding list size.
+
+**Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2 or later. Recompute affected arrays so background has zero count and an empty list.
+
+**Evidence:** The same release algorithm files checked for D4 show an explicit `start == 0` guard through `upstream/release/v7.4.0`. `upstream/release/v7.4.1` has `Range(0, totalFeatures)` without that guard and writes lists from index 1. `upstream/release/v7.4.2` has `Range(1, totalFeatures)` and writes lists from index 0. PR #1652 (`d967a166a`) includes the background correction. DREAM.3D v6.5.171 `FindNeighborhoodsImpl::convert()` skips source 0. Both analytical tests place background at feature 1's centroid and assert its zero count and empty list.
