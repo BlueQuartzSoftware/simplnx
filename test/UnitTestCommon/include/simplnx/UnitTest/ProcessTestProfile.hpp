@@ -33,7 +33,9 @@ class ProcessTestProfile
 public:
   ProcessTestProfile() = default;
   ProcessTestProfile(const ProcessTestProfile&) = delete;
+  ProcessTestProfile(ProcessTestProfile&&) = delete;
   ProcessTestProfile& operator=(const ProcessTestProfile&) = delete;
+  ProcessTestProfile& operator=(ProcessTestProfile&&) = delete;
 
   ~ProcessTestProfile() noexcept
   {
