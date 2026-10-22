@@ -1,162 +1,151 @@
 # V&V Report: ComputeKernelAvgMisorientationsFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
-| SIMPLNX UUID               | `61cfc9c1-aa0e-452b-b9ef-d3b9e6268035`   |
-| SIMPLNX Human Name         | Compute Kernel Average Misorientations   |
-| DREAM3D 6.5.171 equivalent | `FindKernelAvgMisorientations` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindKernelAvgMisorientations.{h,cpp}` (UUID `88d332c1-cf6c-52d3-a38d-22f6eae19fa6`) |
-| Verified commit            | *<filled at SBIR deliverable assembly>*  |
-| Status | COMPLETE     |
-| Sign-off  | *Reopened 2026-07-15 for the `use_feature_ids` feature (issue #1613, branch `topic/kam_ignore_feature_ids`). Prior sign-off: Michael Jackson <mike.jackson@bluequartz.net> (2026-06-03) — superseded* |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
+| SIMPLNX UUID | `61cfc9c1-aa0e-452b-b9ef-d3b9e6268035` |
+| SIMPLNX Human Name | Compute Kernel Average Misorientations |
+| DREAM.3D v6.5.171 equivalent | `FindKernelAvgMisorientations` (OrientationAnalysis plugin, UUID `88d332c1-cf6c-52d3-a38d-22f6eae19fa6`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-07-16; second engineer: Jared Duffey, 2026-07-28 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port with one legacy bug corrected + one NX-only feature addition** — per-voxel kernel averaging; focal-validity gate; divisor always ≥1 (focal self-included). `QuatF`→`QuatD`; `getMisoQuat`→`calculateMisorientation`; iteration order optimized for cache (`col→row→plane` → `plane→row→col`). D2 (legacy l-loop bound typo `KernelSize.z+1` → `KernelSize.x+1`) corrected at port. UUID reassigned. **New this cycle (issue #1613):** `use_feature_ids` BoolParameter (default `true`). `true` = legacy per-grain behavior (neighbor gate `featureIds[point]==featureIds[neighbor]`, behavior-identical to before). `false` = per-voxel KAM: neighbor contributes iff in-bounds AND `featureIds[neighbor]>0` AND `cellPhases[neighbor]==cellPhases[point]`. Focal gate unchanged. No legacy counterpart — see D3. |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 6 hand-derived data fixtures: uniform single-feature, x-axis gradient, z-axis gradient (3D path), multi-feature multi-voxel with background, **per-voxel multi-feature (`use_feature_ids=false`), and per-voxel two-phase gates**. **Class 4 (Invariant) companion** — non-negativity, cubic max-angle bound (62.8°), uniform-within-feature ⇒ KAM=0, background-voxel ⇒ KAM=0 exactly, **and mode-equivalence (per-grain ≡ per-voxel bit-for-bit on single-feature single-phase data)**. Class 1 oracle uses pure φ1 Bunge ZXZ rotations `(φ1, 0, 0)` so that for cubic symmetry, the misorientation between any two cells equals `|Δφ1|` (the c-axis 4-fold reduction is identity when φ1 differences are ≤45°). |
-| Code paths enumerated  | 8 paths enumerated, 8 exercised (re-enumerated for the per-mode neighbor gate; the former path 9, the dead `numVoxel==0` fallback, was removed from SIMPLNX by the review-driven cleanup commit `7f9cddc7d` — see below): (1) focal-valid gate → enter kernel; (2) boundary clamp (out-of-bounds j/k/l, now a signed-index comparison with no separate `neighbor<0` guard) → `continue`; (3) per-grain neighbor feature-id match → accumulate; (4) per-grain neighbor feature-id mismatch → skip; (5) per-voxel neighbor `featureId>0` + phase-match → accumulate; (6) per-voxel neighbor `featureId==0` → skip; (7) per-voxel neighbor phase-mismatch → skip; (8) focal-invalid (`featureIds==0 \|\| cellPhases==0`, now reached via `else`) → KAM=0 directly. |
-| Tests today            | **9 TEST_CASEs / 9 ctest entries**, 100% pass on in-core and out-of-core builds (see full regression sweep, 2026-07-15). 6 Class 1 fixtures + 2 Class 4 invariant tests (Mode-Equivalence + the 3-sub-section Invariants) + 1 SIMPL backwards-compatibility test. **No exemplar archive consumed by this filter.**              |
-| Exemplar archive       | **None — inline-constructed in test source.** The pre-existing main exemplar TEST_CASE (consumed `6_6_stats_test_v2.tar.gz`) was **retired 2026-06-03** because the exemplar `KernelAverageMisorientations` array was a circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output, where the precision shift documented as D1 manifests as a non-zero spurious self-misorientation contribution in every focal voxel — see deviations doc). The 6 Class 1 hand-derived data fixtures, plus the Class 4 invariants, cover all 9 re-enumerated active algorithmic paths and replace the retired test. The shared archive `6_6_stats_test_v2.tar.gz` remains downloaded for `AlignSectionsMutualInformation`, `ComputeShapes`, and `ComputeSchmids` tests; only F#5's consumption line was removed. |
-| Legacy comparison      | **Runtime A/B against DREAM3D 6.5.171 completed (default per-grain path).** Identical synthetic input (12³ cube, 8 features, single cubic phase, kernel `{1,1,1}`) fed through both `PipelineRunner` (6.5.171 `FindKernelAvgMisorientations`) and `nxrunner`; inputs bit-identical (Quats, FeatureIds). KAM delta: **max \|Δ\|=0.0072°, mean \|Δ\|=0.00075°, 0/1728 cells exceed 0.01°, bidirectional** (928 cells legacy>nx, 800 legacy<nx). Gating is provably identical on this path (both use the `featureIds[point]==featureIds[neighbor]` gate → identical neighbor sets → identical divisor), so the delta is purely `calculateMisorientation` precision — consistent with **D1** (EbsdLib 2.4.1 precision fix) plus the `QuatF`→`QuatD` port delta (same precision family). No structural/gating deviation. `use_feature_ids=false` has no legacy counterpart (see D3). Prior source-inspection findings retained. Two deviations observed: **D1 (EbsdLib 2.4.1 CubicOps precision improvement)** — precision-class deviation analogous to BadDataNeighborOrientationCheck, ComputeFeatureFaceMisorientation, ComputeFeatureNeighborMisorientations, and ComputeFeatureReferenceMisorientations of this cycle. The KAM filter is *more sensitive* to this fix than the per-pair misorientation filters because the kernel inclusion of the focal voxel triggers a self-misorientation call per cell, where the pre-2.4.1 `acos(w near 1)` form returns a spurious ~0.03° on float32-sourced quaternions instead of 0°. This precision noise propagates directly into the per-cell average. **D2 (legacy kernel-bound bug at `FindKernelAvgMisorientations.cpp:264`)** — legacy `for(int32_t l = -m_KernelSize.x; l < m_KernelSize.z + 1; l++)` uses `KernelSize.z + 1` as the upper bound for the x-direction inner loop (should be `KernelSize.x + 1`). SIMPLNX has the correct form at line 111. Bug is dormant when `KernelSize.x == KernelSize.z` (default `{1,1,1}` case); fires for asymmetric kernels. |
-| Bug flags              | **One real legacy bug (D2) corrected at port time** — see deviations. SIMPLNX has been correct from the port onward; no SIMPLNX-side algorithmic change required by this V&V cycle. Logged to `/Users/mjackson/Desktop/bug_triage.md` as a known legacy DREAM3D 6.5.171 issue. **Review-driven cleanup (2026-07-16, commit `7f9cddc7d`):** a behavior-preserving cleanup pass refactored the kernel boundary-index handling to signed comparisons (computing the neighbor index directly from the clamped indices instead of a separate stride+negative-index guard), hoisted `LaueOps` construction out of the per-cell hot loop into a worker member built once per run, tightened cancellation checking from per-plane to per-row granularity, and removed the dead `numVoxel==0` fallback (folding the invalid-cell reset into an `else` branch) — all verified behavior-identical by the unchanged 9-test suite passing on both in-core and out-of-core builds. |
-| V&V phase              | **REOPENED 2026-07-15 for the `use_feature_ids` feature (issue #1613); status returned to DRAFT.** Delta from the 2026-06-03 COMPLETE state: 3 new TEST_CASEs (per-voxel multi-feature, per-voxel two-phase gates, mode-equivalence invariant); code paths re-enumerated for the per-mode neighbor gate (6→9); Oracle section extended with the new fixtures' derivations; **runtime legacy A/B run this cycle** (previously source-inspection only); new deviation **D3** (per-voxel mode is an NX-only capability). Unchanged from prior cycle: Class 1 + Class 4 oracle family, no exemplar archive, D1/D2 findings. Three source-tree deliverables in place. **Outstanding:** re-sign-off (DRAFT → READY FOR REVIEW → COMPLETE) pending second-engineer review — is a human step, not self-applied. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to `FindKernelAvgMisorientations` in DREAM.3D v6.5.171. SIMPLNX corrects the X kernel bound, improves precision and adds an optional same-phase mode across feature boundaries. |
+| Oracle (confirmed) | Class 1 analytical averages and Class 4 invariants are encoded in `test/ComputeKernelAvgMisorientationsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 28 of 45 exercised. The table identifies gaps in fallback modes, defensive guards, cancellation and transfer failures. |
+| Tests today | 17 test cases cover analytical averages, invariants, input bounds, memory planning and SIMPL conversion. All pass in CI. |
+| Exemplar archive | Current tests construct their inputs and expected values in C++. The former KAM exemplar in `6_6_stats_test_v2.tar.gz` is retired for this filter. |
+| Legacy comparison | Not run on the current algorithm. The DREAM.3D v6.5.171 comparison dated 2026-09-17 predates the current implementation. |
+| Bug flags | None. |
+| V&V phase | Analytical checks, regression checks and second-engineer review are complete. |
 
 ## Summary
 
-`ComputeKernelAvgMisorientationsFilter` computes the per-cell **Kernel Average Misorientation (KAM)**: for each valid cell (featureId > 0, phase > 0), the algorithm iterates over an axis-aligned kernel of user-specified radius `KernelSize = (x, y, z)`, averages the misorientation between the focal cell's orientation quaternion and every same-feature neighbor's quaternion (including the focal cell itself, which contributes a self-misorientation of 0°), and stores the result. Cells with `featureId == 0` or `phase == 0` are treated as background and assigned KAM = 0 directly.
-
-The filter is the cell-level analog of the feature-level `ComputeFeatureNeighborMisorientationsFilter`. Like that filter, it consumes `Quats` (cell-level avg-orientations) and `CrystalStructures` (per-phase Laue class index), and delegates the actual cubic/hex/etc. symmetry-reduced disorientation calculation to `ebsdlib::LaueOps::calculateMisorientation()`. Unlike the feature-level filter, the kernel iteration ALWAYS visits the focal cell as part of its neighbor list (via the `j=k=l=0` inner iteration), so the per-cell divisor `numVoxel` is always ≥ 1.
-
-The output is `KernelAverageMisorientations`, a `Float32Array` co-located in the same `AttributeMatrix` as the input `Cell Data` arrays, sized one-tuple-per-cell with one component per tuple, in degrees.
-
-**`use_feature_ids` feature (issue #1613):** a new `BoolParameter` (default `true`) selects the neighbor-inclusion rule. With `use_feature_ids = true` (the default, behavior-identical to the legacy filter and to every prior release), a kernel neighbor contributes only if it shares the focal cell's `featureId` — the classic per-grain KAM. With `use_feature_ids = false`, the filter computes a **per-voxel** KAM: a neighbor contributes iff it is in-bounds, has `featureId > 0`, and shares the focal cell's phase — feature boundaries are ignored, so the kernel averages across grain boundaries within the same phase. The focal-validity gate (`featureIds[point] > 0 && cellPhases[point] > 0`) is identical in both modes.
+`ComputeKernelAvgMisorientationsFilter` averages each valid cell's misorientation to admitted kernel neighbors, including the focal cell, and writes the result in degrees. The default mode admits the same feature; the optional mode admits positive feature IDs in the same phase. Class 1 averages and Class 4 invariants verify both modes; all pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Port (with UUID reassignment + name rename + one inherent legacy bug corrected at port time), plus one NX-only feature addition (`use_feature_ids`, issue #1613).**
+*Classification:* Minor changes
 
-*Evidence:* Cross-checked SIMPLNX algorithm against legacy `FindKernelAvgMisorientations.cpp::execute()`. Same per-voxel outer loop, same per-kernel inner loop, same `KAM = totalMisorientation / numVoxel`. On the **default per-grain path (`use_feature_ids = true`)** the neighbor gate is identical: legacy `if(good && m_FeatureIds[point] == m_FeatureIds[neighbor])` (line 292) ≡ SIMPLNX `featureIds[point] == featureIds[neighborIdx]`. Port-time deltas:
-
-- `QuatF` → `QuatD`; `getMisoQuat` → `calculateMisorientation` (EbsdLib 2.4.1+ `2·atan2(|v|, w)` precision form — see D1). The `float32`→`float64` promotion of the misorientation math is the second component of the precision family observed in the runtime A/B (below).
-- `setParallelizationEnabled` removed (now always parallel via `ParallelData3DAlgorithm`).
-- Iteration order `col→row→plane` → `plane→row→col` (cache-friendlier for x-fastest-varying storage; mathematically identical since all writes go to the same `point` index).
-- D2 corrected at port.
-- UUID reassigned; `Find` → `Compute` rename.
-
-*NX-only feature addition (issue #1613):* the `use_feature_ids` BoolParameter. When `true` (default) the code path is bit-for-bit the pre-feature per-grain algorithm — the feature is opt-in and does not alter the default output. When `false`, the neighbor gate becomes `featureIds[neighborIdx] > 0 && cellPhases[neighborIdx] == cellPhases[point]` (per-voxel, phase-gated, feature-agnostic). This is a **new capability with no DREAM3D 6.5.171 counterpart** — validated by the Class 1 / Class 4 oracle only, never by legacy comparison (see D3).
-
-*Material PRs since baseline:* commits `25959c1f2` through `3e863da2f` (inclusive) on branch `topic/kam_ignore_feature_ids` add the `use_feature_ids` parameter, the per-mode neighbor gate, three unit tests, and the user-doc update, followed by a small follow-up commit (`3e863da2f`) correcting the A/B tallies in this V&V report. No other change to the core algorithm.
-
-*Review-driven cleanup (2026-07-16, commit `7f9cddc7d`):* a review-flagged, behavior-preserving cleanup pass refactored the kernel boundary-index handling to signed comparisons (the neighbor index is now computed directly from the clamped `zIdx`/`yIdx`/`xIdx`, removing the vacuous unsigned `< 0` checks and the separate `neighbor<0` guard), hoisted `LaueOps` construction out of the per-cell hot path into a worker member built once per run (constructor-time, shared read-only across parallel ranges — same pattern as `ComputeFeatureFaceMisorientationPerTriangleImpl`), tightened cancellation checking from per-plane to per-row granularity, floored the progress-message increment at 1, and removed the dead `numVoxel==0` fallback (folding the invalid-cell reset into an `else` branch, logically equivalent by De Morgan's law since the two branch conditions are complementary for these non-negative `int32` arrays). No algorithmic or numeric change — verified by the unchanged 9-test suite passing on both in-core and out-of-core builds.
+*Evidence:* `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/OrientationAnalysisLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; both implementations average admitted kernel neighbors, while SIMPLNX corrects the X bound and adds same-phase admission.
 
 ## Oracle
 
-*Confirmed class:* **Class 1 (Analytical) primary, Class 4 (Invariant) companion.**
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-### Class 1 (Analytical)
+*Applied:* Pure Z rotations give cubic misorientations of `|Δφ1|` for differences at most 45°; hand averages include the focal zero, and invariants check range, background zeros and mode equivalence.
 
-Class 1 oracle derived by hand for each fixture in terms of `|Δφ1|` between cell pairs, justified by the cubic FZ analysis below. All quaternions in the test fixtures use the helper `QuatFromPhi1Deg(phi1)` which returns the quaternion form of a pure Bunge ZXZ Euler rotation `(phi1, 0, 0)` with `Phi = phi2 = 0`. This collapses to a single rotation about the z-axis.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/ComputeKernelAvgMisorientationsTest.cpp` — six `Class 1` fixtures, `Bounded Cache Full-Depth Kernel`, `Class 4 - Invariants` and `Class 4 - Mode Equivalence on Single Feature`. All pass in CI.
 
-**Cubic FZ argument:** For two cells with pure φ1 rotations differing by Δφ1, the disorientation between them in the cubic FZ equals `|Δφ1|` whenever `|Δφ1| ≤ 45°`. The reasoning: the cubic group's 4-fold rotation about the z-axis reduces φ1 differences modulo 90°; for |Δφ1| ≤ 45°, the reduction is the identity operator (no reduction needed). For all 4 Class 1 fixtures, the maximum φ1 difference between any pair is ≤ 30°, well within the 45° bound. Other cubic symmetry operators (3-fold about [111], 2-fold about [110], etc.) only produce smaller-angle equivalents for misorientations not aligned with a pure z-axis rotation; for pure z-rotations of small magnitude, the identity is the global minimum.
+*Second-engineer review:* Jared Duffey, 2026-07-28.
 
-**Per-fixture expected KAM derivation:**
+## Bugs found and fixed
 
-| Fixture                | Geometry | Kernel    | Per-cell expected KAM (degrees)        |
-|--------------------------------------------|----------|-----------|------------------------------------------------------------|
-| `Class 1 - Uniform 2D Single Feature`      | 3x3x1    | {1,1,0}   | All cells = 0.0 (all in-kernel neighbors share orientation) |
-| `Class 1 - 1D x-axis Gradient`             | 5x1x1    | {1,0,0}   | [2.5, 10/3, 10/3, 10/3, 2.5] (see derivation in test comments) |
-| `Class 1 - 1D z-axis Gradient (3D path)`   | 1x1x3    | {0,0,1}   | [5.0, 20/3, 5.0]    |
-| `Class 1 - Multi-Feature Multi-Voxel + BG` | 6x1x1    | {1,0,0}   | [5.0, 5.0, 10.0, 10.0, 0.0, 0.0]        |
-| `Class 1 - Per-Voxel Mode` (`use_feature_ids=false`) | 6x1x1 | {1,0,0} | [5.0, 20/3, 10.0, 10.0, 0.0, 0.0] |
-| `Class 1 - Per-Voxel Mode Two-Phase Gates` (`use_feature_ids=false`) | 5x1x1 | {1,0,0} | [5.0, 5.0, 0.0, 0.0, 0.0] |
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2. DREAM3D-NX v7.4.2 contains the fix for `ComputeKernelAvgMisorientationsFilter-D1`. DREAM3D-NX v7.0.0 contains the fix for `ComputeKernelAvgMisorientationsFilter-D2`.
 
-Detailed per-cell hand-derivations are in the test file's TEST_CASE comments and in `vv/provenance/ComputeKernelAvgMisorientationsFilter.md`.
-
-**Per-voxel-mode fixture derivations (issue #1613):**
-
-*`Class 1 - Per-Voxel Mode`* — the same 6×1×1 layout as the Multi-Feature fixture (featureIds `[1,1,2,2,0,1]`, phases `[1,1,1,1,0,1]`, φ1 `[0,10,0,20,–,30]°`), kernel `{1,0,0}`, run with `use_feature_ids=false`. A neighbor now contributes iff `featureId>0 && phase==focalPhase`, so feature boundaries are crossed but `featureId=0` and phase-mismatched cells are still excluded:
-- cell 0: {self=0, x1(F1,P1)=|10−0|} → 10/2 = **5.0** (same as per-grain).
-- cell 1: {x0(F1,P1)=|0−10|, self=0, x2(F2,P1)=|0−10|} → 20/3 ≈ **6.667** — the *diagnostic* cell: per-grain gives 5.0 (x2 skipped as different feature); per-voxel includes x2 because it is a valid same-phase cell. This one value proves the mode actually changed behavior.
-- cell 2: {x1(F1,P1)=|10−0|, self=0, x3(F2,P1)=|20−0|} → 30/3 = **10.0**.
-- cell 3: {x2(F2,P1)=|0−20|, self=0}; x4 excluded (`featureId=0`) → 20/2 = **10.0**.
-- cell 4: focal-invalid (`featureId=0, phase=0`) → **0.0** exactly.
-- cell 5: {self=0}; x4 excluded (`featureId=0`) → 0/1 = **0.0**.
-
-*`Class 1 - Per-Voxel Mode Two-Phase Gates`* — 5×1×1, every cell its own feature, two cubic phases (ensemble `[999,1,1]`); featureIds `[1,2,3,4,0]`, phases `[1,1,2,1,1]`, φ1 `[0,10,20,30,40]°`, kernel `{1,0,0}`, `use_feature_ids=false`:
-- cell 0: {self=0, x1(P1)=|0−10|} → 10/2 = **5.0** (per-grain would give 0.0 — every feature is a single cell).
-- cell 1: {x0(P1)=|10−0|, self=0}; x2 skipped (phase 2 ≠ 1) → 10/2 = **5.0**.
-- cell 2: {self=0}; x1, x3 skipped (phase 1 ≠ 2) → 0/1 = **0.0**.
-- cell 3: {self=0}; x2 skipped (phase), x4 skipped (`featureId=0`) → 0/1 = **0.0**.
-- cell 4: focal `featureId=0` (invalid) → **0.0** exactly, even though its phase>0 — proves the focal gate is unchanged in per-voxel mode.
-
-### Class 4 (Invariant)
-
-Class 4 invariants asserted in the `Class 4 - Invariants` TEST_CASE across 3 sub-sections:
-
-1. **Uniform-orientation single-feature → KAM == 0 everywhere.** Asserted on a 3x3x3 uniform-identity-quaternion fixture with kernel `{1,1,1}` (3D path coverage).
-2. **Background cell → KAM == 0 exactly.** Asserted on a 3x1x1 fixture with the middle cell flagged as `(featureId=0, phase=0)`.
-3. **Range and non-triviality on the x-axis gradient fixture:** (i) `KAM[i] >= 0` for all cells, (ii) `KAM[i] <= 62.8°` (Mackenzie cubic upper bound), (iii) at least one cell has `KAM > 0` (sanity check that the algorithm actually computed something).
-
-**Mode-equivalence invariant (`Class 4 - Mode Equivalence on Single Feature`):** on single-feature single-phase data, the per-grain gate (`featureId` match) and the per-voxel gate (`featureId>0 && phase match`) admit *exactly the same* neighbor set for every focal cell, so the two modes must produce **bit-for-bit identical** output. Asserted on a 3×3×3 gradient fixture (φ1 = 2x+3y+4z°, max 18° < 45° FZ bound) with kernel `{1,1,1}`: `REQUIRE(kamPerGrain[i] == kamPerVoxel[i])` for every cell, plus a non-triviality guard that at least one cell is non-zero. This is a derived property (not a hand-computed value), so it holds regardless of the EbsdLib precision class and pins the invariant "the feature is opt-in and does not change output where the two gates coincide."
-
-The Class 4 invariants are oracle-agnostic — they hold for any input, so they catch regressions even if specific Class 1 expected values were edited away.
-
-### Class 2, 3, 5
-
-N/A — no reference-library invocation (Class 2), no published-paper figure reproduction (Class 3), no expert-visual sign-off (Class 5) needed. Class 1 + Class 4 are sufficient.
-
-### Second-engineer oracle review
-
-Recommended pending another engineer review. The multi-feature multi-voxel fixture in particular has 6 hand-derived per-cell expected values; a second pair of eyes on the symmetry-reduced cubic misorientation reasoning would catch arithmetic mistakes in the test comments before the V&V cycle is closed.
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeKernelAvgMisorientationsFilter-D1` | Cubic misorientation loses precision near zero and can inflate the kernel average. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | EbsdLib calculates the reduced angle with explicit quaternion vector components and `2*atan2`. |
+| `ComputeKernelAvgMisorientationsFilter-D2` | The legacy X loop uses the Z radius as its upper bound and changes asymmetric kernels. | DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. | Each axis uses its own radius and clamps the kernel to the image. |
+| `ComputeKernelAvgMisorientationsFilter-D4` | A participating phase or Laue index can access outside its array. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | The filter rejects an invalid phase with `-67203` and an invalid Laue index with `-67204` before either executor runs. |
+| `ComputeKernelAvgMisorientationsFilter-D5` | A radius of `INT32_MAX` overflows the signed loop upper bound. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | The filter clamps unsigned neighbor bounds to the image before iteration. |
 
 ## Code path coverage
 
-Re-enumerated for the per-mode neighbor gate (`ComputeKernelAvgMisorientations.cpp:124`). Paths 3–4 are the per-grain branch (`use_feature_ids = true`); paths 5–7 are the per-voxel branch (`use_feature_ids = false`). **Updated 2026-07-16 (commit `7f9cddc7d`):** the former path 9 (`numVoxel==0` fallback) was removed as unreachable dead code — see path 8's note. Path 2's boundary clamp is now a signed-index comparison (`zIdx`/`yIdx`/`xIdx` at `.cpp:100,107,114`) with the neighbor index computed directly from the clamped indices (`.cpp:120`); the separate `neighbor < 0` guard no longer exists because it is now provably unreachable by construction rather than checked at runtime.
+28 of 45 paths exercised. Each uncovered row states the missing fixture or the guard that prevents direct execution.
 
-| Path | Description      | Exercised by |
-|------|------------------------------------------------------------------------------|--------------|
-| 1    | Focal-valid gate (`featureIds[point] > 0 && cellPhases[point] > 0`) → enter kernel               | All 6 Class 1 fixtures; both Class 4 tests |
-| 2    | Kernel cell out-of-bounds (signed boundary clamp on `zIdx`/`yIdx`/`xIdx`) → `continue`           | `Class 1 - 1D x-axis Gradient` cells 0/4 (x-boundary); `Class 1 - 1D z-axis Gradient` planes 0/2 (z-boundary); `Class 1 - Uniform 2D` corners; both 3×3×3 fixtures (all faces) |
-| 3    | **Per-grain** (`use_feature_ids=true`): in-bounds neighbor + `featureId` match → accumulate miso + numVoxel++        | All default-mode Class 1 fixtures; Class 4 Invariants (i)/(iii); Class 4 Mode-Equivalence (per-grain run) |
-| 4    | **Per-grain**: in-bounds neighbor + `featureId` mismatch → skip (no accumulate) | `Class 1 - Multi-Feature Multi-Voxel + Background` (cells 1, 2 see different-feature in-bounds neighbors) |
-| 5    | **Per-voxel** (`use_feature_ids=false`): in-bounds neighbor + `featureId>0` + phase match → accumulate               | `Class 1 - Per-Voxel Mode` cells 1, 2 (cross-feature same-phase include); `Class 1 - Per-Voxel Two-Phase Gates` cells 0, 1; Class 4 Mode-Equivalence (per-voxel run) |
-| 6    | **Per-voxel**: neighbor `featureId == 0` → skip          | `Class 1 - Per-Voxel Mode` cells 3, 5 (x=4 background excluded); `Class 1 - Per-Voxel Two-Phase Gates` cell 3 (x=4 excluded) |
-| 7    | **Per-voxel**: neighbor phase mismatch (`cellPhases[neighbor] != cellPhases[point]`) → skip      | `Class 1 - Per-Voxel Two-Phase Gates` cell 2 (excludes phase-1 x=1/x=3), cells 1 & 3 (exclude phase-2 x=2) |
-| 8    | Focal-invalid (`featureIds == 0 \|\| cellPhases == 0`, reached via `else` since commit `7f9cddc7d`) → KAM = 0 directly. The former path 9 (`numVoxel == 0` fallback) was removed by this commit: in both modes the focal voxel always self-contributes when the focal is valid (per-grain: `featureId==featureId`; per-voxel: focal-valid ⇒ `featureId>0` and `phase==phase`), guaranteeing numVoxel ≥ 1 whenever path 1 is entered, so the fallback was unreachable by construction. | `Class 1 - Multi-Feature` cell 4; `Class 1 - Per-Voxel Mode` cell 4; `Class 1 - Per-Voxel Two-Phase Gates` cell 4 (`featureId=0` yet phase>0 — proves focal gate unchanged); Class 4 Invariants (ii) |
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientations.cpp` (92 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsDirect.cpp` (251 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsScanline.cpp` (964 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeKernelAvgMisorientationsFilter.cpp` (175 lines).
 
-8 of 8 paths exercised by the V&V suite. The former path 9 (`numVoxel==0` fallback, previously "unreachable by construction") was removed from SIMPLNX by the review-driven cleanup commit `7f9cddc7d` (2026-07-16); it was purely dead code and its removal is behavior-preserving, confirmed by the unchanged 9-test suite passing on both in-core and out-of-core builds.
+Test names below omit the `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter:` or `OrientationAnalysis::ComputeKernelAvgMisorientations:` prefix. Rows 1–8 describe Direct and rolling-window calculation; the bounded-cache gaps have separate rows.
+
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Calculate | Positive focal feature and phase enter the kernel | `Class 1 - Uniform 2D Single Feature` |
+| 2 | Calculate | Clamp X, Y and Z neighbor bounds to the image | `Class 1 - Uniform 2D Single Feature`; `Class 1 - 1D x-axis Gradient`; `Class 1 - 1D z-axis Gradient (3D path)` |
+| 3 | Calculate | Same-feature mode admits a matching feature | `Class 1 - Multi-Feature Multi-Voxel + Background` |
+| 4 | Calculate | Same-feature mode rejects a different feature | `Class 1 - Multi-Feature Multi-Voxel + Background` |
+| 5 | Calculate | Same-phase mode admits positive features across a feature boundary | `Class 1 - Per-Voxel Mode (use_feature_ids = false)` |
+| 6 | Calculate | Same-phase mode rejects feature zero | `Class 1 - Per-Voxel Mode (use_feature_ids = false)` |
+| 7 | Calculate | Same-phase mode rejects a different phase | `Class 1 - Per-Voxel Mode Two-Phase Gates` |
+| 8 | Calculate | Focal feature zero writes zero, including with a positive phase | `Class 1 - Multi-Feature Multi-Voxel + Background`; `Class 1 - Per-Voxel Mode Two-Phase Gates` |
+| 9 | Validation | Participating phase is outside Crystal Structures: error `-67203` | `Phase and Laue Index Bounds` / `Participating Phase returns an error` |
+| 10 | Validation | Participating Laue index is outside the operator list: error `-67204` | `Phase and Laue Index Bounds` / `Participating Laue index returns an error` |
+| 11 | Validation | Ignore an invalid phase on feature zero | `Phase and Laue Index Bounds` / `Phase on a background Feature is ignored` |
+| 12 | Calculate | Positive focal feature has a nonpositive phase | *Not directly tested. Background fixtures also set the feature to zero.* |
+| 13 | Calculate | Negative feature ID follows the background rule | *Not directly tested. Fixtures use zero or positive feature IDs.* |
+| 14 | Dispatch | Direct calculation on arrays in memory | `Class 1 - 1D x-axis Gradient` — algorithm scenario harness |
+| 15 | Dispatch | Scanline rolling-window calculation on arrays in memory | `Class 1 - 1D z-axis Gradient (3D path)` — algorithm scenario harness |
+| 16 | Dispatch | Bounded-cache calculation in same-feature mode | `Bounded Cache Full-Depth Kernel` — all values match `[10,7,6,7,10]` by Z slice |
+| 17 | Calculate | Bounded-cache calculation in same-phase mode | *Not directly tested. The forced bounded-cache fixture enables same-feature mode.* |
+| 18 | Calculate | Bounded cache skips background cells or different-feature neighbors | *Not directly tested. The forced bounded-cache fixture has one positive feature and phase.* |
+| 19 | Calculate | Maximum signed radius clamps to the image | `Scanline Handles Maximum Kernel Radius` — Direct and Scanline scenarios |
+| 20 | Setup | An empty image returns an empty output | `Scanline Handles Empty Image Geometry` — each axis is zero in turn |
+| 21 | Plan | Kernel vector has fewer or more than three values: error `-67202` | `Working Set Input Validation` / `short kernel is rejected before indexing`; `oversized kernel is rejected` |
+| 22 | Plan | Negative kernel radius: error `-67202` | `Working Set Input Validation` / `negative kernel radius is rejected as invalid input` |
+| 23 | Plan | Live cache use reduces the memory cap | `Working Set Plan` / `live cache use reduces the algorithm cap` |
+| 24 | Plan | Rolling window fits the cap, including zero dimensions | `Working Set Plan` / `normal kernel selects rolling window`; `Working Set Budget Boundaries` / `zero dimensions have an empty rolling working set` |
+| 25 | Plan | Large window selects bounded blocks and shrinks row-aligned blocks | `Working Set Plan` / `large window selects bounded blocks` |
+| 26 | Plan | Zero, exhausted or sub-tuple budget keeps one block and slot | `Working Set Budget Boundaries` |
+| 27 | Plan | Slice tuple count overflows: error `-67200` | `Working Set Plan` / `slice tuple overflow reports complete context` |
+| 28 | Plan | Total tuple or quaternion component count overflows: error `-67200` | `Working Set Overflow Boundaries` / `total tuple count overflow`; `total quaternion value count overflow` |
+| 29 | Plan | Rolling input, output or total bytes overflow: error `-67200` | `Working Set Overflow Boundaries` — three byte-count sections |
+| 30 | Plan | Other checked window, block and cache-size arithmetic rejects overflow | *Not directly tested. Earlier tuple and byte checks and bounded radii/block sizes constrain these quantities.* |
+| 31 | Cache | Small fully associative cache loads, reuses and replaces blocks; writes a partial final block | `Bounded Cache Full-Depth Kernel` — eight slots, 1,280 tuples per block and 4,096 tuples per slice |
+| 32 | Cache | More than 16 slots select a set-associative cache | *Not directly tested. The forced bounded-cache fixture has eight slots.* |
+| 33 | Cancel | Direct stops within a row; Scanline stops before a plane or block | *Not directly tested. No fixture injects cancellation.* |
+| 34 | I/O | Validation propagates Crystal Structures, FeatureIds or Phases read errors | *Not directly tested. Requires injected store read failures.* |
+| 35 | I/O | Rolling execution propagates ensemble or input-slice read errors | *Not directly tested. Requires injected store read failures.* |
+| 36 | I/O | Rolling execution propagates output-slice write errors | *Not directly tested. Requires an injected store write failure.* |
+| 37 | I/O | Bounded execution propagates ensemble, focal or neighbor block read errors | *Not directly tested. Requires injected store read failures.* |
+| 38 | I/O | Bounded execution propagates output-block write errors | *Not directly tested. Requires an injected store write failure.* |
+| 39 | Calculate | Scanline zero-neighbor fallback writes zero | *Not directly tested. A valid focal cell always includes itself.* |
+| 40 | Validation | Read more than one 65,536-tuple validation chunk | *Not directly tested. The largest execution fixture has 20,480 cells.* |
+| 41 | Calculate | Calculate misorientation for a non-cubic Laue class | *Not directly tested. All analytical orientations use cubic symmetry.* |
+| 42 | Preflight | Create one float32 output component with the phase array tuple shape | `Class 1 - Uniform 2D Single Feature` — execution and tuple-dimension check |
+| 43 | Conversion | Convert legacy paths, output name and UUID | `SIMPL Backwards Compatibility` — both dynamic sections |
+| 44 | Setup | Internal rolling and bounded executors return early on empty dimensions | *Not directly tested. The Scanline entry point returns before either executor is called.* |
+| 45 | Cache | Rolling window replaces a slice slot after its first full window | *Not directly tested. Rolling fixtures have at most three Z slices; the five-slice fixture forces bounded-cache execution.* |
 
 ## Test inventory
 
-| TEST_CASE | Category | Status | ctest entry                |
-|--------|----------|--------|--------|
-| `: SIMPL Backwards Compatibility`              | Compat   | kept   | Yes (2 dynamic sections: 6.4 + 6.5)            |
-| `: Class 1 - Uniform 2D Single Feature`        | Class 1  | kept   | Yes    |
-| `: Class 1 - 1D x-axis Gradient`               | Class 1  | kept   | Yes    |
-| `: Class 1 - 1D z-axis Gradient (3D path)`     | Class 1  | kept   | Yes    |
-| `: Class 1 - Multi-Feature Multi-Voxel + Background`               | Class 1  | kept   | Yes    |
-| `: Class 1 - Per-Voxel Mode (use_feature_ids = false)`             | Class 1  | **new (#1613)** | Yes — per-voxel cross-feature include + `featureId=0` exclude; expected `{5.0, 20/3, 10.0, 10.0, 0, 0}` |
-| `: Class 1 - Per-Voxel Mode Two-Phase Gates`   | Class 1  | **new (#1613)** | Yes — per-voxel phase-mismatch exclude + `featureId=0` focal gate; expected `{5.0, 5.0, 0, 0, 0}` |
-| `: Class 4 - Mode Equivalence on Single Feature`  | Class 4  | **new (#1613)** | Yes — per-grain ≡ per-voxel bit-for-bit on single-feature single-phase 3×3×3 |
-| `: Class 4 - Invariants` (3 sub-sections)      | Class 4  | kept   | Yes (3 SECTIONs)           |
-| ~~`: ComputeKernelAvgMisorientationsFilter` (legacy exemplar test)~~  | RETIRED  | —      | Retired 2026-06-03 (circular oracle from pre-EbsdLib-2.4.1 SIMPLNX output)             |
+All pass in CI.
 
-9 active TEST_CASEs / 9 ctest entries (confirmed via `ctest -N -R "ComputeKernelAvgMisorientations"`); 100% pass on both in-core and out-of-core builds (full regression sweep, 2026-07-15).
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Plan` | kept | Checks rolling-window size, live-budget reduction, row-aligned fallback blocks and slice-overflow diagnostics. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Input Validation` | kept | Checks short and oversized vectors, a negative radius, and acceptance of `INT32_MAX` radii by the planner. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Budget Boundaries` | kept | Checks zero, exhausted and sub-tuple budgets, plus zero dimensions. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Overflow Boundaries` | kept | Checks total tuples, quaternion values and three byte-count overflow boundaries; checks full diagnostic text. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline Handles Maximum Kernel Radius` | kept | Runs a one-cell image with all radii at `INT32_MAX`; requires one zero output value. Covers D5. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline Handles Empty Image Geometry` | kept | Checks zero output tuples in dynamic sections `dimensions = 0 x 1 x 1`, `dimensions = 1 x 0 x 1` and `dimensions = 1 x 1 x 0`. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: SIMPL Backwards Compatibility` | kept | Checks UUID, comments, paths and output name in `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` dynamic sections. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Uniform 2D Single Feature` | new-for-V&V | Checks nine zero values on a 3×3×1 image within 0.0001° and checks tuple dimensions. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and Laue Index Bounds` | kept | Checks errors `-67203` and `-67204`; accepts an invalid phase on background feature zero. Covers D4. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - 1D x-axis Gradient` | new-for-V&V | Checks all five values against `[2.5,10/3,10/3,10/3,2.5]` within 0.001°. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - 1D z-axis Gradient (3D path)` | new-for-V&V | Checks all three values against `[5,20/3,5]` within 0.001°. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Multi-Feature Multi-Voxel + Background` | new-for-V&V | Checks `[5,5,10,10,0,0]`, including an exact background zero and an isolated focal cell. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode (use_feature_ids = false)` | new-for-V&V | Checks `[5,20/3,10,10,0,0]`; the changed second value proves that the mode admits a different feature. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode Two-Phase Gates` | new-for-V&V | Checks `[5,5,0,0,0]` for two cubic phases and an invalid focal feature. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Mode Equivalence on Single Feature` | new-for-V&V | Compares all 27 values bit-for-bit between modes on a single-feature, single-phase gradient; requires nonzero output. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Invariants` | new-for-V&V | Checks uniform zero, exact background zero, nonnegativity, a 62.8° cubic bound and nonzero gradient output in three sections. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded Cache Full-Depth Kernel` | kept | Checks all 20,480 values against slice values `[10,7,6,7,10]` within 0.001° under a 1 MiB budget. |
 
 ## Exemplar archive
 
-**None** — inline-constructed. The pre-V&V test (now retired) consumed `6_6_stats_test_v2.tar.gz` (SHA512 `e84999...089723`, downloaded from the BlueQuartz Data_Archive release). The archive contains exemplar `KernelAverageMisorientations` arrays generated from a pre-2.4.1 SIMPLNX build, which embeds the spurious self-misorientation precision noise described in D1. Comparing the post-2.4.1 SIMPLNX output against those exemplars fails by ~0.01-0.05° per cell on real Small_IN100 data. The exemplar arrays cannot be re-generated against the post-2.4.1 build (circular oracle pattern), so the test was retired and replaced with the analytical / invariant suite above.
+- **Archive:** `6_6_stats_test_v2.tar.gz` — retired for this filter; current fixtures are inline.
+- **SHA512:** `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723`
+- **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/ComputeKernelAvgMisorientationsFilter.md`
 
-The shared archive remains referenced in `src/Plugins/OrientationAnalysis/test/CMakeLists.txt` (line 130) for use by `AlignSectionsMutualInformation`, `ComputeShapes`, and `ComputeSchmids` tests. Only F#5's consumption line was removed.
+## Deviations from DREAM.3D v6.5.171
 
-- **Provenance:** `vv/provenance/ComputeKernelAvgMisorientationsFilter.md` — the canonical record of how the inlined data fixtures were designed and how the expected values were derived.
+See `vv/deviations/ComputeKernelAvgMisorientationsFilter.md` for the root cause, affected users and recommendation for each Part 1 entry.
 
-## Deviations from DREAM3D 6.5.171
-
-See `vv/deviations/ComputeKernelAvgMisorientationsFilter.md` for the canonical, ID-stable list:
-
-- **`ComputeKernelAvgMisorientationsFilter-D1`** — EbsdLib 2.4.1 CubicOps precision improvement (non-deviation in the algorithmic sense; precision class). The pre-2.4.1 `acos(w near 1)` form produces a spurious ~0.03° angle on float32-sourced identical quaternions, which inflates every per-cell self-misorientation contribution to the KAM. The 2.4.1 `2*atan2(|v|, w)` form returns 0° as expected. **Confirmed by runtime A/B this cycle:** on identical 12³ synthetic input (default per-grain path, kernel `{1,1,1}`), max \|Δ\|=0.0072°, mean \|Δ\|=0.00075°, 0/1728 cells > 0.01°, gating provably identical — the delta is purely `calculateMisorientation` precision (D1 + the `QuatF`→`QuatD` port delta).
-- **`ComputeKernelAvgMisorientationsFilter-D2`** — Legacy `FindKernelAvgMisorientations.cpp:264` uses `KernelSize.z + 1` as the upper bound of the x-direction inner loop (should be `KernelSize.x + 1`). SIMPLNX has the correct form. Dormant when `KernelSize.x == KernelSize.z`; fires for asymmetric kernels. Logged in `bug_triage.md`.
-- **`ComputeKernelAvgMisorientationsFilter-D3`** — `use_feature_ids = false` (per-voxel KAM) is an **NX-only capability** added for issue #1613. DREAM3D 6.5.171 `FindKernelAvgMisorientations` has no equivalent (it is per-grain only), so there is nothing to A/B against; the mode is validated by the Class 1 per-voxel fixtures and the Class 4 mode-equivalence invariant. The default (`use_feature_ids = true`) is unchanged and remains legacy-comparable.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeKernelAvgMisorientationsFilter-D1` | Cubic KAM values can differ because of the corrected angle calculation and double-precision quaternion arithmetic. |
+| `ComputeKernelAvgMisorientationsFilter-D2` | SIMPLNX uses the requested X radius on both sides of an asymmetric kernel. DREAM.3D v6.5.171 uses the Z radius on the positive X side. |
+| `ComputeKernelAvgMisorientationsFilter-D3` | `use_feature_ids=false` admits same-phase neighbors across feature boundaries. DREAM.3D v6.5.171 has no equivalent mode. |
