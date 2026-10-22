@@ -22,7 +22,7 @@ Part 1 lists three capability differences from DREAM.3D v6.5.171. Part 2 lists t
 
 **Recommendation:** trust SIMPLNX. Select the required component explicitly; a legacy pipeline must first extract that component into a scalar array.
 
-**Evidence:** `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Single Thresholds: Int Multi-Component`, checks indices 0, 1 and 2. Legacy `Source/SIMPLib/CoreFilters/MultiThresholdObjects.cpp` and `MultiThresholdObjects2.cpp` contain the scalar-array checks in the SIMPL snapshot `0afaa6854`, selected as the last revision on or before the DREAM.3D `v6.5.171` tag date, 2026-05-27.
+**Evidence:** `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Single Thresholds: Int Multi-Component`, checks indices 0, 1 and 2. Legacy `Source/SIMPLib/CoreFilters/MultiThresholdObjects.cpp` and `MultiThresholdObjects2.cpp` contain the scalar-array checks in the SIMPL snapshot `0afaa6854`, selected as the last revision on or before the DREAM.3D v6.5.171 tag date, 2026-05-27. `vv_work:MultiThresholdObjectsFilter/ReadMe.md` confirms that `MultiThresholdObjects2::dataCheck()` rejects non-scalar arrays with error `-11003`.
 
 ---
 
@@ -86,7 +86,7 @@ Part 1 lists three capability differences from DREAM.3D v6.5.171. Part 2 lists t
 
 **Recommendation:** trust SIMPLNX. Use DREAM3D-NX v7.4.2 or later and regenerate masks produced with affected nested trees.
 
-**Evidence:** `git show` inspection of all ten release sources places the defect in v7.0.0 through v7.4.1 and the correction in v7.4.2. The affected code is in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp` through v7.4.0 and `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` in v7.4.1. PR #1688 (`467a250d1`) supplies the correction. `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Threshold Sets` / `ArraySet 6: leaf + nested set`, checks the corrected mask. Legacy `Source/SIMPLib/CoreFilters/MultiThresholdObjects2.cpp`, `thresholdSet()`, in SIMPL snapshot `0afaa6854` uses its set buffer for child evaluation.
+**Evidence:** `git show` inspection of all ten release sources places the defect in v7.0.0 through v7.4.1 and the correction in v7.4.2. The affected code is in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp` through v7.4.0 and `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` in v7.4.1. PR #1688 (`467a250d1`) supplies the correction. `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Threshold Sets` / `ArraySet 6: leaf + nested set`, checks the corrected mask. Legacy `Source/SIMPLib/CoreFilters/MultiThresholdObjects2.cpp`, `thresholdSet()`, in SIMPL snapshot `0afaa6854` uses its set buffer for child evaluation. `vv_work:MultiThresholdObjectsFilter/ReadMe.md` records the 2026-07-23 comparison: corrected SIMPLNX masks matched DREAM.3D v6.5.171 and the independent NumPy oracle in all three 100-tuple cases. Before the correction, AB2 produced an all-false mask with 38 of 100 values wrong; AB1 matched. `vv_work:MultiThresholdObjectsFilter/compare.py` compares input values and checks each mask against the legacy output and the oracle after conversion to boolean. The run predates the DREAM3D-NX algorithm changes of 2026-09-20; a comparison with the current algorithm remains open.
 
 ---
 
@@ -108,7 +108,7 @@ Part 1 lists three capability differences from DREAM.3D v6.5.171. Part 2 lists t
 
 **Recommendation:** trust SIMPLNX. Use DREAM3D-NX v7.4.2 or later and regenerate masks made with inverted threshold trees.
 
-**Evidence:** All release sources through v7.4.1 contain `std::reverse()` in the threshold evaluator at the paths identified under D1. The v7.4.2 source applies logical inversion in `InsertThreshold()` and at the final root write. `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Threshold Sets` / `ArraySet 7: leaf + inverted nested set`, checks nested inversion. `Top-level inversion is logical` and `Nested sets compose before root inversion` in `src/Plugins/SimplnxCore/test/MultiThresholdObjectsTest.cpp` check the root. Legacy `MultiThresholdObjects2.cpp` in SIMPL snapshot `0afaa6854` contains the corresponding logical inversion paths.
+**Evidence:** All release sources through v7.4.1 contain `std::reverse()` in the threshold evaluator at the paths identified under D1. The v7.4.2 source applies logical inversion in `InsertThreshold()` and at the final root write. `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp`, `Valid Threshold Sets` / `ArraySet 7: leaf + inverted nested set`, checks nested inversion. `Top-level inversion is logical` and `Nested sets compose before root inversion` in `src/Plugins/SimplnxCore/test/MultiThresholdObjectsTest.cpp` check the root. Legacy `MultiThresholdObjects2.cpp` in SIMPL snapshot `0afaa6854` contains the corresponding logical inversion paths. `vv_work:MultiThresholdObjectsFilter/ReadMe.md` records 51 of 100 incorrect values in AB3 before the correction. This case combines an inverted nested set with OR. On 2026-07-23, the corrected mask matched DREAM.3D v6.5.171 and the independent NumPy oracle. The run predates the DREAM3D-NX algorithm changes of 2026-09-20 and does not verify the current algorithm.
 
 ---
 

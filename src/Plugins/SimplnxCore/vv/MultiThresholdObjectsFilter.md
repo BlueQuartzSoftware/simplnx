@@ -19,9 +19,9 @@
 | Code paths enumerated | 36 of 51 exercised. Gaps include large chunks, several cancellation points, single-option custom values and basic pipeline conversion. |
 | Tests today | 27 test declarations: 23 ordinary cases and 4 template cases. They cover comparisons, nested logic, data types, validation, I/O errors, cancellation and conversion. |
 | Exemplar archive | None. Tests construct inputs and expected masks in memory. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-07-23: all three cases matched. The run predates the DREAM3D-NX algorithm changes of 2026-09-20 and must run again on the current algorithm. |
 | Bug flags | None |
-| V&V phase | Analytical verification and second-engineer review are complete. Three fixed defects and three capability differences are documented. |
+| V&V phase | Analytical verification and second-engineer review are complete. Three fixed defects and three capability differences are documented. A legacy comparison with the current algorithm remains open. |
 
 ## Summary
 
