@@ -43,6 +43,13 @@ class SecondBlockFailureStore : public BaseStore
 public:
   using BaseStore::BaseStore;
 
+  SecondBlockFailureStore() = default;
+  ~SecondBlockFailureStore() override = default;
+  SecondBlockFailureStore(const SecondBlockFailureStore&) = default;
+  SecondBlockFailureStore(SecondBlockFailureStore&&) = default;
+  SecondBlockFailureStore& operator=(const SecondBlockFailureStore&) = default;
+  SecondBlockFailureStore& operator=(SecondBlockFailureStore&&) = default;
+
   /**
    * @brief Copies the first window and rejects the second read.
    * @param startIndex Zero-based source element offset.

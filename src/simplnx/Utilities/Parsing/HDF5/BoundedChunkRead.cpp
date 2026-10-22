@@ -218,6 +218,12 @@ struct BoundedChunkReadMetadata
   {
   }
 
+  ~BoundedChunkReadMetadata() = default;
+  BoundedChunkReadMetadata(const BoundedChunkReadMetadata&) = delete;
+  BoundedChunkReadMetadata(BoundedChunkReadMetadata&&) = delete;
+  BoundedChunkReadMetadata& operator=(const BoundedChunkReadMetadata&) = delete;
+  BoundedChunkReadMetadata& operator=(BoundedChunkReadMetadata&&) = delete;
+
   BoundedBytes Stored;
   BoundedBytes Nominal;
   std::array<hsize_t, H5S_MAX_RANK> Shape{};

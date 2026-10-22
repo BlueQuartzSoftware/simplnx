@@ -131,6 +131,12 @@ public:
   {
   }
 
+  ~RecordingStore() override = default;
+  RecordingStore(const RecordingStore&) = default;
+  RecordingStore(RecordingStore&&) = default;
+  RecordingStore& operator=(const RecordingStore&) = delete;
+  RecordingStore& operator=(RecordingStore&&) = delete;
+
   /**
    * @brief Records a bulk read and optionally returns the injected error before copying.
    * @param startIndex Supplies the requested flat offset.

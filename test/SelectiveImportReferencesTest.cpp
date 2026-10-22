@@ -169,6 +169,13 @@ std::vector<ReferenceLink> PopulateReferences(DataStructure& dataStructure, IGeo
 class GeometryAliasResolver : public IDataStoreFormatResolver
 {
 public:
+  GeometryAliasResolver() = default;
+  ~GeometryAliasResolver() override = default;
+  GeometryAliasResolver(const GeometryAliasResolver&) = delete;
+  GeometryAliasResolver(GeometryAliasResolver&&) = delete;
+  GeometryAliasResolver& operator=(const GeometryAliasResolver&) = delete;
+  GeometryAliasResolver& operator=(GeometryAliasResolver&&) = delete;
+
   mutable std::atomic<usize> Calls{0};
 
   std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, [[maybe_unused]] DataType dataType, [[maybe_unused]] uint64 byteSize) const override
@@ -947,6 +954,13 @@ struct AliasPlanRecord
 class AliasPathResolver : public IDataStoreFormatResolver
 {
 public:
+  AliasPathResolver() = default;
+  ~AliasPathResolver() override = default;
+  AliasPathResolver(const AliasPathResolver&) = default;
+  AliasPathResolver(AliasPathResolver&&) = default;
+  AliasPathResolver& operator=(const AliasPathResolver&) = default;
+  AliasPathResolver& operator=(AliasPathResolver&&) = default;
+
   mutable std::vector<AliasPlanRecord> records;
 
   std::string resolveFormat(const DataStructure&, const DataPath& path, DataType type, uint64 bytes) const override

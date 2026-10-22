@@ -459,6 +459,12 @@ public:
   {
   }
 
+  ~IdentifySampleReportingStore() override = default;
+  IdentifySampleReportingStore(const IdentifySampleReportingStore&) = delete;
+  IdentifySampleReportingStore(IdentifySampleReportingStore&&) = delete;
+  IdentifySampleReportingStore& operator=(const IdentifySampleReportingStore&) = delete;
+  IdentifySampleReportingStore& operator=(IdentifySampleReportingStore&&) = delete;
+
   /**
    * @brief Observes one bulk read and delegates the transfer to the resident store exactly once.
    * @param startIndex First flat source value index.
