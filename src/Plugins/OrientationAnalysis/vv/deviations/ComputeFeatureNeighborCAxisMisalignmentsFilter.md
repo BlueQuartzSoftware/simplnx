@@ -24,7 +24,7 @@ Entries use one stable ID sequence. D3 was not assigned to an entry and remains 
 
 **Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2 or later. The average uses all accepted neighbors, regardless of their order.
 
-**Evidence:** PR #1631 (`ec22ac375`) corrects the divisor. `Class 1 - Realistic Microstructure (exposes divisor bug)` checks the independent expected averages: F2 = 10°, F3 = NaN, F5 = 25/3°, and F6 = 5°. The defective divisor gives 7.5°, 0°, 6.25°, and 2.5°, respectively, by calculation; these are not legacy-run measurements. `Class 4 - Invariants` checks the mean of the non-NaN entries. `Class 1 - Mismatch Last Order` checks an ordering where the old divisor gives the correct result.
+**Evidence:** PR #1631 (`ec22ac375`) corrects the divisor. `Class 1 - Realistic Microstructure (exposes divisor bug)` checks the independent expected averages: F2 = 10°, F3 = NaN, F5 = 25/3°, and F6 = 5°. The defective divisor gives 7.5°, 0°, 6.25°, and 2.5°, respectively, by calculation; these are not legacy-run measurements. `Class 4 - Invariants` checks the mean of the non-NaN entries. `Class 1 - Mismatch Last Order` checks an ordering where the old divisor gives the correct result. The 2026-10-22 comparison records four average differences at F2, F3, F5, and F6 in `mixed_average_on`, no differences beyond 0.001° in the `mixed_average_off` control, and exact agreement with DREAM3D-NX with equal NaN positions for a local proof version in both cases (`vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/comparison/LegacyComparison.md`; proof fixes: `vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/notes/proof_commits.md`).
 
 ---
 
@@ -44,7 +44,7 @@ Entries use one stable ID sequence. D3 was not assigned to an entry and remains 
 
 **Recommendation:** Either acceptable within the 0.001° tolerance used by the analytical fixtures for finite pair angles. Compare averages only after accounting for D1, and compare NaN masks separately. This fixture tolerance is not a bound for all orientations.
 
-**Evidence:** PR #1472 (`413e6fa46`) changes the SIMPLNX quaternion-to-matrix API and transpose expression. The analytical fixtures use a 0.001° absolute tolerance for finite results.
+**Evidence:** PR #1472 (`413e6fa46`) changes the SIMPLNX quaternion-to-matrix API and transpose expression. The analytical fixtures use a 0.001° absolute tolerance for finite results. The 2026-10-22 comparison records precision differences in `neutral_hex_pair`, `mixed_average_on`, and `mixed_average_off`, with a maximum pair-angle difference of 0.00005578994751° from DREAM.3D v6.5.171 and exact agreement with DREAM3D-NX with equal NaN positions for a local proof version (`vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/comparison/LegacyComparison.md`; proof fixes: `vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/notes/proof_commits.md`).
 
 ---
 
@@ -64,7 +64,7 @@ Entries use one stable ID sequence. D3 was not assigned to an entry and remains 
 
 **Recommendation:** Trust SIMPLNX. The same geometric c-axis angle applies to both hexagonal classes.
 
-**Evidence:** The source for each DREAM3D-NX release from v7.0.0 through v7.4.2 includes Hexagonal_Low in the pair gate. No current analytical fixture directly selects Hexagonal_Low.
+**Evidence:** The source for each DREAM3D-NX release from v7.0.0 through v7.4.2 includes Hexagonal_Low in the pair gate. No current analytical unit-test fixture directly selects Hexagonal_Low. The 2026-10-22 `hex_low_fold` case records two list entries and two averages as NaN in DREAM.3D v6.5.171 and as 59.999996185302734° in both DREAM3D-NX and a local proof version, whose outputs match exactly with equal NaN positions (`vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/comparison/LegacyComparison.md`; proof fixes: `vv_work:ComputeFeatureNeighborCAxisMisalignmentsFilter/notes/proof_commits.md`).
 
 ---
 

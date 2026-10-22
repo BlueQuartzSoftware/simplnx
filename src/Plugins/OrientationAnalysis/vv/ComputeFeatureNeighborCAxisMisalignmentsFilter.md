@@ -19,7 +19,7 @@
 | Code paths enumerated | 11 of 24 exercised. Gaps include average-disabled execution, Hexagonal_Low, angle folding, cancellation, and I/O errors. |
 | Tests today | 7 ordinary test cases cover analytical values, invariants, input validation, and SIMPL conversion. One hidden test defines a quaternion chunk-boundary fixture. |
 | Exemplar archive | `compute_feature_neighbor_caxis_misalignments.tar.gz` remains registered, but its test consumer was removed. Current tests construct their inputs and expected values in C++. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 2 of 4 cases match within 0.001° with equal NaN positions; the differences come from D1, D4 and D6. A local proof version with those fixes matches DREAM3D-NX exactly in 4 of 4 cases, with equal NaN positions. |
 | Bug flags | None |
 | V&V phase | Verification records and second-engineer review are complete. |
 
