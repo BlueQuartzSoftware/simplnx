@@ -19,9 +19,9 @@
 | Code paths enumerated | 13 of 22 exercised by the ordinary tests. Gaps include defensive guards, cancellation, grouped child copying and additional array types. |
 | Tests today | 6 test cases: 3 valid executions, 1 input-validation case, 1 SIMPL conversion case and 1 hidden HDF5 case. The five ordinary cases cover analytical values, geometry properties and error codes. |
 | Exemplar archive | None. The test source constructs inputs and defines analytical expected values. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 3 cases match; the differences come from RegularizeZSpacingFilter-D1 and RegularizeZSpacingFilter-D3. A local proof version also matches DREAM3D-NX in 1 of 3 cases; these are configuration and DREAM3D-NX-only option differences, not calculation differences. |
 | Bug flags | None |
-| V&V phase | Analytical checks, input-validation checks and second-engineer review are complete. |
+| V&V phase | Analytical checks, input-validation checks, legacy comparison and second-engineer review are complete. |
 
 ## Summary
 
