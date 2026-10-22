@@ -19,9 +19,9 @@
 | Code paths enumerated | 16 of 21 exercised by the five ordinary test cases. Gaps cover cancellation, empty input, background-only input, and external list storage. |
 | Tests today | Six test cases: two analytical, two preflight, one SIMPL conversion, and one hidden HDF5 fixture. The five ordinary cases cover both radius modes and input validation. |
 | Exemplar archive | None. Tests construct synthetic inputs and use inline analytical expectations. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 3 cases match; the differences come from ComputeNeighborhoodsFilter-D1. A local proof version with those fixes matches DREAM3D-NX in 3 of 3 cases, using constant legacy diameters for the DREAM3D-NX-only absolute-radius case. |
 | Bug flags | None |
-| V&V phase | Verification records are complete. The sign-off has no named second engineer. |
+| V&V phase | Verification records, second-engineer review and the legacy comparison are complete. |
 
 ## Summary
 

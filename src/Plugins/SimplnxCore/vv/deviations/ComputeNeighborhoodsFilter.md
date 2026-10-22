@@ -16,13 +16,13 @@ Part 1 lists differences from `FindNeighborhoods` in DREAM.3D v6.5.171 (D1–D3)
 
 **Symptom:** The same centroids, diameters, and multiplier can give different neighbor counts and lists in SIMPLNX and DREAM.3D v6.5.171.
 
-**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 converts centroids to integer bins using the average diameter. It requires each absolute bin difference to be strictly less than `equivalentDiameter[i] * multiplier / averageDiameter`. SIMPLNX compares squared Euclidean distance with `(equivalentDiameter[i] * multiplier)^2` and includes equality. The average diameter controls the SIMPLNX search grid, not the distance limit. SIMPLNX also offers an absolute-radius mode without Equivalent Diameters; DREAM.3D v6.5.171 has no such mode.
+**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 converts centroids to integer bins using the average diameter. It requires each absolute bin difference to be strictly less than `equivalentDiameter[i] * multiplier / averageDiameter`. SIMPLNX compares squared Euclidean distance with `(equivalentDiameter[i] * multiplier)^2` and includes equality. The average diameter controls the SIMPLNX search grid, not the distance limit. SIMPLNX also offers an absolute-radius mode without Equivalent Diameters; DREAM.3D v6.5.171 has no such mode. SIMPLNX visits bins in X, Y, Z order and features within each bin in ID order, so list order differs from the DREAM.3D v6.5.171 candidate scan even when membership is equal.
 
 **Affected users:** Users who migrate `FindNeighborhoods` pipelines and compare neighbor counts or lists. Bin quantization and the different inclusion rules prevent a fixed count ratio between implementations.
 
 **Recommendation:** Trust SIMPLNX for centroid-distance neighborhoods. The sphere implements the stated search radius, and both radius modes have independent analytical fixtures. The UUID mapping preserves pipeline conversion but does not promise identical output from the different neighborhood definitions.
 
-**Evidence:** `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.cpp` at the DREAM.3D `v6.5.171` tag contains the strict bin comparisons. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` contains the inclusive distance comparison. `SimplnxCore::ComputeNeighborhoods_SyntheticOracle` checks the exact-radius boundary, and `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` checks per-feature asymmetry in `src/Plugins/SimplnxCore/test/ComputeNeighborhoodsTest.cpp`.
+**Evidence:** `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.cpp` at the DREAM.3D `v6.5.171` tag contains the strict bin comparisons. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` contains the inclusive distance comparison. `SimplnxCore::ComputeNeighborhoods_SyntheticOracle` checks the exact-radius boundary, and `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` checks per-feature asymmetry in `src/Plugins/SimplnxCore/test/ComputeNeighborhoodsTest.cpp`. On 2026-10-22, `neutral_absolute_oracle` matches all three implementations, `multiples_analytical_oracle` differs from stock in one list order, and `d1_boundary_box_quantization` differs from stock in six counts and six lists; a local proof version matches DREAM3D-NX exactly in all three cases (`vv_work:ComputeNeighborhoodsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeNeighborhoodsFilter/notes/proof_commits.md`).
 
 ---
 
@@ -42,7 +42,7 @@ Part 1 lists differences from `FindNeighborhoods` in DREAM.3D v6.5.171 (D1–D3)
 
 **Recommendation:** Trust SIMPLNX. Select Centroids and, for multiples mode, Equivalent Diameters; no phase array is required.
 
-**Evidence:** The tagged legacy `FindNeighborhoods.cpp` requires Feature Phases only during input validation. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeNeighborhoodsFilter.cpp` has no phase parameter or `FromSIMPLJson()` mapping. The two analytical fixtures create no phase array, and the SIMPL conversion test checks the remaining argument values.
+**Evidence:** The tagged legacy `FindNeighborhoods.cpp` requires Feature Phases only during input validation. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeNeighborhoodsFilter.cpp` has no phase parameter or `FromSIMPLJson()` mapping. The two analytical fixtures create no phase array, and the SIMPL conversion test checks the remaining argument values. On 2026-10-22, `neutral_absolute_oracle` includes neighbors with different phases and matches all three implementations without a D2 proof patch; the package supplies phases for legacy compatibility and has no dedicated D2 case (`vv_work:ComputeNeighborhoodsFilter/ReadMe.md`, `vv_work:ComputeNeighborhoodsFilter/notes/source_evidence.md`, `vv_work:ComputeNeighborhoodsFilter/comparison/LegacyComparison.md`).
 
 ---
 
@@ -62,7 +62,7 @@ Part 1 lists differences from `FindNeighborhoods` in DREAM.3D v6.5.171 (D1–D3)
 
 **Recommendation:** Trust SIMPLNX. Supply a positive value for the selected radius mode.
 
-**Evidence:** Current `ComputeNeighborhoodsFilter::preflightImpl()` contains both positivity checks. `SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius` asserts both error codes with zero values. DREAM.3D v6.5.171 `FindNeighborhoods::dataCheck()` contains no equivalent check and has no absolute-radius mode.
+**Evidence:** Current `ComputeNeighborhoodsFilter::preflightImpl()` contains both positivity checks. `SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius` asserts both error codes with zero values. DREAM.3D v6.5.171 `FindNeighborhoods::dataCheck()` contains no equivalent check and has no absolute-radius mode. On 2026-10-22, the local proof version matches DREAM3D-NX in `neutral_absolute_oracle`, `multiples_analytical_oracle`, and `d1_boundary_box_quantization` with positive radius parameters; these cases do not check invalid inputs, and the package has no D3 case or D3 proof patch (`vv_work:ComputeNeighborhoodsFilter/ReadMe.md`, `vv_work:ComputeNeighborhoodsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeNeighborhoodsFilter/notes/proof_commits.md`).
 
 ---
 
