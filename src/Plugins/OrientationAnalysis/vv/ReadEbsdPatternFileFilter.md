@@ -7,7 +7,7 @@
 | SIMPLNX Human Name | Read EBSD Pattern File |
 | DREAM.3D v6.5.171 equivalent | None (new filter) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | DRAFT |
+| Status | COMPLETE |
 | Sign-off | Michael Jackson, 2026-08-27; second engineer: Jared Duffey, 2026-09-15 |
 
 ## At a glance
