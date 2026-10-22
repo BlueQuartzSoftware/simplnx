@@ -490,3 +490,173 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Child names containing the geometry na
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+namespace
+{
+DataStructure CreatePadFeatureFixture(bool addFeatureAm, bool addEnsembleAm)
+{
+  DataStructure dataStructure;
+  const DataPath srcGeomPath({"Geom"});
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
+  REQUIRE(geomPtr != nullptr);
+  geomPtr->setDimensions({2, 2, 2});
+  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  geomPtr->setCellData(*cellAmPtr);
+  auto* featureIdsPtr =
+      Int32Array::Create(dataStructure, "Feature Ids",
+                         DataStoreUtilities::CreateDataStore<int32>(dataStructure, srcGeomPath.createChildPath("Cell Data").createChildPath("Feature Ids"), {2, 2, 2}, {1}), cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  featureIdsPtr->fill(1);
+  if(addFeatureAm)
+  {
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {2}, geomPtr->getId()) != nullptr);
+  }
+  if(addEnsembleAm)
+  {
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, geomPtr->getId()) != nullptr);
+  }
+  return dataStructure;
+}
+
+Arguments MakePadArgs(bool padX, bool padY, bool padZ, std::vector<int32> xMinMax, std::vector<int32> yMinMax, std::vector<int32> zMinMax, int32 fillValue, bool updateOrigin)
+{
+  const DataPath srcGeomPath({"Geom"});
+  Arguments args;
+  args.insertOrAssign(PadImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
+  args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Padded Geom"})));
+  args.insertOrAssign(PadImageGeometryFilter::k_AttributeMatrixPath_Key, std::make_any<DataPath>(srcGeomPath.createChildPath("Cell Data")));
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadXDim_Key, std::make_any<bool>(padX));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, std::make_any<bool>(padY));
+  args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, std::make_any<bool>(padZ));
+  args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(xMinMax));
+  args.insertOrAssign(PadImageGeometryFilter::k_YMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(yMinMax));
+  args.insertOrAssign(PadImageGeometryFilter::k_ZMinMax_Key, std::make_any<VectorInt32Parameter::ValueType>(zMinMax));
+  args.insertOrAssign(PadImageGeometryFilter::k_DefaultFillValue_Key, std::make_any<int32>(fillValue));
+  args.insertOrAssign(PadImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(updateOrigin));
+  return args;
+}
+
+usize CountWarnings(const std::vector<Warning>& warnings, int32 code)
+{
+  return static_cast<usize>(std::count_if(warnings.begin(), warnings.end(), [code](const Warning& warning) { return warning.code == code; }));
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Default settings", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {0, 0}, {0, 0}, {0, 0}, 0, GENERATE(false, true));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Nonzero default padding value", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(false, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {0, 0}, {0, 0}, {0, 0}, 5, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 1);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  const auto warningIter = std::find_if(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -67401; });
+  REQUIRE(warningIter != warnings.end());
+  REQUIRE(warningIter->message.find("5") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Minimum padding with copied Attribute Matrices", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, true);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {2, 0}, {0, 0}, {0, 0}, 0, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Minimum padding with Update Origin on", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {2, 0}, {0, 0}, {0, 0}, 0, true);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Minimum padding with only Cell Data", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(false, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {2, 0}, {0, 0}, {0, 0}, 0, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Maximum padding only", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(true, true, true, {0, 2}, {0, 0}, {0, 0}, 0, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Disabled X minimum padding", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, false);
+
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(false, true, true, {2, 0}, {0, 2}, {0, 0}, 0, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
