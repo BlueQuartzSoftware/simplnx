@@ -1,12 +1,12 @@
-# Deviations from DREAM3D 6.5.171: ComputeFaceIPFColoringFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFaceIPFColoringFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`GenerateFaceIPFColoring`).
-
-Entries are referenced by stable ID (`ComputeFaceIPFColoringFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
+Part 1 lists differences from `GenerateFaceIPFColoring` in DREAM.3D v6.5.171 (D1, D2, D4 and D5). Part 2 lists the fixed SIMPLNX phase-bounds defect (D3). Both parts use one stable ID sequence.
 
 ---
 
-## ComputeFaceIPFColoringFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ComputeFaceIPFColoringFilter-D1
 
 | Field | Value |
 |---|---|
@@ -14,39 +14,19 @@ Entries are referenced by stable ID (`ComputeFaceIPFColoringFilter-D<N>`) from t
 | **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
 | **Status** | active |
 
-**Symptom:** On a surface-mesh face, the **Phase-2 (second) color** differs between SIMPLNX and DREAM3D 6.5.171 in two situations: (a) when the two adjacent features use **different Laue groups** (e.g., cubic on one side, hexagonal on the other), the 6.5.171 Phase-2 color is computed with the **wrong symmetry operator**; and (b) when the **first** face label is the invalid/exterior side (`feature1 ≤ 0`) while the second is a real feature, 6.5.171 leaves the Phase-2 color **black** instead of coloring it. SIMPLNX colors both correctly.
+**Symptom:** The second face side uses the wrong symmetry on a mixed-phase boundary, or stays black when the first side is exterior and phase zero has an unknown crystal structure.
 
-**Root cause:** **Bug in 6.5.171.** In the Phase-2 branch of `CalculateFaceIPFColorsImpl::generate`, both the crystal-structure validity guard and the IPF-operator lookup indexed `m_CrystalStructures[phase1]` instead of `m_CrystalStructures[phase2]`, even though the same branch correctly read `feature2`'s Euler angles and the flipped face normal (`GenerateFaceIPFColoring.cpp:166,175` in 6.5.171; the same lines were ported verbatim into SIMPLNX `Algorithms/ComputeFaceIPFColoring.cpp:114,123`). Two consequences follow from the single wrong index:
+**Root cause:** bug. The second-side calculation reads the second feature's Euler angles and reverses the normal, but its crystal-structure guard and operator lookup use the first phase. For a mixed-phase face, this selects the wrong Laue operator. For an exterior first side, the guard reads the phase-zero sentinel and skips the second color. The corrected calculation uses the second phase in both lookups.
 
-- *Mixed-phase faces:* `ops[m_CrystalStructures[phase1]]` applies Phase 1's symmetry operators to Phase 2's orientation — the output stays inside the IPF triangle so it looks valid but is materially wrong.
-- *`feature1`-invalid boundary faces:* `phase1 = 0`, so the guard reads `m_CrystalStructures[0]` (the `UnknownCrystalStructure` sentinel, 999), which is `≥ LaueGroupEnd`; the guard fails and the second color is never written, leaving it black. This affects **even single-phase datasets** — which is why the legacy Small IN100 GBCD exemplar changed when the fix was applied.
+**Affected users:** Users of DREAM3D-NX v7.0.0 through v7.4.1 or DREAM.3D v6.5.171 with adjacent features of different crystal symmetries, or exterior faces whose first label is non-positive. The exterior-face defect also affects single-phase data.
 
-The fix (`phase1`→`phase2`) is confirmed against the Class 1 analytical oracle and matches the backport in a locally patched legacy build `1c96b3b8e`.
+**Recommendation:** trust SIMPLNX. DREAM3D-NX v7.4.2 contains the fix. Each face side uses its own feature's phase and orientation.
 
-**Empirical evidence — legacy binary A/B (hand-built mixed cubic/hex mesh).** On a legacy-native
-4-face fixture (authored with the `legacy_dream3d` writer; generators + pipelines archived on OneDrive under `vv_work/face_ipf/`), DREAM3D
-6.5.171 reproduces the hand-derived *buggy* oracle exactly: the mixed-phase face's Phase-2 color
-is cubic red `(255,0,0)` (Phase-1's operator on a hex feature) and the `feature1`-invalid boundary
-face's Phase-2 color is black `(0,0,0)`. A locally patched legacy build and SIMPLNX both apply the hex operator on
-those two faces (the fix). The two faces are exactly the ones predicted; cubic-side colors and the
-cubic|cubic control face are identical across all three.
-
-**Empirical evidence — real data (756,474-face Small IN100 GBCD mesh).** SIMPLNX (fixed) vs the
-buggy `SurfaceMeshFaceIPFColors` baked into the file (authentic 6.5.171-class output) differs on
-**exactly 120,000 faces**, every one a `feature1 ≤ 0` boundary face, **zero** elsewhere (single-phase,
-so only the boundary manifestation appears). This figure is **reproducible** by re-running the A/B
-generators + pipelines archived on OneDrive (`vv_work/face_ipf/`); the rendered snapshots and the
-prose `legacy_comparison_summary.md` were not preserved, so it is reproducible rather than archived as
-a result file. The `phase1`→`phase2` fix itself is verified independently of this A/B by the Class 1
-analytical oracle, so this real-data figure is corroborating.
-
-**Affected users:** (a) Anyone coloring surface meshes of **multi-phase** microstructures where adjacent phases use different Laue groups — alpha/beta titanium, dual-phase steels, IN625 with inclusions. (b) **All** users (including single-phase) on exterior/boundary faces where the mesh ordered the exterior side as `feature1`; those faces' second color was silently black in 6.5.171. Users who only inspect the first color, or whose meshes order the real feature as `feature1`, are unaffected.
-
-**Recommendation:** **Trust SIMPLNX.** The 6.5.171 output was mathematically incorrect on the Phase-2 side; SIMPLNX applies each phase's own symmetry operators to its own orientation. A locally patched legacy build contains the same fix (`1c96b3b8e`); SIMPLNX and that patched build agree on *which* operator to apply (the residual hex hue difference between them is a separate library deviation, `-D2` below).
+**Evidence:** `Class 1 Oracle - mixed-phase analytical` asserts all 30 output bytes on five faces, including both defect triggers. `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFaceIPFColoring.cpp` uses `phase1` for the second side from `upstream/release/v7.0.0` through `upstream/release/v7.4.1`; v7.4.2 uses `phase2` after PR #1646 (`f5b383be6`). DREAM.3D tag `v6.5.171` has the wrong index in `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceIPFColoring.cpp`. `vv_work:ComputeFaceIPFColoringFilter/legacy_comparison_summary.md` records the 2026-06-30 comparison of stock DREAM.3D v6.5.171, a local proof version with D1 corrected, and SIMPLNX with D1 corrected. Its inputs are `vv_work:ComputeFaceIPFColoringFilter/build_fixture.py` and `vv_work:ComputeFaceIPFColoringFilter/fx_6_5_171.json`. Two of four complete face-color cases match stock DREAM.3D v6.5.171; all four first-side colors match. The summary also records 120,000 changed faces among 756,474 archived Small IN100 faces, all with non-positive first labels; the other 636,474 match. That comparison uses archived colors, not a new legacy execution. These results predate the algorithm changes in PR #1646 and PR #1568 (`4ec21e93f`); they describe the 2026-06-30 binaries.
 
 ---
 
-## ComputeFaceIPFColoringFilter-D2
+### ComputeFaceIPFColoringFilter-D2
 
 | Field | Value |
 |---|---|
@@ -54,10 +34,76 @@ analytical oracle, so this real-data figure is corroborating.
 | **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
 | **Status** | active |
 
-**Symptom:** For a **hexagonal** feature, the IPF color of a basal-plane reference direction differs between SIMPLNX and legacy DREAM3D (both 6.5.171 and a locally patched legacy build): SIMPLNX produces **green `(0,255,0)`** where legacy produces **blue `(0,0,255)`** (and vice-versa for the other basal corner). Cubic coloring is identical. This is unrelated to the `-D1` wrong-phase bug — it shows up on every hex IPF color, in this filter and in the sibling cell-level `ComputeIPFColors`.
+**Symptom:** The tested hexagonal basal direction is green `(0,255,0)` in SIMPLNX and blue `(0,0,255)` with the legacy library after correction of D1 in a local proof version.
 
-**Root cause:** **Library.** SIMPLNX links EbsdLib 3.x; legacy DREAM3D links an older EbsdLib. The hexagonal Laue ops' assignment of the two basal standard-triangle corners (`[2-1-10]` vs `[10-10]`) to green/blue differs between those EbsdLib generations (equivalently, the cartesian a-axis convention / fundamental-sector reduction differs). Both assignments keep the direction in-gamut and give red-channel 0 (a basal direction is never the red c-axis corner); only the green↔blue hue assignment flips. Surfaced during the legacy A/B on the hand-built cubic/hex fixture (`vv_work/face_ipf/`): on the mixed-phase face, 6.5.171 = `(255,0,0)` (wrong phase), the locally patched legacy build = `(0,0,255)` (hex, legacy hue), SIMPLNX = `(0,255,0)` (hex, EbsdLib 3.x hue). Confirmed identical (`(0,255,0)`) under **both EbsdLib 3.0.0 and EbsdLib 3.1.0** — the Class 1 oracle test passes unchanged on a from-source 3.1.0 build (`NX-Com-Qt69-Vtk95-Rel-EbsdLib`).
+**Root cause:** library. The libraries assign different hues to the tested basal corner. The difference remains when both implementations use the correct hexagonal operator. Both outputs have a zero red channel.
 
-**Affected users:** Anyone comparing **hexagonal**-phase IPF colors between DREAM3D-NX and any legacy DREAM3D — face IPF colors and cell IPF colors alike. Cubic-only datasets are unaffected.
+**Affected users:** Users who compare hexagonal basal-plane IPF colors between DREAM3D-NX and DREAM.3D v6.5.171. The cubic controls in this comparison match.
 
-**Recommendation:** **Trust SIMPLNX (EbsdLib).** EbsdLib is the canonical IPF-color authority, and its current output (3.0.0 and 3.1.0 agree: green) is the reference; legacy DREAM3D's blue is the deviation to migrate away from. The difference is a hue-assignment convention that lives in EbsdLib, not in this filter, so it applies uniformly to all hex IPF coloring (face and cell). Migration note for users: hexagonal IPF hues will change vs. legacy DREAM3D; this is expected and correct.
+**Recommendation:** trust SIMPLNX. Use its color key when interpreting its colors. The current analytical test encodes the green basal corner; the zero-red invariant does not depend on the green/blue assignment.
+
+**Evidence:** `vv_work:ComputeFaceIPFColoringFilter/legacy_comparison_summary.md` records the 2026-06-30 comparison with D1 corrected in a local proof version. It separates the library hue difference from the wrong-phase defect and records the same green expectation with EbsdLib 3.0.0 and 3.1.0.
+
+---
+
+### ComputeFaceIPFColoringFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFaceIPFColoringFilter-D4` |
+| **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
+| **Status** | active |
+
+**Symptom:** SIMPLNX produces two three-component RGB arrays instead of one six-component array.
+
+**Root cause:** algorithmic choice. SIMPLNX separates first-side and second-side output. `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeFaceIPFColoringFilter.cpp` creates both arrays with component shape `{3}`. The DREAM.3D v6.5.171 source creates one array with six components.
+
+**Affected users:** Users who import pipelines or downstream scripts that expect `SurfaceMeshFaceIPFColors` to contain both sides.
+
+**Recommendation:** trust SIMPLNX. Read the first and second RGB arrays separately. `FromSIMPLJson()` maps the legacy output name to the first array and leaves the second output name at its default.
+
+**Evidence:** PR #1427 (`0b81a0d59`) separates the two output arrays. `Class 1 Oracle - mixed-phase analytical` checks both arrays; `SIMPL Backwards Compatibility` checks the converted first output name.
+
+---
+
+### ComputeFaceIPFColoringFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFaceIPFColoringFilter-D5` |
+| **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
+| **Status** | active |
+
+**Symptom:** SIMPLNX permits PUCM and Nolze-Hielscher IPF colors in addition to TSL.
+
+**Root cause:** algorithmic choice. SIMPLNX passes the selected Color Key value to EbsdLib. The DREAM.3D v6.5.171 filter has no color-key parameter. `executeImpl()` maps choices 0, 1 and 2 to TSL, PUCM and Nolze-Hielscher.
+
+**Affected users:** Users who select a nondefault color key. TSL remains the default, with the separate D1 and D2 differences described above.
+
+**Recommendation:** trust SIMPLNX. Interpret output with the selected key.
+
+**Evidence:** PR #1631 (`ec22ac375`) adds the Color Key parameter. `ColorKey choice reaches algorithm` checks that each nondefault first-side array differs from TSL; it does not supply independent expected RGB arrays for those keys.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### ComputeFaceIPFColoringFilter-D3
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFaceIPFColoringFilter-D3` |
+| **Filter UUID** | `30759600-7c02-4650-b5ca-e7036d6b568e` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** A referenced positive feature phase at or above the Crystal Structures tuple count can cause an out-of-bounds read.
+
+**Root cause:** bug. Released algorithms index Crystal Structures with a feature phase without checking that phase against the ensemble size. Their filters validate array types and tuple counts, not phase values. Current `ValidateReferencedFeaturePhases()` in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFaceIPFColoring.cpp` reads feature phases and face labels, checks both sides, and returns `-24341` before coloring. It skips non-positive labels and ignores unreferenced feature phases.
+
+**Affected users:** Users whose Face Labels reference a feature with a positive phase outside the ensemble range.
+
+**Recommendation:** trust SIMPLNX. Correct invalid phase values or supply the missing ensemble tuples. The error identifies the feature, face side, phase value and available ensemble size.
+
+**Evidence:** PR #1568 (`4ec21e93f`) adds referenced-phase validation. `Phase Index Bounds` checks `-24341` for each side and success when the invalid phase belongs to an unreferenced feature. Source at every release branch from `upstream/release/v7.0.0` through `upstream/release/v7.4.2` lacks this validation. DREAM.3D tag `v6.5.171`, `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceIPFColoring.cpp`, also reads Crystal Structures through an unchecked phase index. Its `dataCheckVoxel()` checks array types and tuple counts only.
