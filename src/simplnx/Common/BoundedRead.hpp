@@ -225,7 +225,7 @@ struct Diagnostic
    */
   void append(std::string_view value) noexcept
   {
-    constexpr char hex[] = "0123456789ABCDEF";
+    constexpr auto hex = std::to_array("0123456789ABCDEF");
     usize index = 0;
     while(index < value.size())
     {
@@ -325,7 +325,7 @@ struct Diagnostic
     usize count = std::min<usize>(native.size(), 120);
 #ifdef _WIN32
     append(" [native UTF-16 path; malformed units escaped: ");
-    constexpr char hex[] = "0123456789ABCDEF";
+    constexpr auto hex = std::to_array("0123456789ABCDEF");
     for(usize index = 0; index < count; ++index)
     {
       uint32 value = static_cast<uint32>(native[index]);
