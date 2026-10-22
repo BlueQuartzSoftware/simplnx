@@ -19,7 +19,7 @@
 | Code paths enumerated | 19 of 25 exercised. Gaps include cancellation, failed neighbor retrieval, rejected parent claims, an empty parent loop and the HDF5 boundary path. |
 | Tests today | 8 test cases: one four-configuration archive comparison, one empty-parent case, four preflight rejections, one hidden HDF5 fixture and one SIMPL conversion case. |
 | Exemplar archive | `compute_grouping_densities_v2.tar.gz` supplies inputs and outputs for all four option combinations. It replaces `compute_grouping_densities.tar.gz`. |
-| Legacy comparison | Not run against DREAM.3D v6.5.171: it has no equivalent filter, and the comparison working folder is absent. The archive records a local proof comparison signed off on 2026-05-27; the algorithm source changed afterward. |
+| Legacy comparison | Not run — DREAM.3D v6.5.171 has no equivalent filter. A local proof version matched all 4 option combinations bit for bit on 2026-05-27; the algorithm changed afterward. |
 | Bug flags | None |
 | V&V phase | COMPLETE. Analytical values, invariants, input rejection and parameter conversion are covered. |
 
