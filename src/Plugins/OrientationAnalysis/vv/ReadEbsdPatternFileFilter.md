@@ -19,7 +19,7 @@
 | Code paths enumerated | 19 of 42 exercised. Gaps include input guards, warnings, file changes, chunk boundaries, and pixel assertions for two format combinations. |
 | Tests today | 14 test cases cover headers, output shapes, selected pixel values, malformed inputs, warnings, and cancellation. All pass in CI. |
 | Exemplar archive | None. Tests construct synthetic files and expected values in C++. |
-| Legacy comparison | Not run — comparison artifacts are not available. DREAM.3D v6.5.171 has no equivalent filter. |
+| Legacy comparison | Not run — DREAM.3D v6.5.171 has no equivalent filter. |
 | Bug flags | None |
 | V&V phase | Analytical and invariant checks are encoded and pass in CI. Second-engineer review is complete. |
 
