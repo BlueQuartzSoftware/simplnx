@@ -1,4 +1,4 @@
-# Exemplar Archive Provenance: `bad_data_neighbor_orientation_check_v2.tar.gz`
+# Exemplar Archive Provenance: bad_data_neighbor_orientation_check_v2.tar.gz
 
 This sidecar records the test-input archive, independent expected masks, release-source checks and legacy comparison for `BadDataNeighborOrientationCheckFilter`.
 
@@ -15,7 +15,7 @@ This sidecar records the test-input archive, independent expected masks, release
 
 PR #1631 (`ec22ac375`) registers this archive name and SHA512 in `src/Plugins/OrientationAnalysis/test/CMakeLists.txt:173`.
 
-The test source is identical to `01809c236`. All 33 ordinary test cases pass in CI at `01809c236` on Linux, macOS and Windows. The 2D, phase-bounds, tuple-count and HDF5 fixtures construct their inputs in C++.
+CI at `01809c236` records passes for 33 ordinary test cases on Linux, macOS and Windows. The current test source adds `Preflight Error - Number of neighbors out of range (-6810)` and retains those 33 cases. The 2D, phase-bounds, tuple-count, neighbor-count and HDF5 fixtures construct their inputs in C++.
 
 ## How it was generated
 
@@ -59,7 +59,8 @@ Not applicable. The correctness oracles are Classes 1 and 4. Legacy outputs and 
 
 ## Second-engineer oracle review
 
-The report sign-off names Nathan Young (2026-02-02) and Michael Jackson (2026-06-01). Its Oracle text says that Michael Jackson reviewed the design.
+- **Reviewer:** Michael Jackson, as recorded in the report.
+- **Date:** 2026-06-01
 
 ## Regenerated to fix a circular-oracle situation?
 

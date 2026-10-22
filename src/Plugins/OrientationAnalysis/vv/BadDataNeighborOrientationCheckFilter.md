@@ -15,9 +15,9 @@
 | Aspect | Current state |
 |--------|---------------|
 | Algorithm Relationship | Rewrite of `BadDataNeighborOrientationCheck` in DREAM.3D v6.5.171. Worklist and Scanline preserve the neighbor rule with the documented defect corrections. |
-| Oracle (confirmed) | Class 1 expected masks and Class 4 invariants are encoded in `test/BadDataNeighborOrientationCheckTest.cpp`. All 33 ordinary test cases pass in CI at `01809c236` on Linux, macOS and Windows. |
-| Code paths enumerated | 17 of 27 exercised. Defensive guards, cancellation and I/O failures have no direct fixtures. |
-| Tests today | 33 ordinary test cases and 2 hidden template variants cover masks, propagation, invariants, input validation and SIMPL conversion. |
+| Oracle (confirmed) | Class 1 expected masks and Class 4 invariants are encoded in `test/BadDataNeighborOrientationCheckTest.cpp`. CI covers 33 ordinary test cases. All pass in CI. |
+| Code paths enumerated | 17 of 28 exercised. One additional path has a fixture; ten paths have no direct fixtures. |
+| Tests today | 34 ordinary test cases and 2 hidden template variants cover masks, propagation, invariants, input validation and SIMPL conversion. |
 | Exemplar archive | `bad_data_neighbor_orientation_check_v2.tar.gz` supplies test inputs. Expected masks are defined in the test source. |
 | Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-09-17: 12 of 28 cases match. A local proof version matches all 28 cases. |
 | Bug flags | None. |
@@ -25,13 +25,13 @@
 
 ## Summary
 
-`BadDataNeighborOrientationCheckFilter` changes bad mask values to good when enough good face neighbors have the same phase and a misorientation below the tolerance. Class 1 expected masks and Class 4 invariants check the result. The branch contains the five documented defect fixes below.
+`BadDataNeighborOrientationCheckFilter` changes bad mask values to good when enough good face neighbors have the same phase and a misorientation below the tolerance. Class 1 expected masks and Class 4 invariants check the result. The five documented defects below are fixed.
 
 ## Algorithm Relationship
 
 *Classification:* Rewrite
 
-*Evidence:* PR #1499 (`ebdce592f`) corrected the port; PR #1568 (`4ec21e93f`) replaced its repeated full-volume scans with Worklist and Scanline implementations.
+*Evidence:* Worklist and Scanline replace the repeated full-volume scans in DREAM.3D v6.5.171. Both implementations retain the neighbor rule and correct the five defects listed below.
 
 ## Oracle
 
@@ -39,27 +39,27 @@
 
 *Applied:* Expected masks follow the strict angle limit, same-phase rule and repeated neighbor propagation; invariant checks require no loss of good voxels and an unchanged result after a second run.
 
-*Encoded:* `src/Plugins/OrientationAnalysis/test/BadDataNeighborOrientationCheckTest.cpp` — `Case 1.1.1` through `Case 4` give 27 fixtures; `2D Image Fixture (3x3x1)`, `real HDF5 reverse-slice cascade oracle`, `Class 4 Invariants Sweep` and `Class 4 Idempotence` add analytical and invariant checks. All 33 ordinary test cases pass in CI at `01809c236`.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/BadDataNeighborOrientationCheckTest.cpp` — `Case 1.1.1` through `Case 4` give 27 fixtures; `2D Image Fixture (3x3x1)`, `real HDF5 reverse-slice cascade oracle`, `Class 4 Invariants Sweep` and `Class 4 Idempotence` add analytical and invariant checks. CI covers 33 ordinary test cases. All pass in CI.
 
 *Second-engineer review:* Michael Jackson, 2026-06-01, as recorded in the sign-off.
 
 ## Bugs found and fixed
 
-This branch fixes all defects in this table. PR #1499 fixed `BadDataNeighborOrientationCheckFilter-D1` and `BadDataNeighborOrientationCheckFilter-D2`, and DREAM3D-NX v7.4.1 contains those fixes. PR #1631 fixed `BadDataNeighborOrientationCheckFilter-D3` and `BadDataNeighborOrientationCheckFilter-D4`, and DREAM3D-NX v7.4.2 contains those fixes. PR #1568 fixed `BadDataNeighborOrientationCheckFilter-D5`; that fix will be in the DREAM3D-NX release after v7.4.2.
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2. DREAM3D-NX v7.4.1 contains the fix for `BadDataNeighborOrientationCheckFilter-D1`. DREAM3D-NX v7.4.1 contains the fix for `BadDataNeighborOrientationCheckFilter-D2`. DREAM3D-NX v7.4.2 contains the fix for `BadDataNeighborOrientationCheckFilter-D3`. DREAM3D-NX v7.4.2 contains the fix for `BadDataNeighborOrientationCheckFilter-D4`.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|-----------|--------|----------------------------|---------------------------|
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
 | `BadDataNeighborOrientationCheckFilter-D1` | The convergence loop omitted the requested minimum level, so eligible bad voxels stayed bad. | DREAM3D-NX v7.0.0 through v7.4.0. DREAM.3D v6.5.171 was affected. | Both implementations include `currentLevel == NumberOfNeighbors`. |
 | `BadDataNeighborOrientationCheckFilter-D2` | An angle from a previous neighbor could cause a different-phase neighbor to count as a match. | DREAM3D-NX v7.0.0 through v7.4.0. DREAM.3D v6.5.171 was affected. | Both implementations test the angle inside the same-phase condition. |
-| `BadDataNeighborOrientationCheckFilter-D3` | Float conversion of the angle tolerance could admit a neighbor at the strict boundary. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Convert degrees to radians with double precision. |
-| `BadDataNeighborOrientationCheckFilter-D4` | Invalid crystal-structure values could index outside the orientation-operator array. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Reject invalid Laue indices with `-54901`; skip the supported unknown-structure sentinel. |
-| `BadDataNeighborOrientationCheckFilter-D5` | An invalid phase on a bad voxel could index outside Crystal Structures. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | Skip nonpositive phases and return `-54902` for a participating phase beyond the ensemble array. |
+| `BadDataNeighborOrientationCheckFilter-D3` | Float conversion of the angle tolerance could admit a neighbor at the strict boundary. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | The filter converts degrees to radians with double precision. |
+| `BadDataNeighborOrientationCheckFilter-D4` | Invalid crystal-structure values could index outside the orientation-operator array. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | The filter rejects invalid Laue indices with `-54901` and skips the supported unknown-structure sentinel. |
+| `BadDataNeighborOrientationCheckFilter-D5` | An invalid phase on a bad voxel could index outside Crystal Structures. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | The filter skips nonpositive phases and returns `-54902` for a participating phase beyond the ensemble array. |
 
 ## Code path coverage
 
-17 of 27 paths exercised. The table maps source paths to existing fixtures. Each uncovered path states why it has no direct fixture.
+17 of 28 paths exercised. Path 28 has an added fixture. The table maps source paths to existing fixtures and gives the reason for each path without a fixture.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.cpp` (37 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckWorklist.cpp` (256 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckScanline.cpp` (382 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.cpp` (173 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.cpp` (37 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckWorklist.cpp` (261 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckScanline.cpp` (381 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.cpp` (180 lines).
 
 Worklist counts matching neighbors and propagates changes through a queue. Scanline recounts neighbors in rolling slices until each level is stable.
 
@@ -86,12 +86,13 @@ Worklist counts matching neighbors and propagates changes through a queue. Scanl
 | 19 | Validation | Mask cannot be loaded → error `-54900` | *Not directly tested. This requires a direct algorithm call that bypasses parameter validation.* |
 | 20 | Validation | Crystal structure is outside the Laue range and is not the sentinel → error `-54901` | *Not directly tested. No fixture supplies an invalid non-sentinel crystal structure.* |
 | 21 | Worklist | Discard a duplicate queue entry or an entry below the current level | *Not directly tested. No fixture isolates the queue guard.* |
-| 22 | Worklist | Recheck phase and Laue bounds after a flip | *Not directly tested. Valid positive thresholds prevent rejected voxels from entering the queue; no nonpositive-threshold fixture exists.* |
+| 22 | Worklist | Recheck phase and Laue bounds after a flip | *Not directly tested. Preflight restricts the threshold to 1 through 6. No fixture bypasses preflight to isolate these guards.* |
 | 23 | Scanline | Read and write UInt8 mask slices | `real HDF5 reverse-slice cascade oracle` — UInt8 variant |
 | 24 | Scanline | Convert Bool mask slices for bulk reads and writes | `real HDF5 reverse-slice cascade oracle` — Bool variant |
 | 25 | Scanline | Return an ensemble, quaternion, phase or mask I/O error | *Not directly tested. No fixture injects a store read or write failure.* |
 | 26 | Scanline | Use fallback per-element mask I/O | *Not directly tested. Accepted masks use the UInt8 or Bool bulk paths.* |
-| 27 | Propagation | Requested level exceeds six → no propagation | *Not directly tested. No fixture uses a neighbor requirement above six.* |
+| 27 | Propagation | Requested level exceeds six → no propagation | *Not directly tested. Preflight rejects a neighbor requirement above six. No fixture bypasses preflight to isolate this loop guard.* |
+| 28 | Preflight | Neighbor requirement is outside 1 through 6 → error `-6810` | `Preflight Error - Number of neighbors out of range (-6810)` — values 7, 0 and -1 |
 
 ## Test inventory
 
@@ -125,6 +126,7 @@ Worklist counts matching neighbors and propagates changes through a queue. Scanl
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2` | kept | Class 1. Neighbor requirement 1; requires every mask value to be 1 after propagation. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4` | kept | Class 1. Neighbor requirement 4; compares all 125 mask values with a literal array. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight Error - Cell array tuple count mismatch (-6809)` | kept | Checks preflight error `-6809` for 9 phase tuples and 10 mask/quaternion tuples. |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Preflight Error - Number of neighbors out of range (-6810)` | kept | Checks preflight error `-6810` for neighbor requirements 7, 0 and -1. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: SIMPL Backwards Compatibility` | kept | Checks UUID, comments, scalar values and array paths in `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` dynamic sections. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 Invariants Sweep` | new-for-V&V | Checks no loss of good voxels and a nondecreasing good-voxel count in 18 dynamic sections, one for each Case 1 fixture. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 Idempotence` | new-for-V&V | Runs Case 4 twice; compares every value in the second mask with the first. |
