@@ -1,118 +1,119 @@
 # V&V Report: ReplaceElementAttributesWithNeighborValuesFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID                | `65128c53-d3be-4a69-a559-32a48d603884`       |
-| SIMPLNX Human Name          | Replace Element Attributes with Neighbor (Threshold)                                             |
-| DREAM3D 6.5.171 equivalent  | `ReplaceElementAttributesWithNeighborValues` — SIMPL UUID `17410178-4e5f-58b9-900e-8194c69200ab` |
-| Verified commit             | *<filled at SBIR deliverable assembly>*      |
-| Status                      | **COMPLETE**                                 |
-| Sign-off                    | Nathan Young, 07-21-2026                                    |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `65128c53-d3be-4a69-a559-32a48d603884` |
+| SIMPLNX Human Name | Replace Element Attributes with Neighbor (Threshold) |
+| DREAM.3D v6.5.171 equivalent | `ReplaceElementAttributesWithNeighborValues` (OrientationAnalysis plugin, SIMPL UUID `17410178-4e5f-58b9-900e-8194c69200ab`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Nathan Young, 2026-07-21; second engineer: Matthew Marine, 2026-07-22 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port** — direct translation of SIMPL `ReplaceElementAttributesWithNeighborValues`; same two-pass (scan → copy) + optional-loop structure. Legacy UUID cited in filter header. |
-| Oracle                | **Class 1 (Analytical)** — synthetic 3×3×3 grid, 4 SECTIONs with closed-form expected values. **Class 4 (Invariant)** companion — post-loop threshold saturation and multi-array copy. |
-| Code paths            | 16 of 17 directly tested; cancel path untestable (no cancel-signal injection in test framework). |
-| Tests                 | 2 TEST_CASEs: synthetic (4 SECTIONs, Class 1 + Class 4 oracle) + SIMPL backwards-compat (2 DYNAMIC_SECTIONs). |
-| Exemplar archive      | `6_6_replace_element_attributes_with_neighbor.tar.gz` — unreferenced; consuming circular-oracle test removed. See `vv/provenance/ReplaceElementAttributesWithNeighborValues.md`. |
-| Legacy comparison     | **Complete (2026-07-21, re-run 2026-07-21 post-refactor).** Bit-identical on LessThan and GreaterThan vs 6.5.171; a locally patched legacy build also matched 6.5.171 bit-for-bit on LessThan. No deviations. See `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md`. |
-| Bug flags             | None. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to `ReplaceElementAttributesWithNeighborValues` in DREAM.3D v6.5.171. SIMPLNX retains the face-neighbor rules, preserves the comparison value's type, and transfers numeric tuples one Z slice at a time. |
+| Oracle (confirmed) | Classes 1 and 4 use four synthetic sections in `test/ReplaceElementAttributesWithNeighborValuesTest.cpp`. All pass in CI. |
+| Code paths enumerated | 20 of 30 paths exercised. Gaps include cancellation, I/O failures, nonnumeric siblings, other comparison types, and a loop with no passing values. |
+| Tests today | 4 test cases: synthetic replacement, archive regression, SIMPL conversion, and a hidden data generator. The synthetic case has four sections. |
+| Exemplar archive | `6_6_replace_element_attributes_with_neighbor.tar.gz` is used by the archive regression. The test loads the same file as input and reference; the independent oracle is in the synthetic test. |
+| Legacy comparison | Not run on the current algorithm. The comparison dated 2026-07-21 predates the change to slice transfers. |
+| Bug flags | `ReplaceElementAttributesWithNeighborValuesFilter-D3` |
+| V&V phase | COMPLETE. Two defects are fixed; the loop-termination defect remains open. |
 
 ## Summary
 
-`ReplaceElementAttributesWithNeighborValuesFilter` replaces each "bad" cell (one that fails a user-supplied threshold comparison) by copying all AttributeMatrix arrays from the best-passing face neighbor. Algorithm: (1) scan pass — for each bad voxel, check 6 face neighbors and record the one with the most-extreme passing value; (2) copy pass — apply recorded neighbor copies to all cell arrays. An optional loop repeats until no bad voxels remain.
-
-Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 confirmed bit-identical output on both operators; a locally patched legacy build also matched 6.5.171 bit-for-bit on LessThan. The comparison was re-run after the algorithm was refactored and remained bit-identical. No deviations.
+`ReplaceElementAttributesWithNeighborValuesFilter` replaces a cell that fails the threshold by copying numeric tuples from the best passing face neighbor. Four synthetic sections check analytical values, threshold saturation, and copying to a second array; all pass in CI. Two defects are fixed, but loop mode does not terminate when all comparison values fail the threshold.
 
 ## Algorithm Relationship
 
-*Classification:* **Port**
+*Classification:* Minor changes
 
-Near line-by-line translation of SIMPL `ReplaceElementAttributesWithNeighborValues`. Legacy UUID `17410178-4e5f-58b9-900e-8194c69200ab` cited explicitly in `ReplaceElementAttributesWithNeighborValuesFilter.hpp`. SIMPL conversion fixtures present at `test/simpl_conversion/6_5/` and `6_4/ReplaceElementAttributesWithNeighborValuesFilter.json`. Two-pass architecture, 6-face-neighbor scan with individual boundary guards, and `IComparisonFunctor<T>` dispatch pattern are direct ports.
-
-*Port-time deltas (none behavioral):*
-
-1. **Algorithm class extraction** — core logic moved to `Algorithms/ReplaceElementAttributesWithNeighborValues.cpp` per SimplnxCore convention.
-2. **Geometry access** — uses `NeighborUtilities::initializeFaceNeighborOffsets(dims)`; equivalent to legacy's hard-coded `int64 neighpoints[6]`.
-3. **Array copy pass** — iterates `AttributeMatrix` with structured binding + `copyTuple`; legacy iterated SIMPL `AttributeMatrix` equivalently.
-4. **Type dispatch** — `ExecuteDataFunction(ExecuteTemplate{}, ...)` vs SIMPL's `EXECUTE_FUNCTION_TEMPLATE`. UX/framework only.
-5. **Progress reporting** — `ProgressMessage` via `messageHandler` vs `notifyStatusMessage`. UX only.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; both implementations use six face neighbors, while SIMPLNX preserves the candidate type and transfers one Z slice at a time.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary + **4 (Invariant)** companion. Classes 2, 3, 5 N/A — no external library implements this heuristic; no published algorithm.
+*Class:* 1 (Analytical), with 4 (Invariant).
 
-### Class 1 — Analytical derivations
+*Applied:* Hand-derived values on a 3×3×3 grid specify replacement of isolated bad cells and preservation of a center with no passing neighbor; invariants check threshold saturation and a changed marker.
 
-3×3×3 grid, float32 `Confidence Index`, int32 `Marker` (initialized to linear index):
+*Encoded:* `src/Plugins/SimplnxCore/test/ReplaceElementAttributesWithNeighborValuesTest.cpp::SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement` — four fixture sections. All pass in CI.
 
-- **LessThan** (`compare = val < threshold`), bad={0,13,26}, good=0.9, bad=0.1, threshold=0.5, loop=true: bad voxels fail (0.1 < 0.5). Each has ≥1 face neighbor at 0.9. `compare1(0.9 ≥ 0.5)` = true; `compare2(0.9 > 0.1)` = true on first good neighbor; remaining equal neighbors fail `compare2(0.9 > 0.9)`. After copy pass: all three become 0.9. Second iteration: count=0, exit.
-- **GreaterThan** (`compare = val > threshold`): symmetric with good=0.1, bad=0.9. All three become 0.1. All values ≤ 0.5 after one iteration.
-- **loop=false**: single bad voxel at center (index 13), 6 good neighbors, one pass fills it. Deterministic.
-- **compare1=false**: bad cluster = center (13) + all 6 face neighbors {4,10,12,14,16,22}. In the scan pass every `compare1` call for voxel 13 returns false → `bestNeighbor[13]` stays -1 → voxel 13 unchanged. Ring voxels each have ≥1 good face neighbor outside the cluster and are replaced.
+*Second-engineer review:* Matthew Marine, 2026-07-22.
 
-Multi-array copy verified via `Marker`: after replacement `markerStore[13] != 13`, confirming the copy pass covers all AttributeMatrix arrays, not just the comparison array.
+## Bugs found and fixed
 
-### Class 4 — Invariants
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains both fixes.
 
-- Post-loop threshold saturation: after `loop=true` convergence, every value passes the threshold.
-- Multi-array copy: `markerStore[13] != 13` after bad-center-voxel replacement.
-
-### Encoded
-
-`test/ReplaceElementAttributesWithNeighborValuesTest.cpp` — TEST_CASE `"Synthetic neighbor replacement"` — 4 SECTIONs with explicit `REQUIRE` checks. All pass.
-
-*Second-engineer review:* Skipped — no second engineer available at time of V&V.
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ReplaceElementAttributesWithNeighborValuesFilter-D1` | A float32 temporary could change the selected neighbor for a float64 or large-integer comparison array. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | The best candidate retains the comparison array's numeric type. |
+| `ReplaceElementAttributesWithNeighborValuesFilter-D2` | A nonnumeric sibling in the cell AttributeMatrix could cause a failed reference cast during replacement. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The filter copies numeric `IDataArray` siblings and skips other objects. |
 
 ## Code path coverage
 
-*16 of 17 paths directly tested; 1 untestable gap.*
+20 of 30 paths exercised. Each uncovered path has a reason below.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp`
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp` (368 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.cpp` (140 lines).
 
-| #  | Phase        | Path                                          | Test coverage                                    |
-|----|--------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| 1  | Loop         | Cancel check at top of `while(keepGoing)`     | **Untestable** — no cancel-signal injection available.                                                |
-| 2  | (a) Scan     | Good voxel → skip; `count` not incremented    | All 24 good voxels in each synthetic SECTION.    |
-| 3  | (a) Scan     | Bad voxel → enter 6-neighbor search; `count++`| LessThan/GreaterThan: voxels {0,13,26}; loop=false: voxel 13.                                        |
-| 4  | (a) Scan     | -Z boundary guard (`plane == 0`) → skip       | Voxel 0 at (0,0,0).                              |
-| 5  | (a) Scan     | -Y boundary guard (`row == 0`) → skip         | Voxel 0 at (0,0,0).                              |
-| 6  | (a) Scan     | -X boundary guard (`column == 0`) → skip      | Voxel 0 at (0,0,0).                              |
-| 7  | (a) Scan     | +X boundary guard (`column == dims[0]-1`) → skip                                                   | Voxel 26 at (2,2,2).                             |
-| 8  | (a) Scan     | +Y boundary guard (`row == dims[1]-1`) → skip | Voxel 26 at (2,2,2).                             |
-| 9  | (a) Scan     | +Z boundary guard (`plane == dims[2]-1`) → skip                                                    | Voxel 26 at (2,2,2).                             |
-| 10 | (a) Scan     | `compare1=true` AND `compare2=true` → update `best` + `bestNeighbor[i]`                           | First good face neighbor of each bad voxel.      |
-| 11 | (a) Scan     | `compare1=false` → skip neighbor              | compare1=false SECTION: cluster bad={4,10,12,13,14,16,22}; all neighbors of voxel 13 fail compare1; `bestNeighbor[13]` stays -1. |
-| 12 | (a) Scan     | `compare1=true` AND `compare2=false` → skip neighbor                                               | Voxel 13: first good neighbor sets `best=0.9`; remaining 5 at 0.9 fail `compare2(0.9 > 0.9)`.       |
-| 13 | (b) Copy     | `bestNeighbor[i] != -1` → `copyTuple` across all AttributeMatrix arrays                           | LessThan: voxels {0,13,26} replaced; `markerStore[13] != 13` confirms non-comparison array copied.   |
-| 14 | (b) Copy     | `bestNeighbor[i] == -1` → skip                | All 24 good voxels; also voxel 13 in the compare1=false SECTION.                                     |
-| 15 | Loop control | `loopUntilDone && count > 0` → `keepGoing = true`                                                  | LessThan: iteration 1 has count=3; sets keepGoing=true.                                               |
-| 16 | Loop control | `count == 0` → exit while                     | LessThan: second iteration has count=0.          |
-| 17 | Loop control | `loop=false` → single pass only               | loop=false SECTION.                              |
+Rows that name a section refer to `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement`. Each pass selects neighbors from a rolling comparison window and transfers each completed Z slice.
+
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Loop | Cancel before a pass | *Not directly tested. Requires cancellation injection.* |
+| 2 | Scan | A passing cell skips the neighbor search | `LessThan replaces low voxels and loops until none remain` |
+| 3 | Scan | A failing cell increments the count and searches neighbors | `LessThan replaces low voxels and loops until none remain`; `GreaterThan replaces high voxels and loops until none remain` |
+| 4 | Scan | Reject the -Z neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 0 |
+| 5 | Scan | Reject the -Y neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 0 |
+| 6 | Scan | Reject the -X neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 0 |
+| 7 | Scan | Reject the +X neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 26 |
+| 8 | Scan | Reject the +Y neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 26 |
+| 9 | Scan | Reject the +Z neighbor at the boundary | `LessThan replaces low voxels and loops until none remain` — cell 26 |
+| 10 | Scan | A passing, better candidate becomes the selected source | `LessThan replaces low voxels and loops until none remain` |
+| 11 | Scan | Reject a neighbor that fails the threshold | `bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)` |
+| 12 | Scan | Reject a passing neighbor whose value equals the best value | `LessThan replaces low voxels and loops until none remain` — equal candidates at cell 13 |
+| 13 | Copy | Copy a selected source into the comparison and marker arrays | `LessThan replaces low voxels and loops until none remain` — exact replaced values and changed center marker |
+| 14 | Copy | Preserve cells with no selected source | `bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)` — center stays 0.1 |
+| 15 | Loop | Repeat when loop mode is enabled and the pass counted failing cells | `LessThan replaces low voxels and loops until none remain` |
+| 16 | Loop | Exit after a pass counts no failing cells | `LessThan replaces low voxels and loops until none remain`; `GreaterThan replaces high voxels and loops until none remain` |
+| 17 | Loop | Stop after one pass when loop mode is disabled | `loop disabled performs a single pass`; `bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)` |
+| 18 | Setup | Select LessThan and prefer larger passing values | `LessThan replaces low voxels and loops until none remain` |
+| 19 | Setup | Select GreaterThan and prefer smaller passing values | `GreaterThan replaces high voxels and loops until none remain` |
+| 20 | Slices | Read initial slices, rotate the window, read the next slice, and reset source marks after each transfer | `bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)`; both loop sections |
+| 21 | Slices | Process a single Z slice without reading a second slice | *Not directly tested. Synthetic fixtures have three slices; the archive regression does not isolate this condition.* |
+| 22 | I/O | Return a first-slice comparison read error | *Not directly tested. Requires an injected read failure.* |
+| 23 | I/O | Return a second-slice comparison read error | *Not directly tested. Requires an injected read failure.* |
+| 24 | I/O | Return a comparison read error after window rotation | *Not directly tested. Requires an injected read failure.* |
+| 25 | I/O | Return a sibling tuple-transfer error | *Not directly tested. Requires an injected transfer read or write failure.* |
+| 26 | Copy | Skip a sibling that is not an `IDataArray` | *Not directly tested. No fixture includes a nonnumeric sibling.* |
+| 27 | Loop | Cancel after a completed pass | *Not directly tested. Requires cancellation injection.* |
+| 28 | Dispatch | Compare boolean, integer, or float64 values instead of float32 | *Not directly tested. All executing test cases select a float32 comparison array.* |
+| 29 | Loop | Repeat without progress when every value fails the threshold | *Not directly tested. An uncancelled fixture would not terminate; see `ReplaceElementAttributesWithNeighborValuesFilter-D3`.* |
+| 30 | Preflight | Accept the comparison array and declare its parent contents modified | `Synthetic neighbor replacement` — preflight succeeds in all four sections |
 
 ## Test inventory
 
-| Test case (SECTION)                          | Oracle        | Parameters         |
-|----------------------------------------------|---------------|-------------------------------------------------------------------------|
-| Synthetic — LessThan                         | Class 1 + 4   | bad={0,13,26}, good=0.9, threshold=0.5, loop=true. All 27 ≥ threshold; `Marker[13]` copied. |
-| Synthetic — GreaterThan                      | Class 1 + 4   | bad={0,13,26}, good=0.1, threshold=0.5, loop=true. All 27 ≤ threshold. |
-| Synthetic — loop=false                       | Class 1       | bad={13}, good=0.9, threshold=0.5, loop=false. Single pass fills center. |
-| Synthetic — compare1=false skip              | Class 1       | bad cluster={4,10,12,13,14,16,22}, loop=false. Center stays bad; ring replaced. Covers path 11. |
-| SIMPL Backwards Compatibility (6.4 + 6.5)   | N/A           | UUID + arg-key + value round-trip via `Pipeline::FromSIMPLFile`. Not an oracle test. |
+The test cases are in `src/Plugins/SimplnxCore/test/ReplaceElementAttributesWithNeighborValuesTest.cpp`. The three ordinary cases pass in CI. The generator is hidden.
+
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Generate Test Data` | kept | Hidden (`[.GenerateTestData]`). Writes patterned 20×20×20 and 200×200×200 inputs with confidence, Euler-angle, and phase arrays; does not execute the filter. |
+| `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter` | kept | Loads the same archive file as input and reference, runs LessThan at 0.1 with loop enabled, compares cell arrays, and checks tuple dimensions. This checks stability on the stored data. |
+| `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement` | new-for-V&V | Four sections check LessThan, GreaterThan, one pass, and a bad center surrounded by bad neighbors. Checks all 27 values against the threshold in the loop sections, exact replacement values, and a changed center marker. |
+| `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check identity, comments, threshold, comparison, loop, and both input paths. Does not execute replacement. |
 
 ## Exemplar archive
 
 - **Archive:** `6_6_replace_element_attributes_with_neighbor.tar.gz`
 - **SHA512:** `319ebdf08b83ce5ec915afda8ee2af1e0952a3ce26b3e65a4171eb3125c7bc6613c3994610bf526f70413c00da9061c3e6c2d867643220d62faa8c3cd79a96cd`
-- **Status:** Unreferenced — the circular-oracle test that consumed it was removed. Archive may be retired.
-- **Provenance:** `vv/provenance/ReplaceElementAttributesWithNeighborValues.md`
+- **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/ReplaceElementAttributesWithNeighborValues.md`
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-No deviations. A/B comparison (2026-07-21) confirmed bit-identical output on LessThan and GreaterThan vs 6.5.171; a locally patched legacy build also matched 6.5.171 bit-for-bit on LessThan.
+See `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md` for the root cause, affected users, and recommendation. This table lists only Part 1.
 
-Full record: `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md`
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ReplaceElementAttributesWithNeighborValuesFilter-D1` | SIMPLNX retains the comparison value's numeric type when it selects the best neighbor; DREAM.3D v6.5.171 rounds the candidate to float32. |
