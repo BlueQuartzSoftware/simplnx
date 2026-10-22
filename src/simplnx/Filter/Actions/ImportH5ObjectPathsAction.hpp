@@ -59,26 +59,16 @@ public:
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
   /**
-   * @enum PublicationFault
-   * @brief Selects one failure in this action's next publication transaction.
+   * @brief Selects an action-local failure in the destination-owned publication operation.
    */
-  enum class PublicationFault : uint8
-  {
-    None,                  ///< Runs without injection.
-    BeforePublication,     ///< Fails after ID reservation and before insertion.
-    AfterSecondInsert,     ///< Fails after two complete real insertions.
-    AfterHierarchy,        ///< Fails after the second object's hierarchy placement, before its parent list.
-    BeforeTracking,        ///< Fails after the second object's parent list, before its weak entry.
-    AllocationAfterSecond, ///< Throws bad_alloc after two complete insertions.
-    ReturnFalse            ///< Makes the second insertion report failure before mutation.
-  };
+  using PublicationFaultType = DataStructure::ImportPublicationTestControl::Fault;
 
   /**
    * @brief Arms one action-local publication fault.
    * @param fault Selects the failure boundary.
    * @param refuseCleanup Retains the second object's exact placement during automatic cleanup.
    */
-  void setPublicationFaultForTesting(PublicationFault fault, bool refuseCleanup = false) const;
+  void setPublicationFaultForTesting(PublicationFaultType fault, bool refuseCleanup = false) const;
   bool publicationFaultConsumedForTesting() const;
   bool cleanupFaultConsumedForTesting() const;
   std::shared_ptr<DataObject> retainedOwnerForTesting() const;
@@ -93,18 +83,6 @@ public:
 
 private:
   struct TestState;
-  /**
-   * @brief Cleans structures before attempting callbacks and conditionally restores the reserved ID counter.
-   * @param destination Owns the publication target.
-   * @param records Owns the exact shells and preallocated removal messages.
-   * @param savedNextId Supplies the counter before reservation.
-   * @param reservedNextId Supplies the transaction's checked high-water counter.
-   * @param allowRefusal Enables only this action's deterministic test refusal.
-   * @return True if every transaction object and index entry was removed.
-   */
-  bool rollbackPublication(DataStructure& destination, std::vector<DataStructure::ImportPublicationRecord>& records, DataObject::IdType savedNextId, DataObject::IdType reservedNextId,
-                           bool allowRefusal) const;
-
   std::filesystem::path m_H5FilePath;
   PathsType m_Paths;
   mutable std::shared_ptr<TestState> m_TestState;
