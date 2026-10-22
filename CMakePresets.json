@@ -140,6 +140,54 @@
       }
     },
     {
+      "name": "azure-windows-v143",
+      "displayName": "azure-windows-v143",
+      "description": "Build configuration for Azure self-hosted CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/python.exe"
+        },
+        "PYTHON_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/python.exe"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/Scripts/sphinx-build.exe"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "$env{NINJA_INSTALL}/ninja.exe"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "PATH",
+          "value": "$env{AGENT_WORKFOLDER}/DREAM3D_Data"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "DATA_ARCHIVE_WEB_SITE": {
+          "type": "STRING",
+          "value": "https://www.dream3d.io/Data_Archive/"
+        }
+      },
+      "environment": {
+        "ANACONDA_ROOT": "C:/conda3"
+      }
+    },
+    {
       "name": "ci-macos-x64",
       "displayName": "ci-macos-x64",
       "description": "Build configuration for GitHub Actions CI",
@@ -208,6 +256,51 @@
           "type": "PATH",
           "value": "$env{pythonLocation}/bin/python3"
         }
+      }
+    },
+    {
+      "name": "azure-linux-x64",
+      "displayName": "azure-linux-x64",
+      "description": "Build configuration for Azure self-hosted CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/bin/python"
+        },
+        "PYTHON_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/bin/python"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/bin/sphinx-build"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "PATH",
+          "value": "$env{AGENT_WORKFOLDER}/DREAM3D_Data"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "DATA_ARCHIVE_WEB_SITE": {
+          "type": "STRING",
+          "value": "https://www.dream3d.io/Data_Archive/"
+        }
+      },
+      "environment": {
+        "VCPKG_INSTALLATION_ROOT": "/opt/buildbot/agent/vcpkg",
+        "ANACONDA_ROOT": "/opt/local/anaconda3"
       }
     },
     {
@@ -364,6 +457,13 @@
       "configuration": "Release"
     },
     {
+      "name": "azure-windows-v143",
+      "displayName": "azure-windows-v143 CI build",
+      "description": "Build configuration for Azure self-hosted CI",
+      "configurePreset": "azure-windows-v143",
+      "configuration": "Release"
+    },
+    {
       "name": "ci-macos-x64",
       "displayName": "ci-macos-x64 CI build",
       "description": "Build configuration for GitHub actions CI",
@@ -382,6 +482,13 @@
       "displayName": "ci-linux-x64 CI build",
       "description": "Build configuration for GitHub actions CI",
       "configurePreset": "ci-linux-x64",
+      "configuration": "Release"
+    },
+    {
+      "name": "azure-linux-x64",
+      "displayName": "azure-linux-x64 CI build",
+      "description": "Build configuration for Azure self-hosted CI",
+      "configurePreset": "azure-linux-x64",
       "configuration": "Release"
     },
     {
@@ -413,6 +520,16 @@
       }
     },
     {
+      "name": "azure-windows-v143",
+      "displayName": "azure-windows-v143 CI build",
+      "description": "Build configuration for Azure self-hosted CI",
+      "configurePreset": "azure-windows-v143",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
       "name": "ci-macos-x64",
       "displayName": "ci-macos-x64 CI build",
       "description": "Build configuration for GitHub actions CI",
@@ -437,6 +554,16 @@
       "displayName": "ci-linux-x64 CI build",
       "description": "Build configuration for GitHub actions CI",
       "configurePreset": "ci-linux-x64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "azure-linux-x64",
+      "displayName": "azure-linux-x64 CI build",
+      "description": "Build configuration for Azure self-hosted CI",
+      "configurePreset": "azure-linux-x64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
