@@ -19,7 +19,7 @@
 | Code paths enumerated | 24 of 34 exercised by the mapped tests. Error returns, cancellation, negative IDs and the unreachable dispatch fallback have no direct fixture. |
 | Tests today | 38 test cases: 35 analytical cases, one archive regression, one SIMPL conversion case and one hidden HDF5 case. The analytical cases cover eight dimensionality states and all four optional-output combinations. |
 | Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies Small IN100 inputs and three regression reference arrays. Shared surface areas use independent inline expectations. |
-| Legacy comparison | Not run — comparison artifacts are not available. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 4 cases matches; the differences come from `ComputeFeatureNeighborsFilter-D1` and `ComputeFeatureNeighborsFilter-D2`. A local proof version with those fixes matches DREAM3D-NX in 4 of 4 cases. |
 | Bug flags | None. |
 | V&V phase | COMPLETE. |
 
