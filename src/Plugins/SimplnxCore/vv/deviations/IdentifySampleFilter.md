@@ -1,77 +1,137 @@
-# Deviations from DREAM3D 6.5.171: IdentifySample
+# Deviations from DREAM.3D v6.5.171: IdentifySampleFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
-
-Entries are referenced by stable ID (`IdentifySample-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
+Part 1 records the difference from DREAM.3D v6.5.171. Part 2 records SIMPLNX defects and behavior changes. The existing `IdentifySample-D1` ID is unchanged; new entries continue the sequence as `IdentifySampleFilter-D2` through `IdentifySampleFilter-D6`. The Filter UUID is the permanent cross-reference anchor.
 
 ---
 
-## 3D mode — no deviations
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-Source-inspection comparison of the genuinely-3D path (`IdentifySampleFunctor<Image3D>`) against DREAM3D 6.5.171 `IdentifySample::execute()` confirmed identical algorithmic structure:
-
-- **Phase 1 (largest-component isolation):** BFS flood-fill over all good voxels; tracks the largest connected component; all good voxels outside that component are set to false/0.
-- **Phase 2 (hole fill, optional):** BFS flood-fill over all bad voxels; connected components that do not reach the volume boundary are flipped to good.
-
-The algorithm is purely boolean/integer — no floating-point arithmetic — so precision drift cannot occur between two correct implementations of the same 3D logic.
-
-**Confirmed parity — `checked` reset between phases:** `vv/provenance/IdentifySampleFilter.md` documents an "Internal cluster" fixture in `identify_sample_v2.tar.gz`, purpose-built to catch a bug where the `checked` BFS-visited tracker is not reset between Phase 1 and Phase 2 — voxels visited (and marked `checked=true`) while being absorbed into a non-largest component during Phase 1 would then be skipped entirely during Phase 2's hole-fill scan, since `checked` would already be `true` for them, leaving them permanently un-filled even when they qualify as an enclosed hole.
-
-Direct source comparison confirms **both versions reset correctly and this is not a deviation**:
-
-- **Legacy** (`DREAM3D/Source/Plugins/Processing/ProcessingFilters/IdentifySample.cpp:254`, checked out at tag `v6.5.171`): `checked.assign(totalPoints, false);` immediately before the `m_FillHoles` block.
-- **SIMPLNX 3D mode** (`Algorithms/IdentifySample.cpp:112`): `checked.assign(totalPoints, false);` immediately before the `if(fillHoles)` block.
-- **SIMPLNX SliceBySlice mode** (`Algorithms/IdentifySample.cpp:325`): `checked.assign(planeDim1 * planeDim2, false);` immediately before its own `if(fillHoles)` block, scoped per-slice.
-
-The bug referenced in the test data's `generated_data/ReadMe.md` was a SIMPLNX-only regression at some prior point in development (already fixed in current source, as shown above) — it never existed in DREAM3D 6.5.171. The "Internal cluster" fixture remains in the archive as a guard against reintroducing it, not as evidence of any current or legacy deviation.
-
----
-
-## IdentifySample-D1
+### IdentifySample-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `IdentifySample-D1` |
 | **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
-| **Affected output** | hole fill (`FillHoles=true`) on 2D / 1D `ImageGeom` |
-| **Status** | Active — **proven by A/B run (2026-06-29)**; legacy is incorrect, SIMPLNX is correct |
+| **Status** | active |
 
-**Symptom:** With `FillHoles=true` on a 2D or 1D `ImageGeom` (any dimension == 1), legacy `IdentifySample` never fills enclosed holes — every interior bad component is left bad. SIMPLNX correctly fills enclosed holes. Connectivity / largest-component selection (Phase 1) is **not** affected (verified identical — see below).
+**Symptom:** With `FillHoles=true` and whole-image processing, BFS fills an enclosed hole on a 2D image. DREAM.3D v6.5.171 leaves it false.
 
-**Root cause — the hole-fill boundary test, NOT neighbor dispatch.** This corrects the original (source-inspection) hypothesis that the deviation lived in neighbor-offset dispatch; the A/B run showed connectivity is identical and isolated the difference to the Phase-2 boundary test. Legacy's hole-fill boundary check (`Processing/ProcessingFilters/IdentifySample.cpp:287`) is:
+**Root cause:** Bug. DREAM.3D v6.5.171 checks the extrema of all three axes when it tests whether a false component reaches the boundary. A unit dimension makes that condition true at every cell. BFS checks neighbors only along non-flat axes. This corrects the enclosure test without changing face connectivity. DREAM3D-NX v7.0.0 through v7.4.1 used the same boundary test as DREAM.3D v6.5.171; DREAM3D-NX v7.4.2 contains the BFS correction. The separate CCL behavior is `IdentifySampleFilter-D6`.
 
-```cpp
-if(column==0 || column==(xp-1) || row==0 || row==(yp-1) || plane==0 || plane==(zp-1))
-  touchesBoundary = true;
-```
+**Affected users:** Users who fill enclosed holes on a single-slice image with whole-image BFS. DREAM.3D v6.5.171 was affected. The legacy boundary test also marks every cell on a one-dimensional image as boundary-connected.
 
-For a 2D geometry `zp==1`, so `plane==0` (and `plane==(zp-1)`) is unconditionally true — **every** voxel is flagged as touching the sample boundary, so no bad component is ever "enclosed" and no hole is filled. The same applies to 1D (two degenerate axes). SIMPLNX's `EmptyZ/Y/XImage2D` (and 1D) hole-fill flags the boundary only when an in-plane neighbor is actually invalid, so a genuinely interior hole is filled.
+**Recommendation:** Trust SIMPLNX BFS for 2D hole filling. The flat axis must not make an otherwise enclosed hole part of the exterior.
 
-**A/B verification (2026-06-29):** degenerate fixtures were authored as legacy `.dream3d` and run through stock 6.5.171, SIMPLNX, and a local build of the legacy source with a surgical fix applied:
-
-- 2D `{5,5,1}` with one enclosed bad voxel, `FillHoles=true`: **stock 6.5.171 left it bad; SIMPLNX filled it.**
-- Connectivity-only cases (2D `{3,4,1}` / `{1,3,4}` no-fill, 1D `{5,1,1}` with a tie-break, 3D `{4,4,4}` fill) were **byte-identical** across all three — confirming the deviation is isolated to hole-fill on degenerate geometry, and that the `>=` tie-break matches legacy.
-- The **surgical fix to the local legacy build** (boundary test made dimensionality-aware: only extremes of non-degenerate dims count; an all-degenerate geometry is treated as boundary) made legacy fill the 2D hole **identically to SIMPLNX**, while leaving 3D and connectivity byte-for-byte unchanged. This pins the root cause to the boundary test.
-
-**Affected users:** Anyone running `IdentifySampleFilter` with `FillHoles=true` on a 2D or 1D `ImageGeom` (single-slice EBSD scan, line scan) expecting parity with DREAM3D 6.5.171 — legacy silently leaves holes unfilled.
-
-**Recommendation:** Trust SIMPLNX. Legacy cannot fill holes in degenerate geometries — a genuine, now-proven bug.
+**Evidence:** DREAM.3D tag `v6.5.171`, `Source/Plugins/Processing/ProcessingFilters/IdentifySample.cpp`, uses the three-axis coordinate test. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleBFS.cpp` selects `EmptyZImage2D`, `EmptyYImage2D`, or `EmptyXImage2D` and tests valid neighbors. PR #1590 (`e76ad508e`) introduced this dimensional dispatch. Direct inspection of all `upstream/release/v7.0.0` through `upstream/release/v7.4.2` sources establishes the release range. The three non-square tests check connectivity only; they disable hole filling.
 
 ---
 
-## Single-voxel hole fill — a SIMPLNX bug fixed to match legacy (NOT a legacy deviation)
+## Part 2 — SIMPLNX defects and behavior changes
 
-This was originally suspected (alongside `IdentifySample-D1`) to be a legacy deficiency. The A/B run showed the opposite. For a single-voxel `{1,1,1}` `ImageGeom` with `FillHoles=true`, **legacy correctly does not fill the lone bad voxel** (its coordinate boundary test flags it as boundary). The pre-fix SIMPLNX main functor left `touchesBoundary=false` because the neighbor loop never executes when `k_NeighborCount==0` (`SingleVoxelImage`), so it wrongly filled the voxel.
+### IdentifySampleFilter-D2
 
-The current one-line form — `bool touchesBoundary = k_NeighborCount == 0;` (`Algorithms/IdentifySample.cpp:139`) — initializes the flag to `true` for `SingleVoxelImage`, fixing SIMPLNX to match legacy. Verified by A/B: after the fix, SIMPLNX and stock 6.5.171 both leave the single bad voxel unfilled. This is a SIMPLNX correctness fix, not a deviation from DREAM3D 6.5.171.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `IdentifySampleFilter-D2` |
+| **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
+| **Status** | active |
+| **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Dimensional BFS could change the only false voxel in a 1×1×1 image to true when hole filling was enabled.
+
+**Root cause:** Bug. `SingleVoxelImage` has zero neighbors. The empty neighbor loop left `touchesBoundary=false`. The corrected initialization, `touchesBoundary = k_NeighborCount == 0`, treats the voxel as boundary-connected. Earlier released implementations used coordinate checks and already left this voxel false.
+
+**Affected users:** Users of the dimensional BFS before its single-voxel correction. No listed DREAM3D-NX release exposed the defect.
+
+**Recommendation:** Trust SIMPLNX. A single false voxel stays false because it touches the image boundary.
+
+**Evidence:** PR #1640 (`a332e7369`) adds the guard after PR #1590 introduced dimensional dispatch. Releases through v7.4.1 have coordinate boundary checks; v7.4.2 has the guard. DREAM.3D v6.5.171 also has coordinate checks. Current `IdentifySampleBFS.cpp` retains the guard; no test in `IdentifySampleTest.cpp` constructs a single-voxel image.
 
 ---
 
-## New features (no legacy code path to compare against — not deviations)
+### IdentifySampleFilter-D3
 
-These differ from `IdentifySample-D1` in that no input could have triggered the corresponding legacy behavior at all — there is nothing to deviate from.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `IdentifySampleFilter-D3` |
+| **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.2 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
-- **`SliceBySlice` mode** (`IdentifySampleSliceBySliceFunctor`): gated behind a parameter (`SliceBySlice`) that does not exist in DREAM3D 6.5.171 and is not mapped by `FromSIMPLJson`. No legacy pipeline could have exercised this path.
-- **Cancel checks** (`m_ShouldCancel`): UX-only; no algorithmic effect on a run that completes.
+**Symptom:** Slice BFS selected the first of two equally large components, while whole-image BFS selected the later component.
 
-*If a future run against DREAM3D 6.5.171 reveals additional deviations, add them here as `IdentifySample-D2` etc.*
+**Root cause:** Behavior change. Slice selection used `currentVList.size() > biggestBlock`. Whole-image selection used `>=`. Slice BFS now also uses `>=`, so a later equal-size component replaces the earlier component.
+
+**Affected users:** Users of slice processing with two or more components tied for largest size. DREAM.3D v6.5.171 has no slice-processing mode.
+
+**Recommendation:** Trust SIMPLNX. Do not depend on the older first-component tie rule when comparing saved masks.
+
+**Evidence:** PR #1640 (`a332e7369`) changes `>` to `>=`. Release sources v7.0.0 and v7.0.1 have no slice functor; v7.0.2 through v7.4.1 use `>`; v7.4.2 uses `>=`. Current `IdentifySampleCommon.hpp::processSlice()` retains that comparison. No current fixture isolates an equal-size largest-component tie.
+
+---
+
+### IdentifySampleFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `IdentifySampleFilter-D4` |
+| **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.2 through v7.4.0. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.1 |
+
+**Symptom:** Hole filling in an XZ or YZ slice could write true values to the wrong image cells.
+
+**Root cause:** Bug. The write used `fixedIdx * fixedStride + idx`, where `idx` was a local plane index. The correction decomposed that index into two plane coordinates and applied their strides. Current slice implementations transfer the selected plane to a buffer and write it back with the correct image layout.
+
+**Affected users:** Users who enabled hole filling and selected XZ or YZ slice processing. DREAM.3D v6.5.171 has no slice-processing mode.
+
+**Recommendation:** Trust SIMPLNX. Recalculate masks from affected releases when slice hole filling used XZ or YZ.
+
+**Evidence:** PR #1562 (`42bc9ba6e`) corrects the index and registers `identify_sample_v2.tar.gz`. Release sources v7.0.2 through v7.4.0 contain the incorrect write; v7.4.1 and v7.4.2 contain the stride correction. `SimplnxCore::IdentifySampleFilter` compares all values in `sliced_xz_fill` and `sliced_yz_fill`. Current implementations are `IdentifySampleCommon.hpp` and `IdentifySampleCCL.cpp`.
+
+---
+
+### IdentifySampleFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `IdentifySampleFilter-D5` |
+| **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.2 through v7.4.0. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.1 |
+
+**Symptom:** Slice processing could leave false cells inside an enclosed hole where it had removed a smaller true island.
+
+**Root cause:** Bug. Slice BFS reused the visited flags from largest-component selection. Hole filling skipped cells that the first pass had visited and then cleared. Slice BFS now resets the flags before hole filling. CCL labels false components in a separate pass. The legacy whole-image algorithm already reset its visited flags.
+
+**Affected users:** Users who enabled slice hole filling on masks with disconnected true islands inside an enclosed hole. DREAM.3D v6.5.171 has no slice-processing mode.
+
+**Recommendation:** Trust SIMPLNX. Recalculate affected slice masks to fill the removed internal islands.
+
+**Evidence:** PR #1562 (`42bc9ba6e`) adds `checked.assign(planeDim1 * planeDim2, false)`. Release sources v7.0.2 through v7.4.0 omit the slice reset; v7.4.1 and v7.4.2 contain it. The archive's `generated_data/ReadMe.md` defines an eight-cell internal island for this regression. The `sliced_*_fill` sections compare the complete output masks. Current `IdentifySampleCommon.hpp::processSlice()` clears the visited flags.
+
+---
+
+### IdentifySampleFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `IdentifySampleFilter-D6` |
+| **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
+| **Status** | active |
+| **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 do not contain CCL. DREAM.3D v6.5.171 was affected by the same boundary rule. |
+| **Fixed in** | Not fixed |
+
+**Symptom:** With whole-image processing and hole filling enabled, CCL leaves enclosed holes false on a 2D image. BFS fills them.
+
+**Root cause:** Bug. CCL marks a false component as exterior when any voxel lies at an extremum of any of the three axes. A flat axis therefore marks every false component as exterior. BFS excludes flat axes from its neighbor boundary check. This CCL regression restores the boundary rule documented in `IdentifySample-D1`.
+
+**Affected users:** Users whose whole-image execution selects CCL for a flat image with an enclosed hole. Slice processing uses a separate boundary test.
+
+**Recommendation:** Use BFS for whole-image 2D hole filling, or select slice processing in the non-flat plane. Do not assume whole-image BFS and CCL give the same filled mask on a flat image.
+
+**Evidence:** Current `IdentifySampleCCL.cpp` marks boundary roots with `x == 0 || x == dimX - 1 || y == 0 || y == dimY - 1 || z == 0 || z == dimZ - 1`. The behavior follows directly for a 5×5×1 true mask with a false center: `z == 0` marks that center as exterior. The filter dispatcher does not exclude flat images from CCL. PR #1568 (`4ec21e93f`) adds CCL after v7.4.2. All listed release sources contain only the earlier algorithm. The non-square tests disable hole filling, and the hidden HDF5 test uses a 129×129×3 image, so neither detects this case.
