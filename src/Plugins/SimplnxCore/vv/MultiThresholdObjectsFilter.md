@@ -1,176 +1,166 @@
 # V&V Report: MultiThresholdObjectsFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
 | SIMPLNX UUID | `4246245e-1011-4add-8436-0af6bed19228` |
-| DREAM3D 6.5.171 equivalent | Two separate legacy filters, consolidated: **Threshold Objects** (`MultiThresholdObjects`, SIMPL UUID `014b7300-cf36-5ede-a751-5faf9b119dae`) and **Threshold Objects (Advanced)** (`MultiThresholdObjects2`, SIMPL UUID `686d5393-2b02-5c86-b887-dd81a8ae80f2`) — both mapped to this single filter's UUID in `SimplnxCoreLegacyUUIDMapping.hpp` (see Algorithm Relationship) |
+| SIMPLNX Human Name | Multi-Threshold Objects |
+| DREAM.3D v6.5.171 equivalent | `MultiThresholdObjects` (Threshold Objects) and `MultiThresholdObjects2` (Threshold Objects (Advanced)) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE  |
-| Sign-off | Matthew Marine (V&V author, PR #1688). Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-19 (PR #1688 review). |
+| Status | COMPLETE |
+| Sign-off | Matthew Marine, 2026-07-24; second engineer: Michael Jackson, 2026-08-19 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Rewrite.** Consolidates two independently-shipped legacy filters — **Threshold Objects** (flat, AND-only) and **Threshold Objects (Advanced)** (nested AND/OR sets) — into one SIMPLNX filter under one new UUID, unified around a single `ArrayThresholdSet` model. Not a line-by-line translation of either legacy source. |
-| Oracle (confirmed)     | **Class 1 (Analytical) — confirmed.** `expected[i] = COMPARISON(input[i], value)`, hand-combined via AND/OR/invert boolean algebra. Encoded across 14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations in `MultiThresholdObjectsTest.cpp`, all pass. |
-| Code paths enumerated  | **26 of 27 exercised.** Row 13 (unreachable comparison-operator `else`-throw) is a permanent, acceptable gap and the only one remaining. Row 25 (a set mixing a leaf threshold with a nested set — the `MultiThresholdObjectsFilter-D1` trigger shape) is now covered by the `ArraySet 6` / `ArraySet 7` `SECTION`s of `Valid Threshold Sets`. |
-| Tests today            | **14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations / 31 ctest entries**, all passing in both the in-core and out-of-core Release builds (12 single-entry TEST_CASEs + 2 `TEMPLATE_TEST_CASE`s instantiated over 9 and 10 types respectively). Exhaustive sweeps over comparison operator × invert × union operator × set nesting × mask `DataType` (10 types, plus boolean covered elsewhere) × source-array `DataType` (11 types) × custom TRUE/FALSE execution (10 types), plus negative/error-path groups and a SIMPL backwards-compatibility check. All fixtures built in-memory. |
-| Exemplar archive       | **None.** All fixtures are constructed in-memory by `CreateTestDataStructure()` / `CreateTestDataStructure2()`; no `.dream3d` exemplar or `download_test_data()` entry exists for this filter. |
-| Legacy comparison      | **Run, and now complete — no configurations outstanding.** Independent three-way A/B (DREAM3D 6.5.171 `PipelineRunner` vs. this branch's `nxrunner` vs. an independent numpy oracle) across six configurations: flat/basic (`AB1`, vs. `MultiThresholdObjects`), nested and inverted-nested (`AB2`/`AB3`), and three deeper shapes added at second-engineer review — three-level nesting, an inverted sibling set, and a grouping-sensitive case (`AB4`–`AB6`, vs. `MultiThresholdObjects2`) — plus a 50M-tuple scale re-run of `AB1`–`AB3`. All sources MATCH in every case. Pre-fix (`develop`): `AB2`/`AB3` diverged (38/100 and 51/100 tuples wrong) — see `-D1`/`-D2`. `AB4`–`AB6` were additionally run through SIMPLNX's SIMPL-pipeline conversion, which surfaced `-D4`. |
-| Bug flags              | **Three, all resolved, all quantified against real legacy output, all with in-repo regression coverage.** `-D1` — a set combining a leaf threshold with a sibling nested set produced an all-false mask (38/100 tuples wrong) on `develop`. `-D2` — an inverted nested set used `std::reverse` to flip tuple *order* instead of each tuple's value (51/100 wrong) on `develop`. `-D4` — **found at second-engineer review**: converting a legacy pipeline with a nested threshold set flattened the nesting and reset every union operator to AND, so converted `Threshold Objects (Advanced)` pipelines computed a plain AND over all leaves (55/100, 50/100 and 4/100 wrong on `AB4`–`AB6`); pre-existing on `develop`, in shared `ArrayThresholdsParameter` conversion code. See `vv/deviations/MultiThresholdObjectsFilter.md`. |
-| V&V phase              | Discovery, algorithm relationship, oracle design + reconciliation, algorithm review (fixes applied and re-verified), test inventory, legacy comparison, deviations — **complete**. Oracle chosen and applied (Class 1, corroborated by an independent numpy oracle in the legacy A/B), code paths enumerated (26/27), legacy A/B run and MATCH at both 100-tuple and 50M-tuple scale, 6 deviations documented (`D1`/`D2`/`D4` bugs resolved, each with an in-repo regression test; `D3`/`D5`/`D6` confirmed non-bug capability differences). Second-engineer review of the oracle design and this report **signed off by Michael A. Jackson, 2026-08-19** (PR #1688), which also closed the last three outstanding legacy-comparison items and found `D4`. **Nothing outstanding.** |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Rewrite. One threshold tree replaces the flat basic filter and the nested Advanced filter in DREAM.3D v6.5.171. |
+| Oracle (confirmed) | Class 1 analytical masks are encoded in `test/MultiThresholdObjectsTest.cpp` and `test/MultiThresholdObjectsVvTest.cpp`. All pass in CI. |
+| Code paths enumerated | 36 of 51 exercised. Gaps include large chunks, several cancellation points, single-option custom values and basic pipeline conversion. |
+| Tests today | 27 test declarations: 23 ordinary cases and 4 template cases. They cover comparisons, nested logic, data types, validation, I/O errors, cancellation and conversion. |
+| Exemplar archive | None. Tests construct inputs and expected masks in memory. |
+| Legacy comparison | Not run — comparison artifacts are not available. |
+| Bug flags | None |
+| V&V phase | Analytical verification and second-engineer review are complete. Three fixed defects and three capability differences are documented. |
 
 ## Summary
 
-`MultiThresholdObjectsFilter` builds a typed mask array by elementwise-comparing one or more input arrays against user-supplied thresholds, combined through an arbitrarily-nested tree of AND/OR/invert `ArrayThresholdSet`s. Verification uses a **Class 1 (Analytical) oracle**: every comparison operator, invert flag, union operator, nesting depth, custom TRUE/FALSE execution, and both the mask-output and source-input `DataType` are exhaustively hand-derived and asserted in `MultiThresholdObjectsTest.cpp` (14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations, all passing). 26 of 27 algorithm, preflight and SIMPL-conversion code paths are exercised. An independent three-way runtime A/B (legacy DREAM3D 6.5.171, this branch, and a numpy oracle) against both legacy predecessors — at 100 tuples and again at 50M tuples — confirms the current implementation matches legacy exactly, and quantifies two real bugs that were present on `develop` and are resolved: `MultiThresholdObjectsFilter-D1` (all-false mask when a set mixes a leaf threshold with a nested set, 38/100 tuples wrong) and `MultiThresholdObjectsFilter-D2` (`std::reverse`-based tuple-order corruption in an inverted nested set instead of per-value inversion, 51/100 tuples wrong). Both now have dedicated in-repo regression coverage (`Valid Threshold Sets` → `ArraySet 6` / `ArraySet 7`), each verified to fail when the algorithm is stubbed out. Second-engineer review extended the A/B to three deeper shapes (`AB4`–`AB6`) and to SIMPLNX's own SIMPL-pipeline conversion path, which surfaced a third bug, `MultiThresholdObjectsFilter-D4`: converting a legacy pipeline containing a nested threshold set flattened the nesting and reset every union operator to AND. Three further deviations (`-D3`, `-D5`, `-D6`) record SIMPLNX-only capabilities with no legacy equivalent — multi-component index selection, a selectable mask output `DataType`, and custom TRUE/FALSE values.
+`MultiThresholdObjectsFilter` compares array values with thresholds and combines the results through nested AND, OR and inversion operations. Class 1 analytical fixtures check the mask values, while other tests check validation, cancellation, I/O errors and pipeline conversion. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite**
+*Classification:* Rewrite
 
-*Evidence:* `SimplnxCoreLegacyUUIDMapping.hpp` maps **two distinct legacy SIMPL UUIDs** to this single SIMPLNX filter's UUID:
-
-```
-014b7300-cf36-5ede-a751-5faf9b119dae → MultiThresholdObjectsFilter  // MultiThresholdObjects       ("Threshold Objects")
-686d5393-2b02-5c86-b887-dd81a8ae80f2 → MultiThresholdObjectsFilter  // MultiThresholdObjects2      ("Threshold Objects (Advanced)")
-```
-
-`FromSIMPLJson()` correspondingly branches on which legacy UUID (or, for 6.4 pipelines lacking a UUID, which legacy class name) produced the incoming JSON: the basic `MultiThresholdObjects` source is read through `ComparisonSelectionFilterParameterConverter` (flat, AND-only comparison list) and the advanced `MultiThresholdObjects2` source is read through `ComparisonSelectionAdvancedFilterParameterConverter` (nested AND/OR comparison sets). Both are converted into the same `ArrayThresholdSet` argument. This is **not** a line-by-line port of a single legacy algorithm — it's a consolidation of two independently-shipped legacy filters into one, which is why the classification is **Rewrite** rather than Port, per `vv_policy.md`: *"keeping [a UUID relationship] is a claim of functional equivalence... The Deviations file must defend the claim."* Here the claim is stronger than usual — that the merged filter reproduces each of the two legacy filters' behavior when configured equivalently to it. SIMPL 6.4/6.5 conversion fixtures exist at `test/simpl_conversion/6_4/MultiThresholdObjectsFilter.json` and `test/simpl_conversion/6_5/MultiThresholdObjectsFilter.json`, asserting the *argument conversion* round-trips correctly (also now covered by the `SIMPL Backwards Compatibility` `TEST_CASE`). Execution-output equivalence against both legacy filters has now been runtime-A/B-verified on representative flat, nested, and inverted-nested configurations — see Deviations file for the comparison record.
-
-*Structural differences from each legacy source:*
-
-1. **Consolidation itself** — one `ArrayThresholdSet` tree replaces two separate legacy parameter models (flat list vs. nested set); the flat legacy model is representable as a one-level `ArrayThresholdSet`. Spot-verified equivalent via runtime A/B (`AB1`, flat config vs. legacy `Threshold Objects`) — see Deviations file.
-2. Multi-component index selection added (`#1184`, `32837a30f`) — confirmed **NX-only**: legacy `Threshold Objects (Advanced)`'s `dataCheck()` rejects non-scalar arrays outright (error `-11003`); legacy `Threshold Objects` never had per-component comparison either. Documented as `MultiThresholdObjectsFilter-D3` (non-bug capability addition) in the Deviations file.
-3. Custom TRUE/FALSE mask output values added (`#669`, `b65210cf3`) — additive parameter; unconfirmed whether either legacy filter had this option or if it's SIMPLNX-only. Execution-time application (not just preflight bounds-checking) is now covered by the `Valid Execution - Custom Values` `TEMPLATE_TEST_CASE`.
-4. Default mask output `DataType` changed to `uint8` (`#1502`, `49919b086`) — unconfirmed against either legacy filter's default.
-5. `executeImpl()` body moved into `Algorithms/MultiThresholdObjects.{hpp,cpp}` (`#1544`, `8381d1dd5`) — structural only, no behavior change (internal to SIMPLNX, not a legacy-relationship concern).
-
-*Material PRs since baseline (2025-10-01):*
-
-- **#1582** — "ENH: Add missing cancel checks to lots of filters" (`1a42ec6fb`) — cross-cutting PR; added `m_ShouldCancel` checks to many filters including this one (visible today in `MultiThresholdObjects::operator()` and `ComputeThresholdSet`'s per-child cancel check). No output-behavior change on a non-cancelled run.
-- **#1605** — "BUG: Fix SIMPL JSON conversion segfault and re-enable backwards-compatibility checks" (`996d7af5a`) — fixed a crash in `FromSIMPLJson()` and re-enabled the SIMPL 6.4/6.5 backwards-compatibility test for this filter (now `SIMPL Backwards Compatibility` in the test file). Affects pipeline-conversion correctness, not execution output.
-- This PR itself also rewrote the comparison/combination internals, fixing two bugs — `MultiThresholdObjectsFilter-D1` and `-D2` — see Deviations file. The elementwise comparison itself is unchanged from legacy: `ThresholdFilterHelper::filterDataWithComparision` truncates the comparison value to the input array's type and compares with `std::less`/`std::greater`/`std::equal_to`/`std::not_equal_to` in that type, exactly as `SIMPL/Source/SIMPLib/Filtering/ThresholdFilterHelper.h:60` does (see Oracle → *Comparison-value truncation*).
-
-*Port-time deltas* (each stated with whether it changes output):
-
-1. **Combination path consolidated.** The dual apply strategy (direct copy for the first item in a set, AND/OR combine for later items) and the redundant inversion parameter were replaced by a single `ComputeThresholdSet` → `ApplyThresholdValues` → `InsertThreshold` path. **Changes output** — this is the D1/D2 fix, and it restores legacy semantics.
-2. **Component-count preflight relaxed.** The check requiring every thresholded array to have the same component count is removed, along with its error code `ErrorCodes::UnequalComponents` (`-4001`) in `MultiThresholdObjectsFilter.hpp`. A threshold set may now mix arrays with different component counts; each threshold selects its own `componentIndex`, and only the *tuple* counts must agree (still enforced via `ErrorCodes::UnequalTuples`). **Does not change output** for any pipeline that previously passed preflight — it widens what is accepted. Pipelines that previously failed with `-4001` now preflight and execute. Removing the enumerator from the public `ErrorCodes` enum is a source-level API break for any out-of-tree plugin referencing `MultiThresholdObjectsFilter::ErrorCodes::UnequalComponents`; nothing in this repository does (verified by grep across `src/` and the plugin tree).
-3. **Intermediate storage moved from `std::vector<bool>` to `AbstractDataStore<bool>`.** One store per nesting level, allocated through `DataStoreUtilities::CreateDataStore`. **Does not change output** — an out-of-core-readiness change only.
-4. **SIMPL nested-set conversion no longer flattens.** `ComparisonSelectionAdvancedFilterParameterConverter` now preserves nested `ArrayThresholdSet`s and sets each leaf's union operator from the legacy JSON, instead of collapsing the tree and defaulting every leaf to AND. **Changes output** for converted legacy pipelines — this is the `MultiThresholdObjectsFilter-D4` fix. Added here rather than deferred because the nested-set support this PR adds to the algorithm was unreachable from a converted legacy pipeline without it.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps both legacy UUIDs to this filter; Direct and Scanline evaluate the same unified threshold-tree model.
 
 ## Oracle
 
-*Class:* **1 (Analytical)**
+*Class:* 1 (Analytical).
 
-*Applied:* For a single threshold, `expected[i] = COMPARISON(input[i], value)` (optionally inverted); for a component-indexed array, `input[i]` is replaced by `input[i][componentIndex]`. For a threshold set, `expected` is the boolean combination of each member's own `expected` value: the first member always seeds the accumulator, and the configured `UnionOperator` (AND/OR) combines each subsequent member; the whole set's `expected` is inverted again if the set itself is marked inverted. Every free variable in this formula — comparison operator, invert flag, union operator, set nesting, component index, mask output `DataType`, source-array `DataType`, and custom TRUE/FALSE execution values — is enumerated directly against this closed-form definition in the test file's `Expected*Mask` helper functions and inline hardcoded exemplar arrays, independent of the algorithm's own C++ control flow (`ThresholdFilterHelper`, `InsertThreshold`, `ApplyThresholdValues`).
+*Applied:* Hand-derived comparisons cast the threshold to the input scalar type, then combine tuple results with AND, OR and logical inversion.
 
-*Comparison-value truncation (verified, legacy-matching):* the user-supplied comparison value is a `float64`, but `ThresholdFilterHelper::filterDataWithComparision` (`Algorithms/MultiThresholdObjects.cpp`) truncates it to the input array's type and performs the comparison in that type. A threshold of `5.5` against an `int32` array therefore compares against `5`, so `5 == 5.5` is **true** for this filter. This matches legacy DREAM3D exactly — `SIMPL/Source/SIMPLib/Filtering/ThresholdFilterHelper.h:60` performs the identical `static_cast<T>(m_ComparisonValue)` — and it keeps 64-bit integer comparisons exact, which comparing in `float64` would not (values above 2^53 differing by 1 would collapse to equal). The `Expected*Mask` oracle helpers model the same truncation (`static_cast<int32>(thresholdValue)` for the int fixtures, `static_cast<float32>(...)` on both operands for the `Float32Array` fixture) so the oracle and the implementation agree by construction rather than by coincidence of fixture size. `Valid Single Thresholds: Int` deliberately `GENERATE`s a fractional threshold (`5.5`) against integer data to keep this behavior asserted.
+*Encoded:* `src/Plugins/SimplnxCore/test/MultiThresholdObjectsVvTest.cpp::SimplnxCore::MultiThresholdObjects V&V: Valid Threshold Sets` supplies seven tree fixtures; `Exemplar Single Thresholds: Int` and `Exemplar Single Thresholds: Float` supply two literal masks, with comparison and type sweeps in the same file. All pass in CI.
 
-*Encoded:* `test/MultiThresholdObjectsTest.cpp` —
+*Second-engineer review:* Michael Jackson, 2026-08-19.
 
-- `Exemplar Single Thresholds: Int` / `: Float` — single fixed-threshold fixtures checked against hardcoded `k_ExemplarInt4` / `k_ExemplarFloat02` arrays
-- `Valid Single Thresholds: Int` / `: Float` / `: Int Multi-Component` — comparison operator × invert × (component index for multi-component) sweep, via `ExpectedIntSingleComponentMask` / `ExpectedFloatSingleComponentMask` / `ExpectedIntMultiComponentMask`
-- `Valid Threshold Sets` — 7 hand-built configurations: AND / OR / nested-set / nested-set-with-OR / nested-set-with-OR+invert (`CreateThresholdSet1`–`5`, via `ExpectedThresholdSet1Mask`–`5`), plus the two mixed leaf-and-nested-set regression shapes `CreateThresholdSet6`/`7` (via `CheckThresholdSet6`/`7`)
-- `Valid Execution, Mask DataType` — 10 mask-output `DataType`s
-- `Valid Execution, Input Array DataType` — 11 source-array `DataType`s
-- `Valid Execution - Custom Values` — 10 mask `DataType`s, custom TRUE/FALSE values applied at execution time (not just preflight bounds-checked)
-- `SIMPL Backwards Compatibility` — SIMPL 6.4/6.5 argument-conversion round-trip
-- `SIMPL Nested Set Conversion` — a converted legacy nested threshold set keeps its nesting, inversion flag and union operators
-- `Invalid Execution`, `Invalid Execution - Out of Bounds Custom Values` (9 numeric types), `Invalid Execution - Boolean Custom Values` — negative-path fixtures
+## Bugs found and fixed
 
-14 `TEST_CASE`/`TEMPLATE_TEST_CASE` declarations, all pass at HEAD.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `MultiThresholdObjectsFilter-D1`, `MultiThresholdObjectsFilter-D2` and `MultiThresholdObjectsFilter-D4`.
 
-*Second-engineer review:* **Signed off by Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-19** (PR #1688 review, per sign-off convention). The V&V work was authored by Matthew Marine, so the review is independent of the author. Reviewed across two passes (2026-07-24 and 2026-08-12) plus this closing pass:
-
-- **Oracle design.** Confirmed Class 1 is correct and non-circular — every fixture is built in memory, no `.dream3d` exemplar is consulted, and the `Expected*Mask` helpers re-derive the closed form rather than replaying the algorithm's control flow. Independently corroborated by a three-way A/B (DREAM3D 6.5.171 `PipelineRunner`, this branch's `nxrunner`, and an independent numpy oracle) matching exactly on flat, nested, and inverted-nested configurations at both 100-tuple and 50M-tuple scale — see the Deviations file.
-- **Oracle/implementation reconciliation.** The oracle originally compared in `float64` while the implementation truncated the comparison value to the array type. The divergence was masked by the fixture holding only values `0`–`4`; raising the tuple count exposed it. Resolved in favor of the implementation, which matches legacy — the `Expected*Mask` helpers now model the truncation (see *Comparison-value truncation* above).
-- **Test load-bearing check.** `Valid Execution, Mask DataType` was found to assert nothing (a hardcoded true/false split had gone stale against a reduced fixture, leaving the true branch unreachable and the expected mask all-false, which the zero-initialized output already satisfied). Verified fixed by stubbing `MultiThresholdObjects::operator()()` to `return {}` — all 10 `SECTION`s now fail. The same stub check was applied to the new `ArraySet 6` / `ArraySet 7` regression fixtures.
-- **Code path coverage.** Row 25 was independently confirmed to be a genuine gap — every `CreateThresholdSet*` helper passed either all leaves or all nested sets, never a mix — and is now closed.
-- **Closing pass — legacy comparison completed.** The three configurations previously carried as outstanding were closed: custom TRUE/FALSE values and the mask output `DataType` by direct inspection of the legacy sources (neither parameter exists in either legacy filter — recorded as `D6` and `D5`), and the broader configuration sweep by running `AB4`–`AB6` against the legacy `PipelineRunner`. Running those three through SIMPLNX's own SIMPL-pipeline conversion — a path no prior fixture had exercised — surfaced `MultiThresholdObjectsFilter-D4`, fixed here.
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `MultiThresholdObjectsFilter-D1` | Nested-set evaluation applied an unused false buffer and overwrote or cleared valid mask values. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Each child has a separate result; the parent combines that result with the selected operator. |
+| `MultiThresholdObjectsFilter-D2` | Inversion could reverse tuple order, omit nested inversion or invert children before combining the root. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Each node inverts its own completed mask values without changing tuple order. |
+| `MultiThresholdObjectsFilter-D4` | Advanced pipeline conversion flattened nested sets and lost leaf union operators. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Conversion preserves the nested tree, inversion flags and child union operators. |
 
 ## Code path coverage
 
-**26 of 27 paths exercised.** Row 13 is a permanent, acceptable gap and the only one remaining. Row 25 was the gap that let `MultiThresholdObjectsFilter-D1` ship and row 27 the gap that let `-D4` ship; both are now covered — see `vv/deviations/MultiThresholdObjectsFilter.md`.
+36 of 51 paths exercised. Each uncovered row states the missing fixture or injection point.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` (~320 lines), plus 7 preflight-only paths in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp` and the SIMPL-conversion path in `src/simplnx/Parameters/ArrayThresholdsParameter.cpp`.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjects.cpp` (38 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjectsDirect.cpp` (240 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/MultiThresholdObjectsScanline.cpp` (324 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/MultiThresholdObjectsFilter.cpp` (293 lines); `src/simplnx/Parameters/ArrayThresholdsParameter.cpp` (306 lines).
 
-Three logical stages: **(a) preflight** validates the threshold set / mask-type / custom-value configuration and stages the output `CreateArrayAction`; **(b) algorithm** recursively evaluates the `ArrayThresholdSet` tree into an internal `bool` mask (per-array comparison combined inline by `ThresholdFilterHelper`, which selects an AND / OR / replace loop once per threshold, then `InsertThreshold`/`ApplyThresholdValues` for cross-node combination) and writes the result into the typed mask array via `ThresholdSetFunctor`, substituting `trueValue`/`falseValue` at that final write; **(c) SIMPL conversion** maps a legacy `MultiThresholdObjects` / `MultiThresholdObjects2` pipeline onto this filter's arguments via `FromSIMPLJson()` and the `ArrayThresholdsParameter` converters.
+Test names below omit their common namespace prefix. `V&V:` identifies cases in `MultiThresholdObjectsVvTest.cpp`; other names refer to `MultiThresholdObjectsTest.cpp`. The scenario harness selects Direct and Scanline on arrays in memory.
 
-| #  | Stage             | Path                    | Test case           |
-|----|-------------------|------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| 1  | (a) Preflight     | `thresholdPaths.empty()` → error `-4000`                                     | `Invalid Execution` — "Empty ArrayThresholdSet"                         |
-| 2  | (a) Preflight     | Tuple-count mismatch across threshold arrays → `ErrorCodes::UnequalTuples`   | `Invalid Execution` — "Mismatching Tuples in Threshold Arrays"          |
-| 3  | (a) Preflight     | `componentIndex >= numComponents` (via `CheckComponentIndicesInThresholds`, recurses into nested sets) → `ErrorCodes::InvalidComponentIndex` | `Invalid Execution` — "Out of Bounds Component Index"                   |
-| 4  | (a) Preflight     | `maskArrayType == boolean && useCustomTrueValue` → `CustomTrueWithBoolean`   | `Invalid Execution - Boolean Custom Values` — "Custom True Value"       |
-| 5  | (a) Preflight     | `maskArrayType == boolean && useCustomFalseValue` → `CustomFalseWithBoolean` | `Invalid Execution - Boolean Custom Values` — "Custom False Value"      |
-| 6  | (a) Preflight     | `useCustomTrueValue` value outside `[min,max]` of mask type → `CustomTrueOutOfBounds`                                             | `TEMPLATE_TEST_CASE …Out of Bounds Custom Values` — "True Value < Minimum" / "> Maximum", all 9 numeric types                |
-| 7  | (a) Preflight     | `useCustomFalseValue` value outside bounds → `CustomFalseOutOfBounds`        | same — "False Value < Minimum" / "> Maximum"                            |
-| 8  | (a) Preflight     | Success → stage `CreateArrayAction` for mask output                          | every "Valid …" test|
-| 9  | (b) Algorithm     | `ComparisonType::LessThan`                                                   | "ArrayThreshold: <" (int / float / multi-component)                     |
-| 10 | (b) Algorithm     | `ComparisonType::GreaterThan`                                                | "ArrayThreshold: >" |
-| 11 | (b) Algorithm     | `ComparisonType::Operator_Equal`                                             | "ArrayThreshold: =="|
-| 12 | (b) Algorithm     | `ComparisonType::Operator_NotEqual`                                          | "ArrayThreshold: !="|
-| 13 | (b) Algorithm     | `throw std::runtime_error` for an unrecognized union operator, at the end of `ThresholdFilterHelper::filterDataWithComparision` | *Not directly tested. Unreachable via the public `UnionOperator` enum — both enumerators (`And`, `Or`) are exercised elsewhere.* |
-| 14 | (b) Algorithm     | `InsertThreshold` with `inverse == true` (flip before combine)               | `isInverted = GENERATE(false, true)` in every single-threshold and threshold-set test                                       |
-| 15 | (b) Algorithm     | `InsertThreshold` with `inverse == false`                                    | same                |
-| 16 | (b) Algorithm     | Combine with `UnionOperator::Or`                                             | `CreateThresholdSet2` (threshold2 = Or), `CreateThresholdSet4`/`5` (nested-set union = Or)                                   |
-| 17 | (b) Algorithm     | Combine with `UnionOperator::And`                                            | `CreateThresholdSet1` (threshold2/3 = And), `CreateThresholdSet3` default nested And                                        |
-| 18 | (b) Algorithm     | `ApplyThresholdValues` with `replaceInput == true` (the first item in a set overwrites the accumulator, ignoring its configured union operator) | implicit in every threshold set — first entry of every `CreateThresholdSet*`                                                |
-| 19 | (b) Algorithm     | `ApplyThresholdValues` with `replaceInput == false` (honors configured operator for later items)                                 | same sets, 2nd/3rd entries                                              |
-| 20 | (b) Algorithm     | `ComputeThresholdSet` recursion — item is a nested `ArrayThresholdSet`              | `CreateThresholdSet3`/`4`/`5` (set-of-sets)                             |
-| 21 | (b) Algorithm     | `ComputeThresholdSet` — item is a leaf `ArrayThreshold`                             | all tests           |
-| 22 | (b) Algorithm     | `ThresholdSetFunctor` dispatch on **mask (output) DataType**                 | `Valid Execution, Mask DataType` — int8/16/32/64 + uint8/16/32/64 + float32/64 (10 types; no `boolean` `SECTION` in this test — boolean is exercised separately via the default mask type used throughout `RunThresholdSetTest`/other `TEST_CASE`s) |
-| 23 | (b) Algorithm     | `ExecuteThresholdHelper` dispatch on **source array's DataType**             | `Valid Execution, Input Array DataType` — int8/16/32/64 + uint8/16/32/64 + float32/64 + boolean, all 11 types                |
-| 24 | (b) Algorithm     | Multi-component `componentIndex != 0` selection                              | `Valid Single Thresholds: Int Multi-Component` (`componentIndex = GENERATE(0,1,2)`), plus `componentIndex=1` in Set1, `=0` in Set2 |
-| 25 | (b) Algorithm     | An `ArrayThresholdSet` whose children mix at least one leaf `ArrayThreshold` with at least one nested `ArrayThresholdSet` (e.g. `{leaf, nestedSet}`, not `{leaf, leaf, leaf}` or `{set, set}`). Historically produced an all-false mask regardless of input (`MultiThresholdObjectsFilter-D1`, confirmed against legacy `Threshold Objects (Advanced)` — 38/100 tuples wrong on `develop`), resolved. | `Valid Threshold Sets` → `ArraySet 6: leaf + nested set` (`CreateThresholdSet6`, a leaf `Int > 2` sibling to a nested set) and `ArraySet 7: leaf + inverted nested set` (`CreateThresholdSet7`, the `AB3` shape), each × `isInverted`. Both were confirmed to fail when `MultiThresholdObjects::operator()()` is stubbed to `return {}` — i.e. they detect the all-false mask that D1 produced. Also confirmed externally by the `AB2`/`AB3` legacy A/B fixtures (see Deviations file), which are not part of the ctest suite. |
-| 26 | (b) Algorithm     | Custom TRUE/FALSE value substitution at execution time (`ThresholdSetFunctor` writing `trueValue`/`falseValue` from `MultiThresholdObjects::operator()`, not the default `1.0`/`0.0`) — distinct from rows 6–7, which only cover the preflight bounds-check rejecting *out-of-range* custom values and never actually execute with valid ones | `Valid Execution - Custom Values` (`TEMPLATE_TEST_CASE`, 10 numeric mask types), asserting `trueValue`/`falseValue` (25/10 in the test) appear in the output instead of 1/0 |
-| 27 | (c) SIMPL conversion | `ComparisonSelectionAdvancedFilterParameterConverter` on a legacy pipeline containing a *nested* `ComparisonSet` — nesting, inversion flag and per-leaf union operators must all survive conversion (`MultiThresholdObjectsFilter-D4`) | `SIMPL Nested Set Conversion`, plus the `AB4`–`AB6` converted-pipeline runs recorded in the Deviations file |
-
-Not counted as an algorithm/preflight path: the "Empty ArrayThreshold DataPath" section of `Invalid Execution` exercises `ArrayThresholdsParameter`'s own path-existence validation, which runs before `preflightImpl` is called — it's a parameter-layer gate, not code inside this filter or algorithm.
-
-`MultiThresholdObjectsFilter-D2` (the pre-fix `std::reverse` tuple-order bug) does not get its own row: the buggy code path no longer exists on this branch, and its trigger — a leaf combined with an *inverted* nested set (the legacy A/B's `AB3` shape) — overlaps with row 25's mixed-sibling shape rather than isolating D2 cleanly on its own. It is covered in-repo by the `ArraySet 7` `SECTION` listed against row 25.
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | No required input arrays → error `-4000` | V&V: `Invalid Execution` / `Empty ArrayThresholdSet` |
+| 2 | Preflight | Input tuple counts differ → `UnequalTuples` | V&V: `Invalid Execution` / `Mismatching Tuples in Threshold Arrays` |
+| 3 | Preflight | Component index exceeds the array bounds → `InvalidComponentIndex` | V&V: `Invalid Execution` / `Out of Bounds Component Index` |
+| 4 | Preflight | Boolean output with custom TRUE enabled → `CustomTrueWithBoolean` | V&V: `Invalid Execution - Boolean Custom Values` / `Custom True Value` |
+| 5 | Preflight | Boolean output with custom FALSE enabled → `CustomFalseWithBoolean` | V&V: `Invalid Execution - Boolean Custom Values` / `Custom False Value` |
+| 6 | Preflight | Custom TRUE is outside the output type range → `CustomTrueOutOfBounds` | V&V: `Invalid Execution - Out of Bounds Custom Values` — below minimum and above maximum |
+| 7 | Preflight | Custom FALSE is outside the output type range → `CustomFalseOutOfBounds` | V&V: `Invalid Execution - Out of Bounds Custom Values` — below minimum and above maximum |
+| 8 | Preflight | Valid inputs → create a scalar mask with the input tuple shape | `Valid Execution` — checks the output action, type, store and mask values |
+| 9 | Parameter validation | Threshold input path is absent → reject the argument | V&V: `Invalid Execution` / `Empty ArrayThreshold DataPath` |
+| 10 | Dispatch | Select Direct for arrays in memory | `Valid Execution`; V&V: `Valid Threshold Sets` — algorithm scenario harness |
+| 11 | Dispatch | Select Scanline for arrays in memory | `Valid Execution`; V&V: `Valid Threshold Sets` — algorithm scenario harness |
+| 12 | Comparison | Less-than comparison in Direct and Scanline | V&V: `Valid Single Thresholds: Int`, `Float`, `Int Multi-Component` / `ArrayThreshold: <` |
+| 13 | Comparison | Greater-than comparison in Direct and Scanline | V&V: `Valid Single Thresholds: Int`, `Float`, `Int Multi-Component` / `ArrayThreshold: >` |
+| 14 | Comparison | Equal comparison in Direct and Scanline | V&V: `Valid Single Thresholds: Int`, `Float`, `Int Multi-Component` / `ArrayThreshold: ==` |
+| 15 | Comparison | Not-equal comparison in Direct and Scanline | V&V: `Valid Single Thresholds: Int`, `Float`, `Int Multi-Component` / `ArrayThreshold: !=` |
+| 16 | Comparison | Unknown comparison value → throw | *Not directly tested. No fixture supplies an invalid comparison enumerator.* |
+| 17 | Comparison | Dispatch all 11 input scalar types | V&V: `Valid Execution, Input Array DataType` — ten numeric types and boolean |
+| 18 | Output | Dispatch all 11 mask scalar types | V&V: `Valid Execution, Mask DataType` — ten numeric types; `Valid Execution` — boolean |
+| 19 | Comparison | Read a selected nonzero component | V&V: `Valid Single Thresholds: Int Multi-Component` — indices 0, 1 and 2 |
+| 20 | Tree | First child seeds the result; later children combine with it | V&V: `Valid Threshold Sets` — `ArraySet 1` through `ArraySet 7` |
+| 21 | Tree | Combine child results with AND | V&V: `Valid Threshold Sets` / `ArraySet 1`, `ArraySet 3` |
+| 22 | Tree | Combine child results with OR | V&V: `Valid Threshold Sets` / `ArraySet 2`, `ArraySet 4` |
+| 23 | Tree | Invert or retain each leaf result | V&V: `Valid Single Thresholds: Int`, `Float`, `Int Multi-Component` — both inversion states |
+| 24 | Tree | Invert a nested set after evaluating its children | V&V: `Valid Threshold Sets` / `ArraySet 5`, `ArraySet 7: leaf + inverted nested set` |
+| 25 | Tree | Invert the completed root result | `Top-level inversion is logical`; `Nested sets compose before root inversion` |
+| 26 | Tree | Evaluate mixed leaf and nested-set siblings | V&V: `Valid Threshold Sets` / `ArraySet 6: leaf + nested set`, `ArraySet 7: leaf + inverted nested set` |
+| 27 | Output | Use default 1/0 values or enable both custom values | `Valid Execution`; V&V: `Valid Execution - Custom Values` — 25/10 for ten numeric types |
+| 28 | Output | Enable only custom TRUE during execution | *Not directly tested. Successful custom-value fixtures enable both options.* |
+| 29 | Output | Enable only custom FALSE during execution | *Not directly tested. Successful custom-value fixtures enable both options.* |
+| 30 | Direct cancellation | Cancel before evaluation; preserve output | `Direct and Scanline honor cancellation without completing output` / `Direct` |
+| 31 | Direct cancellation | Cancel during leaf evaluation, recursion, merge, inversion or output writes | *Not directly tested. The Direct cancellation fixture sets the flag before entry.* |
+| 32 | Scanline I/O | Read and write a short chunk | `Direct and Scanline evaluate the same nested tree` — 20 tuples |
+| 33 | Scanline I/O | Process a full 65,536-tuple chunk and a later tail | *Not directly tested. Current fixtures have at most 20 tuples.* |
+| 34 | Scanline I/O | Propagate an input bulk-read error through recursive evaluation | `Scanline propagates bulk I/O failures` / `input bulk read` — error `-73001` |
+| 35 | Scanline I/O | Propagate an output bulk-write error | `Scanline propagates bulk I/O failures` / `output bulk write` — error `-73002` |
+| 36 | Scanline cancellation | Cancel after reading input; return before writing output | `Direct and Scanline honor cancellation without completing output` / `Scanline` |
+| 37 | Scanline cancellation | Cancel at node entry or before the first chunk | *Not directly tested. The Scanline fixture cancels after its first read.* |
+| 38 | Scanline cancellation | Cancel during child iteration, merge, inversion or between completed chunks | *Not directly tested. The cancellation fixture has one leaf and one short chunk.* |
+| 39 | Tree | Empty nested set yields false, or true when inverted | *Not directly tested. The empty root fixture fails preflight; no valid tree contains an empty child set.* |
+| 40 | Output | Zero input tuples → no output writes | *Not directly tested. All valid fixtures contain tuples.* |
+| 41 | Tree | Node is neither a leaf nor a set | *Not directly tested. Fixtures use only the two supported threshold classes.* |
+| 42 | Scanline merge | The internal `insertThresholdChunk` inversion argument is true | *Not directly tested. Its only caller passes false; node inversion occurs separately.* |
+| 43 | SIMPL conversion | Select Advanced conversion by UUID | `SIMPL Backwards Compatibility` / `SIMPL 6.5 (UUID)` |
+| 44 | SIMPL conversion | Select Advanced conversion by class name | `SIMPL Backwards Compatibility` / `SIMPL 6.4 (Filter_Name)` |
+| 45 | SIMPL conversion | Select basic flat-list conversion | *Not directly tested. Both compatibility fixtures identify the Advanced filter.* |
+| 46 | SIMPL conversion | Preserve nested sets, child union operators and inversion | V&V: `SIMPL Nested Set Conversion` |
+| 47 | SIMPL conversion | Convert a supplied `ScalarType` | `SIMPL Backwards Compatibility` — fixtures supply the key; assertions check identity and output name |
+| 48 | SIMPL conversion | Use default mask type when `ScalarType` is absent | V&V: `SIMPL Nested Set Conversion` — fixture omits the key; assertions check the threshold tree |
+| 49 | SIMPL conversion | Reject a basic parameter that is not an array | *Not directly tested. No malformed basic conversion fixture exists.* |
+| 50 | SIMPL conversion | Reject an Advanced parameter that is not an object or whose thresholds are not an array | *Not directly tested. No malformed Advanced conversion fixture exists.* |
+| 51 | Dispatch | Select Scanline when an input or the output uses an external store | *Not directly tested. These test files construct stores in memory.* |
 
 ## Test inventory
 
+The two files contain 27 test declarations. All pass in CI. Template type counts and dynamic sections are stated in Notes.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Exemplar Single Thresholds: Int` | kept | Single fixed threshold (`Int32 > 4`) checked against hardcoded `k_ExemplarInt4` array. |
-| `Exemplar Single Thresholds: Float` | kept | Single fixed threshold (`Float32 == 0.02`) checked against hardcoded `k_ExemplarFloat02` array. |
-| `Valid Single Thresholds: Int` | kept | `GENERATE` over 8 threshold values × 2 invert states, 4 `SECTION`s (`>`, `<`, `==`, `!=`) against `k_TestArrayIntPath`; every tuple checked via `ExpectedIntSingleComponentMask`. Modified this cycle: `ExpectedIntSingleComponentMask` now truncates the threshold to `int32` so the oracle matches the implementation's (and legacy's) comparison-value cast — the `5.5` case is what exposed the mismatch. The complementary-operator re-assertions in the `==` / `!=` `SECTION`s were dropped; they restated the oracle rather than testing the filter. |
-| `Valid Single Thresholds: Float` | kept | Same sweep against `k_TestArrayFloatPath` via `ExpectedFloatSingleComponentMask`. Modified this cycle: the oracle rounds both operands through `float32` to match the `Float32Array` fixture, and the complementary-operator re-assertions were dropped for the same reason as the `Int` case. |
-| `Valid Single Thresholds: Int Multi-Component` | kept | Adds `componentIndex = GENERATE(0,1,2)` against `k_MultiComponentArrayPath`. Modified this cycle with the same oracle-truncation and re-assertion changes as the single-component `Int` case. |
-| `Valid Threshold Sets` | kept | 7 `SECTION`s, each × `isInverted`. `ArraySet 1`–`5` cover AND, OR, nested-set, nested-set-with-OR, and nested-set-with-OR+invert combinations. `ArraySet 6` / `ArraySet 7` were **added new-for-V&V**: a leaf threshold with a sibling nested set, and the same with the nested set inverted — the `MultiThresholdObjectsFilter-D1` / `-D2` trigger shapes (code-path row 25). Both were confirmed load-bearing by stubbing the algorithm to `return {}`. |
-| `Invalid Execution` | kept | 4 `SECTION`s: empty threshold set (`-4000`), empty threshold `DataPath` (parameter-layer validation), out-of-bounds component index (`InvalidComponentIndex`), mismatched tuple counts (`UnequalTuples`). |
-| `Invalid Execution - Out of Bounds Custom Values` (`TEMPLATE_TEST_CASE`) | kept | 9 numeric-type instantiations × 4 `SECTION`s (true/false value below minimum / above maximum) — `CustomTrueOutOfBounds` / `CustomFalseOutOfBounds`. |
-| `Invalid Execution - Boolean Custom Values` | kept | 2 `SECTION`s — custom TRUE/FALSE value rejected when mask type is `boolean`. |
-| `Valid Execution, Mask DataType` | kept | 10 `SECTION`s, one per mask-output `DataType` (int8…float64 — no `boolean` `SECTION`; boolean covered via the default mask type used throughout the other `TEST_CASE`s). Modified this cycle: the expected true/false split had been left as a hardcoded literal against a reduced fixture, which made the true branch unreachable and the expected mask all-false — the test asserted nothing. The split is now derived from the fixture constants with a `static_assert` that it lies inside the tuple range. |
-| `Valid Execution, Input Array DataType` | kept | 11 `SECTION`s, one per **source-array** `DataType` (int8…float64, bool). |
-| `SIMPL Nested Set Conversion` | new-for-V&V | Converts a legacy `MultiThresholdObjects2` pipeline whose thresholds are a leaf sibling to an *inverted* nested set with OR-joined children, and asserts the converted `ArrayThresholdSet` keeps the nesting, the inversion flag, the swapped comparison operators, and the children's union operators. Added for `MultiThresholdObjectsFilter-D4`; verified load-bearing (fails against the pre-fix converter). Fixture: `test/simpl_conversion/6_5/MultiThresholdObjectsFilter_Nested.json`. |
-| `SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over the SIMPL 6.4 and 6.5 conversion fixtures; asserts pipeline conversion round-trips (UUID + one argument value). Re-enabled by `#1605` after a prior segfault. Deleted earlier in this PR and restored during V&V review, so the `#1605` coverage is not lost. |
-| `Valid Execution - Custom Values` (`TEMPLATE_TEST_CASE`) | kept | 10 numeric-type instantiations; asserts custom TRUE (`25`) / FALSE (`10`) values are actually written to the output mask at execution time — closes the code-path gap on row 26. Deleted earlier in this PR and restored during V&V review; `UnitTest::CheckArraysInheritTupleDims` was added at the same time. |
-
-**Missing:** nothing outstanding. The last gap — a set mixing a leaf threshold with a sibling nested set (row 25), the shape that triggered `MultiThresholdObjectsFilter-D1` — is closed by the `ArraySet 6` / `ArraySet 7` `SECTION`s of `Valid Threshold Sets`.
-
-**Count basis:** 31 ctest entries = 12 single-entry `TEST_CASE`s (1 ctest entry each) + `Invalid Execution - Out of Bounds Custom Values` (`TEMPLATE_TEST_CASE`, 9 types → 9 entries) + `Valid Execution - Custom Values` (`TEMPLATE_TEST_CASE`, 10 types → 10 entries), verified by directly reading each declaration's type list twice. `catch_discover_tests` is called with no filtering options in `cmake/Plugin.cmake:404`, so Catch2's default behavior applies: one ctest entry per `TEMPLATE_TEST_CASE` type instantiation. A count of 28 entries cited during review was correct at the commit it was measured against; the two `Exemplar Single Thresholds` `TEST_CASE`s added afterwards account for the difference. 31 matches the test file as it stands today.
-
-**Dual-build verification at sign-off:** `ctest -R MultiThresholdObjects` passes 31/31 in **both** builds — in-core (`NX-Com-Qt69-Vtk96-Rel`) and out-of-core (`NX-OOC-Qt69-Vtk95-Rel`). The full `SimplnxCore::` suite also passes 984/984 in-core. The OOC run initially reported all entries failing; all were `LoadPlugins()` aborting because stale plugin binaries in that build directory linked an older TBB soname, and all cleared after rebuilding those plugins — no failure was attributable to this filter.
+| `SimplnxCore::MultiThresholdObjects: Valid Execution` | kept | Checks 20-tuple float and integer masks, output allocation and in-memory storage. |
+| `SimplnxCore::MultiThresholdObjects: Top-level inversion is logical` | kept | Checks `NOT(i > 10)` for all 20 tuples with boolean output. |
+| `SimplnxCore::MultiThresholdObjects: Nested sets compose before root inversion` | kept | Checks `NOT(i > 2 AND (i > 10 OR i < 5))` for all 20 tuples. |
+| `SimplnxCore::MultiThresholdObjects: Scanline propagates bulk I/O failures` | kept | Injects bulk-read and bulk-write failures and checks errors `-73001` and `-73002`. |
+| `SimplnxCore::MultiThresholdObjects: Direct and Scanline evaluate the same nested tree` | kept | Compares Direct and Scanline outputs for an inverted nested tree with component selection and custom values 19/4. This is a consistency check. |
+| `SimplnxCore::MultiThresholdObjects: Direct and Scanline honor cancellation without completing output` | kept | Checks unchanged output after cancellation before Direct entry and after the first Scanline read. |
+| `SimplnxCore::MultiThresholdObjects: Valid Execution - Custom Values` | kept | Template case over ten numeric output types; checks TRUE=25 and FALSE=10 for `Int32 > 15`. |
+| `SimplnxCore::MultiThresholdObjects: Invalid Execution` | kept | Checks empty thresholds, a missing path, an invalid component index and unequal tuple counts. |
+| `SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values` | kept | Template case over nine numeric types; checks custom TRUE and FALSE below the minimum and above the maximum. |
+| `SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custom Values` | kept | Checks rejection of custom TRUE or FALSE with boolean output. |
+| `SimplnxCore::MultiThresholdObjects: Valid Execution, DataType` | kept | Checks threshold output values for ten numeric mask types. |
+| `SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent` | kept | Checks component 1 of a three-component array, including the zero tuple and alternating signs. |
+| `SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check converted filter identity and output name; both fixtures use the Advanced filter. |
+| `SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: Int` | kept | Checks the literal eight-value mask `[0,0,0,0,0,1,1,1]` for `Int32 > 4`. |
+| `SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: Float` | kept | Checks the literal eight-value mask `[0,1,0,0,0,0,0,0]` for `Float32 == 0.02`. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int` | kept | Sweeps four operators, eight thresholds and both inversion states. The oracle casts the threshold to int32, including 5.5. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Float` | kept | Sweeps four operators, six thresholds and both inversion states. The oracle rounds both operands to float32. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int Multi-Component` | kept | Sweeps four operators, eight thresholds, both inversion states and component indices 0, 1 and 2. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Threshold Sets` | kept | Seven tree fixtures check AND, OR, nested sets and inversion. ArraySet 6 and ArraySet 7 add regressions for D1 and D2. |
+| `SimplnxCore::MultiThresholdObjects V&V: Invalid Execution` | kept | Checks empty thresholds, a missing path, an invalid component index and unequal tuple counts. |
+| `SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Out of Bounds Custom Values` | kept | Template case over nine numeric types; checks all four custom-value range errors. |
+| `SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean Custom Values` | kept | Checks rejection of custom TRUE or FALSE with boolean output. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataType` | kept | Checks ten numeric output types. The fixture split selects both false and true values, so an unchanged zero mask fails. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Input Array DataType` | kept | Checks all eleven input types against an int8 mask, including a separate boolean expectation. |
+| `SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conversion` | new-for-V&V | Checks converted leaf comparisons, nested grouping, inversion and OR preservation for D4. It checks arguments, not execution output. |
+| `SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check converted identity and output name for the Advanced filter. |
+| `SimplnxCore::MultiThresholdObjects V&V: Valid Execution - Custom Values` | kept | Template case over ten numeric mask types; checks TRUE=25 and FALSE=10 for `Int32 > 3`, plus inherited tuple dimensions. |
 
 ## Exemplar archive
 
-None. All fixtures for this filter are constructed in-memory in `test/MultiThresholdObjectsTest.cpp` (`CreateTestDataStructure()`, `CreateTestDataStructure2()`); there is no `.dream3d` exemplar and no `download_test_data()` entry in `test/CMakeLists.txt` for `MultiThresholdObjectsFilter`. No provenance sidecar is needed.
+- **Archive:** None. Both test files construct their array fixtures in memory; `src/Plugins/SimplnxCore/test/CMakeLists.txt` registers no archive for this filter.
+- **SHA512:** Not applicable; no archive is registered.
+- **Provenance:** Not applicable; expected masks are defined in the test source.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Legacy comparison **run and complete**: independent three-way A/B (DREAM3D 6.5.171 `PipelineRunner`, this branch's `nxrunner`, and a numpy oracle) across six configurations — flat, nested, inverted-nested, three-level nested, inverted sibling set, and a grouping-sensitive case — at 100 tuples, with the first three re-run at 50M tuples. All sources MATCH in every case. No configurations remain outstanding. Full record in `vv/deviations/MultiThresholdObjectsFilter.md`.
+See `vv/deviations/MultiThresholdObjectsFilter.md` for the root cause, affected users and recommendation. This table lists Part 1 only.
 
-- `MultiThresholdObjectsFilter-D1` — a set mixing a leaf threshold with a sibling nested set produced an all-false mask on `develop` (38/100 tuples wrong vs. legacy `Threshold Objects (Advanced)`). **Fixed by this PR**, with in-repo regression coverage (`Valid Threshold Sets` → `ArraySet 6`).
-- `MultiThresholdObjectsFilter-D2` — a leaf combined with an inverted nested set used `std::reverse` to flip tuple order instead of flipping each tuple's value on `develop` (51/100 tuples wrong vs. the same legacy filter). **Fixed by this PR**, with in-repo regression coverage (`Valid Threshold Sets` → `ArraySet 7`).
-- `MultiThresholdObjectsFilter-D3` — multi-component index selection is SIMPLNX-only; legacy `Threshold Objects (Advanced)` rejects non-scalar arrays (`dataCheck()` error `-11003`). Not a bug — a deliberate SIMPLNX capability addition, documented for migration guidance.
-- `MultiThresholdObjectsFilter-D4` — converting a legacy pipeline containing a nested threshold set flattened the nesting and reset every union operator to AND, so a converted `Threshold Objects (Advanced)` pipeline computed a plain AND over all leaves (55/100, 50/100 and 4/100 tuples wrong on `AB4`–`AB6`). Pre-existing on `develop`, in `src/simplnx/Parameters/ArrayThresholdsParameter.cpp`. **Fixed by this PR**, with in-repo regression coverage (`SIMPL Nested Set Conversion`).
-- `MultiThresholdObjectsFilter-D5` — the mask output `DataType` is selectable in SIMPLNX and defaults to `uint8`; both legacy filters always created a `DataArray<bool>`. Values are identical, the array type is not. Not a bug — set **Mask Type** to `boolean` when bit-for-bit legacy parity of the output file matters.
-- `MultiThresholdObjectsFilter-D6` — custom TRUE/FALSE mask values are SIMPLNX-only; neither legacy filter has the parameter. Not a bug; the defaults (1/0) reproduce legacy behavior.
-
-**Fixed in DREAM3D-NX 7.4.2:** `MultiThresholdObjectsFilter-D1`-`D2`, `MultiThresholdObjectsFilter-D4`.
-
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `MultiThresholdObjectsFilter-D3` | SIMPLNX accepts a selected component of a multi-component array; both legacy filters require scalar arrays. |
+| `MultiThresholdObjectsFilter-D5` | SIMPLNX offers selectable mask types and defaults to uint8; both legacy filters create boolean masks. |
+| `MultiThresholdObjectsFilter-D6` | SIMPLNX offers custom TRUE and FALSE values; both legacy filters write boolean values. |
