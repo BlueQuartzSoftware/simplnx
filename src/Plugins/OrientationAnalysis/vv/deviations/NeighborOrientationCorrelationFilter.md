@@ -1,16 +1,10 @@
-# Deviations from DREAM3D 6.5.171: NeighborOrientationCorrelationFilter
+# Deviations from DREAM.3D v6.5.171: NeighborOrientationCorrelationFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`NeighborOrientationCorrelation`, SIMPL UUID `6427cd5e-0ad2-5a24-8847-29f8e0720f4f`).
+Part 1 lists differences from DREAM.3D v6.5.171 (D1–D4 and D8). Part 2 lists SIMPLNX test and implementation defects (D5–D7). All entries use one stable ID sequence and the filter UUID as the permanent reference.
 
-Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-**Comparison summary (2026-07-07):** SIMPLNX vs DREAM3D 6.5.171 on the 12 legacy-native V&V fixtures (engineer's V&V working archive, `VV_Work/NeighborOrientationCorrelationFilter/`). 6.5.171 reproduces the diagnostic `legacy` prediction of the reference implementation on all 12; SIMPLNX (post-fix) reproduces the canonical `intended` oracle on all 12. 5 of 12 fixtures show 6.5.171 vs SIMPLNX differences — exactly the fixtures whose outcome depends on a defect (D1: F05; D2: F04, F10; D3: F03, F12) — while the 7 fixtures whose neighborhoods are fully tied produce identical output in both versions because SIMPLNX's argmax resolves ties to the same (last-in-scan-order) neighbor 6.5.171 picked. D4 (precision) is latent by fixture design. Each root cause was proven by applying the corresponding surgical fix to a local build of the legacy 6.5.171 source, after which the legacy output became **bit-identical to SIMPLNX** on all 12 fixtures.
-
-**Production-scale A/B (2026-07-07):** Small IN100 (4,444,713 cells, 36.6% below the 0.2 confidence threshold, phases {0, 1}), MinConfidence 0.2, tolerance 5 deg, Level 2, identical legacy-native input fed to both runners. SIMPLNX modified 1,115,040 cells (25.09%); 6.5.171 modified 1,022,494 (23.01%). **635,114 cells (14.29% of the volume) differ between the two versions**, decomposed as: 115,380 cells filled only by SIMPLNX (the D2 extra passes reaching deeper into bad regions), 22,834 filled only by 6.5.171 (cascade divergence — different pass-1 sources shift later scan decisions in both directions), and 496,900 of the 999,660 cells modified by both receiving a different replacement (D1/D3 selection differences plus their cascades). The same input through the patched local legacy build reproduced SIMPLNX **bit-for-bit: 0 of 4,444,713 cells differ** — which also bounds D4 (float32 vs float64 misorientation precision) at zero observable effect on this dataset.
-
----
-
-## NeighborOrientationCorrelationFilter-D1
+### NeighborOrientationCorrelationFilter-D1
 
 | Field | Value |
 |---|---|
@@ -18,17 +12,19 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 | **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
 | **Status** | active |
 
-**Symptom:** 6.5.171 can replace a low-confidence cell with the attributes of a *different-phase* neighbor (fixture `F05_stale_w_mixed_phase`: a phase-1 cell is overwritten with phase-2 data), and more generally can count a mixed-phase or phase-0 neighbor pair as "similar" when it should never be.
+**Symptom:** A low-confidence cell can receive a different-phase tuple because an unrelated neighbor pair counted as similar.
 
-**Root cause:** Bug in 6.5.171 (stale `w`). In legacy `NeighborOrientationCorrelation::execute()` the misorientation `w` is a function-scope variable computed only inside the same-phase conditional, but the `w < misorientationToleranceR` similarity test runs unconditionally — a mixed-phase/phase-0 pair inherits whatever `w` the previous pair produced. SIMPLNX re-initializes the axis-angle to `max()` before every pair (`Algorithms/NeighborOrientationCorrelation.cpp`). Same defect class as `BadDataNeighborOrientationCheckFilter-D2`.
+**Root cause:** bug. DREAM.3D v6.5.171 stores the misorientation in a function-scope variable. The same-phase condition updates that variable, but the similarity test runs outside the condition. A different-phase or phase-zero pair can reuse an earlier angle. SIMPLNX counts similarities only inside the same-positive-phase condition.
 
-**Affected users:** Anyone running 6.5.171 on multi-phase (or partially-indexed, phase-0-containing) datasets. Cells at phase boundaries can be filled from the wrong phase; single-phase fully-indexed datasets are unaffected. Small IN100 contains phase-0 (unindexed) cells, so D1 contributes to the measured 14.29% production-scale difference (jointly with D3; the fixtures isolate each cause individually).
+**Affected users:** Users of DREAM.3D v6.5.171 with mixed-phase or unindexed neighbors. DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.0.0 through v7.4.2 were not affected.
 
-**Recommendation:** Trust SIMPLNX. The 6.5.171 behavior is mathematically incorrect. The root cause was proven by resetting `w` in a local build of the legacy source, which eliminated the difference.
+**Recommendation:** Trust SIMPLNX. Only a pair with the same positive phase contributes to the similarity count; the selected pair need not have the center cell's phase.
+
+**Evidence:** `Oracle F05 - mixed-phase pair never similar (D1 regression)` checks the mixed-phase fixture. The tagged legacy source has the stale-angle path; all ten release sources initialize the pair angle before testing it. See `vv_work:NeighborOrientationCorrelationFilter/notes/ComparisonResults.md` and the source audit in `../provenance/neighbor_orientation_correlation_v2.md`.
 
 ---
 
-## NeighborOrientationCorrelationFilter-D2
+### NeighborOrientationCorrelationFilter-D2
 
 | Field | Value |
 |---|---|
@@ -36,17 +32,19 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 | **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
 | **Status** | active |
 
-**Symptom:** 6.5.171 runs only half the intended cleanup passes — `ceil((6 − Level)/2)` instead of the original design's `6 − Level` — so multi-pass fills stop early (fixture `F04_multipass_cascade_L2`, Level 2: a 3×3×3 bad region that needs 3 passes is fully filled by SIMPLNX's 4 passes but left with an unfilled center after legacy's 2 passes).
+**Symptom:** DREAM.3D and earlier DREAM3D-NX releases stop cleanup before the intended number of passes.
 
-**Root cause:** Bug in 6.5.171 (introduced 2014, DREAM3D commit `0bbeb1d49`). Converting the original 2013 `while(currentLevel > m_Level)` loop to a `for(...; currentLevel--)` loop for progress reporting left the trailing `currentLevel = currentLevel - 1;` in place, decrementing twice per pass. The authoritative statement of intent is the original 2013 implementation, whose single-decrement `while` loop runs exactly `6 − Level` passes (levels 6 down to Level+1). Note that the legacy user documentation's own example ("if the user selects a level of 4, then the filter will run with a level of 6, then 5, then 4") describes `7 − Level` passes and never matched *any* shipped implementation — the doc example was wrong from the filter's birth. SIMPLNX inherited the double decrement at port time; resolved to the original `6 − Level` schedule.
+**Root cause:** bug. The loop decrements the level both in its header and at the end of its body. It runs `ceil((6 - Level)/2)` passes. SIMPLNX removes the second decrement and runs `6 - Level` passes. Level controls the pass count, not a required number of dissimilar neighbors.
 
-**Affected users:** Anyone using *Cleanup Level* ≤ 4 on data where bad regions are more than one erosion layer deep — the filter fills noticeably less than intended. Level 5 datasets (1 pass either way) are unaffected. Measured on Small IN100 (Level 2): the restored passes let SIMPLNX fill 115,380 cells (2.6% of the volume) that 6.5.171 leaves bad.
+**Affected users:** Users who set Level below 5 and need repeated propagation. DREAM3D-NX v7.0.0 through v7.4.1 were affected. DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.4.2 contains the fix.
 
-**Recommendation:** Trust SIMPLNX (post-fix). It implements the documented and originally-intended pass schedule; applying the same fix to a local build of the legacy source reproduces SIMPLNX's output exactly.
+**Recommendation:** Trust SIMPLNX. The corrected schedule gives four passes at Level 2 and two at Level 4.
+
+**Evidence:** `Oracle F04 - pass schedule Level 2 (D2 regression)` and `Oracle F10 - pass schedule Level 4 (D2 regression)` check the resulting fill. Direct inspection of all release sources finds the second decrement through v7.4.1 and no second decrement in v7.4.2. PR #1655 (`71526a1f5`) contains the correction.
 
 ---
 
-## NeighborOrientationCorrelationFilter-D3
+### NeighborOrientationCorrelationFilter-D3
 
 | Field | Value |
 |---|---|
@@ -54,17 +52,19 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 | **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
 | **Status** | active |
 
-**Symptom:** When a bad cell's neighbors have unequal similarity counts, 6.5.171 copies from the *last* scanned neighbor that has any similar pair, not the *most* similar neighbor (fixture `F03_argmax_vs_lastwins`: a count-1 neighbor beats a count-3 neighbor because it is scanned later).
+**Symptom:** A later neighbor with a smaller positive similarity count can replace a neighbor with a larger count.
 
-**Root cause:** Bug in 6.5.171, present since the filter's 2013 introduction. The best-neighbor selection loop resets `best = 0` inside the per-neighbor loop, degrading the intended arg-max (`if(neighborSimCount[j] > best)` with `bestNeighbor` bookkeeping) to "last neighbor with count > 0 wins" — contradicting both the variable's purpose and the documented "replaced with the best neighbor". SIMPLNX inherited the quirk at port time; resolved. The corrected argmax resolves ties to the **last** neighbor in the fixed −Z,−Y,−X,+X,+Y,+Z scan order (`>=` with a count > 0 guard), deliberately chosen so that fully-tied neighborhoods — the common case in grain interiors — pick the *same* neighbor as 6.5.171. Migration differences therefore concentrate exclusively where the ranking defect genuinely changed the outcome.
+**Root cause:** bug. DREAM.3D resets `best` inside the selection loop. Any positive count therefore replaces the previous selection. SIMPLNX retains `best` across the loop and selects the greatest positive count. Equal maxima select the last neighbor in −Z, −Y, −X, +X, +Y, +Z order.
 
-**Affected users:** 6.5.171 replacement decisions where the neighbor similarity counts are unequal and the maximum is not the last positive count in scan order — typically at grain boundaries and noise-cluster edges. Fully-tied neighborhoods (grain interiors) are **not** affected: SIMPLNX's last-of-ties argmax picks the identical neighbor there. Measured on Small IN100: 496,900 of the 999,660 cells modified by both versions (49.7%) received a different replacement (jointly with D1 and cascade effects). **This also changes results relative to prior SIMPLNX/DREAM3D-NX releases**, which inherited the legacy quirk at port time: a pipeline re-run after this fix (with `Level < 5`, where a cell can have unequal neighbor counts) can produce different cleanup than the same pipeline produced on an earlier NX build. This should be called out in the release notes for the version that ships this fix, not only as a legacy-migration note.
+**Affected users:** Users with unequal neighbor similarity counts. DREAM3D-NX v7.0.0 through v7.4.1 were affected. DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.4.2 contains the fix.
 
-**Recommendation:** Trust SIMPLNX (post-fix). The 6.5.171 selection ignores the computed similarity ranking; applying the same fix to a local build of the legacy source reproduces SIMPLNX's output exactly.
+**Recommendation:** Trust SIMPLNX. The selected neighbor has the greatest similarity count; fully tied neighborhoods retain the legacy choice.
+
+**Evidence:** `Oracle F03 - argmax selection (D3 regression)` and `Oracle F12 - anisotropic dims` distinguish the rules. All release sources through v7.4.1 reset `best` per neighbor. The v7.4.2 source contains the maximum-count rule from PR #1655 (`71526a1f5`).
 
 ---
 
-## NeighborOrientationCorrelationFilter-D4
+### NeighborOrientationCorrelationFilter-D4
 
 | Field | Value |
 |---|---|
@@ -72,19 +72,100 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 | **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
 | **Status** | active |
 
-**Symptom:** Latent. A neighbor pair whose misorientation sits within float32 round-off of the tolerance can be classified "similar" by one version and "not similar" by the other, cascading into different replacements.
+**Symptom:** A pair close to the angle tolerance can receive a different similarity decision because the orientation calculations use different precision.
 
-**Root cause:** Precision. 6.5.171 computes misorientations with `QuatF`/`getMisoQuat` (float32); SIMPLNX uses `ebsdlib::QuatD`/`calculateMisorientation` (float64). Not observable in the V&V fixtures, which keep every pair ≥ 1° away from the 5° tolerance by design; on real EBSD data isolated boundary-straddling pairs may flip.
+**Root cause:** precision. DREAM.3D v6.5.171 uses `QuatF` and `getMisoQuat`. SIMPLNX converts the stored float32 quaternion components to `ebsdlib::QuatD` and calls `calculateMisorientation`. The angle result is double precision; conversion of the tolerance to radians still uses float32.
 
-**Affected users:** Only datasets containing neighbor misorientations within ~10⁻⁵ degrees of the chosen tolerance — rare and physically meaningless differences. Measured bound: on Small IN100 (4.44M cells, ~10⁸ pair comparisons across 4 passes), float64 SIMPLNX and the float32 patched legacy build produced **zero** differing cells.
+**Affected users:** Users whose neighbor-pair angles are close to the selected tolerance. This is a numerical difference, not a confirmed defect.
 
-**Recommendation:** Either acceptable. Double precision is not materially more correct at the tolerance boundary; differences are confined to knife-edge pairs.
+**Recommendation:** Trust SIMPLNX. Avoid requiring identical classification across implementations for a pair at the tolerance boundary.
+
+**Evidence:** The legacy and current algorithm sources establish the arithmetic types. The 2026-07-07 comparison found no cell difference between that SIMPLNX version and a local proof version on Small IN100. This measurement does not bound other inputs or the current slice-transfer implementation; see `vv_work:NeighborOrientationCorrelationFilter/notes/ComparisonResults.md`.
 
 ---
 
-## Shared characterized behaviors (not deviations — identical in both versions)
+### NeighborOrientationCorrelationFilter-D8
 
-- **All cell array types are transferred**: the per-pass transfer copies numeric DataArrays *and* NeighborList and String cell arrays into replaced cells, so every attribute of a replaced cell stays consistent. Matches 6.5.171 (which copies all `AttributeMatrix` arrays). The transfer collects arrays via `findAllChildrenOfType<IArray>` and dispatches the tuple copy by concrete type — `IDataArray::copyTuple` / `INeighborList::copyTuple` / `StringArray::operator[]` (`GenerateTransferArrayList` and `CopyArrayTuple` in `Algorithms/NeighborOrientationCorrelation.cpp`). Verified by the `Oracle F13` unit test.
-- **`neighborDiffCount` is dead code**: the count of neighbors *different* from the reference cell is accumulated but never read, in every version since 2013; the documented "at least *Cleanup Level* neighbors must be different than the reference cell" threshold has never been enforced (`currentLevel` never appears in the loop body — the Level parameter only sets the pass count). Documentation corrected during this V&V.
-- **`bestNeighbor` persists across passes**: a cell replaced in pass *n* is re-copied from the same neighbor in later passes even if its confidence is now above the threshold. Identical in 6.5.171 and SIMPLNX; mirrored by the reference oracle.
-- **Level ≥ 6 means zero passes**: the filter is a no-op at its default parameter value in both versions (invariant I4 in the unit tests).
+| Field | Value |
+|---|---|
+| **Deviation ID** | `NeighborOrientationCorrelationFilter-D8` |
+| **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
+| **Status** | active |
+
+**Symptom:** Replacement chains can copy different tuples from DREAM.3D when source cells are also replaced.
+
+**Root cause:** order of operations. DREAM.3D copies tuples in ascending index order and retains the source map across passes. Current SIMPLNX copies numeric tuples from the store state at the start of each slice transfer, then clears that slice's source marks. NeighborList and String arrays still use ascending in-place copies. DREAM3D-NX v7.0.0 through v7.4.2 retain the earlier transfer method; the changed method will be in the DREAM3D-NX release after v7.4.2.
+
+**Affected users:** Users with adjacent low-confidence cells whose selected sources also change. Numeric tuples do not chain within one slice transfer. The selection window and the tuple-transfer buffers serve different purposes.
+
+**Recommendation:** Use the current slice-transfer rules when interpreting replacement chains. The isolated-cell analytical fixtures check source selection but do not establish whole-volume parity with DREAM.3D.
+
+**Evidence:** PR #1568 (`4ec21e93f`) replaces the volume source map with `sliceBestNeighbor`, adds `SliceBufferedTransferOneZ`, and clears marks after each slice. `src/simplnx/Utilities/SliceBufferedTransfer.hpp::SliceTransferOneZFunctor` reads source slices before writing the destination. The 2026-07-07 comparison predates this change.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### NeighborOrientationCorrelationFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `NeighborOrientationCorrelationFilter-D5` |
+| **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1 test sources. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** The production test can pass without comparing any filter output with its exemplar.
+
+**Root cause:** bug. The test substitutes `Exemplar Data` for the container name, but the retired output file uses `DataContainer`. Missing arrays trigger `continue`. The corrected test snapshots the input cell arrays and checks transfer invariants; analytical fixtures independently check exact tuples.
+
+**Affected users:** Developers relying on the earlier exemplar test as correctness evidence. This is a test defect, not a separate output transformation.
+
+**Recommendation:** Trust the current analytical and invariant tests. Do not use the retired exemplar comparison as evidence of correctness.
+
+**Evidence:** All ten release test sources were inspected. Sources through v7.4.1 use the missing-array skip; v7.4.2 uses snapshots and requires at least one changed cell. `vv_work:NeighborOrientationCorrelationFilter/notes/ComparisonResults.md` records the archive container mismatch. PR #1655 (`71526a1f5`) removes the output archive registration.
+
+---
+
+### NeighborOrientationCorrelationFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `NeighborOrientationCorrelationFilter-D6` |
+| **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** A replaced cell keeps its old NeighborList and String values while its numeric values change.
+
+**Root cause:** bug. The earlier transfer list collects only `IDataArray` objects. NeighborList and String arrays are separate types. The corrected list collects `IArray` objects and copies each supported type. DREAM.3D collects every array in the cell AttributeMatrix.
+
+**Affected users:** Users with NeighborList or String arrays beside the confidence array.
+
+**Recommendation:** Trust SIMPLNX. The transfer includes these arrays, and F13 checks their source tuples and unchanged cells.
+
+**Evidence:** PR #1655 (`71526a1f5`) adds `GenerateTransferArrayList`, the concrete copy dispatch and `Oracle F13 - NeighborList and String cell arrays transferred`. All release sources through v7.4.1 use `GenerateDataArrayList`; v7.4.2 includes all three types. The tagged DREAM.3D source loops over all cell arrays.
+
+---
+
+### NeighborOrientationCorrelationFilter-D7
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `NeighborOrientationCorrelationFilter-D7` |
+| **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** An invalid participating phase or crystal-structure value can cause an out-of-bounds array access.
+
+**Root cause:** bug. Earlier sources index Crystal Structures through the cell phase and index the orientation operators through that value without range checks. SIMPLNX now checks each participating positive phase before either lookup. It returns -580096 for an invalid phase and -580097 for an invalid Laue index. Nonpositive phases do not participate.
+
+**Affected users:** Users with a same-positive-phase neighbor pair whose phase exceeds the ensemble bounds or whose crystal structure is not a valid Laue index.
+
+**Recommendation:** Trust SIMPLNX. Correct the phase or crystal-structure value reported in the error before running cleanup again.
+
+**Evidence:** `Phase and Laue Index Bounds` asserts both errors and successful execution with phase-zero neighbors. All release sources through v7.4.2 and DREAM.3D tag `v6.5.171` lack these bounds checks. PR #1568 (`4ec21e93f`) adds the current guards.

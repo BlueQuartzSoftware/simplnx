@@ -1,152 +1,153 @@
 # V&V Report: NeighborOrientationCorrelationFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
-| SIMPLNX UUID | 4625c192-7e46-4333-a294-67a2eb64cb37 |
-| DREAM3D 6.5.171 equivalent | NeighborOrientationCorrelation (SIMPL UUID 6427cd5e-0ad2-5a24-8847-29f8e0720f4f) |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
+| SIMPLNX UUID | `4625c192-7e46-4333-a294-67a2eb64cb37` |
+| SIMPLNX Human Name | Neighbor Orientation Correlation |
+| DREAM.3D v6.5.171 equivalent | `NeighborOrientationCorrelation` (SIMPL UUID `6427cd5e-0ad2-5a24-8847-29f8e0720f4f`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
+| Sign-off | Michael Jackson, 2026-07-06; second engineer: Nathan Young, 2026-07-08 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port with bug fixes** — statement-for-statement port of `NeighborOrientationCorrelation` with four deliberate correctness deltas: stale-w fix, double-precision quaternion math, restored `6 − Level` pass schedule, argmax neighbor selection. |
-| Oracle (confirmed)     | **Class 2 (Reference implementation) + Class 1 (Analytical) + Class 4 (Invariant)** — NumPy reference (`reference_noc.py`) with 35 hand-derivation cross-checks; encoded as 12 inline fixtures `Oracle F01`–`F12` + invariant tests in `test/NeighborOrientationCorrelationTest.cpp`, all pass. |
-| Code paths enumerated  | 20 of 22 exercised; the cancel path and within-pass ascending-copy order dependence remain documented gaps. |
-| Tests today            | 19 public ctest cases run in both builds — 14 oracle/invariant fixtures (including `Oracle F13`), 1 production-scale Small IN100 invariant test, 2 preflight validation tests, 1 phase/Laue bounds test, and 1 SIMPL backward-compatibility test. The OOC build adds one registered 200³ real-HDF5 boundary test. |
-| Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. The v1 archive was retired because its comparison was hollow from its 2022-07-24 introduction (`d199bc749`; archive SHA unchanged since first registration `e34baf1f2`, 2022-12-02), and a regenerated exemplar would be a circular oracle — so no replacement archive exists. |
-| Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171**, fixtures + production scale. Fixtures: 6.5.171 differs on exactly the 5 of 12 whose outcome depends on a defect (D1–D3); the 7 fully-tied fixtures are identical because SIMPLNX's argmax resolves ties to the same last-in-scan-order neighbor 6.5.171 picked. Production (Small IN100, 4.44M cells, Level 2): 14.29% of cells differ, decomposed per deviation entry. Each root cause proven by applying the surgical fix to a local build of the legacy source — then bit-identical to SIMPLNX on all 12 fixtures **and all 4,444,713 production cells** (which also bounds D4 precision at zero observed). |
-| Bug flags              | D1 (legacy stale-w), D2 (double level decrement, was also in SIMPLNX — fixed), D3 (last-wins selection, was also in SIMPLNX — fixed). D4 is precision, not a bug. Plus: hollow exemplar comparison in the v1 test (fixed). |
-| V&V phase              | All phases complete; V&V signed off 2026-07-16 (Michael Jackson, technical authority). Outstanding: fresh before/after doc screenshots (existing images predate the fixes). |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to `NeighborOrientationCorrelation` in DREAM.3D v6.5.171. SIMPLNX corrects the pass count and neighbor selection, uses double-precision orientations, and transfers data by slice. |
+| Oracle (confirmed) | Classes 1 and 4 define analytical tuples and invariants in `test/NeighborOrientationCorrelationTest.cpp`. A Class 2 NumPy reference supplies the 12-fixture comparison evidence in provenance. |
+| Code paths enumerated | 26 of 40 exercised. Gaps include transfer-order cases, cancellation, and I/O failures. |
+| Tests today | 19 ordinary test cases cover analytical outputs, invariants, invalid inputs and SIMPL conversion. All pass in CI; 1 additional hidden case generates input data. |
+| Exemplar archive | `Small_IN100_dream3d_v3.tar.gz` supplies production-test input only. The two filter-output exemplars are retired; expected outputs come from analytical fixtures and invariants. |
+| Legacy comparison | Not run on the current algorithm; the run against DREAM.3D v6.5.171 on 2026-07-07 predates the slice-transfer changes. |
+| Bug flags | None |
+| V&V phase | Verification records and regression fixtures are complete. A legacy comparison with the current algorithm remains open. |
 
 ## Summary
 
-Neighbor Orientation Correlation replaces low-confidence EBSD cells with the attributes of their "best" face neighbor — the one most orientation-similar to the other neighbors — over `6 − Level` passes. It was verified against a NumPy reference implementation with hand-derived (convention-free, co-axial rotation) expected outputs on 12 fixtures covering every logic branch, which exposed and fixed two inherited legacy defects in SIMPLNX (halved pass count; last-wins instead of arg-max selection; the corrected argmax deliberately resolves ties to the same neighbor 6.5.171 picked, confining migration diffs to genuinely defective decisions). SIMPLNX matches the oracle exactly on all fixtures and at production scale. Four differences from DREAM3D 6.5.171 are documented (D1–D4) — cases where SIMPLNX is the more correct version, quantified on Small IN100 at 14.29% of cells, each root cause proven by a surgical patch to a local build of the legacy source.
+`NeighborOrientationCorrelationFilter` replaces low-confidence cells with tuples from the face neighbor that has the highest similarity count over `6 - Level` passes. Analytical fixtures and invariants verify selection, phase handling and tuple transfer. All pass in CI.
 
 ## Algorithm Relationship
 
-**Minor changes** (port with deliberate correctness deltas)
+*Classification:* Minor changes
 
-*Evidence:* SIMPL UUID `6427cd5e-0ad2-5a24-8847-29f8e0720f4f` maps to this filter in `OrientationAnalysisLegacyUUIDMapping.hpp`; the algorithm body is a statement-for-statement translation of legacy `NeighborOrientationCorrelation::execute()` (same 6-face neighbor order `{-XY, -X, -1, +1, +X, +XY}`, same pair-similarity counting, same per-level in-place tuple transfer; SIMPLNX replaces legacy's last-similar-neighbor-wins selection with a last-of-ties argmax — deviation D3).
-
-**Deliberate deltas from legacy:**
-
-1. **Stale-misorientation fix** — legacy computes `w = getMisoQuat(...)` only inside the same-phase conditional but tests `w` against the tolerance unconditionally, so a mixed-phase (or phase-0) pair inherits the previous pair's `w`. SIMPLNX re-initializes the axis-angle to `std::numeric_limits<double>::max()` before every pair. Changes output on mixed-phase datasets (see deviations).
-2. **float → double quaternion math** — legacy uses `QuatF`/`getMisoQuat` (float32); SIMPLNX uses `ebsdlib::QuatD`/`calculateMisorientation` (float64, angle at index `[3]` of the returned Axis-Angle `<XYZ>W`). Only affects pairs whose misorientation sits within float rounding of the tolerance.
-3. **Parallel transfer stage** — legacy TBB `task_group` over arrays vs SIMPLNX `ParallelTaskAlgorithm` over arrays; both copy tuples per-array **in place, in ascending voxel order**. This ordering is a genuine behavioral characteristic, not a no-op: within a single pass, if a replaced cell's chosen source is a lower-indexed cell that is *also* replaced in the same pass, the higher-indexed cell inherits the already-overwritten (chained / double-hop) value rather than the source's original value. SIMPLNX reproduces legacy 6.5.171 here exactly (same ascending in-place copy), so on any given input the two agree — but see the coverage caveat below: the single-bad-cell oracle fixtures do not construct a chaining case, so a hypothetical reference implementation using snapshot-copy semantics would pass them. The parity is established by construction (statement-for-statement port) rather than by a discriminating fixture.
-4. **Face-neighbor refactor (PR #1523)** and 2D standardization (PR #1590) — replaced the hand-rolled bounds checks with `NeighborUtilities` (`initializeFaceNeighborOffsets` / `computeValidFaceNeighbors`); offset table and iteration order match legacy exactly.
-
-**Legacy quirks found ported into SIMPLNX** (disposition per this V&V):
-
-- The level loop double-decremented `currentLevel` (loop `currentLevel--` plus a trailing `currentLevel = currentLevel - 1`), introduced in legacy commit `0bbeb1d49` (2014-08-15) when the original 2013 `while(currentLevel > m_Level)` single-decrement loop was converted to a `for` loop for progress reporting — halving the original design's `6 - Level` pass count. **Fixed in SIMPLNX** (deviation D2). Note: the legacy user doc's own example implied `7 - Level` and never matched any shipped code; the 2013 loop is the statement of intent.
-- `best = 0` was reset inside the neighbor-selection loop (present since the filter's 2013 birth), so the *last* valid neighbor with any similar pair won, not the arg-max neighbor. **Fixed in SIMPLNX** (deviation D3) with a last-of-ties argmax so fully-tied neighborhoods still match 6.5.171.
-- `neighborDiffCount` was accumulated but never read — the once-documented "at least *Cleanup Level* neighbors must ..." threshold has never been enforced by any version; `currentLevel` never appears in the loop body. **Dead code removed** in SIMPLNX; docs corrected instead of changing behavior.
-- `bestNeighbor` persists across passes (re-copying previously repaired cells). Identical in both versions; **characterized, kept as-is**, mirrored by the oracle.
-
-**Material PRs since baseline:** #1340 (threaded messaging), #1472 (EbsdLib 2.0 API), #1523 (face-neighbor utilities), #1590 (2D image standardization) — all verified structure-preserving by diff inspection.
+*Evidence:* `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/OrientationAnalysisLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; source comparison retains face-neighbor pair counting but changes selection, pass count, precision and transfer order.
 
 ## Oracle
 
-*Class:* **2 (Reference implementation)**, with Class 1 (Analytical) and Class 4 (Invariant) companions.
+*Class:* 1 (Analytical) and 4 (Invariant), with 2 (NumPy reference implementation) for the archived comparison fixtures.
 
-*Applied:* A NumPy reference implementation of the intended algorithm (`reference_noc.py`, NumPy 2.4.2, pinned in the provenance sidecar) computes expected outputs for 12 synthetic fixtures. The intended selection rule is an argmax over neighbor similarity counts with **last-of-ties** resolution (`>=` with a count > 0 guard), deliberately tie-compatible with 6.5.171. All fixture orientations are co-axial rotations about +Z with deltas ≤ 45° (cubic) / ≤ 30° (hex), where every misorientation-fold convention reduces to `|Δθ|` — so each single-pass fixture is *also* hand-derivable (Class 1; `check_derivations.py`, 35 assertions). Quirk toggles in the same script exactly reproduce stock 6.5.171 behavior, pinning each deviation's root cause. Class 4 invariants: high-CI cells never modified (I1), ignored arrays untouched (I2), transfer only copies existing tuples (I3), Level ≥ 6 is a no-op (I4).
+*Applied:* Hand-derived rotations and similarity counts specify source tuples; invariants require unchanged high-confidence cells, unchanged ignored arrays, and no changes at Level 6.
 
-*Encoded:* `test/NeighborOrientationCorrelationTest.cpp::Oracle F01..F12` (12 TEST_CASEs) + `::Oracle F13` (NeighborList/String cell-array transfer — verified by construction, not by the reference implementation) + `::Class 4 - Level >= 6 is a no-op (I4)` + `::Preflight - Level validation` — all pass in in-core and OOC builds. Derivations embedded as comments beside each fixture.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/NeighborOrientationCorrelationTest.cpp::OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F01 - uniform neighbors 3D` and F02–F13 provide 13 analytical cases; `Class 4 - Level >= 6 is a no-op (I4)` and `Small IN100 Pipeline` check invariants. All pass in CI.
 
-*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
+*Second-engineer review:* Nathan Young, 2026-07-08.
+
+## Bugs found and fixed
+
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for D2, D3, D5 and D6. The fix for D7 will be in the DREAM3D-NX release after v7.4.2. DREAM3D-NX releases were not affected by D1.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `NeighborOrientationCorrelationFilter-D1` | A stale angle lets mixed-phase or phase-zero pairs count as similar. | DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. | Count a pair only inside the same-positive-phase condition. |
+| `NeighborOrientationCorrelationFilter-D2` | A second level decrement stops cleanup passes early. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Run exactly `6 - Level` passes for valid levels below 6. |
+| `NeighborOrientationCorrelationFilter-D3` | Resetting the best count for every neighbor selects the last positive count instead of the maximum. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Select the largest count; resolve ties to the last neighbor. |
+| `NeighborOrientationCorrelationFilter-D5` | The exemplar test skips every missing array and can pass without comparing output. | DREAM3D-NX v7.0.0 through v7.4.1 test sources. DREAM.3D v6.5.171 was not affected. | Check production-scale snapshots and analytical tuples instead of the retired output archive. |
+| `NeighborOrientationCorrelationFilter-D6` | Tuple transfer omits NeighborList and String cell arrays. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Include both array types in transfer and check their values in F13. |
+| `NeighborOrientationCorrelationFilter-D7` | Invalid participating phase or Laue indices cause out-of-bounds access. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | Return -580096 for an invalid positive phase and -580097 for an invalid Laue index. |
 
 ## Code path coverage
 
-**20 of 22 paths exercised.** Two gaps: the cancel path (path 21) needs cancel-signal injection and is
-a low-value guard exercised implicitly by the GUI; and the within-pass in-place ascending-copy
-order-dependence (path 18a) is a documented legacy-parity behavior established by construction (the
-oracle fixtures do not build a chaining case). Neither is a correctness risk for the isolated-defect
-inputs the filter targets.
+26 of 40 paths exercised. Each uncovered path states its missing fixture below.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.cpp` (216 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.cpp` (359 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.cpp` (243 lines), and `src/simplnx/Utilities/SliceBufferedTransfer.hpp` (364 lines).
 
-Logical phases: (a) preflight validation, (b) per-pass voxel scan (neighbor-pair similarity
-counting + best-neighbor selection), (c) per-pass in-place tuple transfer, repeated `6 − Level` times.
+Test names below omit the common `OrientationAnalysis::NeighborOrientationCorrelationFilter: ` prefix. Each pass scans and transfers one Z slice at a time.
 
-| #  | Phase | Path | Test case |
-|----|-------|------|-----------|
-| 1  | (a) Preflight | cell arrays with mismatched tuple counts → error `-580093` | `Preflight Error - Cell array tuple count mismatch` |
-| 2  | (a) Preflight | `Level < 0` → error `-580094` | `Preflight - Level validation` |
-| 3  | (a) Preflight | `Level >= 6` → warning `-580095`, proceed | `Preflight - Level validation` |
-| 4  | (a) Preflight | valid inputs → modified-arrays notification, proceed | every oracle fixture |
-| 5  | (b) Scan | `CI >= MinConfidence` → cell skipped | all fixtures (invariant I1 checks) |
-| 6  | (b) Scan | invalid face neighbor at volume boundary → skipped | `Oracle F11` (corner, 3 valid), `Oracle F07` (2D) |
-| 7  | (b) Scan | linear-index → (x,y,z) decomposition on anisotropic dims | `Oracle F12` (4×5×3) |
-| 8  | (b) Scan | pair same phase > 0, `w < tol` → similar, both counts credited | `Oracle F01`, `F03`, `F12` |
-| 9  | (b) Scan | pair same phase, `w >= tol` → not counted | `Oracle F02` |
-| 10 | (b) Scan | pair with mismatched phases → never similar (D1 guard) | `Oracle F05` |
-| 11 | (b) Scan | pair involving phase 0 → never similar | `Oracle F06` |
-| 12 | (b) Scan | Laue-class-dependent misorientation fold (hex 60° vs cubic 90° periodicity) | `Oracle F08` — a 58° c-axis pair is similar under hex (folds to 2°) but not cubic (folds to 32°), so the same fixture replaces the center under hex and leaves it untouched under cubic |
-| 13 | (b) Select | all counts zero → `bestNeighbor` stays −1, cell untouched | `Oracle F02` |
-| 14 | (b) Select | tied counts → last neighbor in −Z…+Z scan order (6.5.171-compatible) | `Oracle F01`, `F07`, `F11` |
-| 15 | (b) Select | unequal counts → arg-max wins, last of maxes (D3 fix) | `Oracle F03`, `F05`, `F06`, `F12` |
-| 16 | (c) Transfer | all non-ignored cell arrays copied from best neighbor, including NeighborList and String types | `Oracle F01` (all 6 numeric arrays verified), `Oracle F13` (NeighborList + String) |
-| 17 | (c) Transfer | ignored arrays excluded | `Oracle F09` |
-| 18 | (b+c) | multi-pass chaining: inherited CI enables next-pass fills (D2 fix) | `Oracle F04` (Level 2), `Oracle F10` (Level 4) |
-| 18a | (c) Transfer | **within-pass** in-place ascending-order copy: a replaced cell sourcing from a lower-indexed cell also replaced in the same pass inherits the chained value | *Not covered by a discriminating fixture — the oracle fixtures replace a single isolated bad cell whose source is a good cell, so no chaining occurs. Parity with legacy 6.5.171's ascending in-place copy is established by construction (statement-for-statement port). Known coverage gap; the behavior is documented in the Algorithm Relationship section.* |
-| 19 | (b+c) | `Level >= 6` → zero passes, output identical to input | `Class 4 - Level >= 6 is a no-op (I4)` |
-| 20 | (b) | 2D image (`dims[2] == 1`) degenerate-z validity masks | `Oracle F05`, `F07` |
-| 21 | (b+c) | cancel requested → abort scan / abort transfer tasks | *Not directly tested. Requires cancel-signal injection; low-value guard.* |
-
-Non-algorithm coverage (not code paths of the algorithm, tracked in the test inventory):
-SIMPL 6.4/6.5 JSON parameter conversion (`SIMPL Backwards Compatibility`, 2 DYNAMIC_SECTIONs),
-phase and Laue index bounds (`Phase and Laue Index Bounds`), the production-scale invariant
-verification (`Small IN100 Pipeline`, 4.44M cells, Level 2), and the OOC-only 200³ storage-boundary test.
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Cell tuple counts differ → error -580093 | `Preflight Error - Cell array tuple count mismatch (-580093)` |
+| 2 | Preflight | Level < 0 → error -580094 | `Preflight - Level validation (-580094 error, -580095 warning)` |
+| 3 | Preflight | Level >= 6 → warning -580095 | `Preflight - Level validation (-580094 error, -580095 warning)` |
+| 4 | Preflight | Valid inputs → proceed and report modified arrays | `Oracle F01 - uniform neighbors 3D` |
+| 5 | Scan | Confidence is at least the threshold → skip | `Oracle F01 - uniform neighbors 3D`; `Small IN100 Pipeline` |
+| 6 | Scan | Face neighbor is outside the image → skip | `Oracle F11 - volume corner`; `Oracle F07 - 2D image` |
+| 7 | Scan | Unequal X, Y and Z strides → locate the correct neighbors | `Oracle F12 - anisotropic dims` |
+| 8 | Scan | Same positive phase and angle below tolerance → count both neighbors | `Oracle F01 - uniform neighbors 3D` |
+| 9 | Scan | Angle is at or above tolerance → do not count | `Oracle F02 - dissimilar neighbors untouched` |
+| 10 | Scan | Different phases → do not compare orientations | `Oracle F05 - mixed-phase pair never similar (D1 regression)` |
+| 11 | Scan | Phase zero → do not count | `Oracle F06 - phase-0 neighbors never counted`; `Phase and Laue Index Bounds` |
+| 12 | Scan | Hexagonal symmetry folds a 58° pair to 2° → replace | `Oracle F08 - Laue-class folding (hex vs cubic)` — Hexagonal-High section |
+| 13 | Scan | Cubic symmetry folds the same pair to 32° → keep input | `Oracle F08 - Laue-class folding (hex vs cubic)` — Cubic-High section |
+| 14 | Select | All similarity counts are zero → no source | `Oracle F02 - dissimilar neighbors untouched` |
+| 15 | Select | Counts tie → select the last valid maximum | `Oracle F01 - uniform neighbors 3D`; `Oracle F11 - volume corner` |
+| 16 | Select | Counts differ → select the maximum | `Oracle F03 - argmax selection (D3 regression)`; `Oracle F12 - anisotropic dims` |
+| 17 | Transfer | Numeric arrays copy through SliceBufferedTransferOneZ | `Oracle F01 - uniform neighbors 3D`; `Oracle F12 - anisotropic dims` |
+| 18 | Transfer | NeighborList and String arrays copy their source tuples | `Oracle F13 - NeighborList and String cell arrays transferred` |
+| 19 | Transfer | Ignored numeric array → exclude from transfer | `Oracle F09 - ignored arrays untouched (I2)` |
+| 20 | Passes | Later passes use the preceding pass output | `Oracle F04 - pass schedule Level 2 (D2 regression)`; `Oracle F10 - pass schedule Level 4 (D2 regression)` |
+| 21 | Transfer | Adjacent replaced cells depend on snapshot versus ascending-copy order | *Not directly tested. No fixture asserts distinct source payloads for two replaced cells in the same slice.* |
+| 22 | Passes | Level >= 6 → no cleanup passes | `Class 4 - Level >= 6 is a no-op (I4)` — Level 6 |
+| 23 | Setup | Single-slice image → omit Z-neighbor reads | `Oracle F07 - 2D image` |
+| 24 | Validation | Participating positive phase exceeds ensemble bounds → error -580096 | `Phase and Laue Index Bounds` |
+| 25 | Validation | Participating Laue index exceeds operator bounds → error -580097 | `Phase and Laue Index Bounds` |
+| 26 | Scan | Negative phase → do not count | *Not directly tested. The nonpositive-phase fixture uses zero only.* |
+| 27 | Setup | Read initial slices; rotate the window and stop reads at the final slice | `Oracle F01 - uniform neighbors 3D`; `Oracle F12 - anisotropic dims` |
+| 28 | Transfer | Clear source marks after each slice instead of retaining them across passes | *Not directly tested. No fixture isolates a repaired cell whose old source changes in a later pass.* |
+| 29 | Cancellation | Cancel at a slice boundary → return | *Not directly tested. Requires cancellation injection.* |
+| 30 | I/O | Crystal Structures read fails → return error | *Not directly tested. Requires an injected ensemble read failure.* |
+| 31 | I/O | Initial quaternion slice read fails → return error | *Not directly tested. Requires an injected quaternion read failure.* |
+| 32 | I/O | Initial phase slice read fails → return error | *Not directly tested. Requires an injected phase read failure.* |
+| 33 | I/O | Second initial quaternion slice read fails → return error | *Not directly tested. Requires an injected quaternion read failure.* |
+| 34 | I/O | Second initial phase slice read fails → return error | *Not directly tested. Requires an injected phase read failure.* |
+| 35 | I/O | Quaternion read after window rotation fails → return error | *Not directly tested. Requires an injected quaternion read failure.* |
+| 36 | I/O | Phase read after window rotation fails → return error | *Not directly tested. Requires an injected phase read failure.* |
+| 37 | I/O | Confidence slice read fails → return error | *Not directly tested. Requires an injected confidence read failure.* |
+| 38 | I/O | Numeric transfer read or write fails → return error | *Not directly tested. Requires an injected transfer failure.* |
+| 39 | Transfer | No source marks → preserve numeric tuples without a slice write | `Oracle F02 - dissimilar neighbors untouched` |
+| 40 | Transfer | CopyArrayTuple receives a numeric array → copyTuple | *Not directly tested. The caller routes numeric arrays through SliceBufferedTransferOneZ.* |
 
 ## Test inventory
 
+All names are in `src/Plugins/OrientationAnalysis/test/NeighborOrientationCorrelationTest.cpp`. The 19 ordinary cases are the CI validation set. All pass in CI. The hidden data generator is listed separately from correctness checks.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Small IN100 Pipeline` | kept (modified) | Runs the 6-filter Small IN100 chain + this filter, then verifies the Class 4 invariants at 4.4M cells against a pre-filter snapshot of all 8 CellData arrays (high-confidence cells untouched everywhere; every modified cell was low-confidence; ≥ 1 cell modified). The in-core build uses resident stores and the OOC build verifies the same assertions with actual HDF5-OOC stores. **Modified for V&V:** the previous exemplar comparison was hollow — bisect-proven hollow from its introduction (`d199bc749`, 2022-07-24: already mapped to `Exemplar Data` with a silent `continue`; archive SHA512 unchanged from `e34baf1f2`, 2022-12-02, to retirement) — and a regenerated exemplar would be a circular oracle, so the archive dependency was removed entirely. |
-| `Preflight Error - Cell array tuple count mismatch (-580093)` | kept | Verifies the `validateNumberOfTuples` guard and error code. |
-| `Preflight - Level validation (-580094 error, -580095 warning)` | new-for-V&V | 3 SECTIONs: negative Level errors; Level ≥ 6 warns (zero passes); Level < 6 does not warn. |
-| `Phase and Laue Index Bounds` | new-for-OOC recertification | Uses OOC-aware stores and verifies that invalid participating phase and Laue indices return their exact execution errors, while invalid indices on skipped cells do not fail execution. |
-| `SIMPL Backwards Compatibility` | kept | 2 DYNAMIC_SECTIONs (6.5 UUID / 6.4 Filter_Name), 9 argument checks each. |
-| `Oracle F01 - uniform neighbors 3D` | new-for-V&V | Full-tuple snapshot verify of the replacement (+Z, last of 6 tied counts) + I1 on all other cells (6 arrays × 125 cells). |
-| `Oracle F02 - dissimilar neighbors untouched` | new-for-V&V | Whole-volume untouched verify; covers the no-similar-pair path. |
-| `Oracle F03 - argmax selection (D3 regression)` | new-for-V&V | Count-3 clique vs count-1 pair; the primary pin that the max wins over a later low count. |
-| `Oracle F04 - pass schedule Level 2 (D2 regression)` | new-for-V&V | 3×3×3 cascade fully filled in 4 passes; the legacy schedule's 2 passes left the center bad. |
-| `Oracle F10 - pass schedule Level 4 (D2 regression)` | new-for-V&V | Same cascade, 2 passes: only the cube center remains unfilled. |
-| `Oracle F05 - mixed-phase pair never similar (D1 regression)` | new-for-V&V | Pins the fresh-misorientation behavior; asserts phase never crosses. |
-| `Oracle F06 - phase-0 neighbors never counted` | new-for-V&V | Unindexed neighbors excluded from counting and selection. |
-| `Oracle F07 - 2D image` | new-for-V&V | Degenerate-z masks; 4-neighbor tie resolves to +Y (last in scan order). |
-| `Oracle F08 - Laue-class folding (hex vs cubic)` | new-for-V&V | Discriminating Laue-class test: a 58° c-axis neighbor pair is similar under hex (folds to 2°) but not cubic (folds to 32°). Two sections run the identical fixture under Hexagonal-High and Cubic-High and assert opposite outcomes (center replaced vs untouched), so it catches a folding-periodicity bug in either dispatch. |
-| `Oracle F09 - ignored arrays untouched (I2)` | new-for-V&V | IgnoredDataArrayPaths honored; all other arrays copied. |
-| `Oracle F13 - NeighborList and String cell arrays transferred` | new-for-V&V | F01 geometry plus a cell-level NeighborList and StringArray; pins that both are copied into the replaced cell (matching 6.5.171) while every other cell keeps its own values. |
-| `Oracle F11 - volume corner` | new-for-V&V | 3-valid-neighbor boundary case. |
-| `Oracle F12 - anisotropic dims` | new-for-V&V | 4×5×3 (nx≠ny≠nz) so stride/axis-swap bugs cannot hide behind dimension symmetry; secondary D3 pin (last-of-maxes beats a later count-1 pair). |
-| `Class 4 - Level >= 6 is a no-op (I4)` | new-for-V&V | Default parameter value performs zero passes (now also surfaced as preflight warning `-580095`). |
-| `200x200x200 Large OOC` | new-for-OOC recertification | OOC-only registered test with actual HDF5-OOC input stores. It processes and inspects one Z slice at a time and asserts that the filter modifies at least one low-confidence block-boundary or deterministic-noise cell. |
-
-All 19 public cases pass in both DREAM3D-NX builds. The OOC-only 200³ boundary case also passes in the OOC build.
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline` | kept | Uses the Small IN100 input archive. Replaces the skipped exemplar comparison with snapshots of all numeric cell arrays; checks that only low-confidence cells change and that at least one changes (D5). |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight Error - Cell array tuple count mismatch (-580093)` | kept | Checks error -580093 for nine phase tuples and ten confidence/quaternion tuples. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight - Level validation (-580094 error, -580095 warning)` | new-for-V&V | Checks a negative Level error, a Level 6 warning, and no warning at Level 2. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Phase and Laue Index Bounds` | kept | Checks execution errors -580096 and -580097 for participating invalid indices, and success with phase-zero neighbors (D7). |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check filter identity and converted scalar and path arguments. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F01 - uniform neighbors 3D` | new-for-V&V | Checks all six numeric arrays over 125 cells. Only cell 62 copies cell 87, the final tied neighbor. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F02 - dissimilar neighbors untouched` | new-for-V&V | Checks that all six numeric arrays stay unchanged when no neighbor pair is similar. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Generate Test Data` | kept | Hidden (`[.GenerateTestData]`). Writes a 200×200×200 synthetic input with 25-cell blocks; does not execute this filter or check its output. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F03 - argmax selection (D3 regression)` | new-for-V&V | Checks that a count-3 group wins over a later count-1 pair; compares all six numeric arrays. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F04 - pass schedule Level 2 (D2 regression)` | new-for-V&V | Checks that four passes fill the bad region and copy identity quaternions throughout the volume. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F10 - pass schedule Level 4 (D2 regression)` | new-for-V&V | Checks that two passes leave only the cube center below the confidence threshold. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F05 - mixed-phase pair never similar (D1 regression)` | new-for-V&V | Checks that cell 12 copies cell 11, not the different-phase neighbor; compares all six numeric arrays. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F06 - phase-0 neighbors never counted` | new-for-V&V | Checks that cell 62 copies cell 57 and that phase-zero neighbors do not contribute. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F07 - 2D image` | new-for-V&V | Checks that cell 12 copies the final valid +Y neighbor, cell 17, in a 5×5×1 image. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08 - Laue-class folding (hex vs cubic)` | new-for-V&V | Checks both symmetry modes: a 58° pair folds to 2° under hexagonal symmetry and replaces the center, but to 32° under cubic symmetry and leaves it unchanged. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F09 - ignored arrays untouched (I2)` | new-for-V&V | Checks that ignored Payload2 stays unchanged while all other numeric arrays copy the selected source. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F13 - NeighborList and String cell arrays transferred` | new-for-V&V | Checks all numeric, NeighborList and String tuples; only the center copies cell 87 (D6). |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F11 - volume corner` | new-for-V&V | Checks that corner cell 0 copies cell 16 with only three valid face neighbors. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F12 - anisotropic dims` | new-for-V&V | Checks that cell 29 copies cell 28 on a 4×5×3 image, with unequal similarity counts and axis strides. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Class 4 - Level >= 6 is a no-op (I4)` | new-for-V&V | Executes Level 6 and compares every numeric tuple with its input snapshot. |
 
 ## Exemplar archive
 
-- **Archive:** None — this filter has no exemplar-archive dependency. All oracle data is
-  built inline by the test fixtures, and the production-scale test verifies invariants
-  against a pre-filter snapshot.
-- **Retired:** `neighbor_orientation_correlation.tar.gz` (v1 — hollow comparison: the
-  container name mismatch caused every array lookup to fail and the silent `continue` to
-  skip all comparisons. Bisect-proven hollow from birth: the loop was introduced already
-  mapping to `Exemplar Data` in `d199bc749` (2022-07-24) and the archive SHA512 never
-  changed from first registration, `e34baf1f2` 2022-12-02, through retirement) and
-  `neighbor_orientation_correlation_v2.tar.gz` (a regression pin generated from SIMPLNX's
-  own output is a circular oracle, which the V&V policy forbids).
-- **Provenance (retirement record):** `src/Plugins/OrientationAnalysis/vv/provenance/neighbor_orientation_correlation_v2.md`
+- **Archive:** `Small_IN100_dream3d_v3.tar.gz` (input only; no filter-output exemplar).
+- **SHA512:** `bfa9547e787b0f8e8122702da0eb4e519f48a48bf4f94aad020f72479d071d32dfc96a1425705874c68507a61ed391d28606d9c4f4acd559043ef0ace64fd33f`
+- **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/NeighborOrientationCorrelationFilter_inputs.md`; output-archive retirement and comparison evidence: `src/Plugins/OrientationAnalysis/vv/provenance/neighbor_orientation_correlation_v2.md`.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Comparison run (SIMPLNX vs DREAM3D 6.5.171) on all 12 legacy-native V&V fixtures and at production scale (Small IN100, 4,444,713 cells: 14.29% of cells differ; full decomposition in the deviations file); both binaries matched their reference-implementation predictions exactly. Root causes were proven by applying the D1–D3 fixes to a local build of the legacy source, which then reproduced SIMPLNX's output bit-for-bit on all fixtures and on every production cell.
+See `vv/deviations/NeighborOrientationCorrelationFilter.md` for the root cause, affected users and recommendation. This table lists only Part 1 entries.
 
-- `NeighborOrientationCorrelationFilter-D1` — 6.5.171 stale-`w` can replace a cell with **different-phase** data — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D2` — 6.5.171 (and SIMPLNX releases before this fix) ran half the intended cleanup passes (measured: 115,380 Small IN100 cells filled only by SIMPLNX) — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D3` — 6.5.171 (and SIMPLNX releases before this fix) copied from the last similar neighbor, not the most similar; ties are unaffected by design — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D4` — float32 vs float64 misorientation precision (latent; measured zero effect on Small IN100) — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `NeighborOrientationCorrelationFilter-D1` | Mixed-phase and phase-zero pairs cannot inherit an earlier pair's angle. |
+| `NeighborOrientationCorrelationFilter-D2` | Cleanup uses `6 - Level` passes instead of half that number, rounded up. |
+| `NeighborOrientationCorrelationFilter-D3` | The highest similarity count wins; equal maxima retain the legacy last-neighbor rule. |
+| `NeighborOrientationCorrelationFilter-D4` | Misorientation uses double precision instead of single precision. |
+| `NeighborOrientationCorrelationFilter-D8` | Numeric tuples use a snapshot per slice, and source marks reset after each slice; DREAM.3D uses ascending in-place copies and retains marks across passes. |
