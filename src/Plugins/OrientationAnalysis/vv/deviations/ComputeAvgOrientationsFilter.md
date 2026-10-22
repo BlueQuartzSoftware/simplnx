@@ -1,87 +1,197 @@
-# Deviations from DREAM3D 6.5.171: ComputeAvgOrientationsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeAvgOrientationsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent, `FindAvgOrientations` (SIMPL UUID `bf7036d8-25bd-540e-b6de-3a5ab0e42c5f`).
+Part 1 records the Rodrigues differences from `FindAvgOrientations` and the retired D1 candidate. Part 2 records SIMPLNX defects found and fixed during V&V. Both parts use one stable ID sequence; the Filter UUID is the permanent reference.
 
-Entries are referenced by stable ID (`ComputeAvgOrientationsFilter-D<N>`) from the V&V report and from public migration guidance. The deviations apply **only to the Rodrigues (original) averaging method**; the von Mises-Fisher and Watson methods are new in SIMPLNX and have no 6.5.171 equivalent.
+Source references use `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgOrientations.cpp` and the DREAM.3D `v6.5.171` file `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgOrientations.cpp`. The provenance sidecar records release-source checks and the 2026-09-17 comparison. That comparison predates the current algorithm.
 
-> **Status:** Empirically validated 2026-06-30 via `compare-legacy-dream3d` against the **official DREAM3D 6.5.171 release** (`~/Applications/DREAM3D.app/Contents/bin/PipelineRunner`), reading byte-identical legacy-format input shared with NX `nxrunner`.
->
-> Two fixtures were run: **(A)** the realistic dataset (`ASCIIData` CSVs — 480,000 cells / 409 feature tuples / single cubic phase) and **(B)** a hand-built 3-feature fixture designed to *force* the edge-case deviations.
->
-> **Headline:** on fixture A, SIMPLNX and 6.5.171 agree to float32 epsilon on all 408 **real** features (`AvgQuats` identical ≤1e-6, zero sign flips; `AvgEulerAngles` max diff 4.77e-7). The divergences are confined to the **feature-0 / unindexed-voxel handling**: **D3** (empty feature 0) on fixture A, and **D2** (FeatureId-0 voxels with phase>0) demonstrated on fixture B. **D4** is a confirmed sub-epsilon precision difference. **D1** was downgraded — it could not be made to diverge and has no observable effect (see below). Per-deviation verdicts follow.
+## Part 1 — Differences from DREAM.3D v6.5.171
 
----
-
-## ComputeAvgOrientationsFilter-D1 — NOT A DEVIATION (defensive normalization)
+### ComputeAvgOrientationsFilter-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeAvgOrientationsFilter-D1` |
 | **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
-| **Status** | **downgraded 2026-06-30 — not a deviation.** No demonstrable divergence from 6.5.171. |
+| **Status** | retired 2026-06-30 |
 
-**What it is:** SIMPLNX appends `.getPositiveOrientation()` after normalize (`ComputeAvgOrientations.cpp:448`), canonicalizing the average quaternion into the northern hemisphere (`w ≥ 0`); legacy `FindAvgOrientations` calls only `QuaternionMathF::UnitQuaternion` (no sign canonicalization). On paper this looked like it could produce a `q` vs `−q` difference for any feature whose average lands with `w < 0`.
+**Symptom:** No quaternion sign difference was observed on the compared populated features.
 
-**Why it is not a deviation (empirical + structural, 2026-06-30):** It could not be made to diverge. The Rodrigues algorithm builds each average by symmetry-reducing every voxel toward the running average (`getNearestQuat`), so the result lands in the fundamental zone — rotation angle ≤ 180° ⇒ `w ≥ 0`. A deliberate fixture (feature with `Rz(170°)` + `Rz(200°)`, intended to push the sum to `w < 0`) was reduced identically by **both** 6.5.171 and SIMPLNX to `(0, 0, 0.0436, 0.999)` (`w > 0`) — no sign flip. Even in the only theoretical corner where `w < 0` could survive (pure-triclinic, the incremental average overshooting 180°), the two quaternions represent the **same physical orientation** (`q ≡ −q`), so there is no correctness or downstream effect. `getPositiveOrientation()` is therefore a harmless defensive canonicalization, not a behavioral difference from legacy.
+**Root cause:** Algorithmic choice. SIMPLNX applies `getPositiveOrientation()` after normalization. DREAM.3D v6.5.171 normalizes without that explicit call.
 
-**Affected users:** None.
+**Affected users:** No affected user case was found in these fixtures.
 
-**Recommendation:** No action. Documented here so the source difference (the extra `getPositiveOrientation()` call) is not mistaken for an unverified deviation in a future audit.
+**Recommendation:** Either acceptable within tolerance `1e-6` on the compared features. Quaternion signs must also be interpreted with the equivalence of `q` and `-q`.
+
+**Evidence:** The 2026-09-17 comparison reports zero sign flips on all 415 real features across four fixtures. This result applies to those fixtures; it does not prove that every possible input gives the same quaternion representative. See `vv_work:ComputeAvgOrientationsFilter/comparison/comparison_summary.md`.
 
 ---
 
-## ComputeAvgOrientationsFilter-D2
+### ComputeAvgOrientationsFilter-D2
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeAvgOrientationsFilter-D2` |
 | **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
-| **Status** | **active — empirically demonstrated (2026-06-30)** on a forcing fixture |
+| **Status** | active |
 
-**Symptom:** Voxels labeled `FeatureId == 0` (with `Phase > 0`) contribute to averaging in SIMPLNX and produce a computed average for feature 0; in 6.5.171 they are skipped and feature 0 is left at `(0,0,0,0)`.
+**Symptom:** Positive-phase cells with FeatureId zero contribute to the SIMPLNX average. DREAM.3D v6.5.171 skips them and leaves the feature-zero quaternion at `(0,0,0,0)`.
 
-**Empirical (2026-06-30):** Forcing fixture B — feature 0 given two phase-1 cells (identity + `Rz(90°)`). SIMPLNX computed `AvgQuats[0] = (0, 0, 0.382683, 0.92388)` (the `Rz(45°)` average); the official 6.5.171 wrote `AvgQuats[0] = (0, 0, 0, 0)` (skipped). A clear, large divergence — not sub-epsilon. (The realistic fixture A had no `FeatureId == 0` cells, so this gate is dormant on conventional EBSD data.)
+**Root cause:** Algorithmic choice. The legacy accumulation condition requires both FeatureId and phase to be positive. SIMPLNX removes the FeatureId condition so an unlabeled set of orientations can use feature zero. The current Rodrigues implementation retains that rule.
 
-**Root cause:** Algorithmic choice. Legacy gates accumulation on `m_FeatureIds[i] > 0 && m_CellPhases[i] > 0` (`FindAvgOrientations.cpp:246`). SIMPLNX gates on `currentPhase > 0` only (`ComputeAvgOrientations.cpp:412`), deliberately allowing the documented use-case of averaging an unlabeled bag of orientations all tagged `FeatureId 0` (algorithm comment lines 401–411).
+**Affected users:** Users who assign valid positive phases to cells labeled FeatureId zero.
 
-**Affected users:** Only datasets where `FeatureId 0` legitimately carries `Phase > 0` data (atypical — `FeatureId 0` is conventionally background/unindexed with `Phase 0`). For conventional data there is no observable difference.
+**Recommendation:** Trust SIMPLNX when feature zero represents an orientation set to average. Set the cell phase to zero when those cells must be excluded.
 
-**Recommendation:** Either acceptable within tolerance. For conventional data the outputs match; the SIMPLNX behavior is a strict superset supporting an additional use-case (computing the average of an unlabeled orientation set).
+**Evidence:** PR #1577 introduced feature-zero averaging. On 2026-09-17, `case_B_forcing_d2_d3` gives feature zero identity and Rz90 input cells. SIMPLNX outputs Rz45, `(0,0,0.382683,0.923880)`; stock DREAM.3D v6.5.171 outputs the zero quaternion. A local proof version fixes D3 but retains the feature-zero exclusion, so it outputs identity. See `vv_work:ComputeAvgOrientationsFilter/comparison/comparison_summary.md` and `vv_work:ComputeAvgOrientationsFilter/comparison/case_B_forcing_d2_d3_per_feature.csv`.
 
 ---
 
-## ComputeAvgOrientationsFilter-D3
+### ComputeAvgOrientationsFilter-D3
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeAvgOrientationsFilter-D3` |
 | **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
-| **Status** | **active — empirically confirmed (2026-06-30) at feature 0** |
+| **Status** | active |
 
-**Symptom:** For a feature with zero contributing voxels, SIMPLNX writes a clean identity quaternion `(0,0,0,1)`; 6.5.171 writes garbage. **Confirmed:** feature 0 is `(0,0,0,1)` in NX and `(0,0,0,0)` in 6.5.171 — the only divergent tuple in the entire 409-tuple comparison.
+**Symptom:** Empty features give invalid quaternions in DREAM.3D v6.5.171 and affected DREAM3D-NX releases. SIMPLNX now writes identity quaternions and zero Euler angles.
 
-**Root cause:** Bug in 6.5.171, via two mechanisms. (a) The legacy init and finalize loops both run `for(i = 1; i < totalFeatures)` (`FindAvgOrientations.cpp:239,263`), so feature 0 is **never finalized** and keeps its allocation default `(0,0,0,0)` — this is what the comparison observed. (b) For a zero-count feature at index ≥ 1, the legacy finalize sets `Identity` then still executes `QuaternionMathF::ScalarDivide(avgQuats[i], counts[i])` — a divide by zero — then `UnitQuaternion`. SIMPLNX (`ComputeAvgOrientations.cpp:440–444`) iterates `for(featureId = 0)` and, on `counts == 0`, writes identity and `continue`s, handling both cases cleanly. (No zero-count feature at index ≥ 1 existed in the dataset, so mechanism (b) is source-confirmed only.)
+**Root cause:** Bug. The legacy finalize loop starts at feature 1, leaving tuple zero as `(0,0,0,0)`. For a later zero-count feature it sets identity, then divides by zero. DREAM3D-NX release sources through v7.4.1 also omit tuple zero and divide empty features by zero. SIMPLNX starts finalization at zero and adds `continue` after writing identity. The current implementation uses that rule and initializes the Euler buffer to zero.
 
-**Affected users:** Anyone whose Feature Attribute Matrix contains a feature index with no contributing voxels (feature 0 always; index ≥ 1 after feature removal/renumbering gaps), and any consumer of feature 0's `AvgQuats` in legacy.
+**Affected users:** Users of DREAM.3D v6.5.171 or DREAM3D-NX v7.0.0 through v7.4.1 with empty feature tuples, including background tuple zero and gaps after feature removal.
 
-**Recommendation:** Trust SIMPLNX. The legacy zero-count result was uninitialized/undefined (`(0,0,0,0)` or division by zero); SIMPLNX's identity quaternion is well-defined.
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 contains the fix. Identity is a defined placeholder; a zero quaternion or NaN tuple cannot represent an orientation.
+
+**Evidence:** PR #1577 (`41c079dd2`) corrected empty-feature finalization. The 2026-09-17 comparison shows the zero quaternion at legacy tuple zero in all four cases. Empty nonzero tuples in cases B and C1 contain NaNs in both legacy arrays. A local proof version writes identity and zero Euler angles for these tuples and matches SIMPLNX. `Rodrigues Analytical Oracle` independently checks the corrected values. See `vv_work:ComputeAvgOrientationsFilter/comparison/comparison_summary.md`.
 
 ---
 
-## ComputeAvgOrientationsFilter-D4
+### ComputeAvgOrientationsFilter-D4
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeAvgOrientationsFilter-D4` |
 | **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
-| **Status** | **active — empirically confirmed (2026-06-30), sub-epsilon** |
+| **Status** | active |
 
-**Symptom:** `AvgEulerAngles` (and possibly `AvgQuats` at the last ULPs) may differ from 6.5.171 at the sub-epsilon level.
+**Symptom:** Quaternion and Euler components can differ in their final float32 digits.
 
-**Root cause:** Library + precision. Legacy uses `QuaternionMathF` arithmetic and `OrientationTransforms::qu2eu` for the quaternion→Euler conversion; SIMPLNX uses EbsdLib `ebsdlib::QuatF` and `QuaternionFType::toEuler()`. Both operate in `float32`, but the differing intermediate-math implementations and quaternion→Euler routines can produce last-bit differences.
+**Root cause:** Library and precision. DREAM.3D v6.5.171 uses `QuaternionMathF` and `OrientationTransforms::qu2eu`. SIMPLNX uses EbsdLib quaternion arithmetic and `QuaternionFType::toEuler()`. Their intermediate operations differ.
 
-**Empirical (2026-06-30):** Across all 408 real features, `AvgEulerAngles` differed by at most **4.77e-7** (122 of 1227 components in the 1e-7–1e-6 band, the rest below 1e-7; mean 3.1e-8). `AvgQuats` were identical within 1e-6. Confirms the divergence is purely float32 round-off in the two independent library code paths.
+**Affected users:** Users who require bitwise equality across applications.
 
-**Affected users:** Anyone doing bit-exact comparison of `AvgEulerAngles` between versions. Differences are at the floating-point-noise level and not materially significant for any downstream calculation.
+**Recommendation:** Either acceptable within absolute component tolerance `1e-6` for the compared fixtures. The measurements do not define a universal error bound.
 
-**Recommendation:** Either acceptable within tolerance (≈1e-6). Neither implementation is more correct; the difference is float round-off in independent library code paths.
+**Evidence:** At SIMPLNX commit `8b80721c2`, the 2026-09-17 Small IN100 comparison has 408 populated real features. Against stock DREAM.3D v6.5.171, maximum differences are `8.94e-8` for quaternions and `4.77e-7` radians for Euler angles. There are 86 Euler components in the `[1e-7,1e-6)` band, and no quaternion sign flips. See `vv_work:ComputeAvgOrientationsFilter/comparison/comparison_summary.md`.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### ComputeAvgOrientationsFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgOrientationsFilter-D5` |
+| **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
+| **Status** | active |
+| **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** A phase-zero cell could change a vMF or Watson average and prevent the single-sample shortcut.
+
+**Root cause:** Bug. The directional counting pass excluded phase-zero cells, but its gather loop selected every cell with the same FeatureId. The filter now applies the positive, in-range phase condition to both passes. The current resident and Scanline implementations retain that condition. DREAM.3D v6.5.171 has no directional-sampling path.
+
+**Affected users:** Users of development builds before DREAM3D-NX v7.4.2 with phase-zero cells inside a populated feature. No released version contained this defect.
+
+**Recommendation:** Trust SIMPLNX. Phase-zero cells no longer contribute to the directional average.
+
+**Evidence:** PR #1577 introduced the sampling mismatch; PR #1664 (`bb0cd6545`) corrected it. `vMF/Watson Ignores Phase-0 Voxels` checks single-sample and multiple-sample cases.
+
+---
+
+### ComputeAvgOrientationsFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgOrientationsFilter-D6` |
+| **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** An unsupported crystal-structure value could cause an out-of-bounds orientation-operator access.
+
+**Root cause:** Bug. The released Rodrigues code uses the crystal-structure value as an unchecked vector index. DREAM.3D v6.5.171 does the same. The filter now checks this index in Rodrigues and the directional worker. It reports skipped input with warning `-54671`. Rodrigues excludes affected cells; directional methods skip a feature whose selected phase has an unsupported structure.
+
+**Affected users:** Users with invalid or unknown crystal-structure values on participating phases.
+
+**Recommendation:** Trust SIMPLNX. The filter excludes unsupported crystal structures and reports a warning.
+
+**Evidence:** PR #1645 (`4f9bbc378`) added the operator-index check; PR #1664 added warning `-54671`. `Unknown Crystal Structure and Out-Of-Range Phase Guards` checks the warning and output values.
+
+---
+
+### ComputeAvgOrientationsFilter-D7
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgOrientationsFilter-D7` |
+| **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** A positive phase outside the Crystal Structures array could cause an out-of-bounds read.
+
+**Root cause:** Bug. The earlier code checked only that the phase was positive before indexing Crystal Structures. The filter now checks the upper bound in Rodrigues and directional counting and gathering. The current code excludes these cells and returns warning `-54672`. DREAM.3D v6.5.171 also uses an unchecked positive phase index.
+
+**Affected users:** Users whose cell phases do not identify an existing ensemble tuple.
+
+**Recommendation:** Trust SIMPLNX. Correct the phase values or supply the missing ensemble tuples.
+
+**Evidence:** PR #1664 (`bb0cd6545`) added the phase upper-bound check and warning `-54672`. `Unknown Crystal Structure and Out-Of-Range Phase Guards` checks the warning and output values.
+
+---
+
+### ComputeAvgOrientationsFilter-D8
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgOrientationsFilter-D8` |
+| **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
+| **Status** | active |
+| **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** The directional worker could access shared array stores concurrently without a thread-safety guarantee.
+
+**Root cause:** Bug. The directional implementation scheduled `VmfWatsonSamplingImpl` through `ParallelDataAlgorithm` without disabling parallel execution. The worker reads shared input stores and writes shared output stores. The current resident path calls `setParallelizationEnabled(false)`. DREAM.3D v6.5.171 has no such worker.
+
+**Affected users:** Users of development builds before DREAM3D-NX v7.4.2 with parallel execution enabled. No released version contained this defect.
+
+**Recommendation:** Trust SIMPLNX. Serial worker execution removes the concurrent store access.
+
+**Evidence:** PR #1577 introduced the parallel worker; PR #1645 (`4f9bbc378`) disabled parallel execution. The fixtures check numerical outputs; they do not inject a race.
+
+---
+
+### ComputeAvgOrientationsFilter-D9
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgOrientationsFilter-D9` |
+| **Filter UUID** | `086ddb9a-928f-46ab-bad6-b1498270d71e` |
+| **Status** | active |
+| **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Cancellation did not stop the vMF/Watson worker between features.
+
+**Root cause:** Bug. The directional worker had no cancellation check in its feature loop. The current worker checks `m_Filter->getCancel()` before each feature. DREAM.3D v6.5.171 has no directional-sampling path.
+
+**Affected users:** Users who cancelled directional averaging in development builds before DREAM3D-NX v7.4.2. No released version contained this defect.
+
+**Recommendation:** Trust SIMPLNX. The worker stops before the next feature; this change does not interrupt an EbsdLib estimation already in progress.
+
+**Evidence:** PR #1577 introduced the worker without this check; PR #1645 (`4f9bbc378`) added cancellation checks between features. The current test file does not directly inject cancellation in the resident directional worker.
