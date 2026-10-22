@@ -15,13 +15,13 @@
 | Aspect | Current state |
 |--------|---------------|
 | Algorithm Relationship | Port of `FindSizes` in DREAM.3D v6.5.171, with changes to precision, parallel execution, and 2D size calculation. |
-| Oracle (confirmed) | Class 1 analytical counts, areas, volumes, and equivalent diameters. Three base fixtures and three output-block variants encode expectations in `test/ComputeFeatureSizesTest.cpp`. All registered tests pass in CI at `01809c236`; the flat-spacing case is an expected failure (`ComputeFeatureSizes-D3`). |
-| Code paths enumerated | 24 of 44 paths have test assertions. Gaps include input read errors, count overflow, and several cancellation paths. |
+| Oracle (confirmed) | Class 1 analytical counts, areas, volumes, and equivalent diameters. Three base fixtures and three output-block variants encode expectations in `test/ComputeFeatureSizesTest.cpp`. All pass in CI. The flat-spacing case is an expected failure (`ComputeFeatureSizes-D3`). |
+| Code paths enumerated | 24 of 44 paths exercised with test assertions. Gaps include input read errors, count overflow, and several cancellation paths. |
 | Tests today | 16 test cases: 14 visible and 2 hidden OOC cases. Coverage includes analytical values, output writes, invalid inputs, archive regression, and SIMPL conversion. |
 | Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies the Small IN100 input and three regression arrays. Analytical fixtures are constructed in C++. |
-| Legacy comparison | Source comparison with DREAM.3D v6.5.171 confirms D1–D3. Runtime comparison artifacts are not available. |
-| Bug flags | `ComputeFeatureSizes-D3` (issue #1857) |
-| V&V phase | Complete. `ComputeFeatureSizes-D3` remains open; its regression test is marked as an expected failure. |
+| Legacy comparison | Not run — runtime comparison artifacts are not available. Source comparison with DREAM.3D v6.5.171 identifies D1–D3. |
+| Bug flags | `ComputeFeatureSizes-D3` |
+| V&V phase | Analytical fixtures, source comparison, and test inventory are complete. Runtime comparison artifacts and a separate oracle-design review record are required. `ComputeFeatureSizes-D3` remains open with an expected-failure test. |
 
 ## Summary
 
@@ -39,22 +39,22 @@
 
 *Applied:* Count cells per feature, multiply by image cell size or sum RectGrid cell volumes, then use `2*sqrt(A/pi)` or `2*cbrt(3*V/(4*pi))`.
 
-*Encoded:* `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp::SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` and five companion `Valid:` cases use three base fixtures; `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` adds three variants; all registered tests pass in CI at `01809c236`. The flat-spacing case retains `[!shouldfail]` for `ComputeFeatureSizes-D3`.
+*Encoded:* `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp::SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` and five companion `Valid:` cases use three base fixtures; `SimplnxCore::ComputeFeatureSizesScanline: bounded output writes` adds three variants. All pass in CI. The flat-spacing case is an expected failure (`[!shouldfail]`) for `ComputeFeatureSizes-D3`.
 
-*Second-engineer review:* Michael Jackson, 2026-07-28 (recorded sign-off).
+*Second-engineer review:* The report records Michael Jackson's sign-off on 2026-07-28. A separate record of the oracle-design review is required.
 
 ## Bugs found and fixed
 
-PR #1638 fixed `ComputeFeatureSizes-D4` and `ComputeFeatureSizes-D5`, and DREAM3D-NX v7.4.2 contains those fixes.
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2. DREAM3D-NX v7.4.2 contains the fix for `ComputeFeatureSizes-D4`. DREAM3D-NX v7.4.2 contains the fix for `ComputeFeatureSizes-D5`.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|-----------|--------|----------------------------|---------------------------|
-| `ComputeFeatureSizes-D4` | RectGrid reduction applied Kahan compensation to the accumulated total instead of the incoming partial sum. | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. | Subtract the compensation from the incoming partial sum before adding it to the accumulated total. |
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeFeatureSizes-D4` | RectGrid reduction applied Kahan compensation to the accumulated total instead of the incoming partial sum. | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. | The filter subtracts the compensation from the incoming partial sum before adding it to the accumulated total. |
 | `ComputeFeatureSizes-D5` | Parallel workers could read nonresident FeatureIds without a store-residency scheduling guard. | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. | Direct execution checks FeatureIds residency before parallel scheduling. |
 
 ## Code path coverage
 
-24 of 44 paths have test assertions. Gaps include input read errors, count overflow, and cancellation during input processing.
+24 of 44 paths exercised with test assertions. Gaps include input read errors, count overflow, and cancellation during input processing.
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizes.cpp` (25 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesDirect.cpp` (481 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesScanline.cpp` (449 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureSizesFilter.cpp` (199 lines).
 
@@ -118,13 +118,13 @@ All names are in `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp`. Dyn
 | `SimplnxCore::ComputeFeatureSizesScanline: cancellation preserves completed output blocks` | kept | Cancels after the first complete output block. Checks completed values and zero values in the unwritten tail. |
 | `SimplnxCore::ComputeFeatureSizes: real OOC output writes preserve analytical values` | kept | Hidden OOC case. Checks seven feature tuples on real HDF5-OOC stores; skips the body in an in-core build without that store. |
 | `SimplnxCore::ComputeFeatureSizes: real OOC multi-block output writes` | kept | Hidden OOC case. Requires HDF5-OOC and checks values across an output-block boundary. |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` | kept | Checks counts, areas, and circular diameters for three features; confirms that element sizes are absent. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D` | kept | Checks counts, areas, and circular diameters for three features; confirms that element sizes are absent. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
 | `SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing` | new-for-V&V | Expected failure (`[!shouldfail]`). Variants: flat Z, flat X, flat Y. Expects area 24 with flat spacing 5; both algorithms calculate 120 (`ComputeFeatureSizes-D3`). |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes` | kept | Checks the same 2D values and the presence of the element-size array. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D` | kept | Checks counts, volumes, and spherical diameters for three features; confirms that element sizes are absent. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element Size` | kept | Checks the same 3D values and the presence of the element-size array. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid` | kept | Checks counts, volumes, and spherical diameters on a nonuniform grid; confirms deletion of element sizes. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
-| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Element Size` | kept | Checks the same RectGrid values and retention of element sizes. PR #1638 changed float comparisons to relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes` | kept | Checks the same 2D values and the presence of the element-size array. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D` | kept | Checks counts, volumes, and spherical diameters for three features; confirms that element sizes are absent. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element Size` | kept | Checks the same 3D values and the presence of the element-size array. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid` | kept | Checks counts, volumes, and spherical diameters on a nonuniform grid; confirms deletion of element sizes. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
+| `SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Element Size` | kept | Checks the same RectGrid values and retention of element sizes. Float comparisons now use relative tolerance `1e-6` for platform and reduction-order variation. |
 | `SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure` | kept | Uses FeatureId 10 with four feature tuples. Expects an execution error. |
 | `SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure` | kept | Checks rejection of dimensions (5,1,1), (1,5,1), (1,1,5), and (1,1,1). |
 | `SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test` | kept | Loads `6_6_stats_test_v2.tar.gz` and compares all three generated arrays with archived arrays. This is a regression check, not an independent oracle. |

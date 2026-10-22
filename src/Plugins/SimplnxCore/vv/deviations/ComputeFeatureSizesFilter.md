@@ -55,18 +55,16 @@ Entries use the stable ID sequence `ComputeFeatureSizes-D<N>`. The Filter UUID i
 | **Deviation ID** | `ComputeFeatureSizes-D3` |
 | **Filter UUID** | `c666ee17-ca58-4969-80d0-819986c72485` |
 | **Status** | active |
-| **Affected released versions** | DREAM3D-NX v7.4.2. DREAM.3D v6.5.171 was not affected. |
-| **Fixed in** | Not fixed. Tracked in issue #1857. |
 
 **Symptom:** For a 2D image, the reported area includes the flat dimension's spacing, and the circular diameter uses that value.
 
-**Root cause:** Bug in the area and diameter interpretation. PR #1590 (`e76ad508e`) replaced the two non-flat spacings with the product of all three spacings. Both current algorithms keep this slab convention and then apply `2*sqrt(value/pi)`. With physical length units, the product is a volume, so it is not an area for the circle formula. DREAM.3D v6.5.171 uses only the two non-flat spacings.
+**Root cause:** Bug in the area and diameter interpretation. DREAM3D-NX v7.4.2 uses the product of all three spacings instead of the two non-flat spacings. Both current algorithms keep this slab convention and then apply `2*sqrt(value/pi)`. With physical length units, the product is a volume, so it is not an area for the circle formula. DREAM.3D v6.5.171 uses only the two non-flat spacings.
 
-**Affected users:** Users who need true 2D area and circular diameter, especially when flat spacing is not 1. For four cells with non-flat spacings 2 and 3 and flat spacing 5, the algorithms calculate 120; the true area is 24. Relative to true area, the size scales by flat spacing and the diameter scales by its square root.
+**Affected users:** Users of DREAM3D-NX v7.4.2 who need true 2D area and circular diameter, especially when flat spacing is not 1. DREAM.3D v6.5.171 was not affected. For four cells with non-flat spacings 2 and 3 and flat spacing 5, the algorithms calculate 120; the true area is 24. Relative to true area, the size scales by flat spacing and the diameter scales by its square root.
 
-**Recommendation:** Do not interpret these outputs as true area and circular diameter when flat spacing is not 1. For true 2D measurements, use the product of the two non-flat spacings for area and `2*sqrt(area/pi)` for diameter.
+**Recommendation:** This defect is not fixed. Do not interpret these outputs as true area and circular diameter when flat spacing is not 1. For true 2D measurements, use the product of the two non-flat spacings for area and `2*sqrt(area/pi)` for diameter.
 
-**Evidence:** `SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing` asserts 24 for flat X, Y, and Z and has `[!shouldfail]`. The Scanline `bounded output writes` Image 2D variant instead asserts the current slab result. Source in `upstream/release/v7.0.0` through `upstream/release/v7.4.1` excludes the flat spacing. Source in `upstream/release/v7.4.2` includes all three spacings.
+**Evidence:** PR #1590 (`e76ad508e`) introduced this defect, which is tracked in issue #1857. `SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing` asserts 24 for flat X, Y, and Z and is an expected failure (`[!shouldfail]`). The Scanline `bounded output writes` Image 2D variant instead asserts the current slab result. Source in `upstream/release/v7.0.0` through `upstream/release/v7.4.1` excludes the flat spacing. Source in `upstream/release/v7.4.2` includes all three spacings.
 
 ---
 
@@ -80,15 +78,17 @@ Entries use the stable ID sequence `ComputeFeatureSizes-D<N>`. The Filter UUID i
 | **Filter UUID** | `c666ee17-ca58-4969-80d0-819986c72485` |
 | **Status** | active |
 | **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
-| **Fixed in** | PR #1638 (`8d0b0ed22`), DREAM3D-NX v7.4.2. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
 **Symptom:** RectGrid feature-volume reduction could lose the intended compensation for floating-point rounding.
 
-**Root cause:** Bug. PR #1592 (`aaad2c4e2`) added the parallel reduction. It subtracted the compensation from the accumulated total, added that value to the incoming partial sum, and measured the rounding residual relative to the incoming sum. PR #1638 applies the usual Kahan update: subtract the compensation from the incoming partial sum, add it to the total, and calculate the residual relative to the total. The corrected code is in `ComputeFeatureSizesDirect.cpp`.
+**Root cause:** Bug. The parallel reduction subtracted the compensation from the accumulated total, added that value to the incoming partial sum, and measured the rounding residual relative to the incoming sum. The filter now applies the usual Kahan update: subtract the compensation from the incoming partial sum, add it to the total, and calculate the residual relative to the total. The corrected code is in `ComputeFeatureSizesDirect.cpp`.
 
-**Affected users:** Users of development revisions between PR #1592 and PR #1638 who calculate RectGrid feature volumes. DREAM3D-NX v7.0.0 through v7.4.2 were not affected.
+**Affected users:** Users of development versions that used the incorrect parallel reduction to calculate RectGrid feature volumes. DREAM3D-NX v7.0.0 through v7.4.2 were not affected.
 
-**Recommendation:** Use a revision that contains PR #1638. The RectGrid analytical tests check feature volumes and diameters, but do not isolate the compensation correction with an adversarial rounding fixture.
+**Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2. The filter applies compensation to each incoming partial sum.
+
+**Evidence:** PR #1592 (`aaad2c4e2`) introduced the defect. PR #1638 (`8d0b0ed22`) fixed it before DREAM3D-NX v7.4.2. The release-source inspection is recorded in `../provenance/ComputeFeatureSizesFilter.md`. The RectGrid analytical tests check feature volumes and diameters, but do not isolate this correction with a fixture that exposes the rounding error.
 
 ---
 
@@ -100,12 +100,14 @@ Entries use the stable ID sequence `ComputeFeatureSizes-D<N>`. The Filter UUID i
 | **Filter UUID** | `c666ee17-ca58-4969-80d0-819986c72485` |
 | **Status** | active |
 | **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. DREAM.3D v6.5.171 was not affected. |
-| **Fixed in** | PR #1638 (`8d0b0ed22`), DREAM3D-NX v7.4.2. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
 **Symptom:** Parallel Image and RectGrid workers could read nonresident FeatureIds without first disabling parallel scheduling.
 
-**Root cause:** Bug. PR #1592 introduced parallel reads without a residency guard. PR #1638 added `requireStoresInMemory()` for FeatureIds before each `ParallelDataAlgorithm::execute()` call. The current Direct implementation retains both calls. The guard controls scheduling; it does not pin data or synchronize store access. The RectGrid guard checks FeatureIds only, not element sizes.
+**Root cause:** Bug. Parallel reads had no residency guard. The filter now calls `requireStoresInMemory()` for FeatureIds before each `ParallelDataAlgorithm::execute()` call. The current Direct implementation retains both calls. The guard controls scheduling; it does not pin data or synchronize store access. The RectGrid guard checks FeatureIds only, not element sizes.
 
-**Affected users:** Users of development revisions between PR #1592 and PR #1638 with nonresident FeatureIds and parallel execution. DREAM3D-NX v7.0.0 through v7.4.2 were not affected.
+**Affected users:** Users of development versions that scheduled parallel reads of nonresident FeatureIds without a residency guard. DREAM3D-NX v7.0.0 through v7.4.2 were not affected.
 
-**Recommendation:** Use a revision that contains PR #1638. Current real-store tests require Scanline dispatch and do not directly exercise this Direct scheduling fallback.
+**Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2. Direct execution uses serial scheduling when FeatureIds are nonresident.
+
+**Evidence:** PR #1592 (`aaad2c4e2`) introduced the defect. PR #1638 (`8d0b0ed22`) added both residency guards before DREAM3D-NX v7.4.2. The release-source inspection is recorded in `../provenance/ComputeFeatureSizesFilter.md`. Current real-store tests require Scanline dispatch and do not directly exercise this Direct scheduling fallback.

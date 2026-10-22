@@ -36,7 +36,7 @@ The three builders create synthetic geometries and hand-specified FeatureIds on 
 
 The `CreateRectGridDataStructure()` function generates a 4x4x4 Rectilinear Grid Geometry and all descendant arrays on each test invocation. The inputs are hand-specified. The expected output is a Class 1 hand derivation.
 
-Relevant Information for the data set:
+Input values:
 
 ```text
 Image Info:
@@ -71,7 +71,7 @@ Feature Ids:
 
 The `Create2DImageDataStructure()` function generates a 5x5x1 Image Geometry and all descendant arrays on each test invocation. The inputs are hand-specified and include a single-cell feature. The expected output is a Class 1 hand derivation.
 
-Relevant Information for the data set:
+Input values:
 
 ```text
 Image Info:
@@ -91,7 +91,7 @@ Feature Ids:
 
 The `Create3DImageDataStructure()` function generates a 5x5x5 Image Geometry and all descendant arrays on each test invocation. The inputs are hand-specified. The expected output is a Class 1 hand derivation.
 
-Relevant Information for the data set:
+Input values:
 
 ```text
 Image Info:
@@ -141,7 +141,7 @@ The Class 1 oracle lives in the test code. The following paths refer to the inli
 | `Image/FeatureData/Volumes` | Class 1 cell count times cell area or volume, or sum of RectGrid cell volumes |
 | `Image/FeatureData/EquivalentDiameters` | Class 1 circle or sphere formula applied to the feature area or volume |
 
-The decimal derivations below explain the expected values. `Validate2DImageDataStructure()`, `Validate3DImageDataStructure()`, and `ValidateRectGridDataStructure()` contain the executable float32 expectations with relative tolerance `1e-6`. All registered tests pass in CI at `01809c236` on Linux, macOS, and Windows. The flat-spacing case retains `[!shouldfail]`: it expects area 24 for flat X, Y, and Z, while the filter calculates 120 (`ComputeFeatureSizes-D3`).
+The decimal derivations below explain the expected values. `Validate2DImageDataStructure()`, `Validate3DImageDataStructure()`, and `ValidateRectGridDataStructure()` contain the executable float32 expectations with relative tolerance `1e-6`. All registered tests pass in CI at `01809c236` on Linux, macOS, and Windows. The flat-spacing case is an expected failure (`[!shouldfail]`): it expects area 24 for flat X, Y, and Z, while the filter calculates 120 (`ComputeFeatureSizes-D3`).
 
 **RectGrid derivation**
 
@@ -348,7 +348,7 @@ Each fetched release branch was inspected with `git show upstream/release/v<vers
 | DREAM3D-NX v7.4.1 | `Algorithms/ComputeFeatureSizes.cpp` | Excluded | Serial compensated sum; defect absent | Serial loops; defect absent |
 | DREAM3D-NX v7.4.2 | `Algorithms/ComputeFeatureSizes.cpp` | Included; defect present | Compensation subtracted from incoming partial sum; fixed | Both FeatureIds residency guards present; fixed |
 
-PR #1590 (`e76ad508e`) introduced D3. PR #1592 (`aaad2c4e2`) introduced the parallel code with D4 and D5. PR #1638 (`8d0b0ed22`) corrected the reduction and added both `requireStoresInMemory()` calls. DREAM3D-NX v7.4.2 contains both fixes. No release from DREAM3D-NX v7.0.0 through v7.4.2 contains D4 or D5. D3 remains in the current Direct and Scanline implementations.
+PR #1590 (`e76ad508e`) introduced D3. PR #1592 (`aaad2c4e2`) introduced the parallel code with D4 and D5. PR #1638 (`8d0b0ed22`) corrected the reduction and added both `requireStoresInMemory()` calls. It also changed the six analytical tests to use relative tolerance `1e-6` for platform and reduction-order variation. DREAM3D-NX v7.4.2 contains both fixes. No release from DREAM3D-NX v7.0.0 through v7.4.2 contains D4 or D5. D3 remains in the current Direct and Scanline implementations.
 
 ## Oracle provenance (Classes 2, 3, 5 only)
 
@@ -356,8 +356,7 @@ Not applicable. The independent oracle is Class 1 and is encoded in the test sou
 
 ## Second-engineer oracle review
 
-- **Reviewer:** Michael Jackson.
-- **Date:** 2026-07-28, as recorded in the report sign-off.
+The report records Michael Jackson's sign-off on 2026-07-28. A separate record of the oracle-design review is required.
 
 ## Regenerated to fix a circular-oracle situation?
 
