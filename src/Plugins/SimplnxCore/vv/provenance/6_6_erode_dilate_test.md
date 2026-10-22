@@ -1,6 +1,6 @@
 # Exemplar Archive Provenance: 6_6_erode_dilate_test.tar.gz
 
-This sidecar records the shared Erode/Dilate exemplar archive and the ErodeDilateMaskFilter comparison evidence.
+This sidecar records the shared Erode/Dilate exemplar archive and the mask and bad-data comparison evidence.
 
 ---
 
@@ -15,7 +15,7 @@ This sidecar records the shared Erode/Dilate exemplar archive and the ErodeDilat
 | **Generated on** | 2023-02-07 to 2023-02-15 (inferred from PR #439) |
 | **Generated at commit** | `98d2681e7` (PR #439 merge, inferred) |
 
-Read-only inspection on 2026-10-20 confirmed that the archive SHA512 matches `src/Plugins/SimplnxCore/test/CMakeLists.txt:234` and the value above.
+The SHA512 above matches the archive registration in `src/Plugins/SimplnxCore/test/CMakeLists.txt`. The first registration is `98d2681e7`, authored by Michael Jackson, with PR #439 in its subject.
 
 ## How it was generated
 
@@ -45,11 +45,15 @@ The archive supplies regression references. The independent correctness oracle f
 
 Both mask exemplar tests run two iterations with all axes enabled, compare the cell arrays with the matching exemplar, and check tuple dimensions. These settings cannot detect ignored direction flags. The archive is separate from the stock DREAM.3D v6.5.171 comparison below.
 
+The bad-data `(Erode)` test compares matching cell arrays with `Exemplar Bad Data Erode`. Its two `Expanded` tests instead use 28 pairs of literal FeatureIds and Misc arrays from `ErodeDilateBadDataTest.cpp`. These are regression references. The Class 4 checks in `Ignored Path` and `Ignored Array Cell AM Alias` require ignored values to stay unchanged while FeatureIds change.
+
 ## Oracle provenance (Classes 2, 3, 5 only)
 
 ErodeDilateMaskFilter uses Class 1, so no external correctness-oracle provenance block is required. The following artifacts document the separate legacy comparison.
 
 Run against DREAM.3D v6.5.171 on 2026-08-18: 28 of 28 mask cases match. `vv_work:ErodeDilateMaskFilter/ReadMe.md` identifies the stock `PipelineRunner` and records the run date. `vv_work:ErodeDilateMaskFilter/results_compare.txt` gives the 28 element-wise matches from `vv_work:ErodeDilateMaskFilter/compare.py`.
+
+The recorded mask comparison predates `4ec21e93f` (2026-09-20, rolling slice buffers) and `ba246bc7c` (2026-09-24, shared direction helper). It does not verify the current algorithm. A new comparison is required.
 
 The comparison uses a 5×5×1 centre seed and a 3×3×3 hollow cube. Each fixture runs dilation and erosion for one iteration on each of seven non-empty axis combinations. The Z-only cases on the single-slice fixture preserve the input; the cube supplies the Z-direction evidence.
 
@@ -65,12 +69,20 @@ The comparison uses a 5×5×1 centre seed and a 3×3×3 hollow cube. Each fixtur
 
 The zero-iteration probe in `vv_work:ErodeDilateMaskFilter/ReadMe.md` records DREAM.3D v6.5.171 rejecting the input with `-5555` while SIMPLNX returned the unchanged mask. Its inputs are `vv_work:ErodeDilateMaskFilter/extra/legacy_numiter0.json` and `vv_work:ErodeDilateMaskFilter/extra/nx_numiter0.d3dpipeline`. `ErodeDilateMaskFilter-D1` documents the correction to this validation difference.
 
-The current test source is identical to `01809c236`. All registered ErodeDilateMaskFilter tests pass in CI at `01809c236` on Linux, macOS and Windows.
+The ordinary mask and bad-data tests run in Linux, macOS and Windows in-core builds. All pass in CI at `419f9db35`. The bad-data test source is identical to that revision; its hidden input generator is separate from the ordinary regression cases.
+
+The bad-data artifacts are `vv_work:ErodeDilateBadDataFilter/ab/run_ab.py`, `vv_work:ErodeDilateBadDataFilter/oracle.py` and `vv_work:ErodeDilateBadDataFilter/pr_comment.md`. The runner script names the stock DREAM.3D v6.5.171 `PipelineRunner`. The review note records 0 of 28 matches for an intermediate implementation that masked face indices, and 28 of 28 matches between DREAM.3D and the corrected Python simulation. The simulation explicitly reproduces the implementation structure; it is diagnostic evidence, not an independent morphology oracle.
+
+The saved bad-data folder contains no ReadMe, dated result file or result from the current algorithm. The earlier report at `ea4f1ae20` (2026-08-18) states 28 of 28 matches after the fix but gives no comparison date. Later algorithm changes are `4ec21e93f` (2026-09-20, rolling slice buffers), `ba246bc7c` (2026-09-24, shared direction helper) and `a33c370ca` (2026-09-25, messaging API). Thus the earlier comparison does not describe execution of the current algorithm.
+
+Source comparison preserves useful tie-breaking evidence: dilation overwrites a destination mark when another bad cell reaches it; erosion changes its selected neighbor only when the count strictly exceeds the maximum. Both visit faces in `[-Z,-Y,-X,+X,+Y,+Z]` order. Current slice marks reset each iteration, and `SliceBufferedTransferOneZ` transfers completed slices; the earlier full-volume transfer description does not apply.
 
 ## Second-engineer oracle review
 
-- **Reviewer:** Nathan Young, as the approving reviewer of PR #1717
+- **Reviewer:** Nathan Young for ErodeDilateMaskFilter, as the approving reviewer of PR #1717
 - **Date:** 2026-08-25
+
+ErodeDilateBadDataFilter records Michael Jackson, 2026-08-17, as the second engineer in its report sign-off. Its prior Oracle field says review is pending and supplies no separate oracle-design approval.
 
 ## Regenerated to fix a circular-oracle situation?
 
