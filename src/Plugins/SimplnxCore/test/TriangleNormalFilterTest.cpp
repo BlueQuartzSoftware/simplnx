@@ -336,7 +336,9 @@ struct NormalTraceGuard
   }
 
   NormalTraceGuard(const NormalTraceGuard&) = delete;
+  NormalTraceGuard(NormalTraceGuard&&) = delete;
   NormalTraceGuard& operator=(const NormalTraceGuard&) = delete;
+  NormalTraceGuard& operator=(NormalTraceGuard&&) = delete;
 
   NormalTransferState& stateRef;
 };

@@ -381,7 +381,9 @@ public:
     m_Entry->second = m_Original;
   }
   ScopedRecordManager(const ScopedRecordManager&) = delete;
+  ScopedRecordManager(ScopedRecordManager&&) = delete;
   ScopedRecordManager& operator=(const ScopedRecordManager&) = delete;
+  ScopedRecordManager& operator=(ScopedRecordManager&&) = delete;
   /**
    * @brief Checks that capability selection starts with this scope's record manager.
    * @return True when the first collection entry still owns the installed manager.

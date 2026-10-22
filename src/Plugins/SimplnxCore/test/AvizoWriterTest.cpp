@@ -120,6 +120,11 @@ struct AvizoFixture
     std::filesystem::remove_all(outputRoot, ignored);
   }
 
+  AvizoFixture(const AvizoFixture&) = delete;
+  AvizoFixture(AvizoFixture&&) = delete;
+  AvizoFixture& operator=(const AvizoFixture&) = delete;
+  AvizoFixture& operator=(AvizoFixture&&) = delete;
+
   std::filesystem::path outputRoot;
   DataStructure dataStructure;
   std::shared_ptr<ObservedAvizoStore> source;

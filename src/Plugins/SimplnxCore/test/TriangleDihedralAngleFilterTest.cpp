@@ -377,7 +377,9 @@ struct DihedralTraceGuard
   }
 
   DihedralTraceGuard(const DihedralTraceGuard&) = delete;
+  DihedralTraceGuard(DihedralTraceGuard&&) = delete;
   DihedralTraceGuard& operator=(const DihedralTraceGuard&) = delete;
+  DihedralTraceGuard& operator=(DihedralTraceGuard&&) = delete;
 
   DihedralTransferState& stateRef;
 };
