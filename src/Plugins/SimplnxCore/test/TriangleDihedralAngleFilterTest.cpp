@@ -298,6 +298,12 @@ public:
   {
   }
 
+  ~DihedralReportingStore() override = default;
+  DihedralReportingStore(const DihedralReportingStore&) = default;
+  DihedralReportingStore(DihedralReportingStore&&) = default;
+  DihedralReportingStore& operator=(const DihedralReportingStore&) = delete;
+  DihedralReportingStore& operator=(DihedralReportingStore&&) = delete;
+
   /**
    * @brief Records a read and refuses the selected call before changing the buffer.
    * @param startIndex First flat value index.
@@ -447,6 +453,12 @@ struct DihedralFixture
       SIMPLNX_RESULT_REQUIRE_VALID(result);
     }
   }
+
+  ~DihedralFixture() = default;
+  DihedralFixture(const DihedralFixture&) = default;
+  DihedralFixture(DihedralFixture&&) = default;
+  DihedralFixture& operator=(const DihedralFixture&) = default;
+  DihedralFixture& operator=(DihedralFixture&&) = default;
 
   Arguments arguments() const
   {

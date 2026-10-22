@@ -43,6 +43,12 @@ public:
   {
   }
 
+  ~FaultStore() override = default;
+  FaultStore(const FaultStore&) = default;
+  FaultStore(FaultStore&&) = default;
+  FaultStore& operator=(const FaultStore&) = delete;
+  FaultStore& operator=(FaultStore&&) = default;
+
   CopyFault fault = CopyFault::None;
   bool armed = false;
   mutable uint64 reads = 0;

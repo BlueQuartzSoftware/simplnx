@@ -88,6 +88,12 @@ public:
     setValue(1, 13);
   }
 
+  ~NumericCompletionStore() override = default;
+  NumericCompletionStore(const NumericCompletionStore&) = default;
+  NumericCompletionStore(NumericCompletionStore&&) = default;
+  NumericCompletionStore& operator=(const NumericCompletionStore&) = delete;
+  NumericCompletionStore& operator=(NumericCompletionStore&&) = default;
+
   /**
    * @brief Counts a legacy call without returning checked diagnostics.
    */
@@ -137,6 +143,12 @@ public:
     setList(1, std::vector<int32>{17});
   }
 
+  ~ListCompletionStore() override = default;
+  ListCompletionStore(const ListCompletionStore&) = default;
+  ListCompletionStore(ListCompletionStore&&) = default;
+  ListCompletionStore& operator=(const ListCompletionStore&) = delete;
+  ListCompletionStore& operator=(ListCompletionStore&&) = delete;
+
   /**
    * @brief Returns the selected list completion diagnostics.
    * @return The configured completion result.
@@ -179,6 +191,12 @@ public:
   : m_Control(std::move(control))
   {
   }
+
+  ~CompletionFilter() override = default;
+  CompletionFilter(const CompletionFilter&) = delete;
+  CompletionFilter(CompletionFilter&&) = delete;
+  CompletionFilter& operator=(const CompletionFilter&) = delete;
+  CompletionFilter& operator=(CompletionFilter&&) = delete;
 
   std::string name() const override
   {
@@ -282,6 +300,12 @@ class InterfaceCompletionNode : public PipelineFilter
 public:
   using PipelineFilter::PipelineFilter;
 
+  ~InterfaceCompletionNode() override = default;
+  InterfaceCompletionNode(const InterfaceCompletionNode&) = delete;
+  InterfaceCompletionNode(InterfaceCompletionNode&&) = delete;
+  InterfaceCompletionNode& operator=(const InterfaceCompletionNode&) = delete;
+  InterfaceCompletionNode& operator=(InterfaceCompletionNode&&) = delete;
+
   bool overrideCompletion = false;
   Result<> completionResult;
   usize checkedCalls = 0;
@@ -326,6 +350,13 @@ protected:
 class RemovalWitness : public AbstractDataStructureObserver
 {
 public:
+  RemovalWitness() = default;
+  ~RemovalWitness() override = default;
+  RemovalWitness(const RemovalWitness&) = delete;
+  RemovalWitness(RemovalWitness&&) = delete;
+  RemovalWitness& operator=(const RemovalWitness&) = delete;
+  RemovalWitness& operator=(RemovalWitness&&) = delete;
+
   usize liveRemovalCount = 0;
   DataObject::IdType lastLiveId = 0;
 
@@ -382,6 +413,17 @@ public:
   , m_Control(other.m_Control)
   {
   }
+
+  ~SnapshotGroup() override = default;
+
+  // Rvalues retain the source topology and shared fault control through the copy contract.
+  SnapshotGroup(SnapshotGroup&& other)
+  : SnapshotGroup(static_cast<const SnapshotGroup&>(other))
+  {
+  }
+
+  SnapshotGroup& operator=(const SnapshotGroup&) = delete;
+  SnapshotGroup& operator=(SnapshotGroup&&) = delete;
 
   /**
    * @brief Copies the object or throws the selected synthetic exception.
@@ -448,6 +490,12 @@ struct CompletionTrace
     }
   }
 
+  ~CompletionTrace() = default;
+  CompletionTrace(const CompletionTrace&) = default;
+  CompletionTrace(CompletionTrace&&) = default;
+  CompletionTrace& operator=(const CompletionTrace&) = default;
+  CompletionTrace& operator=(CompletionTrace&&) = default;
+
   std::vector<RunState> pipelineStates;
   std::vector<RunState> nodeStates;
   std::vector<std::string> updates;
@@ -496,6 +544,12 @@ struct CompletionFixture
       secondNode->setIndex(1);
     }
   }
+
+  ~CompletionFixture() = default;
+  CompletionFixture(const CompletionFixture&) = default;
+  CompletionFixture(CompletionFixture&&) = default;
+  CompletionFixture& operator=(const CompletionFixture&) = default;
+  CompletionFixture& operator=(CompletionFixture&&) = default;
 
   StoreKind storeKind;
   DataStructure dataStructure;

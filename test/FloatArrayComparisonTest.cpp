@@ -34,6 +34,12 @@ class RecordingFloatStore : public DataStore<T>
 public:
   using DataStore<T>::DataStore;
 
+  ~RecordingFloatStore() override = default;
+  RecordingFloatStore(const RecordingFloatStore&) = default;
+  RecordingFloatStore(RecordingFloatStore&&) = default;
+  RecordingFloatStore& operator=(const RecordingFloatStore&) = delete;
+  RecordingFloatStore& operator=(RecordingFloatStore&&) = default;
+
   mutable std::vector<std::pair<usize, usize>> reads;
   usize failingReadCall = 0;
   bool warnOnRead = false;
@@ -136,6 +142,12 @@ struct FloatComparisonFixture
     REQUIRE(exemplaryStore->reads.empty());
     REQUIRE(computedStore->reads.empty());
   }
+
+  ~FloatComparisonFixture() = default;
+  FloatComparisonFixture(const FloatComparisonFixture&) = default;
+  FloatComparisonFixture(FloatComparisonFixture&&) = default;
+  FloatComparisonFixture& operator=(const FloatComparisonFixture&) = default;
+  FloatComparisonFixture& operator=(FloatComparisonFixture&&) = default;
 
   /**
    * @brief Evaluates the actual arrays and verifies that every source value stays unchanged.

@@ -95,6 +95,13 @@ public:
   , payload(value)
   {
   }
+
+  ~PlaneFailure() override = default;
+  PlaneFailure(const PlaneFailure&) = default;
+  PlaneFailure(PlaneFailure&&) = default;
+  PlaneFailure& operator=(const PlaneFailure&) = default;
+  PlaneFailure& operator=(PlaneFailure&&) = default;
+
   int payload;
 };
 /**
@@ -112,6 +119,13 @@ public:
   : payload(value)
   {
   }
+
+  ~AllocationFailure() override = default;
+  AllocationFailure(const AllocationFailure&) = default;
+  AllocationFailure(AllocationFailure&&) = default;
+  AllocationFailure& operator=(const AllocationFailure&) = default;
+  AllocationFailure& operator=(AllocationFailure&&) = default;
+
   int payload;
 };
 /**
@@ -208,6 +222,12 @@ public:
   {
     ++m_State.liveRecords;
   }
+
+  RecordDecorator(const RecordDecorator&) = delete;
+  RecordDecorator(RecordDecorator&&) = delete;
+  RecordDecorator& operator=(const RecordDecorator&) = delete;
+  RecordDecorator& operator=(RecordDecorator&&) = delete;
+
   /**
    * @brief Marks the decorator as closed before its owned store is destroyed.
    */
@@ -323,6 +343,13 @@ public:
   : m_State(state)
   {
   }
+
+  ~RecordManager() override = default;
+  RecordManager(const RecordManager&) = default;
+  RecordManager(RecordManager&&) = default;
+  RecordManager& operator=(const RecordManager&) = delete;
+  RecordManager& operator=(RecordManager&&) = delete;
+
   std::string formatName() const override
   {
     return "IdentifySample test records";
@@ -418,6 +445,13 @@ public:
   , m_State(state)
   {
   }
+
+  ~MaskStore() override = default;
+  MaskStore(const MaskStore&) = default;
+  MaskStore(MaskStore&&) = default;
+  MaskStore& operator=(const MaskStore&) = delete;
+  MaskStore& operator=(MaskStore&&) = delete;
+
   /**
    * @brief Reads the mask or injects a witnessed gather/prefix-read fault.
    * @param start First flat mask value.
@@ -1758,6 +1792,12 @@ public:
   , m_State(state)
   {
   }
+
+  ~OrthogonalMaskStore() override = default;
+  OrthogonalMaskStore(const OrthogonalMaskStore&) = default;
+  OrthogonalMaskStore(OrthogonalMaskStore&&) = default;
+  OrthogonalMaskStore& operator=(const OrthogonalMaskStore&) = delete;
+  OrthogonalMaskStore& operator=(OrthogonalMaskStore&&) = delete;
 
   /**
    * @brief Copies source values unless the selected read refuses the transfer.

@@ -21,6 +21,11 @@ public:
   FlushFailureFilter() = default;
   ~FlushFailureFilter() noexcept override = default;
 
+  FlushFailureFilter(const FlushFailureFilter&) = delete;
+  FlushFailureFilter(FlushFailureFilter&&) = delete;
+  FlushFailureFilter& operator=(const FlushFailureFilter&) = delete;
+  FlushFailureFilter& operator=(FlushFailureFilter&&) = delete;
+
   std::string name() const override;
   std::string className() const override;
   Uuid uuid() const override;

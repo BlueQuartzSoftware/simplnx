@@ -102,6 +102,12 @@ public:
   {
   }
 
+  ~CentroidsObservedReadStore() override = default;
+  CentroidsObservedReadStore(const CentroidsObservedReadStore&) = default;
+  CentroidsObservedReadStore(CentroidsObservedReadStore&&) = default;
+  CentroidsObservedReadStore& operator=(const CentroidsObservedReadStore&) = delete;
+  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&) = default;
+
   Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {
     m_ReadCount++;

@@ -84,6 +84,12 @@ public:
   {
   }
 
+  ~RecordingStore() override = default;
+  RecordingStore(const RecordingStore&) = default;
+  RecordingStore(RecordingStore&&) = default;
+  RecordingStore& operator=(const RecordingStore&) = delete;
+  RecordingStore& operator=(RecordingStore&&) = delete;
+
   /**
    * @brief Records a read and refuses the selected call before changing the destination.
    * @param startIndex Specifies the first flat value index.

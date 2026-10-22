@@ -48,6 +48,12 @@ public:
   {
   }
 
+  ~ObservedAvizoStore() override = default;
+  ObservedAvizoStore(const ObservedAvizoStore&) = default;
+  ObservedAvizoStore(ObservedAvizoStore&&) = default;
+  ObservedAvizoStore& operator=(const ObservedAvizoStore&) = delete;
+  ObservedAvizoStore& operator=(ObservedAvizoStore&&) = default;
+
   /**
    * @brief Copies a source window or reports the selected read failure.
    * @param startIndex Specifies the first source element.
@@ -294,6 +300,13 @@ class StageAvizoWriter : public AvizoWriter
 {
 public:
   using AvizoWriter::AvizoWriter;
+
+  ~StageAvizoWriter() override = default;
+  StageAvizoWriter(const StageAvizoWriter&) = delete;
+  StageAvizoWriter(StageAvizoWriter&&) = delete;
+  StageAvizoWriter& operator=(const StageAvizoWriter&) = delete;
+  StageAvizoWriter& operator=(StageAvizoWriter&&) = delete;
+
   StageFault fault = StageFault::None;
   mutable usize headerCalls = 0;
   mutable usize dataCalls = 0;
@@ -344,6 +357,13 @@ class OverflowAvizoWriter : public AvizoWriter
 {
 public:
   using AvizoWriter::AvizoWriter;
+
+  ~OverflowAvizoWriter() override = default;
+  OverflowAvizoWriter(const OverflowAvizoWriter&) = delete;
+  OverflowAvizoWriter(OverflowAvizoWriter&&) = delete;
+  OverflowAvizoWriter& operator=(const OverflowAvizoWriter&) = delete;
+  OverflowAvizoWriter& operator=(OverflowAvizoWriter&&) = delete;
+
   usize elementSize = 2;
   usize elementCount = std::numeric_limits<usize>::max();
 
