@@ -759,10 +759,10 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     REQUIRE(cache.hitCount() == 0);
 
     DataStructure destination;
-    auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
-    marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
+    auto* markerPtr = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
+    markerPtr->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
     const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
-    const auto* markerStore = marker->getIDataStore();
+    const auto* markerStorePtr = markerPtr->getIDataStore();
     const auto nextId = destination.getNextId();
     const auto destinationResolver = std::make_shared<RecordingFormatResolver>();
     destination.setFormatResolver(destinationResolver);
@@ -775,7 +775,7 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     CHECK(cache.missCount() == (warmCache ? 0 : 1));
     CHECK(cache.hitCount() == (warmCache ? 1 : 0));
     CHECK(&destination.formatResolver() == destinationResolver.get());
-    CheckImportPolicyMarker(destination, markerOwner, markerStore);
+    CheckImportPolicyMarker(destination, markerOwner, markerStorePtr);
     if(result.invalid())
     {
       CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
@@ -789,12 +789,12 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     {
       for(const auto& path : {k_ImportPolicyFirst, k_ImportPolicySecond})
       {
-        const auto* firstHandout = warmDestination.getDataAs<Int32Array>(path);
-        const auto* secondHandout = destination.getDataAs<Int32Array>(path);
-        REQUIRE(firstHandout != nullptr);
-        REQUIRE(secondHandout != nullptr);
-        CHECK(firstHandout != secondHandout);
-        CHECK(firstHandout->getIDataStore() != secondHandout->getIDataStore());
+        const auto* firstHandoutPtr = warmDestination.getDataAs<Int32Array>(path);
+        const auto* secondHandoutPtr = destination.getDataAs<Int32Array>(path);
+        REQUIRE(firstHandoutPtr != nullptr);
+        REQUIRE(secondHandoutPtr != nullptr);
+        CHECK(firstHandoutPtr != secondHandoutPtr);
+        CHECK(firstHandoutPtr->getIDataStore() != secondHandoutPtr->getIDataStore());
       }
       CheckImportPolicyOutput(warmDestination, mode);
     }
@@ -822,10 +822,10 @@ TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata befo
     WriteImportPolicyFile(file.path);
 
     DataStructure destination;
-    auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
-    marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
+    auto* markerPtr = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
+    markerPtr->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
     const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
-    const auto* markerStore = marker->getIDataStore();
+    const auto* markerStorePtr = markerPtr->getIDataStore();
     const auto resolver = std::make_shared<CompleteImportContextResolver>();
     destination.setFormatResolver(resolver);
     const ImportH5ObjectPathsAction action(file.path, {k_ImportPolicySecond, k_ImportPolicyGroup, k_ImportPolicyFirst});
@@ -835,7 +835,7 @@ TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata befo
     CHECK(resolver->completeContextCalls == 2);
     CHECK(resolver->placeholderContextCalls == 2);
     CHECK(&destination.formatResolver() == resolver.get());
-    CheckImportPolicyMarker(destination, markerOwner, markerStore);
+    CheckImportPolicyMarker(destination, markerOwner, markerStorePtr);
     CheckImportPolicyOutput(destination, mode);
     CHECK(destination.getAllDataPaths().size() == 4);
   }
