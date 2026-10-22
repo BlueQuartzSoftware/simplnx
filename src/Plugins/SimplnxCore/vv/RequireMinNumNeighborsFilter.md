@@ -19,7 +19,7 @@
 | Code paths enumerated | 20 of 30 paths exercised. Gaps include cancellation, store failures and defensive helper paths. |
 | Tests today | 14 test cases cover both phase modes, exact cell copying, feature compaction, errors, shared paths, Small IN100 and SIMPL conversion. All pass in CI. |
 | Exemplar archive | `6_5_test_data_1_v2.tar.gz` supplies Small IN100 input. The analytical expectations are encoded in the tests. |
-| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-07-28: all six arrays matched in both phase modes. The run predates the DREAM3D-NX algorithm changes of 2026-09-20; run the comparison again on the current algorithm. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-07-31: 2,646 values in 22 arrays over four fixture and mode variants matched DREAM.3D and the analytical oracle. The run predates the DREAM3D-NX algorithm changes of 2026-09-20; run the comparison again on the current algorithm. |
 | Bug flags | None |
 | V&V phase | Analytical verification and second-engineer sign-off are complete. A legacy comparison with the current algorithm remains open. |
 
