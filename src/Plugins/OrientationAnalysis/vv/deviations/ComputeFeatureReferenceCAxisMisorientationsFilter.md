@@ -1,128 +1,97 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeatureReferenceCAxisMisorientationsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeatureReferenceCAxisMisorientationsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`FindFeatureReferenceCAxisMisorientations`, source at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureReferenceCAxisMisorientations.{h,cpp}` in DREAM3D 6.5.171).
-
-Entries are referenced by stable ID (`ComputeFeatureReferenceCAxisMisorientationsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-## Comparison summary
-
-The legacy A/B comparison was performed **empirically** on 2026-06-10 against three binaries:
-
-- **A:** DREAM3D 6.5.171 (official release, `/Users/mjackson/Applications/DREAM3D.app/Contents/bin/PipelineRunner`).
-- **B:** A local build of the DREAM3D 6.5.171 source with surgical fixes applied — used only to prove the root cause of each deviation.
-- **C:** SIMPLNX.
-
-All three binaries were run on the same hand-built `.dream3d` input file containing the realistic-microstructure fixture (5×5×1 ImageGeom, 5 features incl. one all-cubic F3, pure-Φ Bunge ZXZ rotations matching the SIMPLNX `AnalyticalFixtures::BuildRealisticMicrostructure()` helper). A/B test workspace and artifacts at `/Users/mjackson/Desktop/FRCAM_AB_Test/`.
-
-**Result summary:**
-
-- **Patched legacy build (B) ≡ SIMPLNX byte-for-byte** across `FeatureReferenceCAxisMisorientations` (25 cells), `FeatureAvgCAxisMisorientations` (6 features), and `FeatureStdevCAxisMisorientations` (6 features). The two pre-existing surgical fixes to the legacy source (`ENH: FindFeatureReferenceCAxisMisorientations - Update to use Eigen` + `BUG: ... StdDev double precision`) were sufficient.
-- **6.5.171 produces materially-different output** in two distinct ways — D1 (non-hex feature handling) and D4 (EbsdLib precision) — both documented below.
-
-This filter is the c-axis analog of `ComputeFeatureReferenceMisorientationsFilter`. Important distinction: this filter does NOT route through `LaueOps::calculateMisorientation` — it uses Eigen for the c-axis vector math (orientation matrix → c-axis rotation → `arccos(c1 · avgCAxis)` folded to `[0°, 90°]`). The EbsdLib 2.4.1+ `calculateMisorientation` precision improvement that surfaced in F#1/F#2/F#4/F#5 of this V&V cycle does **not** apply here. The precision drift documented under D4 below has a different mechanism: hand-rolled `MatrixMath` + float32 stddev accumulation on the legacy side vs Eigen + double accumulation on the SIMPLNX side.
+Part 1 lists differences from DREAM.3D v6.5.171 (D1 and D2). Part 2 lists fixed SIMPLNX defects (D3 and D4). Both parts use the stable `ComputeFeatureReferenceCAxisMisorientationsFilter-D<N>` sequence. The Filter UUID is the permanent cross-reference anchor.
 
 ---
 
-## ComputeFeatureReferenceCAxisMisorientationsFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-| Field            | Value                                                                                                                                |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D1`                                                                               |
-| **Filter UUID**  | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25`                                                                                               |
-| **Status**       | active (SIMPLNX fixed pre-V&V via PR #1438; legacy 6.5.171 still has the bug — root cause proven by applying the same fix to a local build of the legacy source) |
+### ComputeFeatureReferenceCAxisMisorientationsFilter-D1
 
-**Symptom:** Per-cell and per-feature outputs for non-hex features differ between SIMPLNX and DREAM3D 6.5.171. Legacy 6.5.171s c-axis projection treats every cubic cell's quaternion as if it were hex. For a feature whose cells are *all* non-hex, the legacy filter produces `featAvg = 0.0 or whatever-the-projection-yields` instead of the analytically-correct `NaN`. The issue exists in the per-feature population stddev calculation as well.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D1` |
+| **Filter UUID** | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25` |
+| **Status** | active |
 
-**Root cause:** **Bug** in legacy DREAM3D 6.5.171.
+**Symptom:** DREAM.3D v6.5.171 includes non-hexagonal cells in c-axis statistics; SIMPLNX skips them and gives NaN feature statistics when no hexagonal cell contributes.
 
-The legacy code at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureReferenceCAxisMisorientations.cpp:281` gates the per-cell math on `if(m_FeatureIds[point] > 0 && m_CellPhases[point] > 0)` — no crystal-structure check. Cubic cells fall through to lines 290-308 which compute `c = R^T · [0,0,1]` (the cell-quat-derived c-axis) and then `arccos(c · avgCAxes[fid])` (against whatever `AvgCAxes` was pre-populated for the feature). For a non-hex feature, the upstream `FindAvgCAxes` would either skip the feature (leaving `AvgCAxes[F] = 0` initialized) or produce arbitrary content; either way the resulting cell-level miso is not meaningful.
+**Root cause:** Bug. DREAM.3D v6.5.171 gates the angle calculation only on positive FeatureIds and CellPhases. It has no Crystal Structures input or hexagonal-phase check. A cubic cell therefore produces an angle from its quaternion and the supplied feature reference vector. That angle has no meaning under this filter's hexagonal-phase contract.
 
-SIMPLNX adds the `isHex` gate at `Algorithms/ComputeFeatureReferenceCAxisMisorientations.cpp:124`:
-```cpp
-const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
-...
-if(isHex && cellFeatureId > 0 && cellPhase > 0)
-{
-  // c-axis projection
-}
-else
-{
-  cellRefCAxisMis.setValue(cellIdx, 0.0f);  // explicit zero, skip accumulation
-}
-```
+DREAM3D-NX v7.0.0 through v7.4.2 check Hexagonal-High or Hexagonal-Low before accumulating. DREAM.3D v6.5.171 was affected by the non-hexagonal cell defect; these DREAM3D-NX releases were not affected. DREAM3D-NX v7.0.0 through v7.2.2 write zero mean and standard deviation when no cells contribute. DREAM3D-NX v7.4.0 and v7.4.1 obtain NaN through division by zero. DREAM3D-NX v7.4.2 writes quiet NaN explicitly.
 
-For a feature with all non-hex cells, `counts[featureId] = 0` after the per-cell loop, the per-feature avg becomes `0.0f / 0 = NaN` (IEEE 754) at line 176, and the per-feature stddev becomes `sqrt(NaN / 0) = NaN` at line 202.
+DREAM.3D v6.5.171 also replaces a zero-count feature mean with zero. Its standard-deviation calculation has no zero-count guard. Current SIMPLNX explicitly writes NaN for both outputs. It rejects an ensemble with no hexagonal phase with `-9802` and reports mixed phases with `-9803`.
 
-The fix was introduced in SIMPLNX via PR #1438 ("Microtexture related filter cleanup"); the same fix (`ENH: FindFeatureReferenceCAxisMisorientations - Update to use Eigen`, October 2025) was applied to a local build of the legacy source to prove the root cause.
+**Affected users:** Users who process non-hexagonal cells, mixed-phase data, or features with no contributing cells.
 
-**Empirical confirmation (2026-06-10 A/B):**
+**Recommendation:** Trust SIMPLNX. Zero cell angles mark skipped cells, and NaN feature statistics mark the absence of valid contributors.
 
-Realistic-microstructure fixture, F3 = all-cubic (5 cells):
-
-| Output                                                  | 6.5.171 (A)  | Patched legacy (B)  | SIMPLNX (C)  |
-|---------------------------------------------------------|--------------|--------------|--------------|
-| `FeatureReferenceCAxisMisorientations[cells of F3]`     | 9.999988 each cell  | 0.0 each cell  | 0.0 each cell  |
-| `FeatureAvgCAxisMisorientations[F3]`                    | 9.999988             | **NaN**       | **NaN**       |
-| `FeatureStdevCAxisMisorientations[F3]`                  | 0.0                  | **NaN**       | **NaN**       |
-
-The 6.5.171 `9.999988°` value is the projection of the cubic cell's identity-Quat-derived c-axis `[0,0,1]` against the test fixture's `AvgCAxes[F3] = [0, sin(10°), cos(10°)]` — i.e., the test fixture happened to pre-populate F3's avg-c-axis at a 10° tilt, and 6.5.171 produces ~10° as the "miso" for each cubic cell. On a real dataset, that value would be whatever-random-content `FindAvgCAxes` left in `AvgCAxes[F3]`.
-
-**Affected users:** Any workflow that runs `FindFeatureReferenceCAxisMisorientations` on mixed-phase datasets in DREAM3D 6.5.171. Single-phase hex-only datasets are unaffected. The garbage values propagate into downstream statistics (per-feature average + stddev rows for non-hex features) but cell-level visualization may not surface the issue immediately.
-
-**Recommendation:** **Trust SIMPLNX.** The legacy 6.5.171 output for non-hex features is mathematically meaningless — the c-axis is a hex-specific concept and asking "how far is this cubic cell's c-axis from the feature's avg c-axis" has no defined answer. The `NaN` produced by SIMPLNX is the correct signal that the question is ill-posed for the feature.
+**Evidence:** The `Class 1 — Realistic Microstructure (exposes divide-by-zero)` and `Class 4 — Invariants` cases assert both results. The source comparison uses `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureReferenceCAxisMisorientations.cpp` at the DREAM.3D `v6.5.171` tag and the current SIMPLNX algorithm. The algorithm on all ten `upstream/release/v<version>` branches from v7.0.0 through v7.4.2 contains the hexagonal gate. PR #566 (`6cd130eff`) introduced the gate; PR #1438 (`e6896714b`) changed aggregation; PR #1636 (`c225e8a24`) made NaN output explicit.
 
 ---
 
-## ComputeFeatureReferenceCAxisMisorientationsFilter-D2
+### ComputeFeatureReferenceCAxisMisorientationsFilter-D2
 
-| Field            | Value                                                                                                                                |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D2`                                                                               |
-| **Filter UUID**  | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25`                                                                                               |
-| **Status**       | active (SIMPLNX uses Eigen + double; legacy 6.5.171 uses hand-rolled MatrixMath + float32 — root cause proven by applying the same fixes to a local build of the legacy source) |
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D2` |
+| **Filter UUID** | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25` |
+| **Status** | active |
 
-**Symptom:** Per-cell `FeatureReferenceCAxisMisorientations` and per-feature `FeatureStdevCAxisMisorientations` values drift between SIMPLNX and DREAM3D 6.5.171 by `~1e-4°` to `~1e-6°`, with the larger magnitude appearing on per-cell values for cells whose Φ differs from the feature's avg Φ. The drift is precision-class, not algorithmic; both implementations compute the same analytical reduction.
+**Symptom:** Cell angles and feature statistics can differ numerically from DREAM.3D v6.5.171 because intermediate precision and evaluation order differ.
 
-**Root cause:** **Precision + library.** Two stacked contributions:
+**Root cause:** Precision and library. DREAM.3D v6.5.171 uses float orientation matrices, `MatrixMath` vector operations, `acosf`, and a float array for the count, angle sum and squared-difference sum. SIMPLNX uses a double quaternion-to-matrix conversion, Eigen double vectors and a double angle calculation. Its feature-angle sum remains float32. Its variance accumulator is double, although subtraction of the stored cell angle and feature mean occurs in float32 before assignment to double.
 
-1. **Orientation-matrix math.** Legacy uses `MatrixMath::Transpose3x3` + `MatrixMath::Multiply3x3with3x1` + `MatrixMath::Normalize3x1` (all float32). SIMPLNX uses Eigen's `Eigen::Matrix3d.transpose()` + `Eigen::Vector3d` arithmetic (double precision throughout). The hand-rolled matrix math accumulates intermediate float32 round-off that the Eigen path does not.
-2. **Standard-deviation accumulation.** Legacy accumulates `(diff * diff)` in a `std::vector<float32>` and divides by `static_cast<float32>(counts)`. SIMPLNX uses `std::vector<double>` and `static_cast<double>(counts)`, then casts the final result to float32 only at the output array write. The float32 accumulator on the legacy side lossily rounds each per-cell contribution.
+DREAM3D-NX v7.0.0 already uses double vector math. DREAM3D-NX v7.4.0 replaces the float variance accumulator with `std::vector<double>` and changes cell traversal to plane, row, column order. Later releases retain these changes. This filter does not call `LaueOps::calculateMisorientation`; changes to that function do not explain this difference.
 
-The SIMPLNX-side fix has been present since the initial port (no SIMPLNX-side code change required for this V&V cycle). The legacy-side root-cause proof is split across two surgical fixes applied to a local build of the legacy source:
+**Affected users:** Users who compare numerical outputs across DREAM.3D v6.5.171 and DREAM3D-NX or across the change in feature-statistics accumulation.
 
-- `ENH: FindFeatureReferenceCAxisMisorientations - Update to use Eigen` (October 2025) — replaces `MatrixMath::*` with Eigen for the per-cell orientation-matrix → c-axis pipeline.
-- `BUG: FindFeatureReferenceCAxisOrientation - Use doubles to accumulate the StdDev values` (October 2025) — promotes the stddev accumulator from `std::vector<float32>` to `std::vector<double>` and uses `double` for `diff` and the final division.
+**Recommendation:** Trust SIMPLNX within the analytical tests' 0.001° tolerance. This tolerance applies to the analytical fixtures.
 
-With both fixes applied, the patched legacy build produces byte-identical output to SIMPLNX across all 3 output arrays on the FRCAM A/B fixture.
+**Evidence:** The three Class 1 cases independently check the cell angles, means and population standard deviations. PR #1438 (`e6896714b`) changed variance accumulation and traversal order. The release algorithm sources show double vector math in v7.0.0 and double variance accumulation from v7.4.0.
 
-**Empirical confirmation (2026-06-10 A/B):**
+---
 
-Per-cell `FeatureReferenceCAxisMisorientations`, sample of hex-feature cells (F2 row, cell Φ = 8°, 9°, 10°, 11°, 12°, avg Φ = 10°):
+## Part 2 — SIMPLNX defects and behavior changes
 
-| Cell | Expected | 6.5.171 (A)  | Patched legacy (B)  | SIMPLNX (C)  |
-|------|----------|--------------|--------------|--------------|
-| F2[0] | 2.0  | 1.999782   | 2.000001   | 2.000001   |
-| F2[1] | 1.0  | 0.999755   | 1.000000   | 1.000000   |
-| F2[2] | 0.0  | 0.000000   | 0.000001   | 0.000001   |
-| F2[3] | 1.0  | 0.999755   | 1.000000   | 1.000000   |
-| F2[4] | 2.0  | 1.999880   | 2.000000   | 2.000000   |
+### ComputeFeatureReferenceCAxisMisorientationsFilter-D3
 
-Per-feature `FeatureAvgCAxisMisorientations`:
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D3` |
+| **Filter UUID** | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
-| Feature | Expected  | 6.5.171 (A)  | Patched legacy (B) ≡ SIMPLNX (C) |
-|---------|-----------|--------------|---------------------------|
-| F1      | 0.0       | 0.000000     | 0.000000                  |
-| F2      | 1.2       | 1.199834     | 1.200000                  |
-| F4      | 0.0       | 0.000000     | 0.000000                  |
-| F5      | 2.8       | 2.800004     | 2.800000                  |
+**Symptom:** Successful execution omits warning `-9803` when non-hexagonal phases are skipped.
 
-Per-feature `FeatureStdevCAxisMisorientations`:
+**Root cause:** Bug. The affected algorithms append the warning to a local `Result<> result`, then return an empty result at the end. DREAM3D-NX v7.4.2 and the current filter return `result` and retain the warning. DREAM.3D v6.5.171 has no equivalent mixed-phase warning path.
 
-| Feature | Expected     | 6.5.171 (A)  | Patched legacy (B) ≡ SIMPLNX (C) |
-|---------|--------------|--------------|---------------------------|
-| F2      | √0.56 ≈ 0.7483 | 0.748285   | 0.748331                  |
-| F5      | √3.76 ≈ 1.9391 | 1.939061   | 1.939072                  |
+**Affected users:** Users who depend on execution warnings to identify skipped non-hexagonal phases. The separate preflight warning `-9801` is not affected.
 
-**Affected users:** Any workflow that runs `FindFeatureReferenceCAxisMisorientations` on 6.5.171 and compares its output against SIMPLNX. The drift magnitude (~1e-4° per cell, ~1e-5° per feature avg) is sub-perceptual for visualization but visible in numerical analysis or unit-test comparisons. Real-world EBSD datasets with many cells per feature will see the per-feature avg drift become more stable (the float32-noise per-cell contributions average toward the analytical mean), but the per-cell values themselves still show the precision-class drift.
+**Recommendation:** Trust SIMPLNX. The returned result now carries the warning that the algorithm creates.
 
-**Recommendation:** **Trust SIMPLNX.** The SIMPLNX value is closer to the analytical oracle. The 6.5.171 value differs by precision-class round-off, not by an algorithmic choice.
+**Evidence:** PR #1636 (`c225e8a24`) changes the final statement to `return result;`. The release sources through v7.4.1 discard the warning; v7.4.2 returns it. `Realistic Microstructure` exercises mixed phases, but its nonempty-warning assertion does not isolate `-9803` from the preflight warning.
+
+---
+
+### ComputeFeatureReferenceCAxisMisorientationsFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureReferenceCAxisMisorientationsFilter-D4` |
+| **Filter UUID** | `16c487d2-8f99-4fb5-a4df-d3f70a8e6b25` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** An invalid phase can read outside Crystal Structures, including on a cell that should be skipped.
+
+**Root cause:** Bug. DREAM3D-NX v7.0.0 through v7.4.2 read `crystalStructures[cellPhases[cellIdx]]` before testing whether the cell participates. No phase-range check precedes that read. The current filter first requires a positive FeatureId and phase, then checks the phase against the ensemble tuple count. An invalid positive participating phase returns `-9804`; a nonpositive phase or feature zero skips the lookup. DREAM.3D v6.5.171 does not read Crystal Structures in this filter, so it has no such lookup.
+
+**Affected users:** Users whose Cell Phases array contains an invalid ensemble index.
+
+**Recommendation:** Trust SIMPLNX. Correct the phase index or supply the corresponding ensemble entry.
+
+**Evidence:** PR #1568 (`4ec21e93f`) adds the participation and phase-range checks. The release algorithm sources from v7.0.0 through v7.4.2 perform the lookup before those checks. `Phase Index Bounds` checks the error and the two skip conditions. All visible tests pass in CI at `419f9db35`.
