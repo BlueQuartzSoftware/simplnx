@@ -20,6 +20,7 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
+#include "simplnx/UnitTest/ScopedDefaultFormatResolver.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -701,139 +702,176 @@ public:
     return RecordingFormatResolver::resolveFormat(dataStructure, path, type, bytes);
   }
 };
+
+/**
+ * @brief Checks the saved owner and the next automatic storage-format decision.
+ * @param expectedResolver Supplies the owner that must remain active.
+ * @param expectedFormat Supplies the independently selected format name.
+ */
+void CheckSelectedImportDefaultResolver(const std::shared_ptr<const IDataStoreFormatResolver>& expectedResolver, const std::string& expectedFormat)
+{
+  const auto actualResolver = DataStructure::getDefaultFormatResolver();
+  CHECK(actualResolver == expectedResolver);
+  CHECK_FALSE(actualResolver.owner_before(expectedResolver));
+  CHECK_FALSE(expectedResolver.owner_before(actualResolver));
+  const DataStructure laterStructure;
+  CHECK(&laterStructure.formatResolver() == expectedResolver.get());
+  const auto format = ResolveNumericStorageFormat(laterStructure, DataPath({"LaterArray"}), DataType::int32, sizeof(int32), "");
+  SIMPLNX_RESULT_REQUIRE_VALID(format);
+  CHECK(format.value() == expectedFormat);
+}
 } // namespace
 
 TEST_CASE("StorageFormatPlan: selected import does not consult process policy", "[StorageFormatPlan][SelectedImportPolicy]")
 {
-  const auto application = Application::GetOrCreateInstance();
-  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  const bool warmCache = GENERATE(false, true);
-  CAPTURE(static_cast<int>(mode), warmCache);
-  const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_process_policy.dream3d");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
-  const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
-  const auto cleanup = MakeScopeGuard([&cache, memoryResolver]() noexcept {
+  UnitTest::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
+  const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
+  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
+  {
+    const auto application = Application::GetOrCreateInstance();
+    const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+    const bool warmCache = GENERATE(false, true);
+    CAPTURE(static_cast<int>(mode), warmCache);
+    const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_process_policy.dream3d");
+    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
+    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
+    const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
     cache.clear();
-    DataStructure::setDefaultFormatResolver(memoryResolver);
-  });
-  DataStructure::setDefaultFormatResolver(memoryResolver);
-  cache.clear();
-  cache.resetStats();
-  WriteImportPolicyFile(file.path);
-  const ImportH5ObjectPathsAction action(file.path, {k_ImportPolicySecond, k_ImportPolicyGroup, k_ImportPolicyFirst});
-  DataStructure warmDestination;
-  warmDestination.setFormatResolver(memoryResolver);
-  if(warmCache)
-  {
-    // The action warms its own metadata mode. An ordinary fetch can use a different cache entry.
-    const auto warmResult = action.apply(warmDestination, mode);
-    SIMPLNX_RESULT_REQUIRE_VALID(warmResult);
-    CheckImportPolicyOutput(warmDestination, mode);
-    REQUIRE(cache.missCount() == 1);
-    REQUIRE(cache.hitCount() == 0);
     cache.resetStats();
-  }
-  REQUIRE(cache.missCount() == 0);
-  REQUIRE(cache.hitCount() == 0);
-
-  DataStructure destination;
-  auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
-  marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
-  const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
-  const auto* markerStore = marker->getIDataStore();
-  const auto nextId = destination.getNextId();
-  const auto destinationResolver = std::make_shared<RecordingFormatResolver>();
-  destination.setFormatResolver(destinationResolver);
-  const auto processResolver = std::make_shared<RejectingImportProcessResolver>();
-  DataStructure::setDefaultFormatResolver(processResolver);
-
-  const auto result = action.apply(destination, mode);
-  INFO("Process-policy callbacks: " << processResolver->calls);
-  CHECK(processResolver->calls == 0);
-  CHECK(cache.missCount() == (warmCache ? 0 : 1));
-  CHECK(cache.hitCount() == (warmCache ? 1 : 0));
-  CHECK(&destination.formatResolver() == destinationResolver.get());
-  CheckImportPolicyMarker(destination, markerOwner, markerStore);
-  if(result.invalid())
-  {
-    CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
-    CHECK(destination.getNextId() == nextId);
-  }
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  CheckImportPolicyRecords(*destinationResolver);
-  CheckImportPolicyOutput(destination, mode);
-  CHECK(destination.getAllDataPaths().size() == 4);
-  if(warmCache)
-  {
-    for(const auto& path : {k_ImportPolicyFirst, k_ImportPolicySecond})
+    WriteImportPolicyFile(file.path);
+    const ImportH5ObjectPathsAction action(file.path, {k_ImportPolicySecond, k_ImportPolicyGroup, k_ImportPolicyFirst});
+    DataStructure warmDestination;
+    warmDestination.setFormatResolver(memoryResolver);
+    if(warmCache)
     {
-      const auto* firstHandout = warmDestination.getDataAs<Int32Array>(path);
-      const auto* secondHandout = destination.getDataAs<Int32Array>(path);
-      REQUIRE(firstHandout != nullptr);
-      REQUIRE(secondHandout != nullptr);
-      CHECK(firstHandout != secondHandout);
-      CHECK(firstHandout->getIDataStore() != secondHandout->getIDataStore());
+      // The action warms its own metadata mode. An ordinary fetch can use a different cache entry.
+      const auto warmResult = action.apply(warmDestination, mode);
+      SIMPLNX_RESULT_REQUIRE_VALID(warmResult);
+      CheckImportPolicyOutput(warmDestination, mode);
+      REQUIRE(cache.missCount() == 1);
+      REQUIRE(cache.hitCount() == 0);
+      cache.resetStats();
     }
-    CheckImportPolicyOutput(warmDestination, mode);
+    REQUIRE(cache.missCount() == 0);
+    REQUIRE(cache.hitCount() == 0);
+
+    DataStructure destination;
+    auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
+    marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
+    const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
+    const auto* markerStore = marker->getIDataStore();
+    const auto nextId = destination.getNextId();
+    const auto destinationResolver = std::make_shared<RecordingFormatResolver>();
+    destination.setFormatResolver(destinationResolver);
+    const auto processResolver = std::make_shared<RejectingImportProcessResolver>();
+    DataStructure::setDefaultFormatResolver(processResolver);
+
+    const auto result = action.apply(destination, mode);
+    INFO("Process-policy callbacks: " << processResolver->calls);
+    CHECK(processResolver->calls == 0);
+    CHECK(cache.missCount() == (warmCache ? 0 : 1));
+    CHECK(cache.hitCount() == (warmCache ? 1 : 0));
+    CHECK(&destination.formatResolver() == destinationResolver.get());
+    CheckImportPolicyMarker(destination, markerOwner, markerStore);
+    if(result.invalid())
+    {
+      CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
+      CHECK(destination.getNextId() == nextId);
+    }
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CheckImportPolicyRecords(*destinationResolver);
+    CheckImportPolicyOutput(destination, mode);
+    CHECK(destination.getAllDataPaths().size() == 4);
+    if(warmCache)
+    {
+      for(const auto& path : {k_ImportPolicyFirst, k_ImportPolicySecond})
+      {
+        const auto* firstHandout = warmDestination.getDataAs<Int32Array>(path);
+        const auto* secondHandout = destination.getDataAs<Int32Array>(path);
+        REQUIRE(firstHandout != nullptr);
+        REQUIRE(secondHandout != nullptr);
+        CHECK(firstHandout != secondHandout);
+        CHECK(firstHandout->getIDataStore() != secondHandout->getIDataStore());
+      }
+      CheckImportPolicyOutput(warmDestination, mode);
+    }
   }
+  CheckSelectedImportDefaultResolver(incomingResolver, k_SelectedFormat.str());
 }
 
 TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata before values", "[StorageFormatPlan][SelectedImportPolicy]")
 {
-  const auto application = Application::GetOrCreateInstance();
-  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
-  CAPTURE(static_cast<int>(mode));
-  const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_complete_context.dream3d");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
-  const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
-  const auto cleanup = MakeScopeGuard([&cache, memoryResolver]() noexcept {
+  UnitTest::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
+  const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
+  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
+  {
+    const auto application = Application::GetOrCreateInstance();
+    const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+    CAPTURE(static_cast<int>(mode));
+    const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_complete_context.dream3d");
+    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
+    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
+    const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
     cache.clear();
-    DataStructure::setDefaultFormatResolver(memoryResolver);
-  });
-  DataStructure::setDefaultFormatResolver(memoryResolver);
-  cache.clear();
-  WriteImportPolicyFile(file.path);
+    WriteImportPolicyFile(file.path);
 
-  DataStructure destination;
-  auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
-  marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
-  const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
-  const auto* markerStore = marker->getIDataStore();
-  const auto resolver = std::make_shared<CompleteImportContextResolver>();
-  destination.setFormatResolver(resolver);
-  const ImportH5ObjectPathsAction action(file.path, {k_ImportPolicySecond, k_ImportPolicyGroup, k_ImportPolicyFirst});
-  const auto result = action.apply(destination, mode);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  CheckImportPolicyRecords(*resolver);
-  CHECK(resolver->completeContextCalls == 2);
-  CHECK(resolver->placeholderContextCalls == 2);
-  CHECK(&destination.formatResolver() == resolver.get());
-  CheckImportPolicyMarker(destination, markerOwner, markerStore);
-  CheckImportPolicyOutput(destination, mode);
-  CHECK(destination.getAllDataPaths().size() == 4);
+    DataStructure destination;
+    auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
+    marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
+    const auto markerOwner = destination.getSharedData(k_ImportPolicyMarker);
+    const auto* markerStore = marker->getIDataStore();
+    const auto resolver = std::make_shared<CompleteImportContextResolver>();
+    destination.setFormatResolver(resolver);
+    const ImportH5ObjectPathsAction action(file.path, {k_ImportPolicySecond, k_ImportPolicyGroup, k_ImportPolicyFirst});
+    const auto result = action.apply(destination, mode);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CheckImportPolicyRecords(*resolver);
+    CHECK(resolver->completeContextCalls == 2);
+    CHECK(resolver->placeholderContextCalls == 2);
+    CHECK(&destination.formatResolver() == resolver.get());
+    CheckImportPolicyMarker(destination, markerOwner, markerStore);
+    CheckImportPolicyOutput(destination, mode);
+    CHECK(destination.getAllDataPaths().size() == 4);
+  }
+  CheckSelectedImportDefaultResolver(incomingResolver, k_SelectedFormat.str());
 }
 
 namespace
 {
+/**
+ * @struct SelectedImportTestContext
+ * @brief Keeps resident fixture setup and cache cleanup inside the saved resolver scope.
+ */
 struct SelectedImportTestContext
 {
   std::shared_ptr<InMemoryFormatResolver> memoryResolver = std::make_shared<InMemoryFormatResolver>();
+  // The guard also restores the incoming owner if fixture construction throws.
+  decltype(UnitTest::SetDefaultFormatResolverForScope(nullptr)) RestoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
   ScopedTempFile file;
   DREAM3D::Dream3dPreflightCache& cache = DREAM3D::Dream3dPreflightCache::Instance();
 
   explicit SelectedImportTestContext(const std::string& name)
   : file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / name)
   {
-    DataStructure::setDefaultFormatResolver(memoryResolver);
     cache.clear();
     WriteImportPolicyFile(file.path);
   }
 
-  ~SelectedImportTestContext()
+  ~SelectedImportTestContext() noexcept
   {
     cache.clear();
-    DataStructure::setDefaultFormatResolver(memoryResolver);
   }
+
+  SelectedImportTestContext(const SelectedImportTestContext&) = delete;
+  SelectedImportTestContext(SelectedImportTestContext&&) = delete;
+  SelectedImportTestContext& operator=(const SelectedImportTestContext&) = delete;
+  SelectedImportTestContext& operator=(SelectedImportTestContext&&) = delete;
 };
 
 std::shared_ptr<DataObject> CreateSelectedImportMarker(DataStructure& destination)
@@ -863,6 +901,41 @@ public:
   }
 };
 } // namespace
+
+TEST_CASE("Selected import test context restores nested resolver ownership", "[StorageFormatPlan][SelectedImportPolicy][FormatResolver]")
+{
+  UnitTest::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
+  const bool throwFromNestedScope = GENERATE(false, true);
+  CAPTURE(throwFromNestedScope);
+  auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
+  const std::weak_ptr<const IDataStoreFormatResolver> incomingLifetime = incomingResolver;
+  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(std::move(incomingResolver));
+  REQUIRE(incomingResolver == nullptr);
+  {
+    const SelectedImportTestContext outerContext("selected_import_outer_resolver.dream3d");
+    REQUIRE_FALSE(incomingLifetime.expired());
+    CheckSelectedImportDefaultResolver(outerContext.memoryResolver, "");
+    bool caughtException = false;
+    try
+    {
+      const SelectedImportTestContext innerContext("selected_import_inner_resolver.dream3d");
+      CheckSelectedImportDefaultResolver(innerContext.memoryResolver, "");
+      if(throwFromNestedScope)
+      {
+        throw std::runtime_error("selected import context unwind");
+      }
+    } catch(const std::runtime_error&)
+    {
+      caughtException = true;
+    }
+    CHECK(caughtException == throwFromNestedScope);
+    CheckSelectedImportDefaultResolver(outerContext.memoryResolver, "");
+  }
+  REQUIRE_FALSE(incomingLifetime.expired());
+  CheckSelectedImportDefaultResolver(incomingLifetime.lock(), k_SelectedFormat.str());
+}
 
 TEST_CASE("C8 later destination planning failure preserves destination and allocation identity", "[C8][SelectedImportPolicy]")
 {
