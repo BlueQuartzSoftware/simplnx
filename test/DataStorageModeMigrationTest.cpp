@@ -208,7 +208,9 @@ struct ThresholdPreferenceFiles
   }
 
   ThresholdPreferenceFiles(const ThresholdPreferenceFiles&) = delete;
+  ThresholdPreferenceFiles(ThresholdPreferenceFiles&&) = delete;
   ThresholdPreferenceFiles& operator=(const ThresholdPreferenceFiles&) = delete;
+  ThresholdPreferenceFiles& operator=(ThresholdPreferenceFiles&&) = delete;
 };
 
 const std::array<std::string, 2> k_ThresholdKeys = {std::string(Preferences::k_LargeDataSize_Key), std::string(Preferences::k_LargeDataStructureSize_Key)};

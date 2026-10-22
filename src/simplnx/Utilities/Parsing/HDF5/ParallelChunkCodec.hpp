@@ -121,7 +121,9 @@ public:
   BoundedReadTaskScopeForTesting() noexcept;
   ~BoundedReadTaskScopeForTesting() noexcept;
   BoundedReadTaskScopeForTesting(const BoundedReadTaskScopeForTesting&) = delete;
+  BoundedReadTaskScopeForTesting(BoundedReadTaskScopeForTesting&&) = delete;
   BoundedReadTaskScopeForTesting& operator=(const BoundedReadTaskScopeForTesting&) = delete;
+  BoundedReadTaskScopeForTesting& operator=(BoundedReadTaskScopeForTesting&&) = delete;
 
 private:
   bool m_Active = false;
@@ -305,7 +307,9 @@ public:
    */
   void observeExceptionAggregation() noexcept;
   LegacyPayloadTaskScopeForTesting(const LegacyPayloadTaskScopeForTesting&) = delete;
+  LegacyPayloadTaskScopeForTesting(LegacyPayloadTaskScopeForTesting&&) = delete;
   LegacyPayloadTaskScopeForTesting& operator=(const LegacyPayloadTaskScopeForTesting&) = delete;
+  LegacyPayloadTaskScopeForTesting& operator=(LegacyPayloadTaskScopeForTesting&&) = delete;
 
 private:
   bool m_Active = false;
@@ -330,7 +334,9 @@ public:
    */
   ~LegacyPayloadAdmissionScopeForTesting() noexcept;
   LegacyPayloadAdmissionScopeForTesting(const LegacyPayloadAdmissionScopeForTesting&) = delete;
+  LegacyPayloadAdmissionScopeForTesting(LegacyPayloadAdmissionScopeForTesting&&) = delete;
   LegacyPayloadAdmissionScopeForTesting& operator=(const LegacyPayloadAdmissionScopeForTesting&) = delete;
+  LegacyPayloadAdmissionScopeForTesting& operator=(LegacyPayloadAdmissionScopeForTesting&&) = delete;
 
 private:
   LegacyPayloadTicketForTesting* m_Previous = nullptr;
@@ -361,7 +367,9 @@ public:
    */
   ~MetadataIdentityForTesting() noexcept;
   MetadataIdentityForTesting(const MetadataIdentityForTesting&) = delete;
+  MetadataIdentityForTesting(MetadataIdentityForTesting&&) = delete;
   MetadataIdentityForTesting& operator=(const MetadataIdentityForTesting&) = delete;
+  MetadataIdentityForTesting& operator=(MetadataIdentityForTesting&&) = delete;
 
 private:
   const std::filesystem::path* m_PreviousFile = nullptr;

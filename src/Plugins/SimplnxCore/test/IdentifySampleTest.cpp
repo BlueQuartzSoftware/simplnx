@@ -413,7 +413,9 @@ public:
   }
 
   IdentifySampleBudgetGuard(const IdentifySampleBudgetGuard&) = delete;
+  IdentifySampleBudgetGuard(IdentifySampleBudgetGuard&&) = delete;
   IdentifySampleBudgetGuard& operator=(const IdentifySampleBudgetGuard&) = delete;
+  IdentifySampleBudgetGuard& operator=(IdentifySampleBudgetGuard&&) = delete;
 
 private:
   uint64 m_PreviousBudget;

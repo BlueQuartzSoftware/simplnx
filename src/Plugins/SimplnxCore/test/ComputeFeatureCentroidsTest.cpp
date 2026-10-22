@@ -152,7 +152,12 @@ public:
     m_Manager.setBudgetBytes(budgetBytes);
   }
 
-  ~CentroidsBudgetSentinel()
+  CentroidsBudgetSentinel(const CentroidsBudgetSentinel&) = default;
+  CentroidsBudgetSentinel(CentroidsBudgetSentinel&&) = default;
+  CentroidsBudgetSentinel& operator=(const CentroidsBudgetSentinel&) = delete;
+  CentroidsBudgetSentinel& operator=(CentroidsBudgetSentinel&&) = delete;
+
+  ~CentroidsBudgetSentinel() noexcept
   {
     m_Manager.setBudgetBytes(m_PreviousBudget);
   }

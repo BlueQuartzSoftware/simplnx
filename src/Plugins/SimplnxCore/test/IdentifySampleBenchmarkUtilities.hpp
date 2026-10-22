@@ -161,7 +161,9 @@ public:
     CacheMemoryBudgetManager::instance().setBudgetBytes(m_Original);
   }
   BudgetRestore(const BudgetRestore&) = delete;
+  BudgetRestore(BudgetRestore&&) = delete;
   BudgetRestore& operator=(const BudgetRestore&) = delete;
+  BudgetRestore& operator=(BudgetRestore&&) = delete;
 
 private:
   uint64 m_Original;

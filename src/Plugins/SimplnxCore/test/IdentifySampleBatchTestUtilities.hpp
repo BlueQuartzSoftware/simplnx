@@ -71,7 +71,9 @@ public:
   }
 
   ScopedPreferenceRestore(const ScopedPreferenceRestore&) = delete;
+  ScopedPreferenceRestore(ScopedPreferenceRestore&&) = delete;
   ScopedPreferenceRestore& operator=(const ScopedPreferenceRestore&) = delete;
+  ScopedPreferenceRestore& operator=(ScopedPreferenceRestore&&) = delete;
 
 private:
   Preferences& m_Preferences;
