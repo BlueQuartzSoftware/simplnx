@@ -88,6 +88,12 @@ private:
                                   -> std::unique_ptr<nx::core::IDataStore> { throw std::runtime_error("Watershed preflight must not create a value store from its metadata-only format"); });
     }
 
+    ~MetadataOnlyManager() override = default;
+    MetadataOnlyManager(const MetadataOnlyManager&) = default;
+    MetadataOnlyManager(MetadataOnlyManager&&) = default;
+    MetadataOnlyManager& operator=(const MetadataOnlyManager&) = default;
+    MetadataOnlyManager& operator=(MetadataOnlyManager&&) = default;
+
     std::string formatName() const override
     {
       return m_Format;

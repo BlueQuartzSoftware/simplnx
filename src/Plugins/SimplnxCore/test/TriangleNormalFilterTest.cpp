@@ -257,6 +257,12 @@ public:
   {
   }
 
+  ~NormalReportingStore() override = default;
+  NormalReportingStore(const NormalReportingStore&) = default;
+  NormalReportingStore(NormalReportingStore&&) = default;
+  NormalReportingStore& operator=(const NormalReportingStore&) = delete;
+  NormalReportingStore& operator=(NormalReportingStore&&) = delete;
+
   /**
    * @brief Records a read and refuses the selected call before changing the buffer.
    * @param startIndex First flat value index.
@@ -406,6 +412,12 @@ struct NormalFixture
       SIMPLNX_RESULT_REQUIRE_VALID(result);
     }
   }
+
+  ~NormalFixture() = default;
+  NormalFixture(const NormalFixture&) = default;
+  NormalFixture(NormalFixture&&) = default;
+  NormalFixture& operator=(const NormalFixture&) = default;
+  NormalFixture& operator=(NormalFixture&&) = default;
 
   Arguments arguments() const
   {

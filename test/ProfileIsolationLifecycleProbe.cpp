@@ -21,6 +21,21 @@ std::optional<std::string> environmentValue(const char* name)
 
 struct LateWitness
 {
+  LateWitness() = default;
+  LateWitness(const LateWitness&) = default;
+  LateWitness& operator=(const LateWitness&) = default;
+
+  // Rvalues copy the path so the source keeps its shutdown check.
+  LateWitness(LateWitness&& other)
+  : LateWitness(static_cast<const LateWitness&>(other))
+  {
+  }
+
+  LateWitness& operator=(LateWitness&& other)
+  {
+    return *this = static_cast<const LateWitness&>(other);
+  }
+
   fs::path root;
 
   ~LateWitness() noexcept
