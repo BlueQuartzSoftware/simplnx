@@ -1,88 +1,49 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeatureNeighborsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeatureNeighborsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`FindNeighbors`, SIMPL UUID `97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac`, `Source/Plugins/Statistics/StatisticsFilters/FindNeighbors.cpp`).
+Part 1 lists the two documented differences from `FindNeighbors` in DREAM.3D v6.5.171. Both defects also affected DREAM3D-NX v7.0.0 through v7.4.1. There are no Part 2 entries.
 
-Legacy source reviewed at: `DREAM3D/Source/Plugins/Statistics/StatisticsFilters/FindNeighbors.cpp`.
+The deviation IDs are stable. The Filter UUID is the permanent cross-reference anchor.
 
-Comparison run on the `6_6_stats_test_v2.tar.gz` SmallIn100 fixture (SHA512 `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723`).
+## Part 1 — Differences from DREAM.3D v6.5.171
 
----
-
-## ComputeFeatureNeighborsFilter-D1
+### ComputeFeatureNeighborsFilter-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeFeatureNeighborsFilter-D1` |
 | **Filter UUID** | `7177e88c-c3ab-4169-abe9-1fdaff20e598` |
-| **Status** | active — **A/B-proven (2026-06-29)** |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
-**Symptom:** `SharedSurfaceAreaList` values produced by SIMPLNX differ from DREAM3D 6.5.171 for any dataset with anisotropic spacing. The test at `test/ComputeFeatureNeighborsTest.cpp:910` records this explicitly: *"The exemplar Shared Surface Area is not valid after a bug fix, and the input file is used in other test cases."*
+**Symptom:** Shared surface areas can differ from DREAM.3D v6.5.171 when voxel spacing is anisotropic.
 
-**Root cause:** Bug in 6.5.171. The legacy finalization loop at `FindNeighbors.cpp:431`:
+**Root cause:** Bug. `FindNeighbors.cpp` counts contacts and multiplies every count by X spacing times Y spacing. This is the Z-normal face area. An X-normal face needs Y spacing times Z spacing; a Y-normal face needs X spacing times Z spacing. Current SIMPLNX accumulates each contact with the area returned by `computeFaceSurfaceAreas()` in `src/simplnx/Utilities/NeighborUtilities.hpp`.
 
-```cpp
-float area = float(number) * xRes * yRes;
-```
+**Affected users:** Users with anisotropic spacing and contacts whose face areas differ from X spacing times Y spacing. Downstream calculations that use SharedSurfaceAreaList can change. Isotropic spacing hides the error.
 
-computes the shared surface area between a feature pair as `count × xSpacing × ySpacing`, where `count` is the number of shared face-boundary voxel-contacts. This formula is only correct for faces whose normal points along Z (those faces have area = xSpacing × ySpacing). For faces with X-normal (area = ySpacing × zSpacing) or Y-normal (area = xSpacing × zSpacing), the formula gives the wrong result whenever spacing is anisotropic.
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 and later use the geometric area of each shared face. The analytical 2D and 3D fixtures check direction-specific areas independently of the archive.
 
-SIMPLNX corrects this via `computeFaceSurfaceAreas<ImageDimensionStateT>()` (`NeighborUtilities.hpp:322`), which returns a per-face-direction area array: `{sx·sy, sx·sz, sy·sz, sy·sz, sx·sz, sx·sy}` for faces `{−Z, −Y, −X, +X, +Y, +Z}`. The accumulation `neighborSurfaceAreas[feature][neighborFeatureId] += precomputedFaceAreas[faceIndex]` therefore applies the geometrically correct area for each individual face contact.
-
-**Affected users:** All workflows using `SharedSurfaceAreaList` on datasets with anisotropic voxel spacing (xSpacing ≠ ySpacing ≠ zSpacing). For isotropic spacing (all three equal), the legacy formula happens to give the correct result for all face directions and no deviation is observable. The Small IN100 dataset has anisotropic spacing; downstream filters that consume `SharedSurfaceAreaList` (e.g., `ComputeSlipTransmissionMetrics`) will produce different results.
-
-**Recommendation:** Trust SIMPLNX. The 6.5.171 formula is geometrically incorrect for any non-Z-normal face when spacing is anisotropic. The SIMPLNX values are verified against the geometric definition of face area by 37 independent Class 1 analytical test cases.
-
-**A/B verification (2026-06-29):** A 2×2×2 image with anisotropic spacing (1,2,3) split along X into two features (shared faces are X-normal, area = sy·sz = 6, four contacts) was run through stock 6.5.171, SIMPLNX, and a local build of the legacy source with a surgical fix applied. Stock 6.5.171 produced `SharedSurfaceAreaList = [8, 8]` (4 · sx·sy = 8 — the buggy formula); SIMPLNX produced `[24, 24]` (4 · 6). A legacy-source patch that accumulates the correct per-face-direction area during the scan (`faceArea = {sx·sy, sx·sz, sy·sz, sy·sz, sx·sz, sx·sy}`, k = 0..5) reproduced SIMPLNX's `[24, 24]` exactly, while leaving NumNeighbors, NeighborList, SurfaceFeatures, and BoundaryCells byte-identical. On isotropic spacing all three agree, confirming the deviation is spacing-dependent as stated.
+**Evidence:** The DREAM.3D `v6.5.171` source at `Source/Plugins/Statistics/StatisticsFilters/FindNeighbors.cpp` contains `float area = float(number) * xRes * yRes`. Each `upstream/release/v7.0.0` through `upstream/release/v7.4.1` source contains the same formula. The v7.4.2 source contains per-face accumulation. PR #1569 (`9e61b41d4`) introduced the correction; the release-source table is in `../provenance/ComputeFeatureNeighborsFilter.md`.
 
 ---
 
-## ComputeFeatureNeighborsFilter-D2
+### ComputeFeatureNeighborsFilter-D2
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeFeatureNeighborsFilter-D2` |
 | **Filter UUID** | `7177e88c-c3ab-4169-abe9-1fdaff20e598` |
-| **Status** | active — **A/B-proven (2026-06-29)** |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
-**Symptom:** `SurfaceFeatures` in DREAM3D 6.5.171 marks every feature as a surface feature for any image whose X or Y dimension is 1 (i.e., 1D images and 2D EmptyY/EmptyX images). SIMPLNX correctly identifies only features that touch the actual image boundary in the active dimensions.
+**Symptom:** DREAM.3D v6.5.171 marks interior features as surface features on 1D images and on 2D images with a unit X or Y dimension.
 
-**Root cause:** Bug in 6.5.171. The legacy surface-feature check at `FindNeighbors.cpp:330–343`:
+**Root cause:** Bug. The legacy boundary condition omits Z when Z has length one, but always tests X and Y. With unit X or Y, every cell has column zero or row zero, so every positive feature is marked. Current Direct execution distinguishes corners, edges and faces by dimensionality. Current Scanline execution tests boundaries only on axes longer than one and treats a single voxel as a surface feature.
 
-```cpp
-// Branch 1 — fires when ZPoints != 1
-if((column == 0 || column == XPoints-1 || row == 0 || row == YPoints-1 ||
-    plane == 0 || plane == ZPoints-1) && ZPoints != 1)
-{
-  m_SurfaceFeatures[feature] = true;
-}
-// Branch 2 — fires when ZPoints == 1 (EmptyZ 2D)
-if((column == 0 || column == XPoints-1 || row == 0 || row == YPoints-1) && ZPoints == 1)
-{
-  m_SurfaceFeatures[feature] = true;
-}
-```
+**Affected users:** Users who enable SurfaceFeatures on 1D images or unit-X or unit-Y 2D images. Full 3D images and 2D images with only a unit Z dimension do not expose this defect.
 
-Branch 2 correctly handles the EmptyZ case (ZPoints==1) by restricting the check to X and Y boundaries. However, Branch 1 is used for all other cases including 1D images and 2D EmptyY/EmptyX images:
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 and later mark only features that touch the boundary in an active dimension. The 1D and 2D analytical fixtures assert false flags for interior features.
 
-- **1D Z image** (XPoints=1, YPoints=1, ZPoints=N): `column == 0` is always true (only one X column), so every voxel triggers Branch 1 → every feature is marked surface.
-- **1D Y image** (XPoints=1, YPoints=N, ZPoints=1): `column == 0` is always true → Branch 2 fires → every feature is marked surface.
-- **1D X image** (XPoints=N, YPoints=1, ZPoints=1): `row == 0` is always true (only one Y row) → Branch 2 fires → every feature is marked surface.
-- **2D EmptyY image** (XPoints=M, YPoints=1, ZPoints=N, ZPoints≠1): `row == 0` is always true → Branch 1 fires → every feature is marked surface.
-- **2D EmptyX image** (XPoints=1, YPoints=M, ZPoints=N, ZPoints≠1): `column == 0` is always true → Branch 1 fires → every feature is marked surface.
-
-SIMPLNX's correction: explicit dimensionality dispatch to `ImageDimensionStateT` specializations. The `ProcessSurfaceFeaturesV` template flag is applied at three levels: corner processing (marks all dimensionalities unconditionally for corners, which are always on the boundary), edge processing (`!Is1DImageDimsState()` guard — edges are only on the boundary for 2D and 3D), and face processing (`std::is_same_v<ImageDimensionStateT, Image3D>` guard — boundary-plane interior voxels only exist in 3D). This correctly restricts surface-feature marking to voxels that genuinely touch the image boundary in each active dimension.
-
-**Affected users:** Any pipeline that runs `ComputeFeatureNeighbors` / `FindNeighbors` on a 2D or 1D image geometry (`XPoints==1` or `YPoints==1`) and uses the `SurfaceFeatures` output. For full 3D datasets (all three dimensions > 1), the two implementations produce identical `SurfaceFeatures` output. This deviation is **not observable** on the SmallIn100 dataset (all three dimensions ≫ 1), which is why the SmallIn100 legacy comparison test passes for SurfaceFeatures.
-
-**Recommendation:** Trust SIMPLNX. The 6.5.171 result is geometrically incorrect for degenerate image dimensions — it flags internal features as surface features when a dimension-1 axis makes `column==0` or `row==0` trivially true for every voxel.
-
-**A/B verification (2026-06-29):** A 5×1×5 EmptyY image (Y=1, Z>1) with an interior single-voxel feature (feature 2 at the center, surrounded by feature 1) was run through stock 6.5.171, SIMPLNX, and a local build of the legacy source with a surgical fix applied. Stock 6.5.171 produced `SurfaceFeatures = [0, 1, 1]` — wrongly marking the interior feature 2 as surface (Branch 1 fires because `row==0` is trivially true for every voxel when Y=1); SIMPLNX produced `[0, 1, 0]`. A legacy-source dimensionality-aware boundary check (only the extremes of non-degenerate dims count; an all-degenerate image is treated as boundary) reproduced SIMPLNX's `[0, 1, 0]` exactly, while leaving all other arrays byte-identical. On a full 3D image all three agree, confirming the deviation is confined to degenerate (X=1 or Y=1) geometry as stated.
-
----
-
-## Non-deviations (documented for future-engineer awareness)
-
-- **NumNeighbors** — bit-identical on SmallIn100. Both implementations deduplicate face contacts via a map-like structure (`QMap<int32_t, int32_t>` in legacy; `std::map<usize, float64>` in SIMPLNX) and write the size as `NumNeighbors`.
-- **NeighborList** — bit-identical on SmallIn100. Both produce entries in ascending neighbor feature-ID order (legacy via `QMap` iteration; SIMPLNX via `std::map` iteration). This ordering is an algorithm characteristic, not a guaranteed API contract.
-- **BoundaryCells** — not present in the `6_6_stats_test_v2.tar.gz` archive; comparison not run on SmallIn100. By inspection, both implementations count `onsurf` / `numDiffNeighbors` identically: increment once per valid face contact where the neighbor has a different non-zero feature ID. The face-validity logic (boundary guard per face index) is equivalent in both for all dimensionalities — the legacy `neighpoints` + per-index plane/row/column guards correctly exclude invalid faces for all geometry shapes, matching the SIMPLNX `computeValidFaceNeighbors` output. Correctness of SIMPLNX BoundaryCells established by the Class 1 oracle fixtures.
-- **Neighbor ordering** — same `QMap` / `std::map` ascending-key iteration order in both; algorithm characteristic, not a specified API guarantee.
+**Evidence:** The tagged `FindNeighbors.cpp` source tests `column == 0` and `row == 0` in both boundary conditions. Each `upstream/release/v7.0.0` through `upstream/release/v7.4.1` source retains those conditions. The v7.4.2 source uses dimensionality-specific marking. Current tests `Case 1.0.0`, `Case 1.1.0`, `Case 1.2.0`, `Case 2.1.0` and `Case 2.2.0` assert the corrected flags.
