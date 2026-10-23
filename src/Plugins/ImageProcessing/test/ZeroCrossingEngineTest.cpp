@@ -1,10 +1,12 @@
 #include "simplnx/Utilities/ImageProcessing/ZeroCrossingEngine.hpp"
 
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 
@@ -703,6 +705,67 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pres
       REQUIRE(inputStore.maxReadValues() == transferCase.maximumReadValues);
       REQUIRE(outputStore.maxWriteValues() == transferCase.maximumWriteValues);
       REQUIRE(outputStore.writtenValues() == totalValues);
+    }
+  }
+}
+
+TEST_CASE("ImageProcessing::ZeroCrossingEngine: resident flag precedence has an execution witness", "[ImageProcessing][ZeroCrossingEngine][ZeroCrossingSelection]")
+{
+  UnitTest::LoadPlugins();
+  // Low-level selector tests use raw flags to cover the otherwise conflicting force controls.
+  struct FlagCase
+  {
+    bool ForceInCore;
+    bool ForceOoc;
+    bool ExpectDirect;
+  };
+  constexpr std::array<FlagCase, 4> cases{{
+      {.ForceInCore = false, .ForceOoc = false, .ExpectDirect = true},
+      {.ForceInCore = false, .ForceOoc = true, .ExpectDirect = false},
+      {.ForceInCore = true, .ForceOoc = false, .ExpectDirect = true},
+      {.ForceInCore = true, .ForceOoc = true, .ExpectDirect = true},
+  }};
+  // Equal magnitudes assign each crossing to the lower X endpoint. There are no Y or Z crossings.
+  constexpr std::array<float32, 4> input{-1.0F, 1.0F, -1.0F, 1.0F};
+  constexpr std::array<uint8, 4> expected{7, 3, 7, 3};
+  for(const auto& testCase : cases)
+  {
+    CAPTURE(testCase.ForceInCore, testCase.ForceOoc);
+    const bool originalInCore = ForceInCoreAlgorithm();
+    const bool originalOoc = ForceOocAlgorithm();
+    const auto originalCounts = GetAlgorithmPathExecutionCounts();
+    const auto restoreState = MakeScopeGuard([=]() noexcept {
+      ForceInCoreAlgorithm() = originalInCore;
+      ForceOocAlgorithm() = originalOoc;
+      SetAlgorithmPathExecutionCounts(originalCounts);
+    });
+    const ScopedBudget budget(8192);
+    ForceInCoreAlgorithm() = testCase.ForceInCore;
+    ForceOocAlgorithm() = testCase.ForceOoc;
+    ResetAlgorithmPathExecutionCounts();
+    TransferCountingDataStore<float32> inputStore(ShapeType{2, 1, 2}, ShapeType{1}, 0.0F);
+    TransferCountingDataStore<uint8> outputStore(ShapeType{2, 1, 2}, ShapeType{1}, uint8{99});
+    for(usize index = 0; index < input.size(); ++index)
+    {
+      inputStore.setValue(index, input[index]);
+    }
+    const std::atomic_bool shouldCancel{false};
+    const IFilter::MessageHandler messages{};
+    const auto result = ApplyZeroCrossing(inputStore, outputStore, SizeVec3{2, 1, 2}, uint8{7}, uint8{3}, shouldCancel, messages);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    const auto counts = GetAlgorithmPathExecutionCounts();
+    CHECK(counts.InCore == (testCase.ExpectDirect ? 1 : 0));
+    CHECK(counts.OutOfCore == (testCase.ExpectDirect ? 0 : 1));
+    CHECK(counts.InCoreOnInMemoryStore == counts.InCore);
+    CHECK(counts.OutOfCoreOnInMemoryStore == counts.OutOfCore);
+    CHECK(counts.InCoreOnOutOfCoreStore == 0);
+    CHECK(counts.OutOfCoreOnOutOfCoreStore == 0);
+    CHECK((inputStore.readCount() == 0) == testCase.ExpectDirect);
+    CHECK((outputStore.writeCount() == 0) == testCase.ExpectDirect);
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      CAPTURE(index);
+      CHECK(outputStore.getValue(index) == expected[index]);
     }
   }
 }
