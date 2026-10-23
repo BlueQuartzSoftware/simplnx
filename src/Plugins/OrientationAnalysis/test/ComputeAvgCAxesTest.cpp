@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <filesystem>
+#include <limits>
 #include <vector>
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -36,6 +37,90 @@ const DataPath k_CellFeatureDataPath = k_DataContainerPath.createChildPath("Cell
 const DataPath k_CrystalStructuresPath = k_DataContainerPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
 const std::string k_ComputedAvgCAxesName = "ComputedAvgCAxes";
 } // namespace compute_avg_caxis_class1
+
+namespace
+{
+Arguments CreateUniformCAxisInput(DataStructure& dataStructure, usize numCells, int32 featureId, int32 phase)
+{
+  using namespace compute_avg_caxis_class1;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeom->setDimensions({numCells, 1, 1});
+  const ShapeType cellShape = {1, 1, numCells};
+  auto* cells = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeom->getId());
+  imageGeom->setCellData(*cells);
+  AttributeMatrix::Create(dataStructure, "CellFeatureData", {2}, imageGeom->getId());
+  auto* ensembles = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {3}, imageGeom->getId());
+  auto* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", cellShape, {4}, cells->getId());
+  const float32 cosHalfAngle = static_cast<float32>(std::sqrt(3.0) / 2.0);
+  for(usize i = 0; i < numCells; ++i)
+  {
+    // +60 degrees about X: the sample c-axis is (0, sqrt(3)/2, 1/2).
+    (*quats)[4 * i] = 0.5F;
+    (*quats)[4 * i + 3] = cosHalfAngle;
+  }
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellShape, {1}, cells->getId())->fill(featureId);
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellShape, {1}, cells->getId())->fill(phase);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {3}, {1}, ensembles->getId());
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  (*crystalStructures)[2] = ebsdlib::CrystalStructure::Cubic_High;
+
+  Arguments args = ComputeAvgCAxesFilter().getDefaultArguments();
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(compute_avg_caxis_class1::k_CellFeatureDataPath));
+  args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(k_ComputedAvgCAxesName));
+  return args;
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Feature Id Bounds", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const int32 featureId = GENERATE(-1, 2, std::numeric_limits<int32>::max());
+  // Probe skipped non-hexagonal cells first. REQUIRE stops the old implementation
+  // safely before testing the same invalid ID on a cell that would index the cache.
+  for(const int32 phase : {2, 1})
+  {
+    CAPTURE(featureId, phase);
+    DataStructure dataStructure;
+    const auto args = CreateUniformCAxisInput(dataStructure, 1, featureId, phase);
+    ComputeAvgCAxesFilter filter;
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    const auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    REQUIRE(executeResult.result.errors()[0].code == -76405);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Large Feature Analytical Precision", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const auto args = CreateUniformCAxisInput(dataStructure, 1000003, 1, 1);
+  ComputeAvgCAxesFilter filter;
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  using namespace compute_avg_caxis_class1;
+  const auto outputPath = compute_avg_caxis_class1::k_CellFeatureDataPath.createChildPath(k_ComputedAvgCAxesName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  const auto& avgCAxes = dataStructure.getDataRefAs<Float32Array>(outputPath);
+  // Identical orientations have the same average regardless of cell count.
+  // Allow float32 input/output rounding, but not error that grows during summation.
+  constexpr float64 k_Tolerance = 2.0e-7;
+  CHECK(std::abs(static_cast<float64>(avgCAxes[3])) < k_Tolerance);
+  CHECK(std::abs(static_cast<float64>(avgCAxes[4]) - std::sqrt(3.0) / 2.0) < k_Tolerance);
+  CHECK(std::abs(static_cast<float64>(avgCAxes[5]) - 0.5) < k_Tolerance);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-built dataset)", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
@@ -125,8 +210,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
   // Class 4 (Invariant) — F7 precision-sensitive boundary case.
   // F7 was deliberately constructed so the antipodal-flip cancellation dot
   // product evaluates to zero in math but is precision-dependent in float32.
-  // The SIMPLNX faithful-float32 Eigen path produces (0, sqrt(3)/2, 0.5);
-  // a pure-double replay produces (0, 0, 1). These are genuinely different
+  // Float32 accumulation produces (0, sqrt(3)/2, 0.5), whereas float64
+  // accumulation can produce (0, 0, 1). These are different
   // c-axis directions, not hex c~-c equivalents. After the SIMPLNX
   // finalize-normalize step, both have magnitude 1.0 -- so the direction is
   // implementation-dependent but the unit-vector invariant holds.
