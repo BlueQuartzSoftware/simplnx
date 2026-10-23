@@ -679,18 +679,17 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry", selectedGroupPtr->getId());
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 2, 1});
-  auto* storageGroupPtr = DataGroup::Create(dataStructure, "Storage");
-  REQUIRE(storageGroupPtr != nullptr);
-  // Equal counts are valid even when the selected array is stored separately
-  // and its tuple shape differs from the geometry's {1, 2, 2} shape.
-  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {tupleCount}, storageGroupPtr->getId());
+  // Equal counts are valid in the geometry's Cell Attribute Matrix even when
+  // its tuple shape differs from the geometry's {1, 2, 2} shape.
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {tupleCount}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureAMPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
   REQUIRE(featureAMPtr != nullptr);
   UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {tupleCount}, {1}, cellAMPtr->getId());
   UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAMPtr->getId());
   const DataPath geometryPath({"Selected", "ImageGeometry"});
-  const DataPath featureIdsPath({"Storage", "CellData", "FeatureIds"});
+  const DataPath featureIdsPath({"Selected", "ImageGeometry", "CellData", "FeatureIds"});
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
@@ -848,15 +847,23 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede featu
   CAPTURE(replaceNeighbors, useStringArray, cellMismatch);
   DataStructure dataStructure;
   DiscriminatingFixture::PopulateDataStructure(dataStructure);
-  const DataPath rejectedPath({"RejectedFeatureInput"});
+  const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"ImageGeometry", "FeatureData"}));
+  const DataPath rejectedPath({"ImageGeometry", "FeatureData", "RejectedFeatureInput"});
   if(useStringArray)
   {
-    REQUIRE(StringArray::CreateWithValues(dataStructure, rejectedPath.getTargetName(), {5}, std::vector<std::string>(5, "17")) != nullptr);
+    REQUIRE(StringArray::CreateWithValues(dataStructure, rejectedPath.getTargetName(), featureAM.getShape(), std::vector<std::string>(featureAM.getNumberOfTuples(), "17"), featureAM.getId()) !=
+            nullptr);
   }
   else
   {
-    REQUIRE(NeighborList<int32>::Create(dataStructure, rejectedPath.getTargetName(), {5}) != nullptr);
+    REQUIRE(NeighborList<int32>::Create(dataStructure, rejectedPath.getTargetName(), featureAM.getShape(), featureAM.getId()) != nullptr);
   }
+  // Keep the other selected feature array in a separate AM so its tuple count can differ.
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeometry"}));
+  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {5}, imageGeom.getId());
+  REQUIRE(mismatchAM != nullptr);
+  const DataPath mismatchPath({"ImageGeometry", "MismatchData", "OtherFeatureInput"});
+  UnitTest::CreateTestDataArray<int32>(dataStructure, mismatchPath.getTargetName(), {5}, {1}, mismatchAM->getId());
   if(cellMismatch)
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeometry"})));
@@ -864,6 +871,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede featu
   }
   Arguments args = createArrayKindValidationArguments();
   args.insertOrAssign(replaceNeighbors ? RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key : RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, rejectedPath);
+  args.insertOrAssign(replaceNeighbors ? RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key : RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, mismatchPath);
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = RequireMinNumNeighborsFilter().preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
