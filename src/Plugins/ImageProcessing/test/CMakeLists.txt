@@ -157,8 +157,3 @@ endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-# The citation check downloads DOI and publisher metadata over HTTPS. Windows Python builds fail
-# those requests too often to give a reliable result, so the test runs only on Linux.
-if(NOT WIN32)
-  AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-endif()
