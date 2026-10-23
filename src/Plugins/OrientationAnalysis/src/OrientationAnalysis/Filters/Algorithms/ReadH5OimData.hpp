@@ -38,14 +38,14 @@ public:
 
   /**
    * @brief Imports each selected scan through IEbsdOemReader.
-   * @return Reader, destination transfer, or missing-pattern-data errors.
+   * @return Reader, destination transfer, unavailable scalar channel, or missing-pattern-data errors.
    */
   Result<> operator()();
 
   /**
    * @brief Converts and copies one loaded scan into its volume range.
    * @param sliceIndex Zero-based scan index.
-   * @return Destination transfer or missing-pattern-data errors.
+   * @return Success, or an error for a failed transfer, an unavailable scalar channel, or missing pattern data.
    */
   Result<> copyRawEbsdData(int sliceIndex) override;
 };
