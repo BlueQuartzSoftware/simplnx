@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -676,6 +677,80 @@ TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-s
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   CHECK(preflightResult.outputActions.value().actions.size() == 2);
   CHECK(preflightResult.outputActions.value().deferredActions.empty());
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
+{
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(points != nullptr);
+  auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{4}, ShapeType{2});
+  REQUIRE(mask != nullptr);
+
+  DBSCANFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Points"})));
+  args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+  auto unmaskedResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.outputActions);
+
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -208);
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
+{
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(points != nullptr);
+  auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{3}, ShapeType{1});
+  REQUIRE(mask != nullptr);
+
+  DBSCANFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Points"})));
+  args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+  auto unmaskedResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.outputActions);
+
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -7587);
+  const auto& message = preflightResult.outputActions.errors()[0].message;
+  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
+  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
+{
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(points != nullptr);
+  auto* mask = StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{3}, {"1", "1", "1"});
+  REQUIRE(mask != nullptr);
+
+  DBSCANFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Points"})));
+  args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -7587);
+  const auto& message = preflightResult.outputActions.errors()[0].message;
+  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
+  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
 }
 
 TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
