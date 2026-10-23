@@ -26,7 +26,7 @@ Cell (1,1) has CI = 0.05, which is below a 0.1 minimum, so it is flagged. Its 4 
 
 In this example, cell (1,1) has a confidence index < 0.1. Its four neighbors are compared pairwise with each other: (13.0), (14.0), (12.0) and (15.0) are all within a few degrees of each other, so every neighbor participates in several similar pairs. The central cell (1,1) has all of its attributes replaced with those of the neighbor holding the highest similar-pair count. Note that the central cell's own orientation and phase play no role in choosing the replacement — only the mutual similarity of its neighbors matters.
 
-**Confidence Index**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
+**Confidence Index**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. Replacement copies affect arrays in the Attribute Matrix that contains **Confidence Index**, except the arrays in **Attribute Arrays to Ignore**. Keep **Cell Phases** and **Cell Quaternions** in that matrix when they must also be repaired.
 
 ## Example Data
 
@@ -45,13 +45,7 @@ This filter will copy all attribute data from neighboring cells into the target 
 
 ### Differences from legacy DREAM.3D 6.5.171
 
-DREAM3D-NX's implementation fixes three defects present in DREAM.3D 6.5.171, so results will differ on most datasets:
-
-1. 6.5.171 could count a mixed-phase (or unindexed, phase-0) neighbor pair as "similar" by reusing the previous pair's misorientation, occasionally replacing a cell with data from a **different phase**.
-2. 6.5.171 ran only half the cleanup passes of the original design (`ceil((6 − Level)/2)` instead of `6 − Level`), leaving deep bad regions partially unfilled.
-3. 6.5.171 copied from the *last* neighbor having any similar pair rather than the neighbor with the *highest* similarity count. (When all counts tie — the common case in grain interiors — both versions pick the same neighbor.)
-
-See `NeighborOrientationCorrelationFilter-D1` through `-D4` in `src/Plugins/OrientationAnalysis/vv/deviations/NeighborOrientationCorrelationFilter.md` for the full analysis and migration guidance.
+DREAM3D-NX's implementation fixes three defects present in DREAM.3D 6.5.171.
 
 ## Algorithm
 
