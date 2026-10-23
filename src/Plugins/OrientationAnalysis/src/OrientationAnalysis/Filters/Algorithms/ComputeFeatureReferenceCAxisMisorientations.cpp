@@ -5,6 +5,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
@@ -70,13 +71,26 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
          "Finding the feature reference c-axis misorientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be skipped."});
   }
 
-  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIds.getDataStoreRef();
   const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
   const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
 
   // Feature references stay local because cells access them by feature ID.
   const auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->AvgCAxesArrayPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+  if(validateNumFeatResult.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-9806, fmt::format("Cell Feature Ids array '{}' must contain indices in [0, {}) for Average C-Axes array '{}'. {}",
+                                                                              m_InputValues->FeatureIdsArrayPath.toString(), totalFeatures, m_InputValues->AvgCAxesArrayPath.toString(),
+                                                                              validateNumFeatResult.errors()[0].message)));
+  }
+  if(m_ShouldCancel)
+  {
+    return result;
+  }
+
   const usize avgCAxesSize = totalFeatures * 3;
   std::vector<float32> avgCAxesLocal(avgCAxesSize);
   readResult = avgCAxes.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(avgCAxesLocal.data(), avgCAxesSize));
@@ -95,7 +109,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   const usize numQuatComps = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getNumberOfComponents();
 
   std::vector<usize> counts(totalFeatures, 0);
-  std::vector<float32> avgMisorientations(totalFeatures, 0.0f);
+  std::vector<float64> avgMisorientations(totalFeatures, 0.0);
 
   SizeVec3 uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath).getDimensions();
 
@@ -182,7 +196,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
           outputSlice[localIdx] = static_cast<float32>(w);
           counts[currentFeatureIdx]++;
-          avgMisorientations[currentFeatureIdx] += static_cast<float32>(w);
+          avgMisorientations[currentFeatureIdx] += w;
         }
       }
     }
@@ -212,7 +226,8 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     }
     else
     {
-      featureAverages[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);
+      avgMisorientations[featureId] /= static_cast<float64>(counts[featureId]);
+      featureAverages[featureId] = static_cast<float32>(avgMisorientations[featureId]);
     }
   }
   Result<> writeResult = featAvgCAxisMis.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(featureAverages.data(), totalFeatures));
@@ -240,11 +255,28 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     {
       return readResult;
     }
+    readResult = cellPhasesStoreRef.copyIntoBuffer(sliceOffset, nonstd::span<int32>(cellPhasesSlice.data(), sliceSize));
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
 
     for(usize localIdx = 0; localIdx < sliceSize; localIdx++)
     {
       const int32 featureId = featureIdsSlice[localIdx];
-      double diff = outputSlice[localIdx] - featureAverages[featureId];
+      const int32 phaseId = cellPhasesSlice[localIdx];
+      if(featureId <= 0 || phaseId <= 0)
+      {
+        continue;
+      }
+      // The first pass validated positive phase indices on participating features.
+      const uint32 crystalStructureType = crystalStructuresCache[phaseId];
+      const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
+      if(!isHex)
+      {
+        continue;
+      }
+      const float64 diff = static_cast<float64>(outputSlice[localIdx]) - avgMisorientations[featureId];
       stdevs[featureId] += (diff * diff);
     }
   }
