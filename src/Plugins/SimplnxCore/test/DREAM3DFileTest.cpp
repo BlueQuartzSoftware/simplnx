@@ -32,6 +32,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/FailCloseVfd.hpp"
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
@@ -46,6 +47,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <mutex>
 #include <string>
 #include <utility>
@@ -76,6 +78,7 @@ const fs::path k_ValidParamsFilename = "write_dream3d_valid_params.dream3d";
 const fs::path k_PipelineComboFilename = "write_dream3d_pipeline_combos.dream3d";
 const fs::path k_FileDataFilename = "write_dream3d_file_data.dream3d";
 const fs::path k_UnwritableTypeFilename = "write_dream3d_unwritable_type.dream3d";
+const fs::path k_CloseFailureFilename = "write_dream3d_close_failure.dream3d";
 
 constexpr StringLiteral k_CellData = "Cell Data";
 constexpr StringLiteral k_DataContainer = "Data Container";
@@ -192,6 +195,14 @@ fs::path GetFileDataFilePath()
 fs::path GetUnwritableTypeFilePath()
 {
   return GetTestFilePath(Constants::k_UnwritableTypeFilename);
+}
+
+/**
+ * @brief Returns the output path of the close-failure test, which no other test case writes.
+ */
+fs::path GetCloseFailureFilePath()
+{
+  return GetTestFilePath(Constants::k_CloseFailureFilename);
 }
 
 fs::path GetXdmfPath(const fs::path& dream3dPath)
@@ -1054,6 +1065,17 @@ GeometryTestCase MakeGeometryTestCase(std::string typeName, std::function<GeomTy
   testCase.build = [builder](DataStructure& dataStructure, const std::string& name, const std::optional<DataObject::IdType>& parentId) { builder(dataStructure, name, parentId); };
   testCase.requireType = [](const DataStructure& dataStructure, const DataPath& path) { REQUIRE_NOTHROW(dataStructure.getDataRefAs<GeomType>(path)); };
   return testCase;
+}
+
+/**
+ * @brief Reads a whole file as raw bytes, so a test can prove that a file kept its exact old content.
+ * @param filePath File to read.
+ * @return The file's bytes; empty when the file cannot be opened.
+ */
+std::vector<char> ReadFileBytes(const fs::path& filePath)
+{
+  std::ifstream stream(filePath, std::ios::binary);
+  return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
 }
 
 } // End Namespace
@@ -2120,4 +2142,43 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   const uint64 missesBeforeRewritePreflight = cache.missCount();
   REQUIRE(pipeline.preflight());
   REQUIRE(cache.missCount() == missesBeforeRewritePreflight + 1);
+}
+
+TEST_CASE("WriterFix: Write DREAM3D-NX File keeps the old output when the close fails", "[SimplnxCore][WriteDREAM3DFilter][WriterFix]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path exportFilePath = GetCloseFailureFilePath();
+  fs::create_directories(exportFilePath.parent_path());
+
+  // An existing output file, written without the failing driver.
+  DataStructure dataStructure = CreateTestDataStructure();
+  {
+    const Result<> existingResult = DREAM3D::WriteFile(exportFilePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(existingResult);
+  }
+  const std::vector<char> oldBytes = ReadFileBytes(exportFilePath);
+  REQUIRE_FALSE(oldBytes.empty());
+
+  WriteDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, std::make_any<FileSystemPathParameter::ValueType>(exportFilePath));
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, std::make_any<bool>(false));
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, std::make_any<int32>(1));
+
+  const hid_t driverId = UnitTest::FailCloseVfd::RegisterFailCloseVfd();
+  REQUIRE(driverId >= 0);
+  const int32 failuresBefore = UnitTest::FailCloseVfd::CloseFailureCount();
+  Result<> executeResult;
+  {
+    // Only the filter's own write goes through the failing driver.
+    const UnitTest::FailCloseVfd::FailCloseArmGuard armGuard(driverId);
+    executeResult = filter.execute(dataStructure, args).result;
+  }
+
+  REQUIRE(UnitTest::FailCloseVfd::CloseFailureCount() > failuresBefore);
+  REQUIRE(executeResult.invalid());
+  REQUIRE(executeResult.errors().size() == 1);
+  CHECK(executeResult.errors().front().code == -6056);
+  CHECK(ReadFileBytes(exportFilePath) == oldBytes);
 }

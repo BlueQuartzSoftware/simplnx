@@ -13,6 +13,8 @@
 
 namespace nx::core
 {
+class AtomicFile;
+
 namespace EbsdToH5EbsdInputConstants
 {
 const ChoicesParameter::Choices k_StackingChoices = {"Low to High", "High To Low"};
@@ -65,11 +67,28 @@ public:
   EbsdToH5Ebsd& operator=(const EbsdToH5Ebsd&) = delete;
   EbsdToH5Ebsd& operator=(EbsdToH5Ebsd&&) noexcept = delete;
 
+  /**
+   * @brief Converts the EBSD files into one H5EBSD file, written to a temporary file and moved onto the output path.
+   * @return Success with the warnings of the file-write hook, or the first error with the hook's warnings.
+   *
+   * The file-write hook runs on the final output path after the temporary folder exists and before anything is written, so a store
+   * of the pipeline that reads the output file is released before the commit replaces it. Cancellation is checked before and after
+   * the hook; stores released before a cancel stay released.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
 
 private:
+  /**
+   * @brief Writes the H5EBSD file to the temporary path and moves it onto the output path.
+   * @param atomicFile Temporary file whose commit() replaces the output file.
+   * @return Success, or the write, cancel or commit error. A cancel seen while the slices are converted returns success without the
+   * commit, so the output file stays unchanged.
+   * @pre The file-write hook ran on the output path.
+   */
+  Result<> writeAndCommit(AtomicFile& atomicFile);
+
   DataStructure& m_DataStructure;
   const EbsdToH5EbsdInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

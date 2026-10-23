@@ -178,6 +178,8 @@ SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureArraysMetadata(const std::
  * @param fileWriter Receives serialized content.
  * @param fileData Provides Pipeline and DataStructure data.
  * @return First HDF5 write error, or success.
+ * @pre No out-of-core store in the DataStructure of fileData reads the file that fileWriter holds open. This overload does not run the file-write hook
+ * (DataIOCollection::beforeFileWrite()); the path-based overload that opens the file runs it.
  */
 SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const FileData& fileData);
 
@@ -187,6 +189,8 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const File
  * @param pipeline Provides pipeline metadata.
  * @param dataStructure Provides hierarchy and arrays.
  * @return First HDF5 write error, or success.
+ * @pre No out-of-core store in dataStructure reads the file that fileWriter holds open. This overload does not run the file-write hook
+ * (DataIOCollection::beforeFileWrite()); the path-based overload that opens the file runs it.
  */
 SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
 
@@ -197,6 +201,8 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipe
  * @param dataStructure Provides hierarchy and arrays.
  * @param options Specifies write-time compression and related policies.
  * @return First HDF5 write error, or success.
+ * @pre No out-of-core store in dataStructure reads the file that fileWriter holds open. This overload does not run the file-write hook
+ * (DataIOCollection::beforeFileWrite()); the path-based overload that opens the file runs it.
  */
 SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure, const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
 
@@ -206,7 +212,10 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipe
  * @param dataStructure Provides hierarchy and arrays.
  * @param pipeline Provides optional pipeline metadata.
  * @param writeXdmf Writes a sibling XDMF file when true.
- * @return File or HDF5 write error, or success.
+ * @return File or HDF5 write error, -6056 when the file does not close completely (see HDF5::FileIO::closeChecked()), an XDMF
+ * destination error (-6057, -6058), a file-write hook error, or success.
+ *
+ * Forwards to the overload with options, which runs the file-write hook.
  */
 SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {}, bool writeXdmf = false);
 
@@ -217,7 +226,16 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * @param pipeline Provides pipeline metadata.
  * @param writeXdmf Writes a sibling XDMF file when true.
  * @param options Specifies write-time compression and related policies.
- * @return File or HDF5 write error, or success.
+ * @return File or HDF5 write error, -6056 when the file does not close completely (see HDF5::FileIO::closeChecked()), an XDMF
+ * destination error (-6057, -6058), a file-write hook error, or success.
+ *
+ * Before any file changes, the file-write hook (DataIOCollection::beforeFileWrite() in ReleaseReaders mode) runs on path and, when
+ * writeXdmf is set, on the sidecar path(path).replace_extension(".xdmf"), so out-of-core stores that read either file are copied to
+ * session files first. With writeXdmf set, the two destinations are first checked against each other with std::filesystem: a
+ * path with the .xdmf extension in any letter case, a file name that ends with a space or a period, a path or sidecar that is a
+ * symbolic link or a junction, and an existing path that is the same file as its existing sidecar are rejected with -6057, and a
+ * failed check is -6058; nothing is written. A hook error is returned without a change to either file. The hook's warnings are part
+ * of every returned result. The XDMF file is written only after the HDF5 file closed completely.
  */
 SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
                                   const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
@@ -235,7 +253,11 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * @param dataStructure Provides final pipeline data for a full snapshot.
  * @param pipeline Provides embedded pipeline metadata for a full snapshot.
  * @param userDataFilePath Selects redirect mode and its authoritative file.
- * @return File or HDF5 write error, or success.
+ * @return File or HDF5 write error, -6056 when the file does not close completely (see HDF5::FileIO::closeChecked()), or success.
+ *
+ * A full snapshot delegates to WriteFile(path, ...), so the file-write hook runs on path; a staging path that does not exist yet
+ * releases nothing. Redirect mode opens path directly and does not run the hook.
+ * @pre In redirect mode, no out-of-core store in dataStructure reads path.
  */
 SIMPLNX_EXPORT Result<> WriteRecoveryFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {},
                                           std::optional<std::filesystem::path> userDataFilePath = std::nullopt);
@@ -255,7 +277,12 @@ SIMPLNX_EXPORT Result<std::optional<std::filesystem::path>> ReadUserDataFilePath
  * @param path Identifies the destination file.
  * @param dataStructure Provides the object and its dependencies.
  * @param dataPath Identifies the object to append.
- * @return File, lookup, or HDF5 write error, or success.
+ * @return File, lookup, or HDF5 write error, -6056 when the file does not close completely (see HDF5::FileIO::closeChecked()), a
+ * file-write hook error, or success. With -6056 the file may already hold the appended object; the error does not promise a rollback.
+ *
+ * The file-write hook (DataIOCollection::beforeFileWrite() in ReleaseReaders mode) runs on path before the file is opened, so
+ * out-of-core stores that read it are copied to session files first; an HDF5 file that a store holds open read-only cannot be
+ * opened for appending. A hook error is returned without opening the file. The hook's warnings are part of every returned result.
  */
 SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const DataStructure& dataStructure, const DataPath& dataPath);
 
@@ -355,6 +382,9 @@ SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const std::filesystem::pa
  * @param filePath Specifies the XDMF destination.
  * @param dataStructure Provides geometry and array metadata.
  * @param hdf5FilePath Specifies the referenced HDF5 path.
+ * @pre No out-of-core store in dataStructure reads filePath, and filePath is not the HDF5 file it describes. The function truncates
+ * filePath and does not run the file-write hook; DREAM3D::WriteFile(), its only caller in simplnx, runs the hook and checks the
+ * two destinations before it calls this function.
  */
 SIMPLNX_EXPORT void WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath);
 

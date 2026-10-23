@@ -18,8 +18,12 @@ namespace nx::core
 {
 Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
 {
-  // Add to DataStructureWriter for use in linking
-  dataStructureWriter.addWriter(objectWriter, dataObject->getId());
+  // Record the object's path so later parents of the object receive hard links to it.
+  Result<> recordResult = dataStructureWriter.addWriter(objectWriter, *dataObject);
+  if(recordResult.invalid())
+  {
+    return recordResult;
+  }
 
   int32 importablei32 = (importable ? 1 : 0);
   Result<> result = objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());

@@ -21,13 +21,13 @@ class GroupIO;
 class ObjectIO;
 
 /**
- * @brief Attempts to write the DataObject attributes to HDF5.
- * Returns a Result<> with any errors or warnings encountered during the process.
- * @param dataStructureWriter
- * @param objectWriter
- * @param dataObject
- * @param importable
- * @return Result<>
+ * @brief Records the DataObject's path for hard links, then writes its type, identifier and importable attributes to HDF5.
+ * @param dataStructureWriter Writer that records the object's path, so later parents of the object receive hard links to it.
+ * @param objectWriter HDF5 object the DataObject was written to.
+ * @param dataObject DataObject that was written; must not be null.
+ * @param importable Whether the object is importable.
+ * @return -6055 when the object's identifier is already recorded at a different path (see DataStructureWriter::addWriter()),
+ * attribute-write errors, or success. No attribute is written after a -6055.
  */
 Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructureWriter, ObjectIO& objectWriter, const DataObject* dataObject, bool importable);
 

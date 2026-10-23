@@ -553,6 +553,18 @@ public:
 
   std::vector<DataPath> getAllDataPaths() const;
 
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  /**
+   * @brief Returns the number of getAllDataPaths() calls in this process.
+   * @return Process-wide call count of getAllDataPaths() on any DataStructure.
+   *
+   * getAllDataPaths() expands every path of a multi-parent object, so its cost can be much larger than the object
+   * count. Tests use this count to prove that a walk over the objects does not expand paths. The count uses relaxed
+   * atomic operations; it orders no other memory. Available only in test builds.
+   */
+  static uint64 GetAllDataPathsCallCountForTesting();
+#endif
+
   std::vector<DataObject::IdType> getAllDataObjectIds() const;
 
   std::vector<DataObject*> getTopLevelData() const;
