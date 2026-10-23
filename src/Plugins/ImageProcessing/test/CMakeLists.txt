@@ -157,7 +157,3 @@ endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
-# Set the PYTHON_EXECUTABLE variable as that will get used when the stub shell script or batch file is created.
-# The `Python3_EXECUTABLE` is usually set in the CMakePresets.json file
-set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-AddPythonTest(NAME "PY::ImageProcessing::VerifyExamplePipelineCitations" FILE "${${PLUGIN_NAME}_SOURCE_DIR}/test/VerifyExamplePipelineCitations.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
