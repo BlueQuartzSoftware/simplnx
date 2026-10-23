@@ -23,6 +23,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SamplingUtils.hpp"
 
 #include <algorithm>
 #include <array>
@@ -33,6 +34,8 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
+#include <typeinfo>
 #include <vector>
 
 using namespace nx::core;
@@ -2426,4 +2429,185 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: PhysicalCrop_MaxAtBound", "[Sim
   REQUIRE(croppedGeom.getOrigin() == FloatVec3{1.5F, 1.0F, 2.5F});
   REQUIRE(croppedGeom.getSpacing() == FloatVec3{1.0F, 2.0F, 0.5F});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures negative destination id names the destination array", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  // Guards destination-specific diagnostics for negative Feature Ids.
+  DataStructure dataStructure;
+  auto* dest = DataGroup::Create(dataStructure, "Dest");
+  REQUIRE(dest != nullptr);
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, dest->getId());
+  REQUIRE(featureData != nullptr);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{4}, dest->getId());
+  REQUIRE(vertexData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", ShapeType{4}, ShapeType{1}, vertexData->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = -1;
+  (*featureIds)[3] = 2;
+
+  const DataPath destFeatureAttributeMatrixPath({"Dest", "Feature Data"});
+  const DataPath featureIdsArrayPath({"Source", "Vertex Data", "FeatureIds"});
+  const DataPath destFeatureIdsPath({"Dest", "Vertex Data", "FeatureIds"});
+  IFilter::MessageHandler messageHandler{};
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = Sampling::RenumberFeatures(dataStructure, destFeatureAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel);
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors().front().code == -605);
+  CHECK(result.errors().front().message.find(destFeatureIdsPath.toString()) != std::string::npos);
+  CHECK(result.errors().front().message.find("resampled") == std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures missing destination Feature Ids throws", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  // Guards exception handling for a missing destination Feature Ids array.
+  DataStructure dataStructure;
+  auto* dest = DataGroup::Create(dataStructure, "Dest");
+  REQUIRE(dest != nullptr);
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, dest->getId());
+  REQUIRE(featureData != nullptr);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{4}, dest->getId());
+  REQUIRE(vertexData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", ShapeType{4}, ShapeType{1}, vertexData->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = -1;
+  (*featureIds)[3] = 2;
+
+  const DataPath destFeatureAttributeMatrixPath({"Dest", "Feature Data"});
+  const DataPath featureIdsArrayPath({"Source", "Vertex Data", "FeatureIds"});
+  const DataPath destFeatureIdsPath({"Dest", "Vertex Data", "Missing"});
+  IFilter::MessageHandler messageHandler{};
+  const std::atomic_bool shouldCancel = false;
+
+  REQUIRE_THROWS_AS(Sampling::RenumberFeatures(dataStructure, destFeatureAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel), std::out_of_range);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures wrong-type destination Feature Ids throws", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  // Guards exception handling for a destination Feature Ids array with the wrong type.
+  DataStructure dataStructure;
+  auto* dest = DataGroup::Create(dataStructure, "Dest");
+  REQUIRE(dest != nullptr);
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, dest->getId());
+  REQUIRE(featureData != nullptr);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{4}, dest->getId());
+  REQUIRE(vertexData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", ShapeType{4}, ShapeType{1}, vertexData->getId());
+  REQUIRE(featureIds != nullptr);
+  (*featureIds)[0] = 0;
+  (*featureIds)[1] = 1;
+  (*featureIds)[2] = -1;
+  (*featureIds)[3] = 2;
+
+  const DataPath destFeatureAttributeMatrixPath({"Dest", "Feature Data"});
+  const DataPath featureIdsArrayPath({"Source", "Vertex Data", "FeatureIds"});
+  auto* floatIds = UnitTest::CreateTestDataArray<float32>(dataStructure, "FloatIds", ShapeType{4}, ShapeType{1}, vertexData->getId());
+  REQUIRE(floatIds != nullptr);
+
+  const DataPath destFeatureIdsPath({"Dest", "Vertex Data", "FloatIds"});
+  IFilter::MessageHandler messageHandler{};
+  const std::atomic_bool shouldCancel = false;
+
+  REQUIRE_THROWS_AS(Sampling::RenumberFeatures(dataStructure, destFeatureAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel), std::bad_cast);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures without a geometry removes unused features", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  // The geometry-independent overload must renumber Feature Ids and compact the Feature AM
+  // with no geometry present. Feature 1 is not used, so it is removed and features 2 and 3 move down.
+  DataStructure dataStructure;
+  auto* dest = DataGroup::Create(dataStructure, "Dest");
+  REQUIRE(dest != nullptr);
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{4}, dest->getId());
+  REQUIRE(featureData != nullptr);
+  auto* featureValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", ShapeType{4}, ShapeType{1}, featureData->getId());
+  REQUIRE(featureValues != nullptr);
+  const std::vector<int32> inputValues = {10, 11, 12, 13};
+  for(usize i = 0; i < inputValues.size(); ++i)
+  {
+    (*featureValues)[i] = inputValues[i];
+  }
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{5}, dest->getId());
+  REQUIRE(vertexData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", ShapeType{5}, ShapeType{1}, vertexData->getId());
+  REQUIRE(featureIds != nullptr);
+  const std::vector<int32> inputIds = {0, 2, 2, 0, 3};
+  for(usize i = 0; i < inputIds.size(); ++i)
+  {
+    (*featureIds)[i] = inputIds[i];
+  }
+
+  const DataPath destFeatureAttributeMatrixPath({"Dest", "Feature Data"});
+  const DataPath featureIdsArrayPath({"Source", "Vertex Data", "FeatureIds"});
+  const DataPath destFeatureIdsPath({"Dest", "Vertex Data", "FeatureIds"});
+  IFilter::MessageHandler messageHandler{};
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = Sampling::RenumberFeatures(dataStructure, destFeatureAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  const std::vector<int32> expectedIds = {0, 1, 1, 0, 2};
+  const auto& resultIds = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsPath);
+  REQUIRE(resultIds.getNumberOfTuples() == expectedIds.size());
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(resultIds[i] == expectedIds[i]);
+  }
+
+  const std::vector<int32> expectedValues = {10, 12, 13};
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(destFeatureAttributeMatrixPath).getNumberOfTuples() == expectedValues.size());
+  const auto& resultValues = dataStructure.getDataRefAs<Int32Array>(destFeatureAttributeMatrixPath.createChildPath("Values"));
+  REQUIRE(resultValues.getNumberOfTuples() == expectedValues.size());
+  for(usize i = 0; i < expectedValues.size(); ++i)
+  {
+    CHECK(resultValues[i] == expectedValues[i]);
+  }
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures image cell count mismatch returns -606", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  // The ImageGeom overload must reject a Feature Ids array whose tuple count differs from the
+  // image cell count, and it must not change the Feature Ids or the Feature AM.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 2, 1});
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeom->getId());
+  REQUIRE(featureData != nullptr);
+  auto* otherData = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{3}, imageGeom->getId());
+  REQUIRE(otherData != nullptr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", ShapeType{3}, ShapeType{1}, otherData->getId());
+  REQUIRE(featureIds != nullptr);
+  const std::vector<int32> inputIds = {0, 2, 2};
+  for(usize i = 0; i < inputIds.size(); ++i)
+  {
+    (*featureIds)[i] = inputIds[i];
+  }
+
+  const DataPath imagePath({"Image"});
+  const DataPath destFeatureAttributeMatrixPath({"Image", "Feature Data"});
+  const DataPath featureIdsArrayPath({"Source", "Other Data", "FeatureIds"});
+  const DataPath destFeatureIdsPath({"Image", "Other Data", "FeatureIds"});
+  IFilter::MessageHandler messageHandler{};
+  const std::atomic_bool shouldCancel = false;
+
+  const auto result = Sampling::RenumberFeatures(dataStructure, imagePath, destFeatureAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsPath, messageHandler, shouldCancel);
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors().front().code == -606);
+  CHECK(result.errors().front().message.find(destFeatureIdsPath.toString()) != std::string::npos);
+
+  // Feature 1 is unused, so a renumber would have changed both of these.
+  CHECK(dataStructure.getDataRefAs<AttributeMatrix>(destFeatureAttributeMatrixPath).getNumberOfTuples() == 3);
+  const auto& resultIds = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsPath);
+  for(usize i = 0; i < inputIds.size(); ++i)
+  {
+    CHECK(resultIds[i] == inputIds[i]);
+  }
 }
