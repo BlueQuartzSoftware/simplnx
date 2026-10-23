@@ -43,6 +43,8 @@ When *Use Reduced Integration Elements* is enabled, the `_sects.inp` file includ
 
 The maximum feature ID is limited to 100,000,000. Larger IDs cause an error during execution; renumber the features to be contiguous. The node and element label limit is 999,999,999. Mesh counts above this limit cause a preflight error.
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ### Example Output
 
 The headers in the snippets below read `DREAM3DLib Version 5.1.566`; these version strings are illustrative and will reflect the actual version that wrote the file. The filter is based on a Python script developed by Matthew W. Priddy (Georgia Tech, early 2015).

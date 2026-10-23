@@ -26,6 +26,8 @@ More information can be found in the SPPARKS documentation for [read_sites](http
 - **Image Geometry** -- the voxel grid whose cells become SPPARKS sites.
 - **Cell Feature Ids** -- produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md). The Feature Id at each cell becomes that site's value.
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ### Example Output
 
 ```text

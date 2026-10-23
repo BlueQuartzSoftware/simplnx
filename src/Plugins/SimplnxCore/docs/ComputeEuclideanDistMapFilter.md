@@ -30,6 +30,8 @@ The following algorithm explains the process:
 
 - **Cell Feature Ids** -- the Feature that owns each Cell, produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ### Performance
 
 The bounded-memory scanline implementation is used for every out-of-core array and for most in-memory workloads. Boundary seeds are identified with rolling previous/current/next Z-slices of Feature IDs. On volumes without non-positive Feature IDs, exact Manhattan distances are computed with one forward and one backward sweep per enabled map. If non-positive Feature IDs are present, an exact layer-synchronous fallback preserves their behavior as non-traversable cells. Every store access is a bulk Z-slice transfer.

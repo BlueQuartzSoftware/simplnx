@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -83,13 +84,19 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pComparisonDataPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
+  auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
+
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -15001); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pComparisonDataPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, inputArrayPath.getParent(), {});
 
   return {std::move(resultOutputActions)};
 }

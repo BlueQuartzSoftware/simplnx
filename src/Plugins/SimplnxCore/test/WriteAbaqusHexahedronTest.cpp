@@ -648,3 +648,51 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Target Is A Director
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Geometry cell tuple count", "[SimplnxCore][WriteAbaqusHexahedronFilter][TupleCount]")
+{
+  UnitTest::LoadPlugins();
+  using FilterType = WriteAbaqusHexahedronFilter;
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
+
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+
+  // A matching input in another Attribute Matrix must remain valid.
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 1), otherAMPtr->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterType::k_OutputPath_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TupleCountAbaqus"));
+  args.insertOrAssign(FilterType::k_FilePrefix_Key, std::make_any<std::string>("TupleCount"));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -1124);
+    const DataPath expectedPath = inputPath;
+    const usize expectedTuples = tuples;
+    REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+  }
+}

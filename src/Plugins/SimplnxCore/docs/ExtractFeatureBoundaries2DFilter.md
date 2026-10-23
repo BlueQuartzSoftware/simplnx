@@ -43,6 +43,8 @@ After edge creation, duplicate vertices are eliminated to ensure a clean, connec
 - **Image Geometry** -- a 2D **Image Geometry** (Z dimension of 1) holding the Feature IDs.
 - **Feature IDs** -- a per-cell integer array. It may be a true segmentation produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md), or any per-cell integer/mask array produced by a thresholding filter such as [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
+**Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

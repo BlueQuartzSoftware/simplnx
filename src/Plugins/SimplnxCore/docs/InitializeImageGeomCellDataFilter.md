@@ -37,7 +37,7 @@ For boolean arrays in random modes, each cell is set to a uniformly-chosen true/
 ### Required Input Sources
 
 - **Input Image Geometry** -- the geometry whose cell data will be modified in-place. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
-- **Cell Attribute Arrays to Initialize** -- one or more cell-level arrays already attached to the geometry's Cell Attribute Matrix.
+- **Cell Arrays** -- one or more arrays with one tuple per cell of the selected Image Geometry. The arrays can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

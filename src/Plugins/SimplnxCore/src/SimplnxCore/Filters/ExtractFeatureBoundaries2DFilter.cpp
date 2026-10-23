@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -103,6 +104,11 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   auto pZValueChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key);
   auto pCustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
   auto pExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
+
+  if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;

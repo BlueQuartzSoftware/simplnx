@@ -10,6 +10,8 @@ This **Filter** calculates the *centroid* of each **Feature** by determining the
 
 A **Feature** with no **Cells** (an unused Feature Id) keeps a centroid of (0, 0, 0).
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ## Algorithm
 
 The algorithm iterates over all voxels, accumulating each voxel's XYZ coordinate (computed from its flat index, the geometry origin, and spacing) into a per-feature Kahan sum. After all voxels are processed, each feature's centroid is the accumulated sum divided by the voxel count.

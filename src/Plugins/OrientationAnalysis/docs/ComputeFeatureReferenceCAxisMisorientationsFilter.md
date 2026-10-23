@@ -35,6 +35,8 @@ Results may differ from the DREAM3D 6.6 version by approximately 0.0001 degrees 
 - **Average C-Axes** -- produced by [Compute Average C-Axis Orientations](ComputeAvgCAxesFilter.md).
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 
+**Cell Feature Ids**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
+
 ## Algorithm
 
 For each cell, the quaternion is converted to an active rotation matrix (transpose of the passive orientation matrix) and applied to the <001> c-axis to find the c-axis direction in the sample reference frame. The angle between this cell-level c-axis and the feature's average c-axis is computed. Angles exceeding 90 degrees are folded to (180 - angle) to account for the antipodal symmetry of hexagonal c-axes. The per-cell misorientation values are then used to compute the average and population standard deviation per feature.

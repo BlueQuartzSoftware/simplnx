@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -83,9 +84,13 @@ IFilter::UniquePointer WriteSPParksSitesFilter::clone() const
 IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto geometryPath = filterArgs.value<DataPath>(k_ImageGeomPath);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
-  usize fIdsTupCount = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -77453); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
 
   return {};
 }

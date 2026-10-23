@@ -80,6 +80,8 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
 
+**Input Comparison Array** must have one tuple per cell of the selected geometry. When **Loop Until Gone** is enabled, select a comparison array in the geometry's Cell Data Attribute Matrix. Otherwise, another Attribute Matrix is allowed.
+
 ## Algorithm
 
 This filter iteratively replaces voxel data that fails a user-defined threshold comparison with data from the best-scoring face neighbor.

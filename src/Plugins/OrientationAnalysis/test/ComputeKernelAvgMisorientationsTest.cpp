@@ -5,6 +5,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -1077,6 +1078,66 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded C
     for(const float32 value : outputSlice)
     {
       REQUIRE(value == Approx(expected[z]).margin(1.0e-3F));
+    }
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Geometry cell tuple counts", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter][TupleCount]")
+{
+  // Cases: all short, all long, all matching outside Cell Data, then each input short.
+  const int testCase = GENERATE(0, 1, 2, 3, 4, 5);
+  CAPTURE(testCase);
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "TupleGeometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+
+  ComputeKernelAvgMisorientationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"TupleGeometry"})));
+  const usize commonCount = testCase == 0 ? 4 : (testCase == 1 ? 12 : 8);
+  const usize count0 = testCase == 3 ? 4 : commonCount;
+  auto* inputAM0Ptr = AttributeMatrix::Create(dataStructure, "Input0", {count0});
+  REQUIRE(inputAM0Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {count0}, {1}, inputAM0Ptr->getId()) != nullptr);
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input0", "FeatureIds"})));
+  const usize count1 = testCase == 4 ? 4 : commonCount;
+  auto* inputAM1Ptr = AttributeMatrix::Create(dataStructure, "Input1", {count1});
+  REQUIRE(inputAM1Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1Ptr->getId()) != nullptr);
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input1", "Phases"})));
+  const usize count2 = testCase == 5 ? 4 : commonCount;
+  auto* inputAM2Ptr = AttributeMatrix::Create(dataStructure, "Input2", {count2});
+  REQUIRE(inputAM2Ptr != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count2}, {4}, inputAM2Ptr->getId()) != nullptr);
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "Quats"})));
+  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  const bool useFeatureIds = GENERATE(true, false);
+  CAPTURE(useFeatureIds);
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_UseFeatureIds_Key, std::make_any<bool>(useFeatureIds));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(testCase == 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    {
+      const auto& errorRef = result.outputActions.errors()[0];
+      CHECK(errorRef.code == -67205);
+      const std::vector<DataPath> inputPaths = {DataPath({"Input0", "FeatureIds"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
+      const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;
+      CHECK(errorRef.message.find(inputPaths[inputIndex].toString()) != std::string::npos);
+      CHECK(errorRef.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
+      CHECK(errorRef.message.find("8 cells") != std::string::npos);
+      CHECK(errorRef.message.find("TupleGeometry") != std::string::npos);
     }
   }
 }

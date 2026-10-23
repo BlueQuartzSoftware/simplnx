@@ -50,6 +50,8 @@ When *Process Data Slice-By-Slice* is enabled, the *Slice-By-Slice Plane* parame
 
 - **Good Voxels Mask** -- a boolean array marking cells as *good* or *bad*, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to EBSD confidence index, image quality, or a similar scalar.
 
+**Mask Array** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

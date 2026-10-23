@@ -6,6 +6,7 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -1132,4 +1133,117 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Class 4 - 
 
   VerifyAgainstSnapshot(dataStructure, before, {});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry cell tuple counts", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][TupleCount]")
+{
+  // Cases 0-5 cover short, long, and matching inputs. Case 6 keeps matching
+  // inputs in separate matrices to check the repair boundary.
+  const int testCase = GENERATE(0, 1, 2, 3, 4, 5, 6);
+  CAPTURE(testCase);
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "TupleGeometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+
+  NeighborOrientationCorrelationFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"TupleGeometry"})));
+  const usize commonCount = testCase == 0 ? 4 : (testCase == 1 ? 12 : 8);
+  const usize count0 = testCase == 3 ? 4 : commonCount;
+  auto* inputAM0Ptr = AttributeMatrix::Create(dataStructure, "Input0", {count0});
+  REQUIRE(inputAM0Ptr != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Confidence", {count0}, {1}, inputAM0Ptr->getId()) != nullptr);
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CorrelationArrayPath_Key, std::make_any<DataPath>(DataPath({"Input0", "Confidence"})));
+  const usize count1 = testCase == 4 ? 4 : commonCount;
+  const std::string phasesParentName = testCase == 2 ? "Input0" : "Input1";
+  auto* inputAM1Ptr = testCase == 2 ? inputAM0Ptr : AttributeMatrix::Create(dataStructure, phasesParentName, {count1});
+  REQUIRE(inputAM1Ptr != nullptr);
+  REQUIRE(DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {count1}, {1}, inputAM1Ptr->getId()) != nullptr);
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({phasesParentName, "Phases"})));
+  const usize count2 = testCase == 5 ? 4 : commonCount;
+  const std::string quatsParentName = testCase == 2 ? "Input0" : "Input2";
+  auto* inputAM2Ptr = testCase == 2 ? inputAM0Ptr : AttributeMatrix::Create(dataStructure, quatsParentName, {count2});
+  REQUIRE(inputAM2Ptr != nullptr);
+  REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count2}, {4}, inputAM2Ptr->getId()) != nullptr);
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({quatsParentName, "Quats"})));
+  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(5));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(testCase == 2 || testCase == 6)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Input0", "Confidence"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"CrystalStructures"})));
+    auto& confidence = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input0", "Confidence"}));
+    auto& phases = dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key));
+    auto& quats = dataStructure.getDataRefAs<Float32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key));
+    auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(DataPath({"CrystalStructures"}));
+    confidence.fill(0.9F);
+    phases.fill(1);
+    quats.fill(0.0F);
+    crystalStructures.fill(ebsdlib::CrystalStructure::Cubic_High);
+    for(usize cell = 0; cell < 8; cell++)
+    {
+      quats[cell * 4 + 3] = 1.0F;
+    }
+    // At corner 0, neighbors 1, 2, and 4 form one identical phase-1 group.
+    // All similarity counts tie, so the final +Z neighbor (4) supplies the repair.
+    confidence[0] = 0.01F;
+    phases[0] = 0;
+    quats[2] = 1.0F;
+    quats[3] = 0.0F;
+
+    auto* ignoredPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ignored", {8}, {1}, inputAM0Ptr->getId());
+    REQUIRE(ignoredPtr != nullptr);
+    for(usize cell = 0; cell < 8; cell++)
+    {
+      (*ignoredPtr)[cell] = static_cast<int32>(100 + cell);
+    }
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({"Input0", "Ignored"})}));
+
+    const auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    for(usize cell = 0; cell < 8; cell++)
+    {
+      CAPTURE(cell);
+      const bool externalBadCell = testCase == 6 && cell == 0;
+      CHECK(confidence[cell] == 0.9F);
+      CHECK(phases[cell] == (externalBadCell ? 0 : 1));
+      CHECK(quats[cell * 4] == 0.0F);
+      CHECK(quats[cell * 4 + 1] == 0.0F);
+      CHECK(quats[cell * 4 + 2] == (externalBadCell ? 1.0F : 0.0F));
+      CHECK(quats[cell * 4 + 3] == (externalBadCell ? 0.0F : 1.0F));
+      CHECK((*ignoredPtr)[cell] == static_cast<int32>(100 + cell));
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& errorRef = result.outputActions.errors()[0];
+    const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Confidence"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
+    if(testCase >= 3)
+    {
+      CHECK(errorRef.code == -580093);
+      CHECK(errorRef.message.find(fmt::format("DataPath: {}    | Tuple Count: 4", inputPaths[static_cast<usize>(testCase - 3)].toString())) != std::string::npos);
+    }
+    else
+    {
+      CHECK(errorRef.code == -580098);
+      CHECK(errorRef.message.find(inputPaths[0].toString()) != std::string::npos);
+      CHECK(errorRef.message.find(testCase == 1 ? "12 tuples" : "4 tuples") != std::string::npos);
+      CHECK(errorRef.message.find("8 cells") != std::string::npos);
+      CHECK(errorRef.message.find("TupleGeometry") != std::string::npos);
+    }
+  }
 }

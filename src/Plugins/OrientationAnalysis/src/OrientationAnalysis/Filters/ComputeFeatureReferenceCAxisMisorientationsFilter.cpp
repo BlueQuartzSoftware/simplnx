@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -96,6 +97,7 @@ IFilter::UniquePointer ComputeFeatureReferenceCAxisMisorientationsFilter::clone(
 IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -112,6 +114,11 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
   if(!tupleValidityCheck)
   {
     return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+  }
+
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -9805); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   ShapeType tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();

@@ -16,6 +16,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
@@ -249,6 +250,12 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   auto pUnifiedBoundsPathValue = filterArgs.value<DataPath>(k_UnifiedBoundsPath_Key);
 
   auto pCreateNewAMValue = filterArgs.value<bool>(k_CreateNewAM_Key);
+
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pInputArrayPathValue}, -59204);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   FloatVec3 imageGeomSpacing = dataStructure.getDataAs<ImageGeom>(pGeometryPathValue)->getSpacing();
 

@@ -87,6 +87,8 @@ To illustrate why this is think about an image geometry with the dimensions of `
 
 - **Feature Ids** -- a per-**Cell** integer label array produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

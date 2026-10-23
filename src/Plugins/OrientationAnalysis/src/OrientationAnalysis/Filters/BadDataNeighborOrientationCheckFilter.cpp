@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -97,6 +98,7 @@ IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -119,6 +121,11 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   if(!tupleValidityCheck)
   {
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
+
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pMaskArrayPathValue}, -6810); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   resultOutputActions.value().modifiedActions.emplace_back(

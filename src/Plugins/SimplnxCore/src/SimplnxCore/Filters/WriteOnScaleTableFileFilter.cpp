@@ -2,7 +2,10 @@
 
 #include "SimplnxCore/Filters/Algorithms/WriteOnScaleTableFile.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 // This header declares DataContainerSelectionFilterParameterConverter.
@@ -12,10 +15,18 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <fmt/format.h>
+
+#include <atomic>
 #include <filesystem>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -97,11 +108,20 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   const auto geometryPath = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
   const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>(geometryPath);
   const auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(featureIdsPath);
-  if(featureIds.getNumberOfTuples() != geometry.getNumberOfCells())
+  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
+  // Keep the local type check until the parameter validates supported array kinds.
+  // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
+  const auto* featureIdsPtr = dataStructure.getDataAs<IDataArray>(featureIdsPath);
+  if(featureIdsPtr == nullptr)
   {
-    return MakePreflightErrorResult(-12024, fmt::format("The array '{}' has {} tuples, but the grid geometry '{}' has {} cells.", featureIdsPath.toString(), featureIds.getNumberOfTuples(),
-                                                        geometryPath.toString(), geometry.getNumberOfCells()));
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featureIdsPath);
+    return MakePreflightErrorResult(-12042, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar integer DataArray is required. Select a scalar integer DataArray.",
+                                                        featureIdsPath.toString(), selectedObject.getTypeName()));
+  }
+  auto cellTupleResult = ValidateCellTupleCount(geometry, geometryPath, featureIdsPtr->getNumberOfTuples(), featureIdsPath, -12024);
+  if(cellTupleResult.invalid())
+  {
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);

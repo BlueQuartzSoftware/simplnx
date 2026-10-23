@@ -2,7 +2,9 @@
 
 #include "SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -15,12 +17,21 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/format.h>
+
+#include <any>
+#include <atomic>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace nx::core
 {
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -252;
-constexpr int32 k_FeatureIdsTupleCountMismatch = -55571;
+constexpr int32 k_FeatureIdsTupleCountMismatch = -59571;
 
 } // namespace
 
@@ -114,13 +125,21 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
   featureIdsPath = MapToGeometryCellDataPath(cellDataPath, featureIdsPath);
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  if(featureIds.getNumberOfTuples() != imageGeom.getNumberOfCells())
+  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
+  // Keep the local type checks until the parameter validates supported array kinds.
+  // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+  if(featureIdsPtr == nullptr)
   {
-    return MakePreflightErrorResult(k_FeatureIdsTupleCountMismatch,
-                                    fmt::format("FeatureIds array '{}' contains {} tuples, but Image Geometry '{}' contains {} cells. Select a FeatureIds array that matches the Image Geometry.",
-                                                featureIdsPath.toString(), featureIds.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featureIdsPath);
+    return MakePreflightErrorResult(-59574, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+                                                        featureIdsPath.toString(), selectedObject.getTypeName()));
+  }
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto cellTupleResult = ValidateCellTupleCount(imageGeom, imageGeomPath, featureIdsPtr->getNumberOfTuples(), featureIdsPath, k_FeatureIdsTupleCountMismatch);
+  if(cellTupleResult.invalid())
+  {
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeomPath, ignoredDataArrayPaths, -55573, "Cell Arrays to Ignore");
@@ -152,6 +171,19 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   if(!tupleValidityCheck)
   {
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
+
+  if(dataStructure.getDataAs<Int32Array>(numNeighborsPath) == nullptr)
+  {
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(numNeighborsPath);
+    return MakePreflightErrorResult(-59575, fmt::format("The selected Number of Neighbors object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+                                                        numNeighborsPath.toString(), selectedObject.getTypeName()));
+  }
+  if(applyToSinglePhase && dataStructure.getDataAs<Int32Array>(featurePhasesPath) == nullptr)
+  {
+    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featurePhasesPath);
+    return MakePreflightErrorResult(-59576, fmt::format("The selected Feature Phases object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
+                                                        featurePhasesPath.toString(), selectedObject.getTypeName()));
   }
 
   // Report arrays that the filter modifies in place.

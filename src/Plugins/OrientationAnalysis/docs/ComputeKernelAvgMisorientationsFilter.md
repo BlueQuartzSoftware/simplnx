@@ -65,6 +65,8 @@ In 3D, the Z Radius works the same way, extending into adjacent slices above and
 
 For related per-feature misorientation metrics, see the **Compute Feature Reference Misorientations** and **Compute Misorientation** filters.
 
+**Cell Feature Ids**, **Cell Phases** and **Cell Quaternions** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
+
 ## Algorithm
 
 For each valid cell in the Image Geometry, the algorithm examines all cells within the user-specified kernel radius in X, Y, and Z. In per-grain mode, only neighbors with the same feature ID as the center cell are included. In per-voxel mode, any neighbor with a positive feature ID and the same phase as the center cell is included. The crystallographic misorientation angle between the center cell's quaternion and each qualifying neighbor's quaternion is computed using the appropriate LaueOps symmetry operators. The average of these misorientation angles is stored as the KAM value for the center cell.

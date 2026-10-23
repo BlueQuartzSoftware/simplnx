@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <memory>
@@ -113,6 +114,12 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   auto sharedSurfaceAreaName = filterArgs.value<std::string>(k_SharedSurfaceAreaName_Key);
   auto surfaceFeaturesName = filterArgs.value<std::string>(k_SurfaceFeaturesName_Key);
   auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesPath_Key);
+
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, imageGeomPath, {featureIdsPath}, -24501);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);

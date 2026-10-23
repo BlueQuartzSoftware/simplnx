@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -85,6 +86,14 @@ IFilter::UniquePointer WriteAvizoUniformCoordinateFilter::clone() const
 IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -5835); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
+
   return {};
 }
 

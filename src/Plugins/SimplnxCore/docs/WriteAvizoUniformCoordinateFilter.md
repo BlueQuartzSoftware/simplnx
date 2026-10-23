@@ -43,6 +43,8 @@ The *Write Binary File* parameter selects the on-disk encoding: *false* (the def
 - **Image Geometry** -- the geometry whose dimensions and bounding box are written.
 - **Cell Feature Ids** -- an Int32 per-cell label array, produced by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
+**Cell Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

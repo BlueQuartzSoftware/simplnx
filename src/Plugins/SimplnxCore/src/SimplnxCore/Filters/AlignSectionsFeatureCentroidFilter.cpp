@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -27,7 +28,6 @@ constexpr nx::core::int32 k_InputRepresentationTypeError = -68001;
 constexpr nx::core::int32 k_OutputRepresentationTypeError = -68002;
 constexpr nx::core::int32 k_InputComponentDimensionError = -68003;
 constexpr nx::core::int32 k_InputComponentCountError = -68004;
-constexpr nx::core::int32 k_InconsistentTupleCount = -68063;
 constexpr nx::core::int32 k_OutOfRangeReferenceSliceValue = -68064;
 
 } // namespace
@@ -143,21 +143,17 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   auto pStoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
 
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pGoodVoxelsArrayPath}, -68071);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
+
   nx::core::Result<OutputActions> resultOutputActions;
 
   if(pReferenceSliceValue < 0)
   {
     return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
-  }
-
-  std::vector<DataPath> dataPaths;
-  dataPaths.push_back(pGoodVoxelsArrayPath);
-
-  // Ensure all DataArrays have the same number of Tuples
-  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!tupleValidityCheck)
-  {
-    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   // Handle Array Creation

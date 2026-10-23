@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -91,6 +92,12 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+
+  if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, {goodVoxelsArrayPath}, -45463); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 

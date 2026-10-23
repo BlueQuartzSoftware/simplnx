@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -172,6 +173,11 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
   auto initRangeVec = filterArgs.value<std::vector<float64>>(k_InitRange_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
+  if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, cellArrayPaths, -3557); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
+
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);
   uint64 zMin = minPoint.at(2);
@@ -218,21 +224,9 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     errors.push_back(Error{-3556, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
-  SizeVec3 imageDims = imageGeom.getDimensions();
-
-  std::vector<usize> reversedImageDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
-
   for(const DataPath& path : cellArrayPaths)
   {
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    ShapeType tupleShape = dataArray.getIDataStoreRef().getTupleShape();
-
-    if(tupleShape.size() != reversedImageDims.size())
-    {
-      errors.push_back(Error{-5560, fmt::format("DataArray at '{}' does not match dimensions of ImageGeometry at '{}'", path.toString(), imageGeomPath.toString())});
-      continue;
-    }
-
     std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray.getName(), initType, initValue, initRange); // NO BOOL
     if(maybeError.has_value())
     {

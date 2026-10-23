@@ -1292,6 +1292,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
   // A one-dimensional X extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 5});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1304,11 +1306,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Y extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 5, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1321,11 +1329,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Z extent is invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 5}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({5, 1, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1338,11 +1352,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A single-cell geometry is also invalid for this filter.
   imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
   {
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
@@ -1355,6 +1375,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // The optional output supports manual inspection of the feature-size arrays.
@@ -1468,5 +1492,59 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility
       CHECK(args.value<std::string>(ComputeFeatureSizesFilter::k_NumElementsName_Key) == "TestName");
       CHECK(args.value<std::string>(ComputeFeatureSizesFilter::k_VolumesName_Key) == "TestName");
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: Geometry cell tuple count", "[SimplnxCore][ComputeFeatureSizes][TupleCount]")
+{
+  using FilterType = ComputeFeatureSizesFilter;
+  DataStructure dataStructure;
+  const bool useRectGrid = GENERATE(false, true);
+  CAPTURE(useRectGrid);
+  IGridGeometry* gridGeomPtr = nullptr;
+  if(useRectGrid)
+  {
+    gridGeomPtr = RectGridGeom::Create(dataStructure, "Grid");
+  }
+  else
+  {
+    gridGeomPtr = ImageGeom::Create(dataStructure, "Grid");
+  }
+  REQUIRE(gridGeomPtr != nullptr);
+  gridGeomPtr->setDimensions({4, 3, 1});
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 3, 4}, gridGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  gridGeomPtr->setCellData(*cellAMPtr);
+
+  // Equal counts remain valid in another Attribute Matrix with a different tuple shape.
+  const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
+  CAPTURE(tuples);
+  auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
+  REQUIRE(otherAMPtr != nullptr);
+  REQUIRE(DataArray<int32>::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{1}, 0), otherAMPtr->getId()) != nullptr);
+  const DataPath inputPath({"Other Data", "Values"});
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({"Grid"})));
+  args.insertOrAssign(FilterType::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(inputPath));
+  auto* featureAMPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, gridGeomPtr->getId());
+  REQUIRE(featureAMPtr != nullptr);
+  args.insertOrAssign(FilterType::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Grid", "Feature Data"})));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(tuples == 12)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& errorRef = result.outputActions.errors()[0];
+    REQUIRE(errorRef.code == -74771);
+    REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
+    REQUIRE(errorRef.message.find("'Grid' has 12 cells") != std::string::npos);
   }
 }

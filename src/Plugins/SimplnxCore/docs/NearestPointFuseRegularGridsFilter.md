@@ -27,6 +27,8 @@ The *Sampling* geometry is left unchanged. The *Reference* geometry keeps its ow
 
 - **Reference Image Geometry** and **Sampling Image Geometry** -- two **Image Geometries** (each with a **Cell Attribute Matrix**), typically created by separate import or resampling steps.
 
+**Sampling Cell Attribute Matrix** must have one tuple per cell of **Sampling Image Geometry**. **Reference Cell Attribute Matrix** must have one tuple per cell of **Reference Image Geometry**.
+
 ## Algorithm
 
 The filter maps each reference-grid coordinate to the containing sampling-grid **Cell** without interpolation. For in-memory arrays, the direct implementation preserves the original cell-by-cell traversal. When either a sampled numeric or Boolean **Data Array** or its newly created reference counterpart is out-of-core, the scanline implementation is selected. It calculates the source index for each X, Y, and Z coordinate once, reads only the required sampling row into a bounded buffer, and writes each completed reference row in one bulk operation. Its working memory is proportional to the largest row and the three grid axes, rather than the number of **Cells**. Only numeric and Boolean **Data Arrays** are copied; strings and neighbor lists are skipped.

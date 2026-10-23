@@ -40,6 +40,8 @@ Chaining an erode and a dilate pass (with equal iteration counts) performs the t
 
 - **Mask Array** -- a boolean cell-level array, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md) applied to an EBSD confidence index, image quality, or similar scalar.
 
+**Mask Array Path** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
+
 ## Algorithm
 
 This filter performs iterative morphological erosion or dilation directly on a boolean mask array within an ImageGeom grid. Unlike the Erode/Dilate Bad Data filter, this filter operates only on the mask and does not propagate changes to sibling data arrays.

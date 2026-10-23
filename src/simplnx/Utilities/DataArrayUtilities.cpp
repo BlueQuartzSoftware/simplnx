@@ -155,6 +155,20 @@ Result<> ValidateCellTupleCount(const IGridGeometry& geometry, const DataPath& g
   return {};
 }
 
+Result<> ValidateCellTupleCount(const DataStructure& dataStructure, const DataPath& geometryPath, const std::vector<DataPath>& dataPaths, int32 errorCode)
+{
+  const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>(geometryPath);
+  for(const auto& dataPath : dataPaths)
+  {
+    const auto& array = dataStructure.getDataRefAs<IArray>(dataPath);
+    if(auto result = ValidateCellTupleCount(geometry, geometryPath, array.getNumberOfTuples(), dataPath, errorCode); result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
 bool IsChildOfAttributeMatrix(const DataStructure& dataStructure, const DataPath& arrayPath, const AttributeMatrix& attributeMatrix)
 {
   if(arrayPath.getLength() < 2)

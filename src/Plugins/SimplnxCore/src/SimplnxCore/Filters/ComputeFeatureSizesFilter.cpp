@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
@@ -100,6 +101,12 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   auto volumesName = filterArgs.value<std::string>(k_VolumesName_Key);
   auto equivalentDiametersName = filterArgs.value<std::string>(k_EquivalentDiametersName_Key);
   auto numElementsName = filterArgs.value<std::string>(k_NumElementsName_Key);
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, geometryPath, {featureIdsPath}, -74771);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
+
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);

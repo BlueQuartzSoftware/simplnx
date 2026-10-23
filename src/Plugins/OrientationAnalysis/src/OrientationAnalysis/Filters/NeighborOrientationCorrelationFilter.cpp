@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -172,6 +173,11 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   {
     return {
         MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+  }
+
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, pImageGeomPathValue, {pConfidenceIndexArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -580098); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   // Inform users that the following arrays are going to be modified in place

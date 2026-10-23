@@ -65,6 +65,8 @@ In previous versions a file would have been produced instead. If you wish to rec
 - **Crystal Structures** -- ensemble-level array read from EBSD data or created by [Create Ensemble Info](CreateEnsembleInfoFilter.md).
 - **Mask** (optional) -- a boolean array marking valid cells, typically produced by a threshold operation such as [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md).
 
+**Cell Quaternions** and **Cell Phases** must each have one tuple per cell of the selected geometry. When **Use Mask Array** is enabled, **Cell Mask Array** must also have one tuple per cell. They can be in any Attribute Matrix.
+
 ## Algorithm
 
 ### In-Core Path

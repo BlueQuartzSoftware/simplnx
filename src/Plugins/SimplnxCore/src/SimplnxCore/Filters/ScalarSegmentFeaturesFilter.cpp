@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -112,26 +113,19 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
+  std::vector<DataPath> cellArrayPaths = {inputDataPath};
+  if(filterArgs.value<bool>(k_UseMask_Key))
+  {
+    cellArrayPaths.emplace_back(filterArgs.value<DataPath>(k_MaskArrayPath_Key));
+  }
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+  }
+
   const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
   auto gridDims = gridGeometry.getDimensions();
   const std::vector<usize> cellTupleDims = {gridDims[2], gridDims[1], gridDims[0]};
-  std::vector<DataPath> dataPaths;
-
-  dataPaths.push_back(inputDataPath);
-
-  bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
-  if(useGoodVoxels)
-  {
-    DataPath goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-    dataPaths.push_back(goodVoxelsPath);
-  }
-
-  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
-  if(!tupleValidityCheck)
-  {
-    return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
-  }
-
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, "", "0");
 
   auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{1});

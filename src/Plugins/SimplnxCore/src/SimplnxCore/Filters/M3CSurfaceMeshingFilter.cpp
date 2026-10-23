@@ -14,6 +14,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -141,6 +142,18 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   auto pNodeTypesName = filterArgs.value<std::string>(k_NodeTypesArrayName_Key);
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
+  auto pGridGeometryPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
+
+  std::vector<DataPath> cellArrayPaths = {pFeatureIdsArrayPath};
+  for(const auto& path : pSelectedDataArrayPaths)
+  {
+    cellArrayPaths.emplace_back(path);
+  }
+
+  if(auto result = ValidateCellTupleCount(dataStructure, pGridGeometryPath, cellArrayPaths, -90201); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  }
 
   const DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
@@ -171,15 +184,9 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
 
   // For each Cell/Feature array to transfer, create a matching face array with the component shape
   // doubled (a value for each of the two features on either side of every triangle face).
-  const usize featureIdsTupleCount = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPath).getNumberOfTuples();
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
     const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
-    if(iDataArray.getNumberOfTuples() != featureIdsTupleCount)
-    {
-      return {MakeErrorResult<OutputActions>(-90200, fmt::format("Cannot transfer Cell array '{}': its tuple count ({}) does not match the FeatureIds tuple count ({}).", selectedDataPath.toString(),
-                                                                 iDataArray.getNumberOfTuples(), featureIdsTupleCount))};
-    }
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
     auto createArrayAction =

@@ -1,7 +1,14 @@
 #include "PartitionGeometryFilter.hpp"
 
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -16,7 +23,18 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+
+#include <fmt/format.h>
+
+#include <any>
+#include <atomic>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
 
@@ -34,6 +52,25 @@ const ChoicesParameter::ValueType k_BasicModeIndex = 0;
 const ChoicesParameter::ValueType k_AdvancedModeIndex = 1;
 const ChoicesParameter::ValueType k_BoundingBoxModeIndex = 2;
 const ChoicesParameter::ValueType k_ExistingSchemeModeIndex = 3;
+
+/**
+ * @brief Checks the selected tuple count against vertex metadata without reading coordinate values.
+ * @param geometry Supplies the vertex count.
+ * @param geometryPath Selected geometry path, including linked selections.
+ * @param tupleCount Number of tuples in the selected data.
+ * @param dataPath Selected data path, including linked selections.
+ * @return Error -3043 if the counts differ; otherwise, a valid result.
+ */
+Result<> validateVertexTupleCount(const INodeGeometry0D& geometry, const DataPath& geometryPath, usize tupleCount, const DataPath& dataPath)
+{
+  const usize vertexCount = geometry.getVerticesRef().getNumberOfTuples();
+  if(tupleCount != vertexCount)
+  {
+    return MakeErrorResult(-3043, fmt::format("The selected data '{}' has {} tuples, but the selected node geometry '{}' has {} vertices. Select data with one tuple per geometry vertex.",
+                                              dataPath.toString(), tupleCount, geometryPath.toString(), vertexCount));
+  }
+  return {};
+}
 
 /**
  * @brief Generates the display text that describes the input geometry,
@@ -353,6 +390,15 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
+  if(iGeom.getGeomType() == IGeometry::Type::Image && pPartitioningModeValue == k_ExistingSchemeModeIndex)
+  {
+    const auto& geometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryToPartitionValue);
+    auto result = ValidateCellTupleCount(geometry, pInputGeometryToPartitionValue, attrMatrix.getNumberOfTuples(), pInputGeomCellAMPathValue, -3045);
+    if(result.invalid())
+    {
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
+    }
+  }
   std::string inputGeometryInformation;
   Result<PartitionGeometry::PSGeomInfo> psInfo;
   switch(iGeom.getGeomType())
@@ -370,10 +416,10 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   }
   case IGeometry::Type::RectGrid: {
     const auto& geometry = dataStructure.getDataRefAs<RectGridGeom>({pInputGeometryToPartitionValue});
-    if(attrMatrix.getNumberOfTuples() != geometry.getNumberOfCells())
+    auto cellTupleResult = ValidateCellTupleCount(geometry, pInputGeometryToPartitionValue, attrMatrix.getNumberOfTuples(), pInputGeomCellAMPathValue, -3010);
+    if(cellTupleResult.invalid())
     {
-      return {MakeErrorResult<OutputActions>(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(),
-                                                                attrMatrix.getName(), attrMatrix.getNumberOfTuples(), geometry.getName(), geometry.getNumberOfCells()))};
+      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
@@ -489,6 +535,20 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     return {MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
   }
 
+  if(pUseVertexMask)
+  {
+    const auto maskPath = filterArgs.value<DataPath>(k_VertexMaskPath_Key);
+    // ArraySelectionParameter also accepts StringArray and NeighborList for Boolean selections.
+    // Keep the local type check until the parameter validates supported array kinds.
+    // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
+    if(dataStructure.getDataAs<BoolArray>(maskPath) == nullptr)
+    {
+      const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(maskPath);
+      return MakePreflightErrorResult(-3044, fmt::format("The selected Vertex Mask object '{}' has type '{}', but a scalar Boolean DataArray is required. Select a scalar Boolean DataArray.",
+                                                         maskPath.toString(), selectedObject.getTypeName()));
+    }
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -497,12 +557,11 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
                                                                                        const DataPath& attrMatrixPath) const
 {
   const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
-  const IGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);
-  if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
+  auto vertexTupleResult = validateVertexTupleCount(geometry, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
+  if(vertexTupleResult.invalid())
   {
-    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3014, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).",
-                                                                              humanName(), attrMatrix.getName(), attrMatrix.getNumberOfTuples(), geometry.getName(), geometry.getNumberOfVertices()))};
+    return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(vertexTupleResult), {})};
   }
   Result<> dimensionalityResult = DataCheckDimensionality(geometry);
   if(dimensionalityResult.invalid())
@@ -555,15 +614,16 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
 
   auto pInputGeomCellAMPathValue = filterArgs.value<DataPath>(k_InputGeometryCellAttributeMatrixPath_Key);
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>({pInputGeomCellAMPathValue});
+  const auto geometryToPartitionPath = filterArgs.value<DataPath>(k_InputGeometryToPartition_Key);
 
   switch(partitioningMode)
   {
   case PartitioningMode::Basic:
-    return dataCheckBasicMode<GeomType>(numOfPartitionsPerAxis, geometryToPartition, attrMatrix);
+    return dataCheckBasicMode<GeomType>(numOfPartitionsPerAxis, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::Advanced:
-    return dataCheckAdvancedMode<GeomType>(numOfPartitionsPerAxis, pCellLengthValue, geometryToPartition, attrMatrix);
+    return dataCheckAdvancedMode<GeomType>(numOfPartitionsPerAxis, pCellLengthValue, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::BoundingBox:
-    return dataCheckBoundingBoxMode<GeomType>(numOfPartitionsPerAxis, pMinGridCoordValue, pMaxGridCoordValue, geometryToPartition, attrMatrix);
+    return dataCheckBoundingBoxMode<GeomType>(numOfPartitionsPerAxis, pMinGridCoordValue, pMaxGridCoordValue, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::ExistingPartitionGrid:
     return DataCheckExistingGeometryMode();
   }
@@ -573,7 +633,8 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const
+Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
+                                                     const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
   if(result.invalid())
@@ -581,7 +642,7 @@ Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartit
     return result;
   }
 
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
+  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -593,7 +654,7 @@ Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartit
 // -----------------------------------------------------------------------------
 template <typename GeomType>
 Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& lengthPerPartition, const GeomType& geometryToPartition,
-                                                        const AttributeMatrix& attrMatrix) const
+                                                        const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
   if(result.invalid())
@@ -614,7 +675,7 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
     return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value ({}) cannot be negative.", humanName(), lengthPerPartition.getZ()));
   }
 
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
+  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -626,7 +687,7 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
 // -----------------------------------------------------------------------------
 template <typename GeomType>
 Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
-                                                           const AttributeMatrix& attrMatrix) const
+                                                           const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
   if(result.invalid())
@@ -649,7 +710,7 @@ Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOf
     return MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value ({}) is larger than the upper right coordinate Z value ({}).", humanName(), llCoord.getZ(), urCoord.getZ()));
   }
 
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
+  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -667,27 +728,17 @@ Result<> PartitionGeometryFilter::DataCheckExistingGeometryMode()
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const
+Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+                                                              const DataPath& attrMatrixPath) const
 {
   if constexpr(std::is_same_v<GeomType, ImageGeom> || std::is_same_v<GeomType, RectGridGeom>)
   {
-    if(attrMatrix.getNumberOfTuples() != geometryToPartition.getNumberOfCells())
-    {
-      return MakeErrorResult(-3009, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(), attrMatrix.getName(),
-                                                attrMatrix.getNumberOfTuples(), geometryToPartition.getName(), geometryToPartition.getNumberOfCells()));
-    }
+    return ValidateCellTupleCount(geometryToPartition, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath, -3009);
   }
   else
   {
-    const IGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
-    if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
-    {
-      return MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),
-                                                attrMatrix.getNumberOfTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()));
-    }
+    return validateVertexTupleCount(geometryToPartition, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
   }
-
-  return {};
 }
 
 // -----------------------------------------------------------------------------

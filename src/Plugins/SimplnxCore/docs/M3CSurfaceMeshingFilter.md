@@ -185,6 +185,8 @@ This implementation ports the slice-by-slice algorithm of the legacy DREAM.3D `M
 based on the algorithm of Wu & Sullivan, "Multiple material marching cubes algorithm," *International Journal for Numerical
 Methods in Engineering*, 58(2):189–207, 2003.  
 
+**Cell Feature Ids** and **Cell Attribute Arrays to Transfer** must each have one tuple per cell of the selected geometry. They can be in any Attribute Matrix.
+
 ## Comparison of Surface Meshing Filters
 
 DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi-material triangle surface mesh. All three produce the same output data model (a **Triangle Geometry** with **Face Labels** and **Node Types**), so they are interchangeable inputs to downstream mesh **Filters**; they differ in how the triangles are generated and therefore in mesh smoothness, triangle count, and performance.

@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -93,6 +94,12 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
 
   auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
   DataPath pCentroidsArrayPath = featureAttrMatrixPath.createChildPath(pCentroidsArrayName);
+
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12701);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+  }
 
   PreflightResult preflightResult;
 
