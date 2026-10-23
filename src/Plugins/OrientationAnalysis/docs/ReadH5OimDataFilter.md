@@ -35,6 +35,13 @@ the user should **CHECK** the option **ON** for "Perform Slice By Slice Transfor
 
 Each selected scan is appended in selection order along the **Image Geometry** Z direction. Phase values are clamped and Euler components are interleaved into their output array; scalar measurements, including X and Y positions, are copied at that scan's tuple offset. Pattern data uses the same tuple offset multiplied by its pattern component count. Output arrays are written in bounded bulk transfers, which supports out-of-core output storage.
 
+### X Position and Y Position
+
+The *X Position* and *Y Position* arrays hold the location where the microscope measured each pixel. The values are in microns and are copied from the file without change:
+
+- The *Origin* parameter does not change these values. They can differ from the cell positions of the **Image Geometry**.
+- These arrays contain no Z coordinate. Each slice keeps the X and Y values from its selected scan, which can differ between scans.
+
 ## Thresholding out Unindexed Scan Points
 
 The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) filter can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality. **Confidence Index** and **Image Quality** are per-pixel metrics that describe how reliable each individual measurement is.

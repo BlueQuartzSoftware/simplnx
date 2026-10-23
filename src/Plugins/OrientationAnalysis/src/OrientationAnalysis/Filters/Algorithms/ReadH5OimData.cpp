@@ -3,7 +3,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
+#include <EbsdLib/IO/TSL/AngConstants.h>
+
+#include <fmt/format.h>
+
+#include <array>
 #include <memory>
+#include <string>
+#include <utility>
 
 using namespace nx::core;
 
@@ -37,18 +44,6 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
   const auto* phiPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi));
   const auto* phi2Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi2));
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::EulerAngles));
-
-  const auto* imageQualPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ImageQuality));
-  auto& imageQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ImageQuality));
-
-  const auto* confIndexPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ConfidenceIndex));
-  auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ConfidenceIndex));
-
-  const auto* semSigPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::SEMSignal));
-  auto& semSignal = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::SEMSignal));
-
-  const auto* fitPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Fit));
-  auto& fit = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::Fit));
 
   // EbsdLib owns one resident scan. Use bounded destination pages to avoid
   // per-value disk writes and a second scan-sized allocation.
@@ -88,18 +83,26 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
     }
     return {};
   };
-  Result<> result = copyScalar(imageQuality, imageQualPtr);
-  if(result.invalid())
-    return result;
-  result = copyScalar(confidenceIndex, confIndexPtr);
-  if(result.invalid())
-    return result;
-  result = copyScalar(semSignal, semSigPtr);
-  if(result.invalid())
-    return result;
-  result = copyScalar(fit, fitPtr);
-  if(result.invalid())
-    return result;
+  const std::array<std::pair<std::string, const float32*>, 6> scalarChannels = {{
+      {ebsdlib::Ang::ImageQuality, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ImageQuality))},
+      {ebsdlib::Ang::ConfidenceIndex, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ConfidenceIndex))},
+      {ebsdlib::Ang::SEMSignal, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::SEMSignal))},
+      {ebsdlib::Ang::Fit, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Fit))},
+      {ebsdlib::Ang::XPosition, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::XPosition))},
+      {ebsdlib::Ang::YPosition, static_cast<const float32*>(m_Reader->getPointerByName(ebsdlib::Ang::YPosition))},
+  }};
+  for(const auto& [name, values] : scalarChannels)
+  {
+    if(values == nullptr)
+    {
+      return MakeErrorResult(
+          -34881, fmt::format("Could not read scalar channel '{}' for scan '{}' in file '{}'. Check that the scan contains this dataset.", name, m_Reader->getHDF5Path(), m_Reader->getFileName()));
+    }
+    auto& array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(name));
+    auto result = copyScalar(array, values);
+    if(result.invalid())
+      return result;
+  }
   if(m_InputValues->ReadPatternData)
   {
     const uint8* patternDataPtr = m_Reader->getPatternData();
