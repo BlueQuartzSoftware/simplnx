@@ -18,8 +18,8 @@
 |--------|---------------|
 | Algorithm Relationship | Port of `ErodeDilateMask` in DREAM.3D v6.5.171. SIMPLNX uses rolling slice buffers for the same synchronous face-neighbour operations. |
 | Oracle (confirmed) | Class 1 analytical masks are encoded in 8 test cases in `test/ErodeDilateMaskTest.cpp`. All pass in CI. |
-| Code paths enumerated | 18 of 26 exercised by the mapped test cases. All-directions-off, six I/O failure paths and external-store execution lack direct tests in this file. |
-| Tests today | 13 test cases: 8 analytical, 2 exemplar comparisons, 1 validation, 1 SIMPL conversion and 1 hidden data generator. |
+| Code paths enumerated | 19 of 27 exercised by the mapped test cases. All-directions-off, six I/O failure paths and external-store execution lack direct tests in this file. |
+| Tests today | 14 test cases: 8 analytical, 2 exemplar comparisons, 2 validation, 1 SIMPL conversion and 1 hidden data generator. |
 | Exemplar archive | `6_6_erode_dilate_test.tar.gz` supplies inputs and expected outputs for the two exemplar comparisons. It does not establish parity with DREAM.3D v6.5.171. |
 | Legacy comparison | Not run for the current algorithm. The recorded comparison with DREAM.3D v6.5.171 predates the change to rolling slice buffers. |
 | Bug flags | None. |
@@ -56,9 +56,9 @@ All defects in this table are fixed. The fixes will be in the DREAM3D-NX release
 
 ## Code path coverage
 
-18 of 26 paths exercised. The uncovered rows identify the remaining gaps.
+19 of 27 paths exercised. The uncovered rows identify the remaining gaps.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ErodeDilateMask.cpp` (247 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ErodeDilateMaskFilter.cpp` (164 lines), and `src/simplnx/Utilities/NeighborUtilities.hpp` (634 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ErodeDilateMask.cpp` (255 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ErodeDilateMaskFilter.cpp` (171 lines), and `src/simplnx/Utilities/NeighborUtilities.hpp` (634 lines).
 
 Test names below omit the common `SimplnxCore::ErodeDilateMaskFilter` prefix. The phases are setup, scan, I/O and preflight.
 
@@ -90,6 +90,7 @@ Test names below omit the common `SimplnxCore::ErodeDilateMaskFilter` prefix. Th
 | 24 | I/O | Propagate failure while flushing a single-slice image | *Not directly tested. Requires an injected store write failure.* |
 | 25 | I/O | Propagate failure while flushing the last multi-slice image slice | *Not directly tested. Requires an injected store write failure.* |
 | 26 | I/O | Read and write a mask held in an external store | *Not directly tested. No case in this file requires an external mask store.* |
+| 27 | Preflight | Reject a mask tuple count that differs from the selected geometry's cell count with `-14702` | `Geometry cell tuple count` — 0, 11 and 13 tuples for 12 cells |
 
 ## Test inventory
 
@@ -108,6 +109,7 @@ Test names below omit the common `SimplnxCore::ErodeDilateMaskFilter` prefix. Th
 | `SimplnxCore::ErodeDilateMaskFilter: Class 1 erode honours direction flags` | new-for-V&V | Checks all 27 hollow-cube cells in `All directions on` and `Z direction off`: 20 and 22 cells remain true. Covers `ErodeDilateMaskFilter-D2`. |
 | `SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations` | new-for-V&V | Checks invalid preflight and error `-14701` for 0 and -2. Covers `ErodeDilateMaskFilter-D1`. |
 | `SimplnxCore::ErodeDilateMaskFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check the converted UUID and all arguments; they do not execute the filter. |
+| `SimplnxCore::ErodeDilateMaskFilter: Geometry cell tuple count` | new-for-V&V | Checks preflight error `-14702` for 0, 11 and 13 mask tuples against 12 cells, with the array path and both counts in the message. Accepts 12 tuples in another Attribute Matrix with a different tuple shape. |
 
 ## Exemplar archive
 
