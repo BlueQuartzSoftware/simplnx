@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Minor changes to `ReplaceElementAttributesWithNeighborValues` in DREAM.3D v6.5.171. SIMPLNX retains the face-neighbor rules, preserves the comparison value's type, and transfers numeric tuples one Z slice at a time. |
 | Oracle (confirmed) | Classes 1 and 4 use four synthetic sections in `test/ReplaceElementAttributesWithNeighborValuesTest.cpp`. All pass in CI. |
-| Code paths enumerated | 20 of 30 paths exercised. Gaps include cancellation, I/O failures, nonnumeric siblings, other comparison types, and a loop with no passing values. |
-| Tests today | 4 test cases: synthetic replacement, archive regression, SIMPL conversion, and a hidden data generator. The synthetic case has four sections. |
+| Code paths enumerated | 21 of 31 paths exercised. Gaps include cancellation, I/O failures, nonnumeric siblings, other comparison types, and a loop with no passing values. |
+| Tests today | 5 test cases: synthetic replacement, archive regression, SIMPL conversion, geometry cell tuple counts, and a hidden data generator. The synthetic case has four sections. |
 | Exemplar archive | `6_6_replace_element_attributes_with_neighbor.tar.gz` is used by the archive regression. The test loads the same file as input and reference; the independent oracle is in the synthetic test. |
 | Legacy comparison | Not run on the current algorithm. The comparison dated 2026-07-21 predates the change to slice transfers. |
 | Bug flags | `ReplaceElementAttributesWithNeighborValuesFilter-D3` |
@@ -54,9 +54,9 @@ All defects in this table are fixed. DREAM3D-NX v7.4.2 contains both fixes.
 
 ## Code path coverage
 
-20 of 30 paths exercised. Each uncovered path has a reason below.
+21 of 31 paths exercised. Each uncovered path has a reason below.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp` (368 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.cpp` (140 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp` (368 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.cpp` (147 lines).
 
 Rows that name a section refer to `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement`. Each pass selects neighbors from a rolling comparison window and transfers each completed Z slice.
 
@@ -92,10 +92,11 @@ Rows that name a section refer to `SimplnxCore::ReplaceElementAttributesWithNeig
 | 28 | Dispatch | Compare boolean, integer, or float64 values instead of float32 | *Not directly tested. All executing test cases select a float32 comparison array.* |
 | 29 | Loop | Repeat without progress when every value fails the threshold | *Not directly tested. An uncancelled fixture would not terminate; see `ReplaceElementAttributesWithNeighborValuesFilter-D3`.* |
 | 30 | Preflight | Accept the comparison array and declare its parent contents modified | `Synthetic neighbor replacement` — preflight succeeds in all four sections |
+| 31 | Preflight | Reject a comparison array whose tuple count differs from the selected geometry's cell count with error `-15001` | `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geometry cell tuple count` — 0, 11, and 13 tuples for 12 cells |
 
 ## Test inventory
 
-The test cases are in `src/Plugins/SimplnxCore/test/ReplaceElementAttributesWithNeighborValuesTest.cpp`. The three ordinary cases pass in CI. The generator is hidden.
+The test cases are in `src/Plugins/SimplnxCore/test/ReplaceElementAttributesWithNeighborValuesTest.cpp`. The archive regression, synthetic replacement, and SIMPL conversion cases pass in CI. The generator is hidden.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -103,6 +104,7 @@ The test cases are in `src/Plugins/SimplnxCore/test/ReplaceElementAttributesWith
 | `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter` | kept | Loads the same archive file as input and reference, runs LessThan at 0.1 with loop enabled, compares cell arrays, and checks tuple dimensions. This checks stability on the stored data. |
 | `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement` | new-for-V&V | Four sections check LessThan, GreaterThan, one pass, and a bad center surrounded by bad neighbors. Checks all 27 values against the threshold in the loop sections, exact replacement values, and a changed center marker. |
 | `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check identity, comments, threshold, comparison, loop, and both input paths. Does not execute replacement. |
+| `SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geometry cell tuple count` | new-for-V&V | Checks a 12-cell geometry with comparison arrays of 0, 11, 12, and 13 tuples in another AttributeMatrix. Accepts 12 tuples; otherwise requires one error with code `-15001` and a message that names the array path, tuple count, geometry, and cell count. |
 
 ## Exemplar archive
 
