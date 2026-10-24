@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Minor changes to `FindKernelAvgMisorientations` in DREAM.3D v6.5.171. SIMPLNX corrects the X kernel bound, improves precision and adds an optional same-phase mode across feature boundaries. |
 | Oracle (confirmed) | Class 1 analytical averages and Class 4 invariants are encoded in `test/ComputeKernelAvgMisorientationsTest.cpp`. All pass in CI. |
-| Code paths enumerated | 28 of 45 exercised. The table identifies gaps in fallback modes, defensive guards, cancellation and transfer failures. |
-| Tests today | 17 test cases cover analytical averages, invariants, input bounds, memory planning and SIMPL conversion. All pass in CI. |
+| Code paths enumerated | 29 of 46 exercised. The table identifies gaps in fallback modes, defensive guards, cancellation and transfer failures. |
+| Tests today | 18 test cases cover analytical averages, invariants, input bounds, geometry cell tuple counts, memory planning and SIMPL conversion. All pass in CI. |
 | Exemplar archive | Current tests construct their inputs and expected values in C++. The former KAM exemplar in `6_6_stats_test_v2.tar.gz` is retired for this filter. |
 | Legacy comparison | Not run on the current algorithm. The DREAM.3D v6.5.171 comparison dated 2026-09-17 predates the current implementation. |
 | Bug flags | None. |
@@ -56,9 +56,9 @@ All defects in this table are fixed. The fixes will be in the DREAM3D-NX release
 
 ## Code path coverage
 
-28 of 45 paths exercised. Each uncovered row states the missing fixture or the guard that prevents direct execution.
+29 of 46 paths exercised. Each uncovered row states the missing fixture or the guard that prevents direct execution.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientations.cpp` (92 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsDirect.cpp` (251 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsScanline.cpp` (964 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeKernelAvgMisorientationsFilter.cpp` (175 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientations.cpp` (92 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsDirect.cpp` (251 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeKernelAvgMisorientationsScanline.cpp` (964 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeKernelAvgMisorientationsFilter.cpp` (181 lines).
 
 Test names below omit the `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter:` or `OrientationAnalysis::ComputeKernelAvgMisorientations:` prefix. Rows 1–8 describe Direct and rolling-window calculation; the bounded-cache gaps have separate rows.
 
@@ -109,6 +109,7 @@ Test names below omit the `OrientationAnalysis::ComputeKernelAvgMisorientationsF
 | 43 | Conversion | Convert legacy paths, output name and UUID | `SIMPL Backwards Compatibility` — both dynamic sections |
 | 44 | Setup | Internal rolling and bounded executors return early on empty dimensions | *Not directly tested. The Scanline entry point returns before either executor is called.* |
 | 45 | Cache | Rolling window replaces a slice slot after its first full window | *Not directly tested. Rolling fixtures have at most three Z slices; the five-slice fixture forces bounded-cache execution.* |
+| 46 | Preflight | Feature IDs, Phases or Quaternions tuple count differs from the selected geometry cell count: error `-67205` | `Geometry cell tuple counts` — all inputs short or long, and each input short in turn, in both feature-ID modes |
 
 ## Test inventory
 
@@ -133,6 +134,7 @@ All pass in CI.
 | `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Mode Equivalence on Single Feature` | new-for-V&V | Compares all 27 values bit-for-bit between modes on a single-feature, single-phase gradient; requires nonzero output. |
 | `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Invariants` | new-for-V&V | Checks uniform zero, exact background zero, nonnegativity, a 62.8° cubic bound and nonzero gradient output in three sections. |
 | `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded Cache Full-Depth Kernel` | kept | Checks all 20,480 values against slice values `[10,7,6,7,10]` within 0.001° under a 1 MiB budget. |
+| `OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Geometry cell tuple counts` | new-for-V&V | Checks error `-67205` and diagnostic context when all cell inputs are short or long, or each input is short in turn. Accepts matching tuple counts outside Cell Data in both feature-ID modes. |
 
 ## Exemplar archive
 
