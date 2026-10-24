@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Port of `FindSizes` in DREAM.3D v6.5.171, with changes to precision, parallel execution, and 2D size calculation. |
 | Oracle (confirmed) | Class 1 analytical counts, areas, volumes, and equivalent diameters. Three base fixtures and three output-block variants encode expectations in `test/ComputeFeatureSizesTest.cpp`. All pass in CI. The flat-spacing case is an expected failure (`ComputeFeatureSizes-D3`). |
-| Code paths enumerated | 24 of 44 paths exercised with test assertions. Gaps include input read errors, count overflow, and several cancellation paths. |
-| Tests today | 16 test cases: 14 visible and 2 hidden OOC cases. Coverage includes analytical values, output writes, invalid inputs, archive regression, and SIMPL conversion. |
+| Code paths enumerated | 25 of 45 paths exercised with test assertions. Gaps include input read errors, count overflow, and several cancellation paths. |
+| Tests today | 17 test cases: 15 visible and 2 hidden OOC cases. Coverage includes analytical values, output writes, invalid inputs, cell tuple counts, archive regression, and SIMPL conversion. |
 | Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies the Small IN100 input and three regression arrays. Analytical fixtures are constructed in C++. |
 | Legacy comparison | Not run — runtime comparison artifacts are not available. Source comparison with DREAM.3D v6.5.171 identifies D1–D3. |
 | Bug flags | `ComputeFeatureSizes-D3` |
@@ -54,9 +54,9 @@ All defects in this table are fixed. The fixes will be in the DREAM3D-NX release
 
 ## Code path coverage
 
-24 of 44 paths exercised with test assertions. Gaps include input read errors, count overflow, and cancellation during input processing.
+25 of 45 paths exercised with test assertions. Gaps include input read errors, count overflow, and cancellation during input processing.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizes.cpp` (25 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesDirect.cpp` (481 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesScanline.cpp` (449 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureSizesFilter.cpp` (199 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizes.cpp` (25 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesDirect.cpp` (481 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureSizesScanline.cpp` (449 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureSizesFilter.cpp` (206 lines).
 
 Test names below omit the `SimplnxCore::ComputeFeatureSizes: ` prefix, except where `ComputeFeatureSizesScanline` is stated. The scenario harness selects Direct or Scanline according to the test configuration.
 
@@ -106,6 +106,7 @@ Test names below omit the `SimplnxCore::ComputeFeatureSizes: ` prefix, except wh
 | 42 | Element sizes | Image or RectGrid generation fails → return the error. | *Not directly tested. All geometry fixtures have valid element-size inputs.* |
 | 43 | Element sizes | Reuse an existing element-size array. | *Not directly tested. No fixture explicitly checks reuse of an existing array.* |
 | 44 | Output limits | No feature after background → empty output loop. | *Not directly tested. Every fixture has at least one non-background feature.* |
+| 45 | Preflight | FeatureIds tuple count differs from the selected geometry cell count → error `-74771`. | `Geometry cell tuple count` — Image and RectGrid geometries with 12 cells reject 0, 11, and 13 tuples. |
 
 ## Test inventory
 
@@ -129,6 +130,7 @@ All names are in `src/Plugins/SimplnxCore/test/ComputeFeatureSizesTest.cpp`. Dyn
 | `SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure` | kept | Checks rejection of dimensions (5,1,1), (1,5,1), (1,1,5), and (1,1,1). |
 | `SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test` | kept | Loads `6_6_stats_test_v2.tar.gz` and compares all three generated arrays with archived arrays. This is a regression check, not an independent oracle. |
 | `SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility` | kept | Variants: `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)`. Checks filter identity, empty comments, and seven converted parameter values. |
+| `SimplnxCore::ComputeFeatureSizes: Geometry cell tuple count` | new-for-V&V | Image and RectGrid geometries have 12 cells. Rejects FeatureIds with 0, 11, or 13 tuples with error `-74771`; checks the array path and both counts in the message. Accepts 12 tuples in another Attribute Matrix with a different tuple shape. |
 
 ## Exemplar archive
 
