@@ -12,10 +12,13 @@
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -113,10 +116,26 @@ Parameters CropEdgeGeometryFilter::parameters() const
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_SelectedEdgeGeometryPath_Key, "Selected Edge Geometry", "DataPath to the source Edge Geometry", DataPath(), std::set{IGeometry::Type::Edge}));
 
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+      "Recreates the selected Feature Attribute Matrix in the cropped geometry with no arrays. Cropping changes which edges belong to each feature, so every feature value computed before this "
+      "filter is invalid. Recompute any feature data needed later in the pipeline.",
+      true));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Edge Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after cropping", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeFeatureIdsPath_Key, "Edge Feature Ids", "Specifies to which feature each edge belongs.", DataPath({"Edge Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedEdgeGeometryPath_Key, "Created Edge Geometry", "The DataPath to store the created Edge Geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrixPath_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_EdgeFeatureIdsPath_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedEdgeGeometryPath_Key, false);
 
   return params;
@@ -125,7 +144,7 @@ Parameters CropEdgeGeometryFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType CropEdgeGeometryFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -146,6 +165,11 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   auto pCropXDim = filterArgs.value<BoolParameter::ValueType>(k_CropXDim_Key);
   auto pCropYDim = filterArgs.value<BoolParameter::ValueType>(k_CropYDim_Key);
   auto pCropZDim = filterArgs.value<BoolParameter::ValueType>(k_CropZDim_Key);
+
+  const bool clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  const bool shouldRenumberFeatures = clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
+  const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
 
   auto& srcEdgeGeom = dataStructure.getDataRefAs<EdgeGeom>(srcEdgeGeomPath);
 
@@ -250,6 +274,71 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     preflightUpdatedValues.push_back({"Crop Dimensions", cropOptionsStr});
   }
 
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(clearFeatureAttributeMatrix)
+  {
+    const auto* srcFeatureData = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(srcFeatureData == nullptr || !srcEdgeGeom.contains(srcFeatureData))
+    {
+      return {MakeErrorResult<OutputActions>(
+                  -67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'.", featureAmPath.toString(), srcEdgeGeomPath.toString())),
+              preflightUpdatedValues};
+    }
+    if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureData || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureData)
+    {
+      return {MakeErrorResult<OutputActions>(
+                  -67412, fmt::format("The Feature Attribute Matrix '{}' is the Edge or Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
+                                      "off 'Clear Feature Attribute Matrix'.",
+                                      featureAmPath.toString(), srcEdgeGeomPath.toString())),
+              preflightUpdatedValues};
+    }
+    if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *srcEdgeGeom.getEdgeAttributeMatrix()))
+    {
+      return {
+          MakeErrorResult<OutputActions>(
+              -67413, fmt::format("**Edge Feature Ids** DataArray '{}' must be in the Edge Attribute Matrix '{}' of the selected Edge Geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                                  featureIdsPath.toString(), srcEdgeGeomPath.createChildPath(srcEdgeGeom.getEdgeAttributeMatrix()->getName()).toString(), srcEdgeGeomPath.toString())),
+          preflightUpdatedValues};
+    }
+    if(shouldRenumberFeatures)
+    {
+      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+      if(featureIds.getNumberOfTuples() != srcEdgeGeom.getNumberOfEdges())
+      {
+        return {MakeErrorResult<OutputActions>(
+                    -67414, fmt::format("**Edge Feature Ids** DataArray '{}' has {} tuples, but the selected Edge Geometry '{}' has {} edges. Select a DataArray with one tuple per edge.",
+                                        featureIdsPath.toString(), featureIds.getNumberOfTuples(), srcEdgeGeomPath.toString(), srcEdgeGeom.getNumberOfEdges())),
+                preflightUpdatedValues};
+      }
+    }
+    const auto featureAmPaths = srcFeatureData->getDataPaths();
+    ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+    const DataPath destFeatureAmPath = destEdgeGeomPath.createChildPath(featureAmPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, srcFeatureData->getShape()));
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *srcFeatureData)
+    {
+      clearedList += "\n" + featureAmPath.createChildPath(object->getName()).toString();
+    }
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the cropped geometry with no arrays.", featureAmPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the uncropped geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    if(shouldRenumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the crop.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared",
+                                      "Attribute Matrices other than the Edge and Vertex Attribute Matrices are copied to the cropped geometry unchanged. If one of them holds "
+                                      "Feature data, its values describe the uncropped geometry and are not valid for the cropped geometry."});
+  }
+
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
 
@@ -294,6 +383,10 @@ Result<> CropEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const
 {
   CropEdgeGeometryInputValues inputValues;
 
+  inputValues.clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumberFeatures = inputValues.clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.featureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.edgeFeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
   inputValues.srcEdgeGeomPath = filterArgs.value<DataPath>(k_SelectedEdgeGeometryPath_Key);
   inputValues.destEdgeGeomPath = filterArgs.value<DataPath>(k_CreatedEdgeGeometryPath_Key);
   inputValues.minCoords = filterArgs.value<std::vector<float32>>(k_MinCoord_Key);
