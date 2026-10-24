@@ -146,8 +146,8 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 
   // Create the Vertex Geometry
   {
-    auto createVertexGeometryAction =
-        std::make_unique<CreateVertexGeometryAction>(outputVertexGeometryPath, inputOrientationsArray.getNumberOfTuples(), outputVertexAttrMatrixName, outputSharedVertexListName);
+    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(outputVertexGeometryPath, inputOrientationsArray.getNumberOfTuples(), outputVertexAttrMatrixName,
+                                                                                   outputSharedVertexListName, IGeometry::LengthUnit::Unspecified);
     resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
   }
   DataPath vertexAttrMatrixPath = outputVertexGeometryPath.createChildPath(outputVertexAttrMatrixName);

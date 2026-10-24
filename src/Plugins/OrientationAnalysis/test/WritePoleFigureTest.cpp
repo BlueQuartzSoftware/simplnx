@@ -3,6 +3,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -165,6 +166,11 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({geomName})));
+    CHECK(dataStructure.getDataRefAs<ImageGeom>(DataPath({geomName})).getUnits() == IGeometry::LengthUnit::Unspecified);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({intensityName})));
+    CHECK(dataStructure.getDataRefAs<ImageGeom>(DataPath({intensityName})).getUnits() == IGeometry::LengthUnit::Unspecified);
 
     ConvSnapshot snap;
 
