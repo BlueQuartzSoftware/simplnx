@@ -16,16 +16,16 @@
 |--------|---------------|
 | Algorithm Relationship | Rewrite of `IdentifySample` in DREAM.3D v6.5.171. BFS retains the two-pass search; CCL uses component labels and replay, and SIMPLNX adds slice processing. |
 | Oracle (confirmed) | Class 1 masks in the three non-square cases in `test/IdentifySampleTest.cpp` check largest-component selection. All pass in CI. |
-| Code paths enumerated | 21 of 44 exercised. Gaps include flat-image hole filling, ties, cancellation, and storage failures. |
-| Tests today | 6 test cases: 1 archive case with 12 sections, 3 analytical cases, 1 conversion case, and 1 hidden HDF5 case. The five ordinary cases all pass in CI. |
+| Code paths enumerated | 26 of 45 exercised. Gaps include one-dimensional images, ties, cancellation, and storage failures. |
+| Tests today | 8 test definitions produce 9 cases, including the bool and uint8 template cases. Coverage includes archive masks, analytical masks, tuple counts, conversion, and hidden HDF5 storage. |
 | Exemplar archive | `identify_sample_v2.tar.gz` supplies inputs and SIMPLNX-generated regression outputs. Inline analytical masks provide the independent oracle. |
 | Legacy comparison | Not run — comparison artifacts are not available. |
-| Bug flags | `IdentifySampleFilter-D6` |
+| Bug flags | None. |
 | V&V phase | Source review, analytical fixtures, and archive regression are complete. Second-engineer oracle review and a current legacy comparison remain open. |
 
 ## Summary
 
-`IdentifySampleFilter` keeps the largest face-connected mask component and can fill enclosed holes, either for the whole image or for each selected slice. Class 1 masks check connectivity, and twelve archive sections check regression behavior. The fixed defects are listed below; CCL still leaves enclosed holes unfilled on flat images (`IdentifySampleFilter-D6`).
+`IdentifySampleFilter` keeps the largest face-connected mask component and can fill enclosed holes, either for the whole image or for each selected slice. Class 1 masks check connectivity, and twelve archive sections check regression behavior. The fixed defects are listed below; BFS and CCL ignore flat axes when they check whether a hole reaches the image boundary.
 
 ## Algorithm Relationship
 
@@ -45,7 +45,7 @@
 
 ## Bugs found and fixed
 
-All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the BFS fix for `IdentifySample-D1` and the fixes for `IdentifySampleFilter-D2` and `IdentifySampleFilter-D3`. DREAM3D-NX v7.4.1 contains the fixes for `IdentifySampleFilter-D4` and `IdentifySampleFilter-D5`.
+All defects in this table are corrected in the current source. DREAM3D-NX v7.4.2 contains the BFS fix for `IdentifySample-D1` and the fixes for `IdentifySampleFilter-D2` and `IdentifySampleFilter-D3`. DREAM3D-NX v7.4.1 contains the fixes for `IdentifySampleFilter-D4` and `IdentifySampleFilter-D5`.
 
 | Deviation | Defect | Affected released versions | Resolution |
 |-----------|--------|----------------------------|------------|
@@ -54,12 +54,13 @@ All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the BFS fix for 
 | `IdentifySampleFilter-D3` | Slice processing kept the first of two equally large components, unlike whole-image BFS. | DREAM3D-NX v7.0.2 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The slice BFS uses `>=` and keeps the later component on a tie. |
 | `IdentifySampleFilter-D4` | Slice hole filling used a local plane index as a global index for XZ and YZ planes. | DREAM3D-NX v7.0.2 through v7.4.0. DREAM.3D v6.5.171 was not affected. | Plane coordinates and strides place each filled voxel in the selected slice. |
 | `IdentifySampleFilter-D5` | Slice hole filling reused visited flags from component selection and skipped removed internal islands. | DREAM3D-NX v7.0.2 through v7.4.0. DREAM.3D v6.5.171 was not affected. | Slice BFS clears its visited flags before hole filling. CCL labels the false components in a separate pass. |
+| `IdentifySampleFilter-D6` | Whole-image CCL treated a flat axis as a boundary at every cell and left enclosed holes unfilled. | None. DREAM3D-NX v7.0.0 through v7.4.2 do not contain CCL. DREAM.3D v6.5.171 has the same boundary-rule defect. | CCL ignores flat axes when it marks boundary roots. The unit-dimensions test checks all three flat orientations. |
 
 ## Code path coverage
 
-21 of 44 paths exercised. The table separates test assertions from paths that have no direct fixture.
+26 of 45 paths exercised. The table maps current test assertions to paths; row 42 has partial coverage.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySample.cpp` (28 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleBFS.cpp` (295 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleCCL.cpp` (1055 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleCommon.hpp` (517 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/IdentifySampleFilter.cpp` (139 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySample.cpp` (28 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleBFS.cpp` (295 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleCCL.cpp` (1057 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySampleCommon.hpp` (517 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/IdentifySampleFilter.cpp` (146 lines).
 
 `Archive` below means `SimplnxCore::IdentifySampleFilter`. Other names omit the `SimplnxCore::IdentifySampleFilter: ` prefix. The ordinary mask cases select BFS and CCL on resident stores through the scenario harness.
 
@@ -73,13 +74,13 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySamp
 | 6 | BFS dispatch | X-only line. | *Not directly tested. No one-dimensional fixture exists.* |
 | 7 | BFS dispatch | Y-only line. | *Not directly tested. No one-dimensional fixture exists.* |
 | 8 | BFS dispatch | Z-only line. | *Not directly tested. No one-dimensional fixture exists.* |
-| 9 | BFS dispatch | Single voxel, including its hole-fill boundary guard. | *Not directly tested. No single-voxel fixture exists.* |
+| 9 | BFS dispatch | Single voxel, including its hole-fill boundary guard. | `unit dimensions hole filling` — the false 1×1×1 voxel stays false with filling off and on. |
 | 10 | BFS selection | Expand through valid true neighbors; skip invalid, false, and visited neighbors. | Archive; all three non-square cases. |
 | 11 | BFS selection | Keep the largest component and clear smaller components. | Archive; all three non-square cases. |
 | 12 | BFS filling | `FillHoles=false`. | Archive — `whole_*_nofill`; all three non-square cases. |
 | 13 | BFS filling | Fill an enclosed 3D false component after resetting visited flags. | Archive — `whole_*_fill`, including the internal island. |
 | 14 | BFS filling | Leave a boundary-connected false component unchanged. | Archive — `whole_*_fill`. |
-| 15 | BFS filling | Fill an enclosed hole in a flat image. | *Not directly tested. The non-square fixtures disable hole filling.* |
+| 15 | BFS filling | Fill an enclosed hole in a flat image. | `unit dimensions hole filling` — all three flat orientations, bool and uint8 masks. |
 | 16 | BFS selection | Equal-size whole-image components select the later component. | *Not directly tested. No fixture isolates an equal-size largest-component tie.* |
 | 17 | Slice BFS | XY plane, filling disabled and enabled; contiguous plane transfers. | Archive — `sliced_xy_nofill`, `sliced_xy_fill`. |
 | 18 | Slice BFS | XZ plane, filling disabled and enabled; contiguous row transfers. | Archive — `sliced_xz_nofill`, `sliced_xz_fill`. |
@@ -92,11 +93,11 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySamp
 | 25 | Slice CCL | XY planes with filling disabled and enabled. | Archive — `sliced_xy_nofill`, `sliced_xy_fill`. |
 | 26 | Slice CCL | XZ planes with filling disabled and enabled. | Archive — `sliced_xz_nofill`, `sliced_xz_fill`. |
 | 27 | Slice CCL | YZ planes with filling disabled and enabled. | Archive — `sliced_yz_nofill`, `sliced_yz_fill`. |
-| 28 | CCL selection | Whole image has no true component; return without replay. | *Not directly tested. No all-false whole-image fixture exists.* |
+| 28 | CCL selection | Whole image has no true component; return without replay. | `unit dimensions hole filling` — the all-false 1×1×1 image stays false. |
 | 29 | Slice CCL | An empty plane returns without component removal. | Archive — slices outside all documented features. |
 | 30 | CCL selection | Create labels, merge connected labels, and replay to remove smaller roots. | Archive; all three non-square cases. |
 | 31 | CCL filling | Label false components, mark boundary roots, and fill enclosed roots. | Archive — `whole_*_fill` and `sliced_*_fill`. |
-| 32 | CCL filling | A flat whole image marks every false root as boundary-connected. | *Not directly tested. Flat fixtures disable hole filling; see `IdentifySampleFilter-D6`.* |
+| 32 | CCL filling | Ignore flat axes when marking boundary roots; fill enclosed holes and preserve boundary-connected false cells. | `unit dimensions hole filling` — all three flat orientations, bool and uint8 masks, filling off and on. |
 | 33 | CCL storage | HDF5 mask and equivalences cross a 4096-record page boundary. | *Not directly tested. The hidden `genuine HDF5 equivalence-page and slice oracle` requires a real HDF5 store; the supplied CI evidence covers in-core builds.* |
 | 34 | CCL storage | A failed temporary-store request falls back to resident records. | *Not directly tested. No fixture isolates provider failure and fallback.* |
 | 35 | CCL storage | Provider failure without fallback, or null store (`-45460`). | *Not directly tested. No fixture injects these provider responses.* |
@@ -106,13 +107,14 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/IdentifySamp
 | 39 | CCL storage | Equivalence or root-flag creation, access, or flush fails. | *Not directly tested. No temporary store injects these failures.* |
 | 40 | Cancellation | Return during BFS scanning, slice processing, CCL labeling, or replay. | *Not directly tested. No fixture injects cancellation.* |
 | 41 | CCL selection | Equal-size roots select the larger root label. | *Not directly tested. No fixture isolates a tie between largest roots.* |
-| 42 | CCL dispatch | One-dimensional or single-voxel whole image. | *Not directly tested. The smallest flat fixture is a 3×4 plane.* |
+| 42 | CCL dispatch | One-dimensional or single-voxel whole image. | Partial: `unit dimensions hole filling` checks the false single voxel. *One-dimensional images are not directly tested; no line fixture exists.* |
 | 43 | Slice CCL | Boolean masks in XY, XZ, or YZ planes. | *Not directly tested. All slice fixtures use uint8 masks.* |
 | 44 | Slice BFS | Boolean masks in XY or XZ planes. | *Not directly tested. All slice fixtures use uint8 masks.* |
+| 45 | Preflight | Reject a mask whose tuple count differs from the selected geometry cell count (`-45463`). | `Geometry cell tuple count` — rejects 0, 11, and 13 tuples for 12 cells; accepts 12 tuples in another Attribute Matrix. |
 
 ## Test inventory
 
-The five ordinary cases in `src/Plugins/SimplnxCore/test/IdentifySampleTest.cpp` run in the supplied in-core CI configurations. All pass in CI.
+`src/Plugins/SimplnxCore/test/IdentifySampleTest.cpp` contains seven ordinary test definitions and one hidden HDF5 case. The template definition produces bool and uint8 cases. The supplied in-core CI evidence covers the archive case, the three non-square cases, and the conversion case; all five pass.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -122,6 +124,8 @@ The five ordinary cases in `src/Plugins/SimplnxCore/test/IdentifySampleTest.cpp`
 | `SimplnxCore::IdentifySampleFilter: 2D Empty Z Non-Square {3,4,1}` | kept | Checks all 12 bool values against the four-cell analytical component in the XY plane. |
 | `SimplnxCore::IdentifySampleFilter: 2D Empty Y Non-Square {3,1,4}` | kept | Checks the same analytical component in the XZ plane. |
 | `SimplnxCore::IdentifySampleFilter: 2D Empty X Non-Square {1,3,4}` | kept | Checks the same analytical component in the YZ plane. |
+| `SimplnxCore::IdentifySampleFilter: unit dimensions hole filling` | new-for-V&V | Template cases for bool and uint8 check every value on 5×5×1, 5×1×5, 1×5×5, and 1×1×1 images with filling off and on. Enclosed centers fill only when enabled; a false corner and the lone false voxel stay false. |
+| `SimplnxCore::IdentifySampleFilter: Geometry cell tuple count` | new-for-V&V | Preflight rejects masks with 0, 11, or 13 tuples for a 12-cell geometry with error `-45463`. Checks the array path and tuple/cell counts in the message; accepts 12 tuples in another Attribute Matrix. |
 
 ## Exemplar archive
 

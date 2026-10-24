@@ -46,7 +46,7 @@ Part 1 records the difference from DREAM.3D v6.5.171. Part 2 records SIMPLNX def
 
 **Recommendation:** Trust SIMPLNX. A single false voxel stays false because it touches the image boundary.
 
-**Evidence:** PR #1640 (`a332e7369`) adds the guard after PR #1590 introduced dimensional dispatch. Releases through v7.4.1 have coordinate boundary checks; v7.4.2 has the guard. DREAM.3D v6.5.171 also has coordinate checks. Current `IdentifySampleBFS.cpp` retains the guard; no test in `IdentifySampleTest.cpp` constructs a single-voxel image.
+**Evidence:** PR #1640 (`a332e7369`) adds the guard after PR #1590 introduced dimensional dispatch. Releases through v7.4.1 have coordinate boundary checks; v7.4.2 has the guard. DREAM.3D v6.5.171 also has coordinate checks. Current `IdentifySampleBFS.cpp` retains the guard. `SimplnxCore::IdentifySampleFilter: unit dimensions hole filling` checks that a false single voxel stays false with filling off and on for bool and uint8 masks.
 
 ---
 
@@ -124,14 +124,14 @@ Part 1 records the difference from DREAM.3D v6.5.171. Part 2 records SIMPLNX def
 | **Filter UUID** | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
 | **Status** | active |
 | **Affected released versions** | None. DREAM3D-NX v7.0.0 through v7.4.2 do not contain CCL. DREAM.3D v6.5.171 was affected by the same boundary rule. |
-| **Fixed in** | Not fixed |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
 
-**Symptom:** With whole-image processing and hole filling enabled, CCL leaves enclosed holes false on a 2D image. BFS fills them.
+**Symptom:** With whole-image processing and hole filling enabled, CCL left enclosed holes false on a 2D image. BFS filled them.
 
-**Root cause:** Bug. CCL marks a false component as exterior when any voxel lies at an extremum of any of the three axes. A flat axis therefore marks every false component as exterior. BFS excludes flat axes from its neighbor boundary check. This CCL regression restores the boundary rule documented in `IdentifySample-D1`.
+**Root cause:** Bug. CCL marked a false component as exterior when any voxel was at an extremum of any of the three axes. A flat axis therefore marked every false component as exterior. CCL now excludes flat axes from this check, as BFS does. This corrects the boundary-rule defect documented in `IdentifySample-D1`.
 
-**Affected users:** Users whose whole-image execution selects CCL for a flat image with an enclosed hole. Slice processing uses a separate boundary test.
+**Affected users:** Users whose whole-image execution selected CCL for a flat image with an enclosed hole before the correction. Slice processing uses a separate boundary test.
 
-**Recommendation:** Use BFS for whole-image 2D hole filling, or select slice processing in the non-flat plane. Do not assume whole-image BFS and CCL give the same filled mask on a flat image.
+**Recommendation:** Use the corrected CCL implementation or BFS for whole-image 2D hole filling. Recalculate affected masks.
 
-**Evidence:** Current `IdentifySampleCCL.cpp` marks boundary roots with `x == 0 || x == dimX - 1 || y == 0 || y == dimY - 1 || z == 0 || z == dimZ - 1`. The behavior follows directly for a 5×5×1 true mask with a false center: `z == 0` marks that center as exterior. The filter dispatcher does not exclude flat images from CCL. PR #1568 (`4ec21e93f`) adds CCL after v7.4.2. All listed release sources contain only the earlier algorithm. The non-square tests disable hole filling, and the hidden HDF5 test uses a 129×129×3 image, so neither detects this case.
+**Evidence:** Current `IdentifySampleCCL.cpp` tests coordinate extrema only on axes with more than one cell. `SimplnxCore::IdentifySampleFilter: unit dimensions hole filling` checks every mask value in all three 5×5 flat orientations for bool and uint8 masks, with filling off and on. It checks that the enclosed center fills only when enabled and the false corner stays false. It also checks a false 1×1×1 image, which returns before CCL hole filling because it has no true component. DREAM3D-NX v7.0.0 through v7.4.2 do not contain CCL.
