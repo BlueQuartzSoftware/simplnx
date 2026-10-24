@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Rewrite of `BadDataNeighborOrientationCheck` in DREAM.3D v6.5.171. Worklist and Scanline preserve the neighbor rule with the documented defect corrections. |
 | Oracle (confirmed) | Class 1 expected masks and Class 4 invariants are encoded in `test/BadDataNeighborOrientationCheckTest.cpp`. CI covers 33 ordinary test cases. All pass in CI. |
-| Code paths enumerated | 17 of 28 exercised. One additional path has a fixture; ten paths have no direct fixtures. |
-| Tests today | 34 ordinary test cases and 2 hidden template variants cover masks, propagation, invariants, input validation and SIMPL conversion. |
+| Code paths enumerated | 19 of 29 exercised by the listed tests. Ten paths have no direct fixtures. |
+| Tests today | 35 ordinary test cases and 2 hidden template variants cover masks, propagation, invariants, input validation and SIMPL conversion. |
 | Exemplar archive | `bad_data_neighbor_orientation_check_v2.tar.gz` supplies test inputs. Expected masks are defined in the test source. |
 | Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-09-17: 12 of 28 cases match. A local proof version matches all 28 cases. |
 | Bug flags | None. |
@@ -57,9 +57,9 @@ All defects in this table are fixed. The fixes will be in the DREAM3D-NX release
 
 ## Code path coverage
 
-17 of 28 paths exercised. Path 28 has an added fixture. The table maps source paths to existing fixtures and gives the reason for each path without a fixture.
+19 of 29 paths exercised by the listed tests. The table maps source paths to existing fixtures and gives the reason for each of the ten paths without a fixture.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.cpp` (37 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckWorklist.cpp` (261 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckScanline.cpp` (381 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.cpp` (180 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.cpp` (37 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckWorklist.cpp` (261 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckScanline.cpp` (381 lines), and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.cpp` (187 lines).
 
 Worklist counts matching neighbors and propagates changes through a queue. Scanline recounts neighbors in rolling slices until each level is stable.
 
@@ -93,6 +93,7 @@ Worklist counts matching neighbors and propagates changes through a queue. Scanl
 | 26 | Scanline | Use fallback per-element mask I/O | *Not directly tested. Accepted masks use the UInt8 or Bool bulk paths.* |
 | 27 | Propagation | Requested level exceeds six → no propagation | *Not directly tested. Preflight rejects a neighbor requirement above six. No fixture bypasses preflight to isolate this loop guard.* |
 | 28 | Preflight | Neighbor requirement is outside 1 through 6 → error `-6810` | `Preflight Error - Number of neighbors out of range (-6810)` — values 7, 0 and -1 |
+| 29 | Preflight | Quaternions, phases and mask have equal tuple counts that differ from the selected geometry's cell count → error `-6810` | `Geometry cell tuple counts` — all three arrays have 4 or 12 tuples for 8 cells |
 
 ## Test inventory
 
@@ -132,6 +133,7 @@ Worklist counts matching neighbors and propagates changes through a queue. Scanl
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 Idempotence` | new-for-V&V | Runs Case 4 twice; compares every value in the second mask with the first. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image Fixture (3x3x1)` | new-for-V&V | Compares all 9 values with `[0,1,0,1,1,1,0,1,0]`; the center flips and the corners remain bad. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Index Bounds` | kept | Checks error `-54902` for an invalid phase on the bad center and success when it is on a good corner (BadDataNeighborOrientationCheckFilter-D5). |
+| `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Geometry cell tuple counts` | new-for-V&V | Checks `-6810` when quaternions, phases and mask each have 4 or 12 tuples for 8 cells. Checks `-6809` when only one array has 4 tuples. Checks diagnostic paths and counts, and accepts 8 tuples per array outside Cell Data. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: real HDF5 reverse-slice cascade oracle` — `uint8` template variant | new-for-V&V | Hidden. Requires HDF5-OOC input stores and Scanline dispatch; compares all 45 mask values with the central-column oracle. A 30° control stays bad. |
 | `OrientationAnalysis::BadDataNeighborOrientationCheckFilter: real HDF5 reverse-slice cascade oracle` — `bool` template variant | new-for-V&V | Hidden. Requires HDF5-OOC input stores and Scanline dispatch; compares all 45 mask values with the central-column oracle. A 30° control stays bad. |
 
