@@ -64,6 +64,11 @@ The verified state is pinned by **(commit hash, archive SHA512)**. The commit ca
 | [`deviation_template.md`](./deviation_template.md) | Empty deviation file — copy into `src/Plugins/<P>/vv/deviations/<FilterName>.md` |
 | [`provenance_template.md`](./provenance_template.md) | Empty exemplar-provenance sidecar — copy per exemplar archive |
 | [`commit_template.md`](./commit_template.md) | Standard commit message format for landing a completed V&V cycle — use at step 7 of the engineer workflow below |
+| [`vv_recertification.md`](./vv_recertification.md) | When V&V work happens after a filter has a V&V record, the single V&V branch, and the legacy comparison packages |
+
+## After a filter has a V&V record
+
+A change to a V&V'd filter follows [`vv_recertification.md`](./vv_recertification.md). It says which changes need V&V work in the same PR, where that work is done, and how legacy comparisons are run again.
 
 ## Engineer workflow
 
