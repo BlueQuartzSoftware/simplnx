@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Port of the non-periodic `FindFeatureCentroids` calculation in DREAM.3D v6.5.171. SIMPLNX adds periodic centroids, double-precision cell coordinates and bulk data access. |
 | Oracle (confirmed) | Class 1 analytical means and Class 4 invariants are encoded in `test/ComputeFeatureCentroidsTest.cpp`. All pass in CI. |
-| Code paths enumerated | 16 of 26 exercised by the five ordinary test cases. The table identifies validation, cancellation, I/O and periodic-axis gaps. |
-| Tests today | 6 test cases: analytical centroids, periodic centroids, invalid IDs, bulk reads, SIMPL conversion and a hidden storage-contract fixture. |
+| Code paths enumerated | 17 of 27 exercised by the six ordinary test cases. The table identifies validation, cancellation, I/O and periodic-axis gaps. |
+| Tests today | 7 test cases: analytical centroids, periodic centroids, invalid IDs, bulk reads, SIMPL conversion, cell tuple counts and a hidden storage-contract fixture. |
 | Exemplar archive | None. The tests construct inputs and expected values in C++. |
 | Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 3 cases match; the differences come from `ComputeFeatureCentroidsFilter-D1` and `ComputeFeatureCentroidsFilter-D2`. A local proof version with the D1 fix matches DREAM3D-NX in 2 of 3 cases; the remaining case uses the DREAM3D-NX-only periodic option (D2). |
 | Bug flags | None. |
@@ -54,9 +54,9 @@ All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fix for `Com
 
 ## Code path coverage
 
-16 of 26 paths exercised. The count uses the five ordinary CI test cases; the hidden storage-contract fixture is listed separately in the inventory.
+17 of 27 paths exercised. The count uses the six ordinary test cases; the hidden storage-contract fixture is listed separately in the inventory.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp` (218 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureCentroidsFilter.cpp` (165 lines), and `src/simplnx/Utilities/DataArrayUtilities.cpp` (515 lines; shared FeatureIds validation).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp` (218 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureCentroidsFilter.cpp` (172 lines), and `src/simplnx/Utilities/DataArrayUtilities.cpp` (529 lines; shared FeatureIds and cell tuple-count validation).
 
 | # | Phase | Path | Test case |
 |---|-------|------|-----------|
@@ -86,10 +86,11 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatu
 | 24 | Output | Propagate a centroid write failure | *Not directly tested. No fixture injects an output-store failure.* |
 | 25 | Sweep | Empty image → skip all chunks | *Not directly tested. Every fixture has at least one cell.* |
 | 26 | Periodic | Wrap a feature across a multi-cell Y or Z extent | *Not directly tested. Periodic fixtures use one-cell Y and Z extents.* |
+| 27 | Preflight | Cell Feature Ids tuple count differs from the selected geometry's cell count → error `-12701` | `Geometry cell tuple count` checks 0, 11 and 13 tuples against 12 cells |
 
 ## Test inventory
 
-The five ordinary test cases run in in-core CI on Linux, macOS and Windows. All pass in CI.
+The inventory contains six ordinary test cases and one hidden storage-contract fixture.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -99,6 +100,7 @@ The five ordinary test cases run in in-core CI on Linux, macOS and Windows. All 
 | `SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds Feature AM` | new-for-V&V | Supplies ID 5 with two feature tuples and requires an invalid execution result. |
 | `SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure propagation` | kept | Checks physical centroids across 65,536 cells plus a tail; checks validation-read error `-91911` and an unchanged zero output. |
 | `SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibility` | kept | Dynamic variants `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check one filter, its UUID, empty comments and three converted argument values. |
+| `SimplnxCore::ComputeFeatureCentroidsFilter: Geometry cell tuple count` | new-for-V&V | For a 12-cell image, rejects 0, 11 and 13 tuples with error `-12701` and checks the input path and counts in the message. Accepts 12 tuples in another Attribute Matrix with a different tuple shape. |
 
 ## Exemplar archive
 
