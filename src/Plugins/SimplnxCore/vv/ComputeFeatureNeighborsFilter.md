@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Minor changes to `FindNeighbors` in DREAM.3D v6.5.171. SIMPLNX keeps face adjacency and corrects face areas and surface flags. |
 | Oracle (confirmed) | Class 1 analytical expectations are encoded in 35 ordinary cases in `test/ComputeFeatureNeighborsTest.cpp`. All pass in CI. |
-| Code paths enumerated | 24 of 34 exercised by the mapped tests. Error returns, cancellation, negative IDs and the unreachable dispatch fallback have no direct fixture. |
-| Tests today | 38 test cases: 35 analytical cases, one archive regression, one SIMPL conversion case and one hidden HDF5 case. The analytical cases cover eight dimensionality states and all four optional-output combinations. |
+| Code paths enumerated | 25 of 35 exercised by the mapped tests. Other error returns, cancellation, negative IDs and the unreachable dispatch fallback have no direct fixture. |
+| Tests today | 39 test cases: 35 analytical cases, one archive regression, one SIMPL conversion case, one tuple-count validation case and one hidden HDF5 case. The analytical cases cover eight dimensionality states and all four optional-output combinations. |
 | Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies Small IN100 inputs and three regression reference arrays. Shared surface areas use independent inline expectations. |
 | Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 4 cases matches; the differences come from `ComputeFeatureNeighborsFilter-D1` and `ComputeFeatureNeighborsFilter-D2`. A local proof version with those fixes matches DREAM3D-NX in 4 of 4 cases. |
 | Bug flags | None. |
@@ -54,9 +54,9 @@ All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `C
 
 ## Code path coverage
 
-24 of 34 paths exercised. Each uncovered path states why it has no direct fixture.
+25 of 35 paths exercised. Each uncovered path states why it has no direct fixture.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.cpp` (26 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsDirect.cpp` (394 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsScanline.cpp` (250 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureNeighborsFilter.cpp` (223 lines), and `src/simplnx/Utilities/NeighborUtilities.hpp` (634 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.cpp` (26 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsDirect.cpp` (394 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsScanline.cpp` (250 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureNeighborsFilter.cpp` (230 lines), and `src/simplnx/Utilities/NeighborUtilities.hpp` (634 lines).
 
 Test names below omit the common `SimplnxCore::ComputeFeatureNeighborsFilter:` prefix. Direct separates boundary and interior cells; Scanline uses three rolling slices.
 
@@ -96,10 +96,11 @@ Test names below omit the common `SimplnxCore::ComputeFeatureNeighborsFilter:` p
 | 32 | Preflight | Create required outputs and selected optional outputs | `Case 0.0.0` through `Case 0.0.3` — preflight succeeds and execution checks requested outputs |
 | 33 | Direct interior | Accumulate all six faces without image-boundary guards | `Case 3.0.0` |
 | 34 | Direct dispatch | Return after no dimensionality specialization matches | *Not directly tested. The eight dimensionality states exhaust all unit-axis combinations.* |
+| 35 | Preflight | FeatureIds tuple count differs from the selected geometry's cell count; return `-24501` | `Geometry cell tuple count` — 0, 11 and 13 tuples for a 12-cell geometry |
 
 ## Test inventory
 
-The 37 ordinary test cases cover analytical expectations, archive regression and conversion. All pass in CI.
+The 38 ordinary test cases cover analytical expectations, archive regression, conversion and tuple-count validation. The 35 analytical cases, archive regression and conversion case pass in CI.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -141,6 +142,7 @@ The 37 ordinary test cases cover analytical expectations, archive regression and
 | `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.4: 2D Empty X - Non-Square {1,3,2}` | new-for-V&V | Six cells in two feature rows: checks one neighbor per feature, shared area 6, all boundary counts 1 and both surface flags true. |
 | `SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100` | kept | Compares SurfaceFeatures, NumNeighbors and NeighborList with the Small IN100 archive. SharedSurfaceAreaList and BoundaryCells are not compared. |
 | `SimplnxCore::ComputeFeatureNeighborsFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check identity, comments and ten converted arguments. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Geometry cell tuple count` | new-for-V&V | Checks error `-24501` for 0, 11 and 13 FeatureIds tuples against 12 geometry cells, including the input path and counts in the message. Accepts 12 tuples in another Attribute Matrix with a different tuple shape. |
 
 ## Exemplar archive
 
