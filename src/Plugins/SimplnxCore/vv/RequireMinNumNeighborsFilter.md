@@ -65,7 +65,7 @@ Test names below omit the common `SimplnxCore::RequireMinNumNeighborsFilter: ` p
 |---|-------|------|-----------|
 | 1 | Preflight | Feature array tuple counts differ → `-252`. | `Preflight Error - tuple count mismatch (-252)` |
 | 2 | Preflight | FeatureIds is outside the geometry's Cell Attribute Matrix → `-55575`. | `Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)`; `Strict Feature Ids` |
-| 3 | Preflight | FeatureIds tuple count differs from the geometry cell count → `-55571`. | `Preflight Error - FeatureIds tuple count mismatch (-55571)` |
+| 3 | Preflight | FeatureIds tuple count differs from the geometry cell count → `-59571`. | `Selected cell tuple counts` |
 | 4 | Preflight | An ignored array is outside the Cell Attribute Matrix → `-55573`. | `Strict Feature Ids` — `Ignored array in a second Attribute Matrix` |
 | 5 | Preflight | Number of Neighbors has an invalid Feature Attribute Matrix parent → `-55574`. | `Strict Feature Ids` — external, plain-group and Cell Attribute Matrix parents |
 | 6 | Paths | Resolve shared Cell paths and compact the selected Feature Attribute Matrix. | `Shared Cell Paths and Selected Feature Matrix` — both alias variants |
@@ -115,7 +115,7 @@ All 14 test cases are in `src/Plugins/SimplnxCore/test/RequireMinNumNeighborsTes
 | `SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility` | kept | Loads the two conversion fixtures below and verifies one converted filter, UUID, comments, and seven converted arguments in each section. |
 | `SIMPL 6.5 (UUID)` | kept | `DYNAMIC_SECTION` using `test/simpl_conversion/6_5/RequireMinNumNeighborsFilter.json`; verifies UUID-based 6.5 pipeline conversion. |
 | `SIMPL 6.4 (Filter_Name)` | kept | `DYNAMIC_SECTION` using `test/simpl_conversion/6_4/RequireMinNumNeighborsFilter.json`; verifies name-based 6.4 pipeline conversion. |
-| `SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds tuple count mismatch (-55571)` | new-for-V&V | Creates a 5-cell geometry with four `FeatureIds` tuples in its Cell Attribute Matrix, then asserts invalid preflight and exact code `-55571`. |
+| `SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts` | new-for-V&V | Creates a 4-cell geometry with 3, 4, or 5 `FeatureIds` tuples stored separately. Equal counts pass; mismatches assert invalid preflight, exact code `-59571`, selected paths, tuple count, and cell count. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids` | new-for-V&V | Checks valid Cell and Feature Attribute Matrices, shared Cell paths, and read-only phases in another matrix. Rejects misplaced Feature Ids (`-55575`), ignored arrays (`-55573`), and invalid Feature Attribute Matrix locations (`-55574`); checks each error code and affected paths. |
 | `SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix` | new-for-V&V | Alternates geometry and shared-parent paths for Feature Ids and ignored arrays. Checks geometry-based modification paths, reassigned IDs and cell values, unchanged ignored values, selected Feature Attribute Matrix compaction, unchanged external marker values, and inherited tuple dimensions. |
 
