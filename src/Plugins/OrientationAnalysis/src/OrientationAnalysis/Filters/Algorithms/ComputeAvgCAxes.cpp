@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 
@@ -66,7 +67,8 @@ Result<> ComputeAvgCAxes::operator()()
   auto mergeWarnings = [&result](Result<> ioResult) { return MergeResults(std::move(result), std::move(ioResult)); };
 
   // Cell data uses chunked bulk I/O to avoid per-element OOC access.
-  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIds.getDataStoreRef();
   const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
   const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
   auto& avgCAxesStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath).getDataStoreRef();
@@ -74,11 +76,23 @@ Result<> ComputeAvgCAxes::operator()()
   const usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
   const usize totalFeatures = avgCAxesStoreRef.getNumberOfTuples();
 
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->AvgCAxesArrayPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+  if(validateNumFeatResult.invalid())
+  {
+    return mergeWarnings(
+        MakeErrorResult(-76405, fmt::format("Cell Feature Ids array '{}' must contain indices in [0, {}) for Feature Attribute Matrix '{}'. {}", m_InputValues->FeatureIdsArrayPath.toString(),
+                                            totalFeatures, m_InputValues->CellFeatureDataPath.toString(), validateNumFeatResult.errors()[0].message)));
+  }
+  if(m_ShouldCancel)
+  {
+    return result;
+  }
+
   // Feature IDs select output tuples in random order, so accumulation stays
   // local until the final write.
   const usize avgCAxesElements = totalFeatures * 3;
-  auto avgCAxesCache = std::make_unique<float32[]>(avgCAxesElements);
-  std::fill_n(avgCAxesCache.get(), avgCAxesElements, 0.0f);
+  auto avgCAxesCache = std::make_unique<float64[]>(avgCAxesElements);
+  std::fill_n(avgCAxesCache.get(), avgCAxesElements, 0.0);
 
   const Eigen::Vector3d cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3d c1{0.0f, 0.0f, 0.0f};
@@ -147,9 +161,9 @@ Result<> ComputeAvgCAxes::operator()()
         c1.normalize();
 
         Eigen::Vector3d curCAxis{0.0f, 0.0f, 0.0f};
-        curCAxis[0] = avgCAxesCache[cAxesIndex] / static_cast<float32>(counter[currentFeatureIdx]);
-        curCAxis[1] = avgCAxesCache[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureIdx]);
-        curCAxis[2] = avgCAxesCache[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureIdx]);
+        curCAxis[0] = avgCAxesCache[cAxesIndex] / static_cast<float64>(counter[currentFeatureIdx]);
+        curCAxis[1] = avgCAxesCache[cAxesIndex + 1] / static_cast<float64>(counter[currentFeatureIdx]);
+        curCAxis[2] = avgCAxesCache[cAxesIndex + 2] / static_cast<float64>(counter[currentFeatureIdx]);
         curCAxis.normalize();
 
         // Antiparallel c axes represent the same hexagonal direction.
@@ -159,9 +173,9 @@ Result<> ComputeAvgCAxes::operator()()
           c1 *= -1.0f;
         }
 
-        avgCAxesCache[cAxesIndex] += static_cast<float32>(c1[0]);
-        avgCAxesCache[cAxesIndex + 1] += static_cast<float32>(c1[1]);
-        avgCAxesCache[cAxesIndex + 2] += static_cast<float32>(c1[2]);
+        avgCAxesCache[cAxesIndex] += c1[0];
+        avgCAxesCache[cAxesIndex + 1] += c1[1];
+        avgCAxesCache[cAxesIndex + 2] += c1[2];
       }
     }
 
@@ -170,6 +184,7 @@ Result<> ComputeAvgCAxes::operator()()
 
   m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
 
+  auto avgCAxesOutput = std::make_unique<float32[]>(avgCAxesElements);
   for(usize featureIdx = 0; featureIdx < totalFeatures; featureIdx++)
   {
     if(m_ShouldCancel)
@@ -181,9 +196,9 @@ Result<> ComputeAvgCAxes::operator()()
     if(counter[featureIdx] == 0)
     {
       // Features without a hexagonal contribution have no c-axis average.
-      avgCAxesCache[tupleIndex] = NAN;
-      avgCAxesCache[tupleIndex + 1] = NAN;
-      avgCAxesCache[tupleIndex + 2] = NAN;
+      avgCAxesOutput[tupleIndex] = NAN;
+      avgCAxesOutput[tupleIndex + 1] = NAN;
+      avgCAxesOutput[tupleIndex + 2] = NAN;
     }
     else
     {
@@ -191,13 +206,13 @@ Result<> ComputeAvgCAxes::operator()()
       Eigen::Vector3d finalAvg{avgCAxesCache[tupleIndex] / static_cast<float64>(counter[featureIdx]), avgCAxesCache[tupleIndex + 1] / static_cast<float64>(counter[featureIdx]),
                                avgCAxesCache[tupleIndex + 2] / static_cast<float64>(counter[featureIdx])};
       finalAvg.normalize();
-      avgCAxesCache[tupleIndex] = static_cast<float32>(finalAvg[0]);
-      avgCAxesCache[tupleIndex + 1] = static_cast<float32>(finalAvg[1]);
-      avgCAxesCache[tupleIndex + 2] = static_cast<float32>(finalAvg[2]);
+      avgCAxesOutput[tupleIndex] = static_cast<float32>(finalAvg[0]);
+      avgCAxesOutput[tupleIndex + 1] = static_cast<float32>(finalAvg[1]);
+      avgCAxesOutput[tupleIndex + 2] = static_cast<float32>(finalAvg[2]);
     }
   }
 
-  if(Result<> ioResult = avgCAxesStoreRef.copyFromBuffer(0, nonstd::span<const float32>(avgCAxesCache.get(), avgCAxesElements)); ioResult.invalid())
+  if(Result<> ioResult = avgCAxesStoreRef.copyFromBuffer(0, nonstd::span<const float32>(avgCAxesOutput.get(), avgCAxesElements)); ioResult.invalid())
   {
     return mergeWarnings(std::move(ioResult));
   }

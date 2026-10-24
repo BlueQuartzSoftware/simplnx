@@ -4,12 +4,14 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -85,6 +87,20 @@ IFilter::PreflightResult ComputeTriangleGeomCentroidsFilter::preflightImpl(const
 {
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
   auto pFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
+  auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryPath);
+  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(pFaceLabelsArrayPath);
+  if(faceLabels.getNumberOfTuples() == 0)
+  {
+    return MakePreflightErrorResult(-12903, fmt::format("Face Labels array '{}' has 0 tuples. At least 1 face label tuple is required to compute feature centroids. Select a nonempty triangle mesh.",
+                                                        pFaceLabelsArrayPath.toString()));
+  }
+  if(triangleGeom.getNumberOfFaces() == 0 || !CheckArraysHaveSameTupleCount(dataStructure, {pFaceLabelsArrayPath, triangleGeom.getFaces()->getDataPaths().front()}))
+  {
+    return MakePreflightErrorResult(-12902, fmt::format("Face Labels array '{}' has {} tuples, but Triangle Geometry '{}' has {} faces. Select an array with one tuple per face.",
+                                                        pFaceLabelsArrayPath.toString(), faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()));
+  }
 
   PreflightResult preflightResult;
 

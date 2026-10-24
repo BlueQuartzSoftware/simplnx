@@ -1,82 +1,69 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeatureNeighborMisorientationsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeatureNeighborMisorientationsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`FindMisorientations`, source at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.{h,cpp}` in DREAM3D 6.5.171).
-
-Entries are referenced by stable ID (`ComputeFeatureNeighborMisorientationsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-## Comparison summary
-
-The legacy A/B comparison was performed by **source inspection** rather than empirical run. Justification: SIMPLNX `ComputeFeatureNeighborMisorientations::operator()()` is a clean Port of legacy `FindMisorientations::execute()` (same per-feature outer loop, same per-neighbor inner loop, same phase-match gate, same optional per-feature averaging finalize). Both implementations share a divisor bug at the `tempMisoList` reassignment (D1 below) — verified by grep of the legacy source. The bug went undetected for the lifetime of both implementations because the `ComputeAvgMisors=true` test in the SIMPLNX suite was an `[.][UNIMPLEMENTED][!mayfail]` stub with zero CI coverage.
+Part 1 records the divisor and precision differences from DREAM.3D v6.5.171 (D1 and D2). Part 2 records the phase-index defect fixed in SIMPLNX (D3). Both parts use one stable ID sequence. The Filter UUID is the permanent cross-reference anchor.
 
 ---
 
-## ComputeFeatureNeighborMisorientationsFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-| Field            | Value                                                                                                                                |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D1`                                                                                     |
-| **Filter UUID**  | `0b68fe25-b5ef-4805-ae32-20acb8d4e823`                                                                                               |
-| **Status**       | active (SIMPLNX fixed 2026-06-02; legacy 6.5.171 still has the bug); SIMPLNX-side fix ships in DREAM3D-NX **7.4.2**                                                                  |
+### ComputeFeatureNeighborMisorientationsFilter-D1
 
-**Symptom:** Per-feature `AvgMisorientations` (output of `ComputeAvgMisors=true` / legacy `FindAvgMisors=true`) differ between SIMPLNX (post-2026-06-02 fix) and DREAM3D 6.5.171 on any dataset where features have mixed-phase neighbor lists. The legacy result depends on the *order* in which neighbors appear in the per-feature `NeighborList`: if the last-iterated neighbor is a phase match, the divisor used is the full neighbor-list length (incorrect); if the last neighbor is a phase mismatch, the divisor is decremented by 1 from the full length (the per-mismatch decrement at line 90 happens to be the last write to `tempMisoList`). The legacy result is therefore correct in some cases by accident and wrong by up to `(N-K) / N` of the true value in others, where N is the neighbor count and K is the number of phase-matched neighbors.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D1` |
+| **Filter UUID** | `0b68fe25-b5ef-4805-ae32-20acb8d4e823` |
+| **Status** | active |
 
-The bug is **non-observable on the V&V data fixtures' single-phase configurations** (no phase mismatches → no decrements → divisor matches list length, which equals the number of matches, which is correct). The bug **IS observable** on the bug-exposing fixture `Mixed Phase Neighbors (exposes divisor bug)`, which constructs a neighbor list `[match, mismatch, match]` for which the expected average is `(5 + 10) / 2 = 7.5°` but the buggy code produces `(5 + 10) / 3 = 5.0°`.
+**Symptom:** With averaging enabled, excluded neighbors can lower the average and make it depend on neighbor order.
 
-**Root cause:** **Bug** in both legacy DREAM3D 6.5.171 and SIMPLNX pre-fix.
+**Root cause:** bug. DREAM.3D v6.5.171 `FindMisorientations::execute()` resets `tempMisoList` to the list length inside each neighbor iteration. The next iteration therefore discards the preceding decrement. For a nonempty list of length N, the final divisor is N when the last neighbor is compatible, or N−1 when it is incompatible. SIMPLNX inherited this code. DREAM3D-NX v7.4.2 initializes the divisor once per feature, before the neighbor loop, and preserves all decrements. Compatibility means equal, valid crystal-structure indices. It does not require equal phase IDs. A list with one incompatible neighbor at the end can produce the correct divisor by coincidence. Multiple incompatible neighbors can still produce a wrong divisor when the last neighbor is incompatible. An all-incompatible list with more than one neighbor can produce zero instead of NaN.
 
-The legacy code at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.cpp` (lines TBD) and the SIMPLNX pre-fix code at `Algorithms/ComputeFeatureNeighborMisorientations.cpp:75` both contain `tempMisoList = featureNeighborList.size();` *inside* the inner per-neighbor j-loop. The intended behavior is for `tempMisoList` to start each outer-loop iteration (per feature) at `featureNeighborList.size()` and then decrement by 1 for each phase-mismatched neighbor (line 90: `tempMisoList > 0 ? tempMisoList-- : tempMisoList = 0;`). Because the reassignment happens at the *top* of each j-iteration, the decrement from the *previous* iteration is clobbered. The result is that only the *last* j-iteration's match/mismatch state actually affects `tempMisoList`: if the last neighbor is a match, the assignment runs and the decrement doesn't, so the final divisor is N; if the last neighbor is a mismatch, both the assignment and the decrement run, so the final divisor is N - 1.
+**Affected users:** Users of DREAM.3D v6.5.171 or DREAM3D-NX v7.0.0 through v7.4.1 who enable average misorientation on features with incompatible neighbors. Single-phase data with valid crystal structures does not trigger this divisor defect.
 
-The SIMPLNX fix (2026-06-02) moves the `tempMisoList = featureNeighborList.size();` assignment from line 75 to before the inner j-loop (alongside `tempMisorientationLists[i].assign(...)` at line ~67), so the assignment runs once per outer-loop iteration (per feature) and the decrement is preserved across j-iterations. The result is the mathematically correct divisor: the number of phase-matched neighbors.
+**Recommendation:** trust SIMPLNX. The corrected average divides the sum by the number of compatible neighbors.
 
-The bug went undetected for the lifetime of both implementations because:
-1. **The legacy 6.5.171 implementation had no automated test coverage of the `ComputeAvgMisors=true` path** (legacy DREAM3D's CI tested filters with default parameter values; this parameter defaults to false in many user-facing pipelines and the test infrastructure didn't sweep over both values).
-2. **The SIMPLNX Port preserved the bug** without a regression test that exercises mixed-phase neighbor lists. The `ComputeAvgMisors=true` test in `ComputeFeatureNeighborMisorientationsTest.cpp` was an `[.][UNIMPLEMENTED][!mayfail]` stub with the comment "TODO: needs to be implemented. This will need the input .dream3d file to be regenerated with the missing data generated using DREAM3D 6.6". Zero CI coverage.
-3. **The retroactive bug-triage cycle (2026-05) caught it** by source inspection. Documented in `/Users/mjackson/Desktop/bug_triage.md` as Bug #2.
-
-**Affected users:** Anyone running DREAM3D 6.5.171 or SIMPLNX pre-2026-06-02 with `ComputeAvgMisors=true` (legacy `FindAvgMisors=true`) on data containing features with mixed-phase neighbor lists. In practice this affects any multi-phase EBSD dataset that has at least one feature whose neighbor list includes both same-phase and different-phase neighbors. Single-phase datasets are unaffected. Datasets where the bug "accidentally" produces the correct divisor (every feature's neighbor list ends in a mismatch) are also unaffected.
-
-**Recommendation:** **Trust SIMPLNX (post-2026-06-02 fix).** The pre-fix per-feature `AvgMisorientations` values from both DREAM3D 6.5.171 and pre-fix SIMPLNX are mathematically incorrect for any feature with a mixed-phase neighbor list. Users migrating from 6.5.171 should expect per-feature average misorientations to shift toward the mathematically correct value, with the shift size proportional to the fraction of phase-mismatched neighbors per feature.
-
-A legacy backport branch of `FindMisorientations.cpp` with the same fix (move the `tempMisoList` reassignment outside the inner loop) would produce the corrected values on DREAM3D 6.5.171 for users requiring legacy-version-parity post-correction. The fix is mechanically the same as the SIMPLNX fix and is a one-line move. No such backport branch is currently maintained.
+**Evidence:** PR #1631 (`ec22ac375`) contains the divisor fix. Test sensitivity verification: `Class 1 - Mixed Phase Neighbors (exposes divisor bug)` uses neighbors `[2, 4, 3]` and expects `[5°, NaN, 10°]` with mean 7.5°. Resetting the divisor inside the loop instead gives 5°. `Class 1 - Mismatch Last Order` uses `[2, 3, 4]` as the control. `Class 4 - Invariants` compares the mean with the sum and count of finite list entries. All pass in CI. The run against DREAM.3D v6.5.171 on 2026-09-17 gives 4.9999804° for the middle-mismatch mean and 7.5° in SIMPLNX. In the mixed-phase Small IN100 case, 508 legacy feature averages differ from the correct formula applied to the legacy lists. SIMPLNX and a local proof version satisfy that formula for every feature. See `vv_work:ComputeFeatureNeighborMisorientationsFilter/comparison/case2_mixed_phase_mismatch_middle.txt`, `vv_work:ComputeFeatureNeighborMisorientationsFilter/comparison/case5_small_in100_mixed_phase.txt`, and the provenance sidecar for source changes after the comparison. Every release from `upstream/release/v7.0.0` through `upstream/release/v7.4.1` resets the divisor inside the neighbor loop. The `upstream/release/v7.4.2` source initializes it before that loop. The algorithm path is `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeMisorientations.cpp` in v7.0.0 through v7.0.3 and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.cpp` in later releases. The DREAM.3D `v6.5.171` tag contains the defect in `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.cpp`.
 
 ---
 
-## ComputeFeatureNeighborMisorientationsFilter-D2
+### ComputeFeatureNeighborMisorientationsFilter-D2
 
-| Field            | Value                                                       |
-|------------------|-------------------------------------------------------------|
-| **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D2`            |
-| **Filter UUID**  | `0b68fe25-b5ef-4805-ae32-20acb8d4e823`                      |
-| **Status**       | active (precision-class; non-deviation in algorithmic sense) |
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D2` |
+| **Filter UUID** | `0b68fe25-b5ef-4805-ae32-20acb8d4e823` |
+| **Status** | active |
 
-**Symptom:** Per-neighbor `MisorientationList` values and per-feature `AvgMisorientations` values differ between SIMPLNX (EbsdLib 2.4.1+, post-D1 fix) and DREAM3D 6.5.171 on real EBSD datasets containing cubic-phase features with grain-pair boundaries near cubic symmetry operators (e.g., 4-fold about c-axis, 3-fold about [111], 2-fold about face-diagonal). Per-neighbor values shift by sub-`0.0001°` (within float precision), but the magnitude amplifies when averaged across many neighbors at the per-feature level. On the V&V data fixtures (pure φ1 rotations about z, no sym-op-aligned neighbor pairs), no observable deviation.
+**Symptom:** Neighbor angles and feature averages can differ slightly from DREAM.3D v6.5.171 even when the averaging divisor is correct.
 
-**Root cause:** **Precision** — not an algorithm change in either implementation.
+**Root cause:** precision. DREAM.3D v6.5.171 uses `QuatF`, `getMisoQuat()`, and a float angle. SIMPLNX promotes stored float32 quaternions to `QuatD`, calls `calculateMisorientation()`, and converts the double angle to degrees before float32 storage. EbsdLib also replaces the cubic `acos` angle calculation with `2*atan2(norm(v), w)` using explicit reduced-quaternion vector components. These differences affect individual angles and the means formed from them.
 
-The deviation traces to the EbsdLib 2.4.1 release commit `5c8c993` (BlueQuartz Software, 2026-05-29), which replaces a precision-fragile `acos(w)` form in `CubicOps::calculateMisorientationInternal` with a numerically-stable `2·atan2(|v|, w)` form using the explicit reduced-quaternion `v` components. The precision improvement is real and mathematically more correct; it manifests for cubic misorientations whose minimum-rotation-axis representation lies on or near a cubic symmetry operator.
+**Affected users:** Users who compare floating-point neighbor angles or feature means with DREAM.3D v6.5.171. The archived measurements include cubic analytical inputs and cubic and mixed cubic/hexagonal Small IN100 inputs.
 
-This filter is a clean Port of `FindMisorientations` (modulo the D1 divisor bug, which existed in both implementations and is now fixed in SIMPLNX). The SIMPLNX algorithm reproduces the legacy per-feature outer loop, per-neighbor inner loop, and per-feature average finalization. The legacy filter consumes `OrientationLib::CubicOps::getMisoQuat` (pre-fix `acos`-form, float32); the SIMPLNX filter consumes `ebsdlib::CubicOps::calculateMisorientation` (post-fix `2·atan2`-form, QuatD). The difference is entirely in the EbsdLib precision improvement, NOT in this filter.
+**Recommendation:** trust SIMPLNX. The analytical tests use a `1e-3°` tolerance and independent expected values. The precision difference does not change the definition of the average.
 
-For the full root-cause walkthrough of the EbsdLib precision improvement, see the precedent characterization in `vv/deviations/BadDataNeighborOrientationCheckFilter.md` §"Non-deviations" → "EbsdLib 2.4.1 CubicOps precision improvement". The characterization there applies equally to this filter. As with `ComputeFeatureReferenceMisorientationsFilter-D1`, this filter's per-feature averaging amplifies the per-voxel precision shift across the feature's neighbor list.
-
-**Affected users:** Anyone migrating from DREAM3D 6.5.171 to SIMPLNX on cubic-phase EBSD data with features whose neighbor lists include sym-op-aligned grain-pair boundaries. Non-cubic data and data without sym-op-aligned boundaries are unaffected.
-
-**Recommendation:** **Trust SIMPLNX.** The 6.5.171 result was limited by float32-input ULP noise amplified by `acos`-near-1 catastrophic cancellation; SIMPLNX returns the mathematically correct value. The shift is well below typical EBSD measurement resolution and will not materially affect downstream microstructural analyses.
+**Evidence:** EbsdLib commit `5c8c993` contains the cubic angle-calculation change. On 2026-09-17, the three analytical cases differ from DREAM.3D v6.5.171 by up to `3.05176e-5°` per neighbor. Cubic Small IN100 differs by up to `0.000337124°` per neighbor and `7.24792e-5°` per feature mean. The local proof version matches all five cases within `rtol=1e-6, atol=1e-6`, with paired NaNs; the production cases retain rounding differences. See `vv_work:ComputeFeatureNeighborMisorientationsFilter/comparison/summary.md` and `vv_work:ComputeFeatureNeighborMisorientationsFilter/notes/residual_rounding_analysis.md`.
 
 ---
 
-## Non-deviations (algorithm characteristics common to both filters)
+## Part 2 — SIMPLNX defects and behavior changes
 
-The following behaviors are NOT deviations — SIMPLNX (post-D1 fix) and DREAM3D 6.5.171 (with D1 still present) agree on them where the D1 bug is not exercised. Captured here so future engineers don't re-discover them and propose them as deviations.
+### ComputeFeatureNeighborMisorientationsFilter-D3
 
-### NaN entry on phase mismatch
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureNeighborMisorientationsFilter-D3` |
+| **Filter UUID** | `0b68fe25-b5ef-4805-ae32-20acb8d4e823` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
 
-Both implementations write `NaN` (via `std::numeric_limits<float>::quiet_NaN()` or `<cmath>`'s `NAN`) into the per-neighbor `MisorientationList` entry when the neighbor's phase differs from the focal feature's phase, or when the focal feature's `laueClass1` is out of range for `orientationOps`. **Both filters share this behavior** — algorithm characteristic, not a defect.
+**Symptom:** A negative or out-of-range feature phase can cause an out-of-bounds read from Crystal Structures.
 
-### Per-feature outer-loop iteration starts at index 1 (skips background feature 0)
+**Root cause:** bug. Both the current-feature and neighbor-feature lookups used phase values directly as ensemble indices. Preflight validates array shapes and tuple counts, not the phase values. The filter now checks phase bounds before both lookups in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.cpp`. Invalid phases now return error `-34502`. Background feature zero is skipped by the outer loop.
 
-Both implementations iterate `for(size_t i = 1; i < totalFeatures; i++)` in the per-feature outer loop, skipping the background feature at index 0. The `MisorientationList[0]` and `AvgMisorientations[0]` entries are therefore left at their initialized default values (empty list and `0.0f`, respectively). **Both filters share this behavior**.
+**Affected users:** Users whose participating features contain phase indices outside `[0, number of Crystal Structures tuples)`.
 
-### Self-misorientation not computed
+**Recommendation:** trust SIMPLNX. Correct the reported phase value or supply the corresponding Crystal Structures entry before execution.
 
-Neither implementation includes the focal feature `i` in its own neighbor list (the `NeighborList<int32>` input is assumed to be a list of *other* features that share at least one boundary with feature `i`, not including `i` itself). Both implementations therefore do not compute `misorientation(i, i)` (which would be `0°` by definition). **Both filters share this assumption** — it is a property of how `ComputeFeatureNeighbors` (the upstream filter that produces the `NeighborList`) is conventionally used in the SIMPLNX and DREAM3D 6.5.171 pipelines.
+**Evidence:** PR #1568 (`4ec21e93f`) contains the phase-bounds fix. `Phase Index Bounds` supplies -1 and 2 with a two-tuple ensemble array. It checks both current and neighbor errors and successful execution when only the background phase is invalid. All pass in CI. Every release source from `upstream/release/v7.0.0` through `upstream/release/v7.4.2` has both unchecked lookups, using the algorithm paths listed under D1. DREAM.3D tag `v6.5.171`, `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.cpp`, also has both unchecked lookups.

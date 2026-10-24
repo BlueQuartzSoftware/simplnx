@@ -1,14 +1,12 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeatureCentroidsFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeatureCentroidsFilter
 
-This file lists every documented behavioral difference between the SIMPLNX `ComputeFeatureCentroidsFilter` and its DREAM3D 6.5.171 equivalent `FindFeatureCentroids` (SIMPL UUID `6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca`, `Source/Plugins/Generic/GenericFilters/FindFeatureCentroids.{h,cpp}`).
-
-Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from the V&V report and public migration guidance. The Filter UUID field is the permanent cross-reference anchor.
-
-**Algorithm Relationship:** *Port.* The non-periodic path is a near line-by-line translation of `FindFeatureCentroids::find_centroids()`, preserving the identical Kahan compensated summation and `double` accumulators. Comparison basis: **source inspection of both implementations** (6.5.171/6.5.172 `FindFeatureCentroids.cpp` vs SIMPLNX `Algorithms/ComputeFeatureCentroids.cpp`), backed by the Class 1 analytical fixtures in `test/ComputeFeatureCentroidsTest.cpp` that verify SIMPLNX against hand-derived values independently of either DREAM3D version. An empirical three-way binary A/B (6.5.171 PipelineRunner + 6.5.172 backport + nxrunner) can be run to bit-confirm D1 if the SBIR deliverable requires it; source analysis is conclusive for a verified port.
+Part 1 records the coordinate-precision difference and the added periodic mode. Part 2 records the two fixed SIMPLNX periodic-centroid defects. Both parts use the stable `ComputeFeatureCentroidsFilter-D<N>` sequence.
 
 ---
 
-## ComputeFeatureCentroidsFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ComputeFeatureCentroidsFilter-D1
 
 | Field | Value |
 |---|---|
@@ -16,17 +14,19 @@ Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from 
 | **Filter UUID** | `c6875ac7-8bdd-4f69-b6ce-82ac09bd3421` |
 | **Status** | active |
 
-**Symptom:** Centroid components may differ from DREAM3D 6.5.171 in the lowest bit(s) of the `float32` result on features with large voxel counts and/or large coordinate magnitudes. On typical data the outputs are bit-identical.
+**Symptom:** Non-periodic centroid components can differ from DREAM.3D v6.5.171 because the implementations use different coordinate precision.
 
-**Root cause:** *Precision.* Both implementations accumulate voxel-center coordinates into `double` with the identical Kahan compensated-summation kernel and store the final centroid as `float32`. The only difference is how the per-voxel center is fetched before accumulation: SIMPLNX computes it directly in `float64` (`ImageGeom::getCoords` → `Point3Dd`), whereas 6.5.171 computes it into a `float[3]` and then promotes to `double` inside the Kahan step (`FindFeatureCentroids.cpp:161,175–199`). SIMPLNX therefore carries full double precision through the whole accumulation; legacy carries a `float32`-rounded coordinate into each add. After averaging and the final cast back to `float32`, the residual difference is at or below one `float32` ULP of the coordinate value.
+**Root cause:** Precision. Both implementations use double-precision Kahan sums and store float32 centroids. DREAM.3D v6.5.171 reads each cell center into `std::array<float, 3>` before accumulation. SIMPLNX calculates `origin + (index + 0.5) * spacing` with double-precision operands in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp`.
 
-**Affected users:** Anyone requiring bit-exact reproducibility of centroid values across the DREAM3D → DREAM3D-NX migration, on datasets with very large coordinate magnitudes or features spanning millions of voxels. Users who visualize or do downstream morphology at `float32` precision will not observe a difference.
+**Affected users:** Users who require identical floating-point centroid values when migrating from DREAM.3D v6.5.171.
 
-**Recommendation:** *Trust SIMPLNX.* The `float64` voxel-center path is strictly more accurate; 6.5.171 is not more correct — it simply discards precision earlier. No legacy patch needed.
+**Recommendation:** Trust SIMPLNX. Its coordinate calculation avoids the earlier float32 rounding; compare numerical results with a tolerance appropriate to the data.
+
+**Evidence:** `Source/Plugins/Generic/GenericFilters/FindFeatureCentroids.cpp` in DREAM.3D v6.5.171 contains the float coordinate buffer and Kahan kernel. The current SIMPLNX algorithm contains explicit double-precision coordinate expressions. Both sources divide each accumulated coordinate by its cell count. The 2026-10-22 comparison records an exact match across all three versions for `neutral_B` and feature 1 X = 16777216 in DREAM.3D v6.5.171 versus 16777218 in DREAM3D-NX and a local proof version with the D1 fix for `precision_D1` (`vv_work:ComputeFeatureCentroidsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeFeatureCentroidsFilter/notes/proof_commits.md`).
 
 ---
 
-## ComputeFeatureCentroidsFilter-D2
+### ComputeFeatureCentroidsFilter-D2
 
 | Field | Value |
 |---|---|
@@ -34,18 +34,58 @@ Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from 
 | **Filter UUID** | `c6875ac7-8bdd-4f69-b6ce-82ac09bd3421` |
 | **Status** | active |
 
-**Symptom:** SIMPLNX exposes an `Is Periodic` option that, when enabled, offsets the centroid of any feature spanning the full extent of an axis (wrap-aware centroid). DREAM3D 6.5.171 `FindFeatureCentroids` has no such option and always produces the literal (truncated) centroid.
+**Symptom:** Enabling `Is Periodic` can change centroid components for features that touch both ends of an image axis. DREAM.3D v6.5.171 always calculates arithmetic means.
 
-**Root cause:** *Algorithmic choice (feature addition).* The `Is Periodic` parameter and the periodic centroid computation are SIMPLNX-only. Legacy has no periodic path, so there is nothing to diff against — this is an additive capability, not a divergence on shared behavior. The SIMPLNX default is `false`, which reproduces legacy exactly. SIMPL 6.4/6.5 pipelines convert with `Is Periodic` defaulted to `false`, so auto-converted legacy pipelines match 6.5.171.
+**Root cause:** Algorithmic choice. SIMPLNX adds a circular mean for each spanning axis. A normalized unit-vector resultant below `1e-6` preserves the arithmetic mean. `Is Periodic` defaults to false, including after SIMPL pipeline conversion. With periodic mode off, the precision difference in D1 still applies.
 
-**Affected users:** Only users who explicitly enable `Is Periodic`. Auto-converted legacy pipelines are unaffected (default `false`).
+**Affected users:** Users who enable `Is Periodic`. Automatic conversion of a DREAM.3D pipeline does not enable it.
 
-**Recommendation:** *Trust SIMPLNX.* Opt-in feature with a legacy-preserving default.
+**Recommendation:** Trust SIMPLNX. Enable periodic mode for periodic geometry; keep it disabled for ordinary arithmetic centroids. D3 and D4 describe corrections to this added mode.
 
-**Note (SIMPLNX-internal bugs fixed during V&V — not legacy deviations):** The periodic centroid had two SIMPLNX-internal defects, both fixed. (1) *Spacing:* the offset in the `ImageGeom` overload of `AdjustCentroidsForPeriodicFaces` was added in cell-index units (`(dim−1)/2`) to a physical-coordinate centroid, correct only when spacing == 1 (fixed during #1658). (2) *Model (issue #1665, 2026-07 follow-up):* the constant half-domain offset is itself only correct for a feature whose mass is symmetric about the seam, and can place asymmetric wrapped features outside the domain. The periodic path was reimplemented as a **minimum-image circular mean** accumulated during the cell sweep, and the range-based `ImageGeom` overload (insufficient inputs to compute a wrapped centroid) was removed. `test/ComputeFeatureCentroidsTest.cpp` Fixtures D/E (independent minimum-image oracle) and F (domain-filling fallback) pin the corrected behavior. Because 6.5.171 has no periodic path, neither fix is a change relative to legacy; recorded here for any SIMPLNX user who ran `Is Periodic` before the fixes.
+**Evidence:** `ComputeFeatureCentroidsFilter::parameters()` defines the false default, and `FromSIMPLJson()` starts from default arguments. DREAM.3D v6.5.171 `FindFeatureCentroids` has no periodic parameter or calculation. Fixtures D–F in `src/Plugins/SimplnxCore/test/ComputeFeatureCentroidsTest.cpp` check the periodic behavior independently. The 2026-10-22 case `periodic_E_D2` gives feature 1 X = 13.666666984558105 in both DREAM.3D v6.5.171 and a local proof version versus 11 in DREAM3D-NX because only DREAM3D-NX has the periodic option; no D2 proof patch is needed (`vv_work:ComputeFeatureCentroidsFilter/comparison/LegacyComparison.md`, `vv_work:ComputeFeatureCentroidsFilter/notes/proof_commits.md`).
 
 ---
 
-## Retracted candidate deviations
+## Part 2 — SIMPLNX defects and behavior changes
 
-- **~~D: Kahan-vs-naive summation precision~~** — The retroactive DRAFT report (`docs/vv_retroactive_reports/ComputeFeatureCentroidsFilter.md`) hypothesized that SIMPLNX added Kahan summation over a legacy *naive* running sum. **Retracted:** source inspection shows 6.5.171 `FindFeatureCentroids::find_centroids()` already uses the identical Kahan kernel with identical `double` accumulators. No such deviation exists; the residual precision difference is captured by D1 (voxel-center fetch width), not summation method.
+### ComputeFeatureCentroidsFilter-D3
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureCentroidsFilter-D3` |
+| **Filter UUID** | `c6875ac7-8bdd-4f69-b6ce-82ac09bd3421` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.2.1 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** With non-unit spacing, the periodic centroid offset used cell-index units instead of physical units.
+
+**Root cause:** Bug. The image overload of `AdjustCentroidsForPeriodicFaces` added `(dimension - 1) / 2` directly to a physical centroid. DREAM3D-NX v7.4.2 multiplies that offset by the axis spacing. The current circular-mean calculation also includes spacing in cell coordinates and domain lengths. DREAM.3D v6.5.171 has no periodic code path.
+
+**Affected users:** Users who enable periodic mode with non-unit spacing on a spanning axis in the affected releases.
+
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 corrects the spacing units, but D4 still affects its periodic results; the release after v7.4.2 contains both corrections.
+
+**Evidence:** Direct inspection of `ComputeFeatureCentroids.cpp` and `src/simplnx/Utilities/GeometryHelpers.cpp` on all ten release branches shows no periodic mode through v7.2.0, an unscaled offset from v7.2.1 through v7.4.1, and the scaled offset in v7.4.2. PR #1658 (`ded8bf33f`) applies the spacing correction. Current fixture E checks physical X = 11 with spacing 2 and origin 10 after both D3 and D4 corrections.
+
+---
+
+### ComputeFeatureCentroidsFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeFeatureCentroidsFilter-D4` |
+| **Filter UUID** | `c6875ac7-8bdd-4f69-b6ce-82ac09bd3421` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.2.1 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** The periodic mode could return an incorrect centroid for an asymmetric wrapped feature or place the centroid outside the image domain.
+
+**Root cause:** Bug. A constant half-span offset cannot represent the distribution of a feature's cells across a periodic boundary. The current calculation accumulates cell-center unit vectors, converts their mean angle to a physical coordinate and retains the arithmetic mean when the resultant is below `1e-6`. DREAM.3D v6.5.171 has no periodic code path.
+
+**Affected users:** Users who enable periodic mode in the affected releases, especially for asymmetric wrapped features or features that fill the domain.
+
+**Recommendation:** Trust SIMPLNX. Use the DREAM3D-NX release after v7.4.2 for the corrected periodic calculation. Disable periodic mode only when an ordinary arithmetic centroid is appropriate.
+
+**Evidence:** The periodic implementation in DREAM3D-NX v7.2.1 through v7.4.2 calls the constant-offset image helper. PR #1670 (`4a7b71e5f`) replaces that model with the circular mean and removes the image helper. Current fixtures D and E independently unwrap coordinates to obtain X = 3.5 and X = 11; fixture F requires the arithmetic fallback X = 2.

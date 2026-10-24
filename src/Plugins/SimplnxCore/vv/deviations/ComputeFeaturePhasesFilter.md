@@ -1,81 +1,65 @@
-# Deviations from DREAM3D 6.5.171: ComputeFeaturePhasesFilter
+# Deviations from DREAM.3D v6.5.171: ComputeFeaturePhasesFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`FindFeaturePhases`, SIMPL UUID `6334ce16-cea5-5643-83b5-9573805873fa`).
+Part 1 lists the three differences from `FindFeaturePhases` in DREAM.3D v6.5.171. Entries retain the stable IDs `ComputeFeaturePhasesFilter-D1` through `ComputeFeaturePhasesFilter-D3`. The Filter UUID is the permanent cross-reference anchor.
 
-Entries use stable IDs (`ComputeFeaturePhasesFilter-D<N>`). D1, D2, and D3 are active. None affect `featurePhases[1..N]` for valid inputs.
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-> **Source references:** DREAM3D 6.5.171 `FindFeaturePhases::execute()` is in `DREAM3D/Source/Plugins/Generic/GenericFilters/FindFeaturePhases.cpp`. SIMPLNX algorithm is in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeaturePhases.cpp`.
-
----
-
-## ComputeFeaturePhasesFilter-D1
+### ComputeFeaturePhasesFilter-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeFeaturePhasesFilter-D1` |
-| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` (SIMPL `6334ce16-cea5-5643-83b5-9573805873fa`) |
+| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
 | **Status** | active |
-| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip`, `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zero` (zero-init contract) |
 
-**Symptom:** `featurePhases[0]` is always `0` in SIMPLNX; under 6.5.171 it is written with the phase of the last cell whose `featureId == 0`. Confirmed empirically in the 2026-07-10 comparison run (Case C: SIMPL writes `featurePhases[0] = 2`; SIMPLNX leaves it `0`).
+**Symptom:** SIMPLNX writes zero to feature zero. DREAM.3D v6.5.171 writes the phase of the last background cell.
 
-**Root cause:** *algorithmic choice (explicit background skip).* The SIMPLNX loop contains `if(featureId == 0) { continue; }` before any write. The 6.5.171 `FindFeaturePhases::execute()` performs `m_FeaturePhases[gnum] = m_CellPhases[i]` unconditionally for every cell index `i` without any guard on `gnum == 0` (source: `FindFeaturePhases.cpp:202`), so background cells (featureId 0) are processed and `featurePhases[0]` receives the last background cell's phase.
+**Root cause:** Algorithmic choice. `ComputeFeaturePhases.cpp` skips cells with FeatureId zero and writes a feature cache initialized to zero. `FindFeaturePhases::execute()` in DREAM.3D v6.5.171 assigns every cell phase, including background cells. This is a deliberate background convention, not a defect in the last-cell rule for positive features.
 
-**Affected users:** Any consumer that reads `featurePhases[0]` directly. Standard downstream filters treat feature index 0 as the background and ignore it.
+**Affected users:** Users who read feature zero. DREAM3D-NX v7.4.2 introduces background exclusion; DREAM3D-NX v7.0.0 through v7.4.1 process background cells as DREAM.3D v6.5.171 does.
 
-**Recommendation:** Treat `featurePhases[0]` as undefined. Its value in SIMPLNX (0, from zero-initialization by `CreateArrayAction`) is not equivalent to the last background cell's phase produced by 6.5.171.
+**Recommendation:** Trust SIMPLNX. Treat feature zero as background, not as a measured phase for a positive feature.
+
+**Evidence:** `Valid: Feature 0 Skip` checks output `[0,1,2]`. `Valid: Gap Feature Stays Zero` checks the separate unused-feature rule. Source comparison uses DREAM.3D tag `v6.5.171`, `Source/Plugins/Generic/GenericFilters/FindFeaturePhases.cpp`, and each SIMPLNX release source listed in `../provenance/ComputeFeaturePhasesFilter.md`. `vv_work:ComputeFeaturePhasesFilter/compare_outputs.py` specifies Case C expectations but is not a saved execution result.
 
 ---
 
-## ComputeFeaturePhasesFilter-D2
+### ComputeFeaturePhasesFilter-D2
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeFeaturePhasesFilter-D2` |
-| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` (SIMPL `6334ce16-cea5-5643-83b5-9573805873fa`) |
+| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
 | **Status** | active |
-| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase`, `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Negative Cell Phase On Background Cell` (guard scope) |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
 
-**Symptom:** A cell phases array containing a negative value in a valid feature (not 0) causes an immediate error (`-61861`) in SIMPLNX. Under 6.5.171 the same input is processed silently.
+**Symptom:** Earlier versions could copy a negative phase into a positive feature without reporting an error. SIMPLNX now returns `-61861` for this input.
 
-**Root cause:** *algorithmic choice (defensive guard added).* SIMPLNX checks `if(currentPhaseId < 0) { return MakeErrorResult(-61861, ...); }` before each write. The 6.5.171 `FindFeaturePhases::execute()` has no corresponding check; `m_FeaturePhases[gnum] = m_CellPhases[i]` would silently store the negative value.
+**Root cause:** Bug. Earlier implementations copied signed cell phases without checking for negative values. The current algorithm checks each phase after excluding background cells and before updating its feature cache. Storing a negative integer is defined arithmetic; the defect was accepting an invalid phase value.
 
-**Affected users:** Pipelines that supply negative cell phase values. Such values represent invalid input; the legacy silent-accept behavior was a defect. SIMPLNX surfaces the error explicitly.
+**Affected users:** Users with negative cell phases on positive features in DREAM3D-NX v7.0.0 through v7.4.1 or DREAM.3D v6.5.171. Negative phases on background cells are excluded from the current check.
 
-**Recommendation:** Trust SIMPLNX. Negative phase values are invalid; the 6.5.171 silent-pass was undefined behavior.
+**Recommendation:** Trust SIMPLNX. Correct the negative phase before processing a positive feature; DREAM3D-NX v7.4.2 contains the validation fix.
+
+**Evidence:** `Invalid: Negative Cell Phase` checks `-61861`; `Valid: Negative Cell Phase On Background Cell` checks success and output `[0,2]`. Direct source inspection finds no phase-sign guard in the nine release snapshots before v7.4.2 or in DREAM.3D tag `v6.5.171`; v7.4.2 contains the guard added by `bbc470e6d` (PR #1672). The release table in `../provenance/ComputeFeaturePhasesFilter.md` identifies the source paths.
 
 ---
 
-## ComputeFeaturePhasesFilter-D3
+### ComputeFeaturePhasesFilter-D3
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ComputeFeaturePhasesFilter-D3` |
-| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` (SIMPL `6334ce16-cea5-5643-83b5-9573805873fa`) |
+| **Filter UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
 | **Status** | active |
-| **Tested by** | `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Mixed Phase Warning`, `SimplnxCore::ComputeFeaturePhasesFilter: Valid: Truncated Mixed Feature Warning` |
 
-**Symptom:** When features have cells with inconsistent phases, the two implementations emit different warning message formats under the same warning code (`-500`).
+**Symptom:** Mixed phases produce different warning text under the same warning code, `-500`.
 
-- **SIMPLNX** emits a single line listing up to 15 affected feature IDs as a comma-separated list, followed by `"and N more occurrence(s)"` when more than 15 features are affected. Example: `"... Affected Phase Features: 2, 5, 7, and 3 more occurrences"`.
-- **6.5.171** emits a multi-line message: a header line (`"Elements from some features did not all have the same phase Id. The last phase Id copied into each feature will be used"`) followed by one line per conflicting feature: `"  Phase Feature X created Y warnings."` where `Y` is the number of phase-mismatched cells for that feature. All lines are joined with `\n` in a single `notifyWarningMessage` call. There is no truncation limit.
+**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 counts cells whose phase differs from the first phase of each feature. It combines a header and one line per affected feature in one warning. SIMPLNX collects conflicting feature IDs in a sorted set, lists up to 15 IDs and appends the omitted-feature count. Consecutive phase comparisons identify the same conflicting positive features as comparison with the first phase. Both implementations retain the last phase.
 
-**Root cause:** *message format rewritten at port time.* The legacy implementation tracked a per-feature conflict count in a `QMap<int32_t, int32_t> warningMap` and emitted that count per feature. SIMPLNX replaces the count with a `std::vector<bool> warnFeature` (boolean per feature) and formats the output as a flat ID list rather than per-feature lines. SIMPLNX also caps the list at 15 IDs to keep the warning compact.
+**Affected users:** Tools that parse warning text. DREAM3D-NX v7.0.0 through v7.2.2 emit a header warning and separate feature-count warnings. DREAM3D-NX v7.4.0 and v7.4.1 use one unlimited ID list; v7.4.2 introduces the 15-ID limit.
 
-**Affected users:** Scripts or tooling that parse warning message text. The warning code (`-500`) is unchanged; only the message text and structure differ.
+**Recommendation:** Trust SIMPLNX. Use warning code `-500` to identify mixed phases; avoid parsing the message body as a stable interface.
 
-**Recommendation:** Trust SIMPLNX. The warning code is stable; do not parse the message body for programmatic use.
-
----
-
-## Comparison runs
-
-### 2026-07-10 — current (post-cleanup, 3 cases)
-
-| Case | featureIds | cellPhases | Result |
-|---|---|---|---|
-| A | `[1,1,2,2,3,3,4,4]` | `[1,1,1,1,2,2,2,2]` | `featurePhases[1..4]` **BIT-IDENTICAL** |
-| B | `[1,2,3,4,1,2,3,4]` | `[1,1,2,2,2,1,2,2]` | `featurePhases[1..4]` **BIT-IDENTICAL** |
-| C | `[0,0,1,1,2,2,3,3]` | `[2,2,1,1,2,2,1,1]` | `featurePhases[1..3]` bit-identical; `featurePhases[0]`: SIMPL=2, SIMPLNX=0 — **D1 confirmed** |
-
-**Conclusion:** `featurePhases[1..N]` is bit-identical across all three cases. The only output deviation is D1 at `featurePhases[0]` when background cells are present. D2 and D3 affect error/warning paths only.
+**Evidence:** `Valid: Mixed Phase Warning` checks one warning, ID 1 and final phase 2. `Valid: Truncated Mixed Feature Warning` checks IDs 1 through 15 and the omitted count of one. DREAM.3D `FindFeaturePhases.cpp` at tag `v6.5.171` contains the per-feature conflict counts. The release-source table in `../provenance/ComputeFeaturePhasesFilter.md` records the warning changes.

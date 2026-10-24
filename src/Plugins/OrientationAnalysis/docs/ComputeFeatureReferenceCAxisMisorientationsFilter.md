@@ -25,7 +25,7 @@ This filter requires at least one hexagonal crystal structure phase (6/m or 6/mm
 
 ### Note
 
-Results may differ from the DREAM3D 6.6 version by approximately 0.0001 degrees due to improved double-precision calculations for cross-platform accuracy.
+Feature means are accumulated in double precision and stored as float32. This reduces accumulated rounding error for large features; results can differ from the DREAM3D 6.6 version.
 
 ### Required Input Sources
 
@@ -49,7 +49,7 @@ Cell-level arrays are iterated directly. Crystal structure validation ensures at
 
 Cell-level data (feature IDs, phases, quaternions) is processed one Z-slice at a time. For each slice, all input arrays are bulk-read via `copyIntoBuffer` into pre-allocated slice buffers, the misorientation is computed for every cell in the slice, and results are bulk-written via `copyFromBuffer`. The feature-level average c-axes array is cached locally at startup. Crystal structures are also cached from the ensemble-level array.
 
-A second Z-slice pass re-reads the cell-level feature IDs and the just-written misorientation output to compute the population standard deviation per feature.
+A second Z-slice pass re-reads the cell-level feature IDs, phases, and the just-written misorientation output to compute the population standard deviation per feature. Both passes include only cells with a positive feature ID and a positive hexagonal phase.
 
 ### Performance
 
