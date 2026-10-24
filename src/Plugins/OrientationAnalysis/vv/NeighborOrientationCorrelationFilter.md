@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Minor changes to `NeighborOrientationCorrelation` in DREAM.3D v6.5.171. SIMPLNX corrects the pass count and neighbor selection, uses double-precision orientations, and transfers data by slice. |
 | Oracle (confirmed) | Classes 1 and 4 define analytical tuples and invariants in `test/NeighborOrientationCorrelationTest.cpp`. A Class 2 NumPy reference supplies the 12-fixture comparison evidence in provenance. |
-| Code paths enumerated | 26 of 40 exercised. Gaps include transfer-order cases, cancellation, and I/O failures. |
-| Tests today | 19 ordinary test cases cover analytical outputs, invariants, invalid inputs and SIMPL conversion. All pass in CI; 1 additional hidden case generates input data. |
+| Code paths enumerated | 27 of 41 exercised. Gaps include transfer-order cases, cancellation, and I/O failures. |
+| Tests today | 20 ordinary test cases cover analytical outputs, invariants, invalid inputs, geometry cell tuple counts and SIMPL conversion. One additional hidden case generates input data. |
 | Exemplar archive | `Small_IN100_dream3d_v3.tar.gz` supplies production-test input only. The two filter-output exemplars are retired; expected outputs come from analytical fixtures and invariants. |
 | Legacy comparison | Not run on the current algorithm; the run against DREAM.3D v6.5.171 on 2026-07-07 predates the slice-transfer changes. |
 | Bug flags | None |
@@ -58,9 +58,9 @@ All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for D2
 
 ## Code path coverage
 
-26 of 40 paths exercised. Each uncovered path states its missing fixture below.
+27 of 41 paths exercised. Each uncovered path states its missing fixture below.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.cpp` (359 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.cpp` (243 lines), and `src/simplnx/Utilities/SliceBufferedTransfer.hpp` (364 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.cpp` (359 lines), `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.cpp` (249 lines), and `src/simplnx/Utilities/SliceBufferedTransfer.hpp` (364 lines).
 
 Test names below omit the common `OrientationAnalysis::NeighborOrientationCorrelationFilter: ` prefix. Each pass scans and transfers one Z slice at a time.
 
@@ -106,10 +106,11 @@ Test names below omit the common `OrientationAnalysis::NeighborOrientationCorrel
 | 38 | I/O | Numeric transfer read or write fails → return error | *Not directly tested. Requires an injected transfer failure.* |
 | 39 | Transfer | No source marks → preserve numeric tuples without a slice write | `Oracle F02 - dissimilar neighbors untouched` |
 | 40 | Transfer | CopyArrayTuple receives a numeric array → copyTuple | *Not directly tested. The caller routes numeric arrays through SliceBufferedTransferOneZ.* |
+| 41 | Preflight | Confidence Index, Cell Phases and Cell Quaternions have equal tuple counts that differ from the geometry cell count → error -580098 | `Geometry cell tuple counts` — 4 or 12 tuples for 8 cells |
 
 ## Test inventory
 
-All names are in `src/Plugins/OrientationAnalysis/test/NeighborOrientationCorrelationTest.cpp`. The 19 ordinary cases are the CI validation set. All pass in CI. The hidden data generator is listed separately from correctness checks.
+All names are in `src/Plugins/OrientationAnalysis/test/NeighborOrientationCorrelationTest.cpp`. There are 20 ordinary cases and one hidden data generator. The hidden data generator is listed separately from correctness checks.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -133,6 +134,7 @@ All names are in `src/Plugins/OrientationAnalysis/test/NeighborOrientationCorrel
 | `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F11 - volume corner` | new-for-V&V | Checks that corner cell 0 copies cell 16 with only three valid face neighbors. |
 | `OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F12 - anisotropic dims` | new-for-V&V | Checks that cell 29 copies cell 28 on a 4×5×3 image, with unequal similarity counts and axis strides. |
 | `OrientationAnalysis::NeighborOrientationCorrelationFilter: Class 4 - Level >= 6 is a no-op (I4)` | new-for-V&V | Executes Level 6 and compares every numeric tuple with its input snapshot. |
+| `OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry cell tuple counts` | new-for-V&V | Checks error -580098 for 4 or 12 tuples per input on an 8-cell geometry, and error -580093 when one input has 4 tuples and the others have 8. Matching counts permit inputs in the same or separate Attribute Matrices; execution repairs only arrays in the Confidence Index matrix and preserves ignored arrays. |
 
 ## Exemplar archive
 
