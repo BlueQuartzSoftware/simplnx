@@ -40,7 +40,7 @@ DREAM.3D v6.5.171 also replaces a zero-count feature mean with zero. Its standar
 
 **Symptom:** Cell angles and feature statistics can differ numerically from DREAM.3D v6.5.171 because intermediate precision and evaluation order differ.
 
-**Root cause:** Precision and library. DREAM.3D v6.5.171 uses float orientation matrices, `MatrixMath` vector operations, `acosf`, and a float array for the count, angle sum and squared-difference sum. SIMPLNX uses a double quaternion-to-matrix conversion, Eigen double vectors and a double angle calculation. Its feature-angle sum remains float32. Its variance accumulator is double, although subtraction of the stored cell angle and feature mean occurs in float32 before assignment to double.
+**Root cause:** Precision and library. DREAM.3D v6.5.171 uses float orientation matrices, `MatrixMath` vector operations, `acosf`, and a float array for the count, angle sum and squared-difference sum. SIMPLNX uses a double quaternion-to-matrix conversion, Eigen double vectors and a double angle calculation. Its feature-angle sum, feature mean and variance accumulator use double precision. It converts each stored float32 cell angle to double before subtracting the double feature mean. Output arrays use float32.
 
 DREAM3D-NX v7.0.0 already uses double vector math. DREAM3D-NX v7.4.0 replaces the float variance accumulator with `std::vector<double>` and changes cell traversal to plane, row, column order. Later releases retain these changes. This filter does not call `LaueOps::calculateMisorientation`; changes to that function do not explain this difference.
 

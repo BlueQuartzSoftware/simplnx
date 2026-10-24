@@ -16,8 +16,8 @@
 |--------|---------------|
 | Algorithm Relationship | Minor changes to `FindFeatureReferenceCAxisMisorientations` in DREAM.3D v6.5.171. SIMPLNX adds hexagonal-phase gating, double-precision vector math, explicit NaN outputs and slice transfers. |
 | Oracle (confirmed) | Classes 1 and 4 use analytical angles, feature statistics and invariants. Four cases in `test/ComputeFeatureReferenceCAxisMisorientationsTest.cpp` encode these checks. All pass in CI. |
-| Code paths enumerated | 16 of 27 exercised by the visible tests. Gaps include Hexagonal-Low, angles above 90°, transfer failures and cancellation. |
-| Tests today | 9 test cases: 8 visible and 1 hidden slice-boundary case. The visible cases check analytical values, invalid inputs and SIMPL conversion. |
+| Code paths enumerated | 21 of 29 exercised by the visible tests. Gaps include angles above 90°, cosine clamping, feature-zero statistics, transfer failures and cancellation. |
+| Tests today | 14 test cases: 13 visible and 1 hidden slice-boundary case. The visible cases check analytical values, invalid inputs and SIMPL conversion. |
 | Exemplar archive | `caxis_data.tar.gz` supplies input for `InValid Filter Execution`. The correctness oracle is defined in C++ fixtures. |
 | Legacy comparison | Not run — comparison artifacts are not available. |
 | Bug flags | None |
@@ -25,7 +25,7 @@
 
 ## Summary
 
-`ComputeFeatureReferenceCAxisMisorientationsFilter` calculates cell-to-feature c-axis angles and per-feature means and standard deviations. Class 1 analytical fixtures and Class 4 invariants check these outputs, including NaN for features with no hexagonal contributors. The current source retains the legacy non-hexagonal correction and fixes two SIMPLNX defects.
+`ComputeFeatureReferenceCAxisMisorientationsFilter` calculates cell-to-feature c-axis angles and per-feature means and standard deviations. Class 1 analytical fixtures and Class 4 invariants check these outputs, including NaN for features with no hexagonal contributors. The current source excludes nonparticipating cells from statistics and validates cell tuple counts and feature indices before array access.
 
 ## Algorithm Relationship
 
@@ -55,9 +55,9 @@ All defects in this table are fixed. The fixes will be in the DREAM3D-NX release
 
 ## Code path coverage
 
-16 of 27 paths exercised. The count uses the eight visible tests; the table lists the remaining paths and their gaps.
+21 of 29 paths exercised. The count maps assertions in the 13 visible tests to source paths; the table lists the remaining paths and their gaps.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureReferenceCAxisMisorientations.cpp` (277 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeFeatureReferenceCAxisMisorientationsFilter.cpp` (198 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureReferenceCAxisMisorientations.cpp` (309 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeFeatureReferenceCAxisMisorientationsFilter.cpp` (205 lines).
 
 Test names below omit `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: `. `Realistic Microstructure` refers to `Class 1 — Realistic Microstructure (exposes divide-by-zero)`.
 
@@ -65,35 +65,37 @@ Test names below omit `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorien
 |---|-------|------|-----------|
 | 1 | Preflight | Cell tuple counts differ → error `-9800` | `Preflight Error - Cell array tuple count mismatch (-9800)` |
 | 2 | Preflight | Valid input → three output actions and warning `-9801` | `Class 1 — Simple Hex Triple` — valid actions and output values |
-| 3 | Execution validation | No hexagonal phase → error `-9802` | `InValid Filter Execution` — checks execution failure, not the exact code |
+| 3 | Execution validation | No hexagonal phase → error `-9802` | `InValid Filter Execution` — checks execution failure; `Empty arrays` — checks `-9802` for empty Crystal Structures |
 | 4 | Execution validation | Mixed phases → warning `-9803` | `Realistic Microstructure` — checks a nonempty warning list, not the specific warning |
 | 5 | Execution validation | All phases are hexagonal → continue | `Class 1 — Simple Hex Triple` |
 | 6 | Cell angle | Hexagonal-High cell → calculate and accumulate angle | `Class 1 — Simple Hex Triple`; `Realistic Microstructure` |
-| 7 | Cell angle | Hexagonal-Low cell → calculate and accumulate angle | *Not directly tested. No analytical fixture selects Hexagonal-Low.* |
+| 7 | Cell angle | Hexagonal-Low cell → calculate and accumulate angle | `Statistics exclude nonparticipating cells` — Hexagonal-High and Hexagonal-Low cells give mean 20° and standard deviation 10° |
 | 8 | Cell angle | Non-hexagonal cell → zero output and no contribution | `Realistic Microstructure`; `Class 4 — Invariants` |
 | 9 | Cell angle | Feature zero → skip the phase lookup | `Phase Index Bounds` — feature-zero section checks successful execution only |
 | 10 | Cell angle | Negative phase → skip the phase lookup | `Phase Index Bounds` — nonpositive-phase section checks successful execution only |
-| 11 | Cell angle | Phase zero or negative FeatureId → skip the angle calculation | *Not directly tested. The skip fixtures use a negative phase or feature zero.* |
+| 11 | Cell angle | Phase zero → skip the angle calculation | `Statistics exclude nonparticipating cells` — checks zero cell output and no contribution to feature statistics |
 | 12 | Cell angle | Positive participating phase exceeds the ensemble bounds → error `-9804` | `Phase Index Bounds` — checks error `-9804` |
 | 13 | Cell angle | Angle is at most 90° → keep the angle | All three Class 1 cases |
 | 14 | Cell angle | Angle is above 90° → replace it with `180° − angle` | *Not directly tested. All analytical angle differences are below 90°.* |
 | 15 | Cell angle | Cosine is outside [-1, 1] → clamp it | *Not directly tested. No fixture forces a cosine outside the interval.* |
 | 16 | Feature mean | Positive contributor count → divide sum by count | `Class 1 — Simple Hex Triple`; `Realistic Microstructure` |
 | 17 | Feature mean | Zero contributor count → explicit quiet NaN | `Realistic Microstructure`; `Class 4 — Invariants` |
-| 18 | Variance | Read cell angles again and accumulate squared differences by FeatureId | All three Class 1 cases |
+| 18 | Variance | Read cell angles again and accumulate squared differences only for positive FeatureIds and positive hexagonal phases | All three Class 1 cases; `Statistics exclude nonparticipating cells` |
 | 19 | Feature standard deviation | Positive count → `sqrt(sum of squared differences / count)` | `Class 1 — Simple Hex Triple`; `Realistic Microstructure` |
 | 20 | Feature standard deviation | Zero count → explicit quiet NaN | `Realistic Microstructure`; `Class 4 — Invariants` |
 | 21 | Feature output | Feature-zero mean and standard deviation remain zero | *Not directly tested. No case asserts both feature-zero outputs.* |
-| 22 | Slice transfers | Feature contributions span multiple slices; skipped cells reset to zero | *Not directly tested. The only fixture for this path is the hidden `genuine HDF5 slice-boundary oracle`.* |
+| 22 | Slice transfers | Feature contributions span multiple slices; skipped cells reset to zero | `Large constant-angle feature precision` — checks statistics across two slices; `Statistics exclude nonparticipating cells` — checks skipped-cell zeros across three slices |
 | 23 | Cancellation | Stop in either slice pass or either feature loop | *Not directly tested. No fixture injects cancellation.* |
 | 24 | Input cache | Crystal Structures or Average C-Axes read fails → return error | *Not directly tested. No fixture injects a cache-read failure.* |
 | 25 | First slice pass | FeatureIds, Phases or Quats read fails → return error | *Not directly tested. No fixture injects an input-slice failure.* |
-| 26 | Second slice pass | FeatureIds or cell-angle read fails → return error | *Not directly tested. No fixture injects a second-pass read failure.* |
+| 26 | Second slice pass | FeatureIds, Phases or cell-angle read fails → return error | *Not directly tested. No fixture injects a second-pass read failure.* |
 | 27 | Output | Cell-angle, feature-mean or feature-standard-deviation write fails → return error | *Not directly tested. No fixture injects an output-write failure.* |
+| 28 | Preflight | Cell Feature Ids, Cell Phases and Cell Quaternions have equal tuple counts that differ from the selected geometry cell count → error `-9805` | `Geometry cell tuple counts` — all arrays have 4 or 12 tuples for 8 cells; matching arrays in other Attribute Matrices are accepted |
+| 29 | Execution validation | FeatureId is negative or exceeds the Average C-Axes tuple bounds → error `-9806` | `Feature Id bounds before statistics` — rejects IDs -1 and 2 even with phase zero; `Empty arrays` — rejects cells with no Average C-Axes tuples |
 
 ## Test inventory
 
-The eight visible cases are in `src/Plugins/OrientationAnalysis/test/ComputeFeatureReferenceCAxisMisorientationsTest.cpp`. All pass in CI. The table also includes the hidden case.
+The 13 visible cases and one hidden case are in `src/Plugins/OrientationAnalysis/test/ComputeFeatureReferenceCAxisMisorientationsTest.cpp`.
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -106,6 +108,11 @@ The eight visible cases are in `src/Plugins/OrientationAnalysis/test/ComputeFeat
 | `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check UUID, comments and converted arguments. This case reads JSON fixtures. |
 | `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: genuine HDF5 slice-boundary oracle` | new-for-V&V | Hidden. A 17×19×4 fixture checks angles `[10, 20, 30]`, mean 20, standard deviation `sqrt(200/3)`, and zero values in skipped cells across slices. |
 | `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Phase Index Bounds` | kept | Checks `-9804` for a positive phase outside the ensemble and successful execution for a negative phase or feature zero. |
+| `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Geometry cell tuple counts` | new-for-V&V | Checks `-9805` when all three cell arrays have 4 or 12 tuples for 8 geometry cells. Accepts 8 tuples in other Attribute Matrices; checks `-9800` when each input in turn is short, with array paths and counts in the messages. |
+| `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Feature Id bounds before statistics` | new-for-V&V | Checks execution error `-9806` for FeatureIds -1 and 2 with two feature tuples, even with phase zero. Checks both array paths in the message and rejection before the cancellation guard. |
+| `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Statistics exclude nonparticipating cells` | new-for-V&V | Hexagonal-High and Hexagonal-Low angles 10° and 30° give mean 20° and population standard deviation 10°. Checks zero cell outputs for phases 0 and -1, a cubic phase and feature zero; checks NaN statistics for an empty feature. |
+| `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Large constant-angle feature precision` | new-for-V&V | Two million cells at 13.1° give mean 13.1° and zero population standard deviation within 0.00001°. Checks the first cell angle and feature statistics across two slices. |
+| `OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Empty arrays` | new-for-V&V | Checks zero cell output tuples and NaN feature statistics for empty cells, error `-9806` for empty Average C-Axes, and error `-9802` for empty Crystal Structures. |
 
 ## Exemplar archive
 
