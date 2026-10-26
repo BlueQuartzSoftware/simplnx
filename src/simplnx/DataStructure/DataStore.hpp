@@ -276,14 +276,19 @@ public:
     try
     {
       const auto multiplyOverflows = [](usize a, usize b) { return a != 0 && b > (std::numeric_limits<usize>::max)() / a; };
-      usize totalTuples = 1;
-      for(const usize dimension : tupleShape)
+      // Any zero dimension makes the tuple count zero, so a partial product of the other dimensions cannot overflow it.
+      const bool hasZeroDimension = std::find(tupleShape.cbegin(), tupleShape.cend(), 0) != tupleShape.cend();
+      usize totalTuples = hasZeroDimension ? 0 : 1;
+      if(!hasZeroDimension)
       {
-        if(multiplyOverflows(totalTuples, dimension))
+        for(const usize dimension : tupleShape)
         {
-          return MakeErrorResult(-6035, fmt::format("DataStore resize to shape [{}] failed: the tuple count exceeds the maximum addressable size", fmt::join(tupleShape, ", ")));
+          if(multiplyOverflows(totalTuples, dimension))
+          {
+            return MakeErrorResult(-6035, fmt::format("DataStore resize to shape [{}] failed: the tuple count exceeds the maximum addressable size", fmt::join(tupleShape, ", ")));
+          }
+          totalTuples *= dimension;
         }
-        totalTuples *= dimension;
       }
       if(multiplyOverflows(getNumberOfComponents(), totalTuples))
       {

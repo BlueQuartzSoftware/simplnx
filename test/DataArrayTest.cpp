@@ -901,6 +901,29 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
       REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
     }
   }
+
+  SECTION("zero tuple dimension empties the store regardless of dimension order")
+  {
+    // A zero dimension makes the tuple count zero, so an extent that would overflow a partial product is not an error.
+    const usize maxExtent = (std::numeric_limits<usize>::max)();
+    const ShapeType zeroTupleShape = GENERATE_COPY(ShapeType{0}, ShapeType{maxExtent, 2, 0}, ShapeType{0, maxExtent, 2});
+    INFO(fmt::format("Tuple shape: [{}]", fmt::join(zeroTupleShape, ", ")));
+
+    DataStore<int32> dataStore(ShapeType{4}, ShapeType{1}, 7);
+    const std::array<int32, 4> initialValues = {10, 20, 30, 40};
+    for(usize valueIndex = 0; valueIndex < initialValues.size(); ++valueIndex)
+    {
+      dataStore[valueIndex] = initialValues[valueIndex];
+    }
+
+    const Result<> resizeResult = dataStore.resizeTuples(zeroTupleShape);
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    REQUIRE(dataStore.getTupleShape() == zeroTupleShape);
+    REQUIRE(dataStore.getComponentShape() == ShapeType{1});
+    REQUIRE(dataStore.getNumberOfTuples() == 0);
+    REQUIRE(dataStore.getNumberOfComponents() == 1);
+    REQUIRE(dataStore.getSize() == 0);
+  }
 }
 
 TEST_CASE("DataStore caller-owned extent buffers preserve values and validate before writing", "[simplnx][DataStore]")
