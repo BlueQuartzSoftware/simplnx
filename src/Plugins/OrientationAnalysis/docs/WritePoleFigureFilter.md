@@ -58,9 +58,13 @@ When *Write Pole Figure as Image* is enabled, the combined set of pole figures i
 
 When *Save Output as Image Geometry* is enabled, the combined pole-figure image is stored in the DataStructure as an **Image Geometry** so it can be viewed inside DREAM3D-NX.
 
+The image coordinates are pixel indices, so the geometry length unit is "Unspecified".
+
 ### Save Count Data Arrays
 
 When *Save Count Images* is enabled, the per-direction count data for each pole figure is stored as a Data Array inside an **Image Geometry**, allowing custom color plots to be made later. A string Data Array is also stored that records the metadata used to build each plot (number of points, hemisphere, phase name, etc.). When *Normalize Count Data to MRD* is enabled, the counts are normalized to **multiples of a random distribution (MRD)**, where *1.0* means "as common as a random arrangement."
+
+The count-image coordinates are pixel indices, so the geometry length unit is "Unspecified".
 
 ### Image Size
 

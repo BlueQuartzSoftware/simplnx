@@ -118,7 +118,7 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   std::vector<usize> imageDims = {pOutputImageDimension, pOutputImageDimension, 1ULL}; // Image Geometry wants the tuple dims as XYZ
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
       pImageGeometryPath, imageDims, CreateImageGeometryAction::OriginType{-1.0f, -1.0f, 0.0f},
-      CreateImageGeometryAction::SpacingType{2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension}, pCellAttributeMatrixName);
+      CreateImageGeometryAction::SpacingType{2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension}, pCellAttributeMatrixName, IGeometry::LengthUnit::Unspecified);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   ShapeType cDims = {1};

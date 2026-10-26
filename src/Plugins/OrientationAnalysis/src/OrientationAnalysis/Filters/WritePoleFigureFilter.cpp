@@ -248,8 +248,8 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   }
   {
     const std::vector<size_t> dims = {1ULL, static_cast<usize>(pageHeight), static_cast<usize>(pageWidth)};
-    auto createImageGeometryAction =
-        std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f},
+                                                                                 write_pole_figure::k_ImageAttrMatName, IGeometry::LengthUnit::Unspecified);
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
   }
   if(!pSaveAsImageGeometry)
@@ -268,7 +268,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   {
     const std::vector<size_t> intensityImageDims = {static_cast<usize>(pImageSizeValue), static_cast<usize>(pImageSizeValue), 1ULL};
     auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pOutputIntensityGeometryPath, intensityImageDims, std::vector<float>{0.0f, 0.0f, 0.0f},
-                                                                                 std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
+                                                                                 std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName, IGeometry::LengthUnit::Unspecified);
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
     const std::vector<size_t> intensityImageArrayDims = std::vector<usize>{intensityImageDims.rbegin(), intensityImageDims.rend()};

@@ -6,6 +6,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -63,6 +64,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+      const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_OutputGeometry);
+      REQUIRE(vertexGeomPtr != nullptr);
+      CHECK(vertexGeomPtr->getUnits() == IGeometry::LengthUnit::Unspecified);
 
       // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -125,5 +129,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry: Phase Index
     args.insertOrAssign(ConvertOrientationsToVertexGeometryFilter::k_ConvertToFundamentalZone_Key, std::make_any<bool>(false));
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const DataPath k_OutputGeometryPath({"Bounds Vertices"});
+    const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(k_OutputGeometryPath);
+    REQUIRE(vertexGeomPtr != nullptr);
+    CHECK(vertexGeomPtr->getUnits() == IGeometry::LengthUnit::Unspecified);
   }
 }

@@ -16,6 +16,8 @@ The GBCD is a 5-dimensional histogram that captures the statistical distribution
 
 ## Algorithm
 
+The image spans the stereographic projection square [-1,1] x [-1,1]. The coordinates are projection values, not lengths, so the geometry length unit is "Unspecified".
+
 For each pixel (x, y) in the output square image, the filter:
 
 1. Performs inverse stereographic projection to obtain a unit-sphere direction representing the boundary-plane normal.
