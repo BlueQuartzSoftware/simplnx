@@ -16,6 +16,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -377,6 +378,56 @@ TEST_CASE("QuadGeomTest")
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("CreateRectGridGeometryAction creates bounds in preflight and execute", "[simplnx][CreateRectGridGeometryAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  INFO("mode = " << (mode == IDataAction::Mode::Preflight ? "Preflight" : "Execute"));
+  DataStructure dataStructure;
+  const DataPath path({"RectGrid"});
+  constexpr usize xTuples = 4;
+  constexpr usize yTuples = 5;
+  constexpr usize zTuples = 6;
+  const CreateRectGridGeometryAction action(path, xTuples, yTuples, zTuples, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
+
+  const Result<> result = action.apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* geom = dataStructure.getDataAs<RectGridGeom>(path);
+  REQUIRE(geom != nullptr);
+  REQUIRE(geom->getDimensions() == SizeVec3{xTuples - 1, yTuples - 1, zTuples - 1});
+
+  const auto* xBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("X Bounds"));
+  const auto* yBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("Y Bounds"));
+  const auto* zBounds = dataStructure.getDataAs<Float32Array>(path.createChildPath("Z Bounds"));
+  REQUIRE(xBounds != nullptr);
+  REQUIRE(yBounds != nullptr);
+  REQUIRE(zBounds != nullptr);
+  REQUIRE(xBounds->getNumberOfTuples() == xTuples);
+  REQUIRE(yBounds->getNumberOfTuples() == yTuples);
+  REQUIRE(zBounds->getNumberOfTuples() == zTuples);
+  REQUIRE(geom->getXBounds() == xBounds);
+  REQUIRE(geom->getYBounds() == yBounds);
+  REQUIRE(geom->getZBounds() == zBounds);
+
+  const auto* cellData = dataStructure.getDataAs<AttributeMatrix>(path.createChildPath("Cell Data"));
+  REQUIRE(cellData != nullptr);
+  REQUIRE(geom->getCellData() == cellData);
+  REQUIRE(cellData->getShape() == ShapeType{zTuples - 1, yTuples - 1, xTuples - 1});
+}
+
+TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be created", "[simplnx][CreateRectGridGeometryAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  INFO("mode = " << (mode == IDataAction::Mode::Preflight ? "Preflight" : "Execute"));
+  DataStructure dataStructure;
+  const DataPath path({"RectGrid"});
+  const CreateRectGridGeometryAction action(path, 4, 5, 6, "Cell Data", "Cell Data", "Y Bounds", "Z Bounds");
+
+  const Result<> result = action.apply(dataStructure, mode);
+  REQUIRE(result.invalid());
+  REQUIRE_FALSE(result.errors().empty());
+  REQUIRE(dataStructure.getDataAs<Float32Array>(path.createChildPath("Cell Data")) == nullptr);
 }
 
 TEST_CASE("RectGridGeomTest")

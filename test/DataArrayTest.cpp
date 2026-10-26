@@ -819,13 +819,14 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
     const usize originalTupleCount = dataStore.getNumberOfTuples();
     const usize originalComponentCount = dataStore.getNumberOfComponents();
     const usize originalSize = dataStore.getSize();
-    // The element count fits usize, but its int32 byte count does not. Array new rejects the invalid length before it requests memory.
+    // The element count fits usize, but its int32 byte count does not. The store rejects the byte count before requesting memory.
     const usize impossibleTuples = (std::numeric_limits<usize>::max)() / sizeof(int32) + 1;
 
     const Result<> resizeResult = dataStore.resizeTuples(ShapeType{impossibleTuples});
     REQUIRE(resizeResult.invalid());
     REQUIRE_FALSE(resizeResult.errors().empty());
     REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("byte count") != std::string::npos);
     REQUIRE(dataStore.data() == originalDataPtr);
     REQUIRE(dataStore.getTupleShape() == originalTupleShape);
     REQUIRE(dataStore.getComponentShape() == originalComponentShape);
@@ -836,6 +837,92 @@ TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
     {
       REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
     }
+  }
+
+  SECTION("overflowing tuple-shape product preserves the original state")
+  {
+    DataStore<int32> dataStore(ShapeType{4}, ShapeType{1}, 7);
+    const std::array<int32, 4> expectedValues = {10, 20, 30, 40};
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      dataStore[valueIndex] = expectedValues[valueIndex];
+    }
+    const int32* const originalDataPtr = dataStore.data();
+    const ShapeType originalTupleShape = dataStore.getTupleShape();
+    const ShapeType originalComponentShape = dataStore.getComponentShape();
+    const usize originalTupleCount = dataStore.getNumberOfTuples();
+    const usize originalComponentCount = dataStore.getNumberOfComponents();
+    const usize originalSize = dataStore.getSize();
+    const Result<> resizeResult = dataStore.resizeTuples(ShapeType{(std::numeric_limits<usize>::max)(), 2});
+    REQUIRE(resizeResult.invalid());
+    REQUIRE_FALSE(resizeResult.errors().empty());
+    REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("tuple count") != std::string::npos);
+    REQUIRE(dataStore.data() == originalDataPtr);
+    REQUIRE(dataStore.getTupleShape() == originalTupleShape);
+    REQUIRE(dataStore.getComponentShape() == originalComponentShape);
+    REQUIRE(dataStore.getNumberOfTuples() == originalTupleCount);
+    REQUIRE(dataStore.getNumberOfComponents() == originalComponentCount);
+    REQUIRE(dataStore.getSize() == originalSize);
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
+    }
+  }
+
+  SECTION("overflowing element count preserves the original state")
+  {
+    DataStore<int32> dataStore(ShapeType{4}, ShapeType{2}, 7);
+    const std::array<int32, 8> expectedValues = {10, 20, 30, 40, 50, 60, 70, 80};
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      dataStore[valueIndex] = expectedValues[valueIndex];
+    }
+    const int32* const originalDataPtr = dataStore.data();
+    const ShapeType originalTupleShape = dataStore.getTupleShape();
+    const ShapeType originalComponentShape = dataStore.getComponentShape();
+    const usize originalTupleCount = dataStore.getNumberOfTuples();
+    const usize originalComponentCount = dataStore.getNumberOfComponents();
+    const usize originalSize = dataStore.getSize();
+    // The tuple count fits usize, but multiplying by two components reaches the element-count overflow branch.
+    const Result<> resizeResult = dataStore.resizeTuples(ShapeType{(std::numeric_limits<usize>::max)() / 2 + 1});
+    REQUIRE(resizeResult.invalid());
+    REQUIRE_FALSE(resizeResult.errors().empty());
+    REQUIRE(resizeResult.errors()[0].code == -6035);
+    REQUIRE(resizeResult.errors()[0].message.find("element count") != std::string::npos);
+    REQUIRE(dataStore.data() == originalDataPtr);
+    REQUIRE(dataStore.getTupleShape() == originalTupleShape);
+    REQUIRE(dataStore.getComponentShape() == originalComponentShape);
+    REQUIRE(dataStore.getNumberOfTuples() == originalTupleCount);
+    REQUIRE(dataStore.getNumberOfComponents() == originalComponentCount);
+    REQUIRE(dataStore.getSize() == originalSize);
+    for(usize valueIndex = 0; valueIndex < expectedValues.size(); ++valueIndex)
+    {
+      REQUIRE(dataStore[valueIndex] == expectedValues[valueIndex]);
+    }
+  }
+
+  SECTION("zero tuple dimension empties the store regardless of dimension order")
+  {
+    // A zero dimension makes the tuple count zero, so an extent that would overflow a partial product is not an error.
+    const usize maxExtent = (std::numeric_limits<usize>::max)();
+    const ShapeType zeroTupleShape = GENERATE_COPY(ShapeType{0}, ShapeType{maxExtent, 2, 0}, ShapeType{0, maxExtent, 2});
+    INFO(fmt::format("Tuple shape: [{}]", fmt::join(zeroTupleShape, ", ")));
+
+    DataStore<int32> dataStore(ShapeType{4}, ShapeType{1}, 7);
+    const std::array<int32, 4> initialValues = {10, 20, 30, 40};
+    for(usize valueIndex = 0; valueIndex < initialValues.size(); ++valueIndex)
+    {
+      dataStore[valueIndex] = initialValues[valueIndex];
+    }
+
+    const Result<> resizeResult = dataStore.resizeTuples(zeroTupleShape);
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    REQUIRE(dataStore.getTupleShape() == zeroTupleShape);
+    REQUIRE(dataStore.getComponentShape() == ShapeType{1});
+    REQUIRE(dataStore.getNumberOfTuples() == 0);
+    REQUIRE(dataStore.getNumberOfComponents() == 1);
+    REQUIRE(dataStore.getSize() == 0);
   }
 }
 

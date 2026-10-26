@@ -267,7 +267,7 @@ public:
    * A size change retains values in the shared prefix. When existing storage
    * grows, added values use the initialization or mudflap value. A size change can invalidate pointers and spans.
    * @param tupleShape New tuple dimensions in slowest-to-fastest order.
-   * @return Valid on success. Allocation failure returns error -6035 and preserves the prior store.
+   * @return Valid on success. A tuple, element or byte count that overflows usize, or an allocation failure, returns error -6035 and preserves the prior store.
    *
    * The Result contract prevents an allocation failure from escaping across the store boundary.
    */
@@ -275,10 +275,32 @@ public:
   {
     try
     {
+      const auto multiplyOverflows = [](usize a, usize b) { return a != 0 && b > (std::numeric_limits<usize>::max)() / a; };
+      // Any zero dimension makes the tuple count zero, so a partial product of the other dimensions cannot overflow it.
+      const bool hasZeroDimension = std::find(tupleShape.cbegin(), tupleShape.cend(), 0) != tupleShape.cend();
+      usize totalTuples = hasZeroDimension ? 0 : 1;
+      if(!hasZeroDimension)
+      {
+        for(const usize dimension : tupleShape)
+        {
+          if(multiplyOverflows(totalTuples, dimension))
+          {
+            return MakeErrorResult(-6035, fmt::format("DataStore resize to shape [{}] failed: the tuple count exceeds the maximum addressable size", fmt::join(tupleShape, ", ")));
+          }
+          totalTuples *= dimension;
+        }
+      }
+      if(multiplyOverflows(getNumberOfComponents(), totalTuples))
+      {
+        return MakeErrorResult(-6035, fmt::format("DataStore resize to shape [{}] failed: the element count exceeds the maximum addressable size", fmt::join(tupleShape, ", ")));
+      }
+      const usize newSize = getNumberOfComponents() * totalTuples;
+      if(multiplyOverflows(newSize, sizeof(value_type)))
+      {
+        return MakeErrorResult(-6035, fmt::format("DataStore resize to shape [{}] failed: the byte count exceeds the maximum addressable size", fmt::join(tupleShape, ", ")));
+      }
       ShapeType newTupleShape = tupleShape;
       const usize oldSize = this->getSize();
-      const usize totalTuples = std::accumulate(newTupleShape.cbegin(), newTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-      const usize newSize = getNumberOfComponents() * totalTuples;
 
       if(newSize == oldSize && m_Data != nullptr)
       {
