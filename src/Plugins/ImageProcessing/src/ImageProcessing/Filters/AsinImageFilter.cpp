@@ -76,7 +76,8 @@ IFilter::PreflightResult AsinImageFilter::preflightImpl(const DataStructure& dat
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::IntegerToFloat32Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {std::move(resultOutputActions)};
 }
 Result<> AsinImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -87,7 +88,8 @@ Result<> AsinImageFilter::executeImpl(DataStructure& dataStructure, const Argume
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const AsinOperation operation{};
-  return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::IntegerToFloat32Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                                 messageHandler);
 }
 
 namespace
