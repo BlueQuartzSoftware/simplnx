@@ -1,6 +1,5 @@
 #include "OrientationAnalysis/Filters/ComputeShapesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
