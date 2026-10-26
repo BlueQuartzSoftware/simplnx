@@ -6,6 +6,11 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
+#include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
+#include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -15,10 +20,17 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
+#include "SimplnxCore/Filters/Algorithms/DBSCANScanline.hpp"
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
 
 #include <array>
+#include <atomic>
 #include <filesystem>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -246,6 +258,169 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   ::CheckClusterInvariants(dataStructure, generatedIdsPath, generatedAMPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+/**
+ * @brief Keeps its values in memory but reports out-of-core residency.
+ *
+ * DBSCANScanline selects its external implementation from the reported store
+ * type, so this store reaches that implementation in a build without an
+ * out-of-core storage plugin.
+ * @tparam T Element type.
+ */
+template <typename T>
+class ReportedOutOfCoreDataStore : public DataStore<T>
+{
+public:
+  using DataStore<T>::DataStore;
+
+  IDataStore::StoreType getStoreType() const override
+  {
+    return IDataStore::StoreType::OutOfCore;
+  }
+};
+
+/**
+ * @brief The built-in HDF5 manager, plus external-sort and temporary-record-store providers that fail when used.
+ *
+ * DBSCAN's external implementation requires both capabilities before it validates
+ * input shapes. Its shape checks run before it creates a sorter or record store,
+ * so k_ProviderReachedCode shows that execution passed every shape check.
+ *
+ * The manager keeps the "HDF5" format name and factories so it can stand in for
+ * the built-in manager (see ScopedIOManagerReplacement). DataIOCollection asks
+ * its managers in name order, and "HDF5" sorts before the out-of-core manager
+ * "HDF5-OOC", so these providers answer in both in-core and out-of-core builds.
+ */
+class DBSCANShapeGuardHDF5Manager : public HDF5::DataIOManager
+{
+public:
+  static constexpr int32 k_ProviderReachedCode = -54199;
+
+  bool supportsExternalSort() const override
+  {
+    return true;
+  }
+
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  {
+    return MakeErrorResult<std::unique_ptr<IExternalSort>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached external-sort creation.");
+  }
+
+  bool supportsTemporaryRecordStore() const override
+  {
+    return true;
+  }
+
+  Result<std::unique_ptr<ITemporaryRecordStore>> createTemporaryRecordStore(const TemporaryRecordStoreConfig&) const override
+  {
+    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached temporary record-store creation.");
+  }
+};
+
+/**
+ * @brief Replaces one registered I/O manager for the lifetime of this object.
+ *
+ * DataIOCollection cannot remove a manager, so the replacement takes the format
+ * name of an existing manager and the destructor registers the saved original
+ * again. The destructor also runs when a failed assertion unwinds the test, so
+ * afterwards the collection holds exactly the managers it held before.
+ */
+class ScopedIOManagerReplacement
+{
+public:
+  /**
+   * @brief Registers replacement in place of the manager with the same format name.
+   * @param collection Collection to change; it must outlive this object.
+   * @param replacement Manager to register. Nothing is registered when no manager has its format name.
+   */
+  ScopedIOManagerReplacement(DataIOCollection& collection, std::shared_ptr<IDataIOManager> replacement)
+  : m_Collection(collection)
+  , m_Original(collection.getManager(replacement->formatName()))
+  {
+    // Registering under a new name would add a manager that nothing can remove.
+    if(m_Original != nullptr)
+    {
+      m_Replaced = m_Collection.addIOManager(std::move(replacement)).valid();
+    }
+  }
+
+  ~ScopedIOManagerReplacement() noexcept
+  {
+    if(m_Replaced)
+    {
+      // A destructor cannot report failure; re-registering an accepted name succeeds.
+      (void)m_Collection.addIOManager(m_Original);
+    }
+  }
+
+  ScopedIOManagerReplacement(const ScopedIOManagerReplacement&) = delete;
+  ScopedIOManagerReplacement(ScopedIOManagerReplacement&&) noexcept = delete;
+  ScopedIOManagerReplacement& operator=(const ScopedIOManagerReplacement&) = delete;
+  ScopedIOManagerReplacement& operator=(ScopedIOManagerReplacement&&) noexcept = delete;
+
+  /**
+   * @brief Reports whether the replacement is registered.
+   * @return True when the original manager was found and replaced.
+   */
+  bool replaced() const noexcept
+  {
+    return m_Replaced;
+  }
+
+private:
+  DataIOCollection& m_Collection;
+  std::shared_ptr<IDataIOManager> m_Original;
+  bool m_Replaced = false;
+};
+
+/**
+ * @brief Calls DBSCANScanline directly, without the filter or its preflight, on out-of-core coordinates.
+ * @param pointComponents Coordinate component count.
+ * @param maskShape Mask tuple and component counts, or std::nullopt to run without a mask.
+ * @return The algorithm result.
+ */
+Result<> RunDirectOutOfCoreScanline(usize pointComponents, std::optional<std::pair<usize, usize>> maskShape)
+{
+  constexpr usize k_PointTuples = 4;
+  const DataPath pointsPath({"Points"});
+  const DataPath maskPath({"Mask"});
+  const DataPath idsPath({"Ids"});
+
+  DataStructure dataStructure;
+  auto pointStore = std::make_shared<ReportedOutOfCoreDataStore<float32>>(ShapeType{k_PointTuples}, ShapeType{pointComponents}, 0.0F);
+  for(usize index = 0; index < pointStore->getSize(); ++index)
+  {
+    pointStore->setValue(index, static_cast<float32>(index) * 0.25F);
+  }
+  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  REQUIRE(points != nullptr);
+  // The external implementation runs only for out-of-core arrays.
+  REQUIRE(IsOutOfCore(*points));
+  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, idsPath.getTargetName(), ShapeType{k_PointTuples}, ShapeType{1});
+  REQUIRE(ids != nullptr);
+  if(maskShape.has_value())
+  {
+    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, maskPath.getTargetName(), ShapeType{maskShape->first}, ShapeType{maskShape->second});
+    REQUIRE(mask != nullptr);
+    mask->fill(1);
+  }
+
+  DBSCANInputValues inputValues;
+  inputValues.ClusteringArrayPath = pointsPath;
+  inputValues.MaskArrayPath = maskPath;
+  inputValues.UseMask = maskShape.has_value();
+  inputValues.FeatureIdsArrayPath = idsPath;
+  inputValues.Epsilon = 1.0F;
+  inputValues.MinPoints = 2;
+  inputValues.DistanceMetric = ClusterUtilities::DistanceMetric::Euclidean;
+  inputValues.FeatureAM = DataPath({"Features"});
+  inputValues.ParseOrder = to_underlying(DBSCAN::ParseOrder::LowDensityFirst);
+  inputValues.Seed = 5489;
+
+  const std::atomic_bool shouldCancel = false;
+  DBSCANScanline algorithm(dataStructure, IFilter::MessageHandler{}, shouldCancel, &inputValues);
+  return algorithm();
 }
 } // namespace
 
@@ -751,6 +926,70 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[S
   const auto& message = preflightResult.outputActions.errors()[0].message;
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
+}
+
+TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid input shapes", "[SimplnxCore][DBSCAN][ComponentShape]")
+{
+  DataIOCollection& collection = DataStoreUtilities::GetIOCollection();
+  const std::shared_ptr<IDataIOManager> builtInHDF5Manager = collection.getManager("HDF5");
+  REQUIRE(builtInHDF5Manager != nullptr);
+  const bool hadExternalSort = collection.hasExternalSortCapability();
+  const bool hadTemporaryRecordStore = collection.hasTemporaryRecordStoreCapability();
+
+  {
+    const ScopedIOManagerReplacement providers(collection, std::make_shared<DBSCANShapeGuardHDF5Manager>());
+    REQUIRE(providers.replaced());
+
+    SECTION("Valid shapes pass the shape checks")
+    {
+      const Result<> result = RunDirectOutOfCoreScanline(2, std::make_pair(usize{4}, usize{1}));
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().size() == 1);
+      REQUIRE(result.errors()[0].code == DBSCANShapeGuardHDF5Manager::k_ProviderReachedCode);
+    }
+    SECTION("Four coordinate components")
+    {
+      const Result<> result = RunDirectOutOfCoreScanline(4, std::nullopt);
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().size() == 1);
+      REQUIRE(result.errors()[0].code == -54060);
+      REQUIRE_THAT(result.errors()[0].message, Catch::Matchers::Contains("has a component count of 4"));
+    }
+    SECTION("Two-component mask")
+    {
+      const Result<> result = RunDirectOutOfCoreScanline(2, std::make_pair(usize{4}, usize{2}));
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().size() == 1);
+      REQUIRE(result.errors()[0].code == -54062);
+      REQUIRE_THAT(result.errors()[0].message, Catch::Matchers::Contains("it has 4 tuples and a component count of 2"));
+    }
+    SECTION("Short mask")
+    {
+      const Result<> result = RunDirectOutOfCoreScanline(2, std::make_pair(usize{3}, usize{1}));
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().size() == 1);
+      REQUIRE(result.errors()[0].code == -54062);
+      REQUIRE_THAT(result.errors()[0].message, Catch::Matchers::Contains("it has 3 tuples and a component count of 1"));
+    }
+  }
+
+  SECTION("An exception inside the replacement scope restores the built-in manager")
+  {
+    // A failed REQUIRE also leaves the scope by throwing.
+    const auto failInsideScope = [&collection]() {
+      const ScopedIOManagerReplacement providers(collection, std::make_shared<DBSCANShapeGuardHDF5Manager>());
+      if(providers.replaced())
+      {
+        throw std::runtime_error("Simulated assertion failure inside the replacement scope");
+      }
+    };
+    REQUIRE_THROWS_AS(failInsideScope(), std::runtime_error);
+  }
+
+  // Later tests in the same process must see the collection as it was before this test.
+  REQUIRE(collection.getManager("HDF5") == builtInHDF5Manager);
+  REQUIRE(collection.hasExternalSortCapability() == hadExternalSort);
+  REQUIRE(collection.hasTemporaryRecordStoreCapability() == hadTemporaryRecordStore);
 }
 
 TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
