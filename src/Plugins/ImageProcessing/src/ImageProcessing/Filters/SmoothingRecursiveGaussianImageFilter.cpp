@@ -10,7 +10,10 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <fmt/format.h>
 
 using namespace nx::core;
 
@@ -76,7 +79,7 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the recursive Gaussian is defined on scalar images. The output is SameAsInput (type-preserving),
-  // so an input type T produces a float32-free, T-typed output array. The SignedScalar policy admits only signed integer
+  // so an input type T produces a T-typed output array with float32 inter-pass precision. The SignedScalar policy admits only signed integer
   // + floating point types (the legacy SignedScalarPixelIdTypeList); unsigned types are rejected.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::SignedScalar, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
@@ -92,15 +95,10 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   }
 
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
-  if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
+  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianControls(sigma, imageGeom.getSpacing(), imageGeom.getDimensions()); controls.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
-  }
-
-  if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSpacing, 1e-8);
-     spacingCheck.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+    controls.errors().front().message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(controls), OutputActions{})};
   }
   return {std::move(resultOutputActions)};
 }
