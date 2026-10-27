@@ -3,16 +3,37 @@
 
 #include "ImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
+#include <algorithm>
+#include <any>
+#include <array>
+#include <atomic>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -24,6 +45,92 @@ namespace rt = recon_test;
 namespace
 {
 using SmoothFilter = SmoothingRecursiveGaussianImageFilter;
+
+Arguments makeSmoothingArguments(const DataPath& inputPath, const std::vector<float64>& sigma)
+{
+  Arguments args;
+  args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(sigma));
+  args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  return args;
+}
+
+void requireSmoothingInput(const DataStructure& dataStructure, const DataPath& inputPath, usize dimZ)
+{
+  const IDataArray* inputArrayPtr = nullptr;
+  REQUIRE_NOTHROW(inputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(inputPath));
+  REQUIRE(inputArrayPtr->getDataType() == DataType::float32);
+  REQUIRE(inputArrayPtr->getTupleShape() == ShapeType{dimZ, 4, 4});
+  REQUIRE(inputArrayPtr->getComponentShape() == ShapeType{1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+struct SmoothingTransferFaults
+{
+  usize ReadAt = 0;
+  usize WriteAt = 0;
+  std::atomic_bool* CancelOnWritePtr = nullptr;
+};
+
+// Resident endpoints with real data and controlled transfer outcomes. These are not disk-storage witnesses.
+template <class T>
+class SmoothingTransferStore : public DataStore<T>
+{
+public:
+  explicit SmoothingTransferStore(usize size, T value, SmoothingTransferFaults faults = {})
+  : DataStore<T>(ShapeType{size}, ShapeType{1}, value)
+  , m_FailReadAt(faults.ReadAt)
+  , m_FailWriteAt(faults.WriteAt)
+  , m_CancelOnWritePtr(faults.CancelOnWritePtr)
+  {
+  }
+  ~SmoothingTransferStore() noexcept override = default;
+  SmoothingTransferStore(const SmoothingTransferStore&) = delete;
+  SmoothingTransferStore(SmoothingTransferStore&&) = delete;
+  SmoothingTransferStore& operator=(const SmoothingTransferStore&) = delete;
+  SmoothingTransferStore& operator=(SmoothingTransferStore&&) = delete;
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<T> values) const override
+  {
+    ++m_ReadCount;
+    if(m_ReadCount == m_FailReadAt)
+    {
+      return MakeErrorResult(-23690, "Injected smoothing read failure.");
+    }
+    Result<> result = DataStore<T>::copyIntoBuffer(offset, values);
+    result.warnings().push_back({.code = -23692, .message = "Injected smoothing read warning."});
+    return result;
+  }
+  Result<> copyFromBuffer(usize offset, nonstd::span<const T> values) override
+  {
+    ++m_WriteCount;
+    if(m_WriteCount == m_FailWriteAt)
+    {
+      return MakeErrorResult(-23691, "Injected smoothing write failure.");
+    }
+    Result<> result = DataStore<T>::copyFromBuffer(offset, values);
+    result.warnings().push_back({.code = -23693, .message = "Injected smoothing write warning."});
+    if(m_CancelOnWritePtr != nullptr)
+    {
+      m_CancelOnWritePtr->store(true);
+    }
+    return result;
+  }
+
+private:
+  usize m_FailReadAt = 0;
+  usize m_FailWriteAt = 0;
+  std::atomic_bool* m_CancelOnWritePtr = nullptr;
+  mutable usize m_ReadCount = 0;
+  usize m_WriteCount = 0;
+};
+
+usize countSmoothingWarning(const Result<>& result, int32 code)
+{
+  return static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(), [code](const auto& warning) { return warning.code == code; }));
+}
 // NOTE: the tests below use analytic oracles and ITK's committed baseline image. No live ITK filter runs here.
 
 // A centrally-symmetric radial blob (for the symmetry-preservation check).
@@ -92,6 +199,384 @@ std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
   return out;
 }
 } // namespace
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active sigma is rejected before execution", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
+  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const float64 invalidSigma = GENERATE(std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  std::vector<float64> sigma{1.0, 1.0, 1.0};
+  sigma.at(axis) = invalidSigma;
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  // This deliberately stops at preflight. Invalid coefficients must never reach an unchecked output conversion.
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active spacing is rejected before execution", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
+  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const float32 invalidSpacing = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  std::array<float32, 3> spacing{1.0F, 1.0F, 1.0F};
+  spacing.at(axis) = invalidSpacing;
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0}));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effective active scale is rejected before execution", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
+  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const bool underflow = GENERATE(false, true);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, dimZ);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  std::array<float32, 3> spacing{1.0F, 1.0F, 1.0F};
+  spacing.at(axis) = underflow ? std::numeric_limits<float32>::max() : 0.5F;
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
+  std::vector<float64> sigma{1.0, 1.0, 1.0};
+  sigma.at(axis) = underflow ? std::numeric_limits<float64>::denorm_min() : std::numeric_limits<float64>::max();
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  // Positive finite operands can produce zero or infinity for sigma / abs(spacing). No cutoff on finite scales is imposed.
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: finite negative spacing and unused Z remain accepted", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const float64 unusedSigma = GENERATE(0.0, -1.0, std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  const float32 unusedSpacing = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, 1, std::vector<float32>(16, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, 1);
+  const DataPath geometryPath = inputPath.getParent().getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({-1.0F, -2.0F, unusedSpacing});
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, unusedSigma}));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: each selected validation branch has a diagnostic", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize failure = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  const std::array<int32, 5> expectedCodes{ImageProcessing::k_SmoothingGaussianInvalidSigma, ImageProcessing::k_SmoothingGaussianInvalidSpacing, ImageProcessing::k_SmoothingGaussianInvalidScale,
+                                           ImageProcessing::k_SmoothingGaussianInvalidCoefficients, ImageProcessing::k_SmoothingGaussianInvalidCoefficients};
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, 1, std::vector<float32>(16, 1.0F));
+  requireSmoothingInput(dataStructure, inputPath, 1);
+  std::vector<float64> sigma{1.0, 1.0, 0.0};
+  if(failure == 0)
+  {
+    sigma.at(0) = 0.0;
+  }
+  if(failure == 1)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
+    dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing({1e-9F, 1.0F, 1.0F});
+  }
+  if(failure == 2)
+  {
+    sigma.at(0) = std::numeric_limits<float64>::max();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
+    dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing({0.5F, 1.0F, 1.0F});
+  }
+  // At this finite scale exp(L/scale) and cos(W/scale) round to 1, giving 1-4+6-4+1 == 0 in coefficient denominators.
+  if(failure == 3)
+  {
+    sigma.at(0) = 1e20;
+  }
+  // This quotient stays positive, but the trigonometric coefficient arguments overflow.
+  if(failure == 4)
+  {
+    sigma.at(0) = std::numeric_limits<float64>::denorm_min();
+  }
+  const SmoothFilter filter;
+  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == expectedCodes.at(failure));
+  REQUIRE(preflight.outputActions.errors().front().message.find("Image Geometry") != std::string::npos);
+}
+
+TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: constants retain type shape and selected endpoint behavior",
+                   "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64, float32, float64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope algorithmScope(scenario);
+  const usize dimZ = GENERATE(usize{1}, usize{4});
+  const usize endpoint = GENERATE(usize{0}, usize{1}, usize{2});
+  TestType value = TestType{0};
+  if constexpr(std::is_integral_v<TestType>)
+  {
+    if(endpoint == 1)
+    {
+      value = std::numeric_limits<TestType>::max();
+    }
+    if(endpoint == 2)
+    {
+      value = std::numeric_limits<TestType>::lowest();
+    }
+  }
+  const bool clips = endpoint == 1 && std::is_integral_v<TestType> && sizeof(TestType) >= sizeof(int32);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 4, 4, dimZ, std::vector<TestType>(16 * dimZ, value));
+  const SmoothFilter filter;
+  const Arguments args = makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0});
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.value().actions.size() == 1);
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflight.outputActions.value().actions.front().get());
+  REQUIRE(actionPtr != nullptr);
+  REQUIRE(actionPtr->type() == GetDataType<TestType>());
+  REQUIRE(actionPtr->dims() == ShapeType{dimZ, 4, 4});
+  REQUIRE(actionPtr->componentDims() == ShapeType{1});
+  const auto executed = algorithmScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  REQUIRE(countSmoothingWarning(executed.result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (clips ? 1 : 0));
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{dimZ, 4, 4});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& values = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  for(usize index = 0; index < values.getSize(); ++index)
+  {
+    REQUIRE(values.getValue(index) == value);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 output retains float32 interpass precision", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope algorithmScope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float64>(dataStructure, 4, 4, 1, std::vector<float64>(16, 16777216.25));
+  const SmoothFilter filter;
+  const auto result = algorithmScope.executeFilter(filter, dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 0.0}));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::float64);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+  const auto& values = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+  // Unit DC gain preserves the constant until the required Float32 materialization rounds it to 2^24.
+  for(usize index = 0; index < values.getSize(); ++index)
+  {
+    REQUIRE(values.getValue(index) == 16777216.0);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and buffered terminal conversion follow literal expectations",
+          "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool buffered = GENERATE(false, true);
+  const std::array<float32, 5> input{93.75F, 127.75F, 128.0F, -128.75F, -129.0F};
+  const std::array<int8, 5> expected{93, 127, 127, -128, -128};
+  const usize fixture = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  const DataStore<float32> source(ShapeType{1}, ShapeType{1}, input.at(fixture));
+  DataStore<int8> output(ShapeType{1}, ShapeType{1}, int8{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 5;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (fixture == 2 || fixture == 4 ? 1 : 0));
+  REQUIRE(output.getValue(0) == expected.at(fixture));
+}
+
+TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: floating terminal values retain nonfinite behavior", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]",
+                   float32, float64)
+{
+  UnitTest::LoadPlugins();
+  const bool buffered = GENERATE(false, true);
+  DataStore<float32> source(ShapeType{4}, ShapeType{1}, 93.75F);
+  source.setValue(1, std::numeric_limits<float32>::infinity());
+  source.setValue(2, -std::numeric_limits<float32>::infinity());
+  source.setValue(3, std::numeric_limits<float32>::quiet_NaN());
+  DataStore<TestType> output(ShapeType{4}, ShapeType{1}, TestType{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 5;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(result.warnings().empty());
+  REQUIRE(output.getValue(0) == TestType{93.75});
+  REQUIRE(std::isinf(output.getValue(1)));
+  REQUIRE(output.getValue(1) > TestType{0});
+  REQUIRE(std::isinf(output.getValue(2)));
+  REQUIRE(output.getValue(2) < TestType{0});
+  REQUIRE(std::isnan(output.getValue(3)));
+}
+
+TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: terminal nonfinite integer errors and binary64 boundaries",
+                   "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int32, int64)
+{
+  UnitTest::LoadPlugins();
+  const bool buffered = GENERATE(false, true);
+  const bool nonfinite = GENERATE(false, true);
+  const float32 invalidValue = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
+  const float32 upper = std::is_same_v<TestType, int32> ? 2147483648.0F : 9223372036854775808.0F;
+  DataStore<float32> source(ShapeType{2}, ShapeType{1}, upper);
+  source.setValue(1, nonfinite ? invalidValue : -upper);
+  DataStore<TestType> output(ShapeType{2}, ShapeType{1}, TestType{0});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = buffered;
+  options.targetScratchBytes = 1;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, options);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
+  if(nonfinite)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == ImageProcessing::k_SmoothingGaussianNonFiniteIntegerOutput);
+    REQUIRE(result.errors().front().message.find("index 1") != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(output.getValue(0) == std::numeric_limits<TestType>::max());
+    REQUIRE(output.getValue(1) == std::numeric_limits<TestType>::lowest());
+  }
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping warning survives later transfer failure and cancellation",
+          "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const usize outcome = GENERATE(usize{0}, usize{1}, usize{2});
+  std::atomic_bool shouldCancel{false};
+  const SmoothingTransferStore<float32> source(8, 128.0F, {.ReadAt = outcome == 0 ? usize{2} : usize{0}});
+  SmoothingTransferStore<int8> output(8, int8{0}, {.WriteAt = outcome == 1 ? usize{2} : usize{0}, .CancelOnWritePtr = outcome == 2 ? &shouldCancel : nullptr});
+  ImageProcessing::detail::PointwiseExecutionOptions options;
+  options.forceBuffered = true;
+  options.targetScratchBytes = 5;
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, options);
+  REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
+  REQUIRE(countSmoothingWarning(result, -23692) >= 1);
+  REQUIRE(countSmoothingWarning(result, -23693) >= 1);
+  REQUIRE(output.getValue(0) == 127);
+  if(outcome < 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == (outcome == 0 ? -23690 : -23691));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(shouldCancel.load());
+  }
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected plane sinks retain successful warnings before error or cancellation",
+          "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const SmoothingTransferStore<float32> source(64, 0.0F);
+  std::atomic_bool shouldCancel{false};
+  const bool cancel = GENERATE(false, true);
+  usize calls = 0;
+  const ImageProcessing::RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.0, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false, .CheckedSmoothing = true};
+  const ImageProcessing::RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 1.0, .spacing = 1.0, .order = 0, .normalizeAcrossScale = false, .CheckedSmoothing = true};
+  const auto sink = [&](usize, nonstd::span<float32>) -> Result<> {
+    ++calls;
+    if(calls == 2)
+    {
+      return MakeErrorResult(-23694, "Injected later smoothing sink failure.");
+    }
+    if(cancel)
+    {
+      shouldCancel.store(true);
+    }
+    return MakeWarningVoidResult(-23695, "Injected smoothing sink warning.");
+  };
+  const Result<> result = ImageProcessing::RecursiveGaussianXYPlaneCascadeToSink<float32>(source, SizeVec3{4, 4, 4}, first, second, shouldCancel, {}, sink);
+  REQUIRE(countSmoothingWarning(result, -23695) == 1);
+  REQUIRE(countSmoothingWarning(result, -23692) >= 1);
+  if(cancel)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(calls == 1);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -23694);
+  }
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected tiled transfers keep prior row warnings on failure", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool write = GENERATE(false, true);
+  SmoothingTransferStore<float32> store(8, 0.0F, {.ReadAt = write ? usize{0} : usize{2}, .WriteAt = write ? usize{2} : usize{0}});
+  std::array<float32, 2> values{1.0F, 2.0F};
+  const Result<> result = write ? ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(store, 4, 0, 0, 2, 1, values, true) :
+                                  ImageProcessing::detail::ReadRecursiveGaussian2DBlock<float32>(store, 4, 0, 2, 0, 1, values, true);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == (write ? -23691 : -23690));
+  REQUIRE(countSmoothingWarning(result, write ? -23693 : -23692) == 1);
+}
+
+TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: checked axis materializations narrow finite overflow explicitly",
+          "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const uint32 axis = GENERATE(uint32{0}, uint32{1}, uint32{2});
+  const bool fast = GENERATE(false, true);
+  const DataStore<float64> source(ShapeType{5, 5, 5}, ShapeType{1}, 2.0 * static_cast<float64>(std::numeric_limits<float32>::max()));
+  DataStore<float32> output(ShapeType{5, 5, 5}, ShapeType{1}, 0.0F);
+  ImageProcessing::RecursiveGaussianPassOptions options;
+  options.CheckedSmoothing = true;
+  options.useInMemoryFastPath = fast;
+  options.stagingByteBudget = 256;
+  const std::atomic_bool shouldCancel{false};
+  const Result<> result = ImageProcessing::RecursiveGaussianAxisPass<float64>(source, output, SizeVec3{5, 5, 5}, axis, 1.0, 1.0, 0, false, shouldCancel, {}, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    REQUIRE(std::isinf(output.getValue(index)));
+    REQUIRE(output.getValue(index) > 0.0F);
+  }
+}
 
 // -----------------------------------------------------------------------------
 // (1) Smoothing preserves a constant image (all signed types). A normalized (DC-gain-1) Gaussian of a constant is the
@@ -251,7 +736,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rej
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
+    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSigma);
   }
   SECTION("degenerate spacing rejected")
   {
@@ -269,7 +754,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rej
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSpacing);
+    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
   }
 }
 
@@ -279,6 +764,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rej
 // -----------------------------------------------------------------------------
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJson", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
+  UnitTest::LoadPlugins();
   const nlohmann::json json = {
       {"Sigma", {{"x", 2.0}, {"y", 3.0}, {"z", 4.0}}},
       {"NormalizeAcrossScale", true},
