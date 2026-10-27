@@ -6,7 +6,7 @@ Statistics (Crystallography)
 
 ## Description
 
-Use this filter to separate **hard** and **soft** grains or cells in a hexagonal close-packed (HCP) material. A hard orientation has its crystal c-axis near parallel to the loading direction. A soft orientation has its c-axis near perpendicular to that direction. Set **Reference Direction** to the loading direction in the sample frame. The output gives the angle to that direction. This angle describes orientation relative to the load; it is not a full prediction of mechanical response.
+Use this filter to separate **hard** and **soft** grains or cells in a hexagonal close-packed (HCP) material. A hard orientation has its crystal c-axis nearly parallel to the loading direction. A soft orientation has its c-axis nearly perpendicular to that direction. Set **Reference Direction** to the loading direction in the sample frame. The output gives the angle to that direction. This angle describes orientation relative to the load. It is not a full prediction of mechanical response.
 
 The filter works on cell orientations, feature average orientations, or any other quaternion array. A **feature** usually represents a grain. Select a Phases array at the same level, with one phase index for each orientation. No geometry or Feature Ids array is required.
 
@@ -18,9 +18,9 @@ A zero quaternion or a quaternion with a NaN or infinite component receives NaN.
 
 **Reference Direction** has three dimensionless components in the sample frame. It need not be a unit vector. For example, *[3, 0, 3]* and *[1, 0, 1]* give the same result. All components must be finite. The vector length must be greater than 1e-12.
 
-Only **Hexagonal_High** (6/mmm) and **Hexagonal_Low** (6/m) phases are accepted. Cubic, trigonal, unknown, and other non-hexagonal phases receive NaN. One warning reports the number of tuples with known non-hexagonal structures; **UnknownCrystalStructure** (999) tuples do not contribute to this count or cause a warning. An unmasked phase index outside the Crystal Structures array is an error. Correct the Phases array or select the matching ensemble array.
+Only **Hexagonal_High** (6/mmm) and **Hexagonal_Low** (6/m) phases are accepted. Cubic, trigonal, unknown, and other non-hexagonal phases receive NaN. A warning gives the number of unmasked tuples that have a known non-hexagonal structure. **UnknownCrystalStructure** (999) tuples are not counted. They do not cause a warning. An unmasked phase index outside the Crystal Structures array is an error. Correct the Phases array or select the matching Crystal Structures array.
 
-When **Use Mask Array** is enabled, false or zero mask values receive NaN. True or nonzero values are included. The mask must be a one-component bool or uint8 array with the same tuple count as **Input Quaternions** and Phases.
+When **Use Mask Array** is enabled, tuples with a false or zero mask value receive NaN. Tuples with a true or nonzero mask value are included. The mask must be a one-component bool or uint8 array with the same tuple count as **Input Quaternions** and Phases.
 
 The output is a one-component float32 array beside **Input Quaternions**. It keeps the input tuple shape. Valid angles are in **[0, 90] degrees**. An angle near 0 degrees means parallel. An angle near 90 degrees means perpendicular. The c-axis is antipodally symmetric: opposite c-axis directions represent the same axis. This folds angles greater than 90 degrees into the stated range.
 

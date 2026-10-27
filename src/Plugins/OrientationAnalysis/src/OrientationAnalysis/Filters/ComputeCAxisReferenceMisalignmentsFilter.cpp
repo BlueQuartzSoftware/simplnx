@@ -124,13 +124,13 @@ Result<> ComputeCAxisReferenceMisalignmentsFilter::executeImpl(DataStructure& da
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeCAxisReferenceMisalignmentsInputValues inputValues;
-  inputValues.referenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
-  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.phasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.outputArrayPath = inputValues.quatsArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisReferenceMisalignmentsArrayName_Key));
+  inputValues.ReferenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.OutputArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisReferenceMisalignmentsArrayName_Key));
   return ComputeCAxisReferenceMisalignments(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

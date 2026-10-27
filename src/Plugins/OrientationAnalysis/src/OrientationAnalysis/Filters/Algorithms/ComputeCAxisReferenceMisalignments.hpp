@@ -12,17 +12,20 @@ namespace nx::core
 {
 /**
  * @struct ComputeCAxisReferenceMisalignmentsInputValues
- * @brief Identifies quaternion, phase, mask, and output arrays at any tuple level.
+ * @brief Holds the reference direction, the mask switch, and the array paths.
+ *
+ * Quaternions, Phases, Mask, and output share one tuple count at any level.
+ * Crystal Structures is the ensemble array that Phases indexes.
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignmentsInputValues
 {
-  std::vector<float32> referenceDirection;
-  bool useMask = false;
-  DataPath quatsArrayPath;
-  DataPath phasesArrayPath;
-  DataPath maskArrayPath;
-  DataPath crystalStructuresArrayPath;
-  DataPath outputArrayPath;
+  std::vector<float32> ReferenceDirection;
+  bool UseMask = false;
+  DataPath QuatsArrayPath;
+  DataPath PhasesArrayPath;
+  DataPath MaskArrayPath;
+  DataPath CrystalStructuresArrayPath;
+  DataPath OutputArrayPath;
 };
 
 /**

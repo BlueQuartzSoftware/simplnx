@@ -50,11 +50,11 @@ Result<> ComputeCAxisReferenceMisalignments::ValidateReferenceDirection(const st
 
 Result<> ComputeCAxisReferenceMisalignments::operator()()
 {
-  if(auto validation = ValidateReferenceDirection(m_InputValues->referenceDirection); validation.invalid())
+  if(auto validation = ValidateReferenceDirection(m_InputValues->ReferenceDirection); validation.invalid())
   {
     return validation;
   }
-  const auto& reference = m_InputValues->referenceDirection;
+  const auto& reference = m_InputValues->ReferenceDirection;
   Eigen::Vector3d referenceDirection(reference[0], reference[1], reference[2]);
   referenceDirection.normalize();
 
@@ -65,23 +65,23 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
   };
 
   // Cache only the small ensemble array. All tuple-level buffers have a fixed bound.
-  const auto& crystalStructuresStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
   std::vector<uint32> crystalStructures(crystalStructuresStore.getNumberOfTuples());
   if(!ioSucceeded(crystalStructuresStore.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size()))))
   {
     return result;
   }
 
-  const auto& quatsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath).getDataStoreRef();
-  const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->phasesArrayPath).getDataStoreRef();
-  auto& outputStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->outputArrayPath).getDataStoreRef();
+  const auto& quatsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
+  const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PhasesArrayPath).getDataStoreRef();
+  auto& outputStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputArrayPath).getDataStoreRef();
   const usize total = quatsStore.getNumberOfTuples();
 
   const BoolArray* boolMask = nullptr;
   const UInt8Array* byteMask = nullptr;
-  if(m_InputValues->useMask)
+  if(m_InputValues->UseMask)
   {
-    const auto& mask = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->maskArrayPath);
+    const auto& mask = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
     if(mask.getDataType() == DataType::boolean)
     {
       boolMask = &dynamic_cast<const BoolArray&>(mask);
@@ -134,7 +134,7 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
       {
         return MergeResults(std::move(result), MakeErrorResult(-98712, fmt::format("Phases array '{}' has value {} at tuple index {}, but Crystal Structures array '{}' has {} tuples. "
                                                                                    "Valid phase indices are in [0, {}). Correct this phase value or select the matching Crystal Structures array.",
-                                                                                   m_InputValues->phasesArrayPath.toString(), phase, offset + i, m_InputValues->crystalStructuresArrayPath.toString(),
+                                                                                   m_InputValues->PhasesArrayPath.toString(), phase, offset + i, m_InputValues->CrystalStructuresArrayPath.toString(),
                                                                                    crystalStructures.size(), crystalStructures.size())));
       }
       const uint32 crystalStructure = crystalStructures[phase];
@@ -171,7 +171,7 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
   {
     result.warnings().push_back({-98713, fmt::format("{} tuples in '{}' have non-hexagonal phases and received NaN. Only Hexagonal_High (6/mmm) and Hexagonal_Low (6/m) are supported. "
                                                      "Select hexagonal tuples with the mask if these phases should be excluded.",
-                                                     nonHexagonalCount, m_InputValues->quatsArrayPath.toString())});
+                                                     nonHexagonalCount, m_InputValues->QuatsArrayPath.toString())});
   }
   return result;
 }
