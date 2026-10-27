@@ -13,9 +13,9 @@ dispatch prompt says so.
 - `bluequartz-skills:simplnx-best-practices`: simplnx and simplnx plugin code.
 
 Task skills own the details: `filter-implementation` for filters and algorithms, `implement-filter-tests` and
-`exemplar-testing` for tests, `publish-exemplars` for test-data archives, `thread-safety` for parallel code,
-`ooc-architecture` for out-of-core storage, `pipeline-files` for `.d3dpipeline` files, and `github-workflow` for
-commits and pull requests.
+`exemplar-testing` for tests, `publish-exemplars` for test-data archives, `error-messages` for error and warning
+messages, `thread-safety` for parallel code, `ooc-architecture` for out-of-core storage, `pipeline-files` for
+`.d3dpipeline` files, and `github-workflow` for commits and pull requests.
 
 ## Where new rules go
 
