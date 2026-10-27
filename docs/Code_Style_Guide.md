@@ -251,6 +251,17 @@ A direction or axis parameter must not default to `{0, 0, 0}`, and preflight rej
 - Check `Result::invalid()` and `std::optional::has_value()` before calling `.value()`.
 - When code walks every child of an Attribute Matrix, handle each array kind (`IDataArray`, `StringArray`, `INeighborList`) or return an error that names the array. Write that message by the `bluequartz-skills:error-messages` skill.
 
+### Preflight Does Not Allocate or Read Array Data
+
+Preflight runs every time a parameter changes in the GUI, on arrays whose stores are usually placeholders. It must stay cheap: its memory may grow with metadata and short previews, but not with the element data of an array.
+
+- Declare every output through an action. In preflight an action does not allocate element storage: `CreateArrayAction` and the array-creation paths of the geometry actions create an `EmptyDataStore`, and `CreateNeighborListAction` creates an `EmptyListStore`. Do not create an array with real storage in `preflightImpl()` or in a helper that it calls. `CreateStringArrayAction` allocates every string in preflight and breaks this rule (issue #1892).
+- `CopyDataObjectAction` and the copy paths of the geometry actions copy the store of their source. In pipeline preflight the source is usually a placeholder, so the copy is one too. `CopyArrayInstanceAction` creates a new array with the shape and type of its source, a placeholder in preflight.
+- Use tuple, element and file-derived counts to compute output shapes. A shape stores dimension counts, not element values.
+- Metadata may grow with phases, columns, files, tiles, output objects (even one output per input tuple, as in `SplitDataArrayByTupleFilter`) and the coordinates along one axis (`RegularizeZSpacingFilter` reads the Z + 1 slice bounds). A preview that preflight builds from parameter values holds a few tuples and may grow with the component count, as in `InitializeDataFilter`. Apart from these, do not allocate a scratch buffer, vector or set with one entry per cell, vertex, face or tuple.
+- Do not read element values from a `DataStructure` array; read only its shape, type and counts. During preflight its store is usually an `EmptyDataStore`, and an element read from it throws.
+- A reader may read past the file header when the format requires it to find or check the output structure. `ReadCSVFileFilter` scans the whole file to count its lines, `ReadDeformKeyFileV12Filter` reads the first record of each array to find its component count, and `ReadGrainMapper3DFilter` reads whole HDF5 metadata datasets. Read only what preflight needs. When a scan passes over array data, hold at most a fixed-size buffer or the one record that it needs, keep none of the scanned records, check `shouldCancel` during a long scan, and cache the result (see "Static Header Caches Need a Mutex"). Do not decode image pixels or load the data of an array only to find metadata.
+
 ### Preflight and Execute Make the Same Decisions
 
 Preflight and execute must reach the same decision from the same inputs: which arrays are processed, output names, crop or resample indices, which outputs are enabled. Put that decision in one function and call it from both places. Do not copy the logic.
