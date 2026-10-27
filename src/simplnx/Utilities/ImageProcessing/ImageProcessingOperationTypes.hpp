@@ -2,6 +2,13 @@
 
 namespace nx::core::ImageProcessing
 {
+/** @brief Only Connected Component exposes the explicit legacy wrap policy. Other callers keep Error. */
+enum class ConnectedComponentLabelLimitHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 /**
  * @brief The grayscale morphology operation to apply through a flat structuring element.
  *

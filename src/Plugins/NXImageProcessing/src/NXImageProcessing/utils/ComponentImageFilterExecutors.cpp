@@ -39,7 +39,8 @@ namespace
  * @brief Dispatched execute body for the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels
  *        into consecutive uint32 components via the streaming scanline union-find @ref LabelConnectedComponents
  *        engine. Output is a FIXED uint32 label image, background 0. Input must be an integer scalar type (the
- *        caller's preflight enforces this via the IntegerOnly policy).
+ *        caller's preflight enforces this via the IntegerOnly policy). Explicit legacy overflow can lose foreground
+ *        or merge components through zero and reused IDs.
  */
 struct ConnectedComponentExecuteFn
 {
@@ -51,13 +52,16 @@ struct ConnectedComponentExecuteFn
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
+  ConnectedComponentLabelLimitHandling LabelLimitHandling;
+
   template <class T>
   Result<> operator()() const
   {
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
-    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler);
+    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler, k_ConnectedComponent2DTargetBytes,
+                                       LabelLimitHandling);
   }
 };
 
@@ -867,13 +871,13 @@ struct ThresholdMaxCCExecuteFn
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool fullyConnected,
-                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ConnectedComponentLabelLimitHandling labelLimitHandling)
 {
   using TypeSetPolicy = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler};
+  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler, labelLimitHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
