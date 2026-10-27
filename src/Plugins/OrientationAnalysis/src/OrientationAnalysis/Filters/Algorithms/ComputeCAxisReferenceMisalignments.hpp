@@ -29,8 +29,10 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignmentsInputValues
  * @class ComputeCAxisReferenceMisalignments
  * @brief Computes hexagonal c-axis angles to a sample-frame reference direction.
  *
- * One bounded bulk-I/O traversal serves resident and out-of-core stores. Masked
- * and non-hexagonal tuples receive NaN. Antipodal symmetry folds angles to [0, 90] degrees.
+ * One bounded bulk-I/O traversal serves resident and out-of-core stores.
+ * Masked tuples, non-hexagonal tuples, and zero or nonfinite quaternions receive NaN.
+ * Finite, nonzero quaternions need not be unit length because the computed c-axis is normalized.
+ * Antipodal symmetry folds angles to [0, 90] degrees.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignments
 {
@@ -64,8 +66,10 @@ public:
 
   /**
    * @brief Writes one angle per quaternion tuple using checked bulk I/O.
-   * @return Errors for invalid references, phase indices, or I/O. A warning counts
-   * non-hexagonal tuples. Cancellation leaves only completed chunks written.
+   * @return Errors for invalid references, phase indices, or I/O.
+   * A warning counts only unmasked tuples with known non-hexagonal structures.
+   * UnknownCrystalStructure does not contribute to the count.
+   * Cancellation leaves only completed chunks written.
    */
   Result<> operator()();
 
