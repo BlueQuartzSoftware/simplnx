@@ -49,7 +49,7 @@ Handle NaN and infinity explicitly before range calculations or conversion to in
 
 ## Algorithm
 
-This is an ITK-free implementation of the legacy ITK Log Image Filter. It uses the existing pointwise traversal for resident and disk-backed arrays. Resident storage retains the direct route when available. The buffered route reads and writes bounded batches through the store interface. It does not create a full-array resident copy for this transform. Cancellation and storage failures follow the shared pointwise execution path.
+This is an ITK-free implementation of the legacy ITK Log Image Filter. It uses the existing pointwise traversal for resident and disk-backed arrays. Resident storage retains the direct route when available. The buffered route has a default transfer scratch target of 64 MiB and processes at least one complete slab across the trailing tuple dimensions, such as an XY slice for a Z/Y/X array. A slab can exceed the target or cover the whole array. Bulk reads and writes run serially; parallel calculation uses owned buffers. Log adds no separate full-volume scratch allocation. Cancellation and storage failures follow the shared pointwise execution path.
 
 ![](Images/LogImageFilter.png)
 
