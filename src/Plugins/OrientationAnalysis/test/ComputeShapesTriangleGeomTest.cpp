@@ -1,7 +1,7 @@
 #include "OrientationAnalysis/Filters/ComputeShapesTriangleGeomFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -99,7 +99,6 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom", "[OrientationAnalysi
 
 TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroids requires 3 components", "[OrientationAnalysis][ComputeShapesTriangleGeom][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(triangleGeom != nullptr);

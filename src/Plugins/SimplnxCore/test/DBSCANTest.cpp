@@ -426,7 +426,6 @@ Result<> RunDirectOutOfCoreScanline(usize pointComponents, std::optional<std::pa
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -440,7 +439,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -454,7 +452,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -468,7 +465,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]"
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -482,7 +478,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -496,7 +491,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -510,7 +504,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -566,7 +559,6 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -630,7 +622,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -699,7 +690,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -866,7 +856,6 @@ TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-s
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -891,7 +880,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[Sim
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -919,7 +907,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -943,7 +930,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[S
 
 TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid input shapes", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataIOCollection& collection = DataStoreUtilities::GetIOCollection();
   const std::shared_ptr<IDataIOManager> builtInHDF5Manager = collection.getManager("HDF5");
   REQUIRE(builtInHDF5Manager != nullptr);

@@ -479,7 +479,6 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
   REQUIRE(cellData != nullptr);
@@ -508,7 +507,6 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component",
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
   auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
@@ -550,7 +548,6 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
   auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});

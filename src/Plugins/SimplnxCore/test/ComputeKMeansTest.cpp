@@ -610,7 +610,6 @@ TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[S
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
   REQUIRE(cellData != nullptr);
@@ -639,7 +638,6 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
   auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
@@ -681,7 +679,6 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple c
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMeans][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
   auto* maskData = AttributeMatrix::Create(dataStructure, "Mask Data", {4});

@@ -50,7 +50,6 @@ Arguments CreatePhaseFixture(DataStructure& dataStructure, const std::vector<T>&
 
 void RequireInvalidPhase(const std::vector<int32>& values, const std::string& expectedValue, const std::string& expectedTuple)
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   const auto args = CreatePhaseFixture<int32>(dataStructure, values);
   ComputeNumFeaturesFilter filter;
@@ -79,7 +78,6 @@ void RequireInvalidPhase(const std::vector<int32>& values, const std::string& ex
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Feature Phases requires 1 component", "[SimplnxCore][ComputeNumFeaturesFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   const auto args = CreatePhaseFixture<int32>(dataStructure, {0, 0, 1, 1}, {2});
   ComputeNumFeaturesFilter filter;
@@ -91,7 +89,6 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Feature Phases requires 1 comp
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Feature Phases requires int32", "[SimplnxCore][ComputeNumFeaturesFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   const auto args = CreatePhaseFixture<float32>(dataStructure, {0.0F, 1.0F});
   ComputeNumFeaturesFilter filter;
@@ -113,7 +110,6 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Rejects negative phase", "[Sim
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Counts valid phases and skips feature zero", "[SimplnxCore][ComputeNumFeaturesFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   const auto args = CreatePhaseFixture<int32>(dataStructure, {0, 1, 2, 1, 0, 2, 1});
   ComputeNumFeaturesFilter filter;

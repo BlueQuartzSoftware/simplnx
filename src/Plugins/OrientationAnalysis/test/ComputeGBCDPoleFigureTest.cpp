@@ -273,7 +273,6 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Phase and Laue Inde
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Component Shape", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   const auto componentShape = GENERATE(ShapeType{1}, ShapeType{2, 2, 2, 2, 2, 1}, ShapeType{0, 2, 2, 2, 2, 2}, ShapeType{2, 0, 2, 2, 2, 2}, ShapeType{2, 2, 0, 2, 2, 2}, ShapeType{2, 2, 2, 0, 2, 2},
                                        ShapeType{2, 2, 2, 2, 0, 2});
   CAPTURE(componentShape);

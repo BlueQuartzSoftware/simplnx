@@ -3556,7 +3556,7 @@ struct DBSCANScanlineFunctor
     }
     else
     {
-      return MakeErrorResult(-54060, "Input components invalid. Only 2 or 3 accepted.");
+      return MakeErrorResult(-54060, fmt::format("DBSCAN requires 2 or 3 coordinate components, but the clustering array has a component count of {}.", inputArray.getNumberOfComponents()));
     }
   }
 };

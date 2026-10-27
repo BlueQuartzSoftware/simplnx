@@ -1,9 +1,9 @@
 #include "SimplnxCore/Filters/ComputeVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -121,7 +121,6 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards 
 
 TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals requires 3 components", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* triangleGeom = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(triangleGeom != nullptr);

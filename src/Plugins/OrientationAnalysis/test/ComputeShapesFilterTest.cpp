@@ -190,7 +190,6 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count",
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Cell Feature Ids requires 1 component", "[OrientationAnalysis][ComputeShapesFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);

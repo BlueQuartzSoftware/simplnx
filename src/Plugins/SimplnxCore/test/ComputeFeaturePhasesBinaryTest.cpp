@@ -104,7 +104,6 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: SIMPL Backwards Compat
 
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Cell Feature Ids requires 1 component", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter][ComponentShape]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
   REQUIRE(cellData != nullptr);
