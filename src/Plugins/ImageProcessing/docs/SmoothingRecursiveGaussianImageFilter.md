@@ -50,7 +50,7 @@ The same terminal policy applies to all five output routes:
 | Three-dimensional plane cascade | Checked conversion after the Z, X, and Y passes |
 | Bounded two-dimensional disk cascade | Checked conversion before each output block is written |
 
-Warnings from completed transfers remain available if a later operation fails or the run is cancelled. Cancellation and later I/O failures can leave completed output blocks in place; this filter does not promise an all-or-nothing output update.
+The smoothing helpers retain warnings delivered by completed transfers on their own success, error, and cancellation returns. However, the public filter wrapper can replace a successful execution result with a cancellation error and discard its execution warnings. Warning retention after cancellation is therefore not guaranteed at the public filter boundary. Cancellation and later I/O failures can leave completed output blocks in place; this filter does not promise an all-or-nothing output update.
 
 ### Migration and downstream use
 
