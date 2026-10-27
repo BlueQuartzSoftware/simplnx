@@ -281,6 +281,63 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: hexagonal ph
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masked non-hexagonal tuples are not counted", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool byteMask = GENERATE(false, true);
+  CAPTURE(byteMask);
+  const std::vector<Euler> eulers(6, {23, 37, 89});
+  auto ds = MakeData(eulers, {6});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
+  auto& phases = ds.getDataRefAs<Int32Array>(k_Phases);
+  phases[1] = 3;
+  phases[2] = 4;
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
+  const auto parent = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
+  if(byteMask)
+  {
+    auto& mask = CreateArray<uint8>(ds, k_Mask, {6}, 1, parent);
+    mask.fill(1);
+    mask[1] = 0;
+    mask[2] = 0;
+  }
+  else
+  {
+    auto& mask = CreateArray<bool>(ds, k_Mask, {6}, 1, parent);
+    mask.fill(true);
+    mask[1] = false;
+    mask[2] = false;
+  }
+  usize expectedNonHexagonalCount = 0;
+  std::vector<usize> excluded = {1, 2};
+  SECTION("All non-hexagonal tuples masked")
+  {
+  }
+  SECTION("One unmasked cubic tuple is counted")
+  {
+    phases[4] = 3;
+    expectedNonHexagonalCount = 1;
+    excluded.push_back(4);
+  }
+  auto result = Filter().execute(ds, MakeArgs({0, 0, 1}, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckOutput(ds, eulers, {0, 0, 1}, excluded);
+  if(expectedNonHexagonalCount == 0)
+  {
+    REQUIRE(result.result.warnings().empty());
+  }
+  else
+  {
+    REQUIRE(result.result.warnings().size() == 1);
+    REQUIRE(result.result.warnings()[0].code == -98713);
+    REQUIRE(result.result.warnings()[0].message.find("1 tuples") == 0);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: invalid reference", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
   UnitTest::LoadPlugins();
