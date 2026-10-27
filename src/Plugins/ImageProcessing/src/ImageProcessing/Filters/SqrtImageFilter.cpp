@@ -1,5 +1,8 @@
 #include "SqrtImageFilter.hpp"
 
+#include "ImageProcessing/utils/MathOutputUtilities.hpp"
+
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -20,7 +23,7 @@ struct SqrtOperation
   template <class T, class U>
   auto makeMapOp() const
   {
-    return [](T value) -> U { return static_cast<U>(std::sqrt(static_cast<double>(value))); };
+    return [](T value) -> U { return ImageProcessing::ConvertMathResult<U>(std::sqrt(static_cast<float64>(value))); };
   }
 };
 } // namespace
@@ -76,7 +79,8 @@ IFilter::PreflightResult SqrtImageFilter::preflightImpl(const DataStructure& dat
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::IntegerToFloat64Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {std::move(resultOutputActions)};
 }
 Result<> SqrtImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -87,7 +91,8 @@ Result<> SqrtImageFilter::executeImpl(DataStructure& dataStructure, const Argume
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const SqrtOperation operation{};
-  return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::IntegerToFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                                 messageHandler);
 }
 
 namespace
