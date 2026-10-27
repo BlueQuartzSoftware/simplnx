@@ -1,6 +1,11 @@
 #include "HMinimaImageFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
@@ -13,7 +18,7 @@
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <cmath>
 
@@ -26,6 +31,7 @@ namespace
 // the -8552 (non-finite) and -8555 (negative) slots for its Height guards (HMaxima owns -8551/-8554).
 constexpr int32 k_NonFiniteHeight = -8552;
 constexpr int32 k_NegativeHeight = -8555;
+constexpr int32 k_FractionalIntegerHeight = -1874111;
 } // namespace
 
 namespace nx::core
@@ -56,7 +62,8 @@ Parameters HMinimaImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64Parameter>(k_Height_Key, "Height",
                                                    "The height (contrast) below which a regional minimum is suppressed. Every regional minimum whose depth is less than Height is removed; each "
-                                                   "surviving minimum is raised by exactly Height. Must be finite.",
+                                                   "surviving minimum is raised by exactly Height. Must be finite and nonnegative. Integer input requires a whole-number Height; floating input "
+                                                   "allows fractions.",
                                                    2.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the connected components are defined strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off. For "
@@ -104,6 +111,14 @@ IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& 
   {
     return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Minima requires a non-negative Height, but the supplied value was {}.", height))};
   }
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArrayPtr != nullptr && ImageProcessing::GetIntegerScalarTypes().contains(inputArrayPtr->getDataType()) && std::trunc(height) != height)
+  {
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_FractionalIntegerHeight, fmt::format("H Minima requires a whole-number Height for integer input array '{}', but received {}. Choose an intentional whole Height or explicitly "
+                                                       "convert the input to floating point before using a fractional Height.",
+                                                       selectedInputArray.toString(), height))};
+  }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
@@ -124,7 +139,8 @@ Result<> HMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   // HMinima == reconstruct-by-erosion of the saturating (input + Height) marker under the input mask; unlike
   // HMaxima the legacy ITK filter exposes a FullyConnected option, so honor it here.
   return ImageProcessing::ExecuteMorphologicalReconstructionImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Erosion, fullyConnected,
-                                                                        ImageProcessing::detail::ReconMarker::PlusHeight, height, shouldCancel, messageHandler);
+                                                                        ImageProcessing::detail::ReconMarker::PlusHeight, height, shouldCancel, messageHandler, /*differenceFromInput=*/false,
+                                                                        /*exactIntegerHeight=*/true);
 }
 
 namespace
