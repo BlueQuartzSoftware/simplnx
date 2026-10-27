@@ -34,7 +34,7 @@ If an existing pipeline contains the ITK Write Image filter UUID, the ImageProce
 
 If the input array represents a 3D volume, the filter will output a series of slices along one of the orthogonal axes. The options are to produce XY slices along the Z axis, XZ slices along the Y axis, or YZ slices along the X axis. The output files will be numbered sequentially starting at the *Index Offset* and ending at *Index Offset + (dim - 1)* for the chosen axis. For example, if the Z axis has 117 dimensions and *Index Offset* is 0, 117 XY image files will be produced and numbered 000 through 116. If the volume produces only a single slice, no index is appended and the file is written with exactly the user-specified name.
 
-Writes are performed through an `AtomicFile`, so partially-written slices from an aborted run will not corrupt existing output files.
+The filter encodes each slice in a temporary file, then commits that slice through `AtomicFile`. This is a separate operation for each slice. An unrelated failure in a later slice can leave earlier completed slices in the output folder. File replacement can also fail if the operating system cannot rename the temporary file.
 
 ### Plane
 
@@ -62,12 +62,25 @@ This option only affects the written image files. The input Image Geometry and i
 
 ### Inline Color Table (Optional)
 
-Enabling *Create Color Table* converts a single-component **Data Array** to an RGB image using a selected color preset immediately before writing, so there is no need to run the Create Color Map **Filter** as a separate step beforehand. The results are identical to running Create Color Map followed by Write Image.
+Enabling *Create Color Table* converts a single-component **Data Array** to an RGB image using the selected color preset. The filter checks the color range before it writes the first slice. The nonfinite policy below applies to this inline color conversion.
 
 - *Select Preset...* chooses the color preset (for example grayscale, rainbow, or jet) that is applied to the array's values.
 - When *Create Color Table* is enabled, the **Input Image Data Array** must be a single-component numeric array, but it may be **any** numeric type: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, or float64. This is wider than the type restrictions that apply when writing an array's raw pixel values directly (see *Pixel Data Type Support By Format* above), since color-table mode always produces a uint8 RGB image regardless of the input array's type. If the selected array has more than one component, the filter will fail during preflight.
-- Colorization uses bounded source groups and writes one RGB slice at a time. The filter never holds a full RGB volume in memory. The filter first computes the minimum and maximum input values while ignoring the mask. It uses this range to normalize each voxel against the preset's control points.
-- If every voxel in the input array has the same value (a constant array), every voxel normalizes to the same value and is colored using the preset's first control color.
+- Colorization uses bounded source groups and writes one RGB slice at a time. The initial scan reads bounded scalar and optional mask pages. Every finite scalar value participates in the minimum and maximum, including finite masked values. NaN and infinity do not participate in this range.
+- If the finite range is constant, each unmasked voxel uses the preset's first control color. Masked voxels use the mask color.
+
+#### Nonfinite Input Handling
+
+This choice is active only when *Create Color Table* is enabled:
+
+- **Error** (default) reports an execution error for an unmasked NaN, positive infinity, or negative infinity. The check runs during the initial scan, before any slice file is written or replaced. This also protects existing files when the invalid value occurs in a later slice.
+- **Warn and Continue** uses the preset's first control color for each unmasked nonfinite value. The filter returns one warning with the number of these values. It uses the finite values for the color range. The fallback can look identical to a valid finite minimum; it is not the preset's separate NaN color.
+
+The mask is applied before this policy. A masked nonfinite value uses *Masked Color (RGB)* and does not trigger the policy or its count. Finite masked values still participate in the range. Both choices report an error if no finite values remain, even if all nonfinite values are masked. A finite constant range remains valid. An entirely masked finite array also remains valid and uses the mask color.
+
+Older pipelines now use **Error** unless they explicitly select **Warn and Continue**. To export data with unmasked NaN or infinity, repair the data, mask those pixels, or select the warning choice deliberately. Raw floating TIFF and MHA exports do not use this policy.
+
+The writer keeps native integer endpoints and forms unsigned distances before floating conversion. This preserves adjacent int64 and uint64 ranges and avoids signed overflow. Floating normalization avoids overflowing differences across finite extrema. The normalized coordinate is float32, so interior colors still have finite precision. The existing linear interpolation and truncating conversion to uint8 channels remain in use. Different values can produce the same RGB bytes. Corrected extreme-range colors can differ from older exports.
 
 *Use Mask Array* is a separate, top-level toggle (it is not nested under *Create Color Table*) that assigns a fixed color to "bad" voxels instead of coloring them from the preset:
 
@@ -103,13 +116,13 @@ the padded size.
 
 ## Algorithm
 
-The filter selects an algorithm from the storage type of the input **Data Array** and the optional mask. Both algorithms produce the same files and preserve the same cancellation, flip, color-table, scale-bar, and atomic-write behavior.
+The filter selects an algorithm from the storage type of the input **Data Array** and the optional mask. Both algorithms use the same color scan, nonfinite policy and normalization. They retain the existing slice extraction, flip, scale-bar and per-slice write paths.
 
 ### In-Core Path
 
 `WriteImageDirect` runs when all applicable arrays use in-memory storage. The algorithm uses the original per-slice extraction path. This path preserves the lowest measured in-memory execution time.
 
-The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to the required byte layout and writes the slice before it reads the next slice. Color-table output first scans the scalar array in fixed pages to calculate the normalization range. It then colorizes one source slice and its optional mask at a time.
+The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to the required byte layout and writes the slice before it reads the next slice. Color-table output first scans scalar and optional mask pages with a combined target of 1 MiB. It releases these pages before it colorizes one source slice and its optional mask at a time.
 
 ### Out-of-Core Path
 
@@ -117,7 +130,11 @@ The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to t
 
 XY slices match the default out-of-core Z-slice chunk shape. The algorithm reads one XY slice per extent to prevent unnecessary chunk scatter. For XZ and YZ output, the algorithm groups adjacent output slices into a source slab. The slab size uses an active working-memory reservation with a preferred limit of 64 MiB. If one slice exceeds this limit, the algorithm processes one slice at a time.
 
-The algorithm keeps the grouped source slab and one output slice in memory. A color-table mask shares the same slab plan. The algorithm performs store I/O on one thread and checks cancellation between output slices.
+The algorithm keeps the grouped source slab and one output slice in memory. A color-table mask shares the same slab plan. The initial scalar/mask scan uses bounded pages before the slab allocation. The algorithm performs store I/O on one thread and checks cancellation between output slices.
+
+The filter does not allocate a complete RGB volume. It still requires a complete selected 2D RGB slice. A scale bar can require a second padded slice and a separate band. The image codec can allocate more memory for that slice. The source-buffer reservation is not a limit on total process memory.
+
+Cancellation can leave slices that were committed earlier. Execution errors and warnings are returned through the filter result. The shared filter wrapper can replace a valid execution result with cancellation and lose its execution warnings; this inherited limit does not change the initial nonfinite-error file-preservation guarantee.
 
 % Auto generated parameter table will be inserted here
 

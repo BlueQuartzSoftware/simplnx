@@ -28,6 +28,7 @@ struct IMAGEPROCESSING_EXPORT WriteImageInputValues
   DataPath imageGeometryPath;
   DataPath imageDataArrayPath;
   bool createColorTable = false;
+  uint64 NonfiniteInputHandling = 0;
   std::string presetName;
   bool useMask = false;
   DataPath maskArrayPath;
@@ -62,7 +63,7 @@ public:
 
   /**
    * @brief Writes all slices for the selected plane.
-   * @return An error if slice extraction, compression, or file output fails.
+   * @return Color-policy warnings or an error from the initial scan, slice extraction, compression, or file output.
    */
   Result<> operator()();
 
