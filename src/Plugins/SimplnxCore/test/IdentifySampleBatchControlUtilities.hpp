@@ -3,6 +3,9 @@
 #include "IdentifySampleBenchmarkUtilities.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
 
+#include <algorithm>
+#include <limits>
+
 /**
  * @namespace IdentifySampleBatchControlTest
  * @brief Shares exact reservation and output checks between resident and actual-OOC fixtures.
@@ -73,25 +76,45 @@ void CheckGrant(ScopeT& scope, DataStructure& data, usize width, usize partialBy
   REQUIRE(counters.xyLive == 0);
   if(expectCcl)
   {
-    const usize batches = (fixedCount + width - 1) / width;
-    const usize finalWidth = fixedCount % width == 0 ? width : fixedCount % width;
-    const usize owningBatches = width == 1 ? 0 : batches - static_cast<usize>(finalWidth == 1);
+    // Replay the admitted schedule independently. An out-of-core mask publishes its first batch without extra planes.
+    const bool firstBatchSingle = mask.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore;
+    const uint64 headroom = (width - 1) * k_PlaneBytes + partialBytes;
+    usize batches = 0;
+    usize owningBatches = 0;
+    usize minimumWidth = std::numeric_limits<usize>::max();
+    usize maximumWidth = 0;
+    usize allocatedPlanes = 0;
+    uint64 requestedMaximum = 0;
+    uint64 grantedMaximum = 0;
+    for(usize start = 0; start < fixedCount; ++batches)
+    {
+      const usize maxExtra = firstBatchSingle && batches == 0 ? 0 : std::min(usize{7}, fixedCount - start - 1);
+      const uint64 requested = maxExtra * k_PlaneBytes;
+      const uint64 granted = std::min(requested, headroom);
+      const usize extras = std::min<usize>(maxExtra, static_cast<usize>(granted / k_PlaneBytes));
+      requestedMaximum = std::max(requestedMaximum, requested);
+      grantedMaximum = std::max(grantedMaximum, granted);
+      owningBatches += static_cast<usize>(extras != 0);
+      allocatedPlanes += extras;
+      minimumWidth = std::min(minimumWidth, extras + 1);
+      maximumWidth = std::max(maximumWidth, extras + 1);
+      start += extras + 1;
+    }
     REQUIRE(counters.batchCount == batches);
     REQUIRE(counters.batchPlanes == fixedCount);
-    REQUIRE(counters.minimumBatchWidth == std::min(width, finalWidth));
-    REQUIRE(counters.maximumBatchWidth == std::min(width, fixedCount));
+    REQUIRE(counters.minimumBatchWidth == minimumWidth);
+    REQUIRE(counters.maximumBatchWidth == maximumWidth);
     REQUIRE(counters.extraRequestCount == batches);
     REQUIRE(counters.extraGrantCount == batches);
     REQUIRE(counters.extraRetainCount == batches);
     REQUIRE(counters.extraReservationReleaseCount == batches);
     REQUIRE(counters.extraAllocationCount == owningBatches);
     REQUIRE(counters.extraReleaseCount == owningBatches);
-    REQUIRE(counters.extraAllocatedBytes == (fixedCount - batches) * k_PlaneBytes);
-    REQUIRE(counters.extraPeakBytes == (std::min(width, fixedCount) - 1) * k_PlaneBytes);
+    REQUIRE(counters.extraAllocatedBytes == allocatedPlanes * k_PlaneBytes);
+    REQUIRE(counters.extraPeakBytes == (maximumWidth - 1) * k_PlaneBytes);
     REQUIRE(counters.extraRetainedMaxBytes == counters.extraPeakBytes);
-    const uint64 requestedMaximum = std::min(usize{7}, fixedCount - 1) * k_PlaneBytes;
     REQUIRE(counters.extraRequestedMaxBytes == requestedMaximum);
-    REQUIRE(counters.extraGrantedMaxBytes == std::min(requestedMaximum, (width - 1) * k_PlaneBytes + partialBytes));
+    REQUIRE(counters.extraGrantedMaxBytes == grantedMaximum);
     REQUIRE(counters.reads == 2 * batches * 13);
     REQUIRE(counters.writes == batches * 13);
     REQUIRE(counters.readSuccess == counters.reads);
