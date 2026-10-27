@@ -115,7 +115,7 @@ Willing to Collaborate with Other Contributors on These Changes: Y/N
 
 ### Code Styleguide
 
-For information about our specifc naming conventions and styling see our [coding style guide](/docs/Code_Style_Guide.md).
+For information about our specifc naming conventions and styling see our [coding style guide](/docs/Code_Style_Guide.md). For lessons learned from past defects, see the [coding knowledge base](/docs/Coding_Knowledge_Base.md).
 
 For the basic code styling simplnx uses `clang-format`, the formatting file is included at the root level in the repository.
 
