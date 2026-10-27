@@ -1,5 +1,14 @@
 #include "SquareImageFilter.hpp"
 
+#include "ImageProcessing/utils/MathOutputUtilities.hpp"
+
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -7,22 +16,90 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
+#include <fmt/format.h>
+
+#include <atomic>
+#include <type_traits>
+#include <utility>
 
 using namespace nx::core;
 
 namespace
 {
+template <class T>
+using SquareOutputType = std::conditional_t<
+    std::is_same_v<T, int8>, int16,
+    std::conditional_t<
+        std::is_same_v<T, uint8>, uint16,
+        std::conditional_t<std::is_same_v<T, int16>, int32,
+                           std::conditional_t<std::is_same_v<T, uint16>, uint32, std::conditional_t<std::is_same_v<T, int32>, int64, std::conditional_t<std::is_same_v<T, uint32>, uint64, T>>>>>>;
+
+template <class T>
+Result<> validateSquareRange(const AbstractDataStore<T>& inputStore, const DataPath& inputPath, const std::atomic_bool& shouldCancel)
+{
+  static_assert(std::is_same_v<T, int64> || std::is_same_v<T, uint64>);
+  if(shouldCancel)
+  {
+    return {};
+  }
+  auto extremaResult = ImageProcessing::ComputeArrayMinMax<T>(inputStore, shouldCancel);
+  if(extremaResult.invalid())
+  {
+    return ConvertResult(std::move(extremaResult));
+  }
+  if(shouldCancel || extremaResult.value().count == 0)
+  {
+    return ConvertResult(std::move(extremaResult));
+  }
+  const auto& extrema = extremaResult.value();
+  if constexpr(std::is_same_v<T, int64>)
+  {
+    // Compare native signed values directly; taking abs(INT64_MIN) would overflow.
+    constexpr int64 limit = 3037000499LL;
+    if(extrema.min < -limit)
+    {
+      auto errorResult = MakeErrorResult(-1874091, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at least -3037000499. Convert the input to "
+                                                               "float64 first if approximate larger squares are acceptable.",
+                                                               extrema.min, inputPath.toString()));
+      return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
+    }
+    if(extrema.max > limit)
+    {
+      auto errorResult = MakeErrorResult(-1874092, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at most "
+                                                               "3037000499. Convert the input to float64 first if approximate larger squares are acceptable.",
+                                                               extrema.max, inputPath.toString()));
+      return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
+    }
+  }
+  else if(extrema.max > 4294967295ULL)
+  {
+    auto errorResult = MakeErrorResult(-1874093, fmt::format("Square Image Filter cannot square value {} in input array '{}': uint64 inputs must be at most "
+                                                             "4294967295. Convert the input to float64 first if approximate larger squares are acceptable.",
+                                                             extrema.max, inputPath.toString()));
+    return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
+  }
+  return ConvertResult(std::move(extremaResult));
+}
+
 struct SquareOperation
 {
   template <class T, class U>
   auto makeMapOp() const
   {
     return [](T value) -> U {
-      const double d = static_cast<double>(value);
-      return static_cast<U>(d * d);
+      if constexpr(std::is_integral_v<T>)
+      {
+        const U widenedValue = static_cast<U>(value);
+        return static_cast<U>(widenedValue * widenedValue);
+      }
+      else
+      {
+        const float64 floatingValue = static_cast<float64>(value);
+        return ImageProcessing::ConvertMathResult<U>(floatingValue * floatingValue);
+      }
     };
   }
 };
@@ -79,7 +156,8 @@ IFilter::PreflightResult SquareImageFilter::preflightImpl(const DataStructure& d
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions =
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, SquareOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {std::move(resultOutputActions)};
 }
 Result<> SquareImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -89,8 +167,23 @@ Result<> SquareImageFilter::executeImpl(DataStructure& dataStructure, const Argu
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
+  Result<> validationResult;
+  const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
+  if(inputType == DataType::int64)
+  {
+    validationResult = validateSquareRange(dataStructure.getDataRefAs<Int64Array>(selectedInputArray).getDataStoreRef(), selectedInputArray, shouldCancel);
+  }
+  else if(inputType == DataType::uint64)
+  {
+    validationResult = validateSquareRange(dataStructure.getDataRefAs<UInt64Array>(selectedInputArray).getDataStoreRef(), selectedInputArray, shouldCancel);
+  }
+  if(validationResult.invalid() || shouldCancel)
+  {
+    return validationResult;
+  }
   const SquareOperation operation{};
-  return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  auto executeResult = ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, SquareOutputType>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return MergeResults(std::move(validationResult), std::move(executeResult));
 }
 
 namespace
