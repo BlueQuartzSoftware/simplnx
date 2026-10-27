@@ -23,6 +23,13 @@ inline constexpr int32 k_RecursiveGaussianNonPositiveSigma = -8571;
 // a filtered axis's spacing is < 1e-8 ("suspiciously small"). Without this guard a zero/near-zero spacing yields NaN
 // coefficients and silently NaN output.
 inline constexpr int32 k_RecursiveGaussianNonPositiveSpacing = -8572;
+// Selected Smoothing Recursive Gaussian validation and terminal conversion diagnostics.
+inline constexpr int32 k_SmoothingGaussianInvalidSigma = -23630;
+inline constexpr int32 k_SmoothingGaussianInvalidSpacing = -23631;
+inline constexpr int32 k_SmoothingGaussianInvalidScale = -23632;
+inline constexpr int32 k_SmoothingGaussianInvalidCoefficients = -23633;
+inline constexpr int32 k_SmoothingGaussianNonFiniteIntegerOutput = -23634;
+inline constexpr int32 k_SmoothingGaussianClippedIntegerOutput = -23635;
 // The central-difference gradient magnitude scales each axis derivative by 1/spacing; ITK's GradientMagnitudeImageFilter
 // throws "Image spacing cannot be zero" when UseImageSpacing is on and an axis spacing is exactly zero.
 inline constexpr int32 k_GradientMagnitudeZeroSpacing = -8573;
