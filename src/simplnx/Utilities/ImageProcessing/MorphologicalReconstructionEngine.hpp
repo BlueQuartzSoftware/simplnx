@@ -50,10 +50,108 @@ struct ReconstructionMarkerOptions
 {
   ReconstructionMarkerSource source = ReconstructionMarkerSource::Provided;
   float64 height = 0.0;
+  // Callers opt in only after validating a finite, nonnegative whole Height for integer images.
+  bool ExactIntegerHeight = false;
 };
 
 namespace detail
 {
+/**
+ * @brief Lowers an integer marker value exactly, saturating at the native type minimum.
+ * @tparam T Integer scalar type.
+ * @param value Native input value.
+ * @param heightUnits Nonnegative integer Height below 2^64.
+ * @return The lowered value, saturated to the native minimum.
+ */
+template <class T>
+T SubtractExactIntegerReconstructionHeight(T value, uint64 heightUnits)
+{
+  static_assert(std::is_integral_v<T>);
+  if constexpr(std::is_signed_v<T>)
+  {
+    if(value < 0)
+    {
+      // For a negative value this distance fits the signed type, including when value is its minimum.
+      const uint64 distanceToMinimum = static_cast<uint64>(value - std::numeric_limits<T>::lowest());
+      return heightUnits >= distanceToMinimum ? std::numeric_limits<T>::lowest() : static_cast<T>(value - static_cast<T>(heightUnits));
+    }
+    const uint64 positiveValue = static_cast<uint64>(value);
+    if(heightUnits <= positiveValue)
+    {
+      return static_cast<T>(positiveValue - heightUnits);
+    }
+    const uint64 negativeMagnitude = heightUnits - positiveValue;
+    const uint64 minimumMagnitude = static_cast<uint64>(std::numeric_limits<T>::max()) + uint64{1};
+    return negativeMagnitude >= minimumMagnitude ? std::numeric_limits<T>::lowest() : static_cast<T>(-static_cast<T>(negativeMagnitude));
+  }
+  else
+  {
+    const uint64 unsignedValue = static_cast<uint64>(value);
+    return heightUnits >= unsignedValue ? T{0} : static_cast<T>(unsignedValue - heightUnits);
+  }
+}
+
+/**
+ * @brief Raises an integer marker value exactly, saturating at the native type maximum.
+ * @tparam T Integer scalar type.
+ * @param value Native input value.
+ * @param heightUnits Nonnegative integer Height below 2^64.
+ * @return The raised value, saturated to the native maximum.
+ */
+template <class T>
+T AddExactIntegerReconstructionHeight(T value, uint64 heightUnits)
+{
+  static_assert(std::is_integral_v<T>);
+  if constexpr(std::is_signed_v<T>)
+  {
+    if(value >= 0)
+    {
+      const uint64 distanceToMaximum = static_cast<uint64>(std::numeric_limits<T>::max() - value);
+      return heightUnits >= distanceToMaximum ? std::numeric_limits<T>::max() : static_cast<T>(value + static_cast<T>(heightUnits));
+    }
+    // Add one before negating so even a signed minimum has a representable intermediate.
+    const uint64 negativeMagnitude = static_cast<uint64>(-(value + T{1})) + uint64{1};
+    if(heightUnits < negativeMagnitude)
+    {
+      const uint64 remainingMagnitude = negativeMagnitude - heightUnits;
+      const uint64 minimumMagnitude = static_cast<uint64>(std::numeric_limits<T>::max()) + uint64{1};
+      return remainingMagnitude == minimumMagnitude ? std::numeric_limits<T>::lowest() : static_cast<T>(-static_cast<T>(remainingMagnitude));
+    }
+    const uint64 positiveValue = heightUnits - negativeMagnitude;
+    return positiveValue >= static_cast<uint64>(std::numeric_limits<T>::max()) ? std::numeric_limits<T>::max() : static_cast<T>(positiveValue);
+  }
+  else
+  {
+    const uint64 distanceToMaximum = static_cast<uint64>(std::numeric_limits<T>::max() - value);
+    return heightUnits >= distanceToMaximum ? std::numeric_limits<T>::max() : static_cast<T>(static_cast<uint64>(value) + heightUnits);
+  }
+}
+
+/**
+ * @brief Offsets integer marker values exactly, saturating at the native type bounds.
+ * @tparam T Integer scalar type.
+ * @param values Owned marker buffer to update.
+ * @param height Finite, nonnegative, whole Height, validated by the opting-in caller.
+ * @param lower Selects subtraction when true and addition when false.
+ *
+ * The Height conversion is once per buffer. Values never pass through floating point, and signed minima are never negated.
+ */
+template <class T>
+void ApplyExactIntegerReconstructionHeight(nonstd::span<T> values, float64 height, bool lower)
+{
+  static_assert(std::is_integral_v<T>);
+  if(height >= std::ldexp(1.0, 64))
+  {
+    std::fill(values.begin(), values.end(), lower ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
+    return;
+  }
+  const uint64 heightUnits = static_cast<uint64>(height);
+  for(T& value : values)
+  {
+    value = lower ? SubtractExactIntegerReconstructionHeight(value, heightUnits) : AddExactIntegerReconstructionHeight(value, heightUnits);
+  }
+}
+
 template <class T>
 T SaturateReconstructionMarkerValue(float64 value)
 {
@@ -91,6 +189,14 @@ void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const
   }
   if(options.source == ReconstructionMarkerSource::MaskMinusHeight || options.source == ReconstructionMarkerSource::MaskPlusHeight)
   {
+    if constexpr(std::is_integral_v<T>)
+    {
+      if(options.ExactIntegerHeight)
+      {
+        ApplyExactIntegerReconstructionHeight<T>(values, options.height, options.source == ReconstructionMarkerSource::MaskMinusHeight);
+        return;
+      }
+    }
     const float64 signedHeight = options.source == ReconstructionMarkerSource::MaskMinusHeight ? -options.height : options.height;
     for(T& value : values)
     {

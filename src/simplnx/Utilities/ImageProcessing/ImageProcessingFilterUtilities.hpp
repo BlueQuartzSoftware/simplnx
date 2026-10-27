@@ -2,9 +2,12 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -2062,8 +2065,8 @@ enum class ReconMarker
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight offset every voxel by +/-height through @ref SaturateCastFromDouble, so an offset that
- * leaves the type range saturates (ITK-faithful clamp) instead of wrapping.
+ * MinusHeight/PlusHeight use @ref SaturateCastFromDouble by default. The exactIntegerHeight opt-in preserves native
+ * integer units with saturating addition or subtraction. Floating values retain the default arithmetic.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -2073,10 +2076,20 @@ enum class ReconMarker
  * rule, including "needle" geometries where a non-collapsed axis has extent 1 (every voxel is then a border voxel
  * and the image is left unchanged).
  *
- * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
+ * @tparam T Scalar marker type.
+ * @param inStore Original mask values.
+ * @param markerStore Receives marker values; has the input's tuple and element layout.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param kind Selects a height or border marker.
+ * @param height Finite offset in intensity units; nonnegative and whole for the integer opt-in.
+ * @param shouldCancel Requests cancellation between transfers.
+ * @param exactIntegerHeight Opt-in to exact, saturating integer offsets for a validated whole Height.
+ * @return The first transfer or dimension error, or a valid result.
+ * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel,
+                                   bool exactIntegerHeight = false)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
@@ -2097,9 +2110,19 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      for(usize i = 0; i < count; ++i)
+      if(exactIntegerHeight && std::is_integral_v<T>)
       {
-        buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        if constexpr(std::is_integral_v<T>)
+        {
+          ApplyExactIntegerReconstructionHeight<T>(nonstd::span<T>(buffer.get(), count), height, kind == ReconMarker::MinusHeight);
+        }
+      }
+      else
+      {
+        for(usize i = 0; i < count; ++i)
+        {
+          buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        }
       }
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
@@ -2204,7 +2227,138 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
 }
 
 /**
- * @brief Dispatched execute body for the three grayscale reconstruction filters. Derives the marker (@ref
+ * @brief Subtracts HConvex reconstruction values in one owned resident range without signed overflow.
+ * @tparam T Signed integer scalar type.
+ * @param inputValuesPtr Original image values.
+ * @param reconstructionValuesPtr Reconstruction values, each no greater than the corresponding input.
+ * @param outputValuesPtr Contrast output; may alias the reconstruction buffer.
+ * @param count Number of values in the range.
+ * @param start Global tuple offset for diagnostics.
+ * @param inputPath Original array path for diagnostics.
+ * @return The first contrast overflow, or a valid result.
+ */
+template <class T>
+Result<> SubtractHConvexContrastRange(const T* inputValuesPtr, const T* reconstructionValuesPtr, T* outputValuesPtr, usize count, usize start, const DataPath& inputPath)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  std::atomic<usize> firstInvalid{count};
+  ApplyElementwiseResidentRange(inputValuesPtr, reconstructionValuesPtr, outputValuesPtr, count, [&firstInvalid](const T* inputPtr, const T* reconstructionPtr, T* outputPtr, usize index) {
+    const T inputValue = inputPtr[index];
+    const T reconstructionValue = reconstructionPtr[index];
+    // max + a negative value is representable. Check before subtracting, including for int64 minima.
+    if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+    {
+      PublishSmallerIndex(firstInvalid, index);
+      return;
+    }
+    outputPtr[index] = static_cast<T>(inputValue - reconstructionValue);
+  });
+  const usize invalid = firstInvalid.load(std::memory_order_relaxed);
+  if(invalid != count)
+  {
+    return MakeErrorResult(-1874102, fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
+                                                 "floating-point type before this filter.",
+                                                 start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
+  }
+  return {};
+}
+
+/**
+ * @brief Computes signed HConvex contrast through bounded chunks with serial store transfers.
+ * @tparam T Signed integer scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation between chunks.
+ * @param chunkValues Maximum number of values in each owned buffer.
+ * @return The first transfer or contrast error, with warnings from completed transfers.
+ */
+template <class T>
+Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                        const std::atomic_bool& shouldCancel, usize chunkValues = k_ElementwiseChunkValues<T>)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize size = input.getSize();
+  chunkValues = std::max<usize>(1, chunkValues);
+  auto inputBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  auto reconstructionBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  Result<> accumulatedResult;
+  for(usize start = 0; start < size; start += chunkValues)
+  {
+    if(shouldCancel)
+    {
+      return accumulatedResult;
+    }
+    const usize count = std::min(chunkValues, size - start);
+    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer.get(), reconstructionBuffer.get(), inputBuffer.get(), count, start, inputPath));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+  }
+  return accumulatedResult;
+}
+
+/**
+ * @brief Computes HConvex contrast, preserving the resident fast path and bounded serial store transfers.
+ * @tparam T Numeric scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation before resident work or between chunks.
+ * @return The first transfer or signed contrast error, with warnings from completed transfers.
+ *
+ * Unsigned and floating arrays retain the existing subtraction. Signed arrays check before each subtraction.
+ * Completed chunks may already contain contrast when a later chunk fails; this operation does not promise atomic output.
+ */
+template <class T>
+Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                 const std::atomic_bool& shouldCancel)
+{
+  if constexpr(!std::is_integral_v<T> || !std::is_signed_v<T>)
+  {
+    return SubtractStores<T>(input, reconstruction, output, shouldCancel);
+  }
+  else
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const auto* residentInputPtr = dynamic_cast<const DataStore<T>*>(&input);
+    const auto* residentReconstructionPtr = dynamic_cast<const DataStore<T>*>(&reconstruction);
+    auto* residentOutputPtr = dynamic_cast<DataStore<T>*>(&output);
+    if(residentInputPtr != nullptr && residentReconstructionPtr != nullptr && residentOutputPtr != nullptr)
+    {
+      const auto inputValues = residentInputPtr->createSpan();
+      const auto reconstructionValues = residentReconstructionPtr->createSpan();
+      auto outputValues = residentOutputPtr->createSpan();
+      return SubtractHConvexContrastRange(inputValues.data(), reconstructionValues.data(), outputValues.data(), inputValues.size(), 0, inputPath);
+    }
+
+    return SubtractHConvexContrastChunked<T>(input, reconstruction, output, inputPath, shouldCancel);
+  }
+}
+
+/**
+ * @brief Dispatched execute body for the grayscale reconstruction filters. Derives the marker (@ref
  *        BuildReconstructionMarker) into an out-of-core-inheriting scratch store, then reconstructs it under the
  *        original input (the mask) into the output. The engine's DispatchAlgorithm keys the in-core/out-of-core
  *        path on the real input + output arrays (the scratch marker inherits the input's storage mode), so an
@@ -2223,6 +2377,7 @@ struct MorphologicalReconstructionExecuteFn
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
   bool differenceFromInput; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
+  bool ExactIntegerHeight = false;
 
   template <class T>
   Result<> operator()() const
@@ -2235,6 +2390,7 @@ struct MorphologicalReconstructionExecuteFn
     std::shared_ptr<AbstractDataStore<T>> markerStore;
     const AbstractDataStore<T>* marker = &inStore;
     ReconstructionMarkerOptions markerOptions;
+    markerOptions.ExactIntegerHeight = ExactIntegerHeight;
     const bool isHeightMarker = markerKind == ReconMarker::MinusHeight || markerKind == ReconMarker::PlusHeight;
     const bool isBorderMarker = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
     const bool useDerivedMarker = isBorderMarker || (inStore.getStoreType() == IDataStore::StoreType::OutOfCore && isHeightMarker);
@@ -2255,25 +2411,25 @@ struct MorphologicalReconstructionExecuteFn
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
       markerStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel); r.invalid())
+      if(auto markerResult = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel, ExactIntegerHeight); markerResult.invalid())
       {
-        return r;
+        return markerResult;
       }
       marker = markerStore.get();
     }
     // Mask == the ORIGINAL input; the engine reconstructs the marker under it into outStore. OOC detection uses
     // the real input (mask) + output arrays (the scratch marker has no IDataArray).
     const bool useTemporaryWork = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
-    if(Result<> r = ApplyMorphologicalReconstruction<T>(*marker, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler, useTemporaryWork, markerOptions);
-       r.invalid())
+    auto reconstructionResult =
+        ApplyMorphologicalReconstruction<T>(*marker, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler, useTemporaryWork, markerOptions);
+    if(reconstructionResult.invalid())
     {
-      return r;
+      return reconstructionResult;
     }
     if(differenceFromInput)
     {
-      // HConvex: output = input - reconstruction (the h-maxima result), i.e. the h-dome. SubtractStores is
-      // alias-safe (out == b), and hmax <= input everywhere so the difference never underflows.
-      return SubtractStores<T>(inStore, outStore, outStore, shouldCancel);
+      // HConvex owns exact integer markers and checked signed contrast. Other callers retain their existing defaults.
+      return MergeResults(std::move(reconstructionResult), SubtractHConvexContrast<T>(inStore, outStore, outStore, inputArrayPath, shouldCancel));
     }
     return {};
   }
@@ -5042,19 +5198,44 @@ Result<> ExecuteAxisProjectionImageFilter(DataStructure& dataStructure, const Da
  *        reconstruction result is subtracted from the input in place after reconstruction (output = input -
  *        reconstruction). Output type == input type (SameAsInput). The caller's preflight must have enforced a
  *        scalar input (@ref PreflightImageFilter requireScalar=true) and, for the height markers, a finite
- *        @p height.
+ *        @p height. The opt-in @p exactIntegerHeight also requires a nonnegative whole Height for integer images;
+ *        it preserves native integer units and saturates markers at the type bounds. Other callers default to their existing arithmetic.
+ * @tparam TypeSetPolicy Selects the supported numeric types.
+ * @param dataStructure Owns the selected arrays and geometry.
+ * @param imageGeomPath Image geometry used for dimensions.
+ * @param inputArrayPath Scalar input image and reconstruction mask.
+ * @param outputArrayPath Receives reconstruction or contrast in the input type.
+ * @param op Selects reconstruction by dilation or erosion.
+ * @param fullyConnected Enables face, edge and vertex neighbors instead of faces only.
+ * @param markerKind Selects a height or border marker.
+ * @param height Validated finite height in intensity units.
+ * @param shouldCancel Requests cancellation during reconstruction and between transfers.
+ * @param messageHandler Receives progress messages.
+ * @param differenceFromInput Selects HConvex contrast with checked signed subtraction.
+ * @param exactIntegerHeight Selects exact native integer markers for a validated whole, nonnegative Height.
+ * @return A reconstruction, contrast or transfer error, or a valid result.
  */
 template <class TypeSetPolicy = AllNumeric>
 Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, ReconstructOp op,
                                                        bool fullyConnected, detail::ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
-                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false)
+                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false, bool exactIntegerHeight = false)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath,    dims, op, fullyConnected, markerKind, height,
-                                                         shouldCancel,  messageHandler, differenceFromInput};
+  const detail::MorphologicalReconstructionExecuteFn executeFn{.dataStructure = dataStructure,
+                                                               .inputArrayPath = inputArrayPath,
+                                                               .outputArrayPath = outputArrayPath,
+                                                               .dims = dims,
+                                                               .op = op,
+                                                               .fullyConnected = fullyConnected,
+                                                               .markerKind = markerKind,
+                                                               .height = height,
+                                                               .shouldCancel = shouldCancel,
+                                                               .messageHandler = messageHandler,
+                                                               .differenceFromInput = differenceFromInput,
+                                                               .ExactIntegerHeight = exactIntegerHeight};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
