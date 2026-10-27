@@ -280,12 +280,12 @@ public:
    * not make the release safe to run concurrently.
    *
    * Concurrency contract:
-   * - Reads that can run during the call: numeric tuple, value and extent reads, and NeighborList list reads. The 3D
-   *   view, charts and spreadsheets use these reads.
+   * - Reads that can run during the call: numeric tuple, value and extent reads, NeighborList list reads, and file-path
+   *   and recovery-metadata queries. The 3D view, charts and spreadsheets use these reads.
    * - Operations that the caller must not run during the call:
    *   - Another hook call or save on the same structure.
    *   - A write or other change to a store in the structure, including resize.
-   *   - Deep copies, recovery-metadata queries, file-path queries and handle closes on a store in the structure.
+   *   - Deep copies and handle closes on a store in the structure.
    *   - Replacement of stores in the structure.
    *
    * Not covered:
