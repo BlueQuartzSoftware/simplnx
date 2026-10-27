@@ -3,9 +3,11 @@
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -608,8 +610,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight offset every voxel by +/-height through @ref SaturateCastFromDouble, so an offset that
- * leaves the type range saturates (ITK-faithful clamp) instead of wrapping.
+ * MinusHeight/PlusHeight use @ref SaturateCastFromDouble by default. The exactIntegerHeight opt-in preserves native
+ * integer units with saturating addition or subtraction. Floating values retain the default arithmetic.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -619,10 +621,20 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * rule, including "needle" geometries where a non-collapsed axis has extent 1 (every voxel is then a border voxel
  * and the image is left unchanged).
  *
- * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
+ * @tparam T Scalar marker type.
+ * @param inStore Original mask values.
+ * @param markerStore Receives marker values; has the input's tuple and element layout.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param kind Selects a height or border marker.
+ * @param height Finite offset in intensity units; nonnegative and whole for the integer opt-in.
+ * @param shouldCancel Requests cancellation between transfers.
+ * @param exactIntegerHeight Opt-in to exact, saturating integer offsets for a validated whole Height.
+ * @return The first transfer or dimension error, or a valid result.
+ * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel,
+                                   bool exactIntegerHeight = false)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
@@ -643,9 +655,19 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      for(usize i = 0; i < count; ++i)
+      if(exactIntegerHeight && std::is_integral_v<T>)
       {
-        buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        if constexpr(std::is_integral_v<T>)
+        {
+          ApplyExactIntegerReconstructionHeight<T>(nonstd::span<T>(buffer.get(), count), height, kind == ReconMarker::MinusHeight);
+        }
+      }
+      else
+      {
+        for(usize i = 0; i < count; ++i)
+        {
+          buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        }
       }
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
@@ -863,6 +885,137 @@ inline usize SelectRelabelStagingValues(usize numValues, uint64 grantedBytes, us
   const usize grantSlabs = static_cast<usize>(std::min<uint64>(grantedBytes / slabPlan->slabBytes, std::numeric_limits<usize>::max()));
   const usize stagingSlabs = std::min(fullSlabs, grantSlabs);
   return stagingSlabs == 0 ? fallbackValues : stagingSlabs * slabPlan->slabValues;
+}
+
+/**
+ * @brief Subtracts HConvex reconstruction values in one owned resident range without signed overflow.
+ * @tparam T Signed integer scalar type.
+ * @param inputValuesPtr Original image values.
+ * @param reconstructionValuesPtr Reconstruction values, each no greater than the corresponding input.
+ * @param outputValuesPtr Contrast output; may alias the reconstruction buffer.
+ * @param count Number of values in the range.
+ * @param start Global tuple offset for diagnostics.
+ * @param inputPath Original array path for diagnostics.
+ * @return The first contrast overflow, or a valid result.
+ */
+template <class T>
+Result<> SubtractHConvexContrastRange(const T* inputValuesPtr, const T* reconstructionValuesPtr, T* outputValuesPtr, usize count, usize start, const DataPath& inputPath)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  std::atomic<usize> firstInvalid{count};
+  ApplyElementwiseResidentRange(inputValuesPtr, reconstructionValuesPtr, outputValuesPtr, count, [&firstInvalid](const T* inputPtr, const T* reconstructionPtr, T* outputPtr, usize index) {
+    const T inputValue = inputPtr[index];
+    const T reconstructionValue = reconstructionPtr[index];
+    // max + a negative value is representable. Check before subtracting, including for int64 minima.
+    if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+    {
+      PublishSmallerIndex(firstInvalid, index);
+      return;
+    }
+    outputPtr[index] = static_cast<T>(inputValue - reconstructionValue);
+  });
+  const usize invalid = firstInvalid.load(std::memory_order_relaxed);
+  if(invalid != count)
+  {
+    return MakeErrorResult(-1874102, fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
+                                                 "floating-point type before this filter.",
+                                                 start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
+  }
+  return {};
+}
+
+/**
+ * @brief Computes signed HConvex contrast through bounded chunks with serial store transfers.
+ * @tparam T Signed integer scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation between chunks.
+ * @param chunkValues Maximum number of values in each owned buffer.
+ * @return The first transfer or contrast error, with warnings from completed transfers.
+ */
+template <class T>
+Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                        const std::atomic_bool& shouldCancel, usize chunkValues = k_ElementwiseChunkValues<T>)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize size = input.getSize();
+  chunkValues = std::max<usize>(1, chunkValues);
+  auto inputBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  auto reconstructionBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  Result<> accumulatedResult;
+  for(usize start = 0; start < size; start += chunkValues)
+  {
+    if(shouldCancel)
+    {
+      return accumulatedResult;
+    }
+    const usize count = std::min(chunkValues, size - start);
+    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer.get(), reconstructionBuffer.get(), inputBuffer.get(), count, start, inputPath));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+  }
+  return accumulatedResult;
+}
+
+/**
+ * @brief Computes HConvex contrast, preserving the resident fast path and bounded serial store transfers.
+ * @tparam T Numeric scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation before resident work or between chunks.
+ * @return The first transfer or signed contrast error, with warnings from completed transfers.
+ *
+ * Unsigned and floating arrays retain the existing subtraction. Signed arrays check before each subtraction.
+ * Completed chunks may already contain contrast when a later chunk fails; this operation does not promise atomic output.
+ */
+template <class T>
+Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                 const std::atomic_bool& shouldCancel)
+{
+  if constexpr(!std::is_integral_v<T> || !std::is_signed_v<T>)
+  {
+    return SubtractStores<T>(input, reconstruction, output, shouldCancel);
+  }
+  else
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const auto* residentInputPtr = dynamic_cast<const DataStore<T>*>(&input);
+    const auto* residentReconstructionPtr = dynamic_cast<const DataStore<T>*>(&reconstruction);
+    auto* residentOutputPtr = dynamic_cast<DataStore<T>*>(&output);
+    if(residentInputPtr != nullptr && residentReconstructionPtr != nullptr && residentOutputPtr != nullptr)
+    {
+      const auto inputValues = residentInputPtr->createSpan();
+      const auto reconstructionValues = residentReconstructionPtr->createSpan();
+      auto outputValues = residentOutputPtr->createSpan();
+      return SubtractHConvexContrastRange(inputValues.data(), reconstructionValues.data(), outputValues.data(), inputValues.size(), 0, inputPath);
+    }
+
+    return SubtractHConvexContrastChunked<T>(input, reconstruction, output, inputPath, shouldCancel);
+  }
 }
 
 } // namespace detail
