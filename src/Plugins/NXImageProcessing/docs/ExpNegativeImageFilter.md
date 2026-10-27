@@ -40,7 +40,7 @@ Downstream filters that accept only integers can reject the float64 output. Adju
 
 ## Algorithm
 
-The filter applies the same negative-exponential operation to resident and disk-backed arrays. It uses the existing pointwise traversal and bounded transfer buffers for disk-backed storage. It does not create a full-array resident temporary for the calculation. Output storage still requires the bytes shown above.
+The filter applies the same negative-exponential operation to resident and disk-backed arrays. The shared streaming path targets 64 MiB of transfer scratch space, with a minimum of one complete slab across the trailing tuple dimensions, such as an XY slice for Z/Y/X tuple order. A slab can exceed that target or cover the whole array. Bulk reads and writes are serial; the calculation can run in parallel on owned buffers. Exp Negative adds no separate full-volume scratch array. Output storage still requires the bytes shown above.
 
 % Auto generated parameter table will be inserted here
 
