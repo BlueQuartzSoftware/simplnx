@@ -268,13 +268,17 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: out-of-core 
   std::vector<usize> excluded;
   for(usize i = 0; i < k_NumTuples; ++i)
   {
-    // Alternate unknown, hexagonal high, hexagonal low, and cubic phases.
-    phaseValues[i] = static_cast<int32>(i % 4);
-    if(i % 11 != 0 && i % 4 == 3)
+    // Mix unknown (0), hexagonal high (1), hexagonal low (2), and cubic (3) phases.
+    // The period 6 does not divide 4096, so each chunk has a different phase pattern
+    // and a chunk read at the wrong offset changes the result.
+    phaseValues[i] = static_cast<int32>((i % 6) % 4);
+    const bool masked = i % 11 == 0;
+    const bool hexagonal = phaseValues[i] == 1 || phaseValues[i] == 2;
+    if(!masked && phaseValues[i] == 3)
     {
       ++expectedNonHexagonalCount;
     }
-    if(i % 11 == 0 || i % 4 == 0 || i % 4 == 3 || i == k_ZeroQuaternion)
+    if(masked || !hexagonal || i == k_ZeroQuaternion)
     {
       excluded.push_back(i);
     }
