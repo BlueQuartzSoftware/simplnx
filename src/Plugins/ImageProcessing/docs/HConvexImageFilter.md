@@ -12,13 +12,22 @@ Computes the *h-convex* transform of a grayscale image: **HConvex(f, h) = f − 
 
 This isolates bright "domes" and measures their prominence: peaks taller than `Height` all map to `Height`, while shallower peaks map to their true contrast. It is a common pre-step for peak detection and marker extraction.
 
-Internally the filter reconstructs the input by dilation of the `input − Height` marker (the H Maxima result) and then subtracts that result from the input. Because the reconstruction result never exceeds the input, the difference is always non-negative and stays within the input type's range.
+Internally the filter reconstructs the `input − Height` marker by dilation under the original input, then subtracts that reconstruction from the input. The reconstruction cannot exceed an integer input, so the integer contrast is nonnegative. A nonnegative contrast can still exceed a signed output type's maximum. The filter returns an execution error in that case.
 
-The input array must be single-component (scalar); the output element type matches the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK H Convex Image Filter, and matches it exactly for integer and float types.
+The input array must have one component per tuple (a **scalar image**). Output type, tuple dimensions and component dimensions match the input. Output storage does not increase automatically. Resident and disk-backed arrays use the same numeric rules.
 
 ### Height
 
-The height (contrast) cap. Regional maxima taller than this value are reported at this value; shallower maxima are reported at their true height.
+**Height** is a contrast offset in the input's intensity units. It must be finite and nonnegative.
+
+- Integer images require a whole-number Height. A fractional value, such as *2.5*, fails preflight. Choose an intentional whole value, or explicitly convert the image to a floating type before using a fraction.
+- Floating images allow fractional Height and keep their existing floating arithmetic and precision.
+- With integer images, the marker is the exact native value minus Height, saturated at the input type's minimum. Native 64-bit image values do not pass through floating point. Height *0* preserves the marker and reconstruction exactly; the HConvex output is therefore zero everywhere.
+- Height is stored as a float64 parameter. Above *2^53*, float64 cannot distinguish every consecutive integer Height. The filter uses the whole value represented by that parameter. A Height of *2^64* or more lowers every integer marker value to the type minimum.
+
+If the actual signed integer contrast does not fit the unchanged output type, execution fails with the input array and first failing tuple in the message. For example, int8 input `[-128, 127, -128]` with Height *255* would require contrast `[0, 255, 0]`; *255* cannot fit in int8, so the filter returns an error. Input `[-128, -1, -128]` at the same Height has representable contrast `[0, 127, 0]`.
+
+For an existing integer pipeline that used fractional Height, choose a whole Height or convert its input explicitly. Exact marker arithmetic can also change results that previously lost native 64-bit units. Review downstream peak selection, watershed markers and segmentation when migrating such a pipeline.
 
 ### Fully Connected
 
@@ -31,7 +40,11 @@ Geodesic morphology, the h-maxima transform, and the h-convex transform are desc
 
 ## Algorithm
 
-The filter lowers the input by **Height**, reconstructs that marker under the input by dilation, and subtracts the reconstruction from the input. Resident arrays use the Vincent hybrid reconstruction, whose raster, anti-raster, and fold-to-convergence sweeps run as dependency-exact, block-wavefront parallel plane sweeps when the reconstruction uses face connectivity (**Fully Connected** off); with full connectivity it falls back to the exact serial sweeps, since a same-row diagonal read can land in the horizontally adjacent block, which no rectangular block schedule can order. Disk-backed reconstruction iterates a forward raster sweep followed by a reverse anti-raster sweep over consecutive Z-plane slabs until stable, skipping any slab whose planes are already proven unchanged since that direction's last visit. Within a plane, the raster/anti-raster sweep is tiled into independent blocks that run in parallel; under face connectivity every voxel still sees exactly the values the un-blocked sweep would produce, and under full connectivity the iterated forward/reverse passes still converge to the identical final result. Each work and mask slab targets 16 MiB, plus one boundary plane. At least one plane is processed, so a single plane wider than the target can make the buffers exceed 16 MiB. Update order and output are unchanged, preserving exact storage-path parity.
+The filter lowers the input by **Height**, reconstructs that marker under the input by dilation, and subtracts the reconstruction from the input. Resident arrays keep the Vincent reconstruction route and direct parallel subtraction. Signed subtraction checks each contrast before performing arithmetic that could overflow.
+
+Disk-backed input supplies its marker from owned reconstruction buffers, so it does not require a separate resident marker image. Reconstruction keeps its existing working-memory reservation and sweep routes. A granted working set can hold a complete image when it fits. Otherwise, 2-D data uses rows or tiles, and 3-D data uses slabs with a boundary plane. A 3-D streaming plan needs enough space for two working planes and one boundary plane; it returns an error if the grant cannot hold that minimum. This is a working-buffer budget, not a limit on total process memory.
+
+For disk-backed or other nonresident stores, the signed contrast phase transfers data serially through two owned buffers of at most 32 MiB each. It performs parallel arithmetic only on those buffers and propagates transfer errors and warnings. Resident signed contrast uses direct parallel spans without these transfer buffers. The buffer limits exclude the data stores, their cache and the reconstruction working set. If execution fails, some output values or completed chunks may already have been written; an error does not promise an unchanged output array.
 
 % Auto generated parameter table will be inserted here
 

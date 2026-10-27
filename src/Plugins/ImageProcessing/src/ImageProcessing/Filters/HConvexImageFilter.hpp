@@ -15,9 +15,10 @@ namespace nx::core
  * HConvex(f, h) = f - HMaxima(f, h). A regional maximum of contrast c maps to min(c, h); the background maps to 0.
  * It is implemented by reconstruction-by-dilation of the (input - Height) marker under the input mask (the HMaxima
  * result) followed by an elementwise subtraction of that result from the input. Output type == input type; the
- * input must be single-component (scalar). This matches the legacy ITK H Convex Image Filter exactly for integer
- * and float types, and is out-of-core capable: the reconstruction result never exceeds the input, so the
- * difference never underflows.
+ * input must be single-component (scalar). Height is finite and nonnegative; integer images require a whole Height.
+ * Integer marker arithmetic preserves native units and saturates at the type minimum. Floating images allow fractional
+ * Height. A nonnegative contrast that exceeds a signed output type's maximum returns an execution error.
+ * Resident and disk-backed arrays use the same numeric contract.
  */
 class IMAGEPROCESSING_EXPORT HConvexImageFilter : public IFilter
 {
