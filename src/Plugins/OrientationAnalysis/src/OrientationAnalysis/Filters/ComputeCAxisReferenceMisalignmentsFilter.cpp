@@ -10,7 +10,32 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include <string_view>
+#include <utility>
+#include <vector>
+
 using namespace nx::core;
+
+namespace
+{
+/**
+ * @brief Builds the algorithm inputs from the filter arguments, so preflight and execute read the same paths.
+ * @param filterArgs Filter arguments.
+ * @return Input values, including the output path beside the quaternion array.
+ */
+ComputeCAxisReferenceMisalignmentsInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  ComputeCAxisReferenceMisalignmentsInputValues inputValues;
+  inputValues.ReferenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(ComputeCAxisReferenceMisalignmentsFilter::k_ReferenceDir_Key);
+  inputValues.UseMask = filterArgs.value<bool>(ComputeCAxisReferenceMisalignmentsFilter::k_UseMask_Key);
+  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(ComputeCAxisReferenceMisalignmentsFilter::k_QuatsArrayPath_Key);
+  inputValues.PhasesArrayPath = filterArgs.value<DataPath>(ComputeCAxisReferenceMisalignmentsFilter::k_PhasesArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(ComputeCAxisReferenceMisalignmentsFilter::k_MaskArrayPath_Key);
+  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(ComputeCAxisReferenceMisalignmentsFilter::k_CrystalStructuresArrayPath_Key);
+  inputValues.OutputArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(ComputeCAxisReferenceMisalignmentsFilter::k_CAxisReferenceMisalignmentsArrayName_Key));
+  return inputValues;
+}
+} // namespace
 
 namespace nx::core
 {
@@ -41,7 +66,7 @@ std::string ComputeCAxisReferenceMisalignmentsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeCAxisReferenceMisalignmentsFilter::defaultTags() const
 {
-  return {className(), "Processing", "Crystallography", "C-Axis", "Misalignment", "Hexagonal"};
+  return {className(), "Statistics", "Crystallography", "C-Axis", "Misalignment", "Hexagonal"};
 }
 
 //------------------------------------------------------------------------------
@@ -94,28 +119,31 @@ IFilter::UniquePointer ComputeCAxisReferenceMisalignmentsFilter::clone() const
 IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-
-  const auto referenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
-  if(auto result = ComputeCAxisReferenceMisalignments::ValidateReferenceDirection(referenceDirection); result.invalid())
+  const ComputeCAxisReferenceMisalignmentsInputValues inputValues = CreateInputValues(filterArgs);
+  Result<> validationResult = ComputeCAxisReferenceMisalignments::ValidateInputs(dataStructure, inputValues);
+  if(validationResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {ConvertResultTo<OutputActions>(std::move(validationResult), {})};
   }
-  const auto quatsPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  const auto phasesPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  const auto outputPath = quatsPath.replaceName(filterArgs.value<std::string>(k_CAxisReferenceMisalignmentsArrayName_Key));
-  std::vector<DataPath> paths = {quatsPath, phasesPath};
-  if(filterArgs.value<bool>(k_UseMask_Key))
+  std::vector<std::pair<std::string_view, DataPath>> inputPaths = {
+      {"Input Quaternions", inputValues.QuatsArrayPath}, {"Phases", inputValues.PhasesArrayPath}, {"Crystal Structures", inputValues.CrystalStructuresArrayPath}};
+  if(inputValues.UseMask)
   {
-    paths.push_back(filterArgs.value<DataPath>(k_MaskArrayPath_Key));
+    inputPaths.emplace_back("Mask", inputValues.MaskArrayPath);
   }
-  if(auto tupleCheck = dataStructure.validateNumberOfTuples(paths); !tupleCheck)
+  for(const auto& inputRef : inputPaths)
   {
-    return {MakeErrorResult<OutputActions>(
-        -98711, fmt::format("Input Quaternions, Phases, and the enabled Mask must have the same number of tuples. Select matching arrays at the same data level.\n{}", tupleCheck.error()))};
+    if(inputValues.OutputArrayPath == inputRef.second)
+    {
+      return {MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
+                                             fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
+                                                         "name that no input array uses.",
+                                                         inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};
+    }
   }
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(quatsPath);
+  const auto& quatsRef = dataStructure.getDataRefAs<Float32Array>(inputValues.QuatsArrayPath);
   OutputActions actions;
-  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::float32, quats.getIDataStoreRef().getTupleShape(), std::vector<usize>{1}, outputPath));
+  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::float32, quatsRef.getIDataStoreRef().getTupleShape(), ShapeType{1}, inputValues.OutputArrayPath));
   return {std::move(actions)};
 }
 
@@ -123,14 +151,7 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
 Result<> ComputeCAxisReferenceMisalignmentsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  ComputeCAxisReferenceMisalignmentsInputValues inputValues;
-  inputValues.ReferenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.OutputArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisReferenceMisalignmentsArrayName_Key));
+  const ComputeCAxisReferenceMisalignmentsInputValues inputValues = CreateInputValues(filterArgs);
   return ComputeCAxisReferenceMisalignments(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

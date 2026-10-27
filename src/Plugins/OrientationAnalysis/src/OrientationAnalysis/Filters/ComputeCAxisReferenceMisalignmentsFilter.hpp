@@ -14,9 +14,13 @@ namespace nx::core
 class ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignmentsFilter : public IFilter
 {
 public:
-  /** @brief Constructs the filter with default parameters. */
+  /**
+   * @brief Constructs the filter with default parameters.
+   */
   ComputeCAxisReferenceMisalignmentsFilter() = default;
-  /** @brief Destroys the filter. */
+  /**
+   * @brief Destroys the filter.
+   */
   ~ComputeCAxisReferenceMisalignmentsFilter() noexcept override = default;
 
   ComputeCAxisReferenceMisalignmentsFilter(const ComputeCAxisReferenceMisalignmentsFilter&) = delete;
