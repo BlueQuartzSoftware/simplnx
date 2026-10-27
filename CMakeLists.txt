@@ -407,6 +407,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IExternalSort.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/ITemporaryRecordStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp
@@ -601,6 +602,10 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/TerminalImageConversion.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/StreamingStatistics.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/SweepTemporaryStore.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/HistogramEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/PointwiseEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.hpp

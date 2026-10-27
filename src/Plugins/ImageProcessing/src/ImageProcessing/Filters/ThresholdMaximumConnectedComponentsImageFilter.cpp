@@ -1,12 +1,24 @@
 #include "ThresholdMaximumConnectedComponentsImageFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/Output.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+
+#include <cmath>
+#include <memory>
+#include <utility>
 
 using namespace nx::core;
 
@@ -39,27 +51,23 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt32Parameter>(
       k_MinimumObjectSizeInPixels_Key, "Minimum Object Size In Pixels",
-      "The pixel type must support comparison operators. Set the minimum pixel area used to count objects on the image. Thus, only objects that have a pixel area greater than the minimum pixel area "
-      "will be counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero.",
+      "Count face-connected nonzero output components with at least this many pixels or voxels. This changes the search score; it does not remove small objects from the output. Default: 0 pixels.",
       0u));
-  params.insert(std::make_unique<Float64Parameter>(
-      k_UpperBoundary_Key, "Upper Boundary",
-      "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
-      "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
-      "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
-      65536.0));
-  params.insert(std::make_unique<UInt8Parameter>(
-      k_InsideValue_Key, "Inside Value",
-      "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
-      "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
-      "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
-      1u));
+  params.insert(
+      std::make_unique<Float64Parameter>(k_UpperBoundary_Key, "Upper Boundary",
+                                         "Inclusive upper cutoff in input intensity units. Default: 65536. Integer inputs truncate toward zero. High values or positive infinity select the native "
+                                         "maximum; low/empty bands or negative infinity produce Outside Value with a warning. NaN is an error. Float64 cannot express every 64-bit integer cutoff.",
+                                         65536.0));
+  params.insert(
+      std::make_unique<UInt8Parameter>(k_InsideValue_Key, "Inside Value",
+                                       "Dimensionless uint8 value assigned inside the inclusive threshold band. Default: 1. Only nonzero output pixels participate in the component-count score.", 1u));
   params.insert(std::make_unique<UInt8Parameter>(
       k_OutsideValue_Key, "Outside Value",
-      "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
-      "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
-      "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
-      0u));
+      "Dimensionless uint8 value assigned outside the band. Default: 0. A nonzero value participates in scoring and can connect regions, including nonfinite pixels in Warn mode.", 0u));
+  params.insert(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
+                                                   "Error stops on image NaN or either infinity before search/output. Warn and Continue uses finite bounds and assigns nonfinite pixels Outside Value. "
+                                                   "With no finite pixels, it skips search, fills Outside Value and warns that no threshold was calculated.",
+                                                   0, ChoicesParameter::Choices{"Error", "Warn and Continue"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -75,7 +83,7 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
 
 IFilter::VersionType ThresholdMaximumConnectedComponentsImageFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 IFilter::UniquePointer ThresholdMaximumConnectedComponentsImageFilter::clone() const
 {
@@ -85,6 +93,11 @@ IFilter::UniquePointer ThresholdMaximumConnectedComponentsImageFilter::clone() c
 IFilter::PreflightResult ThresholdMaximumConnectedComponentsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  if(std::isnan(filterArgs.value<float64>(k_UpperBoundary_Key)))
+  {
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                -28610, "Upper Boundary is NaN. Enter a valid numeric cutoff; positive infinity selects the native maximum and negative infinity requests an empty band.")};
+  }
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -112,6 +125,7 @@ Result<> ThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructu
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
   return ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, minimumObjectSizeInPixels, upperBoundary,
-                                                                                insideValue, outsideValue, shouldCancel, messageHandler);
+                                                                                insideValue, outsideValue, shouldCancel, messageHandler,
+                                                                                filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1);
 }
 } // namespace nx::core
