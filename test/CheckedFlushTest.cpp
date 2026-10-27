@@ -389,13 +389,17 @@ TEST_CASE("CheckedFlush forwards numeric and list diagnostics once", "[simplnx][
   }
 }
 
-TEST_CASE("CheckedFlush visits each live object once and keeps all paths", "[simplnx][CheckedFlush]")
+TEST_CASE("CheckedFlush stops at the first failed object and keeps all of its paths", "[simplnx][CheckedFlush]")
 {
   DataStructure dataStructure;
   const auto* firstParentPtr = DataGroup::Create(dataStructure, "First");
   const auto* secondParentPtr = DataGroup::Create(dataStructure, "Second");
   REQUIRE(firstParentPtr != nullptr);
   REQUIRE(secondParentPtr != nullptr);
+  auto warningStore = std::make_shared<ReportingFlushStore>();
+  warningStore->FlushResult = MakeWarningVoidResult(19100, "earlier warning");
+  const auto* warningArrayPtr = DataArray<int32>::Create(dataStructure, "Earlier", warningStore);
+  REQUIRE(warningArrayPtr != nullptr);
   auto firstStore = std::make_shared<ReportingFlushStore>();
   firstStore->FlushResult = MakeErrorResult(-19101, "backing.h5:/first: primary failure");
   firstStore->FlushResult.errors().push_back({-272, "backing.h5:/first: memory allocation failed during cleanup"});
@@ -405,6 +409,7 @@ TEST_CASE("CheckedFlush visits each live object once and keeps all paths", "[sim
   REQUIRE(firstArrayPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(firstArrayPtr->getId(), secondParentPtr->getId()));
   REQUIRE(firstArrayPtr->getDataPaths().size() == 2);
+  REQUIRE(warningArrayPtr->getId() < firstArrayPtr->getId());
 
   auto laterStore = std::make_shared<ReportingFlushStore>();
   laterStore->FlushResult = MakeErrorResult(-19103, "backing.h5:/later: later failure");
@@ -416,14 +421,16 @@ TEST_CASE("CheckedFlush visits each live object once and keeps all paths", "[sim
   const DataStructure& constStructure = dataStructure;
   const auto result = constStructure.flushChecked();
   REQUIRE(result.invalid());
+  CHECK(warningStore->CheckedCalls == 1);
   CHECK(firstStore->CheckedCalls == 1);
-  CHECK(laterStore->CheckedCalls == 1);
+  // The first failure ends the traversal; later objects keep their unflushed state.
+  CHECK(laterStore->CheckedCalls == 0);
+  CHECK(warningStore->LegacyCalls == 0);
   CHECK(firstStore->LegacyCalls == 0);
   CHECK(laterStore->LegacyCalls == 0);
-  REQUIRE(result.errors().size() == 3);
+  REQUIRE(result.errors().size() == 2);
   CHECK(result.errors()[0].code == -19101);
   CHECK(result.errors()[1].code == -272);
-  CHECK(result.errors()[2].code == -19103);
   for(usize errorIdx = 0; errorIdx < 2; ++errorIdx)
   {
     CHECK(result.errors()[errorIdx].message.find("backing.h5:/first") != std::string::npos);
@@ -433,15 +440,14 @@ TEST_CASE("CheckedFlush visits each live object once and keeps all paths", "[sim
   }
   CHECK(result.errors()[0].message.find("primary failure") != std::string::npos);
   CHECK(result.errors()[1].message.find("memory allocation failed during cleanup") != std::string::npos);
-  CHECK(result.errors()[2].message.find("ALater") != std::string::npos);
-  CHECK(result.errors()[2].message.find("backing.h5:/later: later failure") != std::string::npos);
   REQUIRE(result.warnings().size() == 3);
-  CHECK(result.warnings()[0].code == 19101);
-  CHECK(result.warnings()[0].message.find("first warning") != std::string::npos);
-  CHECK(result.warnings()[1].code == 19102);
-  CHECK(result.warnings()[1].message.find("second warning") != std::string::npos);
-  CHECK(result.warnings()[2].code == 19103);
-  CHECK(result.warnings()[2].message.find("later warning") != std::string::npos);
+  CHECK(result.warnings()[0].code == 19100);
+  CHECK(result.warnings()[0].message.find("earlier warning") != std::string::npos);
+  CHECK(result.warnings()[0].message.find("Earlier") != std::string::npos);
+  CHECK(result.warnings()[1].code == 19101);
+  CHECK(result.warnings()[1].message.find("first warning") != std::string::npos);
+  CHECK(result.warnings()[2].code == 19102);
+  CHECK(result.warnings()[2].message.find("second warning") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -502,13 +508,11 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
   CHECK(result.errors()[0].code == -6070);
   CHECK(result.errors()[0].message.find("EmptyFailure") != std::string::npos);
   CHECK(result.errors()[0].message.find(std::to_string(object->getId())) != std::string::npos);
-  REQUIRE(result.warnings().size() == 2);
+  REQUIRE(result.warnings().size() == 1);
   CHECK(result.warnings()[0].code == 19601);
   CHECK(result.warnings()[0].message.find("empty failure warning") != std::string::npos);
-  CHECK(result.warnings()[1].code == 19602);
-  CHECK(result.warnings()[1].message.find("later warning") != std::string::npos);
   CHECK(object->CheckedCalls == 1);
-  CHECK(laterStore->CheckedCalls == 1);
+  CHECK(laterStore->CheckedCalls == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -531,7 +535,7 @@ TEST_CASE("CheckedFlush calls a shared store once for each distinct object", "[s
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("CheckedFlush retains earlier diagnostics and continues after custom checked exceptions", "[simplnx][CheckedFlush]")
+TEST_CASE("CheckedFlush stops at the first failed object before custom checked exceptions", "[simplnx][CheckedFlush]")
 {
   const auto [failure, expectedCode, detail] = GENERATE(Catch::Generators::table<FlushFailure, int32, const char*>(
       {{FlushFailure::Standard, -6070, "backing.h5:/values"}, {FlushFailure::Unknown, -6070, "unknown"}, {FlushFailure::Allocation, -272, "alloc"}}));
@@ -558,22 +562,29 @@ TEST_CASE("CheckedFlush retains earlier diagnostics and continues after custom c
     REQUIRE_NOTHROW(result = std::as_const(dataStructure).flushChecked());
     REQUIRE(result.invalid());
     CHECK(firstStore->CheckedCalls == 1);
-    CHECK(throwingObject->CheckedCalls == 1);
-    CHECK(laterStore->CheckedCalls == 1);
-    REQUIRE(result.errors().size() == 3);
+    CHECK(throwingObject->CheckedCalls == 0);
+    CHECK(laterStore->CheckedCalls == 0);
+    REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -19301);
     CHECK(result.errors()[0].message.find("first ordinary failure") != std::string::npos);
-    CHECK(result.errors()[1].code == expectedCode);
-    CHECK(result.errors()[1].message.find(detail) != std::string::npos);
-    CHECK(result.errors()[1].message.find("ThrowingObject") != std::string::npos);
-    CHECK(result.errors()[1].message.find(std::to_string(throwingObject->getId())) != std::string::npos);
-    CHECK(result.errors()[2].code == -19302);
-    CHECK(result.errors()[2].message.find("later ordinary failure") != std::string::npos);
-    REQUIRE(result.warnings().size() == 2);
+    REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings()[0].code == 19301);
     CHECK(result.warnings()[0].message.find("first warning") != std::string::npos);
-    CHECK(result.warnings()[1].code == 19302);
-    CHECK(result.warnings()[1].message.find("later warning") != std::string::npos);
+
+    // With the ordinary failure repaired, the next flush stops at the throwing object instead.
+    firstStore->FlushResult = MakeWarningVoidResult(19303, "repaired warning");
+    REQUIRE_NOTHROW(result = std::as_const(dataStructure).flushChecked());
+    REQUIRE(result.invalid());
+    CHECK(firstStore->CheckedCalls == 2);
+    CHECK(throwingObject->CheckedCalls == 1);
+    CHECK(laterStore->CheckedCalls == 0);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+    CHECK(result.errors()[0].message.find(detail) != std::string::npos);
+    CHECK(result.errors()[0].message.find("ThrowingObject") != std::string::npos);
+    CHECK(result.errors()[0].message.find(std::to_string(throwingObject->getId())) != std::string::npos);
+    REQUIRE(result.warnings().size() == 1);
+    CHECK(result.warnings()[0].code == 19303);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

@@ -1091,6 +1091,8 @@ struct IdentifySampleSliceCCLFunctor
    * XY transfers whole planes; XZ transfers rows. YZ groups at most eight planes
    * and publishes only completed planes through fresh XY reads. The reservation
    * covers extra YZ values, not the original carriers, CCL records, or backend memory.
+   * For an out-of-core mask the first YZ batch holds one plane and no extra-plane
+   * reservation, so the first mask write never competes with the extra planes.
    */
   template <typename T>
   Result<> operator()(const ImageGeom* imageGeom, IDataArray* maskArray, bool fillHoles, IdentifySampleSliceBySliceFunctor::Plane plane, const IFilter::MessageHandler& messageHandler,
@@ -1220,6 +1222,10 @@ struct IdentifySampleSliceCCLFunctor
     xyObservation.acquired(layout.XyValues);
 #endif
     auto& budget = CacheMemoryBudgetManager::instance();
+    // The first write to an out-of-core mask can need its own working reservation, for example to create a
+    // writable copy of a read-only imported source. Publish the first batch without extra planes so that this
+    // reservation never competes with them, then group later batches.
+    bool extraPlanesAllowed = store.getStoreType() != IDataStore::StoreType::OutOfCore;
     for(usize batchStart = 0; batchStart < layout.FixedCount;)
     {
       if(shouldCancel)
@@ -1227,7 +1233,7 @@ struct IdentifySampleSliceCCLFunctor
         return {};
       }
       const usize remaining = layout.FixedCount - batchStart;
-      const usize maxExtra = layout.PlaneBytes == 0 ? 0 : std::min(maxYzBatchPlanes - 1, remaining - 1);
+      const usize maxExtra = layout.PlaneBytes == 0 || !extraPlanesAllowed ? 0 : std::min(maxYzBatchPlanes - 1, remaining - 1);
       // The maximum request was checked before any carrier allocation.
       const usize requestedBytes = maxExtra * layout.PlaneBytes;
 #if SIMPLNX_BUILD_TESTS
@@ -1432,6 +1438,8 @@ struct IdentifySampleSliceCCLFunctor
       {
         return {};
       }
+      // A completed batch published its planes, so the first mask write has finished.
+      extraPlanesAllowed = true;
       batchStart += width;
     }
     messageHandler.sendProgressCount("Identifying Sample Slices", layout.FixedCount, layout.FixedCount);

@@ -18,6 +18,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <vector>
 
 using namespace nx::core;
 
@@ -271,7 +272,7 @@ Result<> ComputeFeatureCentroids::operator()()
         }
 
         const usize availableWords = static_cast<usize>(reservation.sizeBytes() / sizeof(uint64));
-        auto occupancy = std::make_unique<uint64[]>(availableWords);
+        auto occupancy = std::make_unique<std::vector<uint64>>(availableWords);
         usize nextCandidate = 0;
         usize nextCoordinate = 0;
         usize occupancyScans = 0;
@@ -308,7 +309,7 @@ Result<> ComputeFeatureCentroids::operator()()
             }
           }
 
-          std::fill_n(occupancy.get(), usedWords, uint64{0});
+          std::fill_n(occupancy->data(), usedWords, uint64{0});
           for(usize offset = 0; offset < totalVoxels;)
           {
             if(m_ShouldCancel)
@@ -343,7 +344,7 @@ Result<> ComputeFeatureCentroids::operator()()
                 if(coordinate >= candidate.WindowStart && coordinate - candidate.WindowStart < candidate.WindowLength)
                 {
                   const usize local = coordinate - candidate.WindowStart;
-                  occupancy[candidate.WordOffset + (local / 64)] |= uint64{1} << (local % 64);
+                  (*occupancy)[candidate.WordOffset + (local / 64)] |= uint64{1} << (local % 64);
                 }
               }
             }
@@ -360,7 +361,7 @@ Result<> ComputeFeatureCentroids::operator()()
               {
                 return result;
               }
-              uint64 word = occupancy[candidate.WordOffset + wordIndex];
+              uint64 word = (*occupancy)[candidate.WordOffset + wordIndex];
               while(word != 0)
               {
                 const usize bit = static_cast<usize>(std::countr_zero(word));
