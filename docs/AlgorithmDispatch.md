@@ -193,47 +193,44 @@ Filters/Algorithms/
 
 5. **Register new files**: Add the new algorithm names to the plugin's `AlgorithmList` in `CMakeLists.txt`.
 
-6. **Test both paths**: Use `ForceOocAlgorithmGuard` with Catch2 `GENERATE` to exercise both algorithm paths in every build configuration (see below).
+6. **Test both paths**: Use `UnitTest::AlgorithmTestScope` with Catch2 `GENERATE` to exercise both algorithm paths in every build configuration (see below).
 
 ## Testing Both Algorithm Paths
 
-CI typically only builds the in-core configuration, so the OOC algorithm path would never be exercised without an explicit override. The `ForceOocAlgorithm()` flag and `ForceOocAlgorithmGuard` RAII class solve this.
+CI typically only builds the in-core configuration, so the OOC algorithm path would never be exercised without an explicit override. The `ForceOocAlgorithm()` and `ForceInCoreAlgorithm()` flags provide that override, and filter tests set them through `UnitTest::AlgorithmTestScope`.
 
-### ForceOocAlgorithm
+### ForceOocAlgorithm and ForceInCoreAlgorithm
 
 ```cpp
 bool& ForceOocAlgorithm();
+bool& ForceInCoreAlgorithm();
 ```
 
-Returns a reference to a static bool. When set to `true`, `DispatchAlgorithm` always selects the OOC algorithm class regardless of whether the data arrays use chunked storage. Defaults to `false`.
+Each returns a reference to a static bool that defaults to `false`. When `ForceOocAlgorithm()` is `true`, `DispatchAlgorithm` selects the OOC algorithm class even when no array uses chunked storage. `ForceInCoreAlgorithm()` takes precedence over both the storage check and `ForceOocAlgorithm()`.
 
-### ForceOocAlgorithmGuard
+### AlgorithmTestScope
 
-```cpp
-class ForceOocAlgorithmGuard
-{
-public:
-  ForceOocAlgorithmGuard(bool force);
-  ~ForceOocAlgorithmGuard();
-  // non-copyable, non-movable
-};
-```
-
-RAII guard that sets `ForceOocAlgorithm()` on construction and restores the previous value on destruction. Use with Catch2 `GENERATE` to run each test case twice — once with the in-core algorithm and once with the OOC algorithm:
+`UnitTest::AlgorithmTestScope` (`simplnx/UnitTest/AlgorithmTestScope.hpp`) runs a test on one algorithm path with in-memory stores. `UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()` returns the paths that the build's `SIMPLNX_TEST_ALGORITHM_PATH` setting allows, so `GENERATE` runs the test once for each:
 
 ```cpp
-#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 
 TEST_CASE("MyFilter", "[Plugin][MyFilter]")
 {
-  bool forceOocAlgo = GENERATE(false, true);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
 
-  // ... test body runs identically for both algorithm paths ...
+  // ... build the DataStructure and the Arguments ...
+
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // ... compare the outputs with the expected values ...
 }
 ```
 
-This ensures both code paths are tested in every build configuration (in-core and OOC). The OOC algorithm class works correctly on in-core `DataStore` data because the chunk API methods are no-ops for `DataStore` (1 chunk spanning the full volume).
+`scope.executeFilter()` and `scope.execute()` set the force flags only for the call they wrap, so the filters that build the test data run normally. After the call, the scope requires that the selected algorithm path ran and the other path did not. The OOC algorithm class works correctly on in-core `DataStore` data because the chunk API methods are no-ops for `DataStore` (1 chunk spanning the full volume).
 
 ## Performance Expectations
 
