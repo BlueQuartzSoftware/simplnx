@@ -34,7 +34,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignmentsInputValues
  *
  * One bounded bulk-I/O traversal serves resident and out-of-core stores.
  * Masked tuples, non-hexagonal tuples, and zero or nonfinite quaternions receive NaN.
- * Finite, nonzero quaternions need not be unit length because the computed c-axis is normalized.
+ * Finite, nonzero quaternions are normalized before use.
  * Antipodal symmetry folds angles to [0, 90] degrees.
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignments

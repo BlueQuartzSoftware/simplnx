@@ -14,7 +14,7 @@ The filter works on cell orientations, feature average orientations, or any othe
 
 **Input Quaternions** must contain four-component float32 quaternions in EbsdLib order: x, y, z, w. Use cell *Quats* for cell results. Use feature *AvgQuats*, for example from [Compute Feature Average Orientations](ComputeAvgOrientationsFilter.md), for grain results. Convert Euler angles with [Convert Orientation Representation](ConvertOrientationsFilter.md) before using this filter.
 
-A zero quaternion or a quaternion with a NaN or infinite component receives NaN. It does not define a valid orientation. Finite, nonzero quaternions need not be unit length because the computed c-axis is normalized.
+A zero quaternion or a quaternion with a NaN or infinite component receives NaN. It does not define a valid orientation. Finite, nonzero quaternions are normalized before use.
 
 **Reference Direction** has three dimensionless components in the sample frame. It need not be a unit vector. For example, *[3, 0, 3]* and *[1, 0, 1]* give the same result. All components must be finite. The vector length must be greater than 1e-12.
 
@@ -30,7 +30,7 @@ The output is a one-component float32 array beside **Input Quaternions**. It kee
 
 ## Algorithm
 
-Let g be the passive orientation matrix from the input quaternion. The sample-frame c-axis and normalized reference are
+Let g be the passive orientation matrix from the normalized input quaternion. The sample-frame c-axis and normalized reference are
 
 $$
 \mathbf{c} = \frac{g^{T}(0,0,1)^{T}}{\left\|g^{T}(0,0,1)^{T}\right\|},

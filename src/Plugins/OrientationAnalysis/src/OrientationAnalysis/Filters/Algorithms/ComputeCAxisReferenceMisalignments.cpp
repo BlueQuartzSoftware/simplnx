@@ -147,15 +147,17 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
         continue;
       }
       const usize qi = i * 4;
-      const ebsdlib::OrientationMatrixDType oMatrix = ebsdlib::QuaternionDType(quats[qi], quats[qi + 1], quats[qi + 2], quats[qi + 3]).toOrientationMatrix();
+      ebsdlib::QuaternionDType quat(quats[qi], quats[qi + 1], quats[qi + 2], quats[qi + 3]);
+      const float64 quatLength = quat.length();
+      if(!std::isfinite(quatLength) || quatLength == 0.0)
+      {
+        continue; // Output stays NaN: this quaternion is not a rotation.
+      }
+      quat = quat.normalize().getPositiveOrientation();
+      const ebsdlib::OrientationMatrixDType oMatrix = quat.toOrientationMatrix();
       // The transpose maps crystal [001] into the sample frame. Opposite c-axes represent the same axis.
       Eigen::Vector3d cAxis = oMatrix.transpose() * Eigen::Vector3d(0.0, 0.0, 1.0);
-      const float64 cAxisNorm = cAxis.norm();
-      if(!std::isfinite(cAxisNorm) || cAxisNorm == 0.0)
-      {
-        continue; // An undefined orientation must not become a finite angle.
-      }
-      cAxis /= cAxisNorm;
+      cAxis.normalize();
       const float64 cosine = std::clamp(std::abs(cAxis.dot(referenceDirection)), 0.0, 1.0);
       output[i] = static_cast<float32>(std::acos(cosine) * (180.0 / numbers::pi));
     }
