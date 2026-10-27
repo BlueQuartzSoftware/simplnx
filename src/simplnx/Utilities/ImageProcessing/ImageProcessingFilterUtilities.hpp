@@ -65,6 +65,7 @@
 #include <memory>
 #include <new>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -5714,10 +5715,73 @@ Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& da
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
+/** @brief Policy for native marker IDs that change during uint32 encoding and restoration. */
+enum class MarkerIdConversionHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 namespace detail
 {
+/** @brief Constant-size native context for the existing bounded marker-copy pass. */
+template <class T>
+class MarkerIdConversionState
+{
+public:
+  MarkerIdConversionState() = default;
+  ~MarkerIdConversionState() noexcept = default;
+  MarkerIdConversionState(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState(MarkerIdConversionState&&) = delete;
+  MarkerIdConversionState& operator=(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState& operator=(MarkerIdConversionState&&) = delete;
+
+  bool observe(T nativeValue, uint32 encodedValue, usize index) noexcept
+  {
+    const T restoredValue = static_cast<T>(encodedValue);
+    if(restoredValue == nativeValue)
+    {
+      return false;
+    }
+    if(m_ChangedCount == 0)
+    {
+      m_FirstIndex = index;
+      m_FirstNativeValue = nativeValue;
+      m_FirstRestoredValue = restoredValue;
+    }
+    ++m_ChangedCount;
+    return true;
+  }
+
+  Result<> finish(const DataPath& markerPath, MarkerIdConversionHandling handling, Result<> result = {}) const
+  {
+    if(m_ChangedCount == 0)
+    {
+      return result;
+    }
+    const auto context = fmt::format("Marker array '{}' has {} changed marker occurrence(s) observed. First change at flat index {}: native ID {} restores as {} after uint32 conversion. ",
+                                     markerPath.toString(), m_ChangedCount, m_FirstIndex, m_FirstNativeValue, m_FirstRestoredValue);
+    if(handling == MarkerIdConversionHandling::Error)
+    {
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-79073, context +
+                                                      "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
+                                                      "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
+    }
+    return MergeResults(std::move(result),
+                        MakeWarningVoidResult(79074, context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
+                                                               "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
+  }
+
+private:
+  usize m_ChangedCount = 0;
+  usize m_FirstIndex = 0;
+  T m_FirstNativeValue = {};
+  T m_FirstRestoredValue = {};
+};
+
 /**
- * @brief Functor that copies an integer marker array's values into a uint32 store (widening cast), dispatched on
+ * @brief Functor that copies an integer marker array's values into a uint32 store, dispatched on
  *        the source element type S via the IntegerOnly policy (which calls operator()<S>() through
  *        ExecuteDataFunctionIntType). The source is read through the SAFE typed accessor
  *        getDataRefAs<DataArray<S>> -- not a raw dynamic_cast -- so a type mismatch throws rather than being UB.
@@ -5729,58 +5793,82 @@ struct WidenIntegerArrayToUInt32Fn
   const DataPath& srcPath;
   AbstractDataStore<uint32>& dst;
   const std::atomic_bool& shouldCancel;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
 
   template <class S>
   Result<> operator()() const
   {
     const AbstractDataStore<S>& s = dataStructure.getDataRefAs<DataArray<S>>(srcPath).getDataStoreRef();
     const usize total = s.getSize();
-    constexpr usize k_ChunkValues = 65536;
-    auto inBuf = std::make_unique<S[]>(std::min(k_ChunkValues, total));
-    auto outBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
-    for(usize start = 0; start < total; start += k_ChunkValues)
+    MarkerIdConversionState<S> conversionState;
+    Result<> accumulated;
+    try
     {
-      if(shouldCancel)
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<S[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
       {
-        return {};
+        if(shouldCancel)
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          const S nativeValue = inBufferPtr[index];
+          const uint32 encodedValue = static_cast<uint32>(nativeValue);
+          if(conversionState.observe(nativeValue, encodedValue, start + index) && ConversionHandling == MarkerIdConversionHandling::Error)
+          {
+            // Stop before writing this chunk or entering either flood route.
+            return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+          }
+          outBufferPtr[index] = encodedValue;
+        }
+        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        // count <= total - start, so both the next offset and start + index remain in range.
+        start += count;
       }
-      const usize count = std::min(k_ChunkValues, total - start);
-      if(Result<> r = s.copyIntoBuffer(start, nonstd::span<S>(inBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        outBuf[i] = static_cast<uint32>(inBuf[i]);
-      }
-      if(Result<> r = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
+      return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+    } catch(const std::bad_alloc&)
+    {
+      return conversionState.finish(srcPath, ConversionHandling,
+                                    MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while copying marker IDs.")));
     }
-    return {};
   }
 };
 
 /**
  * @brief Copies the integer marker array at @p srcPath (any of the 8 integer element types) into @p dst as uint32.
  *        The flood runs in uint32 (see @ref ApplyWatershedFromMarkers) but the marker array may be any integer
- *        type, so it is widened up front and the flood dispatches on the grayscale type only. Exact for all marker
- *        labels < 0xFFFFFFFF (i.e. <= 2^32 - 2; every realistic segmentation): 0xFFFFFFFF is reserved as the border
- *        sentinel, so a label of exactly 0xFFFFFFFF (or >= 2^32 on an int64/uint64 array, which would truncate) would
- *        alias it -- documented in the filter doc, tested by the direct-ITK grid at realistic labels.
+ *        type. All native 8/16/32-bit integers round-trip, including negative signed values. The lossless int64/uint64
+ *        domain is 0 through UINT32_MAX, inclusive. Error stops during this copy before the affected chunk is written;
+ *        Warn keeps the legacy encoding and returns one summary warning, also on cancellation or a later transfer error.
  */
-inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel)
+inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel,
+                                          MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel});
+  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel, conversionHandling});
 }
 
 /**
  * @brief Functor that copies a uint32 store's values into an integer output array (narrowing cast), dispatched on
  *        the destination element type D via the IntegerOnly policy. The destination is written through the SAFE
  *        typed accessor getDataRefAs<DataArray<D>> -- not a raw dynamic_cast. The output is created of the marker's
- *        type by the filter's preflight, so the flooded uint32 labels (all < 2^32 for realistic markers) round-trip.
+ *        type by preflight. This is the legacy conversion back from the internal uint32 labels; Warn may have already
+ *        removed, aliased, or renamed native 64-bit marker identities during the initial copy.
  */
 struct NarrowUInt32StoreToIntegerArrayFn
 {
@@ -5794,30 +5882,42 @@ struct NarrowUInt32StoreToIntegerArrayFn
   {
     AbstractDataStore<D>& d = dataStructure.getDataRefAs<DataArray<D>>(dstPath).getDataStoreRef();
     const usize total = src.getSize();
-    constexpr usize k_ChunkValues = 65536;
-    auto inBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
-    auto outBuf = std::make_unique<D[]>(std::min(k_ChunkValues, total));
-    for(usize start = 0; start < total; start += k_ChunkValues)
+    Result<> accumulated;
+    try
     {
-      if(shouldCancel)
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<D[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
       {
-        return {};
+        if(shouldCancel)
+        {
+          return accumulated;
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          outBufferPtr[index] = static_cast<D>(inBufferPtr[index]);
+        }
+        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        start += count; // count <= total - start, including the final short chunk.
       }
-      const usize count = std::min(k_ChunkValues, total - start);
-      if(Result<> r = src.copyIntoBuffer(start, nonstd::span<uint32>(inBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        outBuf[i] = static_cast<D>(inBuf[i]);
-      }
-      if(Result<> r = d.copyFromBuffer(start, nonstd::span<const D>(outBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
+      return accumulated;
+    } catch(const std::bad_alloc&)
+    {
+      return MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while restoring marker IDs."));
     }
-    return {};
   }
 };
 
@@ -5834,9 +5934,8 @@ inline Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>&
 /**
  * @brief The border sentinel for the uint32 flood: static_cast<uint32>(NumericTraits<markerType>::max()). ITK's
  *        MorphologicalWatershedFromMarkers uses NumericTraits<TLabel>::max() as the out-of-bounds marker-image
- *        boundary constant; widening the flood to uint32 requires reproducing that per-type constant so the flood
- *        is bit-identical to ITK's native-TLabel flood (incl. the label==type-max collision). For uint32/int64/
- *        uint64 the max saturates to 0xFFFFFFFF on the cast, which is the intended sentinel for the uint32 flood.
+ *        boundary constant. This value substitutes only out-of-bounds neighbors; UINT32_MAX is a valid in-bounds seed.
+ *        For uint32/int64/uint64 the integer cast yields 0xFFFFFFFF. It does not saturate marker values.
  */
 inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
 {
@@ -5865,8 +5964,8 @@ inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
 
 /**
  * @brief Dispatched execute body for MorphologicalWatershedFromMarkers. Dispatches on the GRAYSCALE element type T
- *        (the FAH key). The all-OOC external endpoint streams native markers into its uint32 flood records and writes
- *        native output labels directly. Other endpoints retain the uint32 scratch-store path.
+ *        (the FAH key). Every endpoint copies native markers into uint32 scratch, floods using the existing route,
+ *        and converts the result back to the marker type. Copy, flood, and restore diagnostics are retained together.
  */
 struct MorphologicalWatershedFromMarkersExecuteFn
 {
@@ -5879,6 +5978,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
 
   template <class T> // T = grayscale type
   Result<> operator()() const
@@ -5887,6 +5987,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
     // == nullptr checks below only catch an out-of-core failure). Resident flood buffers and the external flood's
     // bounded buffers/cache metadata can also throw. Convert either allocation failure into a filter error instead of
     // allowing an exception to escape this execute path.
+    Result<> accumulated;
     try
     {
       const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
@@ -5901,20 +6002,26 @@ struct MorphologicalWatershedFromMarkersExecuteFn
         return MakeErrorResult(-79010, "MorphologicalWatershedFromMarkers: failed to allocate a uint32 scratch store.");
       }
 
-      if(Result<> r = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel); r.invalid())
+      accumulated = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel, ConversionHandling);
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       const uint32 borderSentinel = MarkerTypeMaxAsUInt32(markerArray.getDataType());
-      if(Result<> r = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler); r.invalid())
+      auto floodResult = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler);
+      accumulated = MergeResults(std::move(accumulated), std::move(floodResult));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
-      return NarrowUInt32StoreToIntegerArray(*outU32, dataStructure, outputArrayPath, shouldCancel);
+      auto restoreResult = NarrowUInt32StoreToIntegerArray(*outU32, dataStructure, outputArrayPath, shouldCancel);
+      return MergeResults(std::move(accumulated), std::move(restoreResult));
     } catch(const std::bad_alloc&)
     {
-      return MakeErrorResult(-79045, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
-                                     "requires bounded buffers and external temporary records.");
+      return MergeResults(
+          std::move(accumulated),
+          MakeErrorResult(-79045, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
+                                  "requires bounded buffers and external temporary records."));
     }
   }
 };
@@ -6085,21 +6192,21 @@ struct MorphologicalWatershedExecuteFn
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled
  *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers). Dispatches on the grayscale
  *        input element type via @p TypeSetPolicy (AllNumeric by default -- all 10 scalar types); the marker array is
- *        any integer type and the output is created of the marker's type by the filter's preflight. Reproduces legacy
- *        ITK's MorphologicalWatershedFromMarkersImageFilter output EXACTLY, including label values (see the Parity
- *        model and the direct-ITK oracle test). The caller's preflight must have validated the grayscale (scalar,
+ *        any integer type and the output is created of the marker's type by preflight. Error protects native marker
+ *        identity before flooding; Warn retains the legacy conversion and flood with one conversion diagnostic.
+ *        The caller's preflight must have validated the grayscale (scalar,
  *        allowed type, tuple==cells) and the marker (integer scalar, tuple==grayscale).
  */
 template <class TypeSetPolicy = AllNumeric>
 Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& markerArrayPath,
                                                              const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected, const std::atomic_bool& shouldCancel,
-                                                             const IFilter::MessageHandler& messageHandler)
+                                                             const IFilter::MessageHandler& messageHandler, MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{dataStructure,     inputArrayPath, markerArrayPath, outputArrayPath, imageGeom.getDimensions(),
-                                                               markWatershedLine, fullyConnected, shouldCancel,    messageHandler};
+                                                               markWatershedLine, fullyConnected, shouldCancel,    messageHandler,  conversionHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
