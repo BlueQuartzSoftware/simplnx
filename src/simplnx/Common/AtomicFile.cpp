@@ -1,5 +1,6 @@
 #include "AtomicFile.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/PathText.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -8,7 +9,9 @@
 #include <fmt/std.h>
 
 #include <iostream>
+#include <iterator>
 #include <random>
+#include <vector>
 
 #if defined(__linux__) || defined(__APPLE__)
 #include <sys/xattr.h>
@@ -58,6 +61,17 @@ bool SetExtendedAttribute(const fs::path& path, const std::string& key, const st
 #endif
 }
 
+/**
+ * @brief Moves warnings in front of the warnings of a result.
+ * @param resultWarnings Warnings of the later result.
+ * @param earlierWarnings Warnings collected before; empty after the call.
+ */
+void PrependWarnings(std::vector<Warning>& resultWarnings, std::vector<Warning>& earlierWarnings)
+{
+  resultWarnings.insert(resultWarnings.begin(), std::make_move_iterator(earlierWarnings.begin()), std::make_move_iterator(earlierWarnings.end()));
+  earlierWarnings.clear();
+}
+
 bool SetIgnoreFileSyncAttributes(const fs::path& path)
 {
   // https://help.dropbox.com/sync/ignored-files
@@ -76,6 +90,16 @@ bool SetIgnoreFileSyncAttributes(const fs::path& path)
 
 Result<AtomicFile> AtomicFile::Create(fs::path filename)
 {
+  return CreateImpl(std::move(filename), true);
+}
+
+Result<AtomicFile> AtomicFile::CreateAfterHook(fs::path filename)
+{
+  return CreateImpl(std::move(filename), false);
+}
+
+Result<AtomicFile> AtomicFile::CreateImpl(fs::path filename, bool runsHook)
+{
   AtomicFile atomicFile(std::move(filename));
 
   // If the path is relative, then make it absolute
@@ -91,11 +115,24 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     atomicFile.m_FilePath = std::move(absolutePath);
   }
 
+  // The hook runs before anything else can fail or change, so a hook error leaves no temporary directory behind.
+  std::vector<Warning> hookWarnings;
+  if(runsHook)
+  {
+    Result<> hookResult = BeforeFileReplace(atomicFile.m_FilePath);
+    if(hookResult.invalid())
+    {
+      return ConvertInvalidResult<AtomicFile>(std::move(hookResult));
+    }
+    hookWarnings = std::move(hookResult.warnings());
+  }
+
   // Validate write permissions
   {
     auto result = FileUtilities::ValidateDirectoryWritePermission(atomicFile.m_FilePath, true);
     if(result.invalid())
     {
+      PrependWarnings(result.warnings(), hookWarnings);
       return ConvertInvalidResult<AtomicFile>(std::move(result));
     }
   }
@@ -112,6 +149,7 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     auto result = CreateOutputDirectories(parentPath);
     if(result.invalid())
     {
+      PrependWarnings(result.warnings(), hookWarnings);
       return ConvertInvalidResult<AtomicFile>(std::move(result));
     }
     // The temporary directory that AtomicFile creates should not be synced to cloud services
@@ -123,7 +161,9 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
     }
   }
 
-  return {std::move(atomicFile)};
+  Result<AtomicFile> createdResult{std::move(atomicFile)};
+  createdResult.warnings() = std::move(hookWarnings);
+  return createdResult;
 }
 
 AtomicFile::AtomicFile(fs::path filepath)

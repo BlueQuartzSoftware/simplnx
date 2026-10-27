@@ -1,6 +1,7 @@
 #include "WriteStatsGenOdfAngleFile.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -203,16 +204,27 @@ Result<> WritePhaseFiles(const std::map<int32, int32>& phaseLineCounts, const Wr
 
     messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing file for phase '{}'", phase));
     const std::string absFilePath = fmt::format("{}/{}_Phase_{}{}", absPath, fileName, phase, suffix);
+    // The phase file is truncated in place, so the file-replace hook runs on it first.
+    Result<> hookResult = BeforeFileReplace(absFilePath);
+    if(hookResult.invalid())
+    {
+      hookResult.warnings().insert(hookResult.warnings().begin(), results.warnings().begin(), results.warnings().end());
+      return hookResult;
+    }
+    results.warnings().insert(results.warnings().end(), hookResult.warnings().begin(), hookResult.warnings().end());
     std::ofstream file(absFilePath, std::ios::out | std::ios::trunc | std::ios_base::binary);
     if(!file.is_open())
     {
-      return MakeErrorResult(-9404, fmt::format("Error creating output file '{}'", absFilePath));
+      Result<> openResult = MakeErrorResult(-9404, fmt::format("Error creating output file '{}'", absFilePath));
+      openResult.warnings() = std::move(results.warnings());
+      return openResult;
     }
 
     WriteHeader(file, inputValues, lineCount);
     Result<> writeResult = writePhase(file, phase);
     if(writeResult.invalid())
     {
+      writeResult.warnings().insert(writeResult.warnings().begin(), results.warnings().begin(), results.warnings().end());
       return writeResult;
     }
     file.flush();

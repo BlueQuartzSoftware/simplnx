@@ -73,10 +73,10 @@ public:
    * @param dataStructure Source data structure.
    * @param filepath Destination file path.
    * @return File-creation or write errors, -6056 when the file does not close completely (see FileIO::closeChecked()), a
-   * file-write hook error, or success.
+   * file-replace hook error, or success.
    * @post Replaces an existing file at filepath before creation.
    *
-   * Forwards to the overload with options, which runs the file-write hook.
+   * Forwards to the overload with options, which runs the file-replace hook.
    */
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath);
 
@@ -86,12 +86,11 @@ public:
    * @param filepath Destination file path.
    * @param options Dataset encoding options.
    * @return File-creation or write errors, -6056 when the file does not close completely (see FileIO::closeChecked()), a
-   * file-write hook error, or success.
+   * file-replace hook error, or success.
    * @post Replaces an existing file at filepath before creation.
    *
-   * The file-write hook (DataIOCollection::beforeFileWrite() in ReleaseReaders mode) runs on filepath before the file is
-   * created, so out-of-core stores that read it are copied to session files first. A hook error is returned without a change to
-   * filepath. The hook's warnings are part of every returned result.
+   * BeforeFileReplace() runs once on filepath before the file is created, so a component that reads the file stops reading it
+   * first. A hook error is returned without a change to filepath. The hook's warnings are part of every returned result.
    */
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options);
 
@@ -100,8 +99,8 @@ public:
    * @param dataStructure Source data structure.
    * @param fileWriter Open destination file.
    * @return Write errors, or success.
-   * @pre No out-of-core store in dataStructure reads the file that fileWriter holds open. This overload does not run the file-write
-   * hook; the path-based overload that opens the file runs it.
+   * @pre No component reads the file that fileWriter holds open. This overload does not run the file-replace hook
+   * (BeforeFileReplace()); the path-based overload that opens the file runs it.
    */
   static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter);
 
@@ -111,8 +110,8 @@ public:
    * @param fileWriter Open destination file.
    * @param options Dataset encoding options.
    * @return Write errors, or success.
-   * @pre No out-of-core store in dataStructure reads the file that fileWriter holds open. This overload does not run the file-write
-   * hook; the path-based overload that opens the file runs it.
+   * @pre No component reads the file that fileWriter holds open. This overload does not run the file-replace hook
+   * (BeforeFileReplace()); the path-based overload that opens the file runs it.
    */
   static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter, const WriteOptions& options);
 
@@ -122,9 +121,9 @@ public:
    * @param dataStructure Source data structure.
    * @param dataPath Top-level object path.
    * @return Open, validation or write errors, -6056 when the file does not close completely (see FileIO::closeChecked()), a
-   * file-write hook error, or success.
+   * file-replace hook error, or success.
    *
-   * Forwards to the overload with options, which runs the file-write hook.
+   * Forwards to the overload with options, which runs the file-replace hook.
    */
   static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath);
 
@@ -135,13 +134,12 @@ public:
    * @param dataPath Top-level object path.
    * @param options Dataset encoding options.
    * @return Open, validation or write errors, -6056 when the file does not close completely (see FileIO::closeChecked()), a
-   * file-write hook error, or success. With -6056 the file may already hold the appended object; the error does not promise a
+   * file-replace hook error, or success. With -6056 the file may already hold the appended object; the error does not promise a
    * rollback.
    *
-   * The file-write hook (DataIOCollection::beforeFileWrite() in ReleaseReaders mode) runs on filepath before the file is opened,
-   * so out-of-core stores that read it are copied to session files first; an HDF5 file that a store holds open read-only cannot
-   * be opened for appending. A hook error is returned without opening the file. The hook's warnings are part of every returned
-   * result.
+   * BeforeFileReplace() runs once on filepath before the file is opened, so a component that reads the file stops reading it
+   * first; an HDF5 file that another component holds open read-only cannot be opened for appending. A hook error is returned
+   * without opening the file. The hook's warnings are part of every returned result.
    */
   static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options);
 
@@ -151,7 +149,7 @@ public:
    * @param dataStructure Source data structure.
    * @param dataPath Top-level object path.
    * @return Validation or write errors.
-   * @pre No out-of-core store in dataStructure reads the file that file holds open. This overload does not run the file-write hook;
+   * @pre No component reads the file that file holds open. This overload does not run the file-replace hook (BeforeFileReplace());
    * the path-based overloads (and DREAM3D::AppendFile()) run it before they open the file.
    */
   static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath);
@@ -164,7 +162,7 @@ public:
    * @param options Dataset encoding options.
    * @return Validation or write errors.
    * @pre dataPath has exactly one component.
-   * @pre No out-of-core store in dataStructure reads the file that file holds open. This overload does not run the file-write hook;
+   * @pre No component reads the file that file holds open. This overload does not run the file-replace hook (BeforeFileReplace());
    * the path-based overloads (and DREAM3D::AppendFile()) run it before they open the file.
    *
    * The method copies only dataPath, renumbers it from the file's next object

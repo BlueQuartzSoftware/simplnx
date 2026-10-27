@@ -1,6 +1,7 @@
 #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGridFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -10,7 +11,9 @@
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <set>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -224,4 +227,99 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Cancellation b
   fs::remove_all(outputPath, cleanupError);
   REQUIRE_FALSE(cleanupError);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: the file-replace hook runs once per output before it is written",
+          "[OrientationAnalysis][ConvertHexGridToSquareGridFilter][FileWriteHook]")
+{
+  UnitTest::LoadPlugins();
+  constexpr int32 k_HookWarningCode = 99501;
+  constexpr int32 k_RefusalCode = -99502;
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "convert_hex_grid_hook";
+  fs::remove_all(outputPath);
+  fs::create_directories(outputPath);
+  const bool isMultiFile = GENERATE(false, true);
+  CAPTURE(isMultiFile);
+
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  if(isMultiFile)
+  {
+    GeneratedFileListParameter::ValueType inputFiles;
+    inputFiles.startIndex = 1;
+    inputFiles.incrementIndex = 1;
+    inputFiles.endIndex = 2;
+    inputFiles.inputPath = fmt::format("{}/{}/multi", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir);
+    inputFiles.filePrefix = "hex_grid";
+    inputFiles.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+    inputFiles.paddingDigits = 0;
+    inputFiles.fileExtension = ".ang";
+    inputFiles.fileSuffix = "";
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(inputFiles));
+  }
+  else
+  {
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key,
+                        std::make_any<fs::path>(fs::path(fmt::format("{}/{}/single/hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir))));
+  }
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(outputPath));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
+  const std::set<std::string> expectedFiles = isMultiFile ? std::set<std::string>{"Sqr_hex_grid1.ang", "Sqr_hex_grid2.ang"} : std::set<std::string>{"Sqr_hex_grid.ang"};
+
+  std::vector<std::string> calledFiles;
+  bool areTargetsAbsentAtCall = true;
+  std::string refusedFile;
+  bool refusesWithoutErrors = false;
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode) -> Result<> {
+    calledFiles.push_back(target.filename().string());
+    areTargetsAbsentAtCall = areTargetsAbsentAtCall && !fs::exists(target);
+    if(target.filename().string() == refusedFile)
+    {
+      return refusesWithoutErrors ? Result<>{{nonstd::make_unexpected(ErrorCollection{})}} : MakeErrorResult(k_RefusalCode, "refused");
+    }
+    return MakeWarningVoidResult(k_HookWarningCode, "hook warning");
+  });
+  const auto listFiles = [&outputPath]() {
+    std::set<std::string> files;
+    for(const auto& entry : fs::directory_iterator(outputPath))
+    {
+      files.insert(entry.path().filename().string());
+    }
+    return files;
+  };
+
+  SECTION("success keeps the hook warnings")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(std::multiset<std::string>(calledFiles.begin(), calledFiles.end()) == std::multiset<std::string>(expectedFiles.begin(), expectedFiles.end()));
+    CHECK(areTargetsAbsentAtCall);
+    CHECK(listFiles() == expectedFiles);
+    const auto warningCount = std::count_if(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == k_HookWarningCode; });
+    CHECK(warningCount == static_cast<std::ptrdiff_t>(expectedFiles.size()));
+  }
+  SECTION("a refusal reaches the caller unchanged and nothing is committed")
+  {
+    refusesWithoutErrors = GENERATE(false, true);
+    refusedFile = *expectedFiles.rbegin();
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    if(refusesWithoutErrors)
+    {
+      CHECK(executeResult.result.errors().empty());
+    }
+    else
+    {
+      REQUIRE(executeResult.result.errors().size() == 1);
+      CHECK(executeResult.result.errors().front().code == k_RefusalCode);
+    }
+    CHECK(listFiles().empty());
+  }
+  std::error_code ignored;
+  fs::remove_all(outputPath, ignored);
 }

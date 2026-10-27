@@ -1,9 +1,11 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/PathText.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/UnitTest/RecordingFileReplaceHandler.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -11,6 +13,7 @@
 #include <iterator>
 #include <string>
 #include <system_error>
+#include <vector>
 
 using namespace nx::core;
 
@@ -156,4 +159,114 @@ TEST_CASE("AtomicFile: a commit error names a non-ASCII temporary file", "[simpl
   REQUIRE(committed.errors().size() == 1);
   CHECK(committed.errors().front().code == -15781);
   CHECK(committed.errors().front().message.find(PathToUtf8Text(created.value().tempFilePath())) != std::string::npos);
+}
+
+namespace
+{
+/**
+ * @brief Lists the names of the entries of a directory.
+ * @param directory Directory to list.
+ * @return Entry names in directory order.
+ */
+std::vector<fs::path> ListEntries(const fs::path& directory)
+{
+  std::vector<fs::path> entries;
+  for(const fs::directory_entry& entry : fs::directory_iterator(directory))
+  {
+    entries.push_back(entry.path().filename());
+  }
+  return entries;
+}
+} // namespace
+
+TEST_CASE("AtomicFile: Create runs the file-replace hook once on the absolute final path before the temporary directory exists", "[simplnx][AtomicFile][FileWriteHook]")
+{
+  const ScopedAtomicFileTestDirectory directory("hook_before_staging");
+  const fs::path target = directory.path() / "hooked.dream3d";
+  WriteText(target, "previous");
+  UnitTest::RecordingFileReplaceHandler& recorder = UnitTest::ProcessRecorder();
+  const UnitTest::RecorderDisarmGuard disarmGuard({&recorder});
+  constexpr int32 k_RecorderWarningCode = 99011;
+
+  // A relative final path reaches the hook in its absolute form.
+  const fs::path previousWorkingDirectory = fs::current_path();
+  fs::current_path(directory.path());
+  const auto restoreWorkingDirectory = MakeScopeGuard([&previousWorkingDirectory]() noexcept {
+    std::error_code ignored;
+    fs::current_path(previousWorkingDirectory, ignored);
+  });
+
+  // The working directory can be a resolved form of the test directory (for example /private/var for /var on macOS).
+  const fs::path absoluteTarget = fs::current_path() / target.filename();
+  std::vector<fs::path> calledTargets;
+  std::vector<fs::path> entriesAtCall;
+  recorder.arm(
+      absoluteTarget,
+      [&](const fs::path& callTarget, FileWriteHookMode mode) {
+        calledTargets.push_back(callTarget);
+        entriesAtCall = ListEntries(directory.path());
+        CHECK(mode == FileWriteHookMode::ReleaseReaders);
+      },
+      MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+
+  Result<AtomicFile> created = AtomicFile::Create(target.filename());
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  REQUIRE(calledTargets.size() == 1);
+  CHECK(calledTargets.front() == absoluteTarget);
+  CHECK(calledTargets.front().is_absolute());
+  // The hook ran before the temporary directory existed: only the final file was in the directory.
+  CHECK(entriesAtCall == std::vector<fs::path>{target.filename()});
+  REQUIRE(created.warnings().size() == 1);
+  CHECK(created.warnings().front().code == k_RecorderWarningCode);
+  CHECK(ReadText(target) == "previous");
+}
+
+TEST_CASE("AtomicFile: a refused Create returns the hook result and creates nothing", "[simplnx][AtomicFile][FileWriteHook]")
+{
+  const ScopedAtomicFileTestDirectory directory("hook_refusal");
+  const fs::path target = directory.path() / "refused.dream3d";
+  WriteText(target, "previous");
+  UnitTest::RecordingFileReplaceHandler& recorder = UnitTest::ProcessRecorder();
+  const UnitTest::RecorderDisarmGuard disarmGuard({&recorder});
+  constexpr int32 k_RecorderWarningCode = 99012;
+  constexpr int32 k_ArbitraryErrorCode = -99013;
+
+  Result<> errorWithWarning = MakeErrorResult(k_ArbitraryErrorCode, "recorder error");
+  errorWithWarning.warnings().push_back(Warning{k_RecorderWarningCode, "recorder warning"});
+  const Result<> invalidWithoutErrors = Result<>{{nonstd::make_unexpected(ErrorCollection{})}};
+  for(const Result<>& refusal : {errorWithWarning, invalidWithoutErrors})
+  {
+    int32 callCount = 0;
+    recorder.arm(target, [&callCount](const fs::path&, FileWriteHookMode) { callCount++; }, refusal, false);
+    Result<AtomicFile> created = AtomicFile::Create(target);
+    SIMPLNX_RESULT_REQUIRE_INVALID(created);
+    CHECK(callCount == 1);
+    REQUIRE(created.errors().size() == refusal.errors().size());
+    if(!refusal.errors().empty())
+    {
+      CHECK(created.errors().front().code == k_ArbitraryErrorCode);
+    }
+    REQUIRE(created.warnings().size() == refusal.warnings().size());
+    // No temporary directory exists and the final file is unchanged.
+    CHECK(ListEntries(directory.path()) == std::vector<fs::path>{target.filename()});
+    CHECK(ReadText(target) == "previous");
+  }
+}
+
+TEST_CASE("AtomicFile: CreateAfterHook does not run the file-replace hook", "[simplnx][AtomicFile][FileWriteHook]")
+{
+  const ScopedAtomicFileTestDirectory directory("create_after_hook");
+  const fs::path target = directory.path() / "after-hook.dream3d";
+  UnitTest::RecordingFileReplaceHandler& recorder = UnitTest::ProcessRecorder();
+  const UnitTest::RecorderDisarmGuard disarmGuard({&recorder});
+  // An armed refusal would make Create() fail; CreateAfterHook() must neither call it nor fail.
+  int32 callCount = 0;
+  recorder.arm(target, [&callCount](const fs::path&, FileWriteHookMode) { callCount++; }, MakeErrorResult(-99014, "recorder error"), false);
+  Result<AtomicFile> created = AtomicFile::CreateAfterHook(target);
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  CHECK(callCount == 0);
+  WriteText(created.value().tempFilePath(), "after hook");
+  const Result<> committed = created.value().commit();
+  SIMPLNX_RESULT_REQUIRE_VALID(committed);
+  CHECK(ReadText(target) == "after hook");
 }

@@ -11,11 +11,15 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
 #include <iterator>
+#include <map>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -27,6 +31,18 @@ using TriStore = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
 using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
 struct LimitBoundAtomicFileFactory;
+
+/**
+ * @brief Returns how many files a sequence needs for a triangle count.
+ * @param triangleCount Number of triangles in the sequence.
+ * @param maxTriangles Largest number of triangles in one file. A value of 0 is used as 1.
+ * @return At least one file; a sequence without triangles still writes one file with a header.
+ */
+usize StlFileCount(usize triangleCount, usize maxTriangles)
+{
+  const usize limit = std::max<usize>(maxTriangles, 1);
+  return triangleCount == 0 ? 1 : (triangleCount + limit - 1) / limit;
+}
 
 /**
  * @struct LimitBoundAtomicFile
@@ -42,23 +58,6 @@ struct LimitBoundAtomicFile
 public:
   LimitBoundAtomicFile() = delete;
 
-  /**
-   * @brief Adds one numbered overflow destination.
-   * @return New list index or AtomicFile creation error.
-   */
-  Result<usize> createOverflowFile()
-  {
-    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
-    auto atomicFileResult = AtomicFile::Create(newPath);
-    if(atomicFileResult.invalid())
-    {
-      return {{nonstd::make_unexpected(atomicFileResult.errors())}};
-    }
-    m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
-
-    return {m_AtomicFilesList.size() - 1};
-  }
-
   std::vector<AtomicFile> m_AtomicFilesList = {};
 
 private:
@@ -68,31 +67,67 @@ private:
   : m_InputPath(inputPath)
   {
   }
+
+  /**
+   * @brief Adds one numbered overflow destination.
+   * @return The warnings of the file-replace hook, or the AtomicFile creation error with its warnings.
+   */
+  Result<> createOverflowFile()
+  {
+    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
+    auto atomicFileResult = AtomicFile::Create(newPath);
+    if(atomicFileResult.invalid())
+    {
+      return ConvertResult(std::move(atomicFileResult));
+    }
+    m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+    return ConvertResult(std::move(atomicFileResult));
+  }
 };
 
 /**
  * @struct LimitBoundAtomicFileFactory
- * @brief Creates a validated first file for an overflow sequence.
+ * @brief Creates every file of an overflow sequence.
  */
 struct LimitBoundAtomicFileFactory
 {
   /**
-   * @brief Creates one overflow-sequence owner.
+   * @brief Creates one overflow-sequence owner with all of its files.
    * @param inputPath Specifies the first destination.
-   * @return Initialized owner or AtomicFile creation error.
+   * @param fileCount Number of files in the sequence; at least the first file is created.
+   * @return Owner with the warnings of the file-replace hooks, or the first AtomicFile creation error, unchanged, with the
+   * warnings collected before it.
+   *
+   * Every file is created here, on the calling thread, before a worker writes. Thus the file-replace hook runs under the
+   * policy of the calling thread and never runs, or throws, while workers run.
    */
-  static Result<LimitBoundAtomicFile> Create(const fs::path& inputPath)
+  static Result<LimitBoundAtomicFile> Create(const fs::path& inputPath, usize fileCount)
   {
     LimitBoundAtomicFile outClass(inputPath);
 
     auto atomicFileResult = AtomicFile::Create(inputPath);
     if(atomicFileResult.invalid())
     {
-      return {{nonstd::make_unexpected(atomicFileResult.errors())}};
+      return ConvertInvalidResult<LimitBoundAtomicFile>(std::move(atomicFileResult));
     }
     outClass.m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+    std::vector<Warning> hookWarnings = std::move(atomicFileResult.warnings());
 
-    return {std::move(outClass)};
+    for(usize fileIndex = 1; fileIndex < fileCount; fileIndex++)
+    {
+      Result<> overflowResult = outClass.createOverflowFile();
+      overflowResult.warnings().insert(overflowResult.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+      if(overflowResult.invalid())
+      {
+        return ConvertInvalidResult<LimitBoundAtomicFile>(std::move(overflowResult));
+      }
+      hookWarnings = std::move(overflowResult.warnings());
+    }
+
+    // The warnings of the file-replace hooks travel with the new owner.
+    Result<LimitBoundAtomicFile> ownerResult{std::move(outClass)};
+    ownerResult.warnings() = std::move(hookWarnings);
+    return ownerResult;
   }
 };
 
@@ -402,21 +437,48 @@ public:
    */
   void operator()() const
   {
-    // The factory guarantees a valid first AtomicFile.
-    m_Filter->sendThreadSafeProgressMessage(write(m_LimitBoundAtomicFile.m_AtomicFilesList[0].tempFilePath(), 0));
+    m_Filter->sendThreadSafeProgressMessage(writeAll());
   }
 
   /**
-   * @brief Writes one file and recurses into an overflow file when necessary.
+   * @brief Writes every prepared file of the sequence, each with at most maxTriangles triangles.
+   * @return The first file error with the header warnings collected before it, or success with every header warning.
+   *
+   * The factory created one file per StlFileCount() block, so no file is created here.
+   */
+  [[nodiscard]] Result<> writeAll() const
+  {
+    Result<> result;
+    const usize limit = std::max<usize>(m_MaxTriangles, 1);
+    const usize groupTriangleCount = m_TriangleIndices.size();
+    const std::vector<AtomicFile>& files = m_LimitBoundAtomicFile.m_AtomicFilesList;
+    for(usize fileIndex = 0; fileIndex < files.size(); fileIndex++)
+    {
+      const usize beginIndex = std::min(fileIndex * limit, groupTriangleCount);
+      const usize endIndex = std::min(beginIndex + limit, groupTriangleCount);
+      Result<> fileResult = write(files[fileIndex].tempFilePath(), beginIndex, endIndex);
+      fileResult.warnings().insert(fileResult.warnings().begin(), result.warnings().begin(), result.warnings().end());
+      // The first error wins; MergeResults() is not used because it would make an invalid result without errors valid.
+      if(fileResult.invalid() || m_ShouldCancel)
+      {
+        return fileResult;
+      }
+      result = std::move(fileResult);
+    }
+    return result;
+  }
+
+  /**
+   * @brief Writes one file of the sequence.
    * @param activePath Identifies the active temporary file.
    * @param startIndex Specifies the first index in this task's triangle bucket.
-   * @return The first open, write, seek, close, or overflow-creation error, or success
-   * carrying every header warning from this file and its overflow files.
+   * @param endIndex Specifies one past the last index in this task's triangle bucket.
+   * @return The first open, write, seek, or close error, or success carrying the header warning of this file.
    *
    * Every stdio failure becomes an error, because a truncated temporary file must never
    * reach the destination through a commit.
    */
-  [[nodiscard]] Result<> write(const fs::path& activePath, usize startIndex) const
+  [[nodiscard]] Result<> write(const fs::path& activePath, usize startIndex, usize endIndex) const
   {
     Result<> result;
 
@@ -482,37 +544,12 @@ public:
     attrByteCountPtr[0] = 0;
 
     const usize numComps = m_FeatureIds.getNumberOfComponents();
-    const usize numGroupTriangles = m_TriangleIndices.size();
-    for(usize idx = startIndex; idx < numGroupTriangles; idx++)
+    for(usize idx = startIndex; idx < endIndex; idx++)
     {
       if(m_ShouldCancel)
       {
         // The header warning collected above must survive any finalize error.
         return MergeResults(std::move(result), FinalizeStlFile(filePtr, activePath, triCount));
-      }
-
-      // Start an overflow file when this file reaches its triangle limit.
-      if(triCount == m_MaxTriangles)
-      {
-        Result<> finalizeResult = FinalizeStlFile(filePtr, activePath, triCount);
-        if(finalizeResult.invalid())
-        {
-          // The header warning collected above must survive any finalize error.
-          return MergeResults(std::move(result), std::move(finalizeResult));
-        }
-
-        auto overflowFileResult = m_LimitBoundAtomicFile.createOverflowFile();
-        if(overflowFileResult.invalid())
-        {
-          if(overflowFileResult.errors().empty())
-          {
-            return MergeResults(
-                std::move(result),
-                MakeErrorResult(-27878, fmt::format("Error creating the overflow STL file that follows '{}': the AtomicFile factory reported a failure without a cause.", activePath.string())));
-          }
-          return MergeResults(std::move(result), ConvertResult(std::move(overflowFileResult)));
-        }
-        return MergeResults(std::move(result), write(m_LimitBoundAtomicFile.m_AtomicFilesList[overflowFileResult.value()].tempFilePath(), idx));
       }
 
       const IGeometry::MeshIndexType triangle = m_TriangleIndices[idx];
@@ -589,6 +626,30 @@ private:
 };
 
 /**
+ * @struct StlGroup
+ * @brief Describes one label group of a grouped STL write.
+ */
+struct StlGroup
+{
+  int32 label = 0;
+  fs::path firstFile;
+  std::string header;
+  std::string message;
+};
+
+/**
+ * @brief Wraps warnings in a valid result.
+ * @param warnings Warnings to carry.
+ * @return Valid result with the warnings.
+ */
+Result<> WarningsOnly(std::vector<Warning> warnings)
+{
+  Result<> result;
+  result.warnings() = std::move(warnings);
+  return result;
+}
+
+/**
  * @brief Writes one single-file sequence through parallel overflow tasks.
  * @param filter Holds the first worker error and every worker warning.
  * @param nTriangles Specifies total triangles.
@@ -609,21 +670,19 @@ private:
 {
   const usize count = nTriangles / maxTriangles;
 
-  auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
+  // Every file exists before a worker starts, so the file-replace hook runs on this thread only.
+  auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile, count + 1);
   if(atomicFileResult.invalid())
   {
     return ConvertResult(std::move(atomicFileResult));
   }
   LimitBoundAtomicFile limitedFile(std::move(atomicFileResult.value()));
-
-  for(usize i = 1; i < count + 1; i++)
-  {
-    auto overflowFileResult = limitedFile.createOverflowFile();
-    if(overflowFileResult.invalid())
-    {
-      return ConvertResult(std::move(overflowFileResult));
-    }
-  }
+  // The file-replace hooks can report warnings; every later result carries them first.
+  const std::vector<Warning> hookWarnings = std::move(atomicFileResult.warnings());
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
 
   // Each task writes a separate temporary file.
   ParallelTaskAlgorithm taskRunner;
@@ -647,13 +706,13 @@ private:
   Result<> workerResult = filter->getWorkerResult();
   if(workerResult.invalid())
   {
-    return workerResult;
+    return withHookWarnings(std::move(workerResult));
   }
 
   if(shouldCancel)
   {
     // The warnings latched by the workers must still reach the user.
-    return MergeResults(std::move(workerResult), MakeErrorResult(-1, "Filter cancelled"));
+    return withHookWarnings(MergeResults(std::move(workerResult), MakeErrorResult(-1, "Filter cancelled")));
   }
 
   for(auto& atomicFile : limitedFile.m_AtomicFilesList)
@@ -661,17 +720,17 @@ private:
     if(shouldCancel)
     {
       // The warnings latched by the workers must still reach the user.
-      return MergeResults(std::move(workerResult), MakeErrorResult(-1, "Filter cancelled"));
+      return withHookWarnings(MergeResults(std::move(workerResult), MakeErrorResult(-1, "Filter cancelled")));
     }
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {
       // The warnings latched by the workers must still reach the user.
-      return MergeResults(std::move(workerResult), std::move(commitResult));
+      return withHookWarnings(MergeResults(std::move(workerResult), std::move(commitResult)));
     }
   }
 
-  return workerResult;
+  return withHookWarnings(std::move(workerResult));
 }
 } // namespace
 
@@ -720,24 +779,22 @@ Result<> WriteStlFile::operator()()
       return ConvertResult(std::move(atomicFileResult));
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
-    Result<> writeResult = ::SingleWriteOutStl(atomicFile.tempFilePath(), nTriangles, header, triangles, vertices, m_ShouldCancel);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-
-    if(m_ShouldCancel)
+    Result<> result = ::SingleWriteOutStl(atomicFile.tempFilePath(), nTriangles, header, triangles, vertices, m_ShouldCancel);
+    if(result.valid())
     {
       // The header warning collected by the write must still reach the user.
-      return MergeResults(std::move(writeResult), MakeErrorResult(-1, "Filter cancelled"));
+      if(m_ShouldCancel)
+      {
+        result = MergeResults(std::move(result), MakeErrorResult(-1, "Filter cancelled"));
+      }
+      else if(Result<> commitResult = atomicFile.commit(); commitResult.invalid())
+      {
+        result = MergeResults(std::move(result), std::move(commitResult));
+      }
     }
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      // The header warning collected by the write must still reach the user.
-      return MergeResults(std::move(writeResult), std::move(commitResult));
-    }
-    return writeResult;
+    // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+    result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+    return result;
   }
 
   const std::filesystem::path outputPath = m_InputValues->OutputStlDirectory;
@@ -750,55 +807,30 @@ Result<> WriteStlFile::operator()()
     }
   }
 
-  // Keep every AtomicFile alive until all group tasks finish. Declared before the task
-  // runner so the runner's destructor joins every worker while these files are still alive.
+  // The membership map and every AtomicFile are declared before the task runner. Its destructor joins every worker
+  // before those objects are destroyed, including during exception unwinding.
+  std::unordered_map<int32, std::vector<usize>> trianglesByLabel;
+  const Int32AbstractDataStore* groupLabels = nullptr;
+  std::vector<::StlGroup> groups;
   std::vector<LimitBoundAtomicFile> fileList;
-
-  // Each group task writes a separate temporary file sequence.
-  ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(true);
 
   if(groupingType == GroupingType::Features)
   {
-    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-
-    // Build all feature memberships once before per-feature writers start.
-    const std::unordered_map<int32, std::vector<usize>> trianglesByFeature = ::BuildTrianglesByLabel(featureIds);
-
-    fileList.reserve(trianglesByFeature.size());
-
-    usize fileIndex = 0;
-    for(const auto& [featureId, featureTriangles] : trianglesByFeature)
+    groupLabels = &m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+    trianglesByLabel = ::BuildTrianglesByLabel(*groupLabels);
+    for(const auto& [featureId, featureTriangles] : trianglesByLabel)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId);
-      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
-      if(atomicFileResult.invalid())
-      {
-        // Workers already running hold references to the block-local membership map, so join them before it goes out of scope.
-        taskRunner.wait();
-        // The warnings latched by the workers that already finished must still reach the user.
-        return MergeResults(getWorkerResult(), ConvertResult(std::move(atomicFileResult)));
-      }
-      fileList.emplace_back(std::move(atomicFileResult.value()));
-
-      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds, featureId,
-                                               featureTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
-      fileIndex++;
-      if(m_HasErrors.load())
-      {
-        break;
-      }
+      groups.push_back({featureId, m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId),
+                        "DREAM3D Generated For Feature ID " + StringUtilities::number(featureId), fmt::format("Writing STL for Feature Id {}", featureId)});
     }
-    taskRunner.wait();
   }
 
   if(groupingType == GroupingType::FeaturesAndPhases)
   {
-    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+    groupLabels = &m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+    const Int32AbstractDataStore& featureIds = *groupLabels;
 
     std::map<int32, int32> uniqueGrainIdToPhase;
-
     const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
     for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
@@ -807,70 +839,60 @@ Result<> WriteStlFile::operator()()
     }
 
     // Reuse the feature-group membership and winding rule for phase-qualified names.
-    const std::unordered_map<int32, std::vector<usize>> trianglesByFeature = ::BuildTrianglesByLabel(featureIds);
-
-    // Workers hold references into fileList, so it must never reallocate while tasks run.
-    fileList.reserve(uniqueGrainIdToPhase.size());
-
-    usize fileIndex = 0;
+    trianglesByLabel = ::BuildTrianglesByLabel(featureIds);
     for(const auto& [featureId, value] : uniqueGrainIdToPhase)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId);
-      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
-      if(atomicFileResult.invalid())
-      {
-        // Workers already running hold references to the block-local membership map, so join them before it goes out of scope.
-        taskRunner.wait();
-        // The warnings latched by the workers that already finished must still reach the user.
-        return MergeResults(getWorkerResult(), ConvertResult(std::move(atomicFileResult)));
-      }
-      fileList.emplace_back(std::move(atomicFileResult.value()));
-
-      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)},
-                                               triangles, vertices, featureIds, featureId, trianglesByFeature.at(featureId), m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
-      fileIndex++;
-      if(m_HasErrors.load())
-      {
-        break;
-      }
+      groups.push_back({featureId, m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId),
+                        "DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value),
+                        fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId)});
     }
-    taskRunner.wait();
   }
 
   if(groupingType == GroupingType::PartNumber)
   {
-    const auto& partNumbers = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PartNumberPath)->getDataStoreRef();
-
-    // Build all part-number memberships once before per-part writers start.
-    const std::unordered_map<int32, std::vector<usize>> trianglesByPartNumber = ::BuildTrianglesByLabel(partNumbers);
-    fileList.reserve(trianglesByPartNumber.size());
-
-    usize fileIndex = 0;
-    for(const auto& [currentPartNumber, partTriangles] : trianglesByPartNumber)
+    groupLabels = &m_DataStructure.getDataAs<Int32Array>(m_InputValues->PartNumberPath)->getDataStoreRef();
+    trianglesByLabel = ::BuildTrianglesByLabel(*groupLabels);
+    for(const auto& [currentPartNumber, partTriangles] : trianglesByLabel)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber);
-      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
-      if(atomicFileResult.invalid())
-      {
-        // Workers already running hold references to the block-local membership map, so join them before it goes out of scope.
-        taskRunner.wait();
-        // The warnings latched by the workers that already finished must still reach the user.
-        return MergeResults(getWorkerResult(), ConvertResult(std::move(atomicFileResult)));
-      }
-      fileList.emplace_back(std::move(atomicFileResult.value()));
-
-      m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices, partNumbers,
-                                               currentPartNumber, partTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
-      fileIndex++;
-      if(m_HasErrors.load())
-      {
-        break;
-      }
+      groups.push_back({currentPartNumber, m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber),
+                        "DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber), fmt::format("Writing STL for Part Number {}", currentPartNumber)});
     }
-    taskRunner.wait();
   }
+
+  // Every destination and its overflow files are prepared on this thread before the first worker starts. Thus the file-replace
+  // hooks run under the policy of this thread, and a hook that fails or throws leaves no worker running.
+  fileList.reserve(groups.size());
+  std::vector<Warning> hookWarnings;
+  for(const ::StlGroup& group : groups)
+  {
+    const usize fileCount = ::StlFileCount(trianglesByLabel.at(group.label).size(), m_InputValues->HIDDEN_MaxTrianglesPerFile);
+    auto atomicFileResult = LimitBoundAtomicFileFactory::Create(group.firstFile, fileCount);
+    atomicFileResult.warnings().insert(atomicFileResult.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    if(atomicFileResult.invalid())
+    {
+      return ConvertResult(std::move(atomicFileResult));
+    }
+    hookWarnings = std::move(atomicFileResult.warnings());
+    fileList.emplace_back(std::move(atomicFileResult.value()));
+  }
+  // The warnings of the file-replace hooks come before the worker warnings.
+  sendThreadSafeProgressMessage(::WarningsOnly(std::move(hookWarnings)));
+
+  // Each group task writes a separate temporary file sequence.
+  ParallelTaskAlgorithm taskRunner;
+  taskRunner.setParallelizationEnabled(true);
+  for(usize groupIndex = 0; groupIndex < groups.size(); groupIndex++)
+  {
+    const ::StlGroup& group = groups[groupIndex];
+    m_MessageHandler.sendMessage(IFilter::Message::Type::Info, group.message);
+    taskRunner.execute(MultiWriteStlFileImpl(this, fileList[groupIndex], group.header, triangles, vertices, *groupLabels, group.label, trianglesByLabel.at(group.label),
+                                             m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
+    if(m_HasErrors.load())
+    {
+      break;
+    }
+  }
+  taskRunner.wait();
 
   // No worker runs past the taskRunner.wait() calls above, so the latched result is
   // stable here. A truncated temporary file must never be committed.
@@ -918,9 +940,12 @@ void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
 
   if(result.invalid() && !m_HasErrors.load())
   {
-    // The first error wins, so a later worker cannot bury the original cause.
+    // The first error wins, so a later worker cannot bury the original cause. The latch takes the errors directly, because
+    // MergeResults() would make an invalid result without errors valid.
     m_HasErrors.store(true);
-    m_Result = MergeResults(std::move(m_Result), Result<>{{nonstd::make_unexpected(std::move(result.errors()))}});
+    Result<> latchedResult{{nonstd::make_unexpected(std::move(result.errors()))}};
+    latchedResult.warnings() = std::move(m_Result.warnings());
+    m_Result = std::move(latchedResult);
   }
 }
 

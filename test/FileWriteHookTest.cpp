@@ -1,19 +1,18 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/PathText.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
-#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/FailCloseVfd.hpp"
-#include "simplnx/UnitTest/RecordingFileWriteManager.hpp"
+#include "simplnx/UnitTest/RecordingFileReplaceHandler.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
@@ -28,7 +27,10 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <new>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace nx::core;
@@ -43,325 +45,54 @@ namespace
  */
 struct HookCall
 {
-  std::string managerName;
+  std::string handlerName;
   fs::path target;
   FileWriteHookMode mode = FileWriteHookMode::ReleaseReaders;
 };
 
 /**
- * @brief Disarms recorders when a test ends, also after a failed assertion.
- *
- * The guard does not own the recorders. Each recorder must outlive the guard.
+ * @brief Creates a handler that logs each call and returns a fixed result.
+ * @param handlerName Name stored with each logged call, so a test can check the call order.
+ * @param calls Log that receives the calls. It must outlive the registration.
+ * @param result Result that the handler returns.
+ * @return Handler for RegisterFileReplaceHandler().
  */
-class DisarmGuard
+FileReplaceHandler MakeLoggingHandler(const std::string& handlerName, std::vector<HookCall>& calls, Result<> result = {})
 {
-public:
-  explicit DisarmGuard(std::vector<RecordingFileWriteManager*> recorders)
-  : m_Recorders(std::move(recorders))
-  {
-  }
-  ~DisarmGuard() noexcept
-  {
-    for(RecordingFileWriteManager* recorder : m_Recorders)
-    {
-      recorder->disarm();
-    }
-  }
-  DisarmGuard(const DisarmGuard&) = delete;
-  DisarmGuard(DisarmGuard&&) = delete;
-  DisarmGuard& operator=(const DisarmGuard&) = delete;
-  DisarmGuard& operator=(DisarmGuard&&) = delete;
-
-private:
-  std::vector<RecordingFileWriteManager*> m_Recorders;
-};
-
-/**
- * @brief Restores the I/O managers and plugins of the application after a test deletes and recreates it.
- *
- * A new Application has a new DataIOCollection with only the built-in managers, and it has no loaded plugins. Other
- * tests in the same process expect the managers that a test bootstrap registered, for example the out-of-core manager.
- * They also expect the plugins that UnitTest::LoadPlugins() loaded once. The restorer keeps the managers of the
- * application that exists at construction. At destruction it registers each kept manager that the current collection
- * does not have. It also loads the plugins again if the first application had plugins.
- */
-class ApplicationStateRestorer
-{
-public:
-  ApplicationStateRestorer()
-  {
-    const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
-    for(const auto& [formatName, manager] : application->getIOCollection())
-    {
-      m_Managers.push_back(manager);
-    }
-    m_HadPlugins = !application->getPluginList().empty();
-  }
-
-  ~ApplicationStateRestorer() noexcept
-  {
-    try
-    {
-      const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
-      DataIOCollection& ioCollection = application->getIOCollection();
-      for(const std::shared_ptr<IDataIOManager>& manager : m_Managers)
-      {
-        if(ioCollection.getManager(manager->formatName()) == nullptr)
-        {
-          const Result<> registrationResult = ioCollection.addIOManager(manager);
-          CHECK(registrationResult.valid());
-        }
-      }
-      if(m_HadPlugins && application->getPluginList().empty())
-      {
-        const Result<> loadResult = application->loadPlugins(SIMPLNX_BUILD_DIR, true);
-        CHECK(loadResult.valid());
-      }
-    } catch(const std::exception& exception)
-    {
-      FAIL_CHECK(fmt::format("Cannot restore the application state: {}", exception.what()));
-    }
-  }
-
-  ApplicationStateRestorer(const ApplicationStateRestorer&) = delete;
-  ApplicationStateRestorer(ApplicationStateRestorer&&) = delete;
-  ApplicationStateRestorer& operator=(const ApplicationStateRestorer&) = delete;
-  ApplicationStateRestorer& operator=(ApplicationStateRestorer&&) = delete;
-
-private:
-  std::vector<std::shared_ptr<IDataIOManager>> m_Managers;
-  bool m_HadPlugins = false;
-};
+  return [handlerName, &calls, result](const fs::path& target, FileWriteHookMode mode) {
+    calls.push_back({handlerName, target, mode});
+    return result;
+  };
+}
 
 /**
  * @brief Creates a recorder callback that logs each matching call.
- * @param managerName Name stored with each logged call, so a test can check the manager order.
+ * @param handlerName Name stored with each logged call.
  * @param calls Log that receives the calls. It must outlive the recorder arming.
- * @return Callback for RecordingFileWriteManager::arm().
+ * @return Callback for RecordingFileReplaceHandler::arm().
  */
-RecordingFileWriteManager::HookCallback MakeRecordingCallback(const std::string& managerName, std::vector<HookCall>& calls)
+RecordingFileReplaceHandler::HookCallback MakeRecordingCallback(const std::string& handlerName, std::vector<HookCall>& calls)
 {
-  return [managerName, &calls](const fs::path& target, FileWriteHookMode mode) { calls.push_back({managerName, target, mode}); };
-}
-} // namespace
-
-TEST_CASE("FileWriteHook: beforeFileWrite forwards target and mode to every manager", "[FileWriteHook]")
-{
-  const fs::path target = fs::path("hook_forwarding_dir") / "hook_target.dream3d";
-  DataStructure dataStructure;
-
-  auto recorderA = std::make_shared<RecordingFileWriteManager>("rec-a");
-  auto recorderB = std::make_shared<RecordingFileWriteManager>("rec-b");
-  DataIOCollection collection;
-  Result<> addResultA = collection.addIOManager(recorderA);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultA);
-  Result<> addResultB = collection.addIOManager(recorderB);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultB);
-  const DisarmGuard disarmGuard({recorderA.get(), recorderB.get()});
-
-  std::vector<HookCall> calls;
-  recorderA->arm(target, MakeRecordingCallback("rec-a", calls), {}, false);
-  recorderB->arm(target, MakeRecordingCallback("rec-b", calls), {}, false);
-
-  Result<> refuseResult = collection.beforeFileWrite(dataStructure, target, FileWriteHookMode::RefuseIfRead);
-  SIMPLNX_RESULT_REQUIRE_VALID(refuseResult);
-  REQUIRE(refuseResult.warnings().empty());
-  REQUIRE(calls.size() == 2);
-  CHECK(calls[0].managerName == "rec-a");
-  CHECK(calls[1].managerName == "rec-b");
-  for(const HookCall& call : calls)
-  {
-    CHECK(call.target == target);
-    CHECK(call.mode == FileWriteHookMode::RefuseIfRead);
-  }
-
-  calls.clear();
-  Result<> defaultResult = collection.beforeFileWrite(dataStructure, target);
-  SIMPLNX_RESULT_REQUIRE_VALID(defaultResult);
-  REQUIRE(calls.size() == 2);
-  CHECK(calls[0].managerName == "rec-a");
-  CHECK(calls[1].managerName == "rec-b");
-  for(const HookCall& call : calls)
-  {
-    CHECK(call.target == target);
-    CHECK(call.mode == FileWriteHookMode::ReleaseReaders);
-  }
-
-  // A recorder handles only its armed target.
-  calls.clear();
-  Result<> otherTargetResult = collection.beforeFileWrite(dataStructure, target.parent_path() / "other_target.dream3d");
-  SIMPLNX_RESULT_REQUIRE_VALID(otherTargetResult);
-  CHECK(calls.empty());
+  return [handlerName, &calls](const fs::path& target, FileWriteHookMode mode) { calls.push_back({handlerName, target, mode}); };
 }
 
-TEST_CASE("FileWriteHook: beforeFileWrite stops at the first error and keeps warnings", "[FileWriteHook]")
+/**
+ * @brief Returns an invalid result with an empty error collection.
+ * @return The result. It is a legal invalid Result that MergeResults() would turn into a success.
+ */
+Result<> InvalidWithoutErrors()
 {
-  const fs::path target = fs::path("hook_error_dir") / "hook_target.dream3d";
-  DataStructure dataStructure;
-
-  auto recorderA = std::make_shared<RecordingFileWriteManager>("rec-a");
-  auto recorderB = std::make_shared<RecordingFileWriteManager>("rec-b");
-  auto recorderC = std::make_shared<RecordingFileWriteManager>("rec-c");
-  DataIOCollection collection;
-  Result<> addResultA = collection.addIOManager(recorderA);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultA);
-  Result<> addResultB = collection.addIOManager(recorderB);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultB);
-  Result<> addResultC = collection.addIOManager(recorderC);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultC);
-  const DisarmGuard disarmGuard({recorderA.get(), recorderB.get(), recorderC.get()});
-
-  constexpr int32 k_WarningCodeA = -9101;
-  constexpr int32 k_WarningCodeB = -9102;
-  constexpr int32 k_ReleaseErrorCode = -6039;
-
-  Result<> errorWithWarning = MakeErrorResult(k_ReleaseErrorCode, "rec-b cannot release a reader");
-  errorWithWarning.warnings().push_back(Warning{k_WarningCodeB, "rec-b warning"});
-
-  std::vector<HookCall> calls;
-  recorderA->arm(target, MakeRecordingCallback("rec-a", calls), MakeWarningVoidResult(k_WarningCodeA, "rec-a warning"), false);
-  recorderB->arm(target, MakeRecordingCallback("rec-b", calls), errorWithWarning, false);
-  recorderC->arm(target, MakeRecordingCallback("rec-c", calls), {}, false);
-
-  Result<> hookResult = collection.beforeFileWrite(dataStructure, target);
-  REQUIRE(hookResult.invalid());
-  REQUIRE(hookResult.errors().size() == 1);
-  CHECK(hookResult.errors().front().code == k_ReleaseErrorCode);
-  REQUIRE(hookResult.warnings().size() == 2);
-  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
-  CHECK(hookResult.warnings()[1].code == k_WarningCodeB);
-
-  REQUIRE(calls.size() == 2);
-  CHECK(calls[0].managerName == "rec-a");
-  CHECK(calls[1].managerName == "rec-b");
+  return Result<>{{nonstd::make_unexpected(ErrorCollection{})}};
 }
 
-TEST_CASE("FileWriteHook: beforeFileWrite keeps an invalid result with no errors invalid", "[FileWriteHook]")
-{
-  const fs::path target = fs::path("hook_empty_error_dir") / "hook_target.dream3d";
-  DataStructure dataStructure;
-
-  auto recorderA = std::make_shared<RecordingFileWriteManager>("rec-a");
-  auto recorderB = std::make_shared<RecordingFileWriteManager>("rec-b");
-  auto recorderC = std::make_shared<RecordingFileWriteManager>("rec-c");
-  DataIOCollection collection;
-  Result<> addResultA = collection.addIOManager(recorderA);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultA);
-  Result<> addResultB = collection.addIOManager(recorderB);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultB);
-  Result<> addResultC = collection.addIOManager(recorderC);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultC);
-  const DisarmGuard disarmGuard({recorderA.get(), recorderB.get(), recorderC.get()});
-
-  constexpr int32 k_WarningCodeA = -9111;
-  // An unexpected with an empty error collection is a legal invalid Result.
-  const Result<> invalidWithoutErrors = Result<>{{nonstd::make_unexpected(ErrorCollection{})}};
-  REQUIRE(invalidWithoutErrors.invalid());
-
-  std::vector<HookCall> calls;
-  recorderA->arm(target, MakeRecordingCallback("rec-a", calls), MakeWarningVoidResult(k_WarningCodeA, "rec-a warning"), false);
-  recorderB->arm(target, MakeRecordingCallback("rec-b", calls), invalidWithoutErrors, false);
-  recorderC->arm(target, MakeRecordingCallback("rec-c", calls), {}, false);
-
-  Result<> hookResult = collection.beforeFileWrite(dataStructure, target);
-  REQUIRE(hookResult.invalid());
-  CHECK(hookResult.errors().empty());
-  REQUIRE(hookResult.warnings().size() == 1);
-  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
-
-  REQUIRE(calls.size() == 2);
-  CHECK(calls[0].managerName == "rec-a");
-  CHECK(calls[1].managerName == "rec-b");
-}
-
-TEST_CASE("FileWriteHook: beforeFileWrite keeps the warnings of every manager on success", "[FileWriteHook]")
-{
-  const fs::path target = fs::path("hook_warning_dir") / "hook_target.dream3d";
-  DataStructure dataStructure;
-
-  auto recorderA = std::make_shared<RecordingFileWriteManager>("rec-a");
-  auto recorderB = std::make_shared<RecordingFileWriteManager>("rec-b");
-  DataIOCollection collection;
-  Result<> addResultA = collection.addIOManager(recorderA);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultA);
-  Result<> addResultB = collection.addIOManager(recorderB);
-  SIMPLNX_RESULT_REQUIRE_VALID(addResultB);
-  const DisarmGuard disarmGuard({recorderA.get(), recorderB.get()});
-
-  constexpr int32 k_WarningCodeA = -9121;
-  constexpr int32 k_WarningCodeB = -9122;
-  recorderA->arm(target, {}, MakeWarningVoidResult(k_WarningCodeA, "rec-a warning"), false);
-  recorderB->arm(target, {}, MakeWarningVoidResult(k_WarningCodeB, "rec-b warning"), false);
-
-  Result<> hookResult = collection.beforeFileWrite(dataStructure, target);
-  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
-  REQUIRE(hookResult.warnings().size() == 2);
-  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
-  CHECK(hookResult.warnings()[1].code == k_WarningCodeB);
-}
-
-TEST_CASE("FileWriteHook: the application recorder survives an application reset", "[FileWriteHook]")
-{
-  RecordingFileWriteManager& recorder = ApplicationRecorder();
-  REQUIRE(Application::GetOrCreateInstance()->getIOCollection().getManager(k_ApplicationRecorderName).get() == &recorder);
-
-  const ApplicationStateRestorer applicationRestorer;
-  Application::DeleteInstance();
-  REQUIRE(Application::Instance() == nullptr);
-  REQUIRE(Application::GetOrCreateInstance()->getIOCollection().getManager(k_ApplicationRecorderName) == nullptr);
-
-  RecordingFileWriteManager& recorderAfterReset = ApplicationRecorder();
-  REQUIRE(&recorderAfterReset == &recorder);
-  DataIOCollection& ioCollection = Application::GetOrCreateInstance()->getIOCollection();
-  REQUIRE(ioCollection.getManager(k_ApplicationRecorderName).get() == &recorder);
-
-  const fs::path target = fs::path("hook_reset_dir") / "hook_target.dream3d";
-  std::vector<HookCall> calls;
-  recorder.arm(target, MakeRecordingCallback(k_ApplicationRecorderName, calls), {}, true);
-  const DisarmGuard disarmGuard({&recorder});
-
-  DataStructure dataStructure;
-  Result<> hookResult = ioCollection.beforeFileWrite(dataStructure, target, FileWriteHookMode::RefuseIfRead);
-  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
-  REQUIRE(calls.size() == 1);
-  CHECK(calls[0].target == target);
-  CHECK(calls[0].mode == FileWriteHookMode::RefuseIfRead);
-  CHECK_FALSE(recorder.isArmed());
-}
-
-TEST_CASE("FileWriteHook: DataStructure counts getAllDataPaths calls in test builds", "[FileWriteHook]")
-{
-  DataStructure dataStructure;
-  REQUIRE(DataGroup::Create(dataStructure, "Group") != nullptr);
-
-  const uint64 countBefore = DataStructure::GetAllDataPathsCallCountForTesting();
-  const std::vector<DataPath> paths = dataStructure.getAllDataPaths();
-  CHECK(paths.size() == 1);
-  CHECK(DataStructure::GetAllDataPathsCallCountForTesting() == countBefore + 1);
-
-  (void)dataStructure.getAllDataPaths();
-  (void)dataStructure.getAllDataPaths();
-  CHECK(DataStructure::GetAllDataPathsCallCountForTesting() == countBefore + 3);
-
-  // Other path queries are not counted.
-  (void)dataStructure.getAllDataObjectIds();
-  CHECK(DataStructure::GetAllDataPathsCallCountForTesting() == countBefore + 3);
-}
-
-namespace
-{
 inline constexpr int32 k_RecorderWarningCode = 99001;
 inline constexpr int32 k_RecorderErrorCode = -99002;
 inline constexpr int32 k_XdmfDestinationRejectedCode = -6057;
 inline constexpr int32 k_FailedCloseCode = -6056;
 inline constexpr int32 k_UnwritableTypeCode = -5;
-
-/**
- * @brief Name of the second recorder that SidecarRecorder() registers in the application's I/O collection.
- *
- * It sorts after k_ApplicationRecorderName, so it runs after the application recorder.
- */
-inline constexpr const char* k_SidecarRecorderName = "zz-test-recorder-sidecar";
+inline constexpr int32 k_XdmfOpenErrorCode = -6062;
+inline constexpr int32 k_XdmfWriteErrorCode = -6063;
+inline constexpr int32 k_XdmfCloseErrorCode = -6064;
 
 /**
  * @brief Name of the top-level object every writer test writes or appends.
@@ -369,24 +100,46 @@ inline constexpr const char* k_SidecarRecorderName = "zz-test-recorder-sidecar";
 inline constexpr const char* k_WrittenObjectName = "Appended";
 
 /**
- * @brief Returns a second recorder registered in the I/O collection of the current application.
+ * @brief Name stored in the call log for the process recorder.
+ */
+inline constexpr const char* k_ProcessRecorderName = "process-recorder";
+
+/**
+ * @brief Returns a second recorder that is registered for the whole test executable.
  * @return The one sidecar recorder of this executable.
  *
- * One recorder handles one target. A test that needs a warning from the primary file's hook call and an error from the
- * sidecar's hook call arms the application recorder on the primary file and this recorder on the sidecar. Like
- * ApplicationRecorder(), it registers again when the current application does not hold it.
+ * One recorder handles one target. A test that needs a result for the primary file and another one for the sidecar
+ * arms the process recorder on the primary file and this recorder on the sidecar.
  */
-RecordingFileWriteManager& SidecarRecorder()
+RecordingFileReplaceHandler& SidecarRecorder()
 {
-  static const std::shared_ptr<RecordingFileWriteManager> recorder = std::make_shared<RecordingFileWriteManager>(k_SidecarRecorderName);
-  DataIOCollection& ioCollection = Application::GetOrCreateInstance()->getIOCollection();
-  if(ioCollection.getManager(k_SidecarRecorderName) != recorder)
-  {
-    Result<> registrationResult = ioCollection.addIOManager(recorder);
-    SIMPLNX_RESULT_REQUIRE_VALID(registrationResult);
-  }
-  return *recorder;
+  static const std::shared_ptr<RecordingFileReplaceHandler> s_Recorder = std::make_shared<RecordingFileReplaceHandler>();
+  static const std::shared_ptr<void> s_Registration = RegisterRecorder(s_Recorder);
+  return *s_Recorder;
 }
+
+/**
+ * @class ScopedTextStreamFailure
+ * @brief Makes the text file writers simulate a stream failure until the end of the scope.
+ */
+class ScopedTextStreamFailure
+{
+public:
+  explicit ScopedTextStreamFailure(TextStreamFailureForTesting failure)
+  {
+    SetTextStreamFailureForTesting(failure);
+  }
+
+  ~ScopedTextStreamFailure() noexcept
+  {
+    SetTextStreamFailureForTesting(TextStreamFailureForTesting::None);
+  }
+
+  ScopedTextStreamFailure(const ScopedTextStreamFailure&) = delete;
+  ScopedTextStreamFailure(ScopedTextStreamFailure&&) = delete;
+  ScopedTextStreamFailure& operator=(const ScopedTextStreamFailure&) = delete;
+  ScopedTextStreamFailure& operator=(ScopedTextStreamFailure&&) = delete;
+};
 
 /**
  * @class ScopedTestDirectory
@@ -451,7 +204,7 @@ DataStructure MakeUnwritableStructure()
 }
 
 /**
- * @brief Writes a closed .dream3d file without the hook armed, so tests have an existing target or append fixture.
+ * @brief Writes a closed .dream3d file without an armed recorder, so tests have an existing target or append fixture.
  * @param filePath File to create or replace.
  */
 void WriteExistingFile(const fs::path& filePath)
@@ -459,6 +212,19 @@ void WriteExistingFile(const fs::path& filePath)
   const DataStructure fixtureStructure = MakeWriterTestStructure("Existing", 7);
   const Result<> fixtureResult = DREAM3D::WriteFile(filePath, fixtureStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(fixtureResult);
+}
+
+/**
+ * @brief Writes text to a file, replacing it.
+ * @param filePath The file.
+ * @param text The content.
+ */
+void WriteText(const fs::path& filePath, const std::string& text)
+{
+  std::ofstream stream(filePath, std::ios::binary | std::ios::trunc);
+  REQUIRE(stream.is_open());
+  stream << text;
+  REQUIRE(stream.good());
 }
 
 /**
@@ -559,16 +325,15 @@ bool CreateHardLinkOrWarn(const fs::path& filePath, const fs::path& link)
  * @param primary Primary path as the caller passes it (absolute or relative).
  * @param directory Directory that holds every fixture of the case.
  *
- * The application recorder is armed on the primary path: the destination check runs before the hook, so it must see
- * no call.
+ * The process recorder is armed on the primary path: the destination check runs before the hook, so it must see no call.
  */
 void RequireXdmfDestinationRejected(const fs::path& primary, const fs::path& directory)
 {
   INFO("primary: " << Utf8Text(primary));
-  RecordingFileWriteManager& recorder = ApplicationRecorder();
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
   std::vector<HookCall> calls;
-  recorder.arm(primary, MakeRecordingCallback(k_ApplicationRecorderName, calls), {}, false);
-  const DisarmGuard disarmGuard({&recorder});
+  recorder.arm(primary, MakeRecordingCallback(k_ProcessRecorderName, calls), {}, false);
+  const RecorderDisarmGuard disarmGuard({&recorder});
 
   const std::map<std::string, std::string> before = SnapshotDirectory(directory);
   const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
@@ -627,10 +392,11 @@ struct PathWriterCase
 };
 
 /**
- * @brief Returns every path-based writer that must run the hook.
- * @return DREAM3D::WriteFile, DataStructureWriter::WriteFile, DataStructureWriter::AppendFile and DREAM3D::AppendFile, in that order.
+ * @brief Returns every path-based writer that must run the hook once on its path.
+ * @return DREAM3D::WriteFile, DataStructureWriter::WriteFile, DataStructureWriter::AppendFile, DREAM3D::AppendFile and
+ * DREAM3D::WriteRecoveryFile in its full mode, in that order.
  *
- * Append writers append k_WrittenObjectName to an existing file; write writers replace the file.
+ * Append writers append k_WrittenObjectName to an existing file; the other writers replace the file.
  */
 std::vector<PathWriterCase> PathWriterCases()
 {
@@ -641,6 +407,7 @@ std::vector<PathWriterCase> PathWriterCases()
       {"DataStructureWriter::AppendFile", true,
        [appendPath](const fs::path& filePath, const DataStructure& dataStructure) { return HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, appendPath); }},
       {"DREAM3D::AppendFile", true, [appendPath](const fs::path& filePath, const DataStructure& dataStructure) { return DREAM3D::AppendFile(filePath, dataStructure, appendPath); }},
+      {"DREAM3D::WriteRecoveryFile full", false, [](const fs::path& filePath, const DataStructure& dataStructure) { return DREAM3D::WriteRecoveryFile(filePath, dataStructure); }},
   };
 }
 
@@ -662,7 +429,7 @@ void RequireRecorderWarning(const Result<>& result)
  */
 void RequireErrorCode(const Result<>& result, int32 code)
 {
-  REQUIRE(result.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
   std::string messages;
   for(const Error& error : result.errors())
   {
@@ -672,9 +439,402 @@ void RequireErrorCode(const Result<>& result, int32 code)
   const bool hasCode = std::any_of(result.errors().begin(), result.errors().end(), [code](const Error& error) { return error.code == code; });
   CHECK(hasCode);
 }
+/**
+ * @brief Calls BeforeFileReplace() and requires a valid result.
+ * @param target Target path of the call.
+ */
+void RequireHookValid(const fs::path& target)
+{
+  const Result<> hookResult = BeforeFileReplace(target);
+  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
+}
 } // namespace
 
-TEST_CASE("FileWriteHook: DREAM3D::WriteFile runs the hook on the file and its sidecar before writing", "[FileWriteHook]")
+TEST_CASE("FileReplaceGuard: with no handler the call returns a valid result without warnings", "[FileWriteHook]")
+{
+  // Each test case runs in its own process, and this one registers no handler.
+  const Result<> hookResult = BeforeFileReplace(fs::path("no_handler_dir") / "target.dream3d");
+  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
+  CHECK(hookResult.warnings().empty());
+}
+
+TEST_CASE("FileReplaceGuard: handlers run in registration order with the target and the mode", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_order_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  const std::shared_ptr<void> registrationA = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls));
+  const std::shared_ptr<void> registrationB = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls));
+  const std::shared_ptr<void> registrationC = RegisterFileReplaceHandler(MakeLoggingHandler("handler-c", calls));
+  REQUIRE(registrationA != nullptr);
+
+  const Result<> hookResult = BeforeFileReplace(target);
+  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
+  CHECK(hookResult.warnings().empty());
+  REQUIRE(calls.size() == 3);
+  CHECK(calls[0].handlerName == "handler-a");
+  CHECK(calls[1].handlerName == "handler-b");
+  CHECK(calls[2].handlerName == "handler-c");
+  for(const HookCall& call : calls)
+  {
+    CHECK(call.target == target);
+    CHECK(call.mode == FileWriteHookMode::ReleaseReaders);
+  }
+}
+
+TEST_CASE("FileReplaceGuard: the first error stops the fan-out and keeps the earlier warnings in front", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_error_dir") / "hook_target.dream3d";
+  constexpr int32 k_WarningCodeA = -9101;
+  constexpr int32 k_WarningCodeB = -9102;
+  constexpr int32 k_ArbitraryErrorCode = -9103;
+
+  Result<> errorWithWarning = MakeErrorResult(k_ArbitraryErrorCode, "handler-b cannot make the replacement safe");
+  errorWithWarning.warnings().push_back(Warning{k_WarningCodeB, "handler-b warning"});
+
+  std::vector<HookCall> calls;
+  const std::shared_ptr<void> registrationA = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls, MakeWarningVoidResult(k_WarningCodeA, "handler-a warning")));
+  const std::shared_ptr<void> registrationB = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls, errorWithWarning));
+  const std::shared_ptr<void> registrationC = RegisterFileReplaceHandler(MakeLoggingHandler("handler-c", calls));
+
+  const Result<> hookResult = BeforeFileReplace(target);
+  SIMPLNX_RESULT_REQUIRE_INVALID(hookResult);
+  REQUIRE(hookResult.errors().size() == 1);
+  CHECK(hookResult.errors().front().code == k_ArbitraryErrorCode);
+  REQUIRE(hookResult.warnings().size() == 2);
+  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
+  CHECK(hookResult.warnings()[1].code == k_WarningCodeB);
+  REQUIRE(calls.size() == 2);
+  CHECK(calls[0].handlerName == "handler-a");
+  CHECK(calls[1].handlerName == "handler-b");
+}
+
+TEST_CASE("FileReplaceGuard: an invalid result with no errors stays invalid", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_empty_error_dir") / "hook_target.dream3d";
+  constexpr int32 k_WarningCodeA = -9111;
+  REQUIRE(InvalidWithoutErrors().invalid());
+
+  std::vector<HookCall> calls;
+  const std::shared_ptr<void> registrationA = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls, MakeWarningVoidResult(k_WarningCodeA, "handler-a warning")));
+  const std::shared_ptr<void> registrationB = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls, InvalidWithoutErrors()));
+  const std::shared_ptr<void> registrationC = RegisterFileReplaceHandler(MakeLoggingHandler("handler-c", calls));
+
+  const Result<> hookResult = BeforeFileReplace(target);
+  SIMPLNX_RESULT_REQUIRE_INVALID(hookResult);
+  CHECK(hookResult.errors().empty());
+  REQUIRE(hookResult.warnings().size() == 1);
+  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
+  REQUIRE(calls.size() == 2);
+}
+
+TEST_CASE("FileReplaceGuard: the warnings of every handler are kept in order on success", "[FileWriteHook]")
+{
+  constexpr int32 k_WarningCodeA = -9121;
+  constexpr int32 k_WarningCodeB = -9122;
+  std::vector<HookCall> calls;
+  const std::shared_ptr<void> registrationA = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls, MakeWarningVoidResult(k_WarningCodeA, "handler-a warning")));
+  const std::shared_ptr<void> registrationB = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls, MakeWarningVoidResult(k_WarningCodeB, "handler-b warning")));
+
+  const Result<> hookResult = BeforeFileReplace(fs::path("hook_warning_dir") / "hook_target.dream3d");
+  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
+  REQUIRE(hookResult.warnings().size() == 2);
+  CHECK(hookResult.warnings()[0].code == k_WarningCodeA);
+  CHECK(hookResult.warnings()[1].code == k_WarningCodeB);
+}
+
+TEST_CASE("FileReplaceGuard: releasing the token unregisters the handler", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_token_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  std::shared_ptr<void> registration = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls));
+  std::shared_ptr<void> registrationCopy = registration;
+
+  RequireHookValid(target);
+  REQUIRE(calls.size() == 1);
+
+  // A copy of the token keeps the handler registered.
+  registration.reset();
+  RequireHookValid(target);
+  REQUIRE(calls.size() == 2);
+
+  registrationCopy.reset();
+  RequireHookValid(target);
+  CHECK(calls.size() == 2);
+
+  // An empty handler registers nothing.
+  CHECK(RegisterFileReplaceHandler(FileReplaceHandler{}) == nullptr);
+}
+
+TEST_CASE("FileReplaceGuard: a call from inside a handler returns -6061 and calls no handler", "[FileWriteHook]")
+{
+  const ScopedTestDirectory directory("nested_call");
+  const fs::path outerTarget = directory.path() / "outer.dream3d";
+  const fs::path innerTarget = directory.path() / "inner.dream3d";
+  int32 handlerCallCount = 0;
+  Result<> nestedResult;
+  Result<AtomicFile> nestedAtomicFileResult = MakeErrorResult<AtomicFile>(0, "not called");
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode) -> Result<> {
+    handlerCallCount++;
+    if(target == outerTarget)
+    {
+      nestedResult = BeforeFileReplace(innerTarget);
+      // A writer called from a handler fails the same way and changes nothing.
+      nestedAtomicFileResult = AtomicFile::Create(innerTarget);
+    }
+    return {};
+  });
+
+  const std::map<std::string, std::string> before = SnapshotDirectory(directory.path());
+  const Result<> outerResult = BeforeFileReplace(outerTarget);
+  SIMPLNX_RESULT_REQUIRE_VALID(outerResult);
+  CHECK(handlerCallCount == 1);
+
+  SIMPLNX_RESULT_REQUIRE_INVALID(nestedResult);
+  REQUIRE(nestedResult.errors().size() == 1);
+  CHECK(nestedResult.errors().front().code == k_FileReplaceNestedError);
+  CHECK(nestedResult.errors().front().message.find(Utf8Text(innerTarget)) != std::string::npos);
+
+  SIMPLNX_RESULT_REQUIRE_INVALID(nestedAtomicFileResult);
+  REQUIRE(nestedAtomicFileResult.errors().size() == 1);
+  CHECK(nestedAtomicFileResult.errors().front().code == k_FileReplaceNestedError);
+  CHECK(SnapshotDirectory(directory.path()) == before);
+
+  // Outside a handler the same call works again.
+  RequireHookValid(innerTarget);
+  CHECK(handlerCallCount == 2);
+}
+
+TEST_CASE("FileReplaceGuard: a handler exception propagates and clears the nested-call mark", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_exception_dir") / "hook_target.dream3d";
+  bool throwsException = true;
+  int32 laterHandlerCallCount = 0;
+  const std::shared_ptr<void> throwingRegistration = RegisterFileReplaceHandler([&throwsException](const fs::path&, FileWriteHookMode) -> Result<> {
+    if(throwsException)
+    {
+      throw std::runtime_error("handler failure");
+    }
+    return {};
+  });
+  const std::shared_ptr<void> laterRegistration = RegisterFileReplaceHandler([&laterHandlerCallCount](const fs::path&, FileWriteHookMode) -> Result<> {
+    laterHandlerCallCount++;
+    return {};
+  });
+
+  CHECK_THROWS_WITH(BeforeFileReplace(target), "handler failure");
+  CHECK(laterHandlerCallCount == 0);
+
+  // A mark left set would make this call fail with -6061.
+  throwsException = false;
+  const Result<> hookResult = BeforeFileReplace(target);
+  SIMPLNX_RESULT_REQUIRE_VALID(hookResult);
+  CHECK(laterHandlerCallCount == 1);
+}
+
+TEST_CASE("FileReplaceGuard: the policy applies per thread, the innermost wins, and destruction restores it", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_policy_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls));
+
+  RequireHookValid(target);
+  {
+    const ScopedFileReplacePolicy outerPolicy(FileWriteHookMode::RefuseIfRead);
+    RequireHookValid(target);
+    {
+      const ScopedFileReplacePolicy innerPolicy(FileWriteHookMode::ReleaseReaders);
+      RequireHookValid(target);
+    }
+    RequireHookValid(target);
+
+    // Another thread does not see the policy of this thread. The main thread joins it before it reads the log.
+    Result<> otherThreadResult;
+    std::thread otherThread([&otherThreadResult, &target]() { otherThreadResult = BeforeFileReplace(target); });
+    otherThread.join();
+    SIMPLNX_RESULT_REQUIRE_VALID(otherThreadResult);
+  }
+  RequireHookValid(target);
+
+  REQUIRE(calls.size() == 6);
+  CHECK(calls[0].mode == FileWriteHookMode::ReleaseReaders);
+  CHECK(calls[1].mode == FileWriteHookMode::RefuseIfRead);
+  CHECK(calls[2].mode == FileWriteHookMode::ReleaseReaders);
+  CHECK(calls[3].mode == FileWriteHookMode::RefuseIfRead);
+  CHECK(calls[4].mode == FileWriteHookMode::ReleaseReaders);
+  CHECK(calls[5].mode == FileWriteHookMode::ReleaseReaders);
+}
+
+TEST_CASE("FileReplaceGuard: a handler can register and unregister handlers during a call", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_registration_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  std::shared_ptr<void> registrationB = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls));
+  std::shared_ptr<void> registrationC;
+  int32 callNumber = 0;
+  // The registry mutex is not held while a handler runs, so these registry changes cannot deadlock.
+  const std::shared_ptr<void> registrationA = RegisterFileReplaceHandler([&](const fs::path& callTarget, FileWriteHookMode mode) -> Result<> {
+    calls.push_back({"handler-a", callTarget, mode});
+    callNumber++;
+    if(callNumber == 1)
+    {
+      registrationC = RegisterFileReplaceHandler(MakeLoggingHandler("handler-c", calls));
+    }
+    if(callNumber == 2)
+    {
+      registrationB.reset();
+    }
+    return {};
+  });
+
+  // Call 1: handler-c registers during the call, so it runs only from the next call on.
+  RequireHookValid(target);
+  // Call 2: handler-b is unregistered during the call, after the call copied the list, so it still runs once.
+  RequireHookValid(target);
+  // Call 3: handler-b no longer runs.
+  RequireHookValid(target);
+
+  std::vector<std::string> names;
+  std::transform(calls.begin(), calls.end(), std::back_inserter(names), [](const HookCall& call) { return call.handlerName; });
+  const std::vector<std::string> expectedNames = {"handler-b", "handler-a", "handler-b", "handler-a", "handler-c", "handler-a", "handler-c"};
+  CHECK(names == expectedNames);
+}
+
+TEST_CASE("FileReplaceGuard: releasing a handler that owns another registration does not deadlock", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_owning_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  std::shared_ptr<void> registrationA = RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls));
+  // Handler B owns a copy of the token of handler A, so A stays registered until B is destroyed.
+  std::shared_ptr<void> registrationB = RegisterFileReplaceHandler([registrationOfA = registrationA, &calls](const fs::path& callTarget, FileWriteHookMode mode) -> Result<> {
+    calls.push_back({"handler-b", callTarget, mode});
+    return {};
+  });
+  registrationA.reset();
+  RequireHookValid(target);
+  REQUIRE(calls.size() == 2);
+
+  // Destroying B destroys the last token of A inside the release of B. A deadlock here ends at the ctest timeout.
+  registrationB.reset();
+  calls.clear();
+  RequireHookValid(target);
+  CHECK(calls.empty());
+}
+
+TEST_CASE("FileReplaceGuard: a failed token allocation leaves no handler registered", "[FileWriteHook]")
+{
+  const fs::path target = fs::path("hook_allocation_dir") / "hook_target.dream3d";
+  std::vector<HookCall> calls;
+  FailNextFileReplaceRegistrationForTesting();
+  CHECK_THROWS_AS(RegisterFileReplaceHandler(MakeLoggingHandler("handler-a", calls)), std::bad_alloc);
+  RequireHookValid(target);
+  CHECK(calls.empty());
+
+  // The seam clears itself, so the next registration works.
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler(MakeLoggingHandler("handler-b", calls));
+  RequireHookValid(target);
+  REQUIRE(calls.size() == 1);
+  CHECK(calls[0].handlerName == "handler-b");
+}
+
+TEST_CASE("FileWriteHook: ReplaceFileWithText and OpenFileForReplace run the hook once before the file changes", "[FileWriteHook]")
+{
+  const ScopedTestDirectory directory("replace_file_with_text");
+  const fs::path target = directory.path() / "converted.d3dpipeline";
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder});
+  const Result<> recorderWarning = MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning");
+  const std::vector<char> previousBytes = {'p', 'r', 'e', 'v', 'i', 'o', 'u', 's'};
+  WriteText(target, "previous");
+  int32 callCount = 0;
+  bool isTargetUnchangedAtCall = false;
+  const auto observe = [&](const fs::path&, FileWriteHookMode) {
+    callCount++;
+    isTargetUnchangedAtCall = ReadFileBytes(target) == previousBytes;
+  };
+
+  SECTION("ReplaceFileWithText success keeps the hook warning")
+  {
+    recorder.arm(target, observe, recorderWarning, false);
+    const Result<> writeResult = ReplaceFileWithText(target, "new text");
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+    RequireRecorderWarning(writeResult);
+    CHECK(callCount == 1);
+    CHECK(isTargetUnchangedAtCall);
+    CHECK(ReadFileBytes(target) == std::vector<char>{'n', 'e', 'w', ' ', 't', 'e', 'x', 't'});
+  }
+  SECTION("OpenFileForReplace success keeps the hook warning and truncates")
+  {
+    recorder.arm(target, observe, recorderWarning, false);
+    std::fstream stream;
+    const Result<> openResult = OpenFileForReplace(target, stream);
+    SIMPLNX_RESULT_REQUIRE_VALID(openResult);
+    RequireRecorderWarning(openResult);
+    CHECK(callCount == 1);
+    CHECK(isTargetUnchangedAtCall);
+    stream << "log";
+    stream.close();
+    CHECK(ReadFileBytes(target) == std::vector<char>{'l', 'o', 'g'});
+  }
+  SECTION("a refusal with any code or with no errors returns invalid and changes nothing")
+  {
+    for(const Result<>& refusal : {MakeErrorResult(k_RecorderErrorCode, "recorder error"), InvalidWithoutErrors()})
+    {
+      recorder.arm(target, {}, refusal, false);
+      const Result<> writeResult = ReplaceFileWithText(target, "new text");
+      SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
+      CHECK(writeResult.errors().size() == refusal.errors().size());
+      std::fstream stream;
+      const Result<> openResult = OpenFileForReplace(target, stream);
+      SIMPLNX_RESULT_REQUIRE_INVALID(openResult);
+      CHECK(openResult.errors().size() == refusal.errors().size());
+      CHECK_FALSE(stream.is_open());
+      CHECK(ReadFileBytes(target) == previousBytes);
+    }
+  }
+  SECTION("an open failure returns -6067 with the hook warnings")
+  {
+    const fs::path directoryTarget = directory.path() / "is-a-directory";
+    fs::create_directories(directoryTarget);
+    recorder.arm(directoryTarget, {}, recorderWarning, false);
+    const Result<> writeResult = ReplaceFileWithText(directoryTarget, "new text");
+    RequireErrorCode(writeResult, k_ReplaceFileOpenError);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(directoryTarget)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+    std::fstream stream;
+    const Result<> openResult = OpenFileForReplace(directoryTarget, stream);
+    RequireErrorCode(openResult, k_ReplaceFileOpenError);
+    RequireRecorderWarning(openResult);
+
+    // A stream whose exception mask makes the open throw gets the same result instead of an exception.
+    std::fstream throwingStream;
+    throwingStream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+    Result<> throwingOpenResult;
+    REQUIRE_NOTHROW(throwingOpenResult = OpenFileForReplace(directoryTarget, throwingStream));
+    RequireErrorCode(throwingOpenResult, k_ReplaceFileOpenError);
+    RequireRecorderWarning(throwingOpenResult);
+    CHECK_FALSE(throwingStream.is_open());
+  }
+  SECTION("a write failure returns -6068 with the hook warnings")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Write);
+    recorder.arm(target, {}, recorderWarning, false);
+    const Result<> writeResult = ReplaceFileWithText(target, "new text");
+    RequireErrorCode(writeResult, k_ReplaceFileWriteError);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(target)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+  }
+  SECTION("a close failure returns -6069 with the hook warnings")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Close);
+    recorder.arm(target, {}, recorderWarning, false);
+    const Result<> writeResult = ReplaceFileWithText(target, "new text");
+    RequireErrorCode(writeResult, k_ReplaceFileCloseError);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(target)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+  }
+}
+
+TEST_CASE("FileWriteHook: DREAM3D::WriteFile runs the hook once on the file and once on its sidecar before writing", "[FileWriteHook]")
 {
   const ScopedTestDirectory directory("write_file_hook_order");
   const fs::path primary = directory.path() / "hooked.dream3d";
@@ -683,101 +843,95 @@ TEST_CASE("FileWriteHook: DREAM3D::WriteFile runs the hook on the file and its s
   const std::vector<char> primaryBytes = ReadFileBytes(primary);
   const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
 
-  RecordingFileWriteManager& recorder = ApplicationRecorder();
-  const DisarmGuard disarmGuard({&recorder});
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  RecordingFileReplaceHandler& sidecarRecorder = SidecarRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder, &sidecarRecorder});
   std::vector<HookCall> calls;
-  bool isPrimaryUnchangedAtCall = false;
-  bool isSidecarAbsentAtCall = false;
-  const auto observeFiles = [&](const fs::path& target, FileWriteHookMode mode) {
-    calls.push_back({k_ApplicationRecorderName, target, mode});
-    isPrimaryUnchangedAtCall = ReadFileBytes(primary) == primaryBytes;
-    isSidecarAbsentAtCall = !fs::exists(sidecar);
+  std::vector<bool> isPrimaryUnchangedAtCall;
+  std::vector<bool> isSidecarAbsentAtCall;
+  const auto observeFiles = [&](const std::string& handlerName) {
+    return [&, handlerName](const fs::path& target, FileWriteHookMode mode) {
+      calls.push_back({handlerName, target, mode});
+      isPrimaryUnchangedAtCall.push_back(ReadFileBytes(primary) == primaryBytes);
+      isSidecarAbsentAtCall.push_back(!fs::exists(sidecar));
+    };
   };
 
-  SECTION("the hook runs on the primary file before it changes")
+  SECTION("both hooks run once before either file changes")
   {
-    recorder.arm(primary, observeFiles, {}, false);
+    recorder.arm(primary, observeFiles("primary"), {}, false);
+    sidecarRecorder.arm(sidecar, observeFiles("sidecar"), {}, false);
     const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    REQUIRE(calls.size() == 1);
+    REQUIRE(calls.size() == 2);
+    CHECK(calls[0].handlerName == "primary");
     CHECK(calls[0].target == primary);
-    CHECK(calls[0].mode == FileWriteHookMode::ReleaseReaders);
-    CHECK(isPrimaryUnchangedAtCall);
-    CHECK(isSidecarAbsentAtCall);
+    CHECK(calls[1].handlerName == "sidecar");
+    CHECK(calls[1].target == sidecar);
+    for(usize index = 0; index < calls.size(); index++)
+    {
+      CHECK(calls[index].mode == FileWriteHookMode::ReleaseReaders);
+      CHECK(isPrimaryUnchangedAtCall[index]);
+      CHECK(isSidecarAbsentAtCall[index]);
+    }
     CHECK(ReadFileBytes(primary) != primaryBytes);
     CHECK(fs::exists(sidecar));
   }
-  SECTION("the hook runs on the sidecar before either file changes")
+  SECTION("a sidecar hook error leaves both files unchanged")
   {
-    recorder.arm(sidecar, observeFiles, {}, false);
+    sidecarRecorder.arm(sidecar, observeFiles("sidecar"), MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
     const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
-    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    REQUIRE(calls.size() == 1);
-    CHECK(calls[0].target == sidecar);
-    CHECK(calls[0].mode == FileWriteHookMode::ReleaseReaders);
-    CHECK(isPrimaryUnchangedAtCall);
-    CHECK(isSidecarAbsentAtCall);
-    CHECK(fs::exists(sidecar));
-  }
-  SECTION("a sidecar hook error leaves the primary file unchanged")
-  {
-    recorder.arm(sidecar, observeFiles, MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
-    const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
-    REQUIRE(writeResult.invalid());
-    REQUIRE(writeResult.errors().size() == 1);
-    CHECK(writeResult.errors().front().code == k_RecorderErrorCode);
+    RequireErrorCode(writeResult, k_RecorderErrorCode);
     REQUIRE(calls.size() == 1);
     CHECK(ReadFileBytes(primary) == primaryBytes);
     CHECK_FALSE(fs::exists(sidecar));
   }
-  SECTION("a primary hook error leaves the primary file unchanged")
+  SECTION("a primary hook error leaves both files unchanged and skips the sidecar hook")
   {
-    recorder.arm(primary, observeFiles, MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
+    recorder.arm(primary, observeFiles("primary"), MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
+    sidecarRecorder.arm(sidecar, observeFiles("sidecar"), {}, false);
     const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
-    REQUIRE(writeResult.invalid());
-    REQUIRE(writeResult.errors().size() == 1);
-    CHECK(writeResult.errors().front().code == k_RecorderErrorCode);
+    RequireErrorCode(writeResult, k_RecorderErrorCode);
     REQUIRE(calls.size() == 1);
+    CHECK(calls[0].handlerName == "primary");
     CHECK(ReadFileBytes(primary) == primaryBytes);
     CHECK_FALSE(fs::exists(sidecar));
   }
-  SECTION("without a sidecar the hook does not run on the sidecar path")
+  SECTION("without a sidecar the hook runs only on the primary file")
   {
-    recorder.arm(sidecar, observeFiles, {}, false);
+    recorder.arm(primary, observeFiles("primary"), {}, false);
+    sidecarRecorder.arm(sidecar, observeFiles("sidecar"), {}, false);
     const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, false);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    CHECK(calls.empty());
+    REQUIRE(calls.size() == 1);
+    CHECK(calls[0].handlerName == "primary");
     CHECK_FALSE(fs::exists(sidecar));
   }
 }
 
-TEST_CASE("FileWriteHook: DataStructureWriter and AppendFile run the hook", "[FileWriteHook]")
+TEST_CASE("FileWriteHook: path writers run the hook once before the file changes", "[FileWriteHook]")
 {
-  const ScopedTestDirectory directory("writer_and_append_hook");
+  const ScopedTestDirectory directory("path_writer_hook");
   const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
-  RecordingFileWriteManager& recorder = ApplicationRecorder();
-  const DisarmGuard disarmGuard({&recorder});
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder});
 
   for(const PathWriterCase& writerCase : PathWriterCases())
   {
-    if(writerCase.name == "DREAM3D::WriteFile")
-    {
-      continue;
-    }
     DYNAMIC_SECTION(writerCase.name)
     {
       const fs::path target = directory.path() / "target.dream3d";
       WriteExistingFile(target);
       const std::vector<char> targetBytes = ReadFileBytes(target);
 
-      // Exactly one call per writer call, made before the file changes. DREAM3D::AppendFile delegates to the writer's
-      // FileIO& overload, which does not run the hook again.
+      // Exactly one call per writer call, made before the file changes. Writers that delegate to a FileIO& overload do not run
+      // the hook again.
       std::vector<HookCall> calls;
       bool isTargetUnchangedAtCall = false;
       recorder.arm(
           target,
           [&](const fs::path& callTarget, FileWriteHookMode mode) {
-            calls.push_back({k_ApplicationRecorderName, callTarget, mode});
+            calls.push_back({k_ProcessRecorderName, callTarget, mode});
             isTargetUnchangedAtCall = ReadFileBytes(target) == targetBytes;
           },
           {}, false);
@@ -789,19 +943,178 @@ TEST_CASE("FileWriteHook: DataStructureWriter and AppendFile run the hook", "[Fi
       CHECK(isTargetUnchangedAtCall);
       CHECK(ReadFileBytes(target) != targetBytes);
 
-      // A hook error is returned before the file is opened.
-      WriteExistingFile(target);
-      const std::vector<char> freshBytes = ReadFileBytes(target);
-      calls.clear();
-      recorder.arm(target, MakeRecordingCallback(k_ApplicationRecorderName, calls), MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
-      const Result<> failedResult = writerCase.write(target, dataStructure);
-      REQUIRE(failedResult.invalid());
-      REQUIRE(failedResult.errors().size() == 1);
-      CHECK(failedResult.errors().front().code == k_RecorderErrorCode);
-      CHECK(calls.size() == 1);
-      CHECK(ReadFileBytes(target) == freshBytes);
+      // A hook error is returned before the file is opened, with any code and also with no error at all.
+      for(const Result<>& refusal : {MakeErrorResult(k_RecorderErrorCode, "recorder error"), InvalidWithoutErrors()})
+      {
+        recorder.disarm();
+        WriteExistingFile(target);
+        const std::vector<char> freshBytes = ReadFileBytes(target);
+        calls.clear();
+        recorder.arm(target, MakeRecordingCallback(k_ProcessRecorderName, calls), refusal, false);
+        const Result<> failedResult = writerCase.write(target, dataStructure);
+        SIMPLNX_RESULT_REQUIRE_INVALID(failedResult);
+        CHECK(failedResult.errors().size() == refusal.errors().size());
+        CHECK(calls.size() == 1);
+        CHECK(ReadFileBytes(target) == freshBytes);
+      }
     }
   }
+}
+
+TEST_CASE("FileWriteHook: WriteRecoveryFile runs the hook once in redirect mode", "[FileWriteHook]")
+{
+  const ScopedTestDirectory directory("recovery_redirect_hook");
+  const fs::path target = directory.path() / "recovery.dream3d";
+  const fs::path userDataFile = directory.path() / "user.dream3d";
+  WriteExistingFile(target);
+  const std::vector<char> targetBytes = ReadFileBytes(target);
+  const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder});
+
+  std::vector<HookCall> calls;
+  bool isTargetUnchangedAtCall = false;
+  recorder.arm(
+      target,
+      [&](const fs::path& callTarget, FileWriteHookMode mode) {
+        calls.push_back({k_ProcessRecorderName, callTarget, mode});
+        isTargetUnchangedAtCall = ReadFileBytes(target) == targetBytes;
+      },
+      MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+  const Result<> writeResult = DREAM3D::WriteRecoveryFile(target, dataStructure, Pipeline{}, userDataFile);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  RequireRecorderWarning(writeResult);
+  REQUIRE(calls.size() == 1);
+  CHECK(calls[0].target == target);
+  CHECK(isTargetUnchangedAtCall);
+  const Result<std::optional<fs::path>> redirectResult = DREAM3D::ReadUserDataFilePathAttribute(target);
+  SIMPLNX_RESULT_REQUIRE_VALID(redirectResult);
+  REQUIRE(redirectResult.value().has_value());
+  CHECK(redirectResult.value().value() == fs::absolute(userDataFile));
+
+  // A refusal leaves the existing file unchanged.
+  WriteExistingFile(target);
+  const std::vector<char> freshBytes = ReadFileBytes(target);
+  calls.clear();
+  recorder.arm(target, MakeRecordingCallback(k_ProcessRecorderName, calls), MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
+  const Result<> refusedResult = DREAM3D::WriteRecoveryFile(target, dataStructure, Pipeline{}, userDataFile);
+  RequireErrorCode(refusedResult, k_RecorderErrorCode);
+  CHECK(calls.size() == 1);
+  CHECK(ReadFileBytes(target) == freshBytes);
+}
+
+TEST_CASE("FileWriteHook: WriteXdmf runs the hook once and reports its own stream failures", "[FileWriteHook]")
+{
+  const ScopedTestDirectory directory("write_xdmf");
+  const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder});
+  const Result<> recorderWarning = MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning");
+  const fs::path target = directory.path() / "standalone.xdmf";
+  std::vector<HookCall> calls;
+
+  SECTION("the hook runs once before the file changes")
+  {
+    WriteText(target, "previous");
+    bool isTargetUnchangedAtCall = false;
+    recorder.arm(
+        target,
+        [&](const fs::path& callTarget, FileWriteHookMode mode) {
+          calls.push_back({k_ProcessRecorderName, callTarget, mode});
+          isTargetUnchangedAtCall = ReadFileBytes(target) == std::vector<char>{'p', 'r', 'e', 'v', 'i', 'o', 'u', 's'};
+        },
+        recorderWarning, false);
+    const Result<> writeResult = DREAM3D::WriteXdmf(target, dataStructure, "data.dream3d");
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+    RequireRecorderWarning(writeResult);
+    REQUIRE(calls.size() == 1);
+    CHECK(calls[0].target == target);
+    CHECK(isTargetUnchangedAtCall);
+    CHECK(ReadFileBytes(target) != std::vector<char>{'p', 'r', 'e', 'v', 'i', 'o', 'u', 's'});
+  }
+  SECTION("a refusal with any code or with no errors returns invalid and changes nothing")
+  {
+    for(const Result<>& refusal : {MakeErrorResult(k_RecorderErrorCode, "recorder error"), InvalidWithoutErrors()})
+    {
+      WriteText(target, "previous");
+      recorder.arm(target, {}, refusal, false);
+      const Result<> writeResult = DREAM3D::WriteXdmf(target, dataStructure, "data.dream3d");
+      SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
+      CHECK(writeResult.errors().size() == refusal.errors().size());
+      CHECK(ReadFileBytes(target) == std::vector<char>{'p', 'r', 'e', 'v', 'i', 'o', 'u', 's'});
+    }
+  }
+  SECTION("an open failure returns -6062 with the hook warnings")
+  {
+    // A directory at the path cannot be opened as a file.
+    fs::create_directories(target);
+    recorder.arm(target, {}, recorderWarning, false);
+    const Result<> writeResult = DREAM3D::WriteXdmf(target, dataStructure, "data.dream3d");
+    RequireErrorCode(writeResult, k_XdmfOpenErrorCode);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(target)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+  }
+  SECTION("a write failure returns -6063 with the hook warnings")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Write);
+    recorder.arm(target, {}, recorderWarning, false);
+    const Result<> writeResult = DREAM3D::WriteXdmf(target, dataStructure, "data.dream3d");
+    RequireErrorCode(writeResult, k_XdmfWriteErrorCode);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(target)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+  }
+  SECTION("a close failure returns -6064 with the hook warnings")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Close);
+    recorder.arm(target, {}, recorderWarning, false);
+    const Result<> writeResult = DREAM3D::WriteXdmf(target, dataStructure, "data.dream3d");
+    RequireErrorCode(writeResult, k_XdmfCloseErrorCode);
+    CHECK(writeResult.errors().front().message.find(Utf8Text(target)) != std::string::npos);
+    RequireRecorderWarning(writeResult);
+  }
+}
+
+TEST_CASE("FileWriteHook: DREAM3D::WriteFile propagates sidecar stream failures after the DREAM3D file is written", "[FileWriteHook]")
+{
+  const ScopedTestDirectory directory("write_file_sidecar_failures");
+  const fs::path primary = directory.path() / "with-sidecar.dream3d";
+  const fs::path sidecar = directory.path() / "with-sidecar.xdmf";
+  const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  RecordingFileReplaceHandler& sidecarRecorder = SidecarRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder, &sidecarRecorder});
+  std::vector<HookCall> calls;
+  recorder.arm(primary, MakeRecordingCallback("primary", calls), MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+  sidecarRecorder.arm(sidecar, MakeRecordingCallback("sidecar", calls), {}, false);
+
+  SECTION("open failure")
+  {
+    fs::create_directories(sidecar);
+    const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
+    RequireErrorCode(writeResult, k_XdmfOpenErrorCode);
+    RequireRecorderWarning(writeResult);
+  }
+  SECTION("write failure")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Write);
+    const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
+    RequireErrorCode(writeResult, k_XdmfWriteErrorCode);
+    RequireRecorderWarning(writeResult);
+  }
+  SECTION("close failure")
+  {
+    const ScopedTextStreamFailure failure(TextStreamFailureForTesting::Close);
+    const Result<> writeResult = DREAM3D::WriteFile(primary, dataStructure, Pipeline{}, true);
+    RequireErrorCode(writeResult, k_XdmfCloseErrorCode);
+    RequireRecorderWarning(writeResult);
+  }
+  // The internal sidecar writer does not run the hook a second time, and the DREAM3D file is complete.
+  REQUIRE(calls.size() == 2);
+  CHECK(calls[0].handlerName == "primary");
+  CHECK(calls[1].handlerName == "sidecar");
+  CHECK(fs::is_regular_file(primary));
+  const DataStructure readBack = UnitTest::LoadDataStructure(primary);
+  CHECK(readBack.getData(DataPath({k_WrittenObjectName, "Values"})) != nullptr);
 }
 
 TEST_CASE("FileWriteHook: PathToUtf8Text renders a path as UTF-8 without throwing", "[FileWriteHook]")
@@ -815,7 +1128,7 @@ TEST_CASE("FileWriteHook: PathToUtf8Text renders a path as UTF-8 without throwin
     // Universal character names keep the expected bytes independent of the source encoding the compiler assumes.
     const fs::path asciiPath = fs::path("folder") / "out.dream3d";
     CHECK(PathToUtf8Text(asciiPath) == Utf8Text(asciiPath));
-    const fs::path nonAsciiPath = fs::path("folder") / fs::path(u8"caf\u00E9-\u6587\u4EF6-\U0001F600.dream3d");
+    const fs::path nonAsciiPath = fs::path("folder") / fs::path(u8"café-文件-\U0001F600.dream3d");
     const std::string expectedName = "caf\xC3\xA9-\xE6\x96\x87\xE4\xBB\xB6-\xF0\x9F\x98\x80.dream3d";
     REQUIRE_NOTHROW(PathToUtf8Text(nonAsciiPath));
     CHECK(PathToUtf8Text(nonAsciiPath) == Utf8Text(nonAsciiPath));
@@ -870,16 +1183,16 @@ TEST_CASE("FileWriteHook: WriteFile rejects colliding XDMF destinations", "[File
   // legacy Windows code page, so std::filesystem::path::string() throws for these names there unless the process code page is UTF-8.
   SECTION("a non-ASCII primary with the XDMF extension")
   {
-    RequireXdmfDestinationRejectedBothForms(dir / fs::path(u8"\u6570\u636E-caf\u00E9-\U0001F600.xdmf"), dir);
+    RequireXdmfDestinationRejectedBothForms(dir / fs::path(u8"数据-café-\U0001F600.xdmf"), dir);
   }
   SECTION("a non-ASCII primary that is a hard link of its existing sidecar")
   {
-    const fs::path sidecar = dir / fs::path(u8"\u786C-caf\u00E9-\U0001F600.xdmf");
+    const fs::path sidecar = dir / fs::path(u8"硬-café-\U0001F600.xdmf");
     {
       std::ofstream stream(sidecar, std::ios::binary);
       stream << "existing sidecar";
     }
-    const fs::path primary = dir / fs::path(u8"\u786C-caf\u00E9-\U0001F600.dream3d");
+    const fs::path primary = dir / fs::path(u8"硬-café-\U0001F600.dream3d");
     if(CreateHardLinkOrWarn(sidecar, primary))
     {
       RequireXdmfDestinationRejectedBothForms(primary, dir);
@@ -991,9 +1304,9 @@ TEST_CASE("FileWriteHook: WriteFile rejects colliding XDMF destinations", "[File
 TEST_CASE("FileWriteHook: writers keep hook warnings", "[FileWriteHook]")
 {
   const ScopedTestDirectory directory("writer_hook_warnings");
-  RecordingFileWriteManager& recorder = ApplicationRecorder();
-  RecordingFileWriteManager& sidecarRecorder = SidecarRecorder();
-  const DisarmGuard disarmGuard({&recorder, &sidecarRecorder});
+  RecordingFileReplaceHandler& recorder = ProcessRecorder();
+  RecordingFileReplaceHandler& sidecarRecorder = SidecarRecorder();
+  const RecorderDisarmGuard disarmGuard({&recorder, &sidecarRecorder});
   const DataStructure dataStructure = MakeWriterTestStructure(k_WrittenObjectName, 3);
   const Result<> recorderWarning = MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning");
 

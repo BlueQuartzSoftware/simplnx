@@ -51,7 +51,10 @@ public:
 
   /**
    * @brief Computes the metric-based GBCD section.
-   * @return An error for an invalid Laue index, file operation, or bulk I/O.
+   * @return An error for an invalid Laue index, file operation, or bulk I/O. Error -7239 when the distribution and errors
+   * output paths resolve to the same file, before any file-replace hook runs. A file-replace hook error.
+   *
+   * BeforeFileReplace() runs once on each output file before either file is opened.
    */
   Result<> operator()();
 

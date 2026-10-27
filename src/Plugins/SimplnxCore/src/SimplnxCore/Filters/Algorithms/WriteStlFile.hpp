@@ -89,6 +89,11 @@ public:
    *
    * Cancellation before commit preserves existing destination files. A later
    * multi-file commit failure can leave earlier files published.
+   *
+   * Every destination, overflow files included, is created through AtomicFile on the
+   * calling thread before the first worker starts. Thus the file-replace hook runs under
+   * the policy of the calling thread, a hook error leaves every destination unchanged, and
+   * a hook that throws leaves no worker running. The hook warnings come first in the result.
    */
   Result<> operator()();
 

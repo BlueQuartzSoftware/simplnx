@@ -487,6 +487,13 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
       m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix), m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix),
       m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)};
 
+  // Each Create() runs the file-replace hook on its final path; the hooks can report warnings, and every later result carries them
+  // first.
+  std::vector<Warning> hookWarnings;
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
   std::vector<Result<AtomicFile>> files;
   files.reserve(fileList.size());
   for(const auto& outputPath : fileList)
@@ -495,8 +502,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     if(files.back().invalid())
     {
       RemoveTemporaryFiles(files);
-      return ConvertResult(std::move(files.back()));
+      return withHookWarnings(ConvertResult(std::move(files.back())));
     }
+    hookWarnings.insert(hookWarnings.end(), files.back().warnings().begin(), files.back().warnings().end());
   }
 
   const auto writeFile = [&](FileIndex fileIndex, std::string_view progressMessage, auto&& writer) -> Result<> {
@@ -531,33 +539,33 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   Result<> writeResult = writeFile(FileIndex::Nodes, "Writing Nodes (File 1/5)...", [&](const fs::path& path) { return WriteNodes(path, imageGeom, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
-    return writeResult;
+    return withHookWarnings(std::move(writeResult));
   }
 
   writeResult = writeFile(FileIndex::Elems, "Writing Elements (File 2/5)...",
                           [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->UseReducedIntegration, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
-    return writeResult;
+    return withHookWarnings(std::move(writeResult));
   }
 
   if(m_ShouldCancel)
   {
     RemoveTemporaryFiles(files);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing Element Sets (File 3/5)...");
   writeResult = WriteElementSets(files[nx::core::to_underlying(FileIndex::Elset)].value().tempFilePath(), grainData, featureIdsRef, useOocAlgorithm, m_ShouldCancel, progressThrottle);
   if(writeResult.invalid())
   {
     RemoveTemporaryFiles(files);
-    return writeResult;
+    return withHookWarnings(std::move(writeResult));
   }
 
   writeResult = writeFile(FileIndex::Master, "Writing Master File (File 4/5)...", [&](const fs::path& path) { return WriteMaster(path, *m_InputValues, grainData, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
-    return writeResult;
+    return withHookWarnings(std::move(writeResult));
   }
 
   writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...", [&](const fs::path& path) {
@@ -565,13 +573,13 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   });
   if(writeResult.invalid())
   {
-    return writeResult;
+    return withHookWarnings(std::move(writeResult));
   }
 
   if(m_ShouldCancel)
   {
     RemoveTemporaryFiles(files);
-    return {};
+    return withHookWarnings({});
   }
 
   for(auto& file : files)
@@ -580,9 +588,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
     if(commitResult.invalid())
     {
       RemoveTemporaryFiles(files);
-      return commitResult;
+      return withHookWarnings(std::move(commitResult));
     }
   }
 
-  return {};
+  return withHookWarnings({});
 }

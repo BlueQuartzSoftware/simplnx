@@ -1,5 +1,6 @@
 #include "DataStructureWriter.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/PathText.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -21,20 +22,8 @@ namespace nx::core::HDF5
 namespace
 {
 /**
- * @brief Runs the file-write hook on the final path of a path-based write before the write changes it.
- * @param dataStructure Structure that the writer writes.
- * @param filepath File that the writer creates, truncates or opens for writing.
- * @return The hook's result: valid with its warnings, or its error, which the writer returns without a change to filepath.
- */
-Result<> RunFileWriteHook(const DataStructure& dataStructure, const std::filesystem::path& filepath)
-{
-  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
-  return application->getIOCollection().beforeFileWrite(dataStructure, filepath);
-}
-
-/**
  * @brief Puts the hook's warnings in front of the warnings of a writer result and keeps the result's validity and errors.
- * @param hookResult Valid result of RunFileWriteHook().
+ * @param hookResult Valid result of BeforeFileReplace().
  * @param writerResult Result of the write that followed the hook.
  * @return writerResult with the hook's warnings first.
  */
@@ -51,7 +40,7 @@ Result<> PrependHookWarnings(Result<> hookResult, Result<> writerResult)
  * @param filepath File to create or replace.
  * @param options Dataset encoding options.
  * @return Creation, write or close error, or success.
- * @pre The file-write hook has run on filepath.
+ * @pre BeforeFileReplace() has run on filepath.
  */
 Result<> WriteFileAfterHook(const DataStructure& dataStructure, const std::filesystem::path& filepath, const DataStructureWriter::WriteOptions& options)
 {
@@ -77,7 +66,7 @@ Result<> WriteFileAfterHook(const DataStructure& dataStructure, const std::files
  * @param dataPath Top-level object path.
  * @param options Dataset encoding options.
  * @return Open, validation, write or close error, or success.
- * @pre The file-write hook has run on filepath.
+ * @pre BeforeFileReplace() has run on filepath.
  */
 Result<> AppendFileAfterHook(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const DataStructureWriter::WriteOptions& options)
 {
@@ -123,7 +112,7 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, cons
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options)
 {
-  Result<> hookResult = RunFileWriteHook(dataStructure, filepath);
+  Result<> hookResult = BeforeFileReplace(filepath);
   if(hookResult.invalid())
   {
     return hookResult;
@@ -217,7 +206,7 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
 
 Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options)
 {
-  Result<> hookResult = RunFileWriteHook(dataStructure, filepath);
+  Result<> hookResult = BeforeFileReplace(filepath);
   if(hookResult.invalid())
   {
     return hookResult;

@@ -669,6 +669,13 @@ Result<> WriteImageScanline::operator()()
     }
   };
 
+  // The file-replace hook in AtomicFile::Create() can report warnings for each slice file. The slice writer runs on this thread,
+  // so it collects them here, and every result after this point carries them first.
+  std::vector<Warning> hookWarnings;
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
     // A single-slice volume writes exactly the user-specified file name; the index suffix is only
@@ -685,6 +692,7 @@ Result<> WriteImageScanline::operator()()
     {
       return ConvertResult(std::move(atomicFileResult));
     }
+    hookWarnings.insert(hookWarnings.end(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     // Flip operates on the un-padded slice; the scale-bar band is appended afterwards so the
@@ -727,18 +735,18 @@ Result<> WriteImageScanline::operator()()
     auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues.presetName);
     if(controlPointsResult.invalid())
     {
-      return ConvertResult(std::move(controlPointsResult));
+      return withHookWarnings(ConvertResult(std::move(controlPointsResult)));
     }
     std::vector<float32> controlPoints = controlPointsResult.value();
     if(controlPoints.empty())
     {
-      return MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName));
+      return withHookWarnings(MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName)));
     }
     // Each control color has four values in [A,R,G,B] order.
     // Interpolation requires two colors to prevent an out-of-bounds read.
     if(controlPoints.size() < 8)
     {
-      return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName));
+      return withHookWarnings(MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName)));
     }
     std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
     const usize numControlColors = controlPoints.size() / 4;
@@ -749,11 +757,11 @@ Result<> WriteImageScanline::operator()()
       maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath);
     }
 
-    return ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, m_InputValues.imageDataArrayPath, binPoints,
-                               controlPoints, numControlColors, maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange,
-                               reportRows);
+    return withHookWarnings(ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, m_InputValues.imageDataArrayPath,
+                                                binPoints, controlPoints, numControlColors, maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel,
+                                                std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange, reportRows));
   }
 
-  return ExecuteDataFunction(WriteDirectVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, nComp, m_InputValues.imageDataArrayPath,
-                             m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRows);
+  return withHookWarnings(ExecuteDataFunction(WriteDirectVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, nComp,
+                                              m_InputValues.imageDataArrayPath, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRows));
 }

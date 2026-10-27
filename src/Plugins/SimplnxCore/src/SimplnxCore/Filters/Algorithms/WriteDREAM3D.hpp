@@ -13,7 +13,6 @@
 namespace nx::core
 {
 class AtomicFile;
-class Pipeline;
 class PipelineFilter;
 
 /**
@@ -50,25 +49,25 @@ public:
 
   /**
    * @brief Writes the structure to a temporary file and moves it, and the optional .xdmf file, onto the final paths.
-   * @return Success with the warnings of the file-write hook and the writer, or the first error with the warnings collected before it.
+   * @return Success with the warnings of the file-replace hooks and the writer. Otherwise the first error, with the warnings
+   * collected before it. Error -6065 when the staged .xdmf file cannot move into the temporary path of its AtomicFile.
    *
-   * The file-write hook runs on the final DREAM3D path and, when an .xdmf file is written, on the final .xdmf path, after the
-   * temporary folder exists and before anything is serialized. The writer's own hook sees only the temporary path, so this is the
-   * call that releases a store reading a final path. Cancellation is checked before and after the hook; stores released before a
-   * cancel stay released.
+   * Each final path has its own AtomicFile. AtomicFile::Create() runs the file-replace hook on the final DREAM3D path. When an
+   * .xdmf file is written, it then runs the hook on the final .xdmf path. Both hooks run before anything is serialized. The
+   * .dream3d file is committed first and the .xdmf file after it. If the .xdmf commit fails, the new .dream3d file stays and the previous .xdmf file stays. Cancellation is checked
+   * after the hooks and after the write; components released by a hook before a cancel stay released.
    */
   Result<> operator()();
 
 private:
   /**
-   * @brief Serializes the structure to the temporary file, then moves the file and its optional .xdmf file onto the final paths.
+   * @brief Serializes the structure to the temporary file, then commits the file and its optional .xdmf file onto the final paths.
    * @param atomicFile Temporary file whose commit() replaces the final DREAM3D file.
-   * @param pipeline Pipeline metadata written into the file.
-   * @param finalXdmfFilePath Final .xdmf path, the one the file-write hook ran on.
-   * @return Success with the writer's warnings, or the write, cancel, commit or .xdmf rename error.
-   * @pre The file-write hook ran on every final path.
+   * @param xdmfAtomicFile Temporary file whose commit() replaces the final .xdmf file, or null when no .xdmf file is written.
+   * @return Success with the writer's warnings, or the pipeline lookup, write, cancel, staged .xdmf move or commit error.
+   * @pre The file-replace hook ran on every final path.
    */
-  Result<> writeAndCommit(AtomicFile& atomicFile, const Pipeline& pipeline, const std::filesystem::path& finalXdmfFilePath) const;
+  Result<> writeAndCommit(AtomicFile& atomicFile, AtomicFile* xdmfAtomicFile) const;
 
   DataStructure& m_DataStructure;
   const WriteDREAM3DInputValues* m_InputValues = nullptr;

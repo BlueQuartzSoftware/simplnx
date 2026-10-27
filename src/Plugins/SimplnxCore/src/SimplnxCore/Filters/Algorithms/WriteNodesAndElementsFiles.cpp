@@ -1,5 +1,6 @@
 #include "WriteNodesAndElementsFiles.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
@@ -12,6 +13,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -77,6 +79,47 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
   }
 
   return {};
+}
+
+/**
+ * @brief Resolves an output path for a comparison with another output path.
+ * @param path Output path.
+ * @return std::filesystem::weakly_canonical() of path, or the absolute path without removal of ".." when that fails.
+ */
+fs::path ResolveDestination(const fs::path& path)
+{
+  std::error_code resolveError;
+  fs::path resolved = fs::weakly_canonical(path, resolveError);
+  if(!resolveError)
+  {
+    return resolved;
+  }
+  std::error_code absoluteError;
+  return fs::absolute(path, absoluteError);
+}
+
+/**
+ * @brief Reports whether two output paths name the same file.
+ * @param first First output path.
+ * @param second Second output path.
+ * @return True when the resolved paths are equal, or when both files exist and are the same file.
+ *
+ * Each path is resolved with std::filesystem::weakly_canonical(), which resolves the symbolic links of the existing part
+ * of the path. A new file in a linked folder is therefore compared through the real folder on every platform. The order
+ * of ".." and link resolution differs by platform: on POSIX the link is resolved first, so "link/../a" names a file next
+ * to the target of "link"; Windows path handling removes ".." lexically first, so "link/../a" names the file next to
+ * "link". If a path cannot be resolved, its absolute form is compared without removing "..", so that fallback never
+ * reports two different files as one. Known limit: on a case-insensitive volume, two absent files that differ only in
+ * letter case are reported as different files.
+ */
+bool IsSameDestination(const fs::path& first, const fs::path& second)
+{
+  if(ResolveDestination(first) == ResolveDestination(second))
+  {
+    return true;
+  }
+  std::error_code equivalenceError;
+  return fs::equivalent(first, second, equivalenceError) && !equivalenceError;
 }
 } // namespace
 
@@ -144,6 +187,42 @@ Result<> WriteNodesAndElementsFiles::operator()()
 
   const Float32Array& vertices = iNodeGeometry.getVerticesRef();
 
+  // The files are written in place, so the file-replace hook runs once on every output path before either file is opened.
+  // Two equal paths are rejected first, so the hook runs once per file.
+  const bool writesElementFile = m_InputValues->WriteElementFile && geomType != IGeometry::Type::Vertex;
+  if(m_InputValues->WriteNodeFile && writesElementFile && IsSameDestination(m_InputValues->NodeFilePath, m_InputValues->ElementFilePath))
+  {
+    return MakeErrorResult(to_underlying(ErrorCodes::SameNodeAndElementFile), fmt::format("The node file '{}' and the element file '{}' are the same file. Choose two different output files.",
+                                                                                          m_InputValues->NodeFilePath.string(), m_InputValues->ElementFilePath.string()));
+  }
+  std::vector<fs::path> outputPaths;
+  if(m_InputValues->WriteNodeFile)
+  {
+    outputPaths.push_back(m_InputValues->NodeFilePath);
+  }
+  if(writesElementFile)
+  {
+    outputPaths.push_back(m_InputValues->ElementFilePath);
+  }
+  Result<> hookResults;
+  for(const fs::path& outputPath : outputPaths)
+  {
+    Result<> hookResult = BeforeFileReplace(outputPath);
+    if(hookResult.invalid())
+    {
+      hookResult.warnings().insert(hookResult.warnings().begin(), hookResults.warnings().begin(), hookResults.warnings().end());
+      return hookResult;
+    }
+    hookResults.warnings().insert(hookResults.warnings().end(), hookResult.warnings().begin(), hookResult.warnings().end());
+  }
+  Result<> writeResult = writeFiles(vertices, cellsArray, writesElementFile);
+  writeResult.warnings().insert(writeResult.warnings().begin(), hookResults.warnings().begin(), hookResults.warnings().end());
+  return writeResult;
+}
+
+// -----------------------------------------------------------------------------
+Result<> WriteNodesAndElementsFiles::writeFiles(const Float32Array& vertices, const UInt64Array* cellsArray, bool writesElementFile) const
+{
   if(m_InputValues->WriteNodeFile)
   {
     std::vector<std::string> arrayHeaders;
@@ -162,7 +241,7 @@ Result<> WriteNodesAndElementsFiles::operator()()
     }
   }
 
-  if(m_InputValues->WriteElementFile && geomType != IGeometry::Type::Vertex)
+  if(writesElementFile)
   {
     std::vector<std::string> arrayHeaders;
     if(m_InputValues->NumberElements)

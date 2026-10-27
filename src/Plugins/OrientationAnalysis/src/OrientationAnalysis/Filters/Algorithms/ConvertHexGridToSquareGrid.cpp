@@ -41,6 +41,12 @@ public:
 
   Result<> operator()(const fs::path& inputPath)
   {
+    // The file-replace hook in AtomicFile::Create() can report warnings; every later result carries them first.
+    std::vector<Warning> hookWarnings;
+    const auto withHookWarnings = [&hookWarnings](Result<> result) {
+      result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+      return result;
+    };
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
     if(inputPath.extension() == ("." + ebsdlib::Ang::FileExt))
@@ -74,39 +80,32 @@ public:
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
       m_AtomicFiles.push_back(AtomicFile::Create(fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())));
-      if(m_AtomicFiles[m_Index].invalid())
+      Result<AtomicFile>& createdFile = m_AtomicFiles.back();
+      if(createdFile.invalid())
       {
-        return ConvertResult(std::move(m_AtomicFiles[m_Index]));
+        m_Valid = false;
+        return ConvertResult(std::move(createdFile));
       }
-      fs::path outPath = m_AtomicFiles[m_Index].value().tempFilePath();
-
-      // Ensure the output path exists by creating it if necessary
-      if(!fs::exists(m_OutputPath))
-      {
-        if(m_AtomicFiles[m_Index].invalid())
-        {
-          m_Valid = false;
-          return ConvertResult(std::move(m_AtomicFiles[m_Index]));
-        }
-      }
+      hookWarnings = createdFile.warnings();
+      fs::path outPath = createdFile.value().tempFilePath();
 
       if(outPath == inputPath)
       {
         m_Valid = false;
-        return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
+        return withHookWarnings(MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed"));
       }
 
       std::ofstream outFile(outPath, std::ios_base::out | std::ios_base::binary);
       if(!fs::exists(outPath))
       {
         m_Valid = false;
-        return MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.string()));
+        return withHookWarnings(MakeErrorResult(-77750, fmt::format("The parent path was not created and does not exist: {}", outPath.string())));
       }
 
       if(!outFile.is_open())
       {
         m_Valid = false;
-        return MakeErrorResult(-200, fmt::format("Ang square output file could not be opened for writing: {}", outPath.string()));
+        return withHookWarnings(MakeErrorResult(-200, fmt::format("Ang square output file could not be opened for writing: {}", outPath.string())));
       }
 
       m_HeaderIsComplete = false;
@@ -156,7 +155,7 @@ public:
         if(m_ShouldCancel)
         {
           m_Valid = false;
-          return {};
+          return withHookWarnings({});
         }
         for(int32 i = 0; i < m_SqrNumCols; i++)
         {
@@ -212,11 +211,9 @@ public:
                   << "\n";
         }
       }
-
-      m_Index++;
     }
 
-    return {};
+    return withHookWarnings({});
   }
 
   Result<> commitAllFiles()
@@ -249,7 +246,6 @@ private:
   const fs::path& m_OutputPath;
   const std::string& m_FilePrefix;
   std::vector<Result<AtomicFile>> m_AtomicFiles;
-  usize m_Index = 0;
   bool m_Valid = true;
 
   const float32 m_SqrXStep;
@@ -359,8 +355,14 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   if(!m_InputValues->MultiFile)
   {
     auto converter = ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
-    converter(m_InputValues->InputPath);
-    return converter.commitAllFiles();
+    Result<> convertResult = converter(m_InputValues->InputPath);
+    if(convertResult.invalid())
+    {
+      return convertResult;
+    }
+    Result<> commitResult = converter.commitAllFiles();
+    commitResult.warnings().insert(commitResult.warnings().begin(), convertResult.warnings().begin(), convertResult.warnings().end());
+    return commitResult;
   }
 
   // Now generate all the file names the user is asking for and populate the table
@@ -403,11 +405,14 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   {
     m_MessageHandler.sendInfoMessage(fmt::format("Now Processing: {}", filepath));
 
-    result = MergeResults(converter(filepath), result);
-    if(result.invalid())
+    // The failing result is returned itself, because MergeResults() would turn an invalid result with no errors into a success.
+    Result<> convertResult = converter(filepath);
+    if(convertResult.invalid())
     {
-      return result;
+      convertResult.warnings().insert(convertResult.warnings().begin(), result.warnings().begin(), result.warnings().end());
+      return convertResult;
     }
+    result = MergeResults(std::move(result), std::move(convertResult));
 
     {
       z++;

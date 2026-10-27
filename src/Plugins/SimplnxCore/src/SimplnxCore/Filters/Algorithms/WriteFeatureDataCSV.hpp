@@ -12,6 +12,7 @@
 
 namespace nx::core
 {
+class AtomicFile;
 
 struct SIMPLNXCORE_EXPORT WriteFeatureDataCSVInputValues
 {
@@ -38,9 +39,22 @@ public:
   WriteFeatureDataCSV& operator=(const WriteFeatureDataCSV&) = delete;
   WriteFeatureDataCSV& operator=(WriteFeatureDataCSV&&) noexcept = delete;
 
+  /**
+   * @brief Writes the feature data to a temporary file and commits it onto the output path.
+   * @return Success with the warnings of the file-replace hook, or the first error with those warnings in front.
+   *
+   * AtomicFile::Create() runs the file-replace hook on the output path before anything is written.
+   */
   Result<> operator()();
 
 private:
+  /**
+   * @brief Writes the CSV file to the temporary path and commits it.
+   * @param atomicFile Temporary file whose commit() replaces the output file.
+   * @return Success, or the directory, open, cancel or commit error.
+   */
+  Result<> writeAndCommit(AtomicFile& atomicFile) const;
+
   DataStructure& m_DataStructure;
   const WriteFeatureDataCSVInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

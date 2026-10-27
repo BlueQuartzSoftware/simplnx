@@ -343,20 +343,29 @@ Result<> WriteAbaqusHexahedron::operator()()
   const bool useOocAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOocAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  // Each output gets a separate recoverable temporary path.
+  // Each output gets a separate recoverable temporary path. Each Create() runs the file-replace hook on its final path, so the
+  // first failure stops before a later output is prepared.
+  const std::array<fs::path, 5> outputPaths = {
+      m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix), m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix),
+      m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix), m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix),
+      m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)};
   std::vector<Result<AtomicFile>> fileList;
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)));
-
-  for(auto& file : fileList)
+  fileList.reserve(outputPaths.size());
+  // The file-replace hooks can report warnings; every later result carries them first.
+  std::vector<Warning> hookWarnings;
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
+  for(const fs::path& outputPath : outputPaths)
   {
-    if(file.invalid())
+    fileList.push_back(AtomicFile::Create(outputPath));
+    Result<AtomicFile>& createdFile = fileList.back();
+    if(createdFile.invalid())
     {
-      return ConvertResult(std::move(file));
+      return withHookWarnings(ConvertResult(std::move(createdFile)));
     }
+    hookWarnings.insert(hookWarnings.end(), createdFile.warnings().begin(), createdFile.warnings().end());
   }
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
@@ -364,12 +373,12 @@ Result<> WriteAbaqusHexahedron::operator()()
   progressThrottle.flush();
   if(err < 0)
   {
-    return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
+    return withHookWarnings(MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string())));
   }
   if(getCancel())
   {
     DeleteFiles(fileList);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Wrote Nodes (File 1/5)");
 
@@ -377,24 +386,24 @@ Result<> WriteAbaqusHexahedron::operator()()
   progressThrottle.flush();
   if(err < 0)
   {
-    return MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string()));
+    return withHookWarnings(MakeErrorResult(-1114, fmt::format("Error writing output elems file '{}'", fileList[1].value().tempFilePath().string())));
   }
   if(getCancel())
   {
     DeleteFiles(fileList);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Wrote Elements (File 2/5)");
 
   err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
   if(err < 0)
   {
-    return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
+    return withHookWarnings(MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string())));
   }
   if(getCancel())
   {
     DeleteFiles(fileList);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Wrote Sections (File 3/5)");
 
@@ -403,24 +412,24 @@ Result<> WriteAbaqusHexahedron::operator()()
   if(elsetResult.invalid())
   {
     DeleteFiles(fileList);
-    return elsetResult;
+    return withHookWarnings(std::move(elsetResult));
   }
   if(getCancel())
   {
     DeleteFiles(fileList);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Wrote Element Sets (File 4/5)");
 
   err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
   if(err < 0)
   {
-    return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].value().tempFilePath().string()));
+    return withHookWarnings(MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].value().tempFilePath().string())));
   }
   if(getCancel())
   {
     DeleteFiles(fileList);
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Wrote Master (File 5/5)");
 
@@ -429,14 +438,14 @@ Result<> WriteAbaqusHexahedron::operator()()
   {
     if(m_ShouldCancel)
     {
-      return MakeErrorResult(-1, "Filter cancelled");
+      return withHookWarnings(MakeErrorResult(-1, "Filter cancelled"));
     }
     Result<> commitResult = file.value().commit();
     if(commitResult.invalid())
     {
-      return commitResult;
+      return withHookWarnings(std::move(commitResult));
     }
   }
 
-  return {};
+  return withHookWarnings({});
 }

@@ -1,10 +1,8 @@
 #include "EbsdToH5Ebsd.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -16,8 +14,6 @@
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
-
-#include <memory>
 
 using namespace nx::core;
 
@@ -60,6 +56,8 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
+  // AtomicFile::Create() runs the file-replace hook on the final path, so a component that reads the output file stops reading it
+  // before the commit replaces the file.
   auto atomicFileResult = AtomicFile::Create(absPath);
   if(atomicFileResult.invalid())
   {
@@ -67,22 +65,9 @@ Result<> EbsdToH5Ebsd::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  if(m_ShouldCancel)
-  {
-    return MakeErrorResult(k_FilterCancelledError, "Filter cancelled");
-  }
-  // The output is written through a temporary file, so the hook runs on the final path: a store of the pipeline that reads that file
-  // is released before the commit replaces it.
-  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
-  Result<> hookResult = application->getIOCollection().beforeFileWrite(m_DataStructure, absPath);
-  if(hookResult.invalid())
-  {
-    return hookResult;
-  }
-
-  // Stores released before a cancel stay released; the final file stays unchanged.
+  // Components released by the hook before a cancel stay released; the final file stays unchanged.
   Result<> result = m_ShouldCancel ? MakeErrorResult(k_FilterCancelledError, "Filter cancelled") : writeAndCommit(atomicFile);
-  result.warnings().insert(result.warnings().begin(), hookResult.warnings().begin(), hookResult.warnings().end());
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
   return result;
 }
 

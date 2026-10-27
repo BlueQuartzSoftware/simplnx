@@ -40,6 +40,28 @@ if(BUILD_TESTING)
       "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/test/CacheMemoryBudgetCliTest.cmake"
   )
+  add_test(
+    NAME "nxrunner replaces existing output files"
+    COMMAND ${CMAKE_COMMAND}
+      "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+      "-DINPUT_PIPELINE=${simplnx_SOURCE_DIR}/src/Plugins/SimplnxCore/test/simpl_conversion/6_5/AddBadDataFilter.json"
+      "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/ReplaceOutputFilesCliTest"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/test/ReplaceOutputFilesCliTest.cmake"
+  )
+  # The handler that these tests select exists only in builds with SIMPLNX_BUILD_TESTS.
+  if(SIMPLNX_BUILD_TESTS)
+    foreach(destination convert log)
+      add_test(
+        NAME "nxrunner reports file-replace hook results for the ${destination} file"
+        COMMAND ${CMAKE_COMMAND}
+          "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+          "-DINPUT_PIPELINE=${simplnx_SOURCE_DIR}/src/Plugins/SimplnxCore/test/simpl_conversion/6_5/AddBadDataFilter.json"
+          "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/FileReplaceHookCliTest_${destination}"
+          "-DDESTINATION=${destination}"
+          -P "${CMAKE_CURRENT_SOURCE_DIR}/test/FileReplaceHookCliTest.cmake"
+      )
+    endforeach()
+  endif()
 
 endif()
 

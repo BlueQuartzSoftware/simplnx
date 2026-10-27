@@ -2,6 +2,7 @@
 #include "Dream3dIOInternal.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/PathText.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -650,13 +651,65 @@ void WriteXdmf(std::ostream& out, const DataStructure& dataStructure, std::strin
 
   out << ss.str();
 }
+
+constexpr int32 k_XdmfOpenError = -6062;
+constexpr int32 k_XdmfWriteError = -6063;
+constexpr int32 k_XdmfCloseError = -6064;
+
+/**
+ * @brief Writes the XDMF file and checks the open, the write and the close.
+ * @param filePath XDMF destination.
+ * @param dataStructure Provides geometry and array metadata.
+ * @param hdf5FilePath HDF5 path written into the XDMF file.
+ * @return Success, or -6062 (open), -6063 (write) or -6064 (close and flush) naming filePath.
+ * @pre BeforeFileReplace() ran on filePath.
+ */
+Result<> WriteXdmfAfterHook(const fs::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
+{
+  std::ofstream file(filePath, std::ios_base::out | std::ios_base::trunc);
+  if(!file.is_open())
+  {
+    return MakeErrorResult(k_XdmfOpenError, fmt::format("Cannot open the XDMF file '{}' for writing. Check that the folder exists and that you have write permission.", PathToUtf8Text(filePath)));
+  }
+
+  WriteXdmf(file, dataStructure, hdf5FilePath);
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  if(GetTextStreamFailureForTesting() == TextStreamFailureForTesting::Write)
+  {
+    file.setstate(std::ios_base::badbit);
+  }
+#endif
+  if(file.fail())
+  {
+    return MakeErrorResult(k_XdmfWriteError, fmt::format("Cannot write the XDMF file '{}'. Check the free disk space.", PathToUtf8Text(filePath)));
+  }
+
+  // Buffered text reaches the file only at the flush, so the close is checked separately.
+  file.close();
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  if(GetTextStreamFailureForTesting() == TextStreamFailureForTesting::Close)
+  {
+    file.setstate(std::ios_base::failbit);
+  }
+#endif
+  if(file.fail())
+  {
+    return MakeErrorResult(k_XdmfCloseError, fmt::format("Cannot flush and close the XDMF file '{}'. The file can be incomplete. Check the free disk space.", PathToUtf8Text(filePath)));
+  }
+  return {};
+}
 } // namespace
 
-void DREAM3D::WriteXdmf(const fs::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
+Result<> DREAM3D::WriteXdmf(const fs::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
 {
-  std::ofstream file(filePath);
-
-  ::WriteXdmf(file, dataStructure, hdf5FilePath);
+  Result<> hookResult = BeforeFileReplace(filePath);
+  if(hookResult.invalid())
+  {
+    return hookResult;
+  }
+  Result<> writeResult = WriteXdmfAfterHook(filePath, dataStructure, hdf5FilePath);
+  PrependWarnings(writeResult, hookResult.warnings());
+  return writeResult;
 }
 
 DREAM3D::FileVersionType DREAM3D::GetFileVersion(const fs::path& path)
@@ -2877,21 +2930,18 @@ Result<> CheckXdmfDestinations(const fs::path& primary, const fs::path& sidecar)
 }
 
 /**
- * @brief Runs the file-write hook on every final path of a write, in order, before the write changes any of them.
- * @param dataStructure Structure that the writer writes.
+ * @brief Runs BeforeFileReplace() on every final path of a write, in order, before the write changes any of them.
  * @param targets Final paths that the writer creates, truncates or opens for writing.
  * @return Valid result with the warnings of every hook call, or the first hook error with the warnings collected before it.
  *
  * A hook error must be returned without a change to any target.
  */
-Result<> RunFileWriteHooks(const DataStructure& dataStructure, const std::vector<fs::path>& targets)
+Result<> BeforeReplacingFiles(const std::vector<fs::path>& targets)
 {
-  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
-  DataIOCollection& ioCollection = application->getIOCollection();
   std::vector<Warning> warnings;
   for(const fs::path& target : targets)
   {
-    Result<> hookResult = ioCollection.beforeFileWrite(dataStructure, target);
+    Result<> hookResult = BeforeFileReplace(target);
     if(hookResult.invalid())
     {
       PrependWarnings(hookResult, warnings);
@@ -2912,8 +2962,8 @@ Result<> RunFileWriteHooks(const DataStructure& dataStructure, const std::vector
  * @param pipeline Pipeline metadata.
  * @param writeXdmf Writes the sidecar when true.
  * @param options Dataset encoding options.
- * @return Creation, write or close error, or success.
- * @pre The file-write hook has run on path and, with writeXdmf, on xdmfFilePath.
+ * @return Creation, write or close error of either file, or success. An XDMF error can follow a complete DREAM3D file.
+ * @pre BeforeFileReplace() has run on path and, with writeXdmf, on xdmfFilePath.
  */
 Result<> WriteDream3dFileAfterHooks(const fs::path& path, const fs::path& xdmfFilePath, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
                                     const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
@@ -2940,10 +2990,47 @@ Result<> WriteDream3dFileAfterHooks(const fs::path& path, const fs::path& xdmfFi
   if(writeXdmf)
   {
     // The XDMF file is UTF-8 XML, so the HDF5 file name is written as UTF-8 text.
-    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, PathToUtf8Text(path.filename()));
+    Result<> xdmfResult = WriteXdmfAfterHook(xdmfFilePath, dataStructure, PathToUtf8Text(path.filename()));
+    if(xdmfResult.invalid())
+    {
+      PrependWarnings(xdmfResult, result.warnings());
+      return xdmfResult;
+    }
   }
 
   return result;
+}
+
+/**
+ * @brief Writes a recovery redirect file: the file version and the absolute path of the authoritative user file.
+ * @param path Recovery destination.
+ * @param userDataFilePath User file that holds the serialized content.
+ * @return Creation, write or close error, or success.
+ * @pre BeforeFileReplace() has run on path.
+ */
+Result<> WriteRecoveryRedirectAfterHook(const fs::path& path, const fs::path& userDataFilePath)
+{
+  // Redirect mode records only file version and the authoritative user-data path.
+  // The user file or its paired pipeline already owns all serialized content.
+  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
+  if(!fileWriter.isValid())
+  {
+    return MakeErrorResult(-9046, fmt::format("Failed to create recovery file at path {}", path.string()));
+  }
+  auto versionResult = WriteFileVersion(fileWriter);
+  if(versionResult.invalid())
+  {
+    return versionResult;
+  }
+  // An absolute path keeps the redirect valid after a working-directory change.
+  const fs::path absUserPath = fs::absolute(userDataFilePath);
+  Result<> attributeResult = fileWriter.writeStringAttribute(k_UserDataFilePathTag.str(), absUserPath.string());
+  if(attributeResult.invalid())
+  {
+    return attributeResult;
+  }
+  // The controller commits a redirect checkpoint on a valid result, so the file must have closed completely.
+  return MergeResults(MergeResults(std::move(versionResult), std::move(attributeResult)), fileWriter.closeChecked());
 }
 } // namespace
 
@@ -2967,8 +3054,8 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
     targets.push_back(xdmfFilePath);
   }
 
-  // Both hooks run before either file changes, so a store that reads the file or its sidecar is released first.
-  Result<> hooksResult = RunFileWriteHooks(dataStructure, targets);
+  // Both hooks run before either file changes, so a component that reads the file or its sidecar stops reading it first.
+  Result<> hooksResult = BeforeReplacingFiles(targets);
   if(hooksResult.invalid())
   {
     return hooksResult;
@@ -2980,34 +3067,18 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
 
 Result<> DREAM3D::WriteRecoveryFile(const fs::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, std::optional<fs::path> userDataFilePath)
 {
-  // Redirect mode records only file version and the authoritative user-data path.
-  // The user file or its paired pipeline already owns all serialized content.
-  if(userDataFilePath.has_value())
+  Result<> hookResult = BeforeFileReplace(path);
+  if(hookResult.invalid())
   {
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
-    if(!fileWriter.isValid())
-    {
-      return MakeErrorResult(-9046, fmt::format("Failed to create recovery file at path {}", path.string()));
-    }
-    auto versionResult = WriteFileVersion(fileWriter);
-    if(versionResult.invalid())
-    {
-      return versionResult;
-    }
-    // An absolute path keeps the redirect valid after a working-directory change.
-    const fs::path absUserPath = fs::absolute(*userDataFilePath);
-    Result<> attributeResult = fileWriter.writeStringAttribute(k_UserDataFilePathTag.str(), absUserPath.string());
-    if(attributeResult.invalid())
-    {
-      return attributeResult;
-    }
-    // The controller commits a redirect checkpoint on a valid result, so the file must have closed completely.
-    return MergeResults(MergeResults(std::move(versionResult), std::move(attributeResult)), fileWriter.closeChecked());
+    return hookResult;
   }
 
-  // Full recovery delegates OOC placeholder metadata to registered recovery writers.
-  // Without one, WriteFile serializes in-core arrays normally.
-  return WriteFile(path, dataStructure, pipeline, false);
+  // In a full snapshot, registered recovery writers can store recovery metadata instead of array payloads. Other arrays
+  // store their payloads. The hook already ran, so it does not run again.
+  Result<> writeResult = userDataFilePath.has_value() ? WriteRecoveryRedirectAfterHook(path, *userDataFilePath) :
+                                                        WriteDream3dFileAfterHooks(path, fs::path(path).replace_extension(".xdmf"), dataStructure, pipeline, false, {});
+  PrependWarnings(writeResult, hookResult.warnings());
+  return writeResult;
 }
 
 Result<std::optional<fs::path>> DREAM3D::ReadUserDataFilePathAttribute(const fs::path& recoveryFilePath)
@@ -3041,7 +3112,7 @@ namespace
  * @param dataStructure Structure that holds the object.
  * @param dataPath Top-level object to append.
  * @return Open, version, append or close error, or success.
- * @pre The file-write hook has run on path.
+ * @pre BeforeFileReplace() has run on path.
  */
 Result<> AppendDream3dFileAfterHook(const fs::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
 {
@@ -3056,7 +3127,7 @@ Result<> AppendDream3dFileAfterHook(const fs::path& path, const DataStructure& d
   {
     return MakeErrorResult(-2, fmt::format("DREAM3D::AppendFile: Incompatible file version '{}'. Expected '{}'", fileVersion, DREAM3D::k_CurrentFileVersion));
   }
-  // The FileIO& overload does not run the hook, so the append runs it once.
+  // The FileIO& overload does not run the hook, so the hook runs once per append.
   Result<> appendResult = HDF5::DataStructureWriter::AppendFile(file, dataStructure, dataPath);
   if(appendResult.invalid())
   {
@@ -3070,7 +3141,7 @@ Result<> AppendDream3dFileAfterHook(const fs::path& path, const DataStructure& d
 
 Result<> DREAM3D::AppendFile(const fs::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
 {
-  Result<> hookResult = RunFileWriteHooks(dataStructure, {path});
+  Result<> hookResult = BeforeFileReplace(path);
   if(hookResult.invalid())
   {
     return hookResult;
@@ -3396,8 +3467,8 @@ Result<> EagerLoadEmptyPlaceholders(DataStructure& dataStructure, const nx::core
           }
           return MergeResults(std::move(result), ConvertResult(std::move(formatResult)));
         }
-        // With no finalizer registered nothing can honor an out-of-core plan, so core falls back to an
-        // in-memory store rather than refusing a file it can still read.
+        // Without a registered finalizer, core cannot use a deferred storage plan. It uses an in-memory store so it can
+        // still read the file.
         if(!formatResult.value().empty() && Application::GetOrCreateInstance()->getIOCollection().anyManagerFinalizesImport())
         {
           return MergeResults(std::move(result),

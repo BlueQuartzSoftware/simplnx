@@ -69,11 +69,11 @@ public:
 
   /**
    * @brief Converts the EBSD files into one H5EBSD file, written to a temporary file and moved onto the output path.
-   * @return Success with the warnings of the file-write hook, or the first error with the hook's warnings.
+   * @return Success with the warnings of the file-replace hook, or the first error with the hook's warnings.
    *
-   * The file-write hook runs on the final output path after the temporary folder exists and before anything is written, so a store
-   * of the pipeline that reads the output file is released before the commit replaces it. Cancellation is checked before and after
-   * the hook; stores released before a cancel stay released.
+   * AtomicFile::Create() runs the file-replace hook on the final output path before the temporary folder exists. Thus a
+   * component that reads the output file stops reading it before the commit replaces the file. Cancellation is checked after
+   * the hook; components released before a cancel stay released.
    */
   Result<> operator()();
 
@@ -85,7 +85,7 @@ private:
    * @param atomicFile Temporary file whose commit() replaces the output file.
    * @return Success, or the write, cancel or commit error. A cancel seen while the slices are converted returns success without the
    * commit, so the output file stays unchanged.
-   * @pre The file-write hook ran on the output path.
+   * @pre The file-replace hook ran on the output path.
    */
   Result<> writeAndCommit(AtomicFile& atomicFile);
 

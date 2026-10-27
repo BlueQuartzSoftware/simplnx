@@ -1,5 +1,6 @@
 #include "ExecuteProcess.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -57,12 +58,23 @@ Result<> ExecuteProcess::operator()()
     return createDirectoriesResult;
   }
 
+  // The log file is truncated in place, so the file-replace hook runs on it first. Every later result carries the hook warnings first.
+  Result<> hookResult = BeforeFileReplace(absPath);
+  if(hookResult.invalid())
+  {
+    return hookResult;
+  }
+  const auto withHookWarnings = [&hookResult](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookResult.warnings().begin(), hookResult.warnings().end());
+    return result;
+  };
+
   // open the log file for storing the process output
   std::ofstream outFile;
   outFile.open(m_InputValues->LogFile, std::ios_base::out);
   if(!outFile.is_open())
   {
-    return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_InputValues->LogFile.string()));
+    return withHookWarnings(MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_InputValues->LogFile.string())));
   }
 
   // gather the command/arguments and process options
@@ -78,12 +90,12 @@ Result<> ExecuteProcess::operator()()
   if(ec == std::errc::no_such_file_or_directory)
   {
     outFile.close();
-    return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", arguments[0]));
+    return withHookWarnings(MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", arguments[0])));
   }
   else if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return withHookWarnings(MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message())));
   }
 
   std::string output;
@@ -94,7 +106,7 @@ Result<> ExecuteProcess::operator()()
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return withHookWarnings(MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message())));
     }
     outFile << output;
   }
@@ -128,7 +140,7 @@ Result<> ExecuteProcess::operator()()
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return withHookWarnings(MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message())));
     }
   }
 
@@ -137,7 +149,7 @@ Result<> ExecuteProcess::operator()()
   if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return withHookWarnings(MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message())));
   }
 
   if(m_InputValues->Blocking)
@@ -146,7 +158,7 @@ Result<> ExecuteProcess::operator()()
   }
 
   outFile.close();
-  return {};
+  return withHookWarnings({});
 }
 
 // -----------------------------------------------------------------------------

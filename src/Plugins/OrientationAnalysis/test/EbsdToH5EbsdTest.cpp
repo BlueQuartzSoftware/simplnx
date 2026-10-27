@@ -2,10 +2,12 @@
 #include "OrientationAnalysis/Filters/EbsdToH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/UnitTest/RecordingFileReplaceHandler.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "H5Support/H5Lite.h"
@@ -18,6 +20,7 @@
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -302,5 +305,83 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
 
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
+  }
+}
+
+TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: the file-replace hook runs once on the output path before it changes", "[OrientationAnalysis][EbsdToH5Ebsd][FileWriteHook]")
+{
+  constexpr int32 k_RecorderWarningCode = 99201;
+  constexpr int32 k_RecorderErrorCode = -99202;
+  constexpr int32 k_FilterCancelledCode = -1;
+  const fs::path outputDirectory = fs::temp_directory_path() / "simplnx_ebsd_to_h5ebsd_hook";
+  fs::remove_all(outputDirectory);
+  fs::create_directories(outputDirectory);
+  const auto removeOutputDirectory = MakeScopeGuard([&outputDirectory]() noexcept {
+    std::error_code ignored;
+    fs::remove_all(outputDirectory, ignored);
+  });
+  const fs::path outputPath = outputDirectory / "output.h5ebsd";
+  {
+    std::ofstream stream(outputPath, std::ios::binary);
+    stream << "previous output";
+  }
+  const auto readOutput = [&outputPath]() {
+    std::ifstream stream(outputPath, std::ios::binary);
+    return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+  };
+
+  EbsdToH5EbsdInputValues inputValues;
+  inputValues.ZSpacing = 1.0F;
+  inputValues.StackingOrder = 0;
+  inputValues.ReferenceFrame = 0;
+  inputValues.OutputPath = outputPath;
+  DataStructure dataStructure;
+  std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler{[](const IFilter::Message&) {}};
+
+  UnitTest::RecordingFileReplaceHandler& recorder = UnitTest::ProcessRecorder();
+  const UnitTest::RecorderDisarmGuard disarmGuard({&recorder});
+  int32 callCount = 0;
+  bool isOutputUnchangedAtCall = false;
+  const auto observe = [&](const fs::path&, FileWriteHookMode) {
+    callCount++;
+    isOutputUnchangedAtCall = readOutput() == "previous output";
+  };
+
+  SECTION("a refusal with any code or with no errors changes nothing")
+  {
+    const Result<> invalidWithoutErrors = Result<>{{nonstd::make_unexpected(ErrorCollection{})}};
+    for(const Result<>& refusal : {MakeErrorResult(k_RecorderErrorCode, "recorder error"), invalidWithoutErrors})
+    {
+      callCount = 0;
+      recorder.arm(outputPath, observe, refusal, false);
+      const Result<> result = EbsdToH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues)();
+      SIMPLNX_RESULT_REQUIRE_INVALID(result);
+      CHECK(result.errors().size() == refusal.errors().size());
+      CHECK(callCount == 1);
+      CHECK(isOutputUnchangedAtCall);
+      CHECK(readOutput() == "previous output");
+      CHECK(std::distance(fs::directory_iterator(outputDirectory), fs::directory_iterator{}) == 1);
+    }
+  }
+  SECTION("a cancel requested by the hook keeps the hook warning and the output")
+  {
+    recorder.arm(
+        outputPath,
+        [&](const fs::path& target, FileWriteHookMode mode) {
+          observe(target, mode);
+          shouldCancel = true;
+        },
+        MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+    const Result<> result = EbsdToH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == k_FilterCancelledCode);
+    REQUIRE(result.warnings().size() == 1);
+    CHECK(result.warnings().front().code == k_RecorderWarningCode);
+    CHECK(callCount == 1);
+    CHECK(isOutputUnchangedAtCall);
+    CHECK(readOutput() == "previous output");
+    CHECK(std::distance(fs::directory_iterator(outputDirectory), fs::directory_iterator{}) == 1);
   }
 }

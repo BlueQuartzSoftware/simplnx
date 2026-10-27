@@ -49,7 +49,8 @@ SIMPLNX_EXPORT std::string DelimiterToString(uint64 delim);
  * @param includeHeaders True to include neighbor-list headers.
  * @param componentsPerLine Specifies numeric-array tuples per text line. Zero selects one.
  * @param swapEndian True to byte-swap temporary numeric pages for binary output.
- * @return First numeric storage, binary stream, atomic-file, commit, or cancellation error.
+ * @return First numeric storage, binary stream, atomic-file, commit, or cancellation error. Every result carries the
+ * warnings of the file-replace hooks of the files prepared so far.
  * @throws std::runtime_error If directoryPath is not a directory or binary output selects a neighbor list.
  *
  * Each output uses AtomicFile and commits only after its stream closes. Numeric
