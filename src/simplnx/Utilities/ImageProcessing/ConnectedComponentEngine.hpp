@@ -24,6 +24,7 @@
 #include <new>
 #include <numeric>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -31,6 +32,13 @@
 
 namespace nx::core::ImageProcessing
 {
+/** @brief Only Connected Component exposes the explicit legacy wrap policy. Other callers keep Error. */
+enum class ConnectedComponentLabelLimitHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 namespace detail
 {
 using ProgressCallback = std::function<void(usize)>;
@@ -443,15 +451,85 @@ private:
   SweepTemporaryStore<uint32>* m_FixedRecordStore = nullptr;
 };
 
-// Union-find over provisional labels (1-based; index 0 unused). union-by-smaller-root, matching ITK ScanlineFilterCommon.
+/**
+ * @brief Checks native provisional IDs and owns one warning across recursive resident attempts and retries.
+ * The decision takes the actual prospective parent-table index. It does not impose a voxel or component limit.
+ */
+class ConnectedComponentLabelState
+{
+public:
+  ConnectedComponentLabelState(ConnectedComponentLabelLimitHandling handling, const IFilter::MessageHandler& messageHandler)
+  : m_Handling(handling)
+  , m_MessageHandler(messageHandler)
+  {
+  }
+  ~ConnectedComponentLabelState() noexcept = default;
+  ConnectedComponentLabelState(const ConnectedComponentLabelState&) = delete;
+  ConnectedComponentLabelState(ConnectedComponentLabelState&&) = delete;
+  ConnectedComponentLabelState& operator=(const ConnectedComponentLabelState&) = delete;
+  ConnectedComponentLabelState& operator=(ConnectedComponentLabelState&&) = delete;
+
+  Result<uint32> labelFor(usize candidate)
+  {
+    if(candidate > std::numeric_limits<uint32>::max())
+    {
+      if(m_Handling == ConnectedComponentLabelLimitHandling::Error)
+      {
+        return MakeErrorResult<uint32>(
+            -8771, fmt::format("Connected-component provisional run ID {} exceeds the uint32 limit of 4,294,967,295. Execution stopped before this ID was created. "
+                               "Reduce the number of foreground runs. In Connected Component only, select 'Warn and Continue (Legacy Behavior)' under 'Provisional Label Limit Handling' "
+                               "only if you intentionally accept lost foreground, merged components, and incorrect counts and statistics.",
+                               candidate));
+      }
+      if(!m_WarningIssued)
+      {
+        m_Warnings = MakeWarningVoidResult(8772, fmt::format("Connected-component provisional run ID {} exceeds 4,294,967,295. 'Warn and Continue (Legacy Behavior)' retains uint32 wrap to "
+                                                             "background zero and reused IDs. Foreground can disappear, components can merge, and counts and downstream statistics can be incorrect. "
+                                                             "Execution routes can give different incorrect results. Memory and I/O failures still stop execution.",
+                                                             candidate));
+        m_WarningIssued = true;
+        m_MessageHandler.sendWarningMessage(m_Warnings.warnings().front().message);
+      }
+    }
+    return {static_cast<uint32>(candidate)};
+  }
+
+  // Called once by the outer execution wrapper, including after cancellation, retry, or an independent error.
+  Result<> finish(Result<> result)
+  {
+    return MergeResults(std::move(result), std::move(m_Warnings));
+  }
+
+private:
+  ConnectedComponentLabelLimitHandling m_Handling;
+  const IFilter::MessageHandler& m_MessageHandler;
+  bool m_WarningIssued = false;
+  Result<> m_Warnings;
+};
+
+// Union-find over uint32 provisional labels. Zero is reserved below capacity; explicit legacy overflow can union it.
 struct CcUnionFind
 {
-  std::vector<uint32> parent{0u}; // parent[0] unused; grows as labels are created
-  uint32 makeLabel()              // create a new provisional label = its own root
+  explicit CcUnionFind(ConnectedComponentLabelState& labelState)
+  : m_LabelState(labelState)
   {
-    const uint32 l = static_cast<uint32>(parent.size());
-    parent.push_back(l);
-    return l;
+  }
+  ~CcUnionFind() noexcept = default;
+  CcUnionFind(const CcUnionFind&) = delete;
+  CcUnionFind(CcUnionFind&&) = delete;
+  CcUnionFind& operator=(const CcUnionFind&) = delete;
+  CcUnionFind& operator=(CcUnionFind&&) = delete;
+
+  std::vector<uint32> parent{0u}; // zero is background; explicit legacy wrap can link foreground to it
+  Result<uint32> makeLabel()      // check the actual next table index before conversion, append, or assignment
+  {
+    auto labelResult = m_LabelState.labelFor(parent.size());
+    if(labelResult.invalid())
+    {
+      return labelResult;
+    }
+    parent.push_back(labelResult.value());
+    return labelResult;
   }
   uint32 find(uint32 l) const noexcept // LookupSet: follow parents to the root
   {
@@ -505,6 +583,9 @@ struct CcUnionFind
     }
     return {consecutive, count};
   }
+
+private:
+  ConnectedComponentLabelState& m_LabelState;
 };
 
 // Encode one gathered x-row into unlabeled foreground runs. `Pred` is a compile-time predicate functor so the
@@ -534,13 +615,19 @@ inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pr
 
 // Encode one gathered x-row and assign each run a fresh provisional label.
 template <class T, class Pred>
-inline void EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcUnionFind& uf, CcLine& line)
+inline Result<> EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcUnionFind& uf, CcLine& line)
 {
   EncodeLineGeometryInto(row, nX, pred, line);
   for(CcRun& run : line)
   {
-    run.label = uf.makeLabel();
+    auto labelResult = uf.makeLabel();
+    if(labelResult.invalid())
+    {
+      return ConvertResult(std::move(labelResult));
+    }
+    run.label = labelResult.value();
   }
+  return {};
 }
 
 // CompareLines: union overlapping runs between the current line and an already-scanned neighbor line. `offset` = 0 for
@@ -715,7 +802,12 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
       CcLine& line = curPlane[static_cast<usize>(y)];
       for(CcRun& run : line)
       {
-        run.label = uf.makeLabel();
+        auto labelResult = uf.makeLabel();
+        if(labelResult.invalid())
+        {
+          return ConvertResult(std::move(labelResult));
+        }
+        run.label = labelResult.value();
       }
 
       // ---- union against already-scanned neighbor lines ----
@@ -1093,7 +1185,10 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
     for(usize localRow = 0; localRow < rowCount; ++localRow)
     {
       const usize rowOffset = localRow * dimX;
-      EncodeLineInto<T, Pred>(nonstd::span<const T>(inputBlock.data() + rowOffset, dimX), signedDimX, pred, uf, currentLine);
+      if(auto result = EncodeLineInto<T, Pred>(nonstd::span<const T>(inputBlock.data() + rowOffset, dimX), signedDimX, pred, uf, currentLine); result.invalid())
+      {
+        return result;
+      }
       if(rowBegin + localRow > 0)
       {
         CompareLines(currentLine, previousLine, lineOffset, uf);
@@ -1190,7 +1285,12 @@ Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, Connected
         }
         if(!runContinues)
         {
-          currentRunLabel = uf.makeLabel();
+          auto labelResult = uf.makeLabel();
+          if(labelResult.invalid())
+          {
+            return ConvertResult(std::move(labelResult));
+          }
+          currentRunLabel = labelResult.value();
           runContinues = true;
           if(sizeByLabel != nullptr && sizeByLabel->size() <= currentRunLabel)
           {
@@ -1288,11 +1388,11 @@ namespace detail
 {
 // Full labeling writes consecutive uint32 labels and reserves zero for the background. Bounded OOC routes replay the
 // input after union resolution, so they do not store a complete provisional-label volume. An extreme 2D tile route can
-// use temporary records for previous-row labels. Raster-order label creation and union operations remain byte-exact.
+// use temporary records for previous-row labels. Legacy overflow deliberately retains route-specific zero handling.
 template <class T, class Pred>
 Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
                                       const std::atomic_bool& shouldCancel, usize target2DBytes, const BeginProgressPhaseCallback& beginProgressPhase, const ProgressCallback& reportCount,
-                                      const ProgressCallback& reportPercent)
+                                      const ProgressCallback& reportPercent, ConnectedComponentLabelState& labelState)
 {
   usize sliceValues = 0;
   usize vol = 0;
@@ -1329,17 +1429,18 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
         {
           return result;
         }
-        if(Result<> result = LabelConnectedComponentsImpl(residentInput, residentOutput, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent);
-           result.invalid())
+        Result<> residentResult =
+            LabelConnectedComponentsImpl(residentInput, residentOutput, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent, labelState);
+        if(residentResult.invalid())
         {
-          return result;
+          return residentResult;
         }
         if(shouldCancel)
         {
-          return {};
+          return residentResult;
         }
         const auto outputSpan = residentOutput.createSpan();
-        return outStore.copyFromBuffer(0, nonstd::span<const uint32>(outputSpan.data(), outputSpan.size()));
+        return MergeResults(std::move(residentResult), outStore.copyFromBuffer(0, nonstd::span<const uint32>(outputSpan.data(), outputSpan.size())));
       } catch(const std::bad_alloc&)
       {
         // Release the full-state reservation before trying the resident-provisional and bounded tiers.
@@ -1375,7 +1476,7 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
     provisional = std::make_unique<detail::ConnectedComponentProvisionalStore>(*provisionalDataStore);
   }
 
-  detail::CcUnionFind uf;
+  detail::CcUnionFind uf(labelState);
   beginProgressPhase("Labeling Connected Components", nZ == 1 ? vol : static_cast<usize>(nZ));
   Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes, reportPercent) :
                                    detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, reportCount);
@@ -1488,9 +1589,16 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
 
 } // namespace detail
 
+/**
+ * @brief Labels native foreground runs with fixed uint32 IDs and strict capacity checking by default.
+ * @param labelLimitHandling Only an explicit legacy choice permits zero/reused IDs after uint32 overflow.
+ * The immediate capacity warning is retained once in the engine Result on success, cancellation, or later failure.
+ * Resident retries share its state. Cancellation retains the existing valid engine Result convention.
+ */
 template <class T, class Pred>
 Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
+                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes,
+                                  ConnectedComponentLabelLimitHandling labelLimitHandling = ConnectedComponentLabelLimitHandling::Error)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
   std::mutex progressMutex;
@@ -1507,55 +1615,81 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
     const std::lock_guard<std::mutex> guard(progressMutex);
     progressThrottle.updatePercent(completed);
   };
-  return detail::LabelConnectedComponentsImpl(inStore, outStore, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent);
+  detail::ConnectedComponentLabelState labelState(labelLimitHandling, messageHandler);
+  try
+  {
+    return labelState.finish(
+        detail::LabelConnectedComponentsImpl(inStore, outStore, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent, labelState));
+  } catch(const std::bad_alloc&)
+  {
+    return labelState.finish(MakeErrorResult(-8773, "Connected-component labeling could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory. "
+                                                    "Legacy label continuation does not waive memory failures."));
+  } catch(const std::length_error&)
+  {
+    return labelState.finish(MakeErrorResult(-8775, "Connected-component labeling exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs. "
+                                                    "Legacy label continuation does not increase storage capacity."));
+  }
 }
 
 // Count-only: number of components with size >= minSize. Pass 1 + resolve + per-root size tally, no output written.
+// Provisional capacity handling is always strict; composite consumers do not inherit legacy continuation.
 // Returns Result<uint32> (rather than a bare uint32) so a Pass1 I/O failure is distinguishable from a legitimate
 // "0 components" count.
 template <class T, class Pred>
 Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected, uint64 minSize, const std::atomic_bool& shouldCancel,
                                         usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
 {
-  usize sliceValues = 0;
-  usize volumeValues = 0;
-  if(Result<> validation = detail::ValidateConnectedComponentVolume(inStore, dims, sliceValues, volumeValues); validation.invalid())
+  try
   {
-    return ConvertResultTo<uint32>(std::move(validation), uint32{0});
-  }
-  if(volumeValues == 0)
-  {
-    return Result<uint32>{0u};
-  }
-  detail::CcUnionFind uf;
-  std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
-  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
-                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallback{});
-  if(pass1Result.invalid())
-  {
-    return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});
-  }
-  if(shouldCancel)
-  {
-    return Result<uint32>{0u};
-  }
-
-  // Resolve per-root sizes now that the union-find is final (roots can still change during Pass1, so this can only be
-  // done AFTER Pass1 completes -- summing by raw provisional label first, as Pass1 does, is what makes that safe).
-  std::vector<uint64> rootSize(uf.parent.size(), 0u);
-  for(usize label = 1; label < sizeByLabel.size(); ++label)
-  {
-    rootSize[uf.find(static_cast<uint32>(label))] += sizeByLabel[label];
-  }
-
-  uint32 numComponents = 0;
-  for(usize i = 1; i < uf.parent.size(); ++i)
-  {
-    if(uf.parent[i] == i && rootSize[i] >= minSize) // i is a root (one entry per component)
+    usize sliceValues = 0;
+    usize volumeValues = 0;
+    if(Result<> validation = detail::ValidateConnectedComponentVolume(inStore, dims, sliceValues, volumeValues); validation.invalid())
     {
-      ++numComponents;
+      return ConvertResultTo<uint32>(std::move(validation), uint32{0});
     }
+    if(volumeValues == 0)
+    {
+      return Result<uint32>{0u};
+    }
+    const IFilter::MessageHandler messageHandler;
+    detail::ConnectedComponentLabelState labelState(ConnectedComponentLabelLimitHandling::Error, messageHandler);
+    detail::CcUnionFind uf(labelState);
+    std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
+    Result<> pass1Result = dims[2] == 1 ?
+                               detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
+                               detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallback{});
+    if(pass1Result.invalid())
+    {
+      return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});
+    }
+    if(shouldCancel)
+    {
+      return Result<uint32>{0u};
+    }
+
+    // Resolve per-root sizes now that the union-find is final (roots can still change during Pass1, so this can only be
+    // done AFTER Pass1 completes -- summing by raw provisional label first, as Pass1 does, is what makes that safe).
+    std::vector<uint64> rootSize(uf.parent.size(), 0u);
+    for(usize label = 1; label < sizeByLabel.size(); ++label)
+    {
+      rootSize[uf.find(static_cast<uint32>(label))] += sizeByLabel[label];
+    }
+
+    uint32 numComponents = 0;
+    for(usize i = 1; i < uf.parent.size(); ++i)
+    {
+      if(uf.parent[i] == i && rootSize[i] >= minSize) // i is a root (one entry per component)
+      {
+        ++numComponents;
+      }
+    }
+    return Result<uint32>{numComponents};
+  } catch(const std::bad_alloc&)
+  {
+    return MakeErrorResult<uint32>(-8774, "Connected-component counting could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory.");
+  } catch(const std::length_error&)
+  {
+    return MakeErrorResult<uint32>(-8776, "Connected-component counting exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs.");
   }
-  return Result<uint32>{numComponents};
 }
 } // namespace nx::core::ImageProcessing

@@ -3947,7 +3947,8 @@ struct ApproximateSignedDistanceMapExecuteFn
  * @brief Dispatched execute body for the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels
  *        into consecutive uint32 components via the streaming scanline union-find @ref LabelConnectedComponents
  *        engine. Output is a FIXED uint32 label image, background 0. Input must be an integer scalar type (the
- *        caller's preflight enforces this via the IntegerOnly policy).
+ *        caller's preflight enforces this via the IntegerOnly policy). Explicit legacy overflow can lose foreground
+ *        or merge components through zero and reused IDs.
  */
 struct ConnectedComponentExecuteFn
 {
@@ -3958,6 +3959,7 @@ struct ConnectedComponentExecuteFn
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
+  ConnectedComponentLabelLimitHandling LabelLimitHandling;
 
   template <class T>
   Result<> operator()() const
@@ -3965,7 +3967,8 @@ struct ConnectedComponentExecuteFn
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
-    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler);
+    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler, k_ConnectedComponent2DTargetBytes,
+                                       LabelLimitHandling);
   }
 };
 
@@ -5591,17 +5594,25 @@ Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStruc
  * @brief Execute the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels of an integer scalar
  *        image into consecutive uint32 components (background 0), via the streaming scanline union-find @ref
  *        LabelConnectedComponents engine. The output is a FIXED uint32 label image, not the input element type.
- *        Reproduces legacy ITK's ConnectedComponentImageFilter label VALUES exactly (see the Parity model). The
- *        caller's preflight must have enforced an integer scalar input.
+ *        Below the provisional uint32 capacity limit, preserves the legacy label values. Only this filter exposes
+ *        legacy overflow continuation; shared consumers retain Error. The caller must enforce an integer scalar input.
  */
 template <class TypeSetPolicy = IntegerOnly>
 Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool fullyConnected,
-                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                              ConnectedComponentLabelLimitHandling labelLimitHandling = ConnectedComponentLabelLimitHandling::Error)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler};
+  const detail::ConnectedComponentExecuteFn executeFn{.dataStructure = dataStructure,
+                                                      .inputArrayPath = inputArrayPath,
+                                                      .outputArrayPath = outputArrayPath,
+                                                      .dims = imageGeom.getDimensions(),
+                                                      .fullyConnected = fullyConnected,
+                                                      .shouldCancel = shouldCancel,
+                                                      .messageHandler = messageHandler,
+                                                      .LabelLimitHandling = labelLimitHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

@@ -1,12 +1,18 @@
 #include "ConnectedComponentImageFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+
+#include <memory>
+#include <utility>
 
 using namespace nx::core;
 
@@ -41,6 +47,12 @@ Parameters ConnectedComponentImageFilter::parameters() const
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
+  params.insert(std::make_unique<ChoicesParameter>(k_ProvisionalLabelLimitHandling_Key, "Provisional Label Limit Handling",
+                                                   "Controls what happens if more than 4,294,967,295 provisional run IDs are needed. Error (default) stops before IDs wrap. "
+                                                   "Warn and Continue (Legacy Behavior) keeps uint32 wrap to background zero and reused IDs. Foreground can disappear, components can merge, "
+                                                   "and segmentation, counts, and downstream statistics can be incorrect. Choose Warn only if you intentionally accept these consequences. "
+                                                   "It does not increase label capacity or prevent memory or I/O errors.",
+                                                   0, ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -56,7 +68,7 @@ Parameters ConnectedComponentImageFilter::parameters() const
 
 IFilter::VersionType ConnectedComponentImageFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 IFilter::UniquePointer ConnectedComponentImageFilter::clone() const
 {
@@ -89,7 +101,8 @@ Result<> ConnectedComponentImageFilter::executeImpl(DataStructure& dataStructure
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  const auto labelLimitHandling = static_cast<ImageProcessing::ConnectedComponentLabelLimitHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_ProvisionalLabelLimitHandling_Key));
 
-  return ImageProcessing::ExecuteConnectedComponentImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, fullyConnected, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteConnectedComponentImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, fullyConnected, shouldCancel, messageHandler, labelLimitHandling);
 }
 } // namespace nx::core
