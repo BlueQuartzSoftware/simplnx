@@ -1018,5 +1018,243 @@ Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const Abstra
   }
 }
 
+/** @brief Constant-size native context for the existing bounded marker-copy pass. */
+template <class T>
+class MarkerIdConversionState
+{
+public:
+  MarkerIdConversionState() = default;
+  ~MarkerIdConversionState() noexcept = default;
+  MarkerIdConversionState(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState(MarkerIdConversionState&&) = delete;
+  MarkerIdConversionState& operator=(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState& operator=(MarkerIdConversionState&&) = delete;
+
+  bool observe(T nativeValue, uint32 encodedValue, usize index) noexcept
+  {
+    const T restoredValue = static_cast<T>(encodedValue);
+    if(restoredValue == nativeValue)
+    {
+      return false;
+    }
+    if(m_ChangedCount == 0)
+    {
+      m_FirstIndex = index;
+      m_FirstNativeValue = nativeValue;
+      m_FirstRestoredValue = restoredValue;
+    }
+    ++m_ChangedCount;
+    return true;
+  }
+
+  Result<> finish(const DataPath& markerPath, MarkerIdConversionHandling handling, Result<> result = {}) const
+  {
+    if(m_ChangedCount == 0)
+    {
+      return result;
+    }
+    const auto context = fmt::format("Marker array '{}' has {} changed marker occurrence(s) observed. First change at flat index {}: native ID {} restores as {} after uint32 conversion. ",
+                                     markerPath.toString(), m_ChangedCount, m_FirstIndex, m_FirstNativeValue, m_FirstRestoredValue);
+    if(handling == MarkerIdConversionHandling::Error)
+    {
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-79073, context +
+                                                      "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
+                                                      "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
+    }
+    return MergeResults(std::move(result),
+                        MakeWarningVoidResult(79074, context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
+                                                               "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
+  }
+
+private:
+  usize m_ChangedCount = 0;
+  usize m_FirstIndex = 0;
+  T m_FirstNativeValue = {};
+  T m_FirstRestoredValue = {};
+};
+
+/**
+ * @brief Functor that copies an integer marker array's values into a uint32 store, dispatched on
+ *        the source element type S via the IntegerOnly policy (which calls operator()<S>() through
+ *        ExecuteDataFunctionIntType). The source is read through the SAFE typed accessor
+ *        getDataRefAs<DataArray<S>> -- not a raw dynamic_cast -- so a type mismatch throws rather than being UB.
+ *        Single-component is guaranteed by the caller's preflight, so getSize() (values) == the tuple count.
+ */
+struct WidenIntegerArrayToUInt32Fn
+{
+  const DataStructure& dataStructure;
+  const DataPath& srcPath;
+  AbstractDataStore<uint32>& dst;
+  const std::atomic_bool& shouldCancel;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
+
+  template <class S>
+  Result<> operator()() const
+  {
+    const AbstractDataStore<S>& s = dataStructure.getDataRefAs<DataArray<S>>(srcPath).getDataStoreRef();
+    const usize total = s.getSize();
+    MarkerIdConversionState<S> conversionState;
+    Result<> accumulated;
+    try
+    {
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<S[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
+      {
+        if(shouldCancel)
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          const S nativeValue = inBufferPtr[index];
+          const uint32 encodedValue = static_cast<uint32>(nativeValue);
+          if(conversionState.observe(nativeValue, encodedValue, start + index) && ConversionHandling == MarkerIdConversionHandling::Error)
+          {
+            // Stop before writing this chunk or entering either flood route.
+            return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+          }
+          outBufferPtr[index] = encodedValue;
+        }
+        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        // count <= total - start, so both the next offset and start + index remain in range.
+        start += count;
+      }
+      return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+    } catch(const std::bad_alloc&)
+    {
+      return conversionState.finish(srcPath, ConversionHandling,
+                                    MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while copying marker IDs.")));
+    }
+  }
+};
+
+/**
+ * @brief Copies the integer marker array at @p srcPath (any of the 8 integer element types) into @p dst as uint32.
+ *        The flood runs in uint32 (see @ref ApplyWatershedFromMarkers) but the marker array may be any integer
+ *        type. All native 8/16/32-bit integers round-trip, including negative signed values. The lossless int64/uint64
+ *        domain is 0 through UINT32_MAX, inclusive. Error stops during this copy before the affected chunk is written;
+ *        Warn keeps the legacy encoding and returns one summary warning, also on cancellation or a later transfer error.
+ */
+inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel,
+                                          MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
+{
+  const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
+  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel, conversionHandling});
+}
+
+/**
+ * @brief Functor that copies a uint32 store's values into an integer output array (narrowing cast), dispatched on
+ *        the destination element type D via the IntegerOnly policy. The destination is written through the SAFE
+ *        typed accessor getDataRefAs<DataArray<D>> -- not a raw dynamic_cast. The output is created of the marker's
+ *        type by preflight. This is the legacy conversion back from the internal uint32 labels; Warn may have already
+ *        removed, aliased, or renamed native 64-bit marker identities during the initial copy.
+ */
+struct NarrowUInt32StoreToIntegerArrayFn
+{
+  const AbstractDataStore<uint32>& src;
+  DataStructure& dataStructure;
+  const DataPath& dstPath;
+  const std::atomic_bool& shouldCancel;
+
+  template <class D>
+  Result<> operator()() const
+  {
+    AbstractDataStore<D>& d = dataStructure.getDataRefAs<DataArray<D>>(dstPath).getDataStoreRef();
+    const usize total = src.getSize();
+    Result<> accumulated;
+    try
+    {
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<D[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
+      {
+        if(shouldCancel)
+        {
+          return accumulated;
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          outBufferPtr[index] = static_cast<D>(inBufferPtr[index]);
+        }
+        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        start += count; // count <= total - start, including the final short chunk.
+      }
+      return accumulated;
+    } catch(const std::bad_alloc&)
+    {
+      return MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while restoring marker IDs."));
+    }
+  }
+};
+
+/**
+ * @brief Narrows the uint32 flood output into the integer output array at @p dstPath (whose element type is the
+ *        marker's type, set by the filter's preflight). Inverse of @ref WidenIntegerArrayToUInt32.
+ */
+inline Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>& src, DataStructure& dataStructure, const DataPath& dstPath, const std::atomic_bool& shouldCancel)
+{
+  const auto& dstArray = dataStructure.getDataRefAs<IDataArray>(dstPath);
+  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{src, dataStructure, dstPath, shouldCancel});
+}
+
+/**
+ * @brief The border sentinel for the uint32 flood: static_cast<uint32>(NumericTraits<markerType>::max()). ITK's
+ *        MorphologicalWatershedFromMarkers uses NumericTraits<TLabel>::max() as the out-of-bounds marker-image
+ *        boundary constant. This value substitutes only out-of-bounds neighbors; UINT32_MAX is a valid in-bounds seed.
+ *        For uint32/int64/uint64 the integer cast yields 0xFFFFFFFF. It does not saturate marker values.
+ */
+inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
+{
+  switch(markerType)
+  {
+  case DataType::int8:
+    return static_cast<uint32>(std::numeric_limits<int8>::max());
+  case DataType::uint8:
+    return static_cast<uint32>(std::numeric_limits<uint8>::max());
+  case DataType::int16:
+    return static_cast<uint32>(std::numeric_limits<int16>::max());
+  case DataType::uint16:
+    return static_cast<uint32>(std::numeric_limits<uint16>::max());
+  case DataType::int32:
+    return static_cast<uint32>(std::numeric_limits<int32>::max());
+  case DataType::uint32:
+    return static_cast<uint32>(std::numeric_limits<uint32>::max());
+  case DataType::int64:
+    return static_cast<uint32>(std::numeric_limits<int64>::max());
+  case DataType::uint64:
+    return static_cast<uint32>(std::numeric_limits<uint64>::max());
+  default:
+    return std::numeric_limits<uint32>::max();
+  }
+}
+
 } // namespace detail
 } // namespace nx::core::ImageProcessing

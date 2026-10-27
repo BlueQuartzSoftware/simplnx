@@ -15,6 +15,13 @@
 
 namespace nx::core::ImageProcessing
 {
+/** @brief Policy for native marker IDs that change during uint32 encoding and restoration. */
+enum class MarkerIdConversionHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 /**
  * @brief The composite grayscale-morphology operation to apply, each built from the Dilate/Erode
  *        primitives (and, for the three difference forms, a single elementwise store subtraction):
@@ -445,16 +452,17 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteThresholdMaximumConnectedComponentsImag
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled
- *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers).
- *        Dispatches the grayscale input over the 10 numeric scalar types in @c AllNumeric. The marker array is
- *        any integer type and the output is created of the marker's type by the filter's preflight. Reproduces legacy
- *        ITK's MorphologicalWatershedFromMarkersImageFilter output EXACTLY, including label values (see the Parity
- *        model and the direct-ITK oracle test). The caller's preflight must have validated the grayscale (scalar,
+ *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers). Dispatches on the grayscale
+ *        input element type (all 10 scalar types); the marker array is
+ *        any integer type and the output is created of the marker's type by preflight. Error protects native marker
+ *        identity before flooding; Warn retains the legacy conversion and flood with one conversion diagnostic.
+ *        The caller's preflight must have validated the grayscale (scalar,
  *        allowed type, tuple==cells) and the marker (integer scalar, tuple==grayscale).
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                       const DataPath& markerArrayPath, const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected,
-                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                                      MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error);
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershed filter: the ITK composite (HMinima ->
