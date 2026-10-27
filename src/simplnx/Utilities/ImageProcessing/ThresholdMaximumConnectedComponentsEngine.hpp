@@ -31,7 +31,10 @@
 
 namespace nx::core::ImageProcessing
 {
-/** @brief Controls the native threshold search. Byte targets affect staging, not segmentation. */
+/**
+ * @struct ThresholdMaxCCOptions
+ * @brief Controls the native threshold search. Byte targets affect staging, not segmentation.
+ */
 struct ThresholdMaxCCOptions
 {
   uint32 MinimumObjectSize = 0;
@@ -126,7 +129,15 @@ ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values,
   return summary;
 }
 
-/** @brief Scans finite native bounds without changing shared statistics or making a full-image temporary. */
+/**
+ * @brief Scans finite native bounds without changing shared statistics or making a full-image temporary.
+ * @tparam T Numeric input value type.
+ * @param input Source values to scan.
+ * @param warnOnNonfinite If true, counts nonfinite samples and continues. If false, a nonfinite sample causes an error.
+ * @param shouldCancel Requests cancellation during the scan.
+ * @return Native finite bounds and sample counts, or a transfer or allocation error, or an error for disallowed nonfinite samples.
+ * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
+ */
 template <class T>
 Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, bool warnOnNonfinite, const std::atomic_bool& shouldCancel)
 {
@@ -244,7 +255,15 @@ struct ThresholdMaxCCCap
   bool Empty = false;
 };
 
-/** @brief NaN is rejected by the caller. Finite integer requests truncate before the lower-bound check. */
+/**
+ * @brief Converts an Upper Boundary request to a native finite cap or an empty-band result.
+ * @tparam T Numeric input value type used for the cap.
+ * @param value Upper Boundary request. Positive infinity selects the native maximum; negative infinity requests an empty band.
+ * @return Native cap with Empty false, or Empty true for negative infinity or a request below the native lower bound.
+ * @pre The caller has rejected NaN.
+ *
+ * For integer input types, finite requests truncate before the lower-bound check. Values above the native maximum use the native maximum.
+ */
 template <class T>
 ThresholdMaxCCCap<T> ConvertThresholdMaxCCCap(float64 value)
 {
@@ -416,10 +435,21 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
 } // namespace detail
 
 /**
- * @brief Searches finite native bounds with the inherited absolute-two stop and nonzero-output component objective.
- * NaN Upper Boundary always fails. Image Error fails in the scan before search/output, even for empty bands.
- * Warn retains ordinary inclusive comparisons, or fills Outside with no calculated threshold when no finite data exist.
- * Count capacity remains strict. Owned scan/output buffers are bounded; component run tables still depend on image topology.
+ * @brief Searches native finite bounds using the nonzero-output component-count heuristic and absolute two-unit stop.
+ * @tparam T Numeric input value type.
+ * @param input Scalar source image in X-fastest order.
+ * @param output Scalar uint8 destination with the input value count.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param options Component-size, cutoff, output-value, nonfinite, and staging controls.
+ * @param shouldCancel Requests cancellation during scan, search, and output work.
+ * @param messageHandler Receives output-phase progress messages.
+ * @return Collected warnings, or a parameter, shape, numeric-capacity, allocation, or transfer error.
+ * Cancellation retains the valid engine-result convention.
+ *
+ * NaN Upper Boundary always fails. Image Error fails in the initial scan, including for an empty requested band.
+ * Warn retains ordinary inclusive comparisons. With no finite data, the engine fills Outside Value and reports that no threshold was calculated.
+ * Count capacity remains strict. Owned scan and output buffers are bounded; component-run tables depend on image topology.
+ * Completed output is not rolled back after a late failure or cancellation.
  */
 template <class T>
 Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& input, AbstractDataStore<uint8>& output, const SizeVec3& dims, const ThresholdMaxCCOptions& options,

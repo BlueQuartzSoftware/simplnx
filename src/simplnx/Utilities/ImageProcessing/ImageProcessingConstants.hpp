@@ -55,6 +55,7 @@ using SameAsInput = T;
 
 /**
  * @brief Maps integer input to float32 and retains floating input types.
+ * @tparam T Numeric input type.
  */
 template <class T>
 using IntegerToFloat32Type = std::conditional_t<std::is_integral_v<T>, float32, T>;
