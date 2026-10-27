@@ -40,6 +40,7 @@ set(FilterList
   ComputeAvgOrientationsFilter
   ComputeBoundaryStrengthsFilter
   ComputeCAxisLocationsFilter
+  ComputeCAxisReferenceMisalignmentsFilter
   ComputeFaceIPFColoringFilter
   ComputeFeatureFaceMisorientationFilter
   ComputeFeatureNeighborCAxisMisalignmentsFilter
@@ -182,6 +183,7 @@ set(filter_algorithms
   ComputeAvgOrientations
   ComputeBoundaryStrengths
   ComputeCAxisLocations
+  ComputeCAxisReferenceMisalignments
   ComputeFaceIPFColoring
   ComputeFeatureFaceMisorientation
   ComputeFeatureNeighborCAxisMisalignments
