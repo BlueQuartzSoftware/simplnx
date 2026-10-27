@@ -121,15 +121,55 @@ The algorithm therefore checks every input property it relies on, and returns an
 
 Filter parameters and preflight give the user early feedback. They do not replace the checks in the algorithm. Do not remove a check from an algorithm because the filter makes it unreachable. Test each of these checks by calling the algorithm directly.
 
-When an algorithm dispatches to more than one implementation (for example an in-memory branch and an out-of-core branch), each branch makes these checks before its first read. A check that is present in one branch only is not enough.
+Write the checks that preflight can make once, in a static `ValidateInputs()` function of the algorithm class, and call it from both places. `preflightImpl()` calls it before it builds its output actions, and the algorithm's `operator()()` calls it before its first read. Do not write a second copy of a check in `preflightImpl()`: two copies drift apart in their conditions, error codes and messages. Build the input values in one function of the filter that `preflightImpl()` and `executeImpl()` both call, so that both check the same inputs with the same options.
+
+- `ValidateInputs()` checks every input condition that parameter values and metadata can answer: scalar ranges and combinations of options, the existence and type of each input object, component shapes, tuple and geometry element counts, and the header of an input file. It checks an optional input only when its option is on, as execute does.
+- It checks inputs only. Outputs, and other objects that the filter's own actions create, do not exist yet during preflight.
+- When the filter's own actions move an input, preflight and the algorithm find it at different paths. `ExtractComponentAsArrayFilter` renames the selected array to a temporary name, and its algorithm reads the array under that name. The caller passes the path where the input is at that point (before the actions in preflight, after them in execute); `ValidateInputs()` does not guess the phase from which path exists.
+- A count that an earlier filter computes in execute is only a placeholder during preflight: `QuickSurfaceMeshFilter` creates its Triangle Geometry with 0 faces (see entry 9 of the [coding knowledge base](Coding_Knowledge_Base.md)). `ValidateInputs()` can compare such counts with each other. A check that needs the final count, such as a check for an empty mesh, runs in execute, like the checks of array values (for example the index-range check below).
+- A check that a parameter already makes (for example `AllowedComponentShapes`) still belongs in it. Through the filter that check runs twice, but a direct caller of the algorithm needs it.
+- Build it from the shared utilities, such as `CheckArraysHaveSameTupleCount()` and `ValidateCellTupleCount()`. A reader checks the file header with the same function in both places; execute still handles a failed read, because the file can change after preflight.
+- Checks that only the filter needs stay in `preflightImpl()`, for example checks of output names and of parameters that the algorithm does not read.
+
+When an algorithm dispatches to more than one implementation (for example an in-memory branch and an out-of-core branch), call `ValidateInputs()` before the dispatch, so that every branch is covered. When a filter dispatches straight to two algorithm classes, as `ComputeGBCDPoleFigureFilter` does, one class owns `ValidateInputs()` and both call it first. A check that only one branch needs stays in that branch, before its first read. A filter whose actions do all of its work, such as `DeleteDataFilter`, needs no algorithm class.
 
 Write the algorithm's preconditions as properties of its inputs (`@pre Epsilon and MinPoints are positive.`). Do not write them as checks that a filter made (`@pre Filter preflight has validated Epsilon.`), because a direct caller does not run that filter.
 
-    // In the algorithm, before any fixed-size buffer is indexed by component
-    if(numComponents != 2 && numComponents != 3)
+    // Algorithms/ExampleAlgorithm.cpp
+    Result<> ExampleAlgorithm::ValidateInputs(const DataStructure& dataStructure, const ExampleAlgorithmInputValues& inputValues)
     {
-      return MakeErrorResult(-54060, fmt::format("Input array '{}' has {} components, but only 2 or 3 are accepted.", inputArrayPath.toString(), numComponents));
+      const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath);
+      if(inputArray == nullptr)
+      {
+        return MakeErrorResult(k_InputArrayMissing, fmt::format("The input array '{}' does not exist or is not a DataArray.", inputValues.InputArrayPath.toString()));
+      }
+      const usize numComponents = inputArray->getNumberOfComponents();
+      if(numComponents != 2 && numComponents != 3)
+      {
+        return MakeErrorResult(k_InputComponentCount, fmt::format("Input array '{}' has {} components, but only 2 or 3 are accepted.", inputValues.InputArrayPath.toString(), numComponents));
+      }
+      return {};
     }
+
+    Result<> ExampleAlgorithm::operator()()
+    {
+      Result<> validationResult = ValidateInputs(m_DataStructure, *m_InputValues);
+      if(validationResult.invalid())
+      {
+        return validationResult;
+      }
+      // ... dispatch and compute, merging each Result into validationResult
+      return validationResult;
+    }
+
+    // ExampleFilter.cpp, in preflightImpl()
+    const ExampleAlgorithmInputValues inputValues = CreateInputValues(filterArgs);
+    Result<OutputActions> resultOutputActions = ConvertResultTo<OutputActions>(ExampleAlgorithm::ValidateInputs(dataStructure, inputValues), {});
+    if(resultOutputActions.invalid())
+    {
+      return {std::move(resultOutputActions)};
+    }
+    // ... append the output actions; keep these warnings when a later check fails
 
 ### Put Each Check at the Earliest Point That Can See Its Data
 
@@ -139,7 +179,7 @@ A filter checks its inputs at three levels. Put each check at the earliest level
 2. **`preflightImpl()`.** Parameter values, relationships between inputs (tuple counts, geometry element counts), geometry and file metadata. Preflight cannot see array values.
 3. **Execute.** Checks that need array values, such as feature ids or phases used as indices.
 
-Do not repeat a parameter or preflight check inside the filter's `executeImpl()`. The algorithm class still keeps its own checks (see above).
+Do not repeat a parameter or preflight check inside the filter's `executeImpl()`. The algorithm still runs its `ValidateInputs()` (see above); that is the same check, not a second copy.
 
 ### Declare the Component Shape the Algorithm Reads
 
@@ -354,7 +394,7 @@ Write every error and warning message by the `bluequartz-skills:error-messages` 
 - **Expected values come from an independent oracle**: a hand calculation, a closed-form result, a reference implementation or verified DREAM3D 6.5.171 output. Never regenerate an exemplar only to absorb a change in output; show with the oracle that the new value is correct.
 - **Generated and expected data come from different `DataStructure`s.** A comparison of an array with itself cannot fail.
 - **Test every mode.** A test that only runs a mode is not enough; it compares the output values of that mode with expected values.
-- **Test both algorithm paths.** For a filter with in-core and out-of-core algorithms, run each test for both with `GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()))` and `UnitTest::AlgorithmTestScope`.
+- **Test both algorithm paths.** For a filter with in-core and out-of-core algorithms, run each test that reaches the dispatch for both with `GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()))` and `UnitTest::AlgorithmTestScope`.
 - **Test every axis and plane** for code that has one block per axis or plane.
 - **Test error paths by code.** Assert the exact error code, not only `REQUIRE_NOTHROW` or an invalid result.
 - **Test degenerate and invalid inputs**: empty geometries, out-of-range feature ids, NaN and limit values (`2^63`, `2^64`, `-1` and `256` for `uint8`), inputs in a `DataGroup` instead of at the root, and arrays from a different Attribute Matrix.
@@ -364,7 +404,7 @@ Write every error and warning message by the `bluequartz-skills:error-messages` 
 - **Test a size failure without the allocator.** The nightly `asan` job runs with the default AddressSanitizer options. A request above the AddressSanitizer limit (1 TiB on 64-bit platforms) stops the test process instead of throwing `std::bad_alloc` (#1885). Use a size that the code rejects before it allocates, such as a shape product that overflows. Test a recoverable allocation failure through a deterministic failure seam. Test an intentional allocator abort in a separate process, with a timeout and a check of its exit result. An AddressSanitizer build alone does not make a real allocation failure recoverable.
 - **No network access in CTest.** A test that needs a network service fails when the service is slow or not available. Do not register it with CTest. Keep the script so that it can be run by hand.
 - **Call `UnitTest::LoadPlugins();` only when the test uses plugin code** that the `Application` must load, for example a test that gets filters from the filter list or runs a pipeline that does. A test that constructs a filter or algorithm class directly and builds its data in memory does not call it.
-- **Test an algorithm's own checks by calling the algorithm directly**, once for each dispatch branch. To reach an out-of-core branch in the in-core build, use a store whose `getStoreType()` returns `IDataStore::StoreType::OutOfCore` (the ImageProcessing tests do this). When that branch needs external sort or temporary record stores, register a test `IDataIOManager` that provides them, as described in the next item.
+- **Test an algorithm's own checks by calling the algorithm directly.** Test each failure of `ValidateInputs()` through `operator()()` and assert its error code; a test of `ValidateInputs()` alone does not show that the algorithm calls it. Such a failure returns before the dispatch, so its test does not use `UnitTest::AlgorithmTestScope`, which requires a branch to run. Test a check that is inside a dispatch branch on that branch. To reach an out-of-core branch in the in-core build, use a store whose `getStoreType()` returns `IDataStore::StoreType::OutOfCore` (the ImageProcessing tests do this). When that branch needs external sort or temporary record stores, register a test `IDataIOManager` that provides them, as described in the next item.
 - **Restore the global I/O state.** A test that registers an `IDataIOManager` changes the `DataIOCollection` for the rest of the process. `DataIOCollection` has no remove call, so replace an existing manager under its format name and re-add the saved original in a destructor, which also runs when an assertion fails (see `ScopedImportSelectionManager` in `test/Dream3dLoadingApiTest.cpp`). Do not rely on ctest running each `TEST_CASE` in its own process: the test executable run directly runs many cases in one process, and a leaked manager makes later tests fail or skip their checks.
 
 ## Build Configuration
