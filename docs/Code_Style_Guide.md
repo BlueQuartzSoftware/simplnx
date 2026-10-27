@@ -320,7 +320,7 @@ The product of a tuple shape or a component shape can be too large for `usize`. 
 - checks each multiplication for overflow, then the element count (tuples times components) and the byte count (elements times `sizeof(T)`).
 - does all checks before it allocates memory or changes a member.
 
-`resizeTuples()` returns an error for an overflow and keeps the store unchanged. `DataStore`, `StringStore` and `ListStore` return error -6035 for a resize failure. `EmptyDataStore` returns `EmptyDataStore::k_ResizeError` (-10603). A constructor throws, because it cannot return a `Result`. Each overflow message names the count that does not fit ("tuple count", "element count" or "byte count"), so that a test can tell the checks apart. Issues #1883 and #1884 track the stores that do not follow this rule yet.
+`resizeTuples()` returns an error for an overflow and keeps the store unchanged. `DataStore`, `StringStore` and `ListStore` return error -6035 for a resize failure. `EmptyDataStore` returns `EmptyDataStore::k_ResizeError` (-10603). A constructor throws, because it cannot return a `Result`. Each overflow message names the count that does not fit ("tuple count", "element count" or "byte count"), so that a test can tell the checks apart. Issues #1883 and #1884 describe stores that break this rule.
 
 ## Geometry Conventions
 
