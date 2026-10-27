@@ -7,13 +7,20 @@
 
 namespace nx::core::ImageProcessing
 {
-/** @brief Preserve floating input types and store integer-input math results as float64. */
+/**
+ * @brief Maps integer input to float64 and retains floating input types.
+ * @tparam T Numeric input type.
+ */
 template <class T>
 using IntegerToFloat64Type = std::conditional_t<std::is_integral_v<T>, float64, T>;
 
 /**
- * @brief Convert a floating math result, using signed infinity outside the float32 finite range.
- * NaN, infinities, signed zero, and ordinary subnormal or zero underflow retain floating semantics.
+ * @brief Converts a math result to its selected floating output type.
+ * @tparam OutputType float32 or float64 output type.
+ * @param value Result calculated in float64.
+ * @return The converted value. For float32 output, values outside the finite range become signed infinity.
+ *
+ * NaN, infinity, signed zero, and subnormal or zero underflow retain floating behavior.
  */
 template <class OutputType>
 OutputType ConvertMathResult(float64 value) noexcept
