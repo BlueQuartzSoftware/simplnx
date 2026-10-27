@@ -14,6 +14,7 @@
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -398,27 +399,57 @@ inline bool FloatAlmostEqual(float64 x1, float64 x2, int64 maxUlps = 1)
  * Bin->value conversion uses the bin maximum (min + (bin+1)*binWidth), matching ITK's GetMaxs(), unless
  * @p returnBinMidpoint is set, in which case the bin midpoint (min + (bin+0.5)*binWidth) is used.
  */
-inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint)
+namespace detail
+{
+inline bool OtsuObjectiveIsUsable(float64 globalMean, const std::vector<float64>& classMean, const std::vector<float64>& classFrequency, float64 objective, bool allowZero = false)
+{
+  if(!std::isfinite(globalMean) || !std::isfinite(objective) || objective < 0.0)
+  {
+    return false;
+  }
+  bool hasNonzeroTerm = false;
+  for(usize j = 0; j < classMean.size(); ++j)
+  {
+    const float64 mean = classMean[j];
+    const float64 square = mean * mean;
+    if(!std::isfinite(mean) || !std::isfinite(classFrequency[j]) || classFrequency[j] < 0.0 || (classFrequency[j] > 0.0 && (!std::isfinite(square) || (mean != 0.0 && square == 0.0))))
+    {
+      return false;
+    }
+    hasNonzeroTerm = hasNonzeroTerm || (classFrequency[j] > 0.0 && square > 0.0);
+  }
+  return allowZero || objective != 0.0 || !hasNonzeroTerm;
+}
+
+template <bool Checked>
+Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint, const std::atomic_bool* shouldCancelPtr)
 {
   const usize numBins = h.counts.size();
   std::vector<float64> thresholds;
   if(numBins == 0 || numThresholds == 0)
   {
-    return thresholds;
+    return {thresholds};
   }
   if(numThresholds >= numBins)
   {
     // Not enough bins to place this many thresholds; the init loop below would index past the end.
-    return thresholds;
+    return {thresholds};
   }
   float64 totalCount = 0.0;
-  for(usize c : h.counts)
+  for(usize bin = 0; bin < numBins; ++bin)
   {
-    totalCount += static_cast<float64>(c);
+    if constexpr(Checked)
+    {
+      if((bin % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
+      {
+        return {std::vector<float64>{}};
+      }
+    }
+    totalCount += static_cast<float64>(h.counts[bin]);
   }
   if(totalCount <= 0.0)
   {
-    return thresholds;
+    return {thresholds};
   }
 
   // Per-bin measurement value == bin midpoint (ITK Histogram::GetMeasurementVector(bin)[0]).
@@ -431,6 +462,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   float64 globalMean = 0.0;
   for(usize b = 0; b < numBins; ++b)
   {
+    if constexpr(Checked)
+    {
+      if((b % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
+      {
+        return {std::vector<float64>{}};
+      }
+    }
     globalMean += measurement(b) * frequency(b);
   }
   globalMean /= totalCount;
@@ -457,6 +495,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   std::vector<float64> imgPDF(numBins, 0.0);
   for(usize b = 0; b < numBins; ++b)
   {
+    if constexpr(Checked)
+    {
+      if((b % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
+      {
+        return {std::vector<float64>{}};
+      }
+    }
     imgPDF[b] = frequency(b) / totalCount;
   }
 
@@ -478,6 +523,15 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   }
   maxVarBetween /= totalCount;
 
+  // Opt-in checks leave the established arithmetic and finite tie rule unchanged.
+  if constexpr(Checked)
+  {
+    if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween))
+    {
+      return MakeErrorResult<std::vector<float64>>(-8320, "Otsu class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
+    }
+  }
+
   // Valley emphasis weighting of the initial configuration. NOTE: this deliberately reproduces the ITK
   // quirk where the initial factor is assigned (=) per threshold rather than accumulated (+=); only the
   // last threshold's PDF survives. The in-loop factor below uses the correct accumulation.
@@ -490,6 +544,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
     }
     valleyEmphasisFactor = 1.0 - valleyEmphasisFactor;
     maxVarBetween = maxVarBetween * valleyEmphasisFactor;
+    if constexpr(Checked)
+    {
+      if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween, valleyEmphasisFactor == 0.0))
+      {
+        return MakeErrorResult<std::vector<float64>>(-8321, "Otsu valley-weighted initial objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
+      }
+    }
   }
 
   // --- IncrementThresholds: advance the odometer-style threshold configuration by one step. ---
@@ -557,6 +618,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   // --- Explore every configuration; keep the one with maximum (valley-weighted) between-class variance. ---
   while(incrementThresholds())
   {
+    if constexpr(Checked)
+    {
+      if(shouldCancelPtr != nullptr && shouldCancelPtr->load())
+      {
+        return {std::vector<float64>{}};
+      }
+    }
     float64 varBetween = 0.0;
     for(usize j = 0; j < numberOfClasses; ++j)
     {
@@ -565,6 +633,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
       varBetween += classFrequency[j] * (classMean[j] * classMean[j]);
     }
     varBetween /= totalCount;
+    if constexpr(Checked)
+    {
+      if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween))
+      {
+        return MakeErrorResult<std::vector<float64>>(-8322, "Otsu candidate class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
+      }
+    }
 
     if(valleyEmphasis)
     {
@@ -575,6 +650,13 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
       }
       valleyEmphasisFactor = 1.0 - valleyEmphasisFactor;
       varBetween = varBetween * valleyEmphasisFactor;
+      if constexpr(Checked)
+      {
+        if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween, valleyEmphasisFactor == 0.0))
+        {
+          return MakeErrorResult<std::vector<float64>>(-8323, "Otsu valley-weighted candidate objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
+        }
+      }
     }
 
     if(varBetween > maxVarBetween && !detail::FloatAlmostEqual(maxVarBetween, varBetween, 1))
@@ -591,6 +673,14 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
     const float64 offset = returnBinMidpoint ? 0.5 : 1.0;
     thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.binWidth;
   }
-  return thresholds;
+  return {std::move(thresholds)};
+}
+} // namespace detail
+
+/** @brief Retains the established unchecked solver contract for existing direct consumers. */
+inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint)
+{
+  auto result = detail::ComputeOtsuThresholds<false>(h, numThresholds, valleyEmphasis, returnBinMidpoint, nullptr);
+  return std::move(result.value());
 }
 } // namespace nx::core::ImageProcessing

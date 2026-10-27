@@ -26,6 +26,10 @@ public:
   static constexpr StringLiteral k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
   static constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
   static constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
+  static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
+  static constexpr StringLiteral k_UseMaskArray_Key = "use_mask_array";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_MaskedLabel_Key = "masked_label";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
