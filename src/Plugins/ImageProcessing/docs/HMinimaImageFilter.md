@@ -8,20 +8,24 @@ ImageProcessing (Morphology)
 
 ## Description
 
-Applies the **H-Minima transform** to a grayscale image. The transform removes every *regional minimum* whose **depth** -- its contrast below the surrounding level -- is less than the **Height** parameter, and raises each surviving minimum by exactly **Height**. Shallow dark features (whose contrast is below **Height**) are filled up to their surrounding background, while deeper dark features are preserved but raised in intensity by **Height**.
+Applies the **H-Minima transform** to a grayscale image. A **regional minimum** is a connected region below its surrounding intensities. Its **depth** is the intensity difference to that surrounding level. The transform suppresses minima whose depth is less than **Height**. Deeper minima rise by Height, subject to the input type's maximum.
 
 The H-Minima transform is commonly used to remove insignificant intensity valleys caused by noise prior to a minima-detection or watershed step, so that only sufficiently prominent minima remain. It is the erosion counterpart of the H-Maxima transform.
 
-Internally the filter performs a **reconstruction-by-erosion** of a marker image equal to the saturating sum `input + Height`, using the input image as the mask. Because the marker is formed with a *saturating* cast, a sum that overflows the element type's range is **clamped** to the type maximum (rather than wrapping), matching the legacy ITK behavior exactly.
+The filter performs **reconstruction by erosion** of the raised marker `input + Height`, with the original input as its lower mask. Erosion lowers marker values through connected neighbors, but cannot lower them below the input mask. Output contains these reconstructed intensities. For example, an isolated minimum *30* in background *50* becomes *40* at Height *10*. It does not become a contrast value of *10*. A one-pixel image has no neighbor to lower its marker, so its output is the raised marker.
 
-The input array must be single-component (scalar); the output element type matches the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK H Minima Image Filter. When all data is resident it uses a fast in-core hybrid reconstruction; when the arrays are out-of-core it streams the computation so memory use stays bounded regardless of image size. Both paths produce bit-identical output, and the result matches the legacy ITK filter exactly.
+The input must have one component per tuple, called a **scalar image**. Output type, tuple dimensions and component dimensions match input. Output storage does not increase automatically. Resident and disk-backed arrays use the same numeric rules.
 
 ### Height
 
-The *Height* parameter sets the contrast threshold in the same units as the image intensities:
+**Height** is a contrast offset in the input's intensity units. It must be finite and nonnegative.
 
-- Regional minima with a contrast **less than** *Height* are removed (filled up to the surrounding level).
-- Regional minima with a contrast **greater than or equal to** *Height* survive but are raised by exactly *Height*.
+- Integer images require a whole-number Height. Fractions such as *0.5* or *2.5* fail preflight. Choose an intentional whole Height, or explicitly convert the input to floating point before using a fraction.
+- Floating images allow fractional Height. Their marker uses floating arithmetic and rounds to the input type's precision.
+- Integer markers use exact native addition and saturate at the input type's maximum. Native 64-bit input values do not pass through floating point. Height *0* preserves every integer input value exactly, including native bounds.
+- Height is stored as a float64 parameter. Above *2^53*, float64 cannot distinguish every consecutive integer Height. The filter uses the whole value represented by that parameter. A Height of *2^64* or more raises every integer marker value to the type maximum.
+
+For existing integer pipelines with fractional Height, choose a whole Height or convert the input explicitly. Exact arithmetic can change results that previously lost native 64-bit units. Review downstream minima selection, watershed seeds and segmentation when migrating such a pipeline.
 
 ### Fully Connected
 
@@ -34,7 +38,11 @@ Geodesic morphology and grayscale reconstruction are described in Chapter 6 of P
 
 ## Algorithm
 
-The filter raises the input by **Height** and reconstructs that marker under the input by erosion. Resident arrays use the Vincent hybrid reconstruction, whose raster, anti-raster, and fold-to-convergence sweeps run as dependency-exact, block-wavefront parallel plane sweeps when the reconstruction uses face connectivity (**Fully Connected** off); with full connectivity it falls back to the exact serial sweeps, since a same-row diagonal read can land in the horizontally adjacent block, which no rectangular block schedule can order. Disk-backed reconstruction iterates a forward raster sweep followed by a reverse anti-raster sweep over consecutive Z-plane slabs until stable, skipping any slab whose planes are already proven unchanged since that direction's last visit. Within a plane, the raster/anti-raster sweep is tiled into independent blocks that run in parallel; under face connectivity every voxel still sees exactly the values the un-blocked sweep would produce, and under full connectivity the iterated forward/reverse passes still converge to the identical final result. Each work and mask slab targets 16 MiB, plus one boundary plane. At least one plane is processed, so a single plane wider than the target can make the buffers exceed 16 MiB. Update order and output are unchanged, preserving exact storage-path parity.
+The filter raises the input by Height and reconstructs that marker under the input by erosion. Resident input uses a materialized marker and keeps the Vincent hybrid reconstruction route. This route can allocate complete resident images for its marker and reconstruction work.
+
+Disk-backed input derives marker values in owned reconstruction buffers. It does not require a separate complete resident marker image. Reconstruction keeps its existing working-memory reservation and sweep routes. A granted working set can hold a complete image when it fits. Otherwise, 2-D data uses rows or tiles, and 3-D data uses slabs with a boundary plane. A 3-D streaming plan needs space for two working planes and one boundary plane. Execution fails if the grant cannot hold that minimum. The working-buffer budget excludes data stores, their cache and other process memory.
+
+Store transfers remain serial; parallel work uses stable owned buffers. Transfer errors, cancellation and existing allocation fallbacks retain their existing behavior. A later execution failure can leave completed output values or chunks written. An error does not promise an unchanged output array.
 
 % Auto generated parameter table will be inserted here
 
