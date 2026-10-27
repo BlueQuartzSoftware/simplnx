@@ -1,12 +1,18 @@
 #include "CurvatureFlowImageFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+
+#include <utility>
 
 using namespace nx::core;
 
@@ -74,6 +80,16 @@ IFilter::PreflightResult CurvatureFlowImageFilter::preflightImpl(const DataStruc
   // the legacy ScalarPixelIdTypeList), matching the legacy ITK filter, which has no minimum-dimension requirement.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
+  if(resultOutputActions.invalid())
+  {
+    return {.outputActions = std::move(resultOutputActions)};
+  }
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const float64 timeStep = filterArgs.value<float64>(k_TimeStep_Key);
+  if(Result<> result = ImageProcessing::detail::ValidateCurvatureFlowControls(timeStep, imageGeom.getSpacing(), imageGeom.getDimensions()); result.invalid())
+  {
+    return {.outputActions = MergeResults(std::move(resultOutputActions), ConvertResultTo<OutputActions>(std::move(result), OutputActions{}))};
+  }
   return {std::move(resultOutputActions)};
 }
 
@@ -88,7 +104,7 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
 
-  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric>(
+  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true>(
       dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
 }
 } // namespace nx::core

@@ -30,6 +30,11 @@ inline constexpr int32 k_GradientMagnitudeZeroSpacing = -8573;
 // exceeds the CFL stability bound minSpacing/2^(ImageDimension+1). Shared by the anisotropic-diffusion pair
 // (GradientAnisotropicDiffusion now; CurvatureAnisotropicDiffusion later) via AppendUnstableTimeStepWarning.
 inline constexpr int32 k_AnisotropicDiffusionUnstableTimeStep = -8580;
+// Scoped Curvature Flow validation and final-conversion diagnostics.
+inline constexpr int32 k_CurvatureFlowInvalidTimeStep = -28800;
+inline constexpr int32 k_CurvatureFlowInvalidSpacing = -28801;
+inline constexpr int32 k_CurvatureFlowNonFiniteIntegerOutput = -28802;
+inline constexpr int32 k_CurvatureFlowClippedIntegerOutput = -28803;
 // RelabelComponent's consecutive output-label counter overflows the (possibly narrow, e.g. int8) SameAsInput output
 // type when there are more surviving objects than the type can represent. Mirrors itk::RelabelComponentImageFilter::
 // GenerateData's NumericTraits<OutputPixelType>::max() guard (which itkExceptionMacro-throws in the same situation).
