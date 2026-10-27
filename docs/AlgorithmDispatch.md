@@ -226,7 +226,6 @@ RAII guard that sets `ForceOocAlgorithm()` on construction and restores the prev
 
 TEST_CASE("MyFilter", "[Plugin][MyFilter]")
 {
-  UnitTest::LoadPlugins();
   bool forceOocAlgo = GENERATE(false, true);
   const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
