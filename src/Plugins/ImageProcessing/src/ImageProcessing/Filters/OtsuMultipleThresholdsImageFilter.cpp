@@ -1,8 +1,19 @@
 #include "OtsuMultipleThresholdsImageFilter.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -10,37 +21,41 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/OtsuImageEngine.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
-#include <algorithm>
+#include <atomic>
+#include <memory>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
 
 namespace
 {
-struct OtsuOperation
+struct OtsuExecute
 {
-  uint32 numBins = 128u;
-  uint8 numThresholds = 1u;
-  uint8 labelOffset = 0u;
-  bool valleyEmphasis = false;
-  bool returnBinMidpoint = false;
+  DataStructure& Data;
+  const DataPath& InputPath;
+  const DataPath& OutputPath;
+  const IDataArray* MaskPtr;
+  const ImageProcessing::OtsuImageOptions& Options;
+  const std::atomic_bool& ShouldCancel;
+  const IFilter::MessageHandler& MessageHandler;
 
-  template <class T, class U>
-  auto makeClassifyOp(const std::vector<float64>& thresholds) const
+  template <class T>
+  Result<> operator()() const
   {
-    const uint8 offset = labelOffset;
-    return [thresholds, offset](T value) -> U {
-      // class index = count of thresholds this value STRICTLY EXCEEDS, + labelOffset. std::lower_bound gives the
-      // count of thresholds < value, i.e. a value exactly equal to a threshold lands in the LOWER class -- which
-      // is ITK's ThresholdLabeler convention ("values equal to a threshold are in the lower class"). Using
-      // std::upper_bound here put a value == threshold one class too high (e.g. every voxel of a constant image).
-      const auto idx = static_cast<usize>(std::lower_bound(thresholds.begin(), thresholds.end(), static_cast<float64>(value)) - thresholds.begin());
-      return static_cast<U>(offset + idx);
-    };
+    const auto& input = Data.getDataRefAs<DataArray<T>>(InputPath).getDataStoreRef();
+    auto& output = Data.getDataRefAs<DataArray<uint8>>(OutputPath).getDataStoreRef();
+    if(MaskPtr != nullptr && MaskPtr->getDataType() == DataType::boolean)
+    {
+      return ImageProcessing::ApplyOtsuImage(input, output, &MaskPtr->getIDataStoreRefAs<AbstractDataStore<bool>>(), Options, ShouldCancel, MessageHandler);
+    }
+    const auto* maskStorePtr = MaskPtr == nullptr ? nullptr : &MaskPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+    return ImageProcessing::ApplyOtsuImage(input, output, maskStorePtr, Options, ShouldCancel, MessageHandler);
   }
 };
 } // namespace
@@ -77,6 +92,18 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "Valley Emphasis", "Set/Get the use of valley emphasis. Default is false.", false));
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
+      "Error stops on selected NaN or infinity. Warn and Continue retains NaN/negative infinity in the first histogram bin and positive infinity in the last; classification may be unreliable.", 0,
+      ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UseMaskArray_Key, "Use Mask Array", "Explicitly exclude pixels with a zero/false mask value before range and nonfinite checks.", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Select a scalar bool or uint8 mask with one value per input tuple. Nonzero values select pixels.",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<UInt8Parameter>(k_MaskedLabel_Key, "Masked Label",
+                                                 "Label for excluded pixels. It must be outside the entire configured class interval; downstream filters must explicitly honor it.", uint8{255}));
+  params.linkParameters(k_UseMaskArray_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseMaskArray_Key, k_MaskedLabel_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -92,7 +119,7 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
 }
 IFilter::VersionType OtsuMultipleThresholdsImageFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 IFilter::UniquePointer OtsuMultipleThresholdsImageFilter::clone() const
 {
@@ -115,6 +142,32 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
     return {
         MakeErrorResult<OutputActions>(-8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
   }
+  const uint32 labelOffset = filterArgs.value<uint8>(k_LabelOffset_Key);
+  const uint32 lastLabel = labelOffset + static_cast<uint32>(numberOfThresholds);
+  if(lastLabel > 255)
+  {
+    return {.outputActions =
+                MakeErrorResult<OutputActions>(-8312, fmt::format("Label Offset ({}) plus Number Of Thresholds ({}) exceeds 255. Reduce either value to keep every class label within uint8.",
+                                                                  labelOffset, static_cast<uint32>(numberOfThresholds)))};
+  }
+  if(filterArgs.value<bool>(k_UseMaskArray_Key))
+  {
+    const uint32 maskedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key);
+    if(maskedLabel >= labelOffset && maskedLabel <= lastLabel)
+    {
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -8313, fmt::format("Masked Label ({}) collides with the configured class interval [{}, {}]. Select a Masked Label outside this interval or reduce the class interval.", maskedLabel,
+                                     labelOffset, lastLabel))};
+    }
+    const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+    const auto& mask = dataStructure.getDataRefAs<IDataArray>(maskPath);
+    const auto& input = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
+    if(mask.getNumberOfTuples() != input.getNumberOfTuples())
+    {
+      return {.outputActions = MakeErrorResult<OutputActions>(-8314, fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
+                                                                                 maskPath.toString(), mask.getNumberOfTuples(), selectedInputArray.toString(), input.getNumberOfTuples()))};
+    }
+  }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
@@ -135,14 +188,17 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  auto numberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key);
-  auto labelOffset = filterArgs.value<uint8>(k_LabelOffset_Key);
-  auto numberOfHistogramBins = filterArgs.value<uint32>(k_NumberOfHistogramBins_Key);
-  auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
-  auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
-
-  const OtsuOperation operation{numberOfHistogramBins, numberOfThresholds, labelOffset, valleyEmphasis, returnBinMidpoint};
-  return ImageProcessing::ExecuteHistogramImageFilter<ImageProcessing::AllNumeric>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = filterArgs.value<uint32>(k_NumberOfHistogramBins_Key),
+                                                  .NumberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key),
+                                                  .LabelOffset = filterArgs.value<uint8>(k_LabelOffset_Key),
+                                                  .MaskedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key),
+                                                  .WarnOnNonfinite = filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1,
+                                                  .ValleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key),
+                                                  .ReturnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key)};
+  const IDataArray* maskPtr = filterArgs.value<bool>(k_UseMaskArray_Key) ? &dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_MaskArrayPath_Key)) : nullptr;
+  const OtsuExecute execute{
+      .Data = dataStructure, .InputPath = selectedInputArray, .OutputPath = outputArrayPath, .MaskPtr = maskPtr, .Options = options, .ShouldCancel = shouldCancel, .MessageHandler = messageHandler};
+  return ImageProcessing::AllNumeric::dispatch(dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType(), execute);
 }
 
 namespace
