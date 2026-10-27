@@ -5,8 +5,9 @@ made, why it happened, how it was found, and the rule that prevents it. The audi
 agents that work in this repository. Read the rules before you write or review code in the area they cover.
 
 Add a new entry when a defect taught something that the code itself does not make obvious. Keep the entries short.
-State the rule first, then the evidence. A project convention that does not come from a defect belongs in
-[the code style guide](Code_Style_Guide.md) instead.
+State the rule first, then the evidence. Cite pull requests and issues by number, but do not say whether they are
+open, merged or closed: that changes, and the entry would go stale. A project convention that does not come from a
+defect belongs in [the code style guide](Code_Style_Guide.md) instead.
 
 ## Index
 
@@ -54,7 +55,7 @@ State the rule first, then the evidence. A project convention that does not come
 object becomes a link. Record an object in that map only when it belongs to the `DataStructure` that is being written.
 Return an error when an ID is already recorded at a different path; do not overwrite the entry.
 
-**Pattern to use:** `DataStructureWriter::addWriter()` in open pull request #1859 ignores objects outside
+**Pattern to use:** `DataStructureWriter::addWriter()` in pull request #1859 ignores objects outside
 `m_WrittenStructure`, obtains the object ID and writer path, and inserts them with `m_IdMap.try_emplace()`. If the ID
 already maps to a different path, it returns error -6055 instead of replacing that mapping.
 
@@ -66,7 +67,7 @@ structure and the written structure can both hold an object with the same ID.
 
 **How it showed up:** the NeighborList writer sends a temporary counts array through the main writer. That array
 replaced the map entry of an unrelated object that had two locations, and the second location became a link to the
-counts dataset. Issue #1831. Fixed by open PR #1859, not merged yet.
+counts dataset. Issue #1831. Fixed by PR #1859.
 
 **How to recognize it next time:**
 
@@ -80,7 +81,7 @@ counts dataset. Issue #1831. Fixed by open PR #1859, not merged yet.
 **Rule:** a writer that owns an HDF5 file closes it explicitly and checks the result before it returns success. A close
 failure is returned before `AtomicFile::commit()` replaces the old file.
 
-**Pattern to use:** `FileIO::closeChecked()` in open pull request #1859. For example, the path-based write of
+**Pattern to use:** `FileIO::closeChecked()` in pull request #1859. For example, the path-based write of
 `DataStructureWriter` ends with `return MergeResults(std::move(writeResult), fileWriter.closeChecked());`.
 
 **Pattern to avoid:** return success while the `FileIO` object is still in scope, so that its destructor closes the
@@ -90,7 +91,7 @@ file and discards the result of `H5Fclose()`.
 is complete.
 
 **How it showed up:** an injected close failure still gave a valid `Result`, so **Write DREAM3D-NX File** could replace
-the old output file with an incomplete one. Issue #1832. Fixed by open PR #1859, not merged yet.
+the old output file with an incomplete one. Issue #1832. Fixed by PR #1859.
 
 **How to recognize it next time:**
 
@@ -146,8 +147,8 @@ not convert exceptions into errors.
 
 **How it showed up:** selections that the parameters accepted caused `std::bad_cast` in preflight, or reached a Boolean
 type that the algorithm dispatch did not support. Issues #1821 and #1833. PRs #1817 and #1763 fixed the affected
-filters. Open PR #1766 tightens the parameter declarations and preflight checks of individual filters; it does not fix
-the shared parameter-validation gaps and is not merged yet.
+filters. PR #1766 tightens the parameter declarations and preflight checks of individual filters; it does not fix
+the shared parameter-validation gaps.
 
 **How to recognize it next time:**
 
@@ -199,7 +200,7 @@ result as an arithmetic average after unwrapping.
 **Why:** the circular mean and the unwrapped arithmetic mean are different for an asymmetric population.
 
 **How it showed up:** PR #1670 (issue #1665) removed constant-offset corrections from the triangle and feature centroid
-filters. The arithmetic centroid for cells in `ComputeFeatureCentroids` is fixed by open PR #1764, not merged yet.
+filters. The arithmetic centroid for cells in `ComputeFeatureCentroids` is fixed by PR #1764.
 
 **How to recognize it next time:**
 
