@@ -128,7 +128,7 @@ Write the algorithm's preconditions as properties of its inputs (`@pre Epsilon a
     // In the algorithm, before any fixed-size buffer is indexed by component
     if(numComponents != 2 && numComponents != 3)
     {
-      return MakeErrorResult(-54060, fmt::format("Input array has {} components but only 2 or 3 are accepted.", numComponents));
+      return MakeErrorResult(-54060, fmt::format("Input array '{}' has {} components, but only 2 or 3 are accepted.", inputArrayPath.toString(), numComponents));
     }
 
 ### Put Each Check at the Earliest Point That Can See Its Data
@@ -165,9 +165,9 @@ Tuple-count rules for input arrays:
 - **Outputs sized from an Attribute Matrix**: every input that sets the loop count must have the same tuple count as that Attribute Matrix.
 - **A spatial filter that modifies Feature Ids, its sibling cell arrays, or the Feature Attribute Matrix** requires Feature Ids to be in the geometry's Cell Attribute Matrix. Use `ValidateArrayInGeometryCellData()`, `ValidateArraysInGeometryCellData()` and `ValidateFeatureAttributeMatrixInGeometry()`.
 
-Every message names both paths and both counts:
+Every message names both paths and both counts, as the `bluequartz-skills:error-messages` skill requires:
 
-    "The selected DataArray 'Face Labels' has 12 tuples, but the Triangle Geometry 'Mesh' has 24 faces."
+    "The selected DataArray 'Mesh/Face Data/Face Labels' has 12 tuples, but the Triangle Geometry 'Mesh' has 24 faces."
 
 ### Range-Check Every Index That Comes From Data
 
@@ -209,7 +209,7 @@ A direction or axis parameter must not default to `{0, 0, 0}`, and preflight rej
 - Use `getCellData()`, `getVertexAttributeMatrix()`, `getFaceAttributeMatrix()` and similar accessors and check for `nullptr`. A geometry can have lost its Attribute Matrix.
 - Use non-throwing library calls (`std::filesystem::directory_iterator(path, errorCode)`, `nlohmann::json::parse(text, nullptr, false)`), or catch the exception and return an error `Result`.
 - Check `Result::invalid()` and `std::optional::has_value()` before calling `.value()`.
-- When code walks every child of an Attribute Matrix, handle each array kind (`IDataArray`, `StringArray`, `INeighborList`) or return an error that names the array.
+- When code walks every child of an Attribute Matrix, handle each array kind (`IDataArray`, `StringArray`, `INeighborList`) or return an error that names the array. Write that message by the `bluequartz-skills:error-messages` skill.
 
 ### Preflight and Execute Make the Same Decisions
 
@@ -237,7 +237,7 @@ Build each `DataPath` from the path that the user selected or that preflight cre
 
 ### Never Drop a Result
 
-Return every `Result` or merge it into the `Result` that the function returns. A later warning or error must not replace an earlier one.
+Return every `Result` or merge it into the `Result` that the function returns. A later warning or error must not replace an earlier one. The text of each error and warning, and how to read the errors of a `Result`, follow the `bluequartz-skills:error-messages` skill.
 
     if(suppressedFaceCount == 0)
     {
@@ -320,7 +320,7 @@ The product of a tuple shape or a component shape can be too large for `usize`. 
 - checks each multiplication for overflow, then the element count (tuples times components) and the byte count (elements times `sizeof(T)`).
 - does all checks before it allocates memory or changes a member.
 
-`resizeTuples()` returns an error for an overflow and keeps the store unchanged. `DataStore`, `StringStore` and `ListStore` return error -6035 for a resize failure. `EmptyDataStore` returns `EmptyDataStore::k_ResizeError` (-10603). A constructor throws, because it cannot return a `Result`. Each overflow message names the count that does not fit ("tuple count", "element count" or "byte count"), so that a test can tell the checks apart. Issues #1883 and #1884 describe stores that break this rule.
+`resizeTuples()` returns an error for an overflow and keeps the store unchanged. `DataStore`, `StringStore` and `ListStore` return error -6035 for a resize failure. `EmptyDataStore` returns `EmptyDataStore::k_ResizeError` (-10603). A constructor throws, because it cannot return a `Result`. Each overflow message names the count that does not fit ("tuple count", "element count" or "byte count"), so that a test can tell the checks apart; the rest of its text follows the `bluequartz-skills:error-messages` skill. Issues #1883 and #1884 describe stores that break this rule.
 
 ## Geometry Conventions
 
@@ -329,6 +329,8 @@ The product of a tuple shape or a component shape can be too large for `usize`. 
 - Do not `static_cast` a choice index to an enum. The order of the choice list does not have to match the enum values (`IGeometry::LengthUnit::Unspecified` is 100, but it is choice index 27). Map the index through a lookup.
 
 ## Error Codes and Messages
+
+Write every error and warning message by the `bluequartz-skills:error-messages` skill: it says which values, paths and corrective actions a message shows and how it formats them. The code-allocation rules below supplement that skill.
 
 ### Error Codes Are Unique
 
