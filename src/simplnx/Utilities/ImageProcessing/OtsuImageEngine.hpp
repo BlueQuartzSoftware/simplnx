@@ -28,7 +28,10 @@
 
 namespace nx::core::ImageProcessing
 {
-/** @brief Selected Otsu controls. All output class labels remain uint8. */
+/**
+ * @struct OtsuImageOptions
+ * @brief Holds Otsu controls for fixed uint8 output labels.
+ */
 struct OtsuImageOptions
 {
   uint32 NumberOfBins = 128;
@@ -41,7 +44,10 @@ struct OtsuImageOptions
   usize TargetBytes = 64ULL * 1024ULL * 1024ULL;
 };
 
-/** @brief Histogram plus selected sample counts. Excluded samples are absent from every count. */
+/**
+ * @struct OtsuHistogramResult
+ * @brief Holds the selected histogram and sample counts. Excluded samples are absent from every count.
+ */
 struct OtsuHistogramResult
 {
   Histogram HistogramData;
@@ -349,8 +355,17 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
 
 /**
  * @brief Builds the selected Otsu histogram without changing generic histogram consumers.
- * @details Mask selection precedes nonfinite/range checks. Compact native integral ranges retain exact fixed-ring
- * frequencies; other ranges use a second bounded pass. A valid cancellation is returned to the owning filter.
+ * @tparam T Numeric input value type.
+ * @tparam MaskT Boolean or uint8 selection-mask type.
+ * @param input Scalar source values.
+ * @param maskPtr Optional scalar mask with the input tuple count, paired in flat order. Null selects every input value.
+ * @param options Histogram-bin count, nonfinite policy, and transfer-memory target.
+ * @param shouldCancel Requests cancellation during scans and histogram construction.
+ * @return Histogram and selected finite and nonfinite sample counts, or an input, numeric, or transfer error.
+ * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
+ *
+ * Mask selection precedes nonfinite and range checks. Compact native integer ranges retain exact frequencies in a fixed ring.
+ * Other ranges use a second bounded pass.
  */
 template <class T, class MaskT = uint8>
 Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel)
@@ -565,7 +580,16 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   return ConvertResultTo(std::move(rangeResult), std::move(result));
 }
 
-/** @brief Runs the existing finite solver with opt-in numeric checks and cooperative cancellation. */
+/**
+ * @brief Runs the existing finite Otsu solver with opt-in numeric checks and cooperative cancellation.
+ * @param histogram Selected histogram with usable bounds, bin width, and counts.
+ * @param options Threshold count, Valley Emphasis, and bin-midpoint selection.
+ * @param shouldCancel Requests cancellation during threshold search.
+ * @return Ordered threshold values, or a configuration or numeric error. Cancellation can return a valid empty vector.
+ * The caller must check shouldCancel before classification.
+ *
+ * A true constant uses repeated thresholds at that constant. Finite tie and Valley Emphasis rules remain unchanged.
+ */
 inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram& histogram, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel)
 {
   if(shouldCancel)
@@ -592,7 +616,15 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
   return detail::ComputeOtsuThresholds<true>(histogram, options.NumberOfThresholds, options.ValleyEmphasis, options.ReturnBinMidpoint, &shouldCancel);
 }
 
-/** @brief Maps selected values to ordinary uint8 classes; equality stays in the lower class. */
+/**
+ * @brief Maps one selected value to an ordinary uint8 class; equality stays in the lower class.
+ * @tparam T Numeric input value type.
+ * @param value Native value to classify. NaN and negative infinity use the lowest class; positive infinity uses the highest class.
+ * @param thresholds Finite thresholds in ascending order, with exactly NumberOfThresholds entries.
+ * @param options Class offset and threshold count. Their sum must not exceed 255.
+ * @return The ordinary class label. Masked-label selection belongs to the caller.
+ * @pre The caller has validated the class interval and threshold vector and has enforced the selected nonfinite policy.
+ */
 template <class T>
 uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const OtsuImageOptions& options)
 {
@@ -607,7 +639,22 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
   return static_cast<uint8>(static_cast<usize>(options.LabelOffset) + index);
 }
 
-/** @brief Applies a checked Otsu result; an optional mask is read in flat tuple order in bounded owned chunks. */
+/**
+ * @brief Fits an Otsu histogram and writes selected classes and optional masked labels.
+ * @tparam T Numeric input value type.
+ * @tparam MaskT Boolean or uint8 selection-mask type.
+ * @param input Scalar source image.
+ * @param output Scalar uint8 destination with the input value count.
+ * @param maskPtr Optional scalar mask with the input tuple count, paired in flat order. Null selects every value.
+ * @param options Histogram, class-label, nonfinite, and transfer controls.
+ * @param shouldCancel Requests cancellation during scans, search, and output work.
+ * @param messageHandler Receives output-phase progress messages.
+ * @return Collected diagnostics, including the nonfinite participation warning, or a validation, numeric, or transfer error.
+ * Cancellation retains the valid engine-result convention.
+ *
+ * Mask selection precedes histogram and nonfinite checks. The optional mask is read in bounded owned chunks.
+ * A later write failure or cancellation can leave completed output batches in place.
+ */
 template <class T, class MaskT = uint8>
 Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uint8>& output, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options,
                         const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)

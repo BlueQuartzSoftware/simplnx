@@ -7,18 +7,25 @@
 
 namespace nx::core::ImageProcessing::detail
 {
-/** @brief Reports the final conversion without allocating diagnostics inside a pixel loop. */
+/**
+ * @enum TerminalImageConversionStatus
+ * @brief Reports the final conversion without allocating diagnostics inside a pixel loop.
+ */
 enum class TerminalImageConversionStatus : std::uint8_t
 {
-  Valid,
-  Clipped,
-  NonFinite
+  Valid,    ///< A converted result is available without integer clipping.
+  Clipped,  ///< A finite integer result was clipped after truncation.
+  NonFinite ///< A nonfinite integer result was rejected; output is unchanged.
 };
 
 /**
- * @brief Retains floating behavior and explicitly maps finite narrowing overflow to signed infinity.
- * The input must already be float32 or float64. Preserve existing direct integer-to-float32 conversions at callers;
- * passing those integers through float64 first can introduce double rounding.
+ * @brief Converts floating image values and maps finite narrowing overflow to signed infinity.
+ * @tparam OutputType float or double destination type.
+ * @tparam InputType float or double source type.
+ * @param value Floating value to convert.
+ * @return The converted value, retaining NaN, infinity, and signed zero behavior.
+ *
+ * Preserve direct integer-to-float32 conversions at callers. Passing those integers through float64 first can introduce double rounding.
  */
 template <class OutputType, class InputType>
 OutputType NarrowFloatingImageValue(InputType value)
@@ -38,9 +45,17 @@ OutputType NarrowFloatingImageValue(InputType value)
 }
 
 /**
- * @brief Converts one final image value. Finite integers truncate before clipping; nonfinite integers fail.
- * The binary exclusive upper bound is exact at 64-bit widths, unlike a floating conversion of the native maximum.
- * This function does not change intermediate image precision or aggregate warnings.
+ * @brief Converts one final image value without changing intermediate image precision.
+ * @tparam OutputType Integer, float, or double output type.
+ * @tparam InputType float or double working-value type.
+ * @param value Final working value to convert.
+ * @param output Receives the converted value. Remains unchanged when NonFinite is returned.
+ * @return Valid for a floating conversion or an integer conversion within range. Clipped for a finite integer result outside the range after truncation.
+ * NonFinite only for a nonfinite value with an integer output type.
+ *
+ * A Valid floating result can be NaN or infinity. Finite integer values truncate toward zero before clipping.
+ * The exact binary exclusive upper bound avoids rounding a native 64-bit maximum into an unsafe cast.
+ * This helper does not aggregate warnings.
  */
 template <class OutputType, class InputType>
 TerminalImageConversionStatus ConvertTerminalImageValue(InputType value, OutputType& output)
