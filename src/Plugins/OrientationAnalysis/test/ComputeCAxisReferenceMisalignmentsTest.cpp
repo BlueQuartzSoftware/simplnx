@@ -1,6 +1,7 @@
 #include "OrientationAnalysis/Filters/ComputeCAxisReferenceMisalignmentsFilter.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -17,6 +18,7 @@
 #include <atomic>
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -43,7 +45,7 @@ DataArray<T>& CreateArray(DataStructure& ds, const DataPath& path, const ShapeTy
   return *array;
 }
 
-DataStructure MakeData(const std::vector<Euler>& eulers, const ShapeType& shape)
+DataStructure MakeData(const std::vector<Euler>& eulers, const ShapeType& shape, std::vector<int32> phaseValues = {}, usize zeroQuaternion = std::numeric_limits<usize>::max())
 {
   DataStructure ds;
   auto* am = AttributeMatrix::Create(ds, "Orientations", shape);
@@ -51,24 +53,32 @@ DataStructure MakeData(const std::vector<Euler>& eulers, const ShapeType& shape)
   auto& quats = CreateArray<float32>(ds, k_Quats, shape, 4, am->getId());
   auto& phases = CreateArray<int32>(ds, k_Phases, shape, 1, am->getId());
   REQUIRE(quats.getNumberOfTuples() == eulers.size());
+  std::vector<float32> quatValues(eulers.size() * 4);
+  if(phaseValues.empty())
+  {
+    phaseValues.assign(eulers.size(), 1);
+  }
+  REQUIRE(phaseValues.size() == eulers.size());
   for(usize i = 0; i < eulers.size(); ++i)
   {
     const auto& eu = eulers[i];
     const auto quat = ebsdlib::EulerDType(eu[0] * k_Radians, eu[1] * k_Radians, eu[2] * k_Radians).toQuaternion();
     for(usize j = 0; j < 4; ++j)
     {
-      quats[4 * i + j] = static_cast<float32>(quat[j]);
+      quatValues[4 * i + j] = i == zeroQuaternion ? 0.0F : static_cast<float32>(quat[j]);
     }
-    phases[i] = 1;
   }
+  auto quatsWriteResult = quats.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quatValues.data(), quatValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
+  auto phasesWriteResult = phases.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
   auto* ensembles = AttributeMatrix::Create(ds, "Ensembles", {5});
   REQUIRE(ensembles != nullptr);
   auto& cs = CreateArray<uint32>(ds, k_CrystalStructures, {5}, 1, ensembles->getId());
-  cs[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-  cs[1] = ebsdlib::CrystalStructure::Hexagonal_High;
-  cs[2] = ebsdlib::CrystalStructure::Hexagonal_Low;
-  cs[3] = ebsdlib::CrystalStructure::Cubic_High;
-  cs[4] = ebsdlib::CrystalStructure::Trigonal_High;
+  const std::vector<uint32> crystalValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Hexagonal_Low,
+                                             ebsdlib::CrystalStructure::Cubic_High, ebsdlib::CrystalStructure::Trigonal_High};
+  auto crystalWriteResult = cs.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalValues.data(), crystalValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(crystalWriteResult);
   return ds;
 }
 
@@ -102,19 +112,22 @@ void CheckOutput(const DataStructure& ds, const std::vector<Euler>& eulers, cons
   const auto& output = ds.getDataRefAs<Float32Array>(k_Output);
   REQUIRE(output.getNumberOfComponents() == 1);
   REQUIRE(output.getIDataStoreRef().getTupleShape() == ds.getDataRefAs<Float32Array>(k_Quats).getIDataStoreRef().getTupleShape());
+  std::vector<float32> outputValues(output.getSize());
+  auto outputReadResult = output.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(outputValues.data(), outputValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(outputReadResult);
   for(usize i = 0; i < eulers.size(); ++i)
   {
     CAPTURE(i);
     if(std::find(excluded.begin(), excluded.end(), i) != excluded.end())
     {
-      REQUIRE(std::isnan(output[i]));
+      REQUIRE(std::isnan(outputValues[i]));
     }
     else
     {
-      REQUIRE(std::isfinite(output[i]));
-      REQUIRE(output[i] >= 0.0F);
-      REQUIRE(output[i] <= 90.0F);
-      REQUIRE(output[i] == Approx(ExpectedAngle(eulers[i], reference)).margin(2.0e-4));
+      REQUIRE(std::isfinite(outputValues[i]));
+      REQUIRE(outputValues[i] >= 0.0F);
+      REQUIRE(outputValues[i] <= 90.0F);
+      REQUIRE(outputValues[i] == Approx(ExpectedAngle(eulers[i], reference)).margin(2.0e-4));
     }
   }
 }
@@ -232,6 +245,97 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masks and ch
   ds.getDataRefAs<Int32Array>(k_Phases)[4096] = -1; // Masking takes precedence over phase validation.
   ExecuteAndCheck(ds, MakeArgs({1, 2, -2}, true), scope);
   CheckOutput(ds, eulers, {1, 2, -2}, excluded);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: out-of-core stores", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const bool byteMask = GENERATE(false, true);
+  CAPTURE(byteMask);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+
+  // Cross three 4096-tuple boundaries and exercise a partial final chunk.
+  constexpr usize k_NumTuples = 3 * 4096 + 17;
+  constexpr usize k_ZeroQuaternion = 3 * 4096 + 1; // Unmasked hexagonal tuple in the final chunk.
+  std::vector<Euler> eulers(k_NumTuples);
+  for(usize i = 0; i < eulers.size(); ++i)
+  {
+    eulers[i] = {static_cast<double>(i % 360), static_cast<double>(i % 181), static_cast<double>((i * 7) % 360)};
+  }
+  std::vector<int32> phaseValues(k_NumTuples);
+  usize expectedNonHexagonalCount = 0;
+  std::vector<usize> excluded;
+  for(usize i = 0; i < k_NumTuples; ++i)
+  {
+    // Alternate unknown, hexagonal high, hexagonal low, and cubic phases.
+    phaseValues[i] = static_cast<int32>(i % 4);
+    if(i % 11 != 0 && i % 4 == 3)
+    {
+      ++expectedNonHexagonalCount;
+    }
+    if(i % 11 == 0 || i % 4 == 0 || i % 4 == 3 || i == k_ZeroQuaternion)
+    {
+      excluded.push_back(i);
+    }
+  }
+  auto ds = MakeData(eulers, {k_NumTuples}, phaseValues, k_ZeroQuaternion);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(k_CrystalStructures));
+  const auto parent = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
+  auto& quats = ds.getDataRefAs<Float32Array>(k_Quats);
+  auto& phases = ds.getDataRefAs<Int32Array>(k_Phases);
+  const auto& crystalStructures = ds.getDataRefAs<UInt32Array>(k_CrystalStructures);
+  if(byteMask)
+  {
+    auto& mask = CreateArray<uint8>(ds, k_Mask, {k_NumTuples}, 1, parent);
+    std::vector<uint8> maskValues(k_NumTuples);
+    for(usize i = 0; i < k_NumTuples; ++i)
+    {
+      maskValues[i] = i % 11 == 0 ? 0 : 255;
+    }
+    auto maskWriteResult = mask.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(maskValues.data(), maskValues.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+  }
+  else
+  {
+    auto& mask = CreateArray<bool>(ds, k_Mask, {k_NumTuples}, 1, parent);
+    // Project-rule exception: std::vector<bool> cannot provide the contiguous bool* required for bulk I/O.
+    std::unique_ptr<bool[]> maskValues = std::make_unique<bool[]>(k_NumTuples);
+    for(usize i = 0; i < k_NumTuples; ++i)
+    {
+      maskValues[i] = i % 11 != 0;
+    }
+    auto maskWriteResult = mask.getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.get(), k_NumTuples));
+    SIMPLNX_RESULT_REQUIRE_VALID(maskWriteResult);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(k_Mask));
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(quats.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(crystalStructures.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(ds.getDataRefAs<IDataArray>(k_Mask).getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+
+  const std::vector<float32> reference = {1, 2, -2};
+  const auto args = MakeArgs(reference, true);
+  Filter filter;
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == 1);
+  REQUIRE(result.result.warnings()[0].code == -98713);
+  REQUIRE(result.result.warnings()[0].message.find(std::to_string(expectedNonHexagonalCount) + " tuples") == 0);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Output));
+  if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
+  {
+    REQUIRE(ds.getDataRefAs<Float32Array>(k_Output).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  }
+  CheckOutput(ds, eulers, reference, excluded);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
