@@ -379,11 +379,12 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteApproximateSignedDistanceMapImageFilter
  * @brief Execute the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels of an integer scalar
  *        image into consecutive uint32 components (background 0), via the streaming scanline union-find @ref
  *        LabelConnectedComponents engine. The output is a FIXED uint32 label image, not the input element type.
- *        Reproduces legacy ITK's ConnectedComponentImageFilter label VALUES exactly (see the Parity model). The
- *        caller's preflight must have enforced an integer scalar input.
+ *        Below the provisional uint32 capacity limit, preserves the legacy label values. Only this filter exposes
+ *        legacy overflow continuation; shared consumers retain Error. The caller must enforce an integer scalar input.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
-                                                                       bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                       bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                       ConnectedComponentLabelLimitHandling labelLimitHandling = ConnectedComponentLabelLimitHandling::Error);
 
 /**
  * @brief Execute the (ITK-free) ZeroCrossing filter: marks the voxels closest to sign changes (zero crossings) among
