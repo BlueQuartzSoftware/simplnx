@@ -36,7 +36,7 @@ Earlier integer output truncated positive decay values below 1 to zero. These va
 
 ## Algorithm
 
-The filter applies the same exponential operation to resident and disk-backed arrays. It uses the existing pointwise traversal and bounded transfer buffers for disk-backed storage. It does not create a full-array resident temporary for the calculation. Output storage still requires the bytes shown above.
+The filter applies the same exponential operation to resident and disk-backed arrays. Buffered processing targets 64 MiB of transfer scratch by default, but each batch must contain at least one complete storage slab formed by the trailing tuple dimensions, such as an XY slice for Z/Y/X storage. A slab can exceed that target or cover the entire array. Bulk input and output transfers are serial. The calculation runs in parallel on owned buffers. Exp adds no separate full-volume scratch array beyond those transfer buffers. Output storage still requires the bytes shown above.
 
 % Auto generated parameter table will be inserted here
 
