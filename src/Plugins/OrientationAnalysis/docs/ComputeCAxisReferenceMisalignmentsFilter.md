@@ -14,6 +14,8 @@ The filter works on cell orientations, feature average orientations, or any othe
 
 **Input Quaternions** must contain four-component float32 quaternions in EbsdLib order: x, y, z, w. Use cell *Quats* for cell results. Use feature *AvgQuats*, for example from [Compute Feature Average Orientations](ComputeAvgOrientationsFilter.md), for grain results. Convert Euler angles with [Convert Orientation Representation](ConvertOrientationsFilter.md) before using this filter.
 
+A zero quaternion or a quaternion with a NaN or infinite component receives NaN. It does not define a valid orientation. Finite, nonzero quaternions need not be unit length because the computed c-axis is normalized.
+
 **Reference Direction** has three dimensionless components in the sample frame. It need not be a unit vector. For example, *[3, 0, 3]* and *[1, 0, 1]* give the same result. All components must be finite. The vector length must be greater than 1e-12.
 
 Only **Hexagonal_High** (6/mmm) and **Hexagonal_Low** (6/m) phases are accepted. Cubic, trigonal, unknown, and other non-hexagonal phases receive NaN. One warning reports the number of tuples with known non-hexagonal structures; **UnknownCrystalStructure** (999) tuples do not contribute to this count or cause a warning. An unmasked phase index outside the Crystal Structures array is an error. Correct the Phases array or select the matching ensemble array.

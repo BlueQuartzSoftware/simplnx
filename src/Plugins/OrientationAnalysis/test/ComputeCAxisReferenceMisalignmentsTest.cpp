@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <limits>
 #include <random>
@@ -365,5 +366,116 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: rejects Eule
   auto result = Filter().preflight(ds, args);
   REQUIRE(result.outputActions.invalid());
   REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: zero quaternion is undefined", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize count = GENERATE(1, 4096, 4097, 8192);
+  CAPTURE(count);
+  const std::vector<Euler> eulers(count, {23, 37, 89});
+  auto ds = MakeData(eulers, {count});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
+  auto& quats = ds.getDataRefAs<Float32Array>(k_Quats);
+  for(usize component = 0; component < 4; ++component)
+  {
+    quats[4 * (count - 1) + component] = 0.0F;
+  }
+  ExecuteAndCheck(ds, MakeArgs(), scope);
+  // A zero quaternion defines no orientation, so it cannot have a finite angle.
+  CAPTURE(ds.getDataRefAs<Float32Array>(k_Output)[count - 1]);
+  CheckOutput(ds, eulers, {0, 0, 1}, {count - 1});
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: nonfinite quaternions", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize component = GENERATE(0, 1, 2, 3);
+  const float32 value = GENERATE(as<float32>{}, k_NaN, std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(component, value);
+  REQUIRE_FALSE(std::isfinite(value));
+  const std::vector<Euler> eulers(2, {23, 37, 89});
+  auto ds = MakeData(eulers, {2});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
+  ds.getDataRefAs<Float32Array>(k_Quats)[component] = value;
+  ExecuteAndCheck(ds, MakeArgs(), scope);
+  CheckOutput(ds, eulers, {0, 0, 1}, {0});
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: quaternion scale invariance", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const float32 scale = GENERATE(-2.0F, 0.5F, 1.0e-30F, 1.0e30F);
+  CAPTURE(scale);
+  const std::vector<Euler> eulers = {{0, 0, 71}, {90, 45, 31}, {147, 45, 92}, {271, 90, 13}, {81, 120, 245}};
+  auto ds = MakeData(eulers, {eulers.size()});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
+  auto& quats = ds.getDataRefAs<Float32Array>(k_Quats);
+  for(usize index = 0; index < quats.getSize(); ++index)
+  {
+    quats[index] *= scale;
+  }
+  ExecuteAndCheck(ds, MakeArgs({1, 2, -2}), scope);
+  CheckOutput(ds, eulers, {1, 2, -2});
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: empty input", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = MakeData({}, {0});
+  ExecuteAndCheck(ds, MakeArgs(), scope);
+  CheckOutput(ds, {}, {0, 0, 1});
+  REQUIRE(ds.getDataRefAs<Float32Array>(k_Output).getNumberOfTuples() == 0);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: cancellation", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool cancelBeforeExecute = GENERATE(false, true);
+  CAPTURE(cancelBeforeExecute);
+  std::atomic_bool shouldCancel = cancelBeforeExecute;
+  const std::vector<Euler> eulers(4097, {23, 37, 89});
+  auto ds = MakeData(eulers, {eulers.size()});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
+  // If cancellation is ignored at the next boundary, this produces -98712.
+  ds.getDataRefAs<Int32Array>(k_Phases)[4096] = -1;
+  const IFilter::MessageHandler handler{[&shouldCancel](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Progress)
+    {
+      shouldCancel = true;
+    }
+  }};
+  auto result = Filter().execute(ds, MakeArgs(), nullptr, handler, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors()[0].code == -1);
+  if(cancelBeforeExecute)
+  {
+    REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
+  }
+  else
+  {
+    REQUIRE(shouldCancel.load());
+    CheckOutput(ds, std::vector<Euler>(4096, eulers.front()), {0, 0, 1});
+  }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
