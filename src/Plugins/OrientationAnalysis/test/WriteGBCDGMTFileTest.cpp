@@ -482,6 +482,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: SIMPL Backwards Compatib
 
 TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid GBCD Component Shape", "[OrientationAnalysis][WriteGBCDGMTFile][ComponentShape]")
 {
+  UnitTest::LoadPlugins();
   const auto componentShape = GENERATE(ShapeType{1}, ShapeType{2, 2, 2, 2, 2, 1}, ShapeType{0, 2, 2, 2, 2, 2}, ShapeType{2, 0, 2, 2, 2, 2}, ShapeType{2, 2, 0, 2, 2, 2}, ShapeType{2, 2, 2, 0, 2, 2},
                                        ShapeType{2, 2, 2, 2, 0, 2});
   CAPTURE(componentShape);

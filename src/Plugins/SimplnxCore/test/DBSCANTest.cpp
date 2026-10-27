@@ -856,6 +856,7 @@ TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-s
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -880,6 +881,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[Sim
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -907,6 +909,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
   REQUIRE(points != nullptr);
@@ -930,6 +933,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[S
 
 TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid input shapes", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
+  UnitTest::LoadPlugins();
   DataIOCollection& collection = DataStoreUtilities::GetIOCollection();
   const std::shared_ptr<IDataIOManager> builtInHDF5Manager = collection.getManager("HDF5");
   REQUIRE(builtInHDF5Manager != nullptr);

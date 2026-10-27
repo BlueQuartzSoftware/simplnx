@@ -64,9 +64,7 @@ The filter creates a *cluster Ids* array (one dimensionless integer cluster labe
 
 - **Clustered Attribute Array** -- any **Attribute Array** (cell-level, feature-level, or generic) whose tuples are to be partitioned into clusters. This is typically an output of an earlier computation or import step.
 
-**Mask Array** must have 1 component.
-
-When masking is enabled, **Mask Array** must have the same number of tuples as **Attribute Array to Cluster**.
+When **Use Mask Array** is enabled, **Mask Array** must have 1 component and the same number of tuples as **Attribute Array to Cluster**.
 
 ## Algorithm
 
