@@ -15,15 +15,17 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** — the non-periodic path of `ComputeFeatureCentroids::operator()` is a near line-by-line translation of legacy `FindFeatureCentroids::find_centroids()`, including the identical Kahan compensated summation and `float64`/`float64`/`uint64` sum/compensation/count triplet. Port-time additions: SIMPLNX-only `Is Periodic` option, disabled `ParallelDataAlgorithm` scaffolding, `float64` voxel-center fetch (`Point3Dd`), and a FeatureIds→AttributeMatrix indexing guard. |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** (confirmed 2026-07-07). 6 hand-derived toy fixtures A–F cover arithmetic centroids, minimum-image periodic centroids, and the domain-filling fallback. Signed off by Michael Jackson (technical authority) 2026-07-16. |
+| Oracle (confirmed)     | **Class 1 (Analytical) primary + Class 4 (Invariant) companion** (confirmed 2026-07-07). Historical fixtures A–F cover arithmetic centroids and several periodic cases. The 2026-10 correction adds discriminating unequal-population, tied-gap, full-axis, and sorted-coordinate oracles. The historical 2026-07-16 sign-off is retained. |
 | Code paths enumerated | 9 of 9 listed numerical/validation paths exercised; cancellation and internal error-site exhaustiveness are outside this campaign. |
-| Tests today | 5 registered cases plus 1 hidden real-HDF5 block-tail case, which runs periodic mode off and on. Serial CTest passes 5/5 in both builds. |
+| Tests today | The 2026-10-15 Windows run passed all 8 registered cases in in-core Release and OOC Release/Debug. Both hidden HDF5 cases also passed, normally and with optional working-memory probes. The historical 2026-09-21 results remain recorded below. |
 | Exemplar archive       | **None — inline analytical fixtures** (provenance sidecar written). The shared `6_6_stats_test_v2.tar.gz` is no longer consumed by this test (kept for 5 other tests); `6_6_find_feature_centroids.tar.gz` kept (used by ExtractComponentAsArray / WriteAbaqusHexahedron). |
 | Legacy comparison      | **Source-inspection** (DREAM3D 6.5.171 vs SIMPLNX; local legacy source used for corroboration), backed by the independent Class 1 fixtures. Non-periodic path is an exact Kahan port; 2 deviations (D1 float32→float64 voxel-center precision; D2 SIMPLNX-only `Is Periodic`). Empirical binary A/B available if bit-confirmation is required. |
-| Bug flags              | **None outstanding.** Two SIMPLNX-internal periodic-centroid defects were resolved: the original offset ignored spacing, and the constant half-domain offset model was incorrect for asymmetric wrapped features. The feature-centroid path now uses a minimum-image circular mean; the triangle-centroid utility uses a largest-empty-gap minimum-image mean. Fixtures D/E/F pin the corrected behavior. These are not legacy deviations because legacy has no periodic path. |
+| Bug flags              | The 2026-10 adversarial review found that the circular estimator introduced in 2026-07 disagreed with the documented unwrapped arithmetic mean for unequal voxel populations. The current periodic path uses the unique largest empty gap and a weighted arithmetic mean. The historical spacing and constant-offset fixes remain recorded below. |
 | V&V phase | Historical COMPLETE status and sign-off retained. OOC recertification verifies preserved analytical tests and a real-HDF5 block-tail case. |
 
 ## Follow-up (2026-07, issue #1665) — periodic model reimplemented
+
+This section records what was implemented and verified in July 2026. Its circular-estimator description is superseded by the October 2026 correction below; the original verification and sign-off history is unchanged.
 
 The original V&V (#1658) fixed a **spacing** sub-bug in the periodic path but validated the periodic result against the **constant half-domain offset model itself** (Fixture D's expected value was "naive + (dim−1)/2", a circular oracle — the test was designed around the code). An adversarial review (#1665) showed that model is fundamentally wrong: a constant offset is correct only when a wrapped feature's mass is symmetric about the seam, and for asymmetric features it places the centroid in the empty middle of the feature or outside the domain entirely.
 
@@ -36,13 +38,25 @@ This follow-up (on top of merged #1658) corrects it:
 
 The non-periodic path is unchanged (still the verified Kahan port). Deviation `ComputeFeatureCentroidsFilter-D2` is updated accordingly.
 
+## Follow-up (2026-10) — exact periodic arithmetic
+
+An adversarial five-cell fixture in a 5×3×1 image exposed a difference between the circular estimator (4.75) and the documented arithmetic mean after unwrapping (4.7). The feature's X populations are two cells at index 0, one at 3, and two at 4. The unique largest empty gap lies between indices 0 and 3; shifting index 0 by one period and averaging all five cells gives 4.7. A separate D=8 unequal-population fixture distinguishes this rule from recentering around a circular anchor.
+
+The current implementation records occupied coordinates for actual boundary-spanning feature-axis pairs in bounded bitsets. It carries largest-gap and tie state across ascending words and windows, then makes one sequential weighted Kahan pass for axes with a unique largest gap. Tied gaps and complete axis occupancy retain the original arithmetic mean. The original nonperiodic Kahan summation and unused-feature zero behavior remain. The new occupancy payload requests up to 32 MiB of shared working memory, adapts to the grant, and requires a minimum 8-byte word; validation and pre-final-write failures leave final centroid publication untouched.
+
+The registered tests include the five-cell result, axis permutations, signed/nonunit spacing and origin, all-axis wrapping, ties, full occupancy, deterministic sorted-coordinate random cases, exact small-grant/window behavior, and cancellation/read/resource failures. A separate hidden test checks the wrapped result with actual HDF5-OOC Feature IDs and centroid stores. These cases correct the current oracle claim without retroactively changing the July or September test record.
+
+Verification on 2026-10-15 used Windows MSVC 14.44.35207 with the paired DREAM3D-NX builds: in-core Release (`SIMPLNX_TEST_ALGORITHM_PATH=0`) and OOC Release/Debug (`SIMPLNX_TEST_ALGORITHM_PATH=1`). All eight registered centroid cases passed in each configuration, including the metadata-only arithmetic-overflow guards. The two hidden HDF5 cases passed in Release and Debug with 54 assertions normally and 396 assertions with the optional working-memory probes. Both input and output stores are checked as HDF5-OOC. These are local Windows results, not native macOS/Linux results or a new technical-authority sign-off.
+
+The optional probe uses a 32768-by-16 image and a fixed 256 MiB cache budget. Its occupancy needs only 65,544 bytes, so 8/32/64 MiB of available working memory all fit one batch. A 64 KiB grant requires two batches and an 8 KiB grant requires nine. The resident probe observes the corresponding logical-read counts; the HDF5 probe labels those batch counts as planned and checks every output component. Release samples were approximately 9.6-9.8 ms with ample resident working memory and 35.1 ms at 8 KiB; the HDF5 samples were 14.1-23.4 ms and 39.4 ms respectively. These are single, likely warm-cache samples taken while other builds could run. They demonstrate correct results with smaller grants, not cold-cache throughput, a comparison against the old estimator, large-pipeline performance, or an optimal 32 MiB limit.
+
 ## Summary
 
 `ComputeFeatureCentroidsFilter` computes the centroid of each feature as the average X/Y/Z position of all
 cells belonging to that feature, using Kahan compensated summation for numerical precision. An optional
-`Is Periodic` mode uses a minimum-image circular mean for features that span the image boundary. Verification
-used a **Class 1 (Analytical)** oracle — arithmetic means for non-periodic features and independently derived
-minimum-image means for wrapped features — paired with **Class 4 (Invariant)** bounding-box, fire-condition,
+`Is Periodic` mode uses the unique largest-gap arithmetic mean for features that span the image boundary. Current verification
+uses a **Class 1 (Analytical)** oracle — arithmetic means for non-periodic features and independently derived
+sorted-coordinate weighted means for wrapped features — paired with **Class 4 (Invariant)** bounding-box, fire-condition,
 and in-domain predicates. SIMPLNX matched the analytical values on every fixture; the legacy diff reduces to
 a single float32-vs-float64 precision non-deviation plus the SIMPLNX-only periodic feature, and the
 reconciliation surfaced and fixed two SIMPLNX-internal periodic-centroid defects.
@@ -60,8 +74,8 @@ triplet, and the `count>0` divide-and-store finalize. Same SIMPL UUID retained
 
 *Port-time deltas:*
 
-1. **`Is Periodic` option** (SIMPLNX-only) + per-feature index-range tracking and unit-vector
-   accumulation for a minimum-image circular mean. Changes output when enabled; default `false` reproduces
+1. **`Is Periodic` option** (SIMPLNX-only) + per-feature index-range tracking and bounded occupied-coordinate
+   scans for the unique largest-gap unwrapped arithmetic mean. Changes output when enabled; default `false` reproduces
    legacy exactly. Legacy has no equivalent. Drives deviation D2.
 2. **Voxel-center precision**: SIMPLNX fetches the voxel center directly in `float64`
    (`ImageGeom::getCoords` → `Point3Dd`); legacy fetches into a `float[3]` then promotes to `double` inside the
@@ -74,7 +88,9 @@ triplet, and the `count>0` divide-and-store finalize. Same SIMPL UUID retained
 *Material PRs since baseline (2025-10-01):* none change the algorithm. #1547 (doc: `Is Periodic` description),
 #1543 (doc: pipeline rename), #1588 (test: SIMPL 6.4/6.5 backwards-compat + 2 fixtures).
 
-## Oracle
+## Oracle recorded in the 2026-07 V&V
+
+The following records the oracle and conclusions as signed off in July. Its circular-mean interpretation and periodic adjustment predicate are superseded by the 2026-10 follow-up above.
 
 *Class:* **1 (Analytical)** primary + **4 (Invariant)** companion. (Confirmed by developer 2026-07-07.)
 Class 3 N/A — no published paper for "mean position of the cells in a feature".
@@ -95,11 +111,11 @@ all pass at float32 margin 1e-4.
 
 *Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
-## Bugs found and fixed
+## Bugs found and fixed in the historical V&V
 
 No new defect was found during this OOC recertification. The historical periodic-spacing correction described above remains in the branch.
 
-## Code path coverage
+## Code path coverage recorded in the historical V&V
 
 9 of 9 listed numerical/validation paths exercised. Source:
 `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureCentroids.cpp`.
@@ -122,7 +138,7 @@ adjust.
 cannot be triggered with valid arguments — not separately tested. The OOC dual-build run is deferred: the
 algorithm is a feature-indexed serial sweep with no OOC-specific variant.*
 
-## Test inventory
+## Test inventory recorded in the historical V&V
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
@@ -134,7 +150,7 @@ algorithm is a feature-indexed serial sweep with no OOC-specific variant.*
 | `Bulk boundary and failure propagation` | kept | Existing bulk-read boundary and injected-failure regression. |
 | `real HDF5 65536-block tail oracle` | new-for-V&V | Reuses CentroidToy::Build and Run; checks exact physical centroids for background, the two-cell feature across the boundary, and an empty feature. |
 
-All active TEST_CASEs pass in-core (`NX-Com-Qt69-Vtk96-Rel`). OOC dual-build deferred (see Code path coverage).
+At the time of this historical inventory, all active TEST_CASEs passed in-core (`NX-Com-Qt69-Vtk96-Rel`). OOC dual-build was deferred then (see historical Code path coverage).
 
 OOC recertification (2026-09-21): 5/5 registered CTest entries pass in each DREAM3DNX build. The new hidden case passes 35 assertions across periodic off/on. Input FeatureIds and output Centroids are asserted HDF5-OOC. The two contributing X coordinates are 131081 and 131083, so the expected mean is exactly 131082. Upstream numerical assertions and tolerances remain unchanged; legacy deviation dispositions are retained without claiming a new binary comparison.
 

@@ -4,6 +4,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -25,10 +26,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <nonstd/span.hpp>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -47,47 +46,179 @@ const std::string k_NumFeatures = "NumFeatures";
 const fs::path k_ExemplarFilePath = fs::path(fmt::format("{}/INL_writer/INLWriterExemplar.inl", unit_test::k_TestFilesDir));
 const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/WriteINLFile.inl", unit_test::k_BinaryTestOutputDir));
 
-void CompareResults()
+/**
+ * @brief Compares all INL lines after the variable metadata.
+ * @param exemplarPath Archive file with two initial metadata lines.
+ * @param generatedPath Generated file with one initial metadata line.
+ * @return Empty string on equality, or the first open, read, length, or content error.
+ */
+std::string FindINLFileDifference(const fs::path& exemplarPath, const fs::path& generatedPath)
 {
-  REQUIRE(fs::exists(k_WrittenFilePath));
-  REQUIRE(fs::exists(k_ExemplarFilePath));
-  std::ifstream exemplarFile(k_ExemplarFilePath, std::ios_base::in | std::ios_base::binary);
+  std::ifstream exemplarFile(exemplarPath, std::ios::binary);
   if(!exemplarFile.is_open())
   {
-    throw std::runtime_error(fmt::format("{} must be stream readable!", k_ExemplarFilePath.string()));
-  }
-  // Ignore the timestamp and version header lines.
-  exemplarFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  exemplarFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-  std::ifstream generatedFile(k_WrittenFilePath, std::ios_base::in | std::ios_base::binary);
-  if(!exemplarFile.is_open())
-  {
-    throw std::runtime_error(fmt::format("{} must be stream readable!", k_WrittenFilePath.string()));
+    return fmt::format("Cannot open exemplar INL file '{}'.", exemplarPath.string());
   }
 
-  // Ignore the generated version line.
-  generatedFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-  std::string exemplar = "";
-  std::string generated = "";
-  for(usize i = 0; i < 1024; i++)
+  std::ifstream generatedFile(generatedPath, std::ios::binary);
+  if(!generatedFile.is_open())
   {
-    if(exemplarFile.eof())
+    return fmt::format("Cannot open generated INL file '{}'.", generatedPath.string());
+  }
+
+  const auto readLine = [](std::ifstream& file, std::string& line) {
+    const bool hasLine = static_cast<bool>(std::getline(file, line));
+    // Only a CR before the LF delimiter belongs to the line ending.
+    if(hasLine && !file.eof() && !line.empty() && line.back() == '\r')
     {
-      break;
+      line.pop_back();
     }
+    return hasLine;
+  };
 
-    std::getline(exemplarFile, exemplar, '\n');
-    std::getline(generatedFile, generated, '\n');
+  std::string exemplar;
+  std::string generated;
+  // The archive has version and timestamp lines. The generated file has only a version line.
+  for(usize headerLine = 1; headerLine <= 2; ++headerLine)
+  {
+    if(!readLine(exemplarFile, exemplar))
+    {
+      return fmt::format("Cannot read metadata line {} from exemplar INL file '{}'.", headerLine, exemplarPath.string());
+    }
+  }
+  if(!readLine(generatedFile, generated))
+  {
+    return fmt::format("Cannot read metadata line 1 from generated INL file '{}'.", generatedPath.string());
+  }
 
-    std::string exem = exemplar.substr(0, exemplar.find('\r'));
-
-    std::string gen = generated.substr(0, generated.find('\n'));
-    REQUIRE(exem == gen);
+  for(usize comparedLine = 1;; ++comparedLine)
+  {
+    const bool hasExemplarLine = readLine(exemplarFile, exemplar);
+    const bool hasGeneratedLine = readLine(generatedFile, generated);
+    if(exemplarFile.bad() || (exemplarFile.fail() && !exemplarFile.eof()))
+    {
+      return fmt::format("Cannot read compared line {} from exemplar INL file '{}'.", comparedLine, exemplarPath.string());
+    }
+    if(generatedFile.bad() || (generatedFile.fail() && !generatedFile.eof()))
+    {
+      return fmt::format("Cannot read compared line {} from generated INL file '{}'.", comparedLine, generatedPath.string());
+    }
+    if(hasExemplarLine != hasGeneratedLine)
+    {
+      return fmt::format("{} generated content at compared line {} (exemplar line {}, generated line {}).", hasExemplarLine ? "Missing" : "Extra", comparedLine, comparedLine + 2, comparedLine + 1);
+    }
+    if(!hasExemplarLine)
+    {
+      return {};
+    }
+    if(exemplar != generated)
+    {
+      return fmt::format("Content differs at compared line {} (exemplar line {}, generated line {}): '{}' != '{}'.", comparedLine, comparedLine + 2, comparedLine + 1, exemplar, generated);
+    }
   }
 }
 } // namespace
+
+TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Complete file comparison", "[OrientationAnalysis][WriteINLFileFilter]")
+{
+  const fs::path fixtureDir = fs::temp_directory_path() / ("nx_inl_comparison_" + Uuid::GenerateV4().str());
+  const fs::path exemplarPath = fixtureDir / "exemplar.inl";
+  const fs::path generatedPath = fixtureDir / "generated.inl";
+  REQUIRE(fs::create_directory(fixtureDir));
+  auto fixtureGuard = MakeScopeGuard([&]() noexcept {
+    std::error_code errorCode;
+    fs::remove(exemplarPath, errorCode);
+    fs::remove(generatedPath, errorCode);
+    fs::remove(fixtureDir, errorCode);
+  });
+
+  const std::string exemplarNewline = GENERATE("\n", "\r\n");
+  const std::string generatedNewline = GENERATE("\n", "\r\n");
+  CAPTURE(exemplarNewline, generatedNewline);
+  std::string exemplarText = "# Archived version" + exemplarNewline + "# Archive timestamp" + exemplarNewline;
+  std::string generatedText = "# Generated version" + generatedNewline;
+  for(usize record = 1; record <= 1024; ++record)
+  {
+    const std::string text = fmt::format("record {}", record);
+    exemplarText += text + exemplarNewline;
+    generatedText += text + generatedNewline;
+  }
+  exemplarText += "last record" + exemplarNewline;
+  std::string expectedDifference;
+  bool writeGeneratedFile = true;
+
+  SECTION("Equal complete content with different metadata")
+  {
+    generatedText += "last record" + generatedNewline;
+  }
+  SECTION("Equal final record without a line ending")
+  {
+    generatedText += "last record";
+  }
+  SECTION("Missing generated tail after record 1024")
+  {
+    expectedDifference = "Missing generated content at compared line 1025 ";
+  }
+  SECTION("Extra generated tail after record 1024")
+  {
+    generatedText += "last record" + generatedNewline + "extra record" + generatedNewline;
+    expectedDifference = "Extra generated content at compared line 1026 ";
+  }
+  SECTION("Different generated tail after record 1024")
+  {
+    generatedText += "last record changed" + generatedNewline;
+    expectedDifference = "Content differs at compared line 1025 ";
+  }
+  SECTION("Extra blank generated tail")
+  {
+    generatedText += "last record" + generatedNewline + generatedNewline;
+    expectedDifference = "Extra generated content at compared line 1026 ";
+  }
+  SECTION("Record whitespace remains significant")
+  {
+    generatedText += "last record " + generatedNewline;
+    expectedDifference = "Content differs at compared line 1025 ";
+  }
+  SECTION("Embedded carriage return remains significant")
+  {
+    generatedText += "last record\runexpected" + generatedNewline;
+    expectedDifference = "Content differs at compared line 1025 ";
+  }
+  SECTION("Unterminated carriage return remains significant")
+  {
+    generatedText += "last record\r";
+    expectedDifference = "Content differs at compared line 1025 ";
+  }
+  SECTION("Generated file cannot be opened")
+  {
+    writeGeneratedFile = false;
+    expectedDifference = fmt::format("Cannot open generated INL file '{}'.", generatedPath.string());
+  }
+
+  const auto writeFixture = [](const fs::path& path, const std::string& contents) {
+    std::ofstream outputStream(path, std::ios::binary | std::ios::trunc);
+    REQUIRE(outputStream.is_open());
+    outputStream << contents;
+    outputStream.close();
+    REQUIRE(outputStream.good());
+  };
+  writeFixture(exemplarPath, exemplarText);
+  if(writeGeneratedFile)
+  {
+    writeFixture(generatedPath, generatedText);
+  }
+
+  const std::string difference = FindINLFileDifference(exemplarPath, generatedPath);
+  INFO(difference);
+  if(expectedDifference.empty())
+  {
+    REQUIRE(difference.empty());
+  }
+  else
+  {
+    REQUIRE_THAT(difference, Catch::Matchers::Contains(expectedDifference));
+  }
+}
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[OrientationAnalysis][WriteINLFileFilter]")
 {
@@ -120,7 +251,9 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  ::CompareResults();
+  const std::string difference = FindINLFileDifference(k_ExemplarFilePath, k_WrittenFilePath);
+  INFO(difference);
+  REQUIRE(difference.empty());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

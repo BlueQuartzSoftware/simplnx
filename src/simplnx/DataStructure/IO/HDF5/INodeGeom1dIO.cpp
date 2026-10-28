@@ -1,4 +1,5 @@
 #include "INodeGeom1dIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
@@ -49,36 +50,36 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
   }
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
-  result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), IOConstants::k_EdgeDataTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), IOConstants::k_EdgeDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
   if(result.invalid())
   {
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag);
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag));
   if(result.invalid())
   {
     return result;
   }
 
-  return {};
+  return result;
 }
 } // namespace nx::core::HDF5

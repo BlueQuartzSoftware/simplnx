@@ -17,6 +17,7 @@
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -56,6 +57,7 @@ class CacheRecordingResolver : public IDataStoreFormatResolver
 public:
   std::string selectedFormat;
   std::string failureMessage;
+  std::optional<DataPath> failurePath;
   mutable std::vector<DataPath> paths;
   mutable std::vector<DataType> types;
   mutable std::vector<uint64> bytes;
@@ -65,7 +67,7 @@ public:
     paths.push_back(path);
     types.push_back(numericType);
     bytes.push_back(logicalBytes);
-    if(!failureMessage.empty())
+    if(!failureMessage.empty() && (!failurePath.has_value() || path == *failurePath))
     {
       throw std::runtime_error(failureMessage);
     }
@@ -801,4 +803,330 @@ TEST_CASE("StorageFormatPlan: disk warnings survive cache bypass preparation", "
   REQUIRE(failedStat.invalid());
   CHECK(hasLegacyWarning(failedStat));
 #endif
+}
+
+TEST_CASE("C8 neutral metadata bypasses process policy on every cache route", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  const int route = GENERATE(0, 1, 2);
+  CAPTURE(route);
+  const auto path = WriteTestFile("neutral_cache_routes.dream3d", 4);
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  if(route == 1)
+  {
+    fs::last_write_time(path, fs::file_time_type::clock::now());
+  }
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
+#endif
+  context.resolver->clearRecords();
+  context.resolver->failureMessage = "neutral cache must bypass process policy";
+  auto first = context.cache.fetchNeutralMetadata(path);
+  auto second = context.cache.fetchNeutralMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(first);
+  SIMPLNX_RESULT_REQUIRE_VALID(second);
+  CHECK(first.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  CHECK(second.value().fileVersion == first.value().fileVersion);
+  CHECK(context.resolver->paths.empty());
+  CHECK(context.cache.missCount() == (route == 0 ? 1 : 2));
+  CHECK(context.cache.hitCount() == (route == 0 ? 1 : 0));
+  const DataPath arrayPath({"TestGroup", "CellData", "Ints"});
+  const auto& firstArray = RequirePlannedArray<int32>(first.value().dataStructure, arrayPath, "", {4}, {1});
+  const auto& secondArray = RequirePlannedArray<int32>(second.value().dataStructure, arrayPath, "", {4}, {1});
+  CHECK(firstArray.getIDataStore() != secondArray.getIDataStore());
+  CHECK(firstArray.getId() == secondArray.getId());
+  CHECK(first.value().dataStructure.getData(firstArray.getId()) == &firstArray);
+  CHECK(second.value().dataStructure.getData(secondArray.getId()) == &secondArray);
+  UnitTest::CheckArraysInheritTupleDims(second.value().dataStructure);
+}
+
+TEST_CASE("C8 neutral and ordinary cache modes stay separate and invalidate together", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  const auto path = WriteTestFile("neutral_cache_mode_separation.dream3d", 4);
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  REQUIRE(context.cache.fetch(path).valid());
+  context.resolver->clearRecords();
+  context.resolver->failureMessage = "ordinary mode still resolves policy";
+  REQUIRE(context.cache.fetchNeutralMetadata(path).valid());
+  REQUIRE(context.cache.fetchNeutralMetadata(path).valid());
+  CHECK(context.resolver->paths.empty());
+  CHECK(context.cache.missCount() == 2);
+  CHECK(context.cache.hitCount() == 1);
+  auto ordinary = context.cache.fetch(path);
+  REQUIRE(ordinary.invalid());
+  CHECK_FALSE(context.resolver->paths.empty());
+  CHECK(context.cache.hitCount() == 2);
+  context.resolver->failureMessage.clear();
+  context.cache.invalidate(path);
+  REQUIRE(context.cache.fetch(path).valid());
+  REQUIRE(context.cache.fetchNeutralMetadata(path).valid());
+  CHECK(context.cache.missCount() == 4);
+}
+
+TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  const int route = GENERATE(0, 1, 2);
+  CAPTURE(route);
+  const auto path = WriteLegacyStatisticsWarningFile("neutral_cache_legacy_warnings.dream3d");
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  context.resolver->failureMessage = "legacy neutral metadata must bypass process policy";
+  context.resolver->clearRecords();
+  if(route == 1)
+  {
+    fs::last_write_time(path, fs::file_time_type::clock::now());
+  }
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
+#endif
+  const DataPath valuesPath({"StatsContainer", "Statistics", "Values_Mean"});
+  auto cold = context.cache.fetchNeutralMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(cold);
+  REQUIRE(cold.value().fileVersion == DREAM3D::k_LegacyFileVersion);
+  REQUIRE(cold.warnings().size() == 1);
+  CHECK(cold.warnings().front().code == -298012);
+  auto* first = cold.value().dataStructure.getDataAs<Float32Array>(valuesPath);
+  REQUIRE(first != nullptr);
+  REQUIRE(first->getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(first->size() == 3);
+  CHECK((*first)[0] == 4.0F);
+  CHECK((*first)[1] == 5.0F);
+  CHECK((*first)[2] == 6.0F);
+  (*first)[0] = 99.0F;
+  auto warm = context.cache.fetchNeutralMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(warm);
+  REQUIRE(warm.value().fileVersion == DREAM3D::k_LegacyFileVersion);
+  REQUIRE(warm.warnings().size() == cold.warnings().size());
+  for(usize index = 0; index < cold.warnings().size(); ++index)
+  {
+    CHECK(warm.warnings()[index].code == cold.warnings()[index].code);
+    CHECK(warm.warnings()[index].message == cold.warnings()[index].message);
+  }
+  const auto* second = warm.value().dataStructure.getDataAs<Float32Array>(valuesPath);
+  REQUIRE(second != nullptr);
+  REQUIRE(second->size() == 3);
+  REQUIRE(first->getIDataStore() != second->getIDataStore());
+  CHECK((*second)[0] == 4.0F);
+  CHECK((*second)[1] == 5.0F);
+  CHECK((*second)[2] == 6.0F);
+  CHECK(context.resolver->paths.empty());
+  CHECK(context.cache.hitCount() == (route == 0 ? 1 : 0));
+  CHECK(context.cache.missCount() == (route == 0 ? 1 : 2));
+  UnitTest::CheckArraysInheritTupleDims(warm.value().dataStructure);
+}
+
+TEST_CASE("C8 neutral cache isolates list and string placeholders", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  DataStructure source;
+  source.setFormatResolver(context.inMemoryResolver);
+  auto* lists = NeighborList<int32>::Create(source, "Lists", ShapeType{3});
+  REQUIRE(lists != nullptr);
+  lists->setList(0, std::vector<int32>{3, 6});
+  REQUIRE(StringArray::CreateWithValues(source, "Strings", ShapeType{2}, {"alpha", "beta"}) != nullptr);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "neutral_list_string.dream3d";
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  auto write = DREAM3D::WriteFile(path, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  AgeFile(path);
+  context.resolver->clearRecords();
+  context.resolver->failureMessage = "neutral list metadata must bypass process policy";
+  auto first = context.cache.fetchNeutralMetadata(path);
+  auto second = context.cache.fetchNeutralMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(first);
+  SIMPLNX_RESULT_REQUIRE_VALID(second);
+  auto* firstList = first.value().dataStructure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
+  const auto* secondList = second.value().dataStructure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
+  auto* firstString = first.value().dataStructure.getDataAs<StringArray>(DataPath({"Strings"}));
+  const auto* secondString = second.value().dataStructure.getDataAs<StringArray>(DataPath({"Strings"}));
+  REQUIRE(firstList != nullptr);
+  REQUIRE(secondList != nullptr);
+  REQUIRE(firstString != nullptr);
+  REQUIRE(secondString != nullptr);
+  CHECK(firstList->getStore() != secondList->getStore());
+  REQUIRE(dynamic_cast<EmptyListStore<int32>*>(secondList->getStore().get()) != nullptr);
+  REQUIRE(firstString->isPlaceholder());
+  REQUIRE(secondString->isPlaceholder());
+  REQUIRE(firstList->getStore()->resizeTuples({5}).valid());
+  REQUIRE(firstString->resizeTuples({5}).valid());
+  CHECK(secondList->getTupleShape() == ShapeType{3});
+  CHECK(secondString->getTupleShape() == ShapeType{2});
+  CHECK(context.resolver->paths.empty());
+  UnitTest::CheckArraysInheritTupleDims(second.value().dataStructure);
+}
+
+TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  DataStructure source;
+  source.setFormatResolver(context.inMemoryResolver);
+  auto* container = DataGroup::Create(source, "StatsContainer");
+  REQUIRE(container != nullptr);
+  auto* statistics = DataGroup::Create(source, "Statistics", container->getId());
+  REQUIRE(statistics != nullptr);
+  auto values = std::make_shared<DataStore<float32>>(ShapeType{3}, ShapeType{1}, 17.0F);
+  REQUIRE(Float32Array::Create(source, "Values_Mean", values, statistics->getId()) != nullptr);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "c8_nx_statistics.dream3d";
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  auto write = DREAM3D::WriteFile(path, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  AgeFile(path);
+  context.resolver->failureMessage = "NX Statistics metadata must not consult process policy";
+  context.resolver->clearRecords();
+  const DataPath valuesPath({"StatsContainer", "Statistics", "Values_Mean"});
+  auto cold = context.cache.fetchNeutralMetadata(path);
+  auto warm = context.cache.fetchNeutralMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(cold);
+  SIMPLNX_RESULT_REQUIRE_VALID(warm);
+  REQUIRE(cold.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  REQUIRE(warm.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  const auto& first = RequirePlannedArray<float32>(cold.value().dataStructure, valuesPath, "", {3}, {1});
+  const auto& second = RequirePlannedArray<float32>(warm.value().dataStructure, valuesPath, "", {3}, {1});
+  CHECK(first.getIDataStore() != second.getIDataStore());
+  CHECK(cold.warnings().empty());
+  CHECK(warm.warnings().empty());
+  CHECK(context.resolver->paths.empty());
+
+  DataStructure destination;
+  destination.setFormatResolver(context.inMemoryResolver);
+  ImportH5ObjectPathsAction action(path, {DataPath({"StatsContainer"}), DataPath({"StatsContainer", "Statistics"}), valuesPath});
+  auto preflight = action.apply(destination, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight);
+  RequirePlannedArray<float32>(destination, valuesPath, "", {3}, {1});
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("C8 legacy Statistics action preserves literal values and warning on planning failure", "[C8][Dream3dPreflightCache][StorageFormatPlan]")
+{
+  CacheTestContext context;
+  const bool warmCache = GENERATE(false, true);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool failDestination = GENERATE(false, true);
+  CAPTURE(warmCache, mode, failDestination);
+  const auto path = WriteLegacyStatisticsWarningFile("c8_legacy_statistics_action.dream3d");
+  const auto cleanup = MakeScopeGuard([&path]() noexcept {
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  if(warmCache)
+  {
+    auto warm = context.cache.fetchNeutralMetadata(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(warm);
+  }
+  context.resolver->failureMessage = "legacy action must not consult process policy";
+  context.resolver->clearRecords();
+  const DataPath valuesPath({"StatsContainer", "Statistics", "Values_Mean"});
+  const DataPath datasetPath({"StatsContainer", "Statistics", "Values"});
+  auto destinationResolver = std::make_shared<CacheRecordingResolver>();
+  if(failDestination)
+  {
+    destinationResolver->failureMessage = "injected legacy destination planning failure";
+    destinationResolver->failurePath = datasetPath;
+  }
+  DataStructure destination;
+  destination.setFormatResolver(destinationResolver);
+  auto* marker = DataGroup::Create(destination, "DestinationMarker");
+  REQUIRE(marker != nullptr);
+  const auto markerId = marker->getId();
+  const auto originalPaths = destination.getAllDataPaths();
+  ImportH5ObjectPathsAction action(path, {DataPath({"StatsContainer"}), DataPath({"StatsContainer", "Statistics"}), valuesPath, datasetPath});
+  auto result = action.apply(destination, mode);
+  REQUIRE(result.warnings().size() == 1);
+  CHECK(result.warnings().front().code == -298012);
+  CHECK(context.resolver->paths.empty());
+  const auto attributeDecisions = std::count(destinationResolver->paths.begin(), destinationResolver->paths.end(), valuesPath);
+  const auto datasetDecisions = std::count(destinationResolver->paths.begin(), destinationResolver->paths.end(), datasetPath);
+  CHECK(datasetDecisions == 1);
+  CHECK(destinationResolver->paths.size() == static_cast<usize>(attributeDecisions + datasetDecisions));
+  CHECK(destination.getData(markerId) == marker);
+  if(failDestination)
+  {
+    REQUIRE(result.invalid());
+    REQUIRE_FALSE(result.errors().empty());
+    CHECK(result.errors().front().message.find(destinationResolver->failureMessage) != std::string::npos);
+    CHECK(result.errors().front().message.find(datasetPath.toString()) != std::string::npos);
+    CHECK(attributeDecisions <= 1);
+    CHECK(destination.getAllDataPaths() == originalPaths);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(attributeDecisions == 1);
+    auto* values = destination.getDataAs<Float32Array>(valuesPath);
+    auto* dataset = destination.getDataAs<Float32Array>(datasetPath);
+    REQUIRE(values != nullptr);
+    REQUIRE(dataset != nullptr);
+    REQUIRE(values->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(dataset->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(values->size() == 3);
+    REQUIRE(dataset->size() == 1);
+    CHECK((*dataset)[0] == 1.0F);
+    CHECK((*values)[0] == 4.0F);
+    CHECK((*values)[1] == 5.0F);
+    CHECK((*values)[2] == 6.0F);
+    (*values)[0] = -99.0F;
+    (*dataset)[0] = -88.0F;
+    auto laterHandout = context.cache.fetchNeutralMetadata(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(laterHandout);
+    const auto* original = laterHandout.value().dataStructure.getDataAs<Float32Array>(valuesPath);
+    const auto* originalDataset = laterHandout.value().dataStructure.getDataAs<Float32Array>(datasetPath);
+    REQUIRE(original != nullptr);
+    REQUIRE(originalDataset != nullptr);
+    REQUIRE(original->getIDataStore() != values->getIDataStore());
+    REQUIRE(originalDataset->getIDataStore() != dataset->getIDataStore());
+    REQUIRE(originalDataset->size() == 1);
+    CHECK((*originalDataset)[0] == 1.0F);
+    CHECK((*original)[0] == 4.0F);
+    CHECK((*original)[1] == 5.0F);
+    CHECK((*original)[2] == 6.0F);
+    UnitTest::CheckArraysInheritTupleDims(destination);
+  }
+}
+
+TEST_CASE("C8 neutral and ordinary cache masters share one LRU capacity", "[C8][Dream3dPreflightCache]")
+{
+  CacheTestContext context;
+  std::vector<fs::path> files;
+  const auto cleanup = MakeScopeGuard([&files]() noexcept {
+    for(const auto& path : files)
+    {
+      std::error_code error;
+      fs::remove(path, error);
+    }
+  });
+  for(usize fileIdx = 0; fileIdx < DREAM3D::Dream3dPreflightCache::k_Capacity; ++fileIdx)
+  {
+    files.push_back(WriteTestFile(fmt::format("c8_mixed_cache_capacity_{}.dream3d", fileIdx), 4));
+  }
+  REQUIRE(context.cache.fetchNeutralMetadata(files.front()).valid());
+  REQUIRE(context.cache.fetch(files.front()).valid());
+  for(usize fileIdx = 1; fileIdx + 1 < files.size(); ++fileIdx)
+  {
+    REQUIRE(context.cache.fetch(files[fileIdx]).valid());
+  }
+  REQUIRE(context.cache.missCount() == DREAM3D::Dream3dPreflightCache::k_Capacity);
+  REQUIRE(context.cache.fetchNeutralMetadata(files.back()).valid());
+  context.cache.resetStats();
+  REQUIRE(context.cache.fetch(files.front()).valid());
+  CHECK(context.cache.hitCount() == 1);
+  CHECK(context.cache.missCount() == 0);
+  REQUIRE(context.cache.fetchNeutralMetadata(files.front()).valid());
+  CHECK(context.cache.hitCount() == 1);
+  CHECK(context.cache.missCount() == 1);
 }
