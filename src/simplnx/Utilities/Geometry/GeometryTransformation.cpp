@@ -22,8 +22,8 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <cassert>
 #include <sstream>
 
 using namespace nx::core;
@@ -303,8 +303,11 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       {
         for(const auto& childPath : childPaths.value())
         {
-          const std::string copiedChildName = nx::core::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-          const DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+          // Both traversals append child names below srcImagePath, so rebasing must succeed.
+          const auto rebasedChildPath = childPath.rebase(srcImagePath, destImagePath);
+          assert(rebasedChildPath.has_value());
+          // NOLINTNEXTLINE(bugprone-unchecked-optional-access) -- Traversal constructs this descendant below srcImagePath.
+          const DataPath& copiedChildPath = rebasedChildPath.value();
           if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
           {
             std::vector<DataPath> allCreatedPaths = {copiedChildPath};
@@ -313,8 +316,10 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
             {
               for(const auto& sourcePath : pathsToBeCopied.value())
               {
-                const std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
-                allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+                const auto createdPath = sourcePath.rebase(srcImagePath, destImagePath);
+                assert(createdPath.has_value());
+                // NOLINTNEXTLINE(bugprone-unchecked-optional-access) -- Recursive traversal preserves the srcImagePath prefix.
+                allCreatedPaths.push_back(createdPath.value());
               }
             }
             resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
