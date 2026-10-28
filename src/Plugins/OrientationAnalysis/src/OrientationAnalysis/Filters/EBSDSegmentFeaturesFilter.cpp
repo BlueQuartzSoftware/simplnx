@@ -3,6 +3,7 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -181,7 +182,8 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  const auto& inputGridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
+  inputValues.FeatureIdsArrayPath = inputGridGeom.getCellDataPath().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
