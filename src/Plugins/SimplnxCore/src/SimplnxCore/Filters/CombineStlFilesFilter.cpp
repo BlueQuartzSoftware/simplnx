@@ -228,7 +228,7 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.FaceLabelIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceLabelsName_Key));
 
   inputValues.LabelVertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
-  inputValues.VertexFileIndexArrayPath = DataPath({inputValues.TriangleDataContainerName.getTargetName(), pVertexAttributeMatrixNameValue, filterArgs.value<std::string>(k_VertexLabelName_Key)});
+  inputValues.VertexFileIndexArrayPath = inputValues.TriangleDataContainerName.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(filterArgs.value<std::string>(k_VertexLabelName_Key));
 
   inputValues.CellFeatureAttributeMatrixName = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
   inputValues.ActiveArrayName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
