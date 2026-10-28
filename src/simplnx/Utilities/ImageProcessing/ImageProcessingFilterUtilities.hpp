@@ -2,9 +2,12 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -41,6 +44,7 @@
 #include "simplnx/Utilities/ImageProcessing/RegionalExtremaEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
+#include "simplnx/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/WatershedFromMarkersEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ZeroCrossingEngine.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
@@ -62,6 +66,7 @@
 #include <memory>
 #include <new>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -2062,8 +2067,8 @@ enum class ReconMarker
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight offset every voxel by +/-height through @ref SaturateCastFromDouble, so an offset that
- * leaves the type range saturates (ITK-faithful clamp) instead of wrapping.
+ * MinusHeight/PlusHeight use @ref SaturateCastFromDouble by default. The exactIntegerHeight opt-in preserves native
+ * integer units with saturating addition or subtraction. Floating values retain the default arithmetic.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -2073,10 +2078,20 @@ enum class ReconMarker
  * rule, including "needle" geometries where a non-collapsed axis has extent 1 (every voxel is then a border voxel
  * and the image is left unchanged).
  *
- * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
+ * @tparam T Scalar marker type.
+ * @param inStore Original mask values.
+ * @param markerStore Receives marker values; has the input's tuple and element layout.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param kind Selects a height or border marker.
+ * @param height Finite offset in intensity units; nonnegative and whole for the integer opt-in.
+ * @param shouldCancel Requests cancellation between transfers.
+ * @param exactIntegerHeight Opt-in to exact, saturating integer offsets for a validated whole Height.
+ * @return The first transfer or dimension error, or a valid result.
+ * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel,
+                                   bool exactIntegerHeight = false)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
@@ -2097,9 +2112,19 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      for(usize i = 0; i < count; ++i)
+      if(exactIntegerHeight && std::is_integral_v<T>)
       {
-        buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        if constexpr(std::is_integral_v<T>)
+        {
+          ApplyExactIntegerReconstructionHeight<T>(nonstd::span<T>(buffer.get(), count), height, kind == ReconMarker::MinusHeight);
+        }
+      }
+      else
+      {
+        for(usize i = 0; i < count; ++i)
+        {
+          buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        }
       }
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
@@ -2204,7 +2229,138 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
 }
 
 /**
- * @brief Dispatched execute body for the three grayscale reconstruction filters. Derives the marker (@ref
+ * @brief Subtracts HConvex reconstruction values in one owned resident range without signed overflow.
+ * @tparam T Signed integer scalar type.
+ * @param inputValuesPtr Original image values.
+ * @param reconstructionValuesPtr Reconstruction values, each no greater than the corresponding input.
+ * @param outputValuesPtr Contrast output; may alias the reconstruction buffer.
+ * @param count Number of values in the range.
+ * @param start Global tuple offset for diagnostics.
+ * @param inputPath Original array path for diagnostics.
+ * @return The first contrast overflow, or a valid result.
+ */
+template <class T>
+Result<> SubtractHConvexContrastRange(const T* inputValuesPtr, const T* reconstructionValuesPtr, T* outputValuesPtr, usize count, usize start, const DataPath& inputPath)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  std::atomic<usize> firstInvalid{count};
+  ApplyElementwiseResidentRange(inputValuesPtr, reconstructionValuesPtr, outputValuesPtr, count, [&firstInvalid](const T* inputPtr, const T* reconstructionPtr, T* outputPtr, usize index) {
+    const T inputValue = inputPtr[index];
+    const T reconstructionValue = reconstructionPtr[index];
+    // max + a negative value is representable. Check before subtracting, including for int64 minima.
+    if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+    {
+      PublishSmallerIndex(firstInvalid, index);
+      return;
+    }
+    outputPtr[index] = static_cast<T>(inputValue - reconstructionValue);
+  });
+  const usize invalid = firstInvalid.load(std::memory_order_relaxed);
+  if(invalid != count)
+  {
+    return MakeErrorResult(-1874102, fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
+                                                 "floating-point type before this filter.",
+                                                 start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
+  }
+  return {};
+}
+
+/**
+ * @brief Computes signed HConvex contrast through bounded chunks with serial store transfers.
+ * @tparam T Signed integer scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation between chunks.
+ * @param chunkValues Maximum number of values in each owned buffer.
+ * @return The first transfer or contrast error, with warnings from completed transfers.
+ */
+template <class T>
+Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                        const std::atomic_bool& shouldCancel, usize chunkValues = k_ElementwiseChunkValues<T>)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize size = input.getSize();
+  chunkValues = std::max<usize>(1, chunkValues);
+  auto inputBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  auto reconstructionBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  Result<> accumulatedResult;
+  for(usize start = 0; start < size; start += chunkValues)
+  {
+    if(shouldCancel)
+    {
+      return accumulatedResult;
+    }
+    const usize count = std::min(chunkValues, size - start);
+    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer.get(), reconstructionBuffer.get(), inputBuffer.get(), count, start, inputPath));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer.get(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+  }
+  return accumulatedResult;
+}
+
+/**
+ * @brief Computes HConvex contrast, preserving the resident fast path and bounded serial store transfers.
+ * @tparam T Numeric scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation before resident work or between chunks.
+ * @return The first transfer or signed contrast error, with warnings from completed transfers.
+ *
+ * Unsigned and floating arrays retain the existing subtraction. Signed arrays check before each subtraction.
+ * Completed chunks may already contain contrast when a later chunk fails; this operation does not promise atomic output.
+ */
+template <class T>
+Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                 const std::atomic_bool& shouldCancel)
+{
+  if constexpr(!std::is_integral_v<T> || !std::is_signed_v<T>)
+  {
+    return SubtractStores<T>(input, reconstruction, output, shouldCancel);
+  }
+  else
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const auto* residentInputPtr = dynamic_cast<const DataStore<T>*>(&input);
+    const auto* residentReconstructionPtr = dynamic_cast<const DataStore<T>*>(&reconstruction);
+    auto* residentOutputPtr = dynamic_cast<DataStore<T>*>(&output);
+    if(residentInputPtr != nullptr && residentReconstructionPtr != nullptr && residentOutputPtr != nullptr)
+    {
+      const auto inputValues = residentInputPtr->createSpan();
+      const auto reconstructionValues = residentReconstructionPtr->createSpan();
+      auto outputValues = residentOutputPtr->createSpan();
+      return SubtractHConvexContrastRange(inputValues.data(), reconstructionValues.data(), outputValues.data(), inputValues.size(), 0, inputPath);
+    }
+
+    return SubtractHConvexContrastChunked<T>(input, reconstruction, output, inputPath, shouldCancel);
+  }
+}
+
+/**
+ * @brief Dispatched execute body for the grayscale reconstruction filters. Derives the marker (@ref
  *        BuildReconstructionMarker) into an out-of-core-inheriting scratch store, then reconstructs it under the
  *        original input (the mask) into the output. The engine's DispatchAlgorithm keys the in-core/out-of-core
  *        path on the real input + output arrays (the scratch marker inherits the input's storage mode), so an
@@ -2223,6 +2379,7 @@ struct MorphologicalReconstructionExecuteFn
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
   bool differenceFromInput; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
+  bool ExactIntegerHeight = false;
 
   template <class T>
   Result<> operator()() const
@@ -2235,6 +2392,7 @@ struct MorphologicalReconstructionExecuteFn
     std::shared_ptr<AbstractDataStore<T>> markerStore;
     const AbstractDataStore<T>* marker = &inStore;
     ReconstructionMarkerOptions markerOptions;
+    markerOptions.ExactIntegerHeight = ExactIntegerHeight;
     const bool isHeightMarker = markerKind == ReconMarker::MinusHeight || markerKind == ReconMarker::PlusHeight;
     const bool isBorderMarker = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
     const bool useDerivedMarker = isBorderMarker || (inStore.getStoreType() == IDataStore::StoreType::OutOfCore && isHeightMarker);
@@ -2255,25 +2413,25 @@ struct MorphologicalReconstructionExecuteFn
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
       markerStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel); r.invalid())
+      if(auto markerResult = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel, ExactIntegerHeight); markerResult.invalid())
       {
-        return r;
+        return markerResult;
       }
       marker = markerStore.get();
     }
     // Mask == the ORIGINAL input; the engine reconstructs the marker under it into outStore. OOC detection uses
     // the real input (mask) + output arrays (the scratch marker has no IDataArray).
     const bool useTemporaryWork = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
-    if(Result<> r = ApplyMorphologicalReconstruction<T>(*marker, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler, useTemporaryWork, markerOptions);
-       r.invalid())
+    auto reconstructionResult =
+        ApplyMorphologicalReconstruction<T>(*marker, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler, useTemporaryWork, markerOptions);
+    if(reconstructionResult.invalid())
     {
-      return r;
+      return reconstructionResult;
     }
     if(differenceFromInput)
     {
-      // HConvex: output = input - reconstruction (the h-maxima result), i.e. the h-dome. SubtractStores is
-      // alias-safe (out == b), and hmax <= input everywhere so the difference never underflows.
-      return SubtractStores<T>(inStore, outStore, outStore, shouldCancel);
+      // HConvex owns exact integer markers and checked signed contrast. Other callers retain their existing defaults.
+      return MergeResults(std::move(reconstructionResult), SubtractHConvexContrast<T>(inStore, outStore, outStore, inputArrayPath, shouldCancel));
     }
     return {};
   }
@@ -2939,21 +3097,27 @@ template <class T, class WorkStoreT>
 Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, WorkStoreT& work, const SizeVec3& dims, const FloatVec3& spacing,
                                            const std::vector<float64>& sigma, bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  if(Result<> result = RecursiveGaussianAxisPass<T>(input, work, dims, 2, sigma[2], static_cast<double>(spacing[2]), 0, normalizeAcrossScale, shouldCancel, messageHandler); result.invalid())
+  detail::SmoothingGaussianConversionState conversionState;
+  RecursiveGaussianPassOptions options;
+  options.CheckedSmoothing = true;
+  Result<> accumulated = RecursiveGaussianAxisPass<T>(input, work, dims, 2, sigma[2], static_cast<double>(spacing[2]), 0, normalizeAcrossScale, shouldCancel, messageHandler, options);
+  if(accumulated.invalid())
   {
-    return result;
+    return accumulated;
   }
   std::vector<T> outputPlane(dims[0] * dims[1]);
   auto outputSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) -> Result<> {
-    for(usize index = 0; index < filteredPlane.size(); ++index)
+    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
+                                                  conversionState, shouldCancel))
     {
-      outputPlane[index] = static_cast<T>(filteredPlane[index]);
+      return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
     }
     return output.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
   };
-  const RecursiveGaussianPlaneAxis first{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-  const RecursiveGaussianPlaneAxis second{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
-  return RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, first, second, shouldCancel, messageHandler, outputSink);
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+  accumulated = MergeResults(std::move(accumulated), RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, first, second, shouldCancel, messageHandler, outputSink));
+  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
 }
 
 template <class T, class WorkStoreT, class ContributionStoreT, class CheckpointStoreT>
@@ -3056,22 +3220,27 @@ Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
                                            const FloatVec3& spacing, const std::vector<float64>& sigma, bool normalizeAcrossScale, const detail::RecursiveGaussian2DBufferPlan& plan,
                                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
+  detail::SmoothingGaussianConversionState conversionState;
   std::vector<T> outputBuffer;
   auto terminalSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> filtered, nonstd::span<float32>) -> Result<> {
     if constexpr(std::is_same_v<T, float32>)
     {
-      return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()));
+      return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()), true);
     }
     outputBuffer.resize(filtered.size());
-    for(usize index = 0; index < filtered.size(); ++index)
+    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filtered.data(), filtered.size()), nonstd::span<T>(outputBuffer.data(), outputBuffer.size()), (yBegin * dims[0]) + xBegin,
+                                                  conversionState, shouldCancel, columnCount, dims[0]))
     {
-      outputBuffer[index] = static_cast<T>(filtered[index]);
+      return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
     }
-    return ImageProcessing::WriteRecursiveGaussian2DBlock<T>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const T>(outputBuffer.data(), outputBuffer.size()));
+    return ImageProcessing::WriteRecursiveGaussian2DBlock<T>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const T>(outputBuffer.data(), outputBuffer.size()), true);
   };
-  const RecursiveGaussianPlaneAxis smoothY{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
-  const RecursiveGaussianPlaneAxis smoothX{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-  return RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, smoothY, smoothX, plan, shouldCancel, messageHandler, terminalSink);
+  const RecursiveGaussianPlaneAxis smoothY{
+      .axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+  const RecursiveGaussianPlaneAxis smoothX{
+      .axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+  Result<> result = RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, smoothY, smoothX, plan, shouldCancel, messageHandler, terminalSink);
+  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(result));
 }
 
 /// @brief Dispatched execute body for the GradientMagnitudeRecursiveGaussian filter.
@@ -3609,17 +3778,22 @@ struct SmoothingRecursiveGaussianExecuteFn
     if(usePlaneCascade)
     {
       std::vector<T> outputPlane(dims[0] * dims[1]);
+      detail::SmoothingGaussianConversionState conversionState;
       auto outputSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) -> Result<> {
-        for(usize i = 0; i < filteredPlane.size(); ++i)
+        if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
+                                                      conversionState, shouldCancel))
         {
-          outputPlane[i] = static_cast<T>(filteredPlane[i]);
+          return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
         }
         return outStore.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
       };
 
-      const RecursiveGaussianPlaneAxis first{1, sigma[1], static_cast<double>(spacing[1]), 0, normalizeAcrossScale};
-      const RecursiveGaussianPlaneAxis second{0, sigma[0], static_cast<double>(spacing[0]), 0, normalizeAcrossScale};
-      return RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, shouldCancel, messageHandler, outputSink);
+      const RecursiveGaussianPlaneAxis first{
+          .axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+      const RecursiveGaussianPlaneAxis second{
+          .axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
+      Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, shouldCancel, messageHandler, outputSink);
+      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(result));
     }
 
     const std::string format = detail::SelectRecursiveGaussianWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
@@ -3636,27 +3810,32 @@ struct SmoothingRecursiveGaussianExecuteFn
     }
 
     bool first = true;
+    Result<> accumulated;
+    RecursiveGaussianPassOptions options;
+    options.CheckedSmoothing = true;
     for(uint32 axis : axisOrder)
     {
       const double s = sigma[axis];
       const double sp = static_cast<double>(spacing[axis]);
       if(first)
       {
-        if(Result<> r = RecursiveGaussianAxisPass<T>(inStore, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+        accumulated = MergeResults(std::move(accumulated), RecursiveGaussianAxisPass<T>(inStore, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler, options));
+        if(accumulated.invalid())
         {
-          return r;
+          return accumulated;
         }
         first = false;
       }
       else
       {
-        if(Result<> r = RecursiveGaussianAxisPass<float32>(work, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler); r.invalid())
+        accumulated = MergeResults(std::move(accumulated), RecursiveGaussianAxisPass<float32>(work, work, dims, axis, s, sp, /*order=*/0, normalizeAcrossScale, shouldCancel, messageHandler, options));
+        if(accumulated.invalid())
         {
-          return r;
+          return accumulated;
         }
       }
     }
-    return CastFloat32StoreTo<T>(work, outStore, shouldCancel);
+    return MergeResults(std::move(accumulated), CastFloat32StoreTo<T>(work, outStore, shouldCancel));
   }
 };
 
@@ -3697,7 +3876,7 @@ struct DiscreteGaussianExecuteFn
  *        ConductanceParameter, ...) are supplied by the caller; this functor only resolves the T-typed input/output
  *        stores and forwards to the streaming @ref ApplyFiniteDifference driver.
  */
-template <class F>
+template <class F, bool CheckedOutput = false>
 struct FiniteDifferenceExecuteFn
 {
   DataStructure& dataStructure;
@@ -3716,7 +3895,7 @@ struct FiniteDifferenceExecuteFn
   {
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyFiniteDifference<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+    return ApplyFiniteDifference<T, F, CheckedOutput>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
   }
 };
 
@@ -3770,7 +3949,8 @@ struct ApproximateSignedDistanceMapExecuteFn
  * @brief Dispatched execute body for the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels
  *        into consecutive uint32 components via the streaming scanline union-find @ref LabelConnectedComponents
  *        engine. Output is a FIXED uint32 label image, background 0. Input must be an integer scalar type (the
- *        caller's preflight enforces this via the IntegerOnly policy).
+ *        caller's preflight enforces this via the IntegerOnly policy). Explicit legacy overflow can lose foreground
+ *        or merge components through zero and reused IDs.
  */
 struct ConnectedComponentExecuteFn
 {
@@ -3781,6 +3961,7 @@ struct ConnectedComponentExecuteFn
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
+  ConnectedComponentLabelLimitHandling LabelLimitHandling;
 
   template <class T>
   Result<> operator()() const
@@ -3788,7 +3969,8 @@ struct ConnectedComponentExecuteFn
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
-    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler);
+    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler, k_ConnectedComponent2DTargetBytes,
+                                       LabelLimitHandling);
   }
 };
 
@@ -4535,192 +4717,23 @@ struct RelabelComponentExecuteFn
   }
 };
 
-/**
- * @brief Clamps the user's Float64 Upper Boundary parameter to the input pixel type T's representable range,
- *        mirroring the legacy ITK bridge functor's SetUpperBoundary call
- *        (ITKThresholdMaximumConnectedComponentsImageFilter.cpp::createFilter): `static_cast<PixelType>(
- *        std::min<MinType>(upperBoundary, itk::NumericTraits<PixelType>::max()))`, where MinType is PixelType
- *        itself for int64/uint64 (whose max cannot be represented exactly as a float64, so the comparison is done
- *        in T to avoid that precision loss) and float64 for every other scalar type (all other integers plus
- *        float32/float64). This is the ONE-TIME clamp applied before the bisection (ITK's `m_UpperBoundary`),
- *        distinct from the per-run LOCAL bisection bound computed in @ref ThresholdMaxCCExecuteFn.
- */
-template <class T>
-inline T ClampThresholdMaxCCUpperBoundary(float64 upperBoundary)
-{
-  if constexpr(std::is_same_v<T, int64> || std::is_same_v<T, uint64>)
-  {
-    return std::min(static_cast<T>(upperBoundary), std::numeric_limits<T>::max());
-  }
-  else
-  {
-    return static_cast<T>(std::min(upperBoundary, static_cast<float64>(std::numeric_limits<T>::max())));
-  }
-}
-
-/**
- * @brief Dispatched execute body for the (ITK-free) ThresholdMaximumConnectedComponents filter: bisection-searches
- *        the threshold value that MAXIMIZES the number of connected components with size >=
- *        @c minimumObjectSizeInPixels, then writes the final binary threshold at the converged value. Transcribed
- *        VERBATIM from itk::ThresholdMaximumConnectedComponentsImageFilter::GenerateData + ComputeConnectedComponents
- *        (itkThresholdMaximumConnectedComponentsImageFilter.hxx):
- *          - lowerBound/upperBound = input min/max (one streaming @ref ComputeArrayMinMax pass); upperBound is
- *            then clamped to the (type-clamped) Upper Boundary parameter -- @ref ClampThresholdMaxCCUpperBoundary.
- *          - midpoint = (upperBound-lowerBound)/2; midpointL = lowerBound+(midpoint-lowerBound)/2; midpointR =
- *            upperBound-(upperBound-midpoint)/2 -- PixelType (T) arithmetic (integer division for integer T, so
- *            this is NOT the true midpoint of [lowerBound,upperBound] when lowerBound != 0); this is ITK's own
- *            formula, transcribed exactly as written, not "fixed".
- *          - while((upperBound-lowerBound) > 2): count components at midpointR and midpointL (each count binary-
- *            thresholds [candidateThreshold, UpperBoundary] and counts connected components with size >=
- *            minimumObjectSizeInPixels, via @ref CountConnectedComponents); if the RIGHT count is STRICTLY greater
- *            than the LEFT count, move lowerBound=midpoint, midpoint=midpointR; otherwise (right <= left, i.e. a
- *            TIE TAKES THE LOWER/LEFT branch, matching ITK's `if (connectedComponentsRight > connectedComponentsLeft)`
- *            exactly) move upperBound=midpoint, midpoint=midpointL. Recompute midpointL/midpointR each iteration.
- *          - final: thresholdValue = midpoint; out = (v >= thresholdValue && v <= UpperBoundary) ? insideValue :
- *            outsideValue.
- *        The internal ConnectedComponentImageFilter connectivity is ITK's own default, FullyConnected=false (the
- *        bridge never calls SetFullyConnected; itkScanlineFilterCommon.h's m_FullyConnected member defaults to
- *        false). Output is a FIXED uint8 binary image. Input may be ANY scalar type (the caller's preflight
- *        enforces this via the AllNumeric policy).
- */
+/** @brief Native threshold search adapter; the scoped engine owns validation, warnings and bounded I/O. */
 struct ThresholdMaxCCExecuteFn
 {
   DataStructure& dataStructure;
   const DataPath& inputArrayPath;
   const DataPath& outputArrayPath;
   SizeVec3 dims;
-  uint32 minimumObjectSizeInPixels;
-  float64 upperBoundary;
-  uint8 insideValue;
-  uint8 outsideValue;
+  ThresholdMaxCCOptions Options;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
-
-    // Input min/max (itk::MinimumMaximumImageCalculator equivalent): one streaming bulk-I/O pass. Only min/max
-    // are consumed, so the parallel min/max reduction replaces the full statistics pass.
-    Result<ArrayMinMax<T>> statsResult = ComputeArrayMinMax<T>(inStore, shouldCancel);
-    if(statsResult.invalid())
-    {
-      return ConvertResult(std::move(statsResult));
-    }
-    if(shouldCancel)
-    {
-      return {};
-    }
-    const ArrayMinMax<T>& stats = statsResult.value();
-
-    // m_UpperBoundary (ITK): the Upper Boundary parameter clamped to T's representable range -- FIXED for the
-    // whole run (unlike the local bisection `upperBound` below, which the loop mutates).
-    const T upperBoundaryFixed = ClampThresholdMaxCCUpperBoundary<T>(upperBoundary);
-
-    T lowerBound = stats.min;
-    T upperBound = std::min(stats.max, upperBoundaryFixed);
-
-    T midpoint = (upperBound - lowerBound) / 2;
-    T midpointL = lowerBound + (midpoint - lowerBound) / 2;
-    T midpointR = upperBound - (upperBound - midpoint) / 2;
-
-    const uint64 minSize = static_cast<uint64>(minimumObjectSizeInPixels);
-    // ITK's ComputeConnectedComponents (itkThresholdMaximumConnectedComponentsImageFilter.hxx:76-81,108-110) counts
-    // components on the BINARY-THRESHOLD OUTPUT, whose foreground is `value != 0`: the internal BinaryThresholdImageFilter
-    // writes m_InsideValue to in-band pixels [thr, m_UpperBoundary] and m_OutsideValue elsewhere, then the
-    // ConnectedComponentImageFilter (background=0) labels every NONZERO pixel. So a pixel is counted-foreground iff its
-    // threshold output would be nonzero -- (in-band ? InsideValue!=0 : OutsideValue!=0) -- NOT simply "in-band". For the
-    // DEFAULT (InsideValue=1, OutsideValue=0) this reduces to exactly (in-band ? true : false) = in-band, unchanged; for
-    // non-default Inside/Outside (e.g. Inside=0/Outside=1) ITK instead maximizes components in the OUT-of-band region.
-    // The internal ConnectedComponentImageFilter connectivity is ITK's default (FullyConnected=false).
-    const bool insideNonZero = (insideValue != 0);
-    const bool outsideNonZero = (outsideValue != 0);
-    auto countAt = [&](T thr) -> Result<uint32> {
-      const auto pred = [thr, upperBoundaryFixed, insideNonZero, outsideNonZero](T v) { return (v >= thr && v <= upperBoundaryFixed) ? insideNonZero : outsideNonZero; };
-      return CountConnectedComponents<T>(inStore, dims, pred, /*fullyConnected=*/false, minSize, shouldCancel);
-    };
-
-    while((upperBound - lowerBound) > T{2})
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      Result<uint32> rightResult = countAt(midpointR);
-      if(rightResult.invalid())
-      {
-        return ConvertResult(std::move(rightResult));
-      }
-      Result<uint32> leftResult = countAt(midpointL);
-      if(leftResult.invalid())
-      {
-        return ConvertResult(std::move(leftResult));
-      }
-
-      // itkThresholdMaximumConnectedComponentsImageFilter.hxx::GenerateData: ties (right <= left) take the ELSE
-      // branch -- i.e. the LOWER threshold wins on a tie.
-      if(rightResult.value() > leftResult.value())
-      {
-        lowerBound = midpoint;
-        midpoint = midpointR;
-      }
-      else
-      {
-        upperBound = midpoint;
-        midpoint = midpointL;
-      }
-
-      midpointL = lowerBound + (midpoint - lowerBound) / 2;
-      midpointR = upperBound - (upperBound - midpoint) / 2;
-    }
-
-    const T thresholdValue = midpoint;
-
-    // Final binary threshold [thresholdValue, upperBoundaryFixed] -> insideValue/outsideValue, streamed in a
-    // bounded, working-memory-derived band instead of a fixed 64 KiB chunk (identical in-core and out-of-core).
-    // A 64 KiB call is smaller than one store chunk at the certified geometry (a Z-plane is exactly one 1 MiB
-    // chunk), so every call touched only part of a single chunk and the codec never left its serial branch.
-    // Reserving from the shared working-memory budget widens each call to many whole chunks when the grant
-    // allows it, and degrades to exactly the previous 64 KiB floor -- never smaller -- under a tight grant.
-    const usize total = inStore.getSize();
-    constexpr usize k_FinalPassMinimumValues = 65536;
-    constexpr usize k_FinalPassPreferredBytes = 32ULL * 1024ULL * 1024ULL;
-    constexpr usize k_FinalPassValueBytes = sizeof(T) + sizeof(uint8);
-    const bool finalPassByteCountFits = total <= std::numeric_limits<usize>::max() / k_FinalPassValueBytes;
-    const uint64 usefulFinalPassBytes = finalPassByteCountFits ? static_cast<uint64>(total) * k_FinalPassValueBytes : std::numeric_limits<uint64>::max();
-    auto finalPassReservation = ReserveWorkingMemory(k_FinalPassPreferredBytes, usefulFinalPassBytes);
-    const usize chunkValues =
-        std::max<usize>(k_FinalPassMinimumValues, std::min(total, static_cast<usize>(std::min<uint64>(finalPassReservation.sizeBytes() / k_FinalPassValueBytes, std::numeric_limits<usize>::max()))));
-    // shrinkTo is a no-op when the actual footprint is not smaller than the grant (e.g. the k_FinalPassMinimumValues
-    // floor under a tight grant), and otherwise releases the unused portion back to the shared budget immediately,
-    // rather than holding it for this call's remaining lifetime.
-    finalPassReservation.shrinkTo(static_cast<uint64>(std::min(chunkValues, total)) * k_FinalPassValueBytes);
-    auto inBuffer = std::make_unique<T[]>(std::min(chunkValues, total));
-    auto outBuffer = std::make_unique<uint8[]>(std::min(chunkValues, total));
-    for(usize start = 0; start < total; start += chunkValues)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      const usize count = std::min(chunkValues, total - start);
-      if(Result<> r = inStore.copyIntoBuffer(start, nonstd::span<T>(inBuffer.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        const T v = inBuffer[i];
-        outBuffer[i] = (v >= thresholdValue && v <= upperBoundaryFixed) ? insideValue : outsideValue;
-      }
-      if(Result<> r = outStore.copyFromBuffer(start, nonstd::span<const uint8>(outBuffer.get(), count)); r.invalid())
-      {
-        return r;
-      }
-    }
-    return {};
+    const auto& input = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
+    auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
+    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler);
   }
 };
 } // namespace detail
@@ -5042,19 +5055,44 @@ Result<> ExecuteAxisProjectionImageFilter(DataStructure& dataStructure, const Da
  *        reconstruction result is subtracted from the input in place after reconstruction (output = input -
  *        reconstruction). Output type == input type (SameAsInput). The caller's preflight must have enforced a
  *        scalar input (@ref PreflightImageFilter requireScalar=true) and, for the height markers, a finite
- *        @p height.
+ *        @p height. The opt-in @p exactIntegerHeight also requires a nonnegative whole Height for integer images;
+ *        it preserves native integer units and saturates markers at the type bounds. Other callers default to their existing arithmetic.
+ * @tparam TypeSetPolicy Selects the supported numeric types.
+ * @param dataStructure Owns the selected arrays and geometry.
+ * @param imageGeomPath Image geometry used for dimensions.
+ * @param inputArrayPath Scalar input image and reconstruction mask.
+ * @param outputArrayPath Receives reconstruction or contrast in the input type.
+ * @param op Selects reconstruction by dilation or erosion.
+ * @param fullyConnected Enables face, edge and vertex neighbors instead of faces only.
+ * @param markerKind Selects a height or border marker.
+ * @param height Validated finite height in intensity units.
+ * @param shouldCancel Requests cancellation during reconstruction and between transfers.
+ * @param messageHandler Receives progress messages.
+ * @param differenceFromInput Selects HConvex contrast with checked signed subtraction.
+ * @param exactIntegerHeight Selects exact native integer markers for a validated whole, nonnegative Height.
+ * @return A reconstruction, contrast or transfer error, or a valid result.
  */
 template <class TypeSetPolicy = AllNumeric>
 Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, ReconstructOp op,
                                                        bool fullyConnected, detail::ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
-                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false)
+                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false, bool exactIntegerHeight = false)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath,    dims, op, fullyConnected, markerKind, height,
-                                                         shouldCancel,  messageHandler, differenceFromInput};
+  const detail::MorphologicalReconstructionExecuteFn executeFn{.dataStructure = dataStructure,
+                                                               .inputArrayPath = inputArrayPath,
+                                                               .outputArrayPath = outputArrayPath,
+                                                               .dims = dims,
+                                                               .op = op,
+                                                               .fullyConnected = fullyConnected,
+                                                               .markerKind = markerKind,
+                                                               .height = height,
+                                                               .shouldCancel = shouldCancel,
+                                                               .messageHandler = messageHandler,
+                                                               .differenceFromInput = differenceFromInput,
+                                                               .ExactIntegerHeight = exactIntegerHeight};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -5297,8 +5335,28 @@ Result<> ExecuteSmoothingRecursiveGaussianImageFilter(DataStructure& dataStructu
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
+  if(Result<> controls = detail::ValidateSmoothingGaussianControls(sigma, spacing, dims); controls.invalid())
+  {
+    controls.errors().front().message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
+    return controls;
+  }
   detail::SmoothingRecursiveGaussianExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, sigma, normalizeAcrossScale, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  Result<> result = TypeSetPolicy::dispatch(inputType, executeFn);
+  if(result.invalid())
+  {
+    for(auto& error : result.errors())
+    {
+      error.message += fmt::format(" Output array '{}'.", outputArrayPath.toString());
+    }
+  }
+  for(auto& warning : result.warnings())
+  {
+    if(warning.code == k_SmoothingGaussianClippedIntegerOutput)
+    {
+      warning.message += fmt::format(" Output array '{}'.", outputArrayPath.toString());
+    }
+  }
+  return result;
 }
 
 /**
@@ -5331,8 +5389,9 @@ Result<> ExecuteDiscreteGaussianImageFilter(DataStructure& dataStructure, const 
  *        (CurvatureFlowFn etc.), which may itself hold extra parameters set by the caller. @p TypeSetPolicy
  *        selects which scalar types the filter accepts (AllNumeric for CurvatureFlow; FloatingScalar for the
  *        other three). The caller's preflight must have enforced a scalar input.
+ *        CheckedOutput is an explicit Curvature Flow opt-in; other finite-difference callers keep the default.
  */
-template <class F, class TypeSetPolicy>
+template <class F, class TypeSetPolicy, bool CheckedOutput = false>
 Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, F fn, float64 timeStep,
                                             uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
@@ -5341,7 +5400,7 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
+  const detail::FiniteDifferenceExecuteFn<F, CheckedOutput> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -5368,17 +5427,25 @@ Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStruc
  * @brief Execute the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels of an integer scalar
  *        image into consecutive uint32 components (background 0), via the streaming scanline union-find @ref
  *        LabelConnectedComponents engine. The output is a FIXED uint32 label image, not the input element type.
- *        Reproduces legacy ITK's ConnectedComponentImageFilter label VALUES exactly (see the Parity model). The
- *        caller's preflight must have enforced an integer scalar input.
+ *        Below the provisional uint32 capacity limit, preserves the legacy label values. Only this filter exposes
+ *        legacy overflow continuation; shared consumers retain Error. The caller must enforce an integer scalar input.
  */
 template <class TypeSetPolicy = IntegerOnly>
 Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool fullyConnected,
-                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                              ConnectedComponentLabelLimitHandling labelLimitHandling = ConnectedComponentLabelLimitHandling::Error)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler};
+  const detail::ConnectedComponentExecuteFn executeFn{.dataStructure = dataStructure,
+                                                      .inputArrayPath = inputArrayPath,
+                                                      .outputArrayPath = outputArrayPath,
+                                                      .dims = imageGeom.getDimensions(),
+                                                      .fullyConnected = fullyConnected,
+                                                      .shouldCancel = shouldCancel,
+                                                      .messageHandler = messageHandler,
+                                                      .LabelLimitHandling = labelLimitHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -5460,30 +5527,99 @@ Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const Da
 }
 
 /**
- * @brief Execute the (ITK-free) ThresholdMaximumConnectedComponents filter: bisection-searches the threshold value
- *        that MAXIMIZES the number of connected components (size >= MinimumObjectSizeInPixels) via @ref
+ * @brief Execute the native ThresholdMaximumConnectedComponents heuristic using component scores (size >= MinimumObjectSizeInPixels) via @ref
  *        detail::ThresholdMaxCCExecuteFn (which uses @ref CountConnectedComponents each iteration), then writes the
  *        final binary threshold [ThresholdValue, UpperBoundary] as a FIXED uint8 image (InsideValue/OutsideValue).
- *        Reproduces legacy ITK's ThresholdMaximumConnectedComponentsImageFilter output exactly (see the Parity
- *        model). The caller's preflight must have enforced a scalar input.
+ *        Uses native safe arithmetic, the absolute two-unit stop and an explicit image nonfinite policy.
+ *        The caller's preflight must have enforced a scalar input.
  */
 template <class TypeSetPolicy = AllNumeric>
 Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                                uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue, const std::atomic_bool& shouldCancel,
-                                                               const IFilter::MessageHandler& messageHandler)
+                                                               const IFilter::MessageHandler& messageHandler, bool warnOnNonfinite = false)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ThresholdMaxCCExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), minimumObjectSizeInPixels, upperBoundary, insideValue,
-                                            outsideValue,  shouldCancel,   messageHandler};
+  const ThresholdMaxCCOptions options{
+      .MinimumObjectSize = minimumObjectSizeInPixels, .UpperBoundary = upperBoundary, .InsideValue = insideValue, .OutsideValue = outsideValue, .WarnOnNonfinite = warnOnNonfinite};
+  const detail::ThresholdMaxCCExecuteFn executeFn{.dataStructure = dataStructure,
+                                                  .inputArrayPath = inputArrayPath,
+                                                  .outputArrayPath = outputArrayPath,
+                                                  .dims = imageGeom.getDimensions(),
+                                                  .Options = options,
+                                                  .shouldCancel = shouldCancel,
+                                                  .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
+/** @brief Policy for native marker IDs that change during uint32 encoding and restoration. */
+enum class MarkerIdConversionHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 namespace detail
 {
+/** @brief Constant-size native context for the existing bounded marker-copy pass. */
+template <class T>
+class MarkerIdConversionState
+{
+public:
+  MarkerIdConversionState() = default;
+  ~MarkerIdConversionState() noexcept = default;
+  MarkerIdConversionState(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState(MarkerIdConversionState&&) = delete;
+  MarkerIdConversionState& operator=(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState& operator=(MarkerIdConversionState&&) = delete;
+
+  bool observe(T nativeValue, uint32 encodedValue, usize index) noexcept
+  {
+    const T restoredValue = static_cast<T>(encodedValue);
+    if(restoredValue == nativeValue)
+    {
+      return false;
+    }
+    if(m_ChangedCount == 0)
+    {
+      m_FirstIndex = index;
+      m_FirstNativeValue = nativeValue;
+      m_FirstRestoredValue = restoredValue;
+    }
+    ++m_ChangedCount;
+    return true;
+  }
+
+  Result<> finish(const DataPath& markerPath, MarkerIdConversionHandling handling, Result<> result = {}) const
+  {
+    if(m_ChangedCount == 0)
+    {
+      return result;
+    }
+    const auto context = fmt::format("Marker array '{}' has {} changed marker occurrence(s) observed. First change at flat index {}: native ID {} restores as {} after uint32 conversion. ",
+                                     markerPath.toString(), m_ChangedCount, m_FirstIndex, m_FirstNativeValue, m_FirstRestoredValue);
+    if(handling == MarkerIdConversionHandling::Error)
+    {
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-79073, context +
+                                                      "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
+                                                      "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
+    }
+    return MergeResults(std::move(result),
+                        MakeWarningVoidResult(79074, context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
+                                                               "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
+  }
+
+private:
+  usize m_ChangedCount = 0;
+  usize m_FirstIndex = 0;
+  T m_FirstNativeValue = {};
+  T m_FirstRestoredValue = {};
+};
+
 /**
- * @brief Functor that copies an integer marker array's values into a uint32 store (widening cast), dispatched on
+ * @brief Functor that copies an integer marker array's values into a uint32 store, dispatched on
  *        the source element type S via the IntegerOnly policy (which calls operator()<S>() through
  *        ExecuteDataFunctionIntType). The source is read through the SAFE typed accessor
  *        getDataRefAs<DataArray<S>> -- not a raw dynamic_cast -- so a type mismatch throws rather than being UB.
@@ -5495,58 +5631,82 @@ struct WidenIntegerArrayToUInt32Fn
   const DataPath& srcPath;
   AbstractDataStore<uint32>& dst;
   const std::atomic_bool& shouldCancel;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
 
   template <class S>
   Result<> operator()() const
   {
     const AbstractDataStore<S>& s = dataStructure.getDataRefAs<DataArray<S>>(srcPath).getDataStoreRef();
     const usize total = s.getSize();
-    constexpr usize k_ChunkValues = 65536;
-    auto inBuf = std::make_unique<S[]>(std::min(k_ChunkValues, total));
-    auto outBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
-    for(usize start = 0; start < total; start += k_ChunkValues)
+    MarkerIdConversionState<S> conversionState;
+    Result<> accumulated;
+    try
     {
-      if(shouldCancel)
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<S[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
       {
-        return {};
+        if(shouldCancel)
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          const S nativeValue = inBufferPtr[index];
+          const uint32 encodedValue = static_cast<uint32>(nativeValue);
+          if(conversionState.observe(nativeValue, encodedValue, start + index) && ConversionHandling == MarkerIdConversionHandling::Error)
+          {
+            // Stop before writing this chunk or entering either flood route.
+            return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+          }
+          outBufferPtr[index] = encodedValue;
+        }
+        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        // count <= total - start, so both the next offset and start + index remain in range.
+        start += count;
       }
-      const usize count = std::min(k_ChunkValues, total - start);
-      if(Result<> r = s.copyIntoBuffer(start, nonstd::span<S>(inBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        outBuf[i] = static_cast<uint32>(inBuf[i]);
-      }
-      if(Result<> r = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
+      return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+    } catch(const std::bad_alloc&)
+    {
+      return conversionState.finish(srcPath, ConversionHandling,
+                                    MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while copying marker IDs.")));
     }
-    return {};
   }
 };
 
 /**
  * @brief Copies the integer marker array at @p srcPath (any of the 8 integer element types) into @p dst as uint32.
  *        The flood runs in uint32 (see @ref ApplyWatershedFromMarkers) but the marker array may be any integer
- *        type, so it is widened up front and the flood dispatches on the grayscale type only. Exact for all marker
- *        labels < 0xFFFFFFFF (i.e. <= 2^32 - 2; every realistic segmentation): 0xFFFFFFFF is reserved as the border
- *        sentinel, so a label of exactly 0xFFFFFFFF (or >= 2^32 on an int64/uint64 array, which would truncate) would
- *        alias it -- documented in the filter doc, tested by the direct-ITK grid at realistic labels.
+ *        type. All native 8/16/32-bit integers round-trip, including negative signed values. The lossless int64/uint64
+ *        domain is 0 through UINT32_MAX, inclusive. Error stops during this copy before the affected chunk is written;
+ *        Warn keeps the legacy encoding and returns one summary warning, also on cancellation or a later transfer error.
  */
-inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel)
+inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel,
+                                          MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel});
+  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel, conversionHandling});
 }
 
 /**
  * @brief Functor that copies a uint32 store's values into an integer output array (narrowing cast), dispatched on
  *        the destination element type D via the IntegerOnly policy. The destination is written through the SAFE
  *        typed accessor getDataRefAs<DataArray<D>> -- not a raw dynamic_cast. The output is created of the marker's
- *        type by the filter's preflight, so the flooded uint32 labels (all < 2^32 for realistic markers) round-trip.
+ *        type by preflight. This is the legacy conversion back from the internal uint32 labels; Warn may have already
+ *        removed, aliased, or renamed native 64-bit marker identities during the initial copy.
  */
 struct NarrowUInt32StoreToIntegerArrayFn
 {
@@ -5560,30 +5720,42 @@ struct NarrowUInt32StoreToIntegerArrayFn
   {
     AbstractDataStore<D>& d = dataStructure.getDataRefAs<DataArray<D>>(dstPath).getDataStoreRef();
     const usize total = src.getSize();
-    constexpr usize k_ChunkValues = 65536;
-    auto inBuf = std::make_unique<uint32[]>(std::min(k_ChunkValues, total));
-    auto outBuf = std::make_unique<D[]>(std::min(k_ChunkValues, total));
-    for(usize start = 0; start < total; start += k_ChunkValues)
+    Result<> accumulated;
+    try
     {
-      if(shouldCancel)
+      constexpr usize chunkValues = 65536;
+      const auto inBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      const auto outBufferPtr = std::make_unique<D[]>(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
       {
-        return {};
+        if(shouldCancel)
+        {
+          return accumulated;
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(inBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          outBufferPtr[index] = static_cast<D>(inBufferPtr[index]);
+        }
+        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outBufferPtr.get(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        start += count; // count <= total - start, including the final short chunk.
       }
-      const usize count = std::min(k_ChunkValues, total - start);
-      if(Result<> r = src.copyIntoBuffer(start, nonstd::span<uint32>(inBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        outBuf[i] = static_cast<D>(inBuf[i]);
-      }
-      if(Result<> r = d.copyFromBuffer(start, nonstd::span<const D>(outBuf.get(), count)); r.invalid())
-      {
-        return r;
-      }
+      return accumulated;
+    } catch(const std::bad_alloc&)
+    {
+      return MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while restoring marker IDs."));
     }
-    return {};
   }
 };
 
@@ -5600,9 +5772,8 @@ inline Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>&
 /**
  * @brief The border sentinel for the uint32 flood: static_cast<uint32>(NumericTraits<markerType>::max()). ITK's
  *        MorphologicalWatershedFromMarkers uses NumericTraits<TLabel>::max() as the out-of-bounds marker-image
- *        boundary constant; widening the flood to uint32 requires reproducing that per-type constant so the flood
- *        is bit-identical to ITK's native-TLabel flood (incl. the label==type-max collision). For uint32/int64/
- *        uint64 the max saturates to 0xFFFFFFFF on the cast, which is the intended sentinel for the uint32 flood.
+ *        boundary constant. This value substitutes only out-of-bounds neighbors; UINT32_MAX is a valid in-bounds seed.
+ *        For uint32/int64/uint64 the integer cast yields 0xFFFFFFFF. It does not saturate marker values.
  */
 inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
 {
@@ -5631,8 +5802,8 @@ inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
 
 /**
  * @brief Dispatched execute body for MorphologicalWatershedFromMarkers. Dispatches on the GRAYSCALE element type T
- *        (the FAH key). The all-OOC external endpoint streams native markers into its uint32 flood records and writes
- *        native output labels directly. Other endpoints retain the uint32 scratch-store path.
+ *        (the FAH key). Every endpoint copies native markers into uint32 scratch, floods using the existing route,
+ *        and converts the result back to the marker type. Copy, flood, and restore diagnostics are retained together.
  */
 struct MorphologicalWatershedFromMarkersExecuteFn
 {
@@ -5645,6 +5816,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
 
   template <class T> // T = grayscale type
   Result<> operator()() const
@@ -5653,6 +5825,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
     // == nullptr checks below only catch an out-of-core failure). Resident flood buffers and the external flood's
     // bounded buffers/cache metadata can also throw. Convert either allocation failure into a filter error instead of
     // allowing an exception to escape this execute path.
+    Result<> accumulated;
     try
     {
       const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
@@ -5667,20 +5840,26 @@ struct MorphologicalWatershedFromMarkersExecuteFn
         return MakeErrorResult(-79010, "MorphologicalWatershedFromMarkers: failed to allocate a uint32 scratch store.");
       }
 
-      if(Result<> r = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel); r.invalid())
+      accumulated = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel, ConversionHandling);
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       const uint32 borderSentinel = MarkerTypeMaxAsUInt32(markerArray.getDataType());
-      if(Result<> r = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler); r.invalid())
+      auto floodResult = ApplyWatershedFromMarkers<T>(inStore, *markerU32, *outU32, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler);
+      accumulated = MergeResults(std::move(accumulated), std::move(floodResult));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
-      return NarrowUInt32StoreToIntegerArray(*outU32, dataStructure, outputArrayPath, shouldCancel);
+      auto restoreResult = NarrowUInt32StoreToIntegerArray(*outU32, dataStructure, outputArrayPath, shouldCancel);
+      return MergeResults(std::move(accumulated), std::move(restoreResult));
     } catch(const std::bad_alloc&)
     {
-      return MakeErrorResult(-79045, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
-                                     "requires bounded buffers and external temporary records.");
+      return MergeResults(
+          std::move(accumulated),
+          MakeErrorResult(-79045, "Morphological watershed could not allocate working storage for this volume. Resident execution requires its global working set in RAM; out-of-core execution "
+                                  "requires bounded buffers and external temporary records."));
     }
   }
 };
@@ -5851,21 +6030,21 @@ struct MorphologicalWatershedExecuteFn
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled
  *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers). Dispatches on the grayscale
  *        input element type via @p TypeSetPolicy (AllNumeric by default -- all 10 scalar types); the marker array is
- *        any integer type and the output is created of the marker's type by the filter's preflight. Reproduces legacy
- *        ITK's MorphologicalWatershedFromMarkersImageFilter output EXACTLY, including label values (see the Parity
- *        model and the direct-ITK oracle test). The caller's preflight must have validated the grayscale (scalar,
+ *        any integer type and the output is created of the marker's type by preflight. Error protects native marker
+ *        identity before flooding; Warn retains the legacy conversion and flood with one conversion diagnostic.
+ *        The caller's preflight must have validated the grayscale (scalar,
  *        allowed type, tuple==cells) and the marker (integer scalar, tuple==grayscale).
  */
 template <class TypeSetPolicy = AllNumeric>
 Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& markerArrayPath,
                                                              const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected, const std::atomic_bool& shouldCancel,
-                                                             const IFilter::MessageHandler& messageHandler)
+                                                             const IFilter::MessageHandler& messageHandler, MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
 {
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   detail::MorphologicalWatershedFromMarkersExecuteFn executeFn{dataStructure,     inputArrayPath, markerArrayPath, outputArrayPath, imageGeom.getDimensions(),
-                                                               markWatershedLine, fullyConnected, shouldCancel,    messageHandler};
+                                                               markWatershedLine, fullyConnected, shouldCancel,    messageHandler,  conversionHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

@@ -9,13 +9,12 @@ namespace nx::core
 {
 /**
  * @class ThresholdMaximumConnectedComponentsImageFilter
- * @brief ITK-free, out-of-core-capable iterative auto-threshold that bisection-searches for the threshold value
- * that MAXIMIZES the number of connected components in the image (subject to a minimum object size), then outputs
- * the binary threshold at that value.
+ * @brief Searches native finite bounds with a component-count heuristic and an absolute two-intensity-unit stop.
  *
  * The input may be ANY scalar type; the output is a FIXED uint8 binary image (Inside Value / Outside Value)
- * regardless of the input element type. Matches the legacy ITK Threshold Maximum Connected Components Image
- * Filter exactly (byte-identical binary output). Out-of-core capable.
+ * regardless of the input element type. Safe midpoint arithmetic can change legacy segmentations. Image NaN and
+ * infinities support Error or warned Outside participation. The shared traversal supports both storage types;
+ * component run tables still grow with image topology. The search does not guarantee a global maximum.
  */
 class IMAGEPROCESSING_EXPORT ThresholdMaximumConnectedComponentsImageFilter : public IFilter
 {
@@ -36,6 +35,7 @@ public:
   static constexpr StringLiteral k_UpperBoundary_Key = "upper_boundary";
   static constexpr StringLiteral k_InsideValue_Key = "inside_value";
   static constexpr StringLiteral k_OutsideValue_Key = "outside_value";
+  static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
 
   std::string name() const override;
   std::string className() const override;

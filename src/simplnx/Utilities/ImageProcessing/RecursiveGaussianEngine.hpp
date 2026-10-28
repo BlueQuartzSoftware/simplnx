@@ -3,11 +3,14 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -44,6 +47,8 @@ struct RecursiveGaussianPassOptions
   static constexpr usize k_Default2DResidentLimit = 64ULL * 1024ULL * 1024ULL;
   usize stagingByteBudget = k_FallbackStagingBytes;
   bool useInMemoryFastPath = true;
+  // Opt in only for the selected smoothing contract; other recursive filters retain their behavior.
+  bool CheckedSmoothing = false;
 };
 
 struct RecursiveGaussianPlaneAxis
@@ -53,10 +58,127 @@ struct RecursiveGaussianPlaneAxis
   double spacing = 1.0;
   int order = 0;
   bool normalizeAcrossScale = false;
+  bool CheckedSmoothing = false;
 };
 
 namespace detail
 {
+/** @brief Narrows the existing double recurrence result without changing its arithmetic or pass precision. */
+inline float32 NarrowRecursiveGaussianValue(double value, bool checkedSmoothing)
+{
+  return checkedSmoothing ? NarrowFloatingImageValue<float32>(value) : static_cast<float32>(value);
+}
+
+/** @brief Retains successful transfer/sink warnings only for the selected smoothing path. */
+inline Result<> MergeRecursiveGaussianResults(bool checkedSmoothing, Result<> previous, Result<> current)
+{
+  if(checkedSmoothing)
+  {
+    return MergeResults(std::move(previous), std::move(current));
+  }
+  return current.invalid() ? std::move(current) : Result<>{};
+}
+
+class SmoothingGaussianConversionState
+{
+public:
+  SmoothingGaussianConversionState() = default;
+  ~SmoothingGaussianConversionState() = default;
+  SmoothingGaussianConversionState(const SmoothingGaussianConversionState&) = delete;
+  SmoothingGaussianConversionState(SmoothingGaussianConversionState&&) = delete;
+  SmoothingGaussianConversionState& operator=(const SmoothingGaussianConversionState&) = delete;
+  SmoothingGaussianConversionState& operator=(SmoothingGaussianConversionState&&) = delete;
+
+  void recordClipping() noexcept
+  {
+    m_Clipped.store(true, std::memory_order_relaxed);
+  }
+  bool clipped() const noexcept
+  {
+    return m_Clipped.load(std::memory_order_relaxed);
+  }
+  void recordNonFinite(usize index) noexcept
+  {
+    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
+    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
+    {
+    }
+  }
+  usize nonFiniteIndex() const noexcept
+  {
+    return m_NonFiniteIndex.load(std::memory_order_relaxed);
+  }
+
+private:
+  std::atomic<bool> m_Clipped{false};
+  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
+};
+
+template <class T>
+bool ConvertSmoothingGaussianBuffer(nonstd::span<const float32> input, nonstd::span<T> output, usize offset, SmoothingGaussianConversionState& state, const std::atomic_bool& shouldCancel,
+                                    usize valuesPerRow = 0, usize rowStride = 0)
+{
+  bool clipped = false;
+  for(usize index = 0; index < input.size(); ++index)
+  {
+    if((index & 4095ULL) == 0 && shouldCancel)
+    {
+      if(clipped)
+      {
+        state.recordClipping();
+      }
+      return false;
+    }
+    const auto status = ConvertTerminalImageValue(input[index], output[index]);
+    if(status == TerminalImageConversionStatus::NonFinite)
+    {
+      const usize failedIndex = valuesPerRow == 0 ? offset + index : offset + ((index / valuesPerRow) * rowStride) + (index % valuesPerRow);
+      state.recordNonFinite(failedIndex);
+      if(clipped)
+      {
+        state.recordClipping();
+      }
+      return false;
+    }
+    clipped = clipped || status == TerminalImageConversionStatus::Clipped;
+  }
+  if(clipped)
+  {
+    state.recordClipping();
+  }
+  return true;
+}
+
+template <class T>
+Result<> SmoothingGaussianNonFiniteResult(const SmoothingGaussianConversionState& state)
+{
+  if(state.nonFiniteIndex() == std::numeric_limits<usize>::max())
+  {
+    return {};
+  }
+  return MakeErrorResult(k_SmoothingGaussianNonFiniteIntegerOutput, fmt::format("Smoothing Recursive Gaussian produced a nonfinite value at flat value index {} for output type '{}'. Use a "
+                                                                                "floating-point input array to retain nonfinite output, or correct nonfinite input values.",
+                                                                                state.nonFiniteIndex(), DataTypeToString(GetDataType<T>())));
+}
+
+/** @brief Finalizes the one owner warning on success, cancellation, or a later transfer/conversion failure. */
+template <class T>
+Result<> FinishSmoothingGaussianConversion(const SmoothingGaussianConversionState& state, Result<> result)
+{
+  if(result.valid())
+  {
+    result = MergeResults(std::move(result), SmoothingGaussianNonFiniteResult<T>(state));
+  }
+  if(state.clipped())
+  {
+    result.warnings().push_back({.code = k_SmoothingGaussianClippedIntegerOutput,
+                                 .message = fmt::format("Smoothing Recursive Gaussian clipped finite final integer values to the '{}' range after truncation. Review the "
+                                                        "output before thresholding or segmentation; use a floating-point input to retain these values.",
+                                                        DataTypeToString(GetDataType<T>()))});
+  }
+  return result;
+}
+
 // Four-line batches are the computational unit, not the reporting unit. Group them so a worker
 // enters the shared progress seam once per this many batches.
 constexpr usize k_ProgressBatchGroup = 64;
@@ -341,6 +463,48 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
   }
 
   return c;
+}
+
+/** @brief Checks the selected smoothing controls and formed coefficients without imposing an accuracy cutoff. */
+inline Result<> ValidateSmoothingGaussianControls(const std::vector<float64>& sigma, const FloatVec3& spacing, const SizeVec3& dims)
+{
+  const usize activeAxes = dims[2] > 1 ? 3 : 2;
+  for(usize axis = 0; axis < activeAxes; ++axis)
+  {
+    if(axis >= sigma.size() || !std::isfinite(sigma.at(axis)) || sigma.at(axis) <= 0.0)
+    {
+      return MakeErrorResult(k_SmoothingGaussianInvalidSigma,
+                             fmt::format("Smoothing Recursive Gaussian Sigma for active axis {} must be finite and positive; received {}. Correct Sigma before execution.", axis,
+                                         axis < sigma.size() ? fmt::format("{}", sigma.at(axis)) : "no value"));
+    }
+    const double spacingValue = static_cast<double>(spacing[axis]);
+    if(!std::isfinite(spacingValue) || !(std::abs(spacingValue) > 1e-8))
+    {
+      return MakeErrorResult(
+          k_SmoothingGaussianInvalidSpacing,
+          fmt::format("Smoothing Recursive Gaussian spacing for active axis {} must be finite with absolute value greater than 1e-8; received {}. Correct the Image Geometry spacing.", axis,
+                      spacingValue));
+    }
+    const double scale = sigma.at(axis) / std::abs(spacingValue);
+    if(!std::isfinite(scale) || scale <= 0.0)
+    {
+      return MakeErrorResult(
+          k_SmoothingGaussianInvalidScale,
+          fmt::format("Smoothing Recursive Gaussian effective scale for active axis {} is {} (Sigma {}, spacing {}). Choose values whose Sigma / absolute spacing is finite and positive.", axis, scale,
+                      sigma.at(axis), spacingValue));
+    }
+    const auto coefficients = ComputeRecursiveGaussianCoefficients(sigma.at(axis), spacingValue, 0, false);
+    const std::array<double, 20> values{coefficients.n0,  coefficients.n1,  coefficients.n2,  coefficients.n3,  coefficients.d1,  coefficients.d2,  coefficients.d3,
+                                        coefficients.d4,  coefficients.m1,  coefficients.m2,  coefficients.m3,  coefficients.m4,  coefficients.bn1, coefficients.bn2,
+                                        coefficients.bn3, coefficients.bn4, coefficients.bm1, coefficients.bm2, coefficients.bm3, coefficients.bm4};
+    if(!std::ranges::all_of(values, [](double value) { return std::isfinite(value); }))
+    {
+      return MakeErrorResult(k_SmoothingGaussianInvalidCoefficients, fmt::format("Smoothing Recursive Gaussian coefficients are nonfinite for active axis {} (Sigma {}, spacing {}, effective scale "
+                                                                                 "{}). Choose different Sigma or spacing values. Finite coefficients do not guarantee accuracy at extreme scales.",
+                                                                                 axis, sigma.at(axis), spacingValue, scale));
+    }
+  }
+  return {};
 }
 
 // Port of RecursiveSeparableImageFilter::FilterDataArray. `data` and `outs` are length-`ln` double buffers
@@ -690,20 +854,22 @@ inline usize RecursiveGaussian2DXBlockCount(usize dimX, usize coreCols)
 }
 
 template <class T, class StoreT>
-Result<> ReadRecursiveGaussian2DBlock(const StoreT& store, usize dimX, usize yBegin, usize rowCount, usize xBegin, usize columnCount, nonstd::span<T> values)
+Result<> ReadRecursiveGaussian2DBlock(const StoreT& store, usize dimX, usize yBegin, usize rowCount, usize xBegin, usize columnCount, nonstd::span<T> values, bool checkedSmoothing = false)
 {
+  Result<> accumulated;
   if(columnCount == dimX)
   {
     return store.copyIntoBuffer(yBegin * dimX, values.subspan(0, rowCount * columnCount));
   }
   for(usize row = 0; row < rowCount; ++row)
   {
-    if(Result<> result = store.copyIntoBuffer((yBegin + row) * dimX + xBegin, values.subspan(row * columnCount, columnCount)); result.invalid())
+    accumulated = MergeRecursiveGaussianResults(checkedSmoothing, std::move(accumulated), store.copyIntoBuffer(((yBegin + row) * dimX) + xBegin, values.subspan(row * columnCount, columnCount)));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
   }
-  return {};
+  return accumulated;
 }
 
 template <class SrcT>
@@ -812,7 +978,7 @@ void ComputeFourRecursiveGaussianCausalBlocks(nonstd::span<const SrcT> source, u
 
 template <class SrcT>
 void ComputeRecursiveGaussianAntiCausalBlock(nonstd::span<const SrcT> source, nonstd::span<const double> causal, usize rowCount, usize columnCount, usize column, bool lastBlock,
-                                             const RecursiveGaussianCoefficients& coefficients, std::array<double, 4>& antiState, nonstd::span<float32> filtered)
+                                             const RecursiveGaussianCoefficients& coefficients, std::array<double, 4>& antiState, nonstd::span<float32> filtered, bool checkedSmoothing = false)
 {
   if(lastBlock)
   {
@@ -827,17 +993,17 @@ void ComputeRecursiveGaussianAntiCausalBlock(nonstd::span<const SrcT> source, no
     next3 -= next4 * coefficients.d1 + outputValue * coefficients.bm2 + outputValue * coefficients.bm3 + outputValue * coefficients.bm4;
     next2 -= next3 * coefficients.d1 + next4 * coefficients.d2 + outputValue * coefficients.bm3 + outputValue * coefficients.bm4;
     next1 -= next2 * coefficients.d1 + next3 * coefficients.d2 + next4 * coefficients.d3 + outputValue * coefficients.bm4;
-    filtered[(rowCount - 1) * columnCount + column] = static_cast<float32>(causal[(rowCount - 1) * columnCount + column] + next4);
-    filtered[(rowCount - 2) * columnCount + column] = static_cast<float32>(causal[(rowCount - 2) * columnCount + column] + next3);
-    filtered[(rowCount - 3) * columnCount + column] = static_cast<float32>(causal[(rowCount - 3) * columnCount + column] + next2);
-    filtered[(rowCount - 4) * columnCount + column] = static_cast<float32>(causal[(rowCount - 4) * columnCount + column] + next1);
+    filtered[((rowCount - 1) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 1) * columnCount) + column] + next4, checkedSmoothing);
+    filtered[((rowCount - 2) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 2) * columnCount) + column] + next3, checkedSmoothing);
+    filtered[((rowCount - 3) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 3) * columnCount) + column] + next2, checkedSmoothing);
+    filtered[((rowCount - 4) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 4) * columnCount) + column] + next1, checkedSmoothing);
     antiState = {next1, next2, next3, next4};
     for(usize inputRow = rowCount - 4; inputRow > 0; --inputRow)
     {
       double current = static_cast<double>(source[inputRow * columnCount + column]) * coefficients.m1 + static_cast<double>(source[(inputRow + 1) * columnCount + column]) * coefficients.m2 +
                        static_cast<double>(source[(inputRow + 2) * columnCount + column]) * coefficients.m3 + static_cast<double>(source[(inputRow + 3) * columnCount + column]) * coefficients.m4;
       current -= antiState[0] * coefficients.d1 + antiState[1] * coefficients.d2 + antiState[2] * coefficients.d3 + antiState[3] * coefficients.d4;
-      filtered[(inputRow - 1) * columnCount + column] = static_cast<float32>(causal[(inputRow - 1) * columnCount + column] + current);
+      filtered[((inputRow - 1) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((inputRow - 1) * columnCount) + column] + current, checkedSmoothing);
       antiState = {current, antiState[0], antiState[1], antiState[2]};
     }
     return;
@@ -850,14 +1016,15 @@ void ComputeRecursiveGaussianAntiCausalBlock(nonstd::span<const SrcT> source, no
     double current = static_cast<double>(source[inputRow * columnCount + column]) * coefficients.m1 + static_cast<double>(source[(inputRow + 1) * columnCount + column]) * coefficients.m2 +
                      static_cast<double>(source[(inputRow + 2) * columnCount + column]) * coefficients.m3 + static_cast<double>(source[(inputRow + 3) * columnCount + column]) * coefficients.m4;
     current -= antiState[0] * coefficients.d1 + antiState[1] * coefficients.d2 + antiState[2] * coefficients.d3 + antiState[3] * coefficients.d4;
-    filtered[outputRow * columnCount + column] = static_cast<float32>(causal[outputRow * columnCount + column] + current);
+    filtered[(outputRow * columnCount) + column] = NarrowRecursiveGaussianValue(causal[(outputRow * columnCount) + column] + current, checkedSmoothing);
     antiState = {current, antiState[0], antiState[1], antiState[2]};
   }
 }
 
 template <class SrcT>
 void ComputeFourRecursiveGaussianAntiCausalBlocks(nonstd::span<const SrcT> source, nonstd::span<const double> causal, usize rowCount, usize columnCount, usize firstColumn, bool lastBlock,
-                                                  const RecursiveGaussianCoefficients& coefficients, nonstd::span<std::array<double, 4>> antiStates, nonstd::span<float32> filtered)
+                                                  const RecursiveGaussianCoefficients& coefficients, nonstd::span<std::array<double, 4>> antiStates, nonstd::span<float32> filtered,
+                                                  bool checkedSmoothing = false)
 {
   if(lastBlock)
   {
@@ -876,10 +1043,10 @@ void ComputeFourRecursiveGaussianAntiCausalBlocks(nonstd::span<const SrcT> sourc
       next3 -= next4 * coefficients.d1 + outputValue * coefficients.bm2 + outputValue * coefficients.bm3 + outputValue * coefficients.bm4;
       next2 -= next3 * coefficients.d1 + next4 * coefficients.d2 + outputValue * coefficients.bm3 + outputValue * coefficients.bm4;
       next1 -= next2 * coefficients.d1 + next3 * coefficients.d2 + next4 * coefficients.d3 + outputValue * coefficients.bm4;
-      filtered[(rowCount - 1) * columnCount + column] = static_cast<float32>(causal[(rowCount - 1) * columnCount + column] + next4);
-      filtered[(rowCount - 2) * columnCount + column] = static_cast<float32>(causal[(rowCount - 2) * columnCount + column] + next3);
-      filtered[(rowCount - 3) * columnCount + column] = static_cast<float32>(causal[(rowCount - 3) * columnCount + column] + next2);
-      filtered[(rowCount - 4) * columnCount + column] = static_cast<float32>(causal[(rowCount - 4) * columnCount + column] + next1);
+      filtered[((rowCount - 1) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 1) * columnCount) + column] + next4, checkedSmoothing);
+      filtered[((rowCount - 2) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 2) * columnCount) + column] + next3, checkedSmoothing);
+      filtered[((rowCount - 3) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 3) * columnCount) + column] + next2, checkedSmoothing);
+      filtered[((rowCount - 4) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((rowCount - 4) * columnCount) + column] + next1, checkedSmoothing);
       antiStates[column] = {next1, next2, next3, next4};
     }
     for(usize inputRow = rowCount - 4; inputRow > 0; --inputRow)
@@ -891,7 +1058,7 @@ void ComputeFourRecursiveGaussianAntiCausalBlocks(nonstd::span<const SrcT> sourc
         double current = static_cast<double>(source[inputRow * columnCount + column]) * coefficients.m1 + static_cast<double>(source[(inputRow + 1) * columnCount + column]) * coefficients.m2 +
                          static_cast<double>(source[(inputRow + 2) * columnCount + column]) * coefficients.m3 + static_cast<double>(source[(inputRow + 3) * columnCount + column]) * coefficients.m4;
         current -= antiState[0] * coefficients.d1 + antiState[1] * coefficients.d2 + antiState[2] * coefficients.d3 + antiState[3] * coefficients.d4;
-        filtered[(inputRow - 1) * columnCount + column] = static_cast<float32>(causal[(inputRow - 1) * columnCount + column] + current);
+        filtered[((inputRow - 1) * columnCount) + column] = NarrowRecursiveGaussianValue(causal[((inputRow - 1) * columnCount) + column] + current, checkedSmoothing);
         antiState = {current, antiState[0], antiState[1], antiState[2]};
       }
     }
@@ -908,7 +1075,7 @@ void ComputeFourRecursiveGaussianAntiCausalBlocks(nonstd::span<const SrcT> sourc
       double current = static_cast<double>(source[inputRow * columnCount + column]) * coefficients.m1 + static_cast<double>(source[(inputRow + 1) * columnCount + column]) * coefficients.m2 +
                        static_cast<double>(source[(inputRow + 2) * columnCount + column]) * coefficients.m3 + static_cast<double>(source[(inputRow + 3) * columnCount + column]) * coefficients.m4;
       current -= antiState[0] * coefficients.d1 + antiState[1] * coefficients.d2 + antiState[2] * coefficients.d3 + antiState[3] * coefficients.d4;
-      filtered[outputRow * columnCount + column] = static_cast<float32>(causal[outputRow * columnCount + column] + current);
+      filtered[(outputRow * columnCount) + column] = NarrowRecursiveGaussianValue(causal[(outputRow * columnCount) + column] + current, checkedSmoothing);
       antiState = {current, antiState[0], antiState[1], antiState[2]};
     }
   }
@@ -945,7 +1112,7 @@ void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::s
         detail::FilterDataArray(outs.data(), data.data(), lineLength, coefficients);
         for(usize i = 0; i < lineLength; ++i)
         {
-          dstPlane[rowOffset + i] = static_cast<float32>(outs[i]);
+          dstPlane[rowOffset + i] = NarrowRecursiveGaussianValue(outs[i], pass.CheckedSmoothing);
         }
       }
       else
@@ -957,7 +1124,7 @@ void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::s
         detail::FilterDataArray(outs.data(), data.data(), lineLength, coefficients);
         for(usize i = 0; i < lineLength; ++i)
         {
-          dstPlane[i * dimX + line] = static_cast<float32>(outs[i]);
+          dstPlane[(i * dimX) + line] = NarrowRecursiveGaussianValue(outs[i], pass.CheckedSmoothing);
         }
       }
     }
@@ -970,7 +1137,7 @@ void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::s
 
 template <class SrcT>
 void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::span<float32> destination, usize dimX, usize dimY, const RecursiveGaussianCoefficients& coefficients,
-                                      const std::atomic_bool& shouldCancel, const std::function<void(usize)>& reportProgress = {})
+                                      const std::atomic_bool& shouldCancel, const std::function<void(usize)>& reportProgress = {}, bool checkedSmoothing = false)
 {
   const usize batchCount = (dimY + 3) / 4;
   auto filterBatches = [&](const Range& batchRange) {
@@ -1005,7 +1172,7 @@ void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::s
         {
           for(usize lane = 0; lane < 4; ++lane)
           {
-            destination[(firstRow + lane) * dimX + x] = static_cast<float32>(batchOutput[x * 4 + lane]);
+            destination[((firstRow + lane) * dimX) + x] = NarrowRecursiveGaussianValue(batchOutput[(x * 4) + lane], checkedSmoothing);
           }
         }
       }
@@ -1021,7 +1188,7 @@ void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::s
           FilterDataArray(tailOutput.data(), tailData.data(), dimX, coefficients);
           for(usize x = 0; x < dimX; ++x)
           {
-            destination[rowOffset + x] = static_cast<float32>(tailOutput[x]);
+            destination[rowOffset + x] = NarrowRecursiveGaussianValue(tailOutput[x], checkedSmoothing);
           }
         }
       }
@@ -1055,6 +1222,7 @@ template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
 Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
                                         CheckpointStoreT& checkpointStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
+  Result<> accumulated;
   if(pass.axis != 1 || dims[2] != 1 || dims[0] == 0 || dims[1] < 4 || !plan.valid || plan.coreCols == 0 || plan.blockRows < 4 || plan.blockCount == 0)
   {
     return MakeErrorResult(-23613,
@@ -1092,22 +1260,28 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       if(blockIndex > 0)
       {
-        if(Result<> result = checkpointStore.copyFromBuffer(blockIndex * plan.coreCols, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
+        accumulated = detail::MergeRecursiveGaussianResults(
+            pass.CheckedSmoothing, std::move(accumulated),
+            checkpointStore.copyFromBuffer(blockIndex * plan.coreCols, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)));
+        if(accumulated.invalid())
         {
-          return result;
+          return accumulated;
         }
       }
       const usize yBegin = detail::RecursiveGaussian2DBlockBegin(blockIndex, plan);
       const usize rowCount = detail::RecursiveGaussian2DBlockRows(blockIndex, plan, dims[1]);
       source.resize(rowCount * columnCount);
       causal.resize(rowCount * columnCount);
-      if(Result<> result = detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yBegin, rowCount, xBegin, columnCount, nonstd::span<SrcT>(source.data(), source.size())); result.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(
+          pass.CheckedSmoothing, std::move(accumulated),
+          detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yBegin, rowCount, xBegin, columnCount, nonstd::span<SrcT>(source.data(), source.size()), pass.CheckedSmoothing));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
       const usize columnBatchCount = (columnCount + 3) / 4;
       auto computeForward = [&](const Range& batchRange) {
@@ -1143,7 +1317,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize blockIndex = reverseIndex - 1;
       const usize yBegin = detail::RecursiveGaussian2DBlockBegin(blockIndex, plan);
@@ -1153,27 +1327,37 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       source.resize((rowCount + haloRows) * columnCount);
       causal.resize(rowCount * columnCount);
       filtered.resize(rowCount * columnCount);
-      if(Result<> result = detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yBegin, rowCount, xBegin, columnCount, nonstd::span<SrcT>(source.data(), rowCount * columnCount));
-         result.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(
+          pass.CheckedSmoothing, std::move(accumulated),
+          detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yBegin, rowCount, xBegin, columnCount, nonstd::span<SrcT>(source.data(), rowCount * columnCount), pass.CheckedSmoothing));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
       if(haloRows > 0)
       {
-        if(Result<> result = detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yEnd, haloRows, xBegin, columnCount,
-                                                                        nonstd::span<SrcT>(source.data() + rowCount * columnCount, haloRows * columnCount));
-           result.invalid())
+        accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated),
+                                                            detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yEnd, haloRows, xBegin, columnCount,
+                                                                                                       nonstd::span<SrcT>(source.data() + (rowCount * columnCount), haloRows * columnCount),
+                                                                                                       pass.CheckedSmoothing));
+        if(accumulated.invalid())
         {
-          return result;
+          return accumulated;
         }
       }
       if(blockIndex == 0)
       {
         std::fill(causalStates.begin(), causalStates.end(), detail::RecursiveGaussian2DCheckpoint{});
       }
-      else if(Result<> result = checkpointStore.copyIntoBuffer(blockIndex * plan.coreCols, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
+      else
       {
-        return result;
+        accumulated =
+            detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated),
+                                                  checkpointStore.copyIntoBuffer(blockIndex * plan.coreCols, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)));
+      }
+      if(accumulated.invalid())
+      {
+        return accumulated;
       }
       const usize columnBatchCount = (columnCount + 3) / 4;
       auto computeBackward = [&](const Range& batchRange) {
@@ -1188,7 +1372,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
                                                                    nonstd::span<double>(causal.data(), causal.size()));
             detail::ComputeFourRecursiveGaussianAntiCausalBlocks<SrcT>(
                 nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount, columnCount, firstColumn, blockIndex + 1 == plan.blockCount,
-                coefficients, nonstd::span<std::array<double, 4>>(antiCausalStates.data(), antiCausalStates.size()), nonstd::span<float32>(filtered.data(), filtered.size()));
+                coefficients, nonstd::span<std::array<double, 4>>(antiCausalStates.data(), antiCausalStates.size()), nonstd::span<float32>(filtered.data(), filtered.size()), pass.CheckedSmoothing);
           }
           else
           {
@@ -1199,7 +1383,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
                                                                 causalStates[column], nonstd::span<double>(causal.data(), causal.size()));
               detail::ComputeRecursiveGaussianAntiCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount,
                                                                     columnCount, column, blockIndex + 1 == plan.blockCount, coefficients, antiCausalStates[column],
-                                                                    nonstd::span<float32>(filtered.data(), filtered.size()));
+                                                                    nonstd::span<float32>(filtered.data(), filtered.size()), pass.CheckedSmoothing);
             }
           }
         }
@@ -1209,39 +1393,45 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       parallelAlgorithm.execute(computeBackward);
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
-      if(Result<> result = sink(yBegin, xBegin, rowCount, columnCount, nonstd::span<float32>(filtered.data(), filtered.size())); result.invalid())
+      accumulated =
+          detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sink(yBegin, xBegin, rowCount, columnCount, nonstd::span<float32>(filtered.data(), filtered.size())));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
       progressThrottle.incrementPercent(1, 1);
     }
   }
-  return {};
+  return accumulated;
 }
 
 template <class T, class StoreT>
-Result<> WriteRecursiveGaussian2DBlock(StoreT& store, usize dimX, usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<const T> values)
+Result<> WriteRecursiveGaussian2DBlock(StoreT& store, usize dimX, usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<const T> values, bool checkedSmoothing = false)
 {
+  Result<> accumulated;
   if(columnCount == dimX)
   {
     return store.copyFromBuffer(yBegin * dimX, values.subspan(0, rowCount * columnCount));
   }
   for(usize row = 0; row < rowCount; ++row)
   {
-    if(Result<> result = store.copyFromBuffer((yBegin + row) * dimX + xBegin, values.subspan(row * columnCount, columnCount)); result.invalid())
+    accumulated =
+        detail::MergeRecursiveGaussianResults(checkedSmoothing, std::move(accumulated), store.copyFromBuffer(((yBegin + row) * dimX) + xBegin, values.subspan(row * columnCount, columnCount)));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
   }
-  return {};
+  return accumulated;
 }
 
 template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
 Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, CheckpointStoreT& checkpointStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass,
                                              const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel, SinkT&& sink)
 {
+  Result<> accumulated;
   const usize blockValues = detail::RecursiveGaussian2DXBlockValues(dims[0], plan.coreCols);
   const usize blockCount = detail::RecursiveGaussian2DXBlockCount(dims[0], plan.coreCols);
   if(dims[0] - (blockCount - 1) * blockValues < 4 || checkpointStore.getSize() < blockCount)
@@ -1261,22 +1451,26 @@ Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, Check
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       if(blockIndex > 0)
       {
-        if(Result<> result = checkpointStore.copyFromBuffer(blockIndex, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(&causalState, 1)); result.invalid())
+        accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated),
+                                                            checkpointStore.copyFromBuffer(blockIndex, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(&causalState, 1)));
+        if(accumulated.invalid())
         {
-          return result;
+          return accumulated;
         }
       }
       const usize xBegin = blockIndex * blockValues;
       const usize valueCount = std::min(blockValues, dims[0] - xBegin);
       source.resize(valueCount);
       causal.resize(valueCount);
-      if(Result<> result = sourceStore.copyIntoBuffer(y * dims[0] + xBegin, nonstd::span<SrcT>(source.data(), source.size())); result.invalid())
+      accumulated =
+          detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sourceStore.copyIntoBuffer((y * dims[0]) + xBegin, nonstd::span<SrcT>(source.data(), source.size())));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
       detail::ComputeRecursiveGaussianCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), valueCount, 1, 0, blockIndex == 0, coefficients, causalState,
                                                         nonstd::span<double>(causal.data(), causal.size()));
@@ -1287,7 +1481,7 @@ Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, Check
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize blockIndex = reverseIndex - 1;
       const usize xBegin = blockIndex * blockValues;
@@ -1296,35 +1490,44 @@ Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, Check
       source.resize(valueCount + haloValues);
       causal.resize(valueCount);
       filtered.resize(valueCount);
-      if(Result<> result = sourceStore.copyIntoBuffer(y * dims[0] + xBegin, nonstd::span<SrcT>(source.data(), source.size())); result.invalid())
+      accumulated =
+          detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sourceStore.copyIntoBuffer((y * dims[0]) + xBegin, nonstd::span<SrcT>(source.data(), source.size())));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
       if(blockIndex == 0)
       {
         causalState = {};
       }
-      else if(Result<> result = checkpointStore.copyIntoBuffer(blockIndex, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(&causalState, 1)); result.invalid())
+      else
       {
-        return result;
+        accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated),
+                                                            checkpointStore.copyIntoBuffer(blockIndex, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(&causalState, 1)));
+      }
+      if(accumulated.invalid())
+      {
+        return accumulated;
       }
       detail::ComputeRecursiveGaussianCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), valueCount, 1, 0, blockIndex == 0, coefficients, causalState,
                                                         nonstd::span<double>(causal.data(), causal.size()));
       detail::ComputeRecursiveGaussianAntiCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), valueCount, 1, 0,
-                                                            blockIndex + 1 == blockCount, coefficients, antiState, nonstd::span<float32>(filtered.data(), filtered.size()));
-      if(Result<> result = sink(y, xBegin, 1, valueCount, nonstd::span<float32>(filtered.data(), filtered.size())); result.invalid())
+                                                            blockIndex + 1 == blockCount, coefficients, antiState, nonstd::span<float32>(filtered.data(), filtered.size()), pass.CheckedSmoothing);
+      accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sink(y, xBegin, 1, valueCount, nonstd::span<float32>(filtered.data(), filtered.size())));
+      if(accumulated.invalid())
       {
-        return result;
+        return accumulated;
       }
     }
   }
-  return {};
+  return accumulated;
 }
 
 template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
 Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
                                         CheckpointStoreT& checkpointStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
+  Result<> accumulated;
   if(pass.axis != 0 || dims[2] != 1 || dims[0] < 4 || dims[1] == 0 || !plan.valid || plan.blockRows == 0)
   {
     return MakeErrorResult(-23616,
@@ -1359,29 +1562,31 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
   {
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     const usize rowCount = std::min(rowsPerBlock, dims[1] - yBegin);
     source.resize(rowCount * dims[0]);
     filtered.resize(rowCount * dims[0]);
-    if(Result<> result = sourceStore.copyIntoBuffer(yBegin * dims[0], nonstd::span<SrcT>(source.data(), source.size())); result.invalid())
+    accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sourceStore.copyIntoBuffer(yBegin * dims[0], nonstd::span<SrcT>(source.data(), source.size())));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
     const SizeVec3 blockDims{dims[0], rowCount, 1};
     detail::FilterFourRecursiveGaussianXRows<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<float32>(filtered.data(), filtered.size()), blockDims[0], blockDims[1],
-                                                   coefficients, shouldCancel);
+                                                   coefficients, shouldCancel, {}, pass.CheckedSmoothing);
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
-    if(Result<> result = sink(yBegin, 0, rowCount, dims[0], nonstd::span<float32>(filtered.data(), filtered.size())); result.invalid())
+    accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated), sink(yBegin, 0, rowCount, dims[0], nonstd::span<float32>(filtered.data(), filtered.size())));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
     progressThrottle.incrementPercent(1, 1);
   }
-  return {};
+  return accumulated;
 }
 
 template <class SrcT, class SrcStoreT, class WorkStoreT, class CheckpointStoreT, class SinkT>
@@ -1408,6 +1613,7 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
                                             const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel,
                                             const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
+  Result<> accumulated;
   if(firstPass.axis != 1 || secondPass.axis != 0)
   {
     return MakeErrorResult(-23619, fmt::format("Recursive Gaussian bounded 2D YX cascade requires axes 1 then 0, but received axes {} then {}.", firstPass.axis, secondPass.axis));
@@ -1415,18 +1621,21 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
   if(plan.coreCols != dims[0])
   {
     auto workSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values) {
-      return WriteRecursiveGaussian2DBlock<float32>(workStore, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(values.data(), values.size()));
+      return WriteRecursiveGaussian2DBlock<float32>(workStore, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(values.data(), values.size()), firstPass.CheckedSmoothing);
     };
-    if(Result<> result = RecursiveGaussian2DYAxisToSink<SrcT>(sourceStore, dims, firstPass, plan, checkpointStore, shouldCancel, messageHandler, workSink); result.invalid())
+    accumulated = detail::MergeRecursiveGaussianResults(firstPass.CheckedSmoothing, std::move(accumulated),
+                                                        RecursiveGaussian2DYAxisToSink<SrcT>(sourceStore, dims, firstPass, plan, checkpointStore, shouldCancel, messageHandler, workSink));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
     std::vector<float32> terminalScratch;
     auto terminalSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> filtered) -> Result<> {
       terminalScratch.resize(filtered.size());
       return sink(yBegin, xBegin, rowCount, columnCount, filtered, nonstd::span<float32>(terminalScratch.data(), terminalScratch.size()));
     };
-    return RecursiveGaussian2DXAxisToSink<float32>(workStore, dims, secondPass, plan, checkpointStore, shouldCancel, messageHandler, terminalSink);
+    return detail::MergeRecursiveGaussianResults(firstPass.CheckedSmoothing, std::move(accumulated),
+                                                 RecursiveGaussian2DXAxisToSink<float32>(workStore, dims, secondPass, plan, checkpointStore, shouldCancel, messageHandler, terminalSink));
   }
   const detail::RecursiveGaussianCoefficients secondCoefficients =
       detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalizeAcrossScale);
@@ -1435,7 +1644,7 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
     secondOutput.resize(firstOutput.size());
     const SizeVec3 blockDims{dims[0], rowCount, 1};
     detail::FilterFourRecursiveGaussianXRows<float32>(nonstd::span<const float32>(firstOutput.data(), firstOutput.size()), nonstd::span<float32>(secondOutput.data(), secondOutput.size()),
-                                                      blockDims[0], blockDims[1], secondCoefficients, shouldCancel);
+                                                      blockDims[0], blockDims[1], secondCoefficients, shouldCancel, {}, secondPass.CheckedSmoothing);
     if(shouldCancel)
     {
       return {};
@@ -1459,6 +1668,7 @@ template <class SrcT, class SrcStoreT, class SinkT>
 Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& firstPass, const RecursiveGaussianPlaneAxis& secondPass,
                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
+  Result<> accumulated;
   if(firstPass.axis > 1 || secondPass.axis > 1 || firstPass.axis == secondPass.axis)
   {
     return MakeErrorResult(-23600, fmt::format("Recursive Gaussian XY plane cascade requires two distinct X/Y axes, but received axes {} and {}.", firstPass.axis, secondPass.axis));
@@ -1501,33 +1711,35 @@ Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeV
   {
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     const usize planeOffset = z * planeValues;
-    if(Result<> result = src.copyIntoBuffer(planeOffset, nonstd::span<SrcT>(srcPlane.data(), planeValues)); result.invalid())
+    accumulated = detail::MergeRecursiveGaussianResults(firstPass.CheckedSmoothing, std::move(accumulated), src.copyIntoBuffer(planeOffset, nonstd::span<SrcT>(srcPlane.data(), planeValues)));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
 
     detail::FilterRecursiveGaussianXYPlane<SrcT>(nonstd::span<const SrcT>(srcPlane.data(), planeValues), nonstd::span<float32>(firstPlane.data(), planeValues), dims, firstPass, firstCoefficients,
                                                  shouldCancel);
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     detail::FilterRecursiveGaussianXYPlane<float32>(nonstd::span<const float32>(firstPlane.data(), planeValues), nonstd::span<float32>(secondPlane.data(), planeValues), dims, secondPass,
                                                     secondCoefficients, shouldCancel);
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
-    if(Result<> result = sink(planeOffset, nonstd::span<float32>(secondPlane.data(), planeValues)); result.invalid())
+    accumulated = detail::MergeRecursiveGaussianResults(firstPass.CheckedSmoothing, std::move(accumulated), sink(planeOffset, nonstd::span<float32>(secondPlane.data(), planeValues)));
+    if(accumulated.invalid())
     {
-      return result;
+      return accumulated;
     }
     progressThrottle.incrementPercent(1, 1);
   }
-  return {};
+  return accumulated;
 }
 
 // One separable recursive-Gaussian pass along `axis` (0=x,1=y,2=z). Reads `src` (any scalar SrcT), promotes each line
@@ -1538,6 +1750,7 @@ template <class SrcT, class SrcStoreT, class DstStoreT>
 Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3& dims, uint32 axis, double sigma, double spacing, int order, bool normalizeAcrossScale,
                                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const RecursiveGaussianPassOptions& options = {})
 {
+  Result<> accumulated;
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
   const int64 nZ = static_cast<int64>(dims[2]);
@@ -1564,19 +1777,19 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   {
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     const nonstd::span<const SrcT> srcValues = inMemorySrc->createSpan();
     nonstd::span<float32> dstValues = inMemoryDst->createSpan();
     progressThrottle.reset((static_cast<usize>(nY * nZ) + 3) / 4, progressLabel);
-    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(nY * nZ), coeffs, shouldCancel, sendThreadSafeProgress);
-    return {};
+    detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(nY * nZ), coeffs, shouldCancel, sendThreadSafeProgress, options.CheckedSmoothing);
+    return accumulated;
   }
   if(options.useInMemoryFastPath && inMemorySrc != nullptr && inMemoryDst != nullptr && axis != 0)
   {
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
 
     const nonstd::span<const SrcT> srcValues = inMemorySrc->createSpan();
@@ -1625,7 +1838,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
             const usize destination = base + i * stride;
             for(usize lane = 0; lane < 4; ++lane)
             {
-              dstValues[destination + lane] = static_cast<float32>(batchOuts[i * 4 + lane]);
+              dstValues[destination + lane] = detail::NarrowRecursiveGaussianValue(batchOuts[(i * 4) + lane], options.CheckedSmoothing);
             }
           }
         }
@@ -1640,7 +1853,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
             detail::FilterDataArray(tailOuts.data(), tailData.data(), lineLength, coeffs);
             for(usize i = 0; i < lineLength; ++i)
             {
-              dstValues[base + lane + i * stride] = static_cast<float32>(tailOuts[i]);
+              dstValues[base + lane + (i * stride)] = detail::NarrowRecursiveGaussianValue(tailOuts[i], options.CheckedSmoothing);
             }
           }
         }
@@ -1651,7 +1864,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, batchesPerPlane * planeCount);
     parallelAlgorithm.execute(filterLineBatches);
-    return {};
+    return accumulated;
   }
 
   // NOTE: the per-line IIR scratch (`data`/`outs`/`scratch`) is NOT allocated here. Each axis pass stages one
@@ -1684,12 +1897,13 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize planeOff = static_cast<usize>(z) * slice;
-      if(Result<> r = src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated), src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       // Parallel over rows [0, nY): each worker filters a disjoint set of contiguous nX-rows with its OWN
       // thread-local scratch, gathering from srcPlane and scattering into dstPlane at disjoint indices. Pure
@@ -1709,20 +1923,21 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
           detail::FilterDataArray(outs.data(), data.data(), static_cast<usize>(nX), coeffs);
           for(int64 i = 0; i < nX; ++i)
           {
-            dstPlane[rowOff + static_cast<usize>(i)] = static_cast<float32>(outs[static_cast<usize>(i)]);
+            dstPlane[rowOff + static_cast<usize>(i)] = detail::NarrowRecursiveGaussianValue(outs[static_cast<usize>(i)], options.CheckedSmoothing);
           }
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, static_cast<usize>(nY));
       parallelAlgorithm.execute(filterRows);
-      if(Result<> r = dst.copyFromBuffer(planeOff, nonstd::span<const float32>(dstPlane.data(), slice)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated), dst.copyFromBuffer(planeOff, nonstd::span<const float32>(dstPlane.data(), slice)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       reportProgress(static_cast<usize>(z + 1));
     }
-    return {};
+    return accumulated;
   }
 
   if(axis == 1)
@@ -1734,12 +1949,13 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize planeOff = static_cast<usize>(z) * slice;
-      if(Result<> r = src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated), src.copyIntoBuffer(planeOff, nonstd::span<SrcT>(srcPlane.data(), slice)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       // Parallel over columns [0, nX): each worker filters a disjoint set of columns (stride nX, count nY) with
       // its OWN thread-local scratch, gathering from srcPlane and scattering into dstPlane at disjoint indices.
@@ -1758,20 +1974,21 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
           detail::FilterDataArray(outs.data(), data.data(), static_cast<usize>(nY), coeffs);
           for(int64 j = 0; j < nY; ++j)
           {
-            dstPlane[static_cast<usize>(j) * static_cast<usize>(nX) + x] = static_cast<float32>(outs[static_cast<usize>(j)]);
+            dstPlane[(static_cast<usize>(j) * static_cast<usize>(nX)) + x] = detail::NarrowRecursiveGaussianValue(outs[static_cast<usize>(j)], options.CheckedSmoothing);
           }
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, static_cast<usize>(nX));
       parallelAlgorithm.execute(filterColumns);
-      if(Result<> r = dst.copyFromBuffer(planeOff, nonstd::span<const float32>(dstPlane.data(), slice)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated), dst.copyFromBuffer(planeOff, nonstd::span<const float32>(dstPlane.data(), slice)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
       reportProgress(static_cast<usize>(z + 1));
     }
-    return {};
+    return accumulated;
   }
 
   // Z pass (3D only): stage consecutive Y rows across every Z plane. A batch converts many small per-row HDF5
@@ -1808,7 +2025,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   {
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     const usize yCount = std::min(maxYRows, dims[1] - yBegin);
     const usize valuesPerPlaneBlock = yCount * dims[0];
@@ -1819,12 +2036,14 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize blockOffset = (z * dims[1] + yBegin) * dims[0];
-      if(Result<> r = src.copyIntoBuffer(blockOffset, nonstd::span<SrcT>(srcSlab.data() + z * valuesPerPlaneBlock, valuesPerPlaneBlock)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated),
+                                                          src.copyIntoBuffer(blockOffset, nonstd::span<SrcT>(srcSlab.data() + (z * valuesPerPlaneBlock), valuesPerPlaneBlock)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
     }
     // Adjacent X/Y lines are independent and occupy adjacent lanes in every staged Z plane. Workers touch only
@@ -1864,7 +2083,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
             const usize destination = z * valuesPerPlaneBlock + firstLine;
             for(usize lane = 0; lane < 4; ++lane)
             {
-              dstSlab[destination + lane] = static_cast<float32>(batchOuts[z * 4 + lane]);
+              dstSlab[destination + lane] = detail::NarrowRecursiveGaussianValue(batchOuts[(z * 4) + lane], options.CheckedSmoothing);
             }
           }
         }
@@ -1879,7 +2098,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
             detail::FilterDataArray(tailOuts.data(), tailData.data(), dims[2], coeffs);
             for(usize z = 0; z < dims[2]; ++z)
             {
-              dstSlab[z * valuesPerPlaneBlock + firstLine + lane] = static_cast<float32>(tailOuts[z]);
+              dstSlab[(z * valuesPerPlaneBlock) + firstLine + lane] = detail::NarrowRecursiveGaussianValue(tailOuts[z], options.CheckedSmoothing);
             }
           }
         }
@@ -1890,23 +2109,25 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     parallelAlgorithm.execute(filterZLineBatches);
     if(shouldCancel)
     {
-      return {};
+      return accumulated;
     }
     for(usize z = 0; z < dims[2]; ++z)
     {
       if(shouldCancel)
       {
-        return {};
+        return accumulated;
       }
       const usize blockOffset = (z * dims[1] + yBegin) * dims[0];
-      if(Result<> r = dst.copyFromBuffer(blockOffset, nonstd::span<const float32>(dstSlab.data() + z * valuesPerPlaneBlock, valuesPerPlaneBlock)); r.invalid())
+      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated),
+                                                          dst.copyFromBuffer(blockOffset, nonstd::span<const float32>(dstSlab.data() + (z * valuesPerPlaneBlock), valuesPerPlaneBlock)));
+      if(accumulated.invalid())
       {
-        return r;
+        return accumulated;
       }
     }
     reportProgress(yBegin + yCount);
   }
-  return {};
+  return accumulated;
 }
 
 // ---- Element-wise helpers over float32 stores. Streamed paths use the shared shape-aware pointwise planner so every
@@ -2375,10 +2596,12 @@ inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::a
   return {};
 }
 
-// dst[i] = static_cast<T>(src[i]) — Smoothing final cast float32 -> output type (ITK CastImageFilter).
+// Smoothing final conversion retains float32 pass values and checks only the terminal integer conversion.
 template <class T>
 Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataStore<T>& dst, const std::atomic_bool& shouldCancel, const detail::PointwiseExecutionOptions& options = {})
 {
+  detail::SmoothingGaussianConversionState conversionState;
+  Result<> accumulated;
   const usize total = src.getSize();
   if(dst.getSize() != total)
   {
@@ -2393,12 +2616,10 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {
-      detail::TransformRecursiveGaussianBatch(range.max() - range.min(), shouldCancel, [&](usize localIndex) {
-        const usize i = range.min() + localIndex;
-        dstValues[i] = static_cast<T>(srcValues[i]);
-      });
+      detail::ConvertSmoothingGaussianBuffer<T>(srcValues.subspan(range.min(), range.max() - range.min()), dstValues.subspan(range.min(), range.max() - range.min()), range.min(), conversionState,
+                                                shouldCancel);
     });
-    return {};
+    return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
       total, sizeof(float32) + sizeof(T), options.targetScratchBytes,
@@ -2415,23 +2636,25 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
   {
     if(shouldCancel)
     {
-      return {};
+      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
     }
     const usize n = std::min(batchValues, total - start);
-    if(Result<> r = src.copyIntoBuffer(start, nonstd::span<float32>(s.data(), n)); r.invalid())
+    accumulated = MergeResults(std::move(accumulated), src.copyIntoBuffer(start, nonstd::span<float32>(s.data(), n)));
+    if(accumulated.invalid())
     {
-      return r;
+      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
     }
-    if(!detail::TransformRecursiveGaussianBatch(n, shouldCancel, [&](usize i) { d[i] = static_cast<T>(s[i]); }))
+    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(s.data(), n), nonstd::span<T>(d.data(), n), start, conversionState, shouldCancel))
     {
-      return {};
+      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
     }
-    if(Result<> r = dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)); r.invalid())
+    accumulated = MergeResults(std::move(accumulated), dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
+    if(accumulated.invalid())
     {
-      return r;
+      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
     }
     start += n;
   }
-  return {};
+  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
 }
 } // namespace nx::core::ImageProcessing

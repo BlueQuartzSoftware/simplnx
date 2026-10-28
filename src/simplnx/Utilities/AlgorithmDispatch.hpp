@@ -197,6 +197,20 @@ private:
 SIMPLNX_EXPORT bool& ForceInCoreAlgorithm();
 
 /**
+ * @brief Selects the algorithm path from storage residency and test flags.
+ * @param usesOutOfCoreStore True when a relevant target uses out-of-core storage.
+ * @return True when the out-of-core algorithm is selected.
+ *
+ * ForceInCoreAlgorithm() overrides storage residency and ForceOocAlgorithm().
+ * Callers retain storage capability checks and record the path that runs.
+ * @warning Set the process-wide test flags before parallel work starts.
+ */
+inline bool ShouldUseOutOfCoreAlgorithm(bool usesOutOfCoreStore)
+{
+  return !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+}
+
+/**
  * @class ForceInCoreAlgorithmGuard
  * @brief Restores the force-in-core test flag at scope exit.
  *
@@ -319,7 +333,7 @@ template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(std::initializer_list<const IDataArray*> arrays, ArgsT&&... args)
 {
   const bool usesOutOfCoreStore = AnyOutOfCore(arrays);
-  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  const bool useOutOfCoreAlgorithm = ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
   if(useOutOfCoreAlgorithm)
@@ -345,7 +359,7 @@ template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(const AlgorithmArrayTargets& targets, ArgsT&&... args)
 {
   const bool usesOutOfCoreStore = AnyOutOfCore(targets);
-  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  const bool useOutOfCoreAlgorithm = ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
   if(useOutOfCoreAlgorithm)

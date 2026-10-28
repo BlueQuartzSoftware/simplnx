@@ -9,19 +9,15 @@ namespace nx::core
 {
 /**
  * @class HMinimaImageFilter
- * @brief ITK-free, out-of-core-capable H-Minima transform (suppresses regional minima whose depth/contrast is
- *        below a user-supplied Height).
+ * @brief Suppresses shallow regional minima by reconstructing the raised input marker by erosion.
  *
- * The H-Minima transform removes every regional minimum whose depth (contrast below the surrounding level) is
- * less than @c Height, and raises each surviving minimum by exactly @c Height, leaving the background otherwise
- * unchanged. It is implemented as reconstruction-by-erosion of a marker image equal to the saturating sum
- * (input + Height) under the input itself as the mask (the shared D3-split morphological reconstruction engine).
- * The saturating marker matches the legacy ITK H Minima Image Filter exactly, including the clamp (rather than
- * wrap) when (input + Height) overflows the element type's range.
+ * The marker is input plus Height, and the original input is the lower mask for reconstruction.
+ * Integer images require finite, nonnegative whole Height values. Integer marker addition uses native values and saturates at the type maximum.
+ * Height 0 preserves integer input exactly, including native 64-bit units. Floating images retain fractional Height and existing floating arithmetic.
+ * Height uses float64 precision, which cannot distinguish every consecutive integer above 2^53.
  *
- * Output type == input type; the input must be single-component (scalar). This is out-of-core capable (the legacy
- * filter rejected chunked arrays): reconstruction only copies or clamps existing values, so the result is
- * bit-for-bit identical for integer AND float types and matches the legacy ITK output exactly.
+ * Input must have one component per tuple. Output contains reconstructed intensities with the same type and shape as input.
+ * Resident and disk-backed reconstruction retain their existing storage routes. Corrected integer markers can change downstream minima and watershed seeds.
  */
 class IMAGEPROCESSING_EXPORT HMinimaImageFilter : public IFilter
 {

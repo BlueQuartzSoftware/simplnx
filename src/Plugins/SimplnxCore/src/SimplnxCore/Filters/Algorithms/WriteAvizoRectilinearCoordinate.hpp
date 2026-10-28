@@ -13,10 +13,10 @@ namespace nx::core
  * size is the current axis dimension. Binary output uses native endianness and
  * identifies it in the header. ASCII Feature IDs insert a newline after 21 values.
  *
- * DataStore read results and C stdio return values are not inspected. A source
- * or file-write failure can produce stale or partial output while returning
- * success. Cancellation is checked between Feature ID chunks. It returns success
- * and closes a file that does not include the remaining data or coordinates.
+ * The writer checks source reads and each output operation. A failure stops
+ * later reads and returns an error. Cancellation is checked between Feature ID
+ * windows. The filter wrapper rejects
+ * publication after cancellation.
  */
 class SIMPLNXCORE_EXPORT WriteAvizoRectilinearCoordinate : public AvizoWriter
 {
@@ -42,9 +42,7 @@ public:
 
   /**
    * @brief Creates the output path and writes the Avizo file.
-   * @return Directory or file-open result from AvizoWriter.
-   *
-   * Cancellation and data-write failures are not distinguishable from success.
+   * @return Directory, source-read, output, or close status from AvizoWriter.
    */
   Result<> operator()();
 
@@ -52,7 +50,7 @@ protected:
   /**
    * @brief Writes the rectilinear Avizo header.
    * @param outputFile Open binary-mode output stream.
-   * @return Success. C stdio failures are not inspected.
+   * @return Error if a header output operation fails.
    * @pre outputFile is not null.
    */
   Result<> generateHeader(FILE* outputFile) const override;
@@ -60,7 +58,7 @@ protected:
   /**
    * @brief Writes Feature IDs and X, Y, then Z coordinate arrays.
    * @param outputFile Open binary-mode output stream.
-   * @return Success after completion or cancellation.
+   * @return Source warnings and any read or output error. Cancellation ends the current output.
    * @pre outputFile is not null.
    */
   Result<> writeData(FILE* outputFile) const override;

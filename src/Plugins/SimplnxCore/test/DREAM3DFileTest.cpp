@@ -4,6 +4,7 @@
 #include "SimplnxCore/Filters/WriteDREAM3DFilter.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -11,6 +12,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyListStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -21,10 +23,15 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataStoreFormatResolver.hpp"
+#include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
+#include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -33,6 +40,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
+#include "simplnx/UnitTest/ScopedDefaultFormatResolver.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -43,10 +51,13 @@
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -2120,4 +2131,324 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   const uint64 missesBeforeRewritePreflight = cache.missCount();
   REQUIRE(pipeline.preflight());
   REQUIRE(cache.missCount() == missesBeforeRewritePreflight + 1);
+}
+
+namespace
+{
+class C8FilterResolver : public IDataStoreFormatResolver
+{
+public:
+  C8FilterResolver() = default;
+  ~C8FilterResolver() override = default;
+  C8FilterResolver(const C8FilterResolver&) = default;
+  C8FilterResolver(C8FilterResolver&&) = default;
+  C8FilterResolver& operator=(const C8FilterResolver&) = default;
+  C8FilterResolver& operator=(C8FilterResolver&&) = default;
+
+  bool reject = false;
+  bool requireContext = false;
+  mutable std::vector<DataPath> paths;
+
+  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType, uint64) const override
+  {
+    paths.push_back(path);
+    if(reject)
+    {
+      throw std::runtime_error("injected C8 filter policy rejection at '" + path.toString() + "'");
+    }
+    if(requireContext)
+    {
+      REQUIRE(dataStructure.containsData(DataPath({"DestinationMarker"})));
+      REQUIRE(dataStructure.containsData(DataPath({"Image", "Cells", "Selected"})));
+      REQUIRE(dataStructure.containsData(DataPath({"Image", "Lists"})));
+      REQUIRE(dataStructure.containsData(DataPath({"Image", "Labels"})));
+      REQUIRE_FALSE(dataStructure.containsData(DataPath({"Image", "Cells", "Excluded"})));
+    }
+    return "";
+  }
+};
+
+void WriteC8FilterSelectionFile(const fs::path& path)
+{
+  DataStructure source;
+  source.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
+  auto* imageGeom = ImageGeom::Create(source, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({2, 2, 1});
+  imageGeom->setSpacing({1.0F, 2.0F, 3.0F});
+  imageGeom->setOrigin({-2.0F, -1.0F, 0.0F});
+  auto* cells = AttributeMatrix::Create(source, "Cells", ShapeType{1, 2, 2}, imageGeom->getId());
+  REQUIRE(cells != nullptr);
+  imageGeom->setCellData(*cells);
+  auto selectedStore = DataStoreUtilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Selected"}), {1, 2, 2}, {1});
+  REQUIRE(selectedStore != nullptr);
+  const std::vector<int32> values{4, -7, 12, 29};
+  REQUIRE(selectedStore->copyFromBuffer(0, nonstd::span<const int32>(values.data(), values.size())).valid());
+  REQUIRE(Int32Array::Create(source, "Selected", selectedStore, cells->getId()) != nullptr);
+  auto excludedStore = DataStoreUtilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Excluded"}), {1, 2, 2}, {1});
+  REQUIRE(excludedStore != nullptr);
+  excludedStore->fill(90);
+  REQUIRE(Int32Array::Create(source, "Excluded", excludedStore, cells->getId()) != nullptr);
+  auto* lists = NeighborList<int32>::Create(source, "Lists", ShapeType{4}, imageGeom->getId());
+  REQUIRE(lists != nullptr);
+  const std::vector<std::vector<int32>> listValues{{1, 2}, {}, {-3}, {4, 5, 6}};
+  for(int32 tupleIdx = 0; tupleIdx < 4; ++tupleIdx)
+  {
+    lists->setList(tupleIdx, listValues[static_cast<usize>(tupleIdx)]);
+  }
+  REQUIRE(StringArray::CreateWithValues(source, "Labels", ShapeType{2}, {"first", "second"}, imageGeom->getId()) != nullptr);
+  auto write = DREAM3D::WriteFile(path, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  fs::last_write_time(path, fs::last_write_time(path) - std::chrono::seconds(10));
+}
+
+void WriteC8FilterLegacyWarningFile(const fs::path& path)
+{
+  {
+    auto file = HDF5::FileIO::WriteFile(path);
+    REQUIRE(file.isValid());
+    REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    auto containers = file.createGroup("DataContainers");
+    auto container = containers.createGroup("StatsContainer");
+    auto attributeMatrix = container.createGroup("StatsAM");
+    REQUIRE(attributeMatrix.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
+    REQUIRE(attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13).valid());
+    auto statistics = attributeMatrix.createGroup("StatisticsSource");
+    REQUIRE(statistics.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, "Statistics").valid());
+    auto values = statistics.createDataset("Values");
+    const std::vector<float32> payload{1.0F};
+    REQUIRE(values.writeSpan<float32>({1, 1}, nonstd::span<const float32>(payload.data(), payload.size())).valid());
+    REQUIRE(values.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, DataArray<float32>::GetTypeName()).valid());
+    REQUIRE(values.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
+    REQUIRE(values.writeVectorAttribute("ComponentDimensions", ShapeType{1}).valid());
+    REQUIRE(values.writeVectorAttribute<float32>("Mean", {4.0F, 5.0F, 6.0F}).valid());
+    auto unsupported = attributeMatrix.createGroup("Unsupported");
+    REQUIRE(unsupported.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
+  }
+  fs::last_write_time(path, fs::last_write_time(path) - std::chrono::seconds(10));
+}
+} // namespace
+
+TEST_CASE("Scoped default format resolver preserves ownership and nested restoration", "[Core][FormatResolver]")
+{
+  UnitTest::LoadPlugins();
+  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  const bool throwFromNestedScope = GENERATE(false, true);
+  CAPTURE(throwFromNestedScope);
+  auto outerResolver = std::make_shared<InMemoryFormatResolver>();
+  const auto* outerResolverPtr = outerResolver.get();
+  const std::weak_ptr<const IDataStoreFormatResolver> outerLifetime = outerResolver;
+  {
+    const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(std::move(outerResolver));
+    REQUIRE(outerResolver == nullptr);
+    CHECK(&DataStructure{}.formatResolver() == outerResolverPtr);
+    bool caughtException = false;
+    try
+    {
+      auto innerResolver = std::make_shared<InMemoryFormatResolver>();
+      const auto* innerResolverPtr = innerResolver.get();
+      const auto restoreOuter = UnitTest::SetDefaultFormatResolverForScope(std::move(innerResolver));
+      REQUIRE(innerResolver == nullptr);
+      REQUIRE_FALSE(outerLifetime.expired());
+      CHECK(&DataStructure{}.formatResolver() == innerResolverPtr);
+      if(throwFromNestedScope)
+      {
+        throw std::runtime_error("resolver scope unwind");
+      }
+    } catch(const std::runtime_error&)
+    {
+      caughtException = true;
+    }
+    CHECK(caughtException == throwFromNestedScope);
+    REQUIRE_FALSE(outerLifetime.expired());
+    CHECK(&DataStructure{}.formatResolver() == outerResolverPtr);
+  }
+  CHECK(outerLifetime.expired());
+  CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+  const auto restoredResolver = DataStructure::getDefaultFormatResolver();
+  CHECK_FALSE(restoredResolver.owner_before(incomingResolver));
+  CHECK_FALSE(incomingResolver.owner_before(restoredResolver));
+}
+
+TEST_CASE("Scoped null default format resolver preserves the active policy", "[Core][FormatResolver]")
+{
+  UnitTest::LoadPlugins();
+  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  {
+    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(nullptr);
+    CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+  }
+  CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
+}
+
+TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context", "[C8][ReadDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto policy = GENERATE(Dream3dImportParameter::PathImportPolicy::IncludeList, Dream3dImportParameter::PathImportPolicy::ExcludeList);
+  const bool warmCache = GENERATE(false, true);
+  const bool execute = GENERATE(false, true);
+  const bool rejectDestination = GENERATE(false, true);
+  CAPTURE(policy, warmCache, execute, rejectDestination);
+  const auto path = GetTestFilePath("c8_filter_destination_context.dream3d");
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.clear();
+  cache.resetStats();
+  const auto cleanup = MakeScopeGuard([&cache, &path]() noexcept {
+    cache.clear();
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  WriteC8FilterSelectionFile(path);
+  if(warmCache)
+  {
+    auto warm = cache.fetchNeutralMetadata(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(warm);
+  }
+  auto processResolver = std::make_shared<C8FilterResolver>();
+  processResolver->reject = true;
+  const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(processResolver);
+  auto destinationResolver = std::make_shared<C8FilterResolver>();
+  destinationResolver->requireContext = true;
+  destinationResolver->reject = rejectDestination;
+  DataStructure destination;
+  destination.setFormatResolver(destinationResolver);
+  // The marker uses an explicit resident store because the process policy deliberately rejects every request.
+  auto* marker = Int32Array::Create(destination, "DestinationMarker", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 73));
+  REQUIRE(marker != nullptr);
+  const auto markerId = marker->getId();
+  const auto* originalStore = marker->getIDataStore();
+  const auto originalPaths = destination.getAllDataPaths();
+  const DataPath selectedPath({"Image", "Cells", "Selected"});
+  const DataPath listsPath({"Image", "Lists"});
+  const DataPath labelsPath({"Image", "Labels"});
+  const std::vector<DataPath> paths =
+      policy == Dream3dImportParameter::PathImportPolicy::IncludeList ? std::vector<DataPath>{selectedPath, listsPath, labelsPath} : std::vector<DataPath>{DataPath({"Image", "Cells", "Excluded"})};
+  ReadDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(path, policy, paths));
+  cache.resetStats();
+  Result<> result;
+  if(execute)
+  {
+    result = filter.execute(destination, args).result;
+  }
+  else
+  {
+    auto preflight = filter.preflight(destination, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    CHECK(destination.getAllDataPaths() == originalPaths);
+    CHECK(destinationResolver->paths.empty());
+    CHECK(processResolver->paths.empty());
+    result = preflight.outputActions.value().applyRegular(destination, IDataAction::Mode::Preflight);
+  }
+  CHECK(cache.missCount() == (warmCache ? 0 : 1));
+  CHECK(cache.hitCount() == (warmCache ? 2 : 1));
+  CHECK(processResolver->paths.empty());
+  CHECK(destination.getData(markerId) == marker);
+  CHECK(marker->getIDataStore() == originalStore);
+  CHECK((*marker)[0] == 73);
+  CHECK(std::count(destinationResolver->paths.begin(), destinationResolver->paths.end(), selectedPath) == 1);
+  CHECK(std::count(destinationResolver->paths.begin(), destinationResolver->paths.end(), DataPath({"Image", "Cells", "Excluded"})) == 0);
+  if(rejectDestination)
+  {
+    REQUIRE(result.invalid());
+    REQUIRE_FALSE(result.errors().empty());
+    CHECK(result.errors().front().message.find("injected C8 filter policy rejection") != std::string::npos);
+    CHECK(result.errors().front().message.find(selectedPath.toString()) != std::string::npos);
+    CHECK(destination.getAllDataPaths() == originalPaths);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const Int32Array* selectedPtr = nullptr;
+  REQUIRE_NOTHROW(selectedPtr = &destination.getDataRefAs<Int32Array>(selectedPath));
+  const NeighborList<int32>* listsPtr = nullptr;
+  REQUIRE_NOTHROW(listsPtr = &destination.getDataRefAs<NeighborList<int32>>(listsPath));
+  const StringArray* labelsPtr = nullptr;
+  REQUIRE_NOTHROW(labelsPtr = &destination.getDataRefAs<StringArray>(labelsPath));
+  const ImageGeom* imageGeomPtr = nullptr;
+  REQUIRE_NOTHROW(imageGeomPtr = &destination.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  const AttributeMatrix* cellsPtr = nullptr;
+  REQUIRE_NOTHROW(cellsPtr = &destination.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cells"})));
+  CHECK(imageGeomPtr->getCellData() == cellsPtr);
+  CHECK(imageGeomPtr->getCellDataId() == cellsPtr->getId());
+  CHECK(imageGeomPtr->getDimensions() == SizeVec3{2, 2, 1});
+  CHECK(imageGeomPtr->getOrigin() == FloatVec3{-2.0F, -1.0F, 0.0F});
+  CHECK(imageGeomPtr->getSpacing() == FloatVec3{1.0F, 2.0F, 3.0F});
+  CHECK_FALSE(destination.containsData(DataPath({"Image", "Cells", "Excluded"})));
+  if(execute)
+  {
+    CHECK(selectedPtr->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(selectedPtr->size() == 4);
+    CHECK((*selectedPtr)[0] == 4);
+    CHECK((*selectedPtr)[1] == -7);
+    CHECK((*selectedPtr)[2] == 12);
+    CHECK((*selectedPtr)[3] == 29);
+    CHECK(listsPtr->getList(0) == std::vector<int32>{1, 2});
+    CHECK(listsPtr->getList(1).empty());
+    CHECK(listsPtr->getList(2) == std::vector<int32>{-3});
+    CHECK(listsPtr->getList(3) == std::vector<int32>{4, 5, 6});
+    REQUIRE_FALSE(labelsPtr->isPlaceholder());
+    REQUIRE(labelsPtr->getNumberOfTuples() == 2);
+    CHECK((*labelsPtr)[0] == "first");
+    CHECK((*labelsPtr)[1] == "second");
+  }
+  else
+  {
+    REQUIRE(selectedPtr->getStoreType() == IDataStore::StoreType::Empty);
+    REQUIRE(dynamic_cast<const EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr);
+    CHECK(labelsPtr->isPlaceholder());
+  }
+  UnitTest::CheckArraysInheritTupleDims(destination);
+}
+
+TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy", "[C8][ReadDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool warmCache = GENERATE(false, true);
+  const bool execute = GENERATE(false, true);
+  CAPTURE(warmCache, execute);
+  const auto path = GetTestFilePath("c8_filter_unsupported_policy.dream3d");
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.clear();
+  const auto cleanup = MakeScopeGuard([&cache, &path]() noexcept {
+    cache.clear();
+    std::error_code error;
+    fs::remove(path, error);
+  });
+  WriteC8FilterLegacyWarningFile(path);
+  if(warmCache)
+  {
+    auto warm = cache.fetchNeutralMetadata(path);
+    SIMPLNX_RESULT_REQUIRE_VALID(warm);
+    REQUIRE(warm.warnings().size() == 1);
+  }
+  DataStructure destination;
+  auto* marker = DataGroup::Create(destination, "DestinationMarker");
+  REQUIRE(marker != nullptr);
+  const auto markerId = marker->getId();
+  const auto originalPaths = destination.getAllDataPaths();
+  ReadDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(path, static_cast<Dream3dImportParameter::PathImportPolicy>(99), {}));
+  cache.resetStats();
+  Result<> result;
+  if(execute)
+  {
+    result = filter.execute(destination, args).result;
+  }
+  else
+  {
+    auto preflight = filter.preflight(destination, args);
+    result = ConvertResult(std::move(preflight.outputActions));
+  }
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == -51);
+  REQUIRE(result.warnings().size() == 1);
+  CHECK(result.warnings().front().code == -298012);
+  CHECK(result.warnings().front().message == "DataObject 'Unsupported' is not a supported simplnx data type");
+  CHECK(cache.missCount() == (warmCache ? 0 : 1));
+  CHECK(cache.hitCount() == (warmCache ? 1 : 0));
+  CHECK(destination.getData(markerId) == marker);
+  CHECK(destination.getAllDataPaths() == originalPaths);
 }

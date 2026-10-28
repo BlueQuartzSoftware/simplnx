@@ -8,6 +8,8 @@
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp" // CreateDataStoreWithFormat (update buffer)
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp" // CalculateChange in-plane parallelization
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
@@ -37,6 +39,177 @@ namespace nx::core::ImageProcessing
 {
 namespace detail
 {
+/** @brief Checks the selected Curvature Flow controls, including requests that only copy the input. */
+inline Result<> ValidateCurvatureFlowControls(float64 timeStep, const FloatVec3& spacing, const SizeVec3& dims)
+{
+  if(!std::isfinite(timeStep) || timeStep < 0.0)
+  {
+    return MakeErrorResult(k_CurvatureFlowInvalidTimeStep, fmt::format("Curvature Flow Time Step must be finite and nonnegative; received {}. Set Time Step to zero to copy the input.", timeStep));
+  }
+  const usize activeAxes = dims[2] > 1 ? 3 : 2;
+  for(usize axis = 0; axis < activeAxes; ++axis)
+  {
+    const float64 value = spacing[axis];
+    if(!std::isfinite(value) || value == 0.0)
+    {
+      return MakeErrorResult(k_CurvatureFlowInvalidSpacing,
+                             fmt::format("Curvature Flow image spacing for active axis {} must be finite and nonzero; received {}. Correct the Image Geometry spacing before execution.", axis, value));
+    }
+  }
+  return {};
+}
+
+class CurvatureFlowConversionState
+{
+public:
+  CurvatureFlowConversionState() = default;
+  ~CurvatureFlowConversionState() = default;
+  CurvatureFlowConversionState(const CurvatureFlowConversionState&) = delete;
+  CurvatureFlowConversionState(CurvatureFlowConversionState&&) = delete;
+  CurvatureFlowConversionState& operator=(const CurvatureFlowConversionState&) = delete;
+  CurvatureFlowConversionState& operator=(CurvatureFlowConversionState&&) = delete;
+
+  void recordClipping() noexcept
+  {
+    m_Clipped.store(true, std::memory_order_relaxed);
+  }
+  bool clipped() const noexcept
+  {
+    return m_Clipped.load(std::memory_order_relaxed);
+  }
+  void recordNonFinite(usize index) noexcept
+  {
+    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
+    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
+    {
+    }
+  }
+  usize nonFiniteIndex() const noexcept
+  {
+    return m_NonFiniteIndex.load(std::memory_order_relaxed);
+  }
+
+private:
+  std::atomic<bool> m_Clipped{false};
+  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
+};
+
+template <bool CheckedOutput, class T, class Real>
+bool ConvertFiniteDifferenceOutputBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, CurvatureFlowConversionState& state, const std::atomic_bool& shouldCancel,
+                                         usize valuesPerRow = 0, usize rowStride = 0)
+{
+  bool clipped = false;
+  for(usize index = 0; index < input.size(); ++index)
+  {
+    if((index & 4095ULL) == 0 && shouldCancel)
+    {
+      if(clipped)
+      {
+        state.recordClipping();
+      }
+      return false;
+    }
+    if constexpr(CheckedOutput)
+    {
+      const auto status = ConvertTerminalImageValue(input[index], output[index]);
+      if(status == TerminalImageConversionStatus::NonFinite)
+      {
+        const usize failedIndex = valuesPerRow == 0 ? offset + index : offset + ((index / valuesPerRow) * rowStride) + (index % valuesPerRow);
+        state.recordNonFinite(failedIndex);
+        if(clipped)
+        {
+          state.recordClipping();
+        }
+        return false;
+      }
+      clipped = clipped || status == TerminalImageConversionStatus::Clipped;
+    }
+    else
+    {
+      output[index] = static_cast<T>(input[index]);
+    }
+  }
+  if(clipped)
+  {
+    state.recordClipping();
+  }
+  return true;
+}
+
+template <bool CheckedOutput>
+Result<> FinishFiniteDifferenceConversion(const CurvatureFlowConversionState& state)
+{
+  Result<> result;
+  if constexpr(CheckedOutput)
+  {
+    const usize failedIndex = state.nonFiniteIndex();
+    if(failedIndex != std::numeric_limits<usize>::max())
+    {
+      result = MakeErrorResult(
+          k_CurvatureFlowNonFiniteIntegerOutput,
+          fmt::format("Curvature Flow produced a nonfinite integer output at flat value index {}. Reduce Time Step or use a floating-point input array to retain nonfinite output.", failedIndex));
+    }
+    if(state.clipped())
+    {
+      result.warnings().push_back({.code = k_CurvatureFlowClippedIntegerOutput,
+                                   .message = "Curvature Flow clipped final integer values to the output type's range after truncation. The evolution may be unstable. "
+                                              "Reduce Time Step and check downstream masks and segmentation for clipping plateaus."});
+    }
+  }
+  return result;
+}
+
+template <class T>
+Result<> CopyCurvatureFlowInput(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const std::atomic_bool& shouldCancel)
+{
+  constexpr usize bufferBytes = usize{1024} * 1024;
+  const usize capacity = std::min(input.getSize(), bufferBytes / sizeof(T));
+  std::vector<T> buffer(capacity);
+  Result<> result;
+  for(usize offset = 0; offset < input.getSize();)
+  {
+    if(shouldCancel)
+    {
+      return result;
+    }
+    const usize count = std::min(capacity, input.getSize() - offset);
+    result = MergeResults(std::move(result), input.copyIntoBuffer(offset, nonstd::span<T>(buffer.data(), count)));
+    if(result.invalid())
+    {
+      return result;
+    }
+    if(shouldCancel)
+    {
+      return result;
+    }
+    result = MergeResults(std::move(result), output.copyFromBuffer(offset, nonstd::span<const T>(buffer.data(), count)));
+    if(result.invalid())
+    {
+      return result;
+    }
+    offset += count;
+  }
+  return result;
+}
+
+// Selected routes retain successful serial transfer warnings until their single outer finalization point.
+template <bool CheckedOutput>
+Result<> RecordFiniteDifferenceIoResult(Result<>& accumulated, Result<> transfer)
+{
+  if constexpr(CheckedOutput)
+  {
+    if(transfer.valid())
+    {
+      for(auto& warning : transfer.warnings())
+      {
+        accumulated.warnings().push_back(std::move(warning));
+      }
+      return {};
+    }
+  }
+  return transfer;
+}
+
 inline std::string SelectFiniteDifferenceWorkingDataFormat(IDataStore::StoreType inputStoreType, std::string inputDataFormat, IDataStore::StoreType outputStoreType, std::string outputDataFormat)
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
@@ -1328,11 +1501,20 @@ Result<> UpdateGlobalConductance2DBounded(F& fn, const StoreT& currentStore, usi
   return {};
 }
 
-template <class T, class F, class Real, class WorkingStoreT>
+template <class T, class F, class Real, bool CheckedOutput = false, class WorkingStoreT>
 Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, usize nx, usize ny,
                                         const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                         const IFilter::MessageHandler& messageHandler, usize residentLimit)
 {
+  detail::CurvatureFlowConversionState conversionState;
+  Result<> ioResult;
+  const auto finish = [&](Result<> result = {}) {
+    if constexpr(CheckedOutput)
+    {
+      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+    }
+    return result;
+  };
   ThrottledMessageHandler progressThrottle(messageHandler);
   messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
 
@@ -1379,21 +1561,25 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
       {
         if(shouldCancel)
         {
-          return {};
+          return finish();
         }
         const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
-        if(Result<> result = ReadFiniteDifference2DRegion(inStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<T>(inputBlock.data(), inputBlock.size())); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+               ioResult, ReadFiniteDifference2DRegion(inStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<T>(inputBlock.data(), inputBlock.size())));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
         for(usize index = 0; index < valueCount; ++index)
         {
           castBlock[index] = static_cast<Real>(inputBlock[index]);
         }
-        if(Result<> result = WriteFiniteDifference2DRegion(firstStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(castBlock.data(), valueCount)); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+               ioResult, WriteFiniteDifference2DRegion(firstStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(castBlock.data(), valueCount)));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
     }
@@ -1408,13 +1594,15 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
       if constexpr(F::k_NeedsGlobalGradient)
       {
-        if(Result<> result = UpdateGlobalConductance2DBounded(fn, *currentStore, nx, ny, sc, plan, nonstd::span<Real>(inputBlock.data(), inputBlock.size()), iter, shouldCancel); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+               ioResult, UpdateGlobalConductance2DBounded(fn, *currentStore, nx, ny, sc, plan, nonstd::span<Real>(inputBlock.data(), inputBlock.size()), iter, shouldCancel));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
 
@@ -1429,7 +1617,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         {
           if(shouldCancel)
           {
-            return {};
+            return finish();
           }
           const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
           const usize loadXBegin = xBegin > radius ? xBegin - radius : 0;
@@ -1437,9 +1625,11 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           const usize loadedWidth = loadXEnd - loadXBegin;
           const usize coreWidth = xEnd - xBegin;
           const usize coreRows = yEnd - yBegin;
-          if(Result<> result = ReadFiniteDifference2DRegion(*currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())); result.invalid())
+          if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+                 ioResult, ReadFiniteDifference2DRegion(*currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())));
+             result.invalid())
           {
-            return result;
+            return finish(std::move(result));
           }
 
           auto calculateRows = [&](const Range& rowRange) {
@@ -1471,9 +1661,11 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
             calculateRows(Range{0, coreRows});
           }
           const usize valueCount = coreRows * coreWidth;
-          if(Result<> result = WriteFiniteDifference2DRegion(*nextStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)); result.invalid())
+          if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+                 ioResult, WriteFiniteDifference2DRegion(*nextStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)));
+             result.invalid())
           {
-            return result;
+            return finish(std::move(result));
           }
           completedValues += valueCount;
           progressThrottle.updatePercent(completedValues);
@@ -1497,33 +1689,47 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
       {
         if(shouldCancel)
         {
-          return {};
+          return finish();
         }
         const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
-        if(Result<> result = ReadFiniteDifference2DRegion(*currentStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+               ioResult, ReadFiniteDifference2DRegion(*currentStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
-        for(usize index = 0; index < valueCount; ++index)
+        if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(workingBlock.data(), valueCount), nonstd::span<T>(outputValues.data(), valueCount),
+                                                                       (yBegin * nx) + xBegin, conversionState, shouldCancel, xEnd - xBegin, nx))
         {
-          outputValues[index] = static_cast<T>(workingBlock[index]);
+          return finish();
         }
-        if(Result<> result = WriteFiniteDifference2DRegion(outStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const T>(outputValues.data(), valueCount)); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
+               ioResult, WriteFiniteDifference2DRegion(outStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const T>(outputValues.data(), valueCount)));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
     }
   }
-  return {};
+  return finish();
 }
 
-template <class T, class F, class Real, class WorkingStoreT>
+template <class T, class F, class Real, bool CheckedOutput = false, class WorkingStoreT>
 Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, const SizeVec3& dims,
                                          const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                          const IFilter::MessageHandler& messageHandler)
 {
+  detail::CurvatureFlowConversionState conversionState;
+  Result<> ioResult;
+  const auto finish = [&](Result<> result = {}) {
+    if constexpr(CheckedOutput)
+    {
+      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+    }
+    return result;
+  };
   ThrottledMessageHandler progressThrottle(messageHandler);
   messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
 
@@ -1541,27 +1747,31 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
-      if(Result<> result = inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputPlane.data(), slice)); result.invalid())
+      if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputPlane.data(), slice)));
+         result.invalid())
       {
-        return result;
+        return finish(std::move(result));
       }
-      if(Result<> result = outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(inputPlane.data(), slice)); result.invalid())
+      if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(inputPlane.data(), slice)));
+         result.invalid())
       {
-        return result;
+        return finish(std::move(result));
       }
     }
-    return {};
+    return finish();
   }
 
   if constexpr(F::k_NeedsGlobalGradient)
   {
     if(!fn.gradientMagnitudeFixed)
     {
-      if(Result<> result = detail::InitializeFiniteDifferenceWorkingStoreAndConductance<T, F, Real>(fn, inStore, firstStore, dims, sc, shouldCancel); result.invalid())
+      if(Result<> result =
+             detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::InitializeFiniteDifferenceWorkingStoreAndConductance<T, F, Real>(fn, inStore, firstStore, dims, sc, shouldCancel));
+         result.invalid())
       {
-        return result;
+        return finish(std::move(result));
       }
     }
     else
@@ -1572,19 +1782,22 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       {
         if(shouldCancel)
         {
-          return {};
+          return finish();
         }
-        if(Result<> result = inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputPlane.data(), slice)); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputPlane.data(), slice)));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
         for(usize index = 0; index < slice; ++index)
         {
           workingPlane[index] = static_cast<Real>(inputPlane[index]);
         }
-        if(Result<> result = firstStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(workingPlane.data(), slice)); result.invalid())
+        if(Result<> result =
+               detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, firstStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(workingPlane.data(), slice)));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
     }
@@ -1611,7 +1824,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           return {};
         }
       }
-      if(Result<> result = loadPlane(window[slot], z); result.invalid())
+      if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(window[slot], z)); result.invalid())
       {
         return result;
       }
@@ -1620,7 +1833,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     };
     for(int64 slot = 0; slot < static_cast<int64>(windowPlanes); ++slot)
     {
-      if(Result<> result = loadWindowPlane(static_cast<usize>(slot), slot - radius); result.invalid())
+      if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadWindowPlane(static_cast<usize>(slot), slot - radius)); result.invalid())
       {
         return result;
       }
@@ -1689,16 +1902,21 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       algorithm.execute(calculateRows);
       if(finalIteration)
       {
-        for(usize index = 0; index < slice; ++index)
+        if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(nextPlane.data(), slice), nonstd::span<T>(finalOutputPlane.data(), slice),
+                                                                       static_cast<usize>(z) * slice, conversionState, shouldCancel))
         {
-          finalOutputPlane[index] = static_cast<T>(nextPlane[index]);
+          return {};
         }
-        if(Result<> result = outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(finalOutputPlane.data(), slice)); result.invalid())
+        if(Result<> result =
+               detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(finalOutputPlane.data(), slice)));
+           result.invalid())
         {
           return result;
         }
       }
-      else if(Result<> result = destinationStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)); result.invalid())
+      else if(Result<> result =
+                  detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, destinationStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)));
+              result.invalid())
       {
         return result;
       }
@@ -1710,7 +1928,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           std::swap(window[slot], window[slot + 1]);
           std::swap(windowZ[slot], windowZ[slot + 1]);
         }
-        if(Result<> result = loadWindowPlane(windowPlanes - 1, z + 1 + radius); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadWindowPlane(windowPlanes - 1, z + 1 + radius)); result.invalid())
         {
           return result;
         }
@@ -1723,16 +1941,17 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
   {
     if(shouldCancel)
     {
-      return {};
+      return finish();
     }
     if constexpr(F::k_NeedsGlobalGradient)
     {
       const bool initializedConductance = iter == 0 && !fn.gradientMagnitudeFixed;
       if(!initializedConductance)
       {
-        if(Result<> result = detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, 3, iter, shouldCancel); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, 3, iter, shouldCancel));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
     }
@@ -1748,7 +1967,8 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           const int64 z = clampi(wantedZ, nZ - 1);
           if(!loadedInputZ.has_value() || *loadedInputZ != z)
           {
-            if(Result<> result = inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputCastPlane.data(), slice)); result.invalid())
+            if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(inputCastPlane.data(), slice)));
+               result.invalid())
             {
               return result;
             }
@@ -1760,9 +1980,9 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           }
           return {};
         };
-        if(Result<> result = processIteration(loadInputPlane, &firstStore, finalIteration); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, processIteration(loadInputPlane, &firstStore, finalIteration)); result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
         if(finalIteration)
         {
@@ -1770,7 +1990,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
           {
             throttleProgress(progressThrottle, iter, numberOfIterations);
           }
-          return {};
+          return finish();
         }
         currentStore = &firstStore;
         nextStore = &secondStore;
@@ -1786,9 +2006,9 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       const int64 z = clampi(wantedZ, nZ - 1);
       return currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(destination.data(), slice));
     };
-    if(Result<> result = processIteration(loadWorkingPlane, nextStore, finalIteration); result.invalid())
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, processIteration(loadWorkingPlane, nextStore, finalIteration)); result.invalid())
     {
-      return result;
+      return finish(std::move(result));
     }
     if(finalIteration)
     {
@@ -1796,7 +2016,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       {
         throttleProgress(progressThrottle, iter, numberOfIterations);
       }
-      return {};
+      return finish();
     }
     std::swap(currentStore, nextStore);
     if(!shouldCancel)
@@ -1804,10 +2024,10 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       throttleProgress(progressThrottle, iter, numberOfIterations);
     }
   }
-  return {};
+  return finish();
 }
 
-template <class T, class F, class Real>
+template <class T, class F, class Real, bool CheckedOutput = false>
 Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, F fn, float64 timeStep,
                                      uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D)
 {
@@ -1873,9 +2093,10 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
   TemporaryFiniteDifferenceStore<Real> secondStore(*secondRecords, shouldCancel);
   if(nz == 1)
   {
-    return ApplyFiniteDifference2DBounded<T, F, Real>(inStore, outStore, firstStore, secondStore, nx, ny, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
+    return ApplyFiniteDifference2DBounded<T, F, Real, CheckedOutput>(inStore, outStore, firstStore, secondStore, nx, ny, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler,
+                                                                     residentLimit2D);
   }
-  return ApplyFiniteDifference3DPingPong<T, F, Real>(inStore, outStore, firstStore, secondStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  return ApplyFiniteDifference3DPingPong<T, F, Real, CheckedOutput>(inStore, outStore, firstStore, secondStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
 }
 
 // Full ITK-free FiniteDifference driver. Resident DataStore execution retains the original full-volume
@@ -1900,14 +2121,32 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
 // CurvatureAnisoFn sets k_NativePrecision=true so Real==T reproduces THAT model instead (verified: with Real
 // hardcoded to float64, the float32-input live-ITK grid diverged from ITK by ~1 ULP at essentially every voxel --
 // a deterministic precision-MODEL mismatch, not thread-order FP noise -- and resolved once Real became T here).
-template <class T, class F>
+// CheckedOutput opts into the selected Curvature Flow controls, exact no-ops, and terminal conversion only.
+// Other finite-difference filters retain the default behavior and their own precision models.
+template <class T, class F, bool CheckedOutput = false>
 Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, FloatVec3 spacing, F fn, float64 timeStep, uint32 numberOfIterations,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {
   using Real = std::conditional_t<F::k_NativePrecision, T, float64>;
+  detail::CurvatureFlowConversionState conversionState;
+  Result<> ioResult;
+  const auto finish = [&](Result<> result = {}) {
+    if constexpr(CheckedOutput)
+    {
+      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+    }
+    return result;
+  };
+  if constexpr(CheckedOutput)
+  {
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::ValidateCurvatureFlowControls(timeStep, spacing, dims)); result.invalid())
+    {
+      return finish(std::move(result));
+    }
+  }
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
-    return {};
+    return finish();
   }
   if(dims[0] > static_cast<usize>(std::numeric_limits<int64>::max()) || dims[1] > static_cast<usize>(std::numeric_limits<int64>::max()) ||
      dims[2] > static_cast<usize>(std::numeric_limits<int64>::max()))
@@ -1938,9 +2177,16 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     return MakeErrorResult(-8633, fmt::format("Finite-difference output store size does not match the image dimensions. Actual size: {}; expected size: {}; dimensions: {} x {} x {}.",
                                               outStore.getSize(), volume, dims[0], dims[1], dims[2]));
   }
+  if constexpr(CheckedOutput)
+  {
+    if(timeStep == 0.0 || numberOfIterations == 0)
+    {
+      return detail::CopyCurvatureFlowInput(inStore, outStore, shouldCancel);
+    }
+  }
   if(shouldCancel)
   {
-    return {};
+    return finish();
   }
 
   const bool hasOutOfCoreEndpoint = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
@@ -1958,20 +2204,23 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       {
         DataStore<T> residentInput(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, std::nullopt);
         DataStore<T> residentOutput(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, std::nullopt);
-        if(Result<> result = inStore.copyIntoBuffer(0, residentInput.createSpan()); result.invalid())
+        Result<> inputResult = inStore.copyIntoBuffer(0, residentInput.createSpan());
+        if(inputResult.invalid())
         {
-          return result;
+          return finish(std::move(inputResult));
         }
-        if(Result<> result = ApplyFiniteDifference(residentInput, residentOutput, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D); result.invalid())
+        Result<> evolutionResult = MergeResults(std::move(inputResult), ApplyFiniteDifference<T, F, CheckedOutput>(residentInput, residentOutput, dims, spacing, fn, timeStep, numberOfIterations,
+                                                                                                                   shouldCancel, messageHandler, residentLimit2D));
+        if(evolutionResult.invalid())
         {
-          return result;
+          return finish(std::move(evolutionResult));
         }
         if(shouldCancel)
         {
-          return {};
+          return finish(std::move(evolutionResult));
         }
         const auto outputSpan = residentOutput.createSpan();
-        return outStore.copyFromBuffer(0, nonstd::span<const T>(outputSpan.data(), outputSpan.size()));
+        return MergeResults(std::move(evolutionResult), outStore.copyFromBuffer(0, nonstd::span<const T>(outputSpan.data(), outputSpan.size())));
       } catch(const std::bad_alloc&)
       {
         // Release the complete-state reservation before entering the raw-record fallback.
@@ -1987,16 +2236,16 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   {
     return MakeErrorResult(-8634, fmt::format("Finite-difference neighborhood radius must be nonnegative and addressable. Radius: {}.", r));
   }
-  // sc[i] = 1/spacing[i] (ITK InitializeFunctionCoefficients, UseImageSpacing on). A zero/near-zero spacing yields inf
-  // here -- this MATCHES ITK's own unguarded 1.0/spacing[i], so (per the "ITK-faithful guard only" decision) no spacing
-  // guard is added; the degenerate input is the caller's responsibility, as in ITK.
+  // sc[i] = 1/spacing[i] (ITK InitializeFunctionCoefficients, UseImageSpacing on). Unchecked callers retain the
+  // legacy unguarded reciprocal. Checked Curvature Flow validates
+  // finite nonzero active-axis spacing before reaching this point; inactive Z spacing remains unused in 2D.
   const std::array<double, 3> sc = {1.0 / static_cast<double>(spacing[0]), 1.0 / static_cast<double>(spacing[1]), 1.0 / static_cast<double>(spacing[2])};
   auto clampi = [](int64 v, int64 hi) { return v < 0 ? int64{0} : (v > hi ? hi : v); };
   const std::vector<usize> shape{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)};
 
   if(hasOutOfCoreEndpoint)
   {
-    return ApplyFiniteDifferenceOocRaw<T, F, Real>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
+    return ApplyFiniteDifferenceOocRaw<T, F, Real, CheckedOutput>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
   }
 
   // Resident/fallback stores: accum (Real) = cast<Real>(in), streamed plane by plane -- ITK's IntermediateType
@@ -2019,19 +2268,20 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
-      if(Result<> rr = inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(planeIn.data(), slice)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(planeIn.data(), slice))); rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
       for(usize i = 0; i < slice; ++i)
       {
         planeOut[i] = static_cast<Real>(planeIn[i]);
       }
-      if(Result<> rr = accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(planeOut.data(), slice)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(planeOut.data(), slice)));
+         rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
     }
   }
@@ -2054,13 +2304,14 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
       if constexpr(F::k_NeedsGlobalGradient)
       {
-        if(Result<> result = detail::UpdateGlobalConductance<F, Real>(fn, accum, dims, sc, effDim, iter, shouldCancel); result.invalid())
+        if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::UpdateGlobalConductance<F, Real>(fn, accum, dims, sc, effDim, iter, shouldCancel));
+           result.invalid())
         {
-          return result;
+          return finish(std::move(result));
         }
       }
 
@@ -2116,7 +2367,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       calculateAlgorithm.execute(calculateChange);
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
 
       progressThrottle.reset(volume, fmt::format("Finite Difference: Applying Changes for Iteration {} of {}", iter + 1, numberOfIterations));
@@ -2147,7 +2398,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       applyAlgorithm.execute(applyUpdate);
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
       if(!shouldCancel)
       {
@@ -2156,19 +2407,13 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     }
 
     auto castOutput = [&](const Range& range) {
-      for(usize tuple = range.min(); tuple < range.max(); ++tuple)
-      {
-        if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
-        {
-          return;
-        }
-        outputValues[tuple] = static_cast<T>(accumValues[tuple]);
-      }
+      detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(accumValues.data() + range.min(), range.max() - range.min()),
+                                                                 nonstd::span<T>(outputValues.data() + range.min(), range.max() - range.min()), range.min(), conversionState, shouldCancel);
     };
     ParallelDataAlgorithm castAlgorithm;
     castAlgorithm.setRange(0, volume);
     castAlgorithm.execute(castOutput);
-    return {};
+    return finish();
   }
 
   // Non-DataStore resident fallback: two Real stores are ping-ponged. CalculateChange and ApplyUpdate are fused per
@@ -2189,15 +2434,15 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   {
     if(shouldCancel)
     {
-      return {};
+      return finish();
     }
 
     // (aniso) global reduction hook -- no-op unless F::k_NeedsGlobalGradient (Task 4 specializes this).
     if constexpr(F::k_NeedsGlobalGradient)
     {
-      if(Result<> rr = detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, effDim, iter, shouldCancel); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, effDim, iter, shouldCancel)); rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
     }
 
@@ -2205,9 +2450,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     // seed the window at z = -r .. +r
     for(int64 k = 0; k < static_cast<int64>(windowPlanes); ++k)
     {
-      if(Result<> rr = loadPlane(win[static_cast<usize>(k)], (k - r)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[static_cast<usize>(k)], (k - r))); rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
     }
     progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
@@ -2215,7 +2460,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
       // In-plane voxel loop, parallelized over the row range [0, nY). Each `nextPlane[y*nX+x]` depends ONLY on the
       // frozen (read-only) rolling window `win`, the shared const functor `fn`, and `sc` -- there is no shared mutable
@@ -2263,9 +2508,10 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, static_cast<usize>(nY));
       parallelAlgorithm.execute(calculateChangeRows);
-      if(Result<> rr = nextStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, nextStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)));
+         rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
       progressThrottle.updateCount(static_cast<usize>(z + 1));
       // advance the rolling window by one z (drop the oldest plane, load clamp(z+1+r))
@@ -2275,9 +2521,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         {
           std::swap(win[k], win[k + 1]);
         }
-        if(Result<> rr = loadPlane(win[windowPlanes - 1], z + 1 + r); rr.invalid())
+        if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[windowPlanes - 1], z + 1 + r)); rr.invalid())
         {
-          return rr;
+          return finish(std::move(rr));
         }
       }
     }
@@ -2296,22 +2542,25 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     {
       if(shouldCancel)
       {
-        return {};
+        return finish();
       }
-      if(Result<> rr = currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(planeIn.data(), slice)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(planeIn.data(), slice)));
+         rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
-      for(usize i = 0; i < slice; ++i)
+      if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(planeIn.data(), slice), nonstd::span<T>(planeOut.data(), slice), static_cast<usize>(z) * slice,
+                                                                     conversionState, shouldCancel))
       {
-        planeOut[i] = static_cast<T>(planeIn[i]);
+        return finish();
       }
-      if(Result<> rr = outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(planeOut.data(), slice)); rr.invalid())
+      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(planeOut.data(), slice)));
+         rr.invalid())
       {
-        return rr;
+        return finish(std::move(rr));
       }
     }
   }
-  return {};
+  return finish();
 }
 } // namespace nx::core::ImageProcessing

@@ -1,11 +1,15 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "WatershedPreflightTestUtils.hpp"
 
 #include "ImageProcessing/Filters/MorphologicalWatershedImageFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -19,6 +23,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -160,4 +165,92 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: ITK real-image go
     args.insertOrAssign(MorphologicalWatershedImageFilter::k_Level_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(MorphologicalWatershedImageFilter::k_MarkWatershedLine_Key, std::make_any<bool>(false));
   });
+}
+
+TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight rejects missing temporary provider", "[ImageProcessing][MorphologicalWatershedImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto application = Application::GetOrCreateInstance();
+  auto& collection = application->getIOCollection();
+  const DataIOCollection::map_type originalManagers(collection.begin(), collection.end());
+  const bool originalTemporaryCapability = collection.hasTemporaryRecordStoreCapability();
+  const bool originalSortCapability = collection.hasExternalSortCapability();
+  const bool originalImportCapability = collection.anyManagerFinalizesImport();
+  const auto originalNumericFormats = collection.getFormatNames();
+  const auto originalDisplayNames = collection.getFormatDisplayNames();
+  const std::string plannedFormat = "HDF5";
+  REQUIRE(collection.getManager(plannedFormat) != nullptr);
+  const auto originalInMemoryManager = collection.getManager(Preferences::k_InMemoryFormat.str());
+  REQUIRE(originalInMemoryManager != nullptr);
+
+  {
+    watershed_preflight_test::ScopedMissingTemporaryProvider guard(collection);
+    REQUIRE_FALSE(collection.hasTemporaryRecordStoreCapability());
+    REQUIRE(collection.getManager(Preferences::k_InMemoryFormat.str()) == originalInMemoryManager);
+    REQUIRE(collection.hasDataStoreCreationFunction(plannedFormat));
+
+    DataStructure dataStructure;
+    const DataPath geomPath({"Planned Image"});
+    const auto cellPath = geomPath.createChildPath("CellData");
+    const auto inputPath = cellPath.createChildPath("Grayscale");
+    const auto outputPath = cellPath.createChildPath("Output");
+    const ShapeType tupleShape{1, 2, 3};
+    const ShapeType componentShape{1};
+    auto* imageGeom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
+    REQUIRE(imageGeom != nullptr);
+    imageGeom->setDimensions({3, 2, 1});
+    imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+    imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+    auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imageGeom->getId());
+    REQUIRE(cellData != nullptr);
+    imageGeom->setCellData(*cellData);
+
+    // HDF5 identifies a registered metadata-only format here. The input contains no HDF5 values.
+    auto inputStoreResult = EmptyDataStore<int16>::Create(tupleShape, componentShape, plannedFormat);
+    SIMPLNX_RESULT_REQUIRE_VALID(inputStoreResult);
+    const auto* inputStore = inputStoreResult.value().get();
+    auto* inputArray = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellData->getId());
+    REQUIRE(inputArray != nullptr);
+
+    const auto checkInput = [&] {
+      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArray);
+      REQUIRE(inputArray->getIDataStore() == inputStore);
+      REQUIRE(inputArray->getDataType() == DataType::int16);
+      REQUIRE(inputArray->getTupleShape() == tupleShape);
+      REQUIRE(inputArray->getComponentShape() == componentShape);
+      REQUIRE(inputArray->getStoreType() == IDataStore::StoreType::Empty);
+      REQUIRE(inputStore->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
+      REQUIRE(inputArray->getDataFormat() == plannedFormat);
+    };
+    checkInput();
+    REQUIRE(dataStructure.getData(outputPath) == nullptr);
+    const auto originalIds = dataStructure.getAllDataObjectIds();
+
+    WSFilter filter;
+    Arguments args;
+    args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
+    args.insertOrAssign(WSFilter::k_Level_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+    const auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.outputActions.invalid());
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors().front().code == -79048);
+    REQUIRE(result.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(result.outputActions.warnings().empty());
+    REQUIRE(dataStructure.getData(outputPath) == nullptr);
+    REQUIRE(dataStructure.getAllDataObjectIds() == originalIds);
+    checkInput();
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  const DataIOCollection::map_type restoredManagers(collection.begin(), collection.end());
+  REQUIRE(restoredManagers == originalManagers);
+  REQUIRE(collection.hasTemporaryRecordStoreCapability() == originalTemporaryCapability);
+  REQUIRE(collection.hasExternalSortCapability() == originalSortCapability);
+  REQUIRE(collection.anyManagerFinalizesImport() == originalImportCapability);
+  REQUIRE(collection.getFormatNames() == originalNumericFormats);
+  REQUIRE(collection.getFormatDisplayNames() == originalDisplayNames);
 }

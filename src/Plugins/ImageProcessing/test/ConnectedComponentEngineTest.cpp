@@ -1,20 +1,32 @@
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
+#include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <limits>
+#include <new>
 #include <numeric>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -142,6 +154,116 @@ public:
 
 private:
   mutable usize m_ReadCount = 0;
+};
+
+enum class ConnectedComponentReadFaultType : uint8
+{
+  None,
+  Error,
+  BadAllocOnce,
+  LengthError,
+  Cancel
+};
+
+// A resident synthetic with a reported endpoint type, for deterministic Result/fallback control only.
+class ConnectedComponentFaultInputStore : public OutOfCoreReportingDataStore<int32>
+{
+public:
+  ConnectedComponentFaultInputStore(const ShapeType& shape, ConnectedComponentReadFaultType fault, std::atomic_bool& shouldCancel)
+  : OutOfCoreReportingDataStore<int32>(shape, ShapeType{1}, 1)
+  , m_Fault(fault)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+  ~ConnectedComponentFaultInputStore() noexcept override = default;
+  ConnectedComponentFaultInputStore(const ConnectedComponentFaultInputStore&) = delete;
+  ConnectedComponentFaultInputStore(ConnectedComponentFaultInputStore&&) = delete;
+  ConnectedComponentFaultInputStore& operator=(const ConnectedComponentFaultInputStore&) = delete;
+  ConnectedComponentFaultInputStore& operator=(ConnectedComponentFaultInputStore&&) = delete;
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
+  {
+    ++m_Attempts;
+    if(m_Fault == ConnectedComponentReadFaultType::Error)
+    {
+      return MakeErrorResult(-8791, "Injected connected-component input failure.");
+    }
+    if(m_Fault == ConnectedComponentReadFaultType::BadAllocOnce && m_Attempts == 1)
+    {
+      throw std::bad_alloc{};
+    }
+    if(m_Fault == ConnectedComponentReadFaultType::LengthError)
+    {
+      throw std::length_error("Injected connected-component addressability failure.");
+    }
+    auto result = OutOfCoreReportingDataStore<int32>::copyIntoBuffer(startIndex, buffer);
+    if(m_Fault == ConnectedComponentReadFaultType::Cancel)
+    {
+      m_ShouldCancel = true;
+    }
+    return result;
+  }
+
+  usize attempts() const noexcept
+  {
+    return m_Attempts;
+  }
+
+private:
+  ConnectedComponentReadFaultType m_Fault;
+  std::atomic_bool& m_ShouldCancel;
+  mutable usize m_Attempts = 0;
+};
+
+class ConnectedComponentFaultOutputStore : public OutOfCoreReportingDataStore<uint32>
+{
+public:
+  using OutOfCoreReportingDataStore<uint32>::OutOfCoreReportingDataStore;
+  ~ConnectedComponentFaultOutputStore() noexcept override = default;
+  ConnectedComponentFaultOutputStore(const ConnectedComponentFaultOutputStore&) = delete;
+  ConnectedComponentFaultOutputStore(ConnectedComponentFaultOutputStore&&) = delete;
+  ConnectedComponentFaultOutputStore& operator=(const ConnectedComponentFaultOutputStore&) = delete;
+  ConnectedComponentFaultOutputStore& operator=(ConnectedComponentFaultOutputStore&&) = delete;
+
+  Result<> copyFromBuffer([[maybe_unused]] usize startIndex, [[maybe_unused]] nonstd::span<const uint32> buffer) override
+  {
+    return MakeErrorResult(-8792, "Injected connected-component output failure.");
+  }
+};
+
+// Supplies literal zero labels for reads of the first row, modelling a previous row with wrapped IDs.
+// All actual native IDs and allocations stay small; this is not a capacity-sized forest execution.
+class ConnectedComponentZeroPreviousRowStore : public DataStore<uint32>
+{
+public:
+  ConnectedComponentZeroPreviousRowStore()
+  : DataStore<uint32>(ShapeType{1, 2, 3}, ShapeType{1}, 0U)
+  {
+  }
+  ~ConnectedComponentZeroPreviousRowStore() noexcept override = default;
+  ConnectedComponentZeroPreviousRowStore(const ConnectedComponentZeroPreviousRowStore&) = delete;
+  ConnectedComponentZeroPreviousRowStore(ConnectedComponentZeroPreviousRowStore&&) = delete;
+  ConnectedComponentZeroPreviousRowStore& operator=(const ConnectedComponentZeroPreviousRowStore&) = delete;
+  ConnectedComponentZeroPreviousRowStore& operator=(ConnectedComponentZeroPreviousRowStore&&) = delete;
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<uint32> buffer) const override
+  {
+    auto result = DataStore<uint32>::copyIntoBuffer(startIndex, buffer);
+    if(result.valid() && startIndex < 3 && buffer.size() <= 3 - startIndex)
+    {
+      std::ranges::fill(buffer, uint32{0});
+      ++m_ZeroRowReads;
+    }
+    return result;
+  }
+
+  usize zeroRowReads() const noexcept
+  {
+    return m_ZeroRowReads;
+  }
+
+private:
+  mutable usize m_ZeroRowReads = 0;
 };
 
 std::vector<uint32> ConnectedComponent2DOracle(const std::vector<int32>& mask, usize dimX, usize dimY, bool fullyConnected)
@@ -906,4 +1028,246 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellat
       REQUIRE(outputStore.getValue(index) == k_Poison);
     }
   }
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: native provisional capacity decisions require no large forest",
+          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
+  {
+    SUCCEED("A native index on this platform cannot exceed uint32 capacity; no overflowing candidate was executed.");
+    return;
+  }
+  const std::array<uint64, 6> candidates{1, 4294967295ULL, 4294967296ULL, 4294967297ULL, 8589934592ULL, 8589934593ULL};
+  const std::array<uint32, 6> legacyLabels{1, 4294967295U, 0, 1, 0, 1};
+  usize warningMessages = 0;
+  const IFilter::MessageHandler handler{[&warningMessages](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Warning)
+    {
+      ++warningMessages;
+    }
+  }};
+  ImageProcessing::detail::ConnectedComponentLabelState strictState(ConnectedComponentLabelLimitHandling::Error, handler);
+  ImageProcessing::detail::ConnectedComponentLabelState legacyState(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  for(usize index = 0; index < candidates.size(); ++index)
+  {
+    const usize candidate = static_cast<usize>(candidates.at(index));
+    CAPTURE(candidate);
+    const auto strictResult = strictState.labelFor(candidate);
+    if(index < 2)
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(strictResult);
+      REQUIRE(strictResult.value() == legacyLabels.at(index));
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(strictResult);
+      REQUIRE(strictResult.errors().front().code == -8771);
+      REQUIRE(strictResult.errors().front().message.find(std::to_string(candidate)) != std::string::npos);
+      REQUIRE(strictResult.errors().front().message.find("Warn and Continue (Legacy Behavior)") != std::string::npos);
+    }
+    const auto legacyResult = legacyState.labelFor(candidate);
+    SIMPLNX_RESULT_REQUIRE_VALID(legacyResult);
+    REQUIRE(legacyResult.value() == legacyLabels.at(index));
+    REQUIRE(warningMessages == (index < 2 ? 0 : 1)); // immediate, before finish(), and only once
+  }
+  REQUIRE(warningMessages == 1);
+  const auto strictFinished = strictState.finish({});
+  SIMPLNX_RESULT_REQUIRE_VALID(strictFinished);
+  REQUIRE(strictFinished.warnings().empty());
+  const auto legacyFinished = legacyState.finish({});
+  SIMPLNX_RESULT_REQUIRE_VALID(legacyFinished);
+  REQUIRE(legacyFinished.warnings().size() == 1);
+  REQUIRE(legacyFinished.warnings().front().code == 8772);
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reuse consequence model", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  // Literal wrapped IDs in a tiny real uint32 union-find. This is not a 2^32-entry forest execution.
+  const IFilter::MessageHandler handler;
+  ImageProcessing::detail::ConnectedComponentLabelState state(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  ImageProcessing::detail::CcUnionFind forest(state);
+  forest.parent = {0, 1, 2, 3};
+  forest.link(2, 3);
+  const ImageProcessing::detail::CcLine current{{.start = 0, .length = 1, .label = 0}};
+  const ImageProcessing::detail::CcLine previous{{.start = 0, .length = 1, .label = 2}};
+  ImageProcessing::detail::CompareLines(current, previous, 0, forest);
+  REQUIRE(forest.find(2) == 0);
+  REQUIRE(forest.find(3) == 0); // an already-linked component is also absorbed into background
+  forest.link(1, 2);            // reused ID 1 now joins the zero root as well
+  REQUIRE(forest.parent == std::vector<uint32>{0, 0, 0, 2});
+  const std::atomic_bool shouldCancel{false};
+  const auto resolved = forest.createConsecutive(shouldCancel, {});
+  REQUIRE(resolved.second == 0);
+  REQUIRE(resolved.first == std::vector<uint32>{0, 0, 0, 0});
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor consequence model preserves a foreground root",
+          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  const bool fullyConnected = GENERATE(false, true);
+  DataStore<int32> inputStore(ShapeType{1, 2, 3}, ShapeType{1}, 0);
+  inputStore.setValue(1, 1);
+  inputStore.setValue(4, 1);
+  ConnectedComponentZeroPreviousRowStore provisionalStore;
+  ImageProcessing::detail::ConnectedComponentProvisionalStore provisional(provisionalStore);
+  const IFilter::MessageHandler handler;
+  ImageProcessing::detail::ConnectedComponentLabelState state(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  ImageProcessing::detail::CcUnionFind forest(state);
+  const usize tileFixedBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + (2 * sizeof(std::vector<uint32>)) + (2 * sizeof(uint32));
+  const usize targetBytes = tileFixedBytes + sizeof(int32) + (2 * sizeof(uint32));
+  const auto planResult = ImageProcessing::detail::CreateConnectedComponent2DPlan<int32>(3, 2, true, targetBytes);
+  SIMPLNX_RESULT_REQUIRE_VALID(planResult);
+  REQUIRE(planResult.value().useTiles);
+  REQUIRE(planResult.value().coreColumns == 1);
+  const std::atomic_bool shouldCancel{false};
+  const auto predicate = [](int32 value) { return value != 0; };
+
+  // The actual tile pass must skip the controlled zero-valued previous-row neighbor.
+  const auto passResult =
+      ImageProcessing::detail::Pass1TwoDimensionalTiles(inputStore, provisional, SizeVec3{3, 2, 1}, predicate, fullyConnected, shouldCancel, forest, nullptr, planResult.value(), {});
+  SIMPLNX_RESULT_REQUIRE_VALID(passResult);
+  REQUIRE(provisionalStore.zeroRowReads() == 3);
+  REQUIRE(forest.parent == std::vector<uint32>{0, 1, 2});
+  REQUIRE(forest.find(2) == 2);
+  const auto resolved = forest.createConsecutive(shouldCancel, {});
+  REQUIRE(resolved.second == 2);
+  REQUIRE(resolved.first == std::vector<uint32>{0, 1, 2});
+  const std::array<uint32, 6> finalLabels{0, resolved.first.at(forest.find(1)), 0, 0, resolved.first.at(forest.find(2)), 0};
+  REQUIRE(finalLabels == std::array<uint32, 6>{0, 1, 0, 0, 2, 0});
+
+  // The real scanline union on the corresponding literal IDs absorbs the current run into zero instead.
+  ImageProcessing::detail::CcUnionFind scanlineForest(state);
+  scanlineForest.parent = {0, 1, 2};
+  const ImageProcessing::detail::CcLine current{{.start = 1, .length = 1, .label = 2}};
+  const ImageProcessing::detail::CcLine previous{{.start = 1, .length = 1, .label = 0}};
+  ImageProcessing::detail::CompareLines(current, previous, fullyConnected ? 1 : 0, scanlineForest);
+  REQUIRE(scanlineForest.parent == std::vector<uint32>{0, 1, 0});
+  REQUIRE(scanlineForest.find(2) == 0);
+  const auto scanlineResolved = scanlineForest.createConsecutive(shouldCancel, {});
+  REQUIRE(scanlineResolved.second == 1);
+  const std::array<uint32, 6> scanlineFinalLabels{0, scanlineResolved.first.at(scanlineForest.find(1)), 0, 0, scanlineResolved.first.at(scanlineForest.find(2)), 0};
+  REQUIRE(scanlineFinalLabels == std::array<uint32, 6>{0, 1, 0, 0, 0, 0});
+  // This exercises the production route's zero-neighbor rule using a controlled scratch-row model, not real overflow.
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: capacity warning context retains independent delivered diagnostics",
+          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
+  {
+    SUCCEED("No native overflowing candidate is available on this platform.");
+    return;
+  }
+  const IFilter::MessageHandler handler;
+  ImageProcessing::detail::ConnectedComponentLabelState state(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  const auto labelResult = state.labelFor(static_cast<usize>(4294967296ULL));
+  SIMPLNX_RESULT_REQUIRE_VALID(labelResult);
+  auto delivered = MergeResults(MakeWarningVoidResult(8793, "Delivered child warning."), MakeErrorResult(-8794, "Delivered later transfer failure."));
+  const auto result = state.finish(std::move(delivered));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors().front().code == -8794);
+  REQUIRE(result.warnings().size() == 2);
+  REQUIRE(result.warnings().at(0).code == 8793);
+  REQUIRE(result.warnings().at(1).code == 8772);
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: seeded warning context survives resident retry copy error and cancellation",
+          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
+  {
+    SUCCEED("No native overflowing candidate is available on this platform.");
+    return;
+  }
+  const auto fault = GENERATE(ConnectedComponentReadFaultType::None, ConnectedComponentReadFaultType::Error, ConnectedComponentReadFaultType::BadAllocOnce, ConnectedComponentReadFaultType::Cancel);
+  const bool failCopy = GENERATE(false, true);
+  const ScopedWorkingMemoryTuningOverride tuning(65536);
+  const SizeVec3 dims{5, 6, 7};
+  auto allocationResult = ImageProcessing::detail::ReserveConnectedComponentResidentWorkingMemory<int32>(dims);
+  SIMPLNX_RESULT_REQUIRE_VALID(allocationResult);
+  REQUIRE(allocationResult.value().holdsCompleteState());
+  allocationResult.value().reservation.shrinkTo(0);
+  std::atomic_bool shouldCancel{false};
+  const ConnectedComponentFaultInputStore inputStore(ShapeType{7, 6, 5}, fault, shouldCancel);
+  ConnectedComponentFaultOutputStore failedOutputStore(ShapeType{7, 6, 5}, ShapeType{1}, 99U);
+  DataStore<uint32> successfulOutputStore(ShapeType{7, 6, 5}, ShapeType{1}, 99U);
+  AbstractDataStore<uint32>& outputStore = failCopy ? static_cast<AbstractDataStore<uint32>&>(failedOutputStore) : successfulOutputStore;
+  usize warnings = 0;
+  const IFilter::MessageHandler handler{[&warnings](const IFilter::Message& message) { warnings += static_cast<usize>(message.type == IFilter::Message::Type::Warning); }};
+  ImageProcessing::detail::ConnectedComponentLabelState state(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  // Seed only production warning context using a native metadata boundary; the actual image remains tiny.
+  const auto boundaryResult = state.labelFor(static_cast<usize>(4294967296ULL));
+  SIMPLNX_RESULT_REQUIRE_VALID(boundaryResult);
+  const auto predicate = [](int32 value) { return value != 0; };
+  const ImageProcessing::detail::BeginProgressPhaseCallback beginPhase = [](std::string_view, usize) {};
+  const ImageProcessing::detail::ProgressCallback report = [](usize) {};
+  auto result = ImageProcessing::detail::LabelConnectedComponentsImpl(inputStore, outputStore, dims, predicate, false, shouldCancel, ImageProcessing::detail::k_ConnectedComponent2DTargetBytes,
+                                                                      beginPhase, report, report, state);
+  result = state.finish(std::move(result));
+  REQUIRE(warnings == 1);
+  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().front().code == 8772);
+  if(fault == ConnectedComponentReadFaultType::Cancel)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(shouldCancel);
+  }
+  else if(fault == ConnectedComponentReadFaultType::Error || failCopy)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == (fault == ConnectedComponentReadFaultType::Error ? -8791 : -8792));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    for(usize index = 0; index < outputStore.getSize(); ++index)
+    {
+      REQUIRE(outputStore.getValue(index) == 1);
+    }
+  }
+  REQUIRE(inputStore.attempts() == (fault == ConnectedComponentReadFaultType::BadAllocOnce ? dims[2] + 1 : 1));
+}
+
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: allocation addressability and I/O failures remain errors under both policies",
+          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  const auto handling = GENERATE(ConnectedComponentLabelLimitHandling::Error, ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy);
+  const auto fault = GENERATE(ConnectedComponentReadFaultType::Error, ConnectedComponentReadFaultType::BadAllocOnce, ConnectedComponentReadFaultType::LengthError);
+  std::atomic_bool shouldCancel{false};
+  const ConnectedComponentFaultInputStore inputStore(ShapeType{1, 2, 3}, fault, shouldCancel);
+  DataStore<uint32> outputStore(ShapeType{1, 2, 3}, ShapeType{1}, 99U);
+  const auto predicate = [](int32 value) { return value != 0; };
+  const auto labelResult =
+      LabelConnectedComponents(inputStore, outputStore, SizeVec3{3, 2, 1}, predicate, false, shouldCancel, {}, ImageProcessing::detail::k_ConnectedComponent2DTargetBytes, handling);
+  SIMPLNX_RESULT_REQUIRE_INVALID(labelResult);
+  int32 labelCode = -8791;
+  int32 countCode = -8791;
+  if(fault == ConnectedComponentReadFaultType::BadAllocOnce)
+  {
+    labelCode = -8773;
+    countCode = -8774;
+  }
+  else if(fault == ConnectedComponentReadFaultType::LengthError)
+  {
+    labelCode = -8775;
+    countCode = -8776;
+  }
+  REQUIRE(labelResult.errors().front().code == labelCode);
+  REQUIRE(labelResult.warnings().empty());
+  for(usize index = 0; index < outputStore.getSize(); ++index)
+  {
+    REQUIRE(outputStore.getValue(index) == 99);
+  }
+  const ConnectedComponentFaultInputStore countInputStore(ShapeType{1, 2, 3}, fault, shouldCancel);
+  const auto countResult = CountConnectedComponents(countInputStore, SizeVec3{3, 2, 1}, predicate, false, 1, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(countResult);
+  REQUIRE(countResult.errors().front().code == countCode);
 }

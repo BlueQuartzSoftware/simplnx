@@ -45,10 +45,13 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
 
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/flying_edges_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ContourTest::k_DataPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(ContourTest::k_DataPath));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -67,35 +70,41 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // This is in here because the exemplar face attribute matrix is not sized correctly. This will
-    // correct that value allowing the test to proceed normally.
+    // The archive has 70 faces but an incorrect face AttributeMatrix size.
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath));
     auto& exemplarContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath);
     auto faceAttributeMatrixResizeResult = exemplarContourTriGeom.getFaceAttributeMatrixRef().resizeTuples({70});
     SIMPLNX_RESULT_REQUIRE_VALID(faceAttributeMatrixResizeResult);
 
     // Execute the filter and check the result
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare the results
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_NewContourPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath));
     auto& newContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_NewContourPath);
     auto& exemplarContourTriGeom = dataStructure.getDataRefAs<TriangleGeom>(ContourTest::k_ExemplarContourPath);
 
     const auto& kNxVertArray = newContourTriGeom.getVerticesRef();
     const auto& kExemplarsVertArray = exemplarContourTriGeom.getVerticesRef();
+    algorithmTestScope.requireExpectedStore(kNxVertArray);
 
     CompareDataArrays<IGeometry::SharedVertexList::value_type>(kExemplarsVertArray, kNxVertArray);
 
     const auto& kNxTriArray = newContourTriGeom.getFacesRef();
     const auto& kExemplarsTriArray = exemplarContourTriGeom.getFacesRef();
+    algorithmTestScope.requireExpectedStore(kNxTriArray);
 
     CompareDataArrays<IGeometry::MeshIndexType>(kExemplarsTriArray, kNxTriArray);
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ContourTest::k_NewNormals));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ContourTest::k_ExemplarNormals));
     const auto& kNxNormalsArray = dataStructure.getDataRefAs<Float32Array>(ContourTest::k_NewNormals);
     const auto& kExemplarsNormalsArray = dataStructure.getDataRefAs<Float32Array>(ContourTest::k_ExemplarNormals);
+    algorithmTestScope.requireExpectedStore(kNxNormalsArray);
 
     CompareDataArrays<float32>(kExemplarsNormalsArray, kNxNormalsArray);
   }

@@ -13,7 +13,9 @@ namespace nx::core
  *
  * Convolves the input with a Gaussian (per-axis sigma) using the Deriche 4th-order recursive IIR approximation.
  * The input may be any SIGNED scalar type (int8/16/32/64 or float32/64); the output has the SAME type as the input.
- * Matches the legacy ITK Smoothing Recursive Gaussian Image Filter exactly for integer/float64 inputs.
+ * Each axis materializes float32 values, including for float64 output. Finite final integer values truncate and clip
+ * to the output range with one warning. Nonfinite final integer values fail. Active Sigma, spacing, effective scale,
+ * and formed coefficients are validated; inactive Z controls remain unused for a two-dimensional image.
  */
 class IMAGEPROCESSING_EXPORT SmoothingRecursiveGaussianImageFilter : public IFilter
 {
