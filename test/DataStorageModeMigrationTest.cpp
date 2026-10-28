@@ -289,28 +289,31 @@ TEST_CASE("Preferences preserves valid OOC threshold values", "[Core][Preference
         CHECK(preferences.defaultValue(Preferences::k_LargeDataStructureSize_Key) == originalDefault);
         REQUIRE(preferences.saveToFile(files.input).valid());
 
+        // The file stores 0.01-GB steps (1 GB = 1024^3 bytes), so a load returns the nearest step.
+        // 37 bytes is above 0 and becomes 0.01 GB (10737418 bytes). UINT64_MAX becomes 17179869183.99 GB.
+        const std::string gbKey = key == Preferences::k_LargeDataSize_Key ? std::string(Preferences::k_LargeDataSizeGB_Key) : std::string(Preferences::k_LargeDataStructureSizeGB_Key);
+        const uint64 inputBytes = validValue.get<uint64>();
+        const uint64 expectedBytes = inputBytes == 0 ? uint64{0} : (inputBytes == 37 ? uint64{10737418} : uint64{18446744073698814198ULL});
+        const double expectedGB = inputBytes == 0 ? 0.0 : (inputBytes == 37 ? 0.01 : 17179869183.99);
+        const auto written = readThresholdJson(files.input);
+        CHECK_FALSE(written.contains(key));
+        REQUIRE(written.contains(gbKey));
+        CHECK(written.at(gbKey).get<double>() == expectedGB);
+
         Preferences loaded;
         const auto result = loaded.loadFromFile(files.input);
         REQUIRE(result.valid());
         CHECK(result.warnings().empty());
         REQUIRE(loaded.contains(key));
+        CHECK_FALSE(loaded.contains(gbKey));
         const auto loadedValue = loaded.value(key);
-        REQUIRE(loadedValue.is_number_integer());
-        if(validValue.get<uint64>() == std::numeric_limits<uint64>::max())
-        {
-          REQUIRE(loadedValue.is_number_unsigned());
-        }
-        CHECK(loadedValue.get<uint64>() == validValue.get<uint64>());
+        REQUIRE(loadedValue.is_number_unsigned());
+        CHECK(loadedValue.get<uint64>() == expectedBytes);
         REQUIRE(loaded.saveToFile(files.output).valid());
         const auto saved = readThresholdJson(files.output);
-        REQUIRE(saved.contains(key));
-        const auto& savedValue = saved.at(key);
-        REQUIRE(savedValue.is_number_integer());
-        if(validValue.get<uint64>() == std::numeric_limits<uint64>::max())
-        {
-          REQUIRE(savedValue.is_number_unsigned());
-        }
-        CHECK(savedValue.get<uint64>() == validValue.get<uint64>());
+        CHECK_FALSE(saved.contains(key));
+        REQUIRE(saved.contains(gbKey));
+        CHECK(saved.at(gbKey).get<double>() == expectedGB);
       }
     }
   }
@@ -332,6 +335,8 @@ TEST_CASE("Preferences preserves absent OOC threshold keys", "[Core][Preferences
     CHECK(preferences.value(key) == preferences.defaultValue(key));
     CHECK_FALSE(saved.contains(key));
   }
+  CHECK_FALSE(saved.contains(Preferences::k_LargeDataSizeGB_Key));
+  CHECK_FALSE(saved.contains(Preferences::k_LargeDataStructureSizeGB_Key));
 }
 
 TEST_CASE("Preferences repairs only invalid saved OOC threshold fields", "[Core][Preferences][OocThreshold]")
@@ -366,11 +371,13 @@ TEST_CASE("Preferences repairs only invalid saved OOC threshold fields", "[Core]
         CHECK(message.find(std::to_string(std::numeric_limits<uint64>::max())) != std::string::npos);
         CHECK(message.find(std::to_string(defaultBytes)) != std::string::npos);
         CHECK(message.find("Preferences > Out of Core") != std::string::npos);
+        CHECK(result.warnings().front().code == -591);
         CHECK(preferences.value(invalidKey) == preferences.defaultValue(invalidKey));
         REQUIRE(preferences.contains(validKey));
         const auto retainedValue = preferences.value(validKey);
         REQUIRE(retainedValue.is_number_unsigned());
-        CHECK(retainedValue.get<uint64>() == std::numeric_limits<uint64>::max());
+        // A legacy byte value loads as the nearest 0.01-GB step; UINT64_MAX becomes 17179869183.99 GB.
+        CHECK(retainedValue.get<uint64>() == uint64{18446744073698814198ULL});
         CHECK(preferences.pluginValue("ThresholdTest", "keep") == nested.at("keep"));
         CHECK(preferences.cacheMemoryBudgetBytes() == uint64{123456});
         CHECK(preferences.value("unrelated") == nlohmann::json("preserved"));
