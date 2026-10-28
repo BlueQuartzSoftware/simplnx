@@ -36,6 +36,7 @@ project convention that does not come from a defect belongs in [the code style g
 22. [Set a distinct modification time in a file-change test][kb-22]
 23. [Test geometry formulas with unequal spacing along each axis][kb-23]
 24. [Test a transfer failure after an earlier batch succeeded][kb-24]
+25. [Give Catch2 a bool when you compare file times][kb-25]
 
 [kb-1]: #1-record-an-object-in-the-writer-id-map-only-when-the-written-datastructure-owns-it
 [kb-2]: #2-check-the-hdf5-file-close-before-you-report-a-successful-save
@@ -57,6 +58,7 @@ project convention that does not come from a defect belongs in [the code style g
 [kb-22]: #22-set-a-distinct-modification-time-in-a-file-change-test
 [kb-23]: #23-test-geometry-formulas-with-unequal-spacing-along-each-axis
 [kb-24]: #24-test-a-transfer-failure-after-an-earlier-batch-succeeded
+[kb-25]: #25-give-catch2-a-bool-when-you-compare-file-times
 
 ---
 
@@ -655,6 +657,40 @@ failure cases.
 **How to recognize it next time:**
 
 - An algorithm that writes output before its last operation that can fail, with tests that fail only the first one.
+
+---
+
+## 25. Give Catch2 a bool when you compare file times
+
+**Rule:** in `CHECK` and `REQUIRE`, put an extra pair of parentheses around a comparison of
+`std::filesystem::file_time_type` values or of file-clock durations, so that Catch2 gets one `bool`.
+
+**Pattern to use:** the legacy-file conversion case in `test/PreferencesSizeGBTest.cpp`:
+
+```cpp
+// Evaluate to bool before Catch2 tries to stream libc++'s file-clock time point.
+CHECK((fs::last_write_time(files.input) == modifiedBefore));
+```
+
+**Pattern to avoid:**
+
+```cpp
+CHECK(fs::last_write_time(files.input) == modifiedBefore);
+```
+
+**Why:** Catch2 splits `a == b` into its two operands and compiles code that converts each operand to text for the
+failure message. For a file-clock value, libc++ formats a floating-point number, which needs `std::to_chars` from
+macOS 13.3. The macOS CI builds of DREAM3D-NX set the deployment target to macOS 11.7, so the test does not compile
+there. A local build with a newer deployment target compiles it without an error.
+
+**How it showed up:** `test/SelectiveImportReferencesTest.cpp` and `test/PreferencesSizeGBTest.cpp` did not compile on
+the macOS CI jobs. PR #1764 fixed both.
+
+**How to recognize it next time:**
+
+- A `CHECK` or `REQUIRE` whose operand is `fs::last_write_time(...)`, a `file_time_type`, or a `clock::now() - ...`
+  duration.
+- The compile error `'to_chars' is unavailable: introduced in macOS 13.3` in `__format/formatter_floating_point.h`.
 
 ---
 
