@@ -481,7 +481,7 @@ General Parameters
 
    **Enumeration**
 
-   .. py:enum:: CropGeometryParameter.TypeEnum
+   .. py:class:: CropGeometryParameter.TypeEnum
 
       - ``NoCropping`` – do not crop.
       - ``VoxelSubvolume`` – use the ``*_bound_voxels`` members.

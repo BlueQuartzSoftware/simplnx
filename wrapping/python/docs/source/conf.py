@@ -30,4 +30,3 @@ suppress_warnings = ['autosectionlabel.*']
 
 html_theme = 'sphinx_rtd_theme'
 #html_theme = 'sphinx_book_theme'
-html_static_path = ['_static']

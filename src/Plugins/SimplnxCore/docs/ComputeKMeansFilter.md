@@ -6,7 +6,7 @@ DREAM3D Review (Clustering)
 
 ## Description
 
-***Warning:* The randomness in this filter is not currently consistent between operating systems even if the same seed is used. Specifically between Unix and Windows. This does not affect the results, but the IDs will not correspond. For example if the Cluster Identifier at index one on Linux is 1 it could be 2 on Windows, the overarching clusters will be the same, but their IDs will be different.**
+**Warning:** *The randomness in this filter is not currently consistent between operating systems even if the same seed is used. Specifically between Unix and Windows. This does not affect the results, but the IDs will not correspond. For example if the Cluster Identifier at index one on Linux is 1 it could be 2 on Windows, the overarching clusters will be the same, but their IDs will be different.*
 
 This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns each point (each tuple) of the **Attribute Array** to a *cluster Id*.  A **cluster** is a group of data points that are more similar to each other than to points in other groups.  The user must specify the number of clusters (a dimensionless count, *k*) in which to partition the array.
 
