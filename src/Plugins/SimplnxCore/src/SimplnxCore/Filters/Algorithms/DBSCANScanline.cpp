@@ -311,7 +311,12 @@ public:
 
   /**
    * @brief Validates inputs, discovers grid origin, externally sorts enabled points, and builds grid/core/axis records.
-   * @pre Filter preflight has validated positive Epsilon and MinPoints values.
+   *
+   * The coordinate component count and the mask shape are checked here even
+   * though filter preflight also enforces them, because DBSCANScanline can be
+   * called without its filter. Grid coordinates hold at most three axes, and
+   * the mask is read as one value per coordinate tuple.
+   * @pre Epsilon and MinPoints are positive.
    * @return Success, a no-cluster warning, or the first provider, validation, or record-I/O failure.
    */
   Result<> initialize()
@@ -323,16 +328,14 @@ public:
     }
     if(m_Dimensions != 2 && m_Dimensions != 3)
     {
-      return MakeErrorResult(-54060, "Input components invalid. Only 2 or 3 accepted.");
+      return MakeErrorResult(-54060, fmt::format("DBSCAN requires 2 or 3 coordinate components, but the clustering array has a component count of {}.", m_Dimensions));
     }
     const usize tupleCount = m_InputStore.getNumberOfTuples();
-    if(m_InputStore.getNumberOfComponents() != m_Dimensions)
-    {
-      return MakeErrorResult(-54060, "DBSCAN input component count does not match the selected dimensionality.");
-    }
     if(m_MaskStore != nullptr && (m_MaskStore->getNumberOfTuples() != tupleCount || m_MaskStore->getNumberOfComponents() != 1))
     {
-      return MakeErrorResult(-54062, "DBSCAN mask tuple count does not match the clustering array or the mask is not scalar.");
+      return MakeErrorResult(-54062,
+                             fmt::format("The DBSCAN mask must have 1 component and the same number of tuples as the clustering array ({} tuples), but it has {} tuples and a component count of {}.",
+                                         tupleCount, m_MaskStore->getNumberOfTuples(), m_MaskStore->getNumberOfComponents()));
     }
     if(m_InputValues.MinPoints < 0)
     {
@@ -3553,7 +3556,7 @@ struct DBSCANScanlineFunctor
     }
     else
     {
-      return MakeErrorResult(-54060, "Input components invalid. Only 2 or 3 accepted.");
+      return MakeErrorResult(-54060, fmt::format("DBSCAN requires 2 or 3 coordinate components, but the clustering array has a component count of {}.", inputArray.getNumberOfComponents()));
     }
   }
 };

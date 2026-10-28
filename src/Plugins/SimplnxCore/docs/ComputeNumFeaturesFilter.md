@@ -16,6 +16,8 @@ The output is a single-component count array indexed by **Ensemble** (phase) Id:
 
 % Auto generated parameter table will be inserted here
 
+**Feature Phases** must be a 1-component int32 DataArray; each value from feature index 1 onward must be a valid index into the **Ensemble Attribute Matrix**.
+
 ## Example Pipelines
 
 + INL Export

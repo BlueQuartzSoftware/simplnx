@@ -52,7 +52,8 @@ Parameters ComputeNumFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), nx::core::GetAllDataTypes()));
+                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
@@ -107,6 +108,19 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
 
   const auto& featurePhasesStore = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
   auto& numFeaturesStore = dataStructure.getDataAs<Int32Array>(pNumFeaturesArrayPathValue)->getDataStoreRef();
+
+  const usize ensembleTupleCount = numFeaturesStore.getNumberOfTuples();
+  for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)
+  {
+    const int32 phase = featurePhasesStore[index];
+    if(phase < 0 || static_cast<usize>(phase) >= ensembleTupleCount)
+    {
+      return MakeErrorResult(-9740,
+                             fmt::format("**Feature Phases** DataArray '{}' has value {} at tuple index {}, which is not a valid Ensemble index. The **Ensemble Attribute Matrix** has Ensemble tuple "
+                                         "count {}. Each value must be a valid Ensemble index.",
+                                         pFeaturePhasesArrayPathValue.toString(), phase, index, ensembleTupleCount));
+    }
+  }
 
   for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)
   {
