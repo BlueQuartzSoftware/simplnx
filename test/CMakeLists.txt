@@ -89,6 +89,7 @@ set(SIMPLNX_TEST_SRCS
   DataStoreFormatResolverTest.cpp
   DataStorageModeMigrationTest.cpp
   OocThresholdScopeTest.cpp
+  PreferencesSizeGBTest.cpp
   TiffImageIOTest.cpp
 )
 
