@@ -423,7 +423,8 @@ TEST_CASE("Preferences converts a legacy file only when it saves", "[Core][Prefe
   REQUIRE(result.valid());
   CHECK(result.warnings().empty());
   CHECK(readText(files.input) == legacyText);
-  CHECK(fs::last_write_time(files.input) == modifiedBefore);
+  // Evaluate to bool before Catch2 tries to stream libc++'s file-clock time point.
+  CHECK((fs::last_write_time(files.input) == modifiedBefore));
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[0]) == k_OneHundredthBytes);
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[1]) == k_MaxGridBytes);
 
