@@ -4,10 +4,11 @@ This file collects lessons learned from real defects in simplnx and its plugins.
 made, why it happened, how it was found, and the rule that prevents it. The audience is developers and the coding
 agents that work in this repository. Read the rules before you write or review code in the area they cover.
 
-Add a new entry when a defect taught something that the code itself does not make obvious. Keep the entries short.
-State the rule first, then the evidence. Cite pull requests and issues by number, but do not say whether they are
-open, merged or closed: that changes, and the entry would go stale. A project convention that does not come from a
-defect belongs in [the code style guide](Code_Style_Guide.md) instead.
+Add a new entry when a defect taught something that the code itself does not make obvious. Keep the entries short. State
+the rule first, then the evidence. Cite pull requests and issues by number, but do not say whether they are open, merged
+or closed: that changes, and the entry would go stale. Refer to code by file and function or test name, not by line
+number, because line numbers change with every edit; a line number belongs only in a link that is pinned to a commit. A
+project convention that does not come from a defect belongs in [the code style guide](Code_Style_Guide.md) instead.
 
 ## Index
 
@@ -30,6 +31,11 @@ defect belongs in [the code style guide](Code_Style_Guide.md) instead.
 17. [Give a geometry without physical coordinates an unspecified length unit][kb-17]
 18. [Apply the hexagonal axis correction to both hexagonal Laue classes][kb-18]
 19. [Use the search grid only to find neighbor candidates](#19-use-the-search-grid-only-to-find-neighbor-candidates)
+20. [Validate an in-place array by the object ID of its Attribute Matrix, not by its path][kb-20]
+21. [Keep the legacy conversions when a filter moves or a plugin is retired][kb-21]
+22. [Set a distinct modification time in a file-change test][kb-22]
+23. [Test geometry formulas with unequal spacing along each axis][kb-23]
+24. [Test a transfer failure after an earlier batch succeeded][kb-24]
 
 [kb-1]: #1-record-an-object-in-the-writer-id-map-only-when-the-written-datastructure-owns-it
 [kb-2]: #2-check-the-hdf5-file-close-before-you-report-a-successful-save
@@ -46,6 +52,11 @@ defect belongs in [the code style guide](Code_Style_Guide.md) instead.
 [kb-16]: #16-check-the-binary-stl-file-size-before-you-use-attribute-byte-counts
 [kb-17]: #17-give-a-geometry-without-physical-coordinates-an-unspecified-length-unit
 [kb-18]: #18-apply-the-hexagonal-axis-correction-to-both-hexagonal-laue-classes
+[kb-20]: #20-validate-an-in-place-array-by-the-object-id-of-its-attribute-matrix-not-by-its-path
+[kb-21]: #21-keep-the-legacy-conversions-when-a-filter-moves-or-a-plugin-is-retired
+[kb-22]: #22-set-a-distinct-modification-time-in-a-file-change-test
+[kb-23]: #23-test-geometry-formulas-with-unequal-spacing-along-each-axis
+[kb-24]: #24-test-a-transfer-failure-after-an-earlier-batch-succeeded
 
 ---
 
@@ -137,7 +148,9 @@ parameter validation or an earlier check establishes the required type. Otherwis
 `nullptr`.
 
 **Pattern to use:** `ComputeSurfaceAreaToVolumeFilter::preflightImpl()` gets its inputs with
-`getDataAs<Int32Array>()` and checks each pointer.
+`getDataAs<Int32Array>()` and checks each pointer. A check that needs only the tuple count, such as a mask-size check,
+reads the selection as `IArray` (`DBSCANFilter` does). A `StringArray` that the parameter accepted then gets the
+tuple-count error instead of a `std::bad_cast`. Reading it as `IArray` does not make it a numeric array for execute.
 
 **Pattern to avoid:** rely on the numeric-type list of `ArraySelectionParameter` to establish `IDataArray`, or on
 `MultiArraySelectionParameter::AllowedDataTypes` to establish a concrete element type.
@@ -520,6 +533,128 @@ Neighborhoods** found far fewer neighbors. PR #1652.
 **How to recognize it next time:**
 
 - A performance rewrite that uses the bin width as the scientific acceptance threshold.
+
+---
+
+## 20. Validate an in-place array by the object ID of its Attribute Matrix, not by its path
+
+**Rule:** one DataObject can have several DataPaths. A filter that changes cell arrays in place checks that Feature Ids
+and the ignored arrays it uses are children of the geometry's Cell Attribute Matrix by comparing object IDs, and checks
+the ignored arrays only when the selected operation uses them. A Feature Attribute Matrix that a removal uses is a
+direct child of the selected geometry and differs from its Cell Attribute Matrix. After validation, map the paths onto
+the geometry's Cell Attribute Matrix path before the algorithm compares paths or finds sibling arrays.
+
+**Pattern to use:** `RemoveFlaggedFeaturesFilter` checks membership with `ValidateArrayInGeometryCellData()`,
+`ValidateArraysInGeometryCellData()` and `ValidateFeatureAttributeMatrixInGeometry()`, then calls
+`MapToGeometryCellDataPath()` (all in `simplnx/Utilities/DataArrayUtilities.hpp`).
+
+**Pattern to avoid:** compare the selected DataPaths as strings, or take the arrays to change from
+`FeatureIdsArrayPath.getParent()` without checking that parent.
+
+**Why:** a path comparison misses an ignored array that was selected through another path to the same Attribute
+Matrix, and an unrelated parent selects the wrong arrays to change.
+
+**How it showed up:** PR #1829 added the membership checks and the path mapping to the filters that change the cell
+data of a geometry in place.
+
+**How to recognize it next time:**
+
+- A spatial in-place algorithm that compares selected paths or derives the arrays to change from the parent of the
+  selected Feature Ids.
+
+---
+
+## 21. Keep the legacy conversions when a filter moves or a plugin is retired
+
+**Rule:** every legacy SIMPL filter UUID has one conversion owner. Several legacy UUIDs can map to the same current
+filter. Each mapping has a fixture with non-default values, and its test checks the target filter UUID and the
+converted arguments. When a filter or plugin is retired, move its conversions to the replacement first.
+
+**Pattern to use:** `src/Plugins/ImageProcessing/test/SimplConversionCoverageTest.cpp` reads the live conversion map,
+requires a fixture for every entry, checks the target UUID, and rejects a conversion that produces only the default
+arguments.
+
+**Pattern to avoid:** a copied table of expected mappings, or a test that checks only that a pipeline loads.
+
+**Why:** a missing mapping stops an old pipeline from converting, and a conversion that produces only the defaults
+loses every saved value without an error.
+
+**How it showed up:** removing the retired image-processing plugin dropped 59 SIMPL conversions, and no test failed.
+PR #1752 restored the mappings and added the coverage test.
+
+**How to recognize it next time:**
+
+- A change that removes or moves a filter or plugin without moving its conversion map and fixtures.
+
+---
+
+## 22. Set a distinct modification time in a file-change test
+
+**Rule:** when a test rewrites a file and expects a size-and-modification-time check to notice the change, set a
+modification time that differs from the cached one.
+
+**Pattern to use:** `test/Dream3dPreflightCacheTest.cpp`:
+
+```cpp
+const auto cachedMtime = fs::last_write_time(filePath);
+// ... rewrite the file ...
+fs::last_write_time(filePath, cachedMtime - std::chrono::seconds(20));
+```
+
+**Pattern to avoid:** rewrite the file and assume that its size or time changed.
+
+**Why:** HDF5 can give different contents the same file size, and the timestamp resolution of the file system can hide
+a fast rewrite.
+
+**How it showed up:** the stale-file test of the preflight metadata cache needed an explicit timestamp to detect the
+rewrite reliably. PR #1668.
+
+**How to recognize it next time:**
+
+- A cache-invalidation test that rewrites a file without setting its modification time.
+
+---
+
+## 23. Test geometry formulas with unequal spacing along each axis
+
+**Rule:** test a formula that depends on axis spacing with unequal spacing, with a case along each axis, and with
+expected values derived independently. Check a dimensionless result, such as sphericity, under uniform scaling.
+
+**Pattern to use:** the analytical pair and scale-invariant sphericity cases in
+`src/Plugins/SimplnxCore/test/ComputeSurfaceAreaToVolumeTest.cpp`.
+
+**Pattern to avoid:** test only with equal spacing, or use agreement between two implementations as the only check.
+
+**Why:** equal spacing hides a swapped axis, and two implementations can share the same error.
+
+**How it showed up:** **Compute Surface Area to Volume** used the wrong face weights for X- and Y-normal faces, which
+is wrong only when the X and Y spacings differ. PR #1817, issues #1773 and #1780.
+
+**How to recognize it next time:**
+
+- A test of an axis-dependent formula whose fixtures all use equal spacing or a symmetric shape.
+
+---
+
+## 24. Test a transfer failure after an earlier batch succeeded
+
+**Rule:** when an algorithm reads or writes in batches, inject a failure after at least one batch has succeeded. Assert
+the original error, the values that the earlier batches wrote, and that the regions after the failure stay unwritten.
+
+**Pattern to use:** the "later metric I/O failures preserve prior batches" case in
+`src/Plugins/SimplnxCore/test/ComputeSurfaceAreaToVolumeTest.cpp`, which fails each operation of the second batch.
+
+**Pattern to avoid:** test only a failure of the first transfer, or assume that a failure undoes the earlier writes.
+
+**Why:** a later failure leaves the earlier batches written, and only a test of that state shows whether the error and
+the partial output are what the caller expects.
+
+**How it showed up:** PR #1817 bounded the transfers of **Compute Surface Area to Volume** into batches and added these
+failure cases.
+
+**How to recognize it next time:**
+
+- An algorithm that writes output before its last operation that can fail, with tests that fail only the first one.
 
 ---
 

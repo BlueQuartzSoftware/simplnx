@@ -106,6 +106,10 @@ When using ANSI C one should use a char* for constant strings:
 
 Using this type of approach allows for quicker code updates when constant values need to be changed.
 
+## Public Code
+
+simplnx is public. Proprietary code stays in the private repository that owns it (for example SimplnxOoc or DREAM3D-NX). simplnx holds only public interfaces and integration points, and their names, comments and documentation do not describe a private implementation.
+
 ## Filters and Algorithms
 
 ### Algorithms Are Callable Without Their Filter
@@ -321,6 +325,10 @@ For outputs that must stay distinct from their inputs, preflight resolves each o
 
 An intentional in-place update, or a deferred replacement of an input, follows the documented contract of the filter and keeps the input until the replacement is ready. For example, with **Perform in Place** on, **Convert AttributeArray DataType** writes a temporary array, then deletes the input and renames the temporary array to the input path in deferred actions.
 
+### Compare a Choice With Its Named Value
+
+When the values of an enum are the indices of a `ChoicesParameter`, compare the selected value, and pass default values and parameter links, with `to_underlying(Enum::Value)`, as `RemoveFlaggedFeaturesFilter` does. Do not compare with a raw index such as `== 2`. Keep the order of the choices and the enum values stable: a saved pipeline stores the index, so reordering the choices changes what an existing pipeline does. When the enum values are not the indices, map the index through a lookup (see Geometry Conventions).
+
 ## Concurrency
 
 ### Static Header Caches Need a Mutex
@@ -373,6 +381,16 @@ The product of a tuple shape or a component shape can be too large for `usize`. 
 
 `resizeTuples()` returns an error for an overflow and keeps the store unchanged. `DataStore`, `StringStore` and `ListStore` return error -6035 for a resize failure. `EmptyDataStore` returns `EmptyDataStore::k_ResizeError` (-10603). A constructor throws, because it cannot return a `Result`. Each overflow message names the count that does not fit ("tuple count", "element count" or "byte count"), so that a test can tell the checks apart; the rest of its text follows the `bluequartz-skills:error-messages` skill. Issues #1883 and #1884 describe stores that break this rule.
 
+### Check the Stores Before You Use Resident Pointers or Spans
+
+A path that reads or writes through a raw pointer or a span into store memory checks every store it uses: each store reports `IDataStore::StoreType::InMemory` and casts to the required `DataStore<T>`. An algorithm-selection flag such as `ForceInCoreAlgorithm()` does not show that a store is in memory. When a check fails, use the store API instead (`ZeroCrossingEngine` checks both stores and both casts). Test that fallback with a store that is not a `DataStore<T>`.
+
+## HDF5 Files
+
+### A Dataset From `openDataset()` Is Not Valid Until It Is Used
+
+`GroupIO::openDataset()` checks that the dataset exists and returns a `DatasetIO` that opens it only on first use, so `isValid()` returns false until then. Do not use `isValid()` to test that a dataset exists. Check `isDataset(name)` on the parent group, and check the `Result` of the first read. An empty `getDimensions()` does not mean that the dataset is missing: a scalar dataset has no dimensions.
+
 ## Geometry Conventions
 
 - The Image Geometry origin is the minimum corner of cell 0. The center of cell `i` is `origin + (i + 0.5) * spacing`. Use `ImageGeom::getCoordsf()` or `getCoords()` for cell centers instead of a local formula.
@@ -395,6 +413,10 @@ Write every error and warning message by the `bluequartz-skills:error-messages` 
 
     Do not rely on `\b`; it is not portable extended-regex syntax.
 
+### Keep Error Codes Through a Refactoring
+
+A refactoring keeps the error code of every condition whose meaning it does not change, also when the check moves to another function or class. Tests, documentation and users rely on the codes. When a condition must get a new code, the pull request description lists the old and the new code.
+
 ### Messages Name the Right Values
 
 - Each message names the correct values in the correct order, and fires only on the condition it describes. Advice in a message must be something the user can do.
@@ -413,6 +435,11 @@ Write every error and warning message by the `bluequartz-skills:error-messages` 
 - **Print the errors of a failed Result.** Use `SIMPLNX_RESULT_REQUIRE_VALID(result)` instead of `REQUIRE(result.valid())`. It prints each error code and message when the check fails.
 - **Apply an action in both modes.** An `IDataAction` creates different objects in preflight and in execute. Test it with `GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute)` and an `INFO` that names the mode.
 - **Test a size failure without the allocator.** The nightly `asan` job runs with the default AddressSanitizer options. A request above the AddressSanitizer limit (1 TiB on 64-bit platforms) stops the test process instead of throwing `std::bad_alloc` (#1885). Use a size that the code rejects before it allocates, such as a shape product that overflows. Test a recoverable allocation failure through a deterministic failure seam. Test an intentional allocator abort in a separate process, with a timeout and a check of its exit result. An AddressSanitizer build alone does not make a real allocation failure recoverable.
+- **Test core code in the core test target.** A test of code in `src/simplnx/` goes in the core `test/` directory and carries the `[simplnx]` tag. Core code must not depend on an optional plugin's tests for its only coverage. Each new exported helper gets its own direct test, also when a filter test already runs it.
+- **Pass with optional plugins turned off.** Every test passes when an optional plugin is not built. A test that needs filters from an optional plugin skips them when the filter list does not have them, as `test/PrebuiltPipelineTest.cpp` does for shipped pipelines.
+- **Name a filter test after its plugin.** The test name starts with the plugin name and its first tag is the plugin: `TEST_CASE("ImageProcessing::AbsImageFilter: ...", "[ImageProcessing][AbsImageFilter]")`. When a filter moves to another plugin, change both.
+- **Hide a test of a known defect.** A test that shows an open defect asserts the correct result, carries the hidden tags `[.][BlockedDefect]` and names the issue in a comment. The change that fixes the defect removes the hidden tags.
+- **Use unequal dimensions and spacings** in tests of an algorithm that depends on the geometry: different cell counts and spacings along X, Y and Z, so that a swapped axis changes the result (knowledge base entry 23).
 - **No network access in CTest.** A test that needs a network service fails when the service is slow or not available. Do not register it with CTest. Keep the script so that it can be run by hand.
 - **Call `UnitTest::LoadPlugins();` only when the test looks up filters by UUID.** Loading the plugins fills the `Application`'s filter list. A test needs it when it calls `createFilter()` on the filter list, loads a pipeline with `Pipeline::FromJson()`, `FromFile()`, `FromSIMPLJson()` or `FromSIMPLFile()` (every SIMPL backwards-compatibility test does), or runs a filter whose code gets other filters from the filter list (`ReadH5Ebsd` does). A test that constructs a filter or algorithm class directly does not call it, whether it builds its data in memory or reads it with `UnitTest::LoadDataStructure()`. The call loads every plugin library and fails the test when one does not load, so an unneeded call makes the test fail for a plugin it does not use. A test that needs the plugins calls `LoadPlugins()` itself: ctest runs each `TEST_CASE` in its own process, so no other test has loaded them.
 - **Test an algorithm's own checks by calling the algorithm directly.** Test each failure of `ValidateInputs()` through `operator()()` and assert its error code; a test of `ValidateInputs()` alone does not show that the algorithm calls it. Such a failure returns before the dispatch, so its test does not use `UnitTest::AlgorithmTestScope`, which requires a branch to run. Test a check that is inside a dispatch branch on that branch. To reach an out-of-core branch in the in-core build, use a store whose `getStoreType()` returns `IDataStore::StoreType::OutOfCore` (the ImageProcessing tests do this). When that branch needs external sort or temporary record stores, register a test `IDataIOManager` that provides them, as described in the next item.
