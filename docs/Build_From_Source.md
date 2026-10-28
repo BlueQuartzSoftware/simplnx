@@ -12,7 +12,7 @@
 | eigen3 |  <https://gitlab.com/libeigen/eigen.git> | 3.4.0 |
 | expected-lite | <https://github.com/martinmoene/expected-lite>  | 0.8.0 |
 | fmt | <https://github.com/fmtlib/fmt>  | 11.1.4 |
-| h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.13 |
+| h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.14 |
 | hdf5 | <https://github.com/HDFGroup/hdf5/>  | 1.14.4.3 |
 | lz4 | <https://github.com/lz4/lz4> | 1.9.4 |
 | nlohmann-json | <https://github.com/nlohmann/json/>  | 3.11.2 |
