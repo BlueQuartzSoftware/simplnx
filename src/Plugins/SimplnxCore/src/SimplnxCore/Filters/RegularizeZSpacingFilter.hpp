@@ -15,7 +15,9 @@ namespace nx::core
  * (ZPoints + 1) whitespace-delimited float values. For each new, evenly spaced Z plane the filter
  * selects the original plane whose boundary interval contains the new plane position and copies that
  * original plane's entire XY cell-data slab. The X and Y dimensions and spacing are unchanged; the Z
- * dimension count and Z spacing are recomputed.
+ * dimension count and Z spacing are recomputed. The selected Feature Attribute Matrix is cleared by
+ * default. Optional renumbering compacts Feature Ids and resizes the empty matrix; it does not
+ * recompute feature values.
  */
 class SIMPLNXCORE_EXPORT RegularizeZSpacingFilter : public IFilter
 {
@@ -30,6 +32,10 @@ public:
   RegularizeZSpacingFilter& operator=(RegularizeZSpacingFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
   static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static constexpr StringLiteral k_InputFile_Key = "input_file";
   static constexpr StringLiteral k_NewZRes_Key = "new_z_spacing";
