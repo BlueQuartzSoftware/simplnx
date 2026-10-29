@@ -6,7 +6,7 @@ Statistics
 
 ## Description
 
-***NOTE:* This filter allows each **Cell** value to contribute to 0 or more bounding boxes (a 1-to-many architecture). This comes with the caveat that the *Standardize Data* option offered by [Compute Attribute Array Statistics](ComputeArrayStatisticsFilter.md) cannot be included as functionality in this filter.**
+**NOTE:** This filter allows each **Cell** value to contribute to 0 or more bounding boxes (a 1-to-many architecture). This comes with the caveat that the *Standardize Data* option offered by [Compute Attribute Array Statistics](ComputeArrayStatisticsFilter.md) cannot be included as functionality in this filter.
 
 This filter computes a variety of statistics for a given scalar array, restricted to the **Cells** that fall inside each supplied bounding box. Because boxes may overlap (or leave gaps), a single **Cell** may be counted toward several boxes, exactly one box, or none. The currently available statistics are array length, minimum, maximum, (arithmetic) mean, median, mode, standard deviation, summation, and number of unique values; any combination of these statistics may be computed. Any scalar array, of any primitive type, may be used as input. The type of each output array depends on the kind of statistic computed:
 

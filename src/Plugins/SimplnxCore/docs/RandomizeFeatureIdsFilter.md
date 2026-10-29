@@ -6,7 +6,7 @@ Core (Filters)
 
 ## Description
 
-***WARNING:** This filter can throw a pipeline terminating error (at runtime) if the number of tuples in the supplied Feature `Attribute Matrix` is less than the max value in the Feature Ids `DataArray`*
+**WARNING:** *This filter can throw a pipeline terminating error (at runtime) if the number of tuples in the supplied Feature `Attribute Matrix` is less than the max value in the Feature Ids `DataArray`.*
 
 This filter will randomize a user selected **Feature Ids** array and update every container (`DataArray`, `NeighborList`, and `StringArray`) in the Feature **Attribute Matrix**. This does not generate random data but instead uses the existing values and swaps the positions of the values in the array. The intended use case is primarily for visualization, so feature data does not appear as a smooth gradient.
 

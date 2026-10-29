@@ -12,6 +12,7 @@
 
 #include "plugin_source_dirs.hpp"
 
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -304,45 +305,137 @@ std::string GenerateUnderline(size_t length, char value)
   return result;
 }
 
-std::string MarkdownToRstLink(const std::string& markDown)
+namespace
 {
-  std::string rst = markDown;
-
-  // Find the start of a Markdown link
-  size_t start = rst.find('[');
-  while(start != std::string::npos)
+std::string EscapeRst(const std::string& text)
+{
+  std::string rst;
+  for(const char value : text)
   {
-    size_t const endText = rst.find(']', start);
-    if(endText == std::string::npos)
+    if(value == '\\' || value == '*' || value == '`' || value == '|' || value == '_')
     {
-      break; // No matching ']'
+      rst += '\\';
     }
-
-    size_t const startUrl = rst.find('(', endText);
-    if(startUrl == std::string::npos)
-    {
-      break; // No matching '(' after ']'
-    }
-    size_t const endUrl = rst.find(')', startUrl);
-    if(endUrl == std::string::npos)
-    {
-      break; // No matching ')'
-    }
-
-    // Extract link text and URL
-    const std::string linkText = rst.substr(start + 1, endText - start - 1);
-    const std::string url = rst.substr(startUrl + 1, endUrl - startUrl - 1);
-
-    // Replace with reStructuredText format
-    const std::string rstLink = fmt::format("`{} <{}>`_", linkText, url);
-    rst.replace(start, endUrl - start + 1, rstLink);
-
-    // Find the next link
-    start = rst.find('[', endUrl);
+    rst += value;
   }
-
   return rst;
 }
+
+usize FindMarkdownSpanEnd(const std::string& text, usize start, const std::string& delimiter)
+{
+  const usize contentStart = start + delimiter.size();
+  for(usize end = contentStart; end < text.size(); ++end)
+  {
+    if(delimiter != "`" && text[end] == '\\')
+    {
+      ++end;
+      continue;
+    }
+    // A code span is opaque, including any asterisks inside it.
+    if(delimiter != "`" && text[end] == '`')
+    {
+      const usize codeEnd = text.find('`', end + 1);
+      if(codeEnd != std::string::npos)
+      {
+        end = codeEnd;
+        continue;
+      }
+    }
+    if(text.compare(end, delimiter.size(), delimiter) != 0)
+    {
+      continue;
+    }
+    const usize spanEnd = end + delimiter.size();
+    if(delimiter != "`" && ((end > contentStart && text[end - 1] == '*') || (spanEnd < text.size() && text[spanEnd] == '*')))
+    {
+      continue;
+    }
+    if(end > contentStart && std::isspace(static_cast<unsigned char>(text[contentStart])) == 0 && std::isspace(static_cast<unsigned char>(text[end - 1])) == 0)
+    {
+      return end;
+    }
+    return std::string::npos;
+  }
+  return std::string::npos;
+}
+
+std::string MarkdownInlineToRst(const std::string& markDown, bool plainText = false)
+{
+  std::string rst;
+  for(usize index = 0; index < markDown.size();)
+  {
+    const char value = markDown[index];
+    usize spanEnd = index;
+    std::string converted;
+    if(value == '\\' && index + 1 < markDown.size() && std::ispunct(static_cast<unsigned char>(markDown[index + 1])) != 0)
+    {
+      rst += EscapeRst(markDown.substr(index + 1, 1));
+      index += 2;
+      continue;
+    }
+    if(value == '[')
+    {
+      const usize textEnd = markDown.find(']', index + 1);
+      if(textEnd != std::string::npos && textEnd > index + 1 && markDown.compare(textEnd, 2, "](") == 0)
+      {
+        const usize urlEnd = markDown.find(')', textEnd + 2);
+        if(urlEnd != std::string::npos && urlEnd > textEnd + 2)
+        {
+          const std::string label = MarkdownInlineToRst(markDown.substr(index + 1, textEnd - index - 1), true);
+          const std::string url = EscapeRst(markDown.substr(textEnd + 2, urlEnd - textEnd - 2));
+          converted = plainText ? label : "`" + label + " <" + url + ">`_";
+          spanEnd = urlEnd + 1;
+        }
+      }
+    }
+    else if(value == '`' || value == '*')
+    {
+      usize delimiterSize = 1;
+      if(value == '*')
+      {
+        while(index + delimiterSize < markDown.size() && markDown[index + delimiterSize] == '*')
+        {
+          ++delimiterSize;
+        }
+      }
+      const std::string delimiter(delimiterSize, value);
+      const usize end = delimiterSize <= 3 ? FindMarkdownSpanEnd(markDown, index, delimiter) : std::string::npos;
+      if(end != std::string::npos)
+      {
+        const std::string content = markDown.substr(index + delimiterSize, end - index - delimiterSize);
+        // RST cannot nest inline markup. Keep the outer style and flatten inner spans.
+        const std::string rstDelimiter = value == '`' ? "``" : (delimiterSize >= 2 ? "**" : "*");
+        const std::string rstContent = value == '`' ? (plainText ? EscapeRst(content) : content) : MarkdownInlineToRst(content, true);
+        converted = plainText ? rstContent : rstDelimiter + rstContent + rstDelimiter;
+        spanEnd = end + delimiterSize;
+      }
+      else
+      {
+        rst += EscapeRst(delimiter);
+        index += delimiterSize;
+        continue;
+      }
+    }
+    if(spanEnd > index)
+    {
+      if(!plainText && index > 0 && std::isalnum(static_cast<unsigned char>(markDown[index - 1])) != 0)
+      {
+        rst += "\\ ";
+      }
+      rst += converted;
+      if(!plainText && spanEnd < markDown.size() && std::isalnum(static_cast<unsigned char>(markDown[spanEnd])) != 0)
+      {
+        rst += "\\ ";
+      }
+      index = spanEnd;
+      continue;
+    }
+    rst += EscapeRst(markDown.substr(index, 1));
+    ++index;
+  }
+  return rst;
+}
+} // namespace
 
 std::string CreateFilledString(const std::string& input_string, int max_width, char fill_value)
 {
@@ -385,33 +478,38 @@ std::string MarkdownToRst(const std::string& markDown)
   rst = std::regex_replace(rst, std::regex("^## (.+)$"), "$1\n" + GenerateUnderline(40, '-'));
   rst = std::regex_replace(rst, std::regex("^### (.+)$"), "$1\n" + GenerateUnderline(40, '^'));
 
-  // Convert bold text
-  rst = std::regex_replace(rst, std::regex("\\*\\*(.+)\\*\\*"), "**$1**");
-
-  // Convert italic text
-  rst = std::regex_replace(rst, std::regex("\\*(.+)\\*"), "*$1*");
-
-  // Convert unordered lists
-  rst = std::regex_replace(rst, std::regex("^\\s*[-*+] (.+)$"), "* $1");
-
-  // Convert ordered lists
-  rst = std::regex_replace(rst, std::regex("^\\s*\\d+\\. (.+)$"), "#. $1");
-
-  // Convert List
-  // rst = std::regex_replace(rst, std::regex("\\[(.+)\\]\\((.+)\\)"), "`$1 <$2>`_");
-
-  // Convert links
-  // rst = std::regex_replace(rst, std::regex("\\[(.+)\\]\\((.+)\\)"), "`$1 <$2>`_");
-  rst = MarkdownToRstLink(rst);
-
-  // Convert images
-  //  rst = std::regex_replace(rst, std::regex("!\\[(.*)\\]\\((.+?)\\)"), ".. image:: $2\n   :alt: $1");
-
-  // Convert inline code
-  // rst = std::regex_replace(rst, std::regex("`(.+?)`"), "``$1``");
-
-  // Convert code blocks
-  rst = std::regex_replace(rst, std::regex("```\n?(.+?)\n?```"), "::\n\n   $1");
+  // Keep code block contents out of the inline scanner.
+  std::smatch codeMatch;
+  if(std::regex_search(rst, codeMatch, std::regex("```\n?(.+?)\n?```")))
+  {
+    return MarkdownToRst(codeMatch.prefix().str()) + "::\n\n   " + codeMatch[1].str() + MarkdownToRst(codeMatch.suffix().str());
+  }
+  // Convert each line separately so list markers are not treated as inline markup.
+  std::istringstream lines(rst);
+  std::string line;
+  const std::regex unorderedListRegex("^\\s*[-*+] (.+)$");
+  const std::regex orderedListRegex("^\\s*\\d+\\. (.+)$");
+  rst.clear();
+  while(std::getline(lines, line))
+  {
+    std::smatch listMatch;
+    if(std::regex_match(line, listMatch, unorderedListRegex))
+    {
+      rst += "* " + MarkdownInlineToRst(listMatch[1]);
+    }
+    else if(std::regex_match(line, listMatch, orderedListRegex))
+    {
+      rst += "#. " + MarkdownInlineToRst(listMatch[1]);
+    }
+    else
+    {
+      rst += MarkdownInlineToRst(line);
+    }
+    if(!lines.eof())
+    {
+      rst += '\n';
+    }
+  }
   rst = std::regex_replace(rst, std::regex("    (.+?)\n"), "|$1\n");
 
   return rst;
@@ -746,7 +844,7 @@ void GeneratePythonRstFiles()
 
         rstStream << parameterPair.first;
         std::string helpText = anyParameter->helpText();
-        helpText = StringUtilities::replace(helpText, "\n", " ");
+        helpText = EscapeRst(StringUtilities::replace(helpText, "\n", " "));
         memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": " << helpText << "\n";
       }
       rstStream << ")\n\n";

@@ -1,18 +1,21 @@
 @ECHO OFF
+setlocal
 
-pushd %~dp0
+pushd "%~dp0"
 
 REM Command file for Sphinx documentation
 
-if "%SPHINXBUILD%" == "" (
-	set SPHINXBUILD=${SPHINX_BUILD_EXECUTABLE}
+if not defined SPHINXBUILD (
+	set "SPHINXBUILD=${SPHINX_BUILD_EXECUTABLE}"
 )
-set SOURCEDIR=${SIMPLNX_SPHINX_DOCS_DIR}/source
-set BUILDDIR=${SIMPLNX_SPHINX_DOCS_DIR}/build
+if not defined SPHINXOPTS set "SPHINXOPTS=-W --keep-going"
+set "SOURCEDIR=${SIMPLNX_SPHINX_DOCS_DIR}/source"
+set "BUILDDIR=${SIMPLNX_SPHINX_DOCS_DIR}/build"
+set "SPHINXLOG=${SIMPLNX_SPHINX_DOCS_DIR}/sphinx_build_output.log"
 
 if "%1" == "" goto help
 
-%SPHINXBUILD% >NUL 2>NUL
+"%SPHINXBUILD%" >NUL 2>NUL
 if errorlevel 9009 (
 	echo.
 	echo.The 'sphinx-build' command was not found. Make sure you have Sphinx
@@ -22,14 +25,19 @@ if errorlevel 9009 (
 	echo.
 	echo.If you don't have Sphinx installed, grab it from
 	echo.http://sphinx-doc.org/
-	exit /b 1
+	set "SPHINXSTATUS=1"
+	goto end
 )
 
-%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O% > ${SIMPLNX_SPHINX_DOCS_DIR}/sphinx_build_output.log
+"%SPHINXBUILD%" -M %1 "%SOURCEDIR%" "%BUILDDIR%" %SPHINXOPTS% %O% > "%SPHINXLOG%" 2>&1
+set "SPHINXSTATUS=%ERRORLEVEL%"
+if not "%SPHINXSTATUS%" == "0" type "%SPHINXLOG%"
 goto end
 
 :help
-%SPHINXBUILD% -M help %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+"%SPHINXBUILD%" -M help "%SOURCEDIR%" "%BUILDDIR%" %SPHINXOPTS% %O%
+set "SPHINXSTATUS=%ERRORLEVEL%"
 
 :end
 popd
+endlocal & exit /b %SPHINXSTATUS%
