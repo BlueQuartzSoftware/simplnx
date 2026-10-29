@@ -10,33 +10,30 @@ Some filter algorithms that perform well on in-memory data become extremely slow
 
 In-core arrays store data in a single contiguous memory buffer. Any element can be accessed in O(1) time via pointer arithmetic. Algorithms that use random access patterns (BFS flood fill, graph traversal, etc.) work efficiently because every `operator[]` call is a simple memory read.
 
-### Out-of-Core Storage (ZarrStore)
+### Out-of-Core Storage
 
-Out-of-core arrays partition data into compressed chunks stored on disk. A fixed-size FIFO cache (6 chunks) keeps recently accessed chunks in memory. When code accesses an element, the system:
-
-1. Determines which chunk contains that element
-2. If the chunk is cached, returns the value directly
-3. If not cached, evicts the oldest chunk (writing it to disk if dirty) and loads the needed chunk from disk
+Out-of-core arrays keep their data on disk in compressed chunks and hold a bounded number of decoded chunks in memory. When code reads or writes one element whose chunk is not in memory, the store loads and decodes that whole chunk, and it may first have to evict another chunk, writing it back when it was changed.
 
 This means algorithms with random access patterns cause **chunk thrashing**: each random jump may load a new chunk and evict another, turning O(1) memory reads into O(disk) operations. A BFS flood fill that visits neighbors across chunk boundaries can trigger thousands of chunk load/evict cycles, making a sub-second algorithm take 10+ minutes.
 
-### The Solution: Chunk-Sequential Algorithms
+### The Solution: Sequential Bulk Transfers
 
-Algorithms designed for OOC data process chunks sequentially using the chunk API:
+Algorithms designed for OOC data read and write contiguous ranges in order, through the bulk transfers of `AbstractDataStore` (`copyIntoBuffer()`, `copyFromBuffer()`, `readExtent()`), and keep only a bounded window in local buffers. A common form reads one XY slice at a time:
 
 ```cpp
-for(uint64 chunkIdx = 0; chunkIdx < store.getNumberOfChunks(); chunkIdx++)
+std::vector<int32> slice(dimX * dimY);
+for(usize z = 0; z < dimZ; z++)
 {
-    store.loadChunk(chunkIdx);
-    auto lower = store.getChunkLowerBounds(chunkIdx);
-    auto upper = store.getChunkUpperBounds(chunkIdx);
-    for(z = lower[0]; z <= upper[0]; z++)
-        for(y = lower[1]; y <= upper[1]; y++)
-            for(x = lower[2]; x <= upper[2]; x++) { /* process voxel */ }
+  Result<> readResult = featureIdsStore.copyIntoBuffer(z * slice.size(), nonstd::span<int32>(slice.data(), slice.size()));
+  if(readResult.invalid())
+  {
+    return readResult;
+  }
+  // ... process the slice from the local buffer ...
 }
 ```
 
-This pattern ensures sequential disk access and keeps the working set within the cache. However, chunk-sequential algorithms often require different data structures (e.g., union-find instead of BFS queues) and may use more auxiliary memory.
+This pattern gives sequential disk access and a bounded working set. However, such algorithms often require different data structures (e.g., union-find instead of BFS queues) and may use more auxiliary memory.
 
 ## When to Use Algorithm Dispatch
 
@@ -49,7 +46,7 @@ Use the dispatch pattern when:
 Do **not** use dispatch when:
 
 - The algorithm already uses sequential access patterns (a single algorithm with chunk-aware loops suffices)
-- The only difference is minor (e.g., adding `loadChunk()` calls) rather than a fundamentally different approach
+- The only difference is minor (e.g., reading in larger blocks) rather than a fundamentally different approach
 - The data is small enough that OOC overhead is negligible
 
 ## The DispatchAlgorithm Utility
@@ -66,8 +63,7 @@ bool IsOutOfCore(const IArray& array);
 `IDataArray` uses its `IDataStore::StoreType`; `INeighborList` uses its
 storage-neutral `IListStore::isOutOfCore()` query. Other `IArray` types, such
 as `StringArray`, are conservatively in-memory until they expose a residency
-contract. The private HDF5 list store overrides that query without adding a
-SimplnxOoc type dependency to public simplnx.
+contract.
 
 ### AnyOutOfCore
 
@@ -76,7 +72,7 @@ bool AnyOutOfCore(std::initializer_list<const IDataArray*> arrays);
 bool AnyOutOfCore(const AlgorithmArrayTargets& targets);
 ```
 
-Returns `true` if **any** of the given arrays uses OOC storage. Null pointers in the list are skipped. Use this when a filter operates on multiple input/output arrays and any one of them being OOC should trigger the chunk-sequential algorithm path.
+Returns `true` if **any** of the given arrays uses OOC storage. Null pointers in the list are skipped. Use this when a filter operates on multiple input/output arrays and any one of them being OOC should trigger the out-of-core algorithm path.
 
 The original `IDataArray` initializer-list overload is retained for source
 compatibility, including named `std::initializer_list<const IDataArray*>`
@@ -90,10 +86,12 @@ arrays, which must remain alive for the call.
 ```cpp
 template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(std::initializer_list<const IDataArray*> arrays, ArgsT&&... args);
+
+template <typename InCoreAlgo, typename OocAlgo, typename... ArgsT>
 Result<> DispatchAlgorithm(const AlgorithmArrayTargets& targets, ArgsT&&... args);
 ```
 
-Checks whether any array in `arrays` uses OOC storage, or if the global `ForceOocAlgorithm()` flag is set. If either condition is true, constructs `OocAlgo(args...)` and calls `operator()()`. Otherwise, constructs `InCoreAlgo(args...)` and calls `operator()()`.
+When the global `ForceInCoreAlgorithm()` flag is set, constructs `InCoreAlgo(args...)` and calls `operator()()`. Otherwise, when any array in `arrays` uses OOC storage or the global `ForceOocAlgorithm()` flag is set, constructs `OocAlgo(args...)` and calls `operator()()`; when neither is true, it constructs `InCoreAlgo(args...)`. See "ForceOocAlgorithm and ForceInCoreAlgorithm" below.
 
 For existing data-array-only callers, continue using the familiar form:
 
@@ -121,7 +119,7 @@ The IdentifySample filter identifies the largest contiguous region of "good" vox
 ### IdentifySampleBFS (In-Core)
 
 Uses BFS flood fill with `std::vector<bool>` tracking arrays:
-- Memory: 2 bits per voxel (checked + sample flags)
+- Memory: 2 bits per voxel (checked + sample flags), plus an int64 queue that grows with the largest component
 - Access pattern: Random (BFS visits neighbors in all 6 directions)
 - In-core performance: Fast (random access is O(1) in memory)
 - OOC performance: Extremely slow (random neighbor access thrashes chunk cache)
@@ -129,10 +127,10 @@ Uses BFS flood fill with `std::vector<bool>` tracking arrays:
 ### IdentifySampleCCL (Out-of-Core)
 
 Uses scanline Connected Component Labeling with union-find:
-- Memory: 8 bytes per voxel (int64 label array) + union-find overhead
-- Access pattern: Sequential (processes chunks in order, only checks backward neighbors)
-- In-core performance: Good but uses more RAM than BFS
-- OOC performance: Fast (sequential chunk access, no thrashing)
+- Memory: two rolling slices of int64 labels plus the equivalence storage; a replay pass derives the labels again instead of storing one label per voxel
+- Access pattern: Sequential (reads XY slices in Z order with `copyIntoBuffer()`, and checks only the x-1, y-1 and z-1 neighbors)
+- In-core performance: Good, at the cost of an extra sequential read for the replay
+- OOC performance: Fast (sequential slice reads instead of random neighbor access; the cost of the equivalence lookups depends on the input)
 
 ### Dispatcher Code
 
@@ -163,7 +161,7 @@ Filters/Algorithms/
     IdentifySampleBFS.hpp     # BFS algorithm class declaration
     IdentifySampleBFS.cpp     # BFS flood-fill implementation
     IdentifySampleCCL.hpp     # CCL algorithm class declaration
-    IdentifySampleCCL.cpp     # Chunk-sequential CCL implementation
+    IdentifySampleCCL.cpp     # Slice-sequential CCL implementation
     IdentifySampleCommon.hpp  # Shared code (VectorUnionFind, slice-by-slice functor)
 ```
 
@@ -171,10 +169,10 @@ Filters/Algorithms/
 
 1. **Identify the bottleneck**: Profile the filter in OOC mode. If it is orders of magnitude slower than in-core, random access patterns are likely the cause.
 
-2. **Design the OOC algorithm**: Replace random access with chunk-sequential processing. Common techniques:
+2. **Design the OOC algorithm**: Replace random access with sequential bulk transfers. Common techniques:
    - Scanline CCL with union-find instead of BFS flood fill
-   - Worklists sorted by chunk instead of global queues
-   - Multi-pass algorithms where each pass processes chunks sequentially
+   - Worklists sorted by position instead of global queues
+   - Multi-pass algorithms where each pass reads the data in order
 
 3. **Create separate algorithm classes**: Both must share the same `InputValues` struct and constructor signature. Follow the existing pattern:
    ```
@@ -230,7 +228,7 @@ TEST_CASE("MyFilter", "[Plugin][MyFilter]")
 }
 ```
 
-`scope.executeFilter()` and `scope.execute()` set the force flags only for the call they wrap, so the filters that build the test data run normally. After the call, the scope requires that the selected algorithm path ran and the other path did not. The OOC algorithm class works correctly on in-core `DataStore` data because the chunk API methods are no-ops for `DataStore` (1 chunk spanning the full volume).
+`scope.executeFilter()` and `scope.execute()` set the force flags only for the call they wrap, so the filters that build the test data run normally. After the call, the scope requires that the selected algorithm path ran and the other path did not. The OOC algorithm class also works on in-core `DataStore` data, because the bulk transfers work on allocated in-memory stores as well as on out-of-core stores. A placeholder store (`EmptyDataStore`) holds no values and rejects them.
 
 ## Performance Expectations
 
