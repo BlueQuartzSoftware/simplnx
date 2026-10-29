@@ -6,7 +6,7 @@ IO (Input)
 
 ## Description
 
-This filter reads an OnScale/PZFLEX table file and creates a **Rectilinear Grid Geometry**. The suggested file extension is `.flxtbl`, but the filter accepts any file extension. OnScale table files describe grid coordinates, material names, and the material index for each grid **Cell**.
+This filter reads an OnScale/PZFLEX table file and creates a **Rectilinear Grid Geometry**. The file must have the `.flxtbl` extension. OnScale table files describe grid coordinates, material names, and the material index for each grid **Cell**.
 
 The reader processes these sections:
 

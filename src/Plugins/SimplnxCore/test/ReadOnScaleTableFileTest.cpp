@@ -459,12 +459,12 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Invalid Preflight Input", "[
 TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Additional Valid Inputs", "[SimplnxCore][ReadOnScaleTableFileFilter]")
 {
   UnitTest::LoadPlugins();
-  const std::string testName = GENERATE("CRLF Line Endings", "Empty Names", "Nonstandard Extension");
+  const std::string testName = GENERATE("CRLF Line Endings", "Empty Names");
   CAPTURE(testName);
 
   FixtureOptions options;
   options.BoundsCounts = {4, 3, 2};
-  fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / fmt::format("{}.flxtbl", testName);
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / fmt::format("{}.flxtbl", testName);
   if(testName == "CRLF Line Endings")
   {
     options.LineEnding = "\r\n";
@@ -473,13 +473,23 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Additional Valid Inputs", "[
   {
     options.Names.clear();
   }
-  else
-  {
-    inputFile.replace_extension(".table");
-  }
-
   const GeneratedFixture fixture = WriteFixture(inputFile, options);
   RequireValidImport(inputFile, fixture, {3, 2, 1});
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Unsupported Extension", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  FixtureOptions options;
+  options.BoundsCounts = {4, 3, 2};
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "UnsupportedExtension.table";
+  WriteFixture(inputFile, options);
+
+  DataStructure dataStructure;
+  const ReadOnScaleTableFileFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -3003);
 }
 
 TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Malformed File", "[SimplnxCore][ReadOnScaleTableFileFilter]")
