@@ -2,18 +2,23 @@
 
 #include "SimplnxCore/Filters/Algorithms/RegularizeZSpacing.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
@@ -93,9 +98,25 @@ Parameters RegularizeZSpacingFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The Image Geometry to resample along the Z axis.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+      "Recreates the selected Feature Attribute Matrix in the resampled geometry with no arrays. Resampling changes which cells belong to each feature, so every feature value computed before this "
+      "filter is invalid. Recompute any feature data needed later in the pipeline.",
+      true));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Cell Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The path to the resampled Image Geometry.", DataPath()));
 
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrix_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
 
   return params;
@@ -104,7 +125,7 @@ Parameters RegularizeZSpacingFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType RegularizeZSpacingFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -122,6 +143,10 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   auto newZRes = filterArgs.value<float32>(k_NewZRes_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  const bool clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  const bool renumberFeatures = clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  const auto cellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
+  const auto featureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -220,6 +245,67 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     preflightUpdatedValues.push_back({"Regularized Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, destSpacing, srcOrigin, srcImageGeom.getUnits())});
   }
 
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(clearFeatureAttributeMatrix)
+  {
+    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+    if(srcCellFeatureData == nullptr || !srcImageGeom.contains(srcCellFeatureData))
+    {
+      return MakePreflightErrorResult(
+          -67431, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
+    if(srcImageGeom.getCellData() == srcCellFeatureData)
+    {
+      return MakePreflightErrorResult(
+          -67432,
+          fmt::format("The Feature Attribute Matrix '{}' is the Cell Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn off 'Clear Feature Attribute Matrix'.",
+                      cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
+
+    if(renumberFeatures)
+    {
+      auto locationResult = ValidateArrayInGeometryCellData(dataStructure, srcImagePath, featureIdsArrayPath, -67433, "Cell Feature Ids");
+      if(locationResult.invalid())
+      {
+        return {ConvertResultTo<OutputActions>(std::move(locationResult), {})};
+      }
+      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+      if(featureIds.getNumberOfTuples() != srcImageGeom.getNumberOfCells())
+      {
+        return MakePreflightErrorResult(-67434,
+                                        fmt::format("**Cell Feature Ids** DataArray '{}' has {} tuples, but the selected Image Geometry '{}' has {} cells. Select an array with one tuple per cell.",
+                                                    featureIdsArrayPath.toString(), featureIds.getNumberOfTuples(), srcImagePath.toString(), srcImageGeom.getNumberOfCells()));
+      }
+    }
+
+    // Ignore every path to the Feature AM, including selections through another parent.
+    const auto featureAmPaths = srcCellFeatureData->getDataPaths();
+    ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+    const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *srcCellFeatureData)
+    {
+      clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
+    }
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the resampled geometry with no arrays.", cellFeatureAttributeMatrixPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    if(renumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the resampled geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the original geometry and are not valid for the resampled geometry."});
+  }
+
   // Copy any remaining loose data groups or data arrays from the source geometry.
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
@@ -269,6 +355,10 @@ Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.NewZRes = filterArgs.value<float32>(k_NewZRes_Key);
   inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.CellFeatureAttributeMatrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
 
   if(inputValues.RemoveOriginalImageGeom)
   {
@@ -293,6 +383,8 @@ constexpr StringLiteral k_NewZResKey = "NewZRes";
 Result<Arguments> RegularizeZSpacingFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = RegularizeZSpacingFilter().getDefaultArguments();
+  // The legacy filter had no Feature parameters and copied every non-Cell Attribute Matrix unchanged.
+  args.insertOrAssign(k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
 
   std::vector<Result<>> results;
 

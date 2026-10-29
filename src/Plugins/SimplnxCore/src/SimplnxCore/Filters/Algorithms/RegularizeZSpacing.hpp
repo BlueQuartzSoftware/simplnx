@@ -5,6 +5,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <filesystem>
@@ -20,11 +23,16 @@ struct SIMPLNXCORE_EXPORT RegularizeZSpacingInputValues
   float32 NewZRes = 0.0F;
   bool RemoveOriginalImageGeom = true;
   DataPath CreatedImageGeometryPath;
+  BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
+  BoolParameter::ValueType RenumberFeatures = false;
+  ArraySelectionParameter::ValueType FeatureIdsArrayPath;
+  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrix;
 };
 
 /**
  * @class RegularizeZSpacing
- * @brief Copies the cell data of an irregularly Z-spaced Image Geometry onto a regularly Z-spaced Image Geometry.
+ * @brief Copies cell data onto a regularly Z-spaced Image Geometry and optionally renumbers
+ * Feature Ids and resizes the cleared Feature Attribute Matrix.
  */
 class SIMPLNXCORE_EXPORT RegularizeZSpacing
 {
