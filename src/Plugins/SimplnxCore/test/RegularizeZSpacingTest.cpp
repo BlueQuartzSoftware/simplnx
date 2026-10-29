@@ -2,8 +2,11 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -17,6 +20,8 @@
 #include "SimplnxCore/Filters/RegularizeZSpacingFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include <algorithm>
+#include <array>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -81,10 +86,76 @@ fs::path writeZBoundsFile(const std::string& fileName, const std::vector<float32
   }
   return filePath;
 }
+
+/**
+ * @brief Creates four Z slices of features and independent Feature and Ensemble data.
+ * @return Image geometry with FeatureId z + 1 at each cell (0, 0, z).
+ */
+DataStructure CreateFeatureRegularizeFixture()
+{
+  DataStructure dataStructure;
+  dataStructure.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({1, 1, 4});
+  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{4, 1, 1}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellData->getShape(), {1}, cellData->getId());
+  REQUIRE(featureIds != nullptr);
+  for(usize z = 0; z < 4; ++z)
+  {
+    (*featureIds)[z] = static_cast<int32>(z + 1);
+  }
+
+  auto* featureData = AttributeMatrix::Create(dataStructure, "Cell Feature Data", ShapeType{5}, imageGeom->getId());
+  REQUIRE(featureData != nullptr);
+  auto* numElements = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureData->getId());
+  REQUIRE(numElements != nullptr);
+  numElements->fill(1);
+  (*numElements)[0] = 0;
+  auto* neighbors = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{5}, featureData->getId());
+  REQUIRE(neighbors != nullptr);
+  neighbors->setLists({{}, {2}, {1, 3}, {2, 4}, {3}});
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", ShapeType{5}, {"Background", "One", "Two", "Three", "Four"}, featureData->getId()) != nullptr);
+
+  auto* ensembleData = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", ShapeType{2}, imageGeom->getId());
+  REQUIRE(ensembleData != nullptr);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleData->getId());
+  REQUIRE(crystalStructures != nullptr);
+  (*crystalStructures)[0] = 999;
+  (*crystalStructures)[1] = 1;
+  return dataStructure;
+}
+
+/**
+ * @brief Samples source Z slices 0 and 2 at positions 0 and 4, removing features 2 and 4.
+ * @param clear Whether to clear the destination Feature Attribute Matrix.
+ * @param renumber Stored renumber setting, effective only when clear is true.
+ * @return Explicit arguments for every parameter; preserves the source geometry.
+ */
+Arguments MakeFeatureRegularizeArgs(bool clear, bool renumber)
+{
+  Arguments args;
+  args.insert(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insert(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(writeZBoundsFile("RegularizeZSpacing_features.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F})));
+  args.insert(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(4.0F));
+  args.insert(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(DataPath({"Regularized"})));
+  args.insert(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(clear));
+  args.insert(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(renumber));
+  args.insert(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Feature Data"})));
+  args.insert(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  return args;
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure = createTestDataStructure();
 
   // Irregular Z boundaries: slices span [0,1], [1,3], [3,6], [6,10]; total Z extent = 10.
@@ -93,6 +164,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
 
   RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(newZRes));
@@ -228,6 +303,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Missing Extension", "[SimplnxC
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Exceeds Extent)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure = createTestDataStructure();
 
   const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_clamp.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
@@ -239,6 +315,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Excee
 
   RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(newZRes));
@@ -268,12 +348,17 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Excee
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure = createTestDataStructure();
 
   const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_bounds.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
 
   RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -297,6 +382,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)", "
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
+  UnitTest::LoadPlugins();
   DataStructure dataStructure = createTestDataStructure();
   RegularizeZSpacingFilter filter;
 
@@ -304,6 +390,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
   {
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_bounds.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(0.0F));
@@ -319,6 +409,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
   {
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_short.txt", {0.0F, 1.0F, 3.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -334,6 +428,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
   {
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_nonmono.txt", {0.0F, 3.0F, 1.0F, 6.0F, 10.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -350,6 +448,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     // Equal values are monotonically non-decreasing, so this reaches the extent check (-5559).
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_zeroextent.txt", {0.0F, 0.0F, 0.0F, 0.0F, 0.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -371,6 +473,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
 
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_noam.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -391,6 +497,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
 
     const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_stringarray.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
     Arguments args;
+    args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
     args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
     args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -420,6 +530,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", 
   const auto boundsFile = writeZBoundsFile("regularize_z_ooc_bounds.txt", {0, 1, 3, 6, 10});
   RegularizeZSpacingFilter filter;
   auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(boundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -454,8 +568,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", 
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RegularizeZSpacingFilter][BackwardsCompatibility]")
 {
-  auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
+  auto app = Application::GetOrCreateInstance();
   auto filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -482,14 +596,402 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility"
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<RegularizeZSpacingFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      Arguments args = pipelineFilter->getArguments();
       // Only the DataContainer name survives conversion of the legacy CellAttributeMatrixPath;
       // the filter binds to the geometry's assigned cell AttributeMatrix (see V&V report, delta 5).
       CHECK(args.value<DataPath>(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<FileSystemPathParameter::ValueType>(RegularizeZSpacingFilter::k_InputFile_Key) == fs::path("/test/z_positions.txt"));
       CHECK(args.value<float32>(RegularizeZSpacingFilter::k_NewZRes_Key) == 0.5f);
+      CHECK_FALSE(args.value<bool>(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key));
+      CHECK(args.value<bool>(RegularizeZSpacingFilter::k_RenumberFeatures_Key) == false);
+      CHECK(args.value<DataPath>(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"Cell Data", "FeatureIds"}));
+      CHECK(args.value<DataPath>(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Cell Feature Data"}));
       // Legacy had no new-geometry option; the unconverted default must stay in place.
       CHECK(args.value<bool>(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key) == true);
+
+      // Supply only the legacy inputs: a geometry with cell data and no Feature Attribute Matrix.
+      auto ds = createTestDataStructure();
+      auto* imageGeom = ds.getDataAs<ImageGeom>(k_InputGeometryPath);
+      REQUIRE(imageGeom != nullptr);
+      REQUIRE(imageGeom->rename("DataContainer"));
+      REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({"DataContainer", "Cell Feature Data"})) == nullptr);
+      args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key,
+                          std::make_any<FileSystemPathParameter::ValueType>(writeZBoundsFile("RegularizeZSpacing_legacy.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F})));
+      pipelineFilter->setArguments(args);
+      CHECK(pipeline.preflight(ds, false));
+      UnitTest::CheckArraysInheritTupleDims(ds);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF preflight", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(it != result.outputValues.end());
+  CHECK(it->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
+  CHECK(it->value.find("Image/Cell Feature Data/NeighborList") != std::string::npos);
+  CHECK(it->value.find("Image/Cell Feature Data/Names") != std::string::npos);
+  CHECK(it->value.find("Ensemble") == std::string::npos);
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
+  CHECK(filter.parametersVersion() == 2);
+  CHECK(filter.getDefaultArguments().value<bool>(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key));
+  CHECK_FALSE(filter.getDefaultArguments().value<bool>(RegularizeZSpacingFilter::k_RenumberFeatures_Key));
+  auto applyResult = result.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  const auto* am = ds.getDataAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  REQUIRE(am != nullptr);
+  CHECK(am->getShape() == ShapeType{5});
+  CHECK(am->getSize() == 0);
+  const auto* ensemble = ds.getDataAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(ensemble != nullptr);
+  REQUIRE(ensemble->getNumberOfTuples() == 2);
+  CHECK((*ensemble)[0] == 999);
+  CHECK((*ensemble)[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF preflight", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(false, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF ignores stored renumber", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  Arguments args = MakeFeatureRegularizeArgs(false, true);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "DoesNotExist"})));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto* am = ds.getDataAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  REQUIRE(am != nullptr);
+  CHECK(am->getShape() == ShapeType{5});
+  CHECK(am->getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+  CHECK(result.outputActions.warnings().empty());
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "[SimplnxCore][RegularizeZSpacingFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  const auto* imageGeom = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(imageGeom != nullptr);
+  const auto* cellData = imageGeom->getCellData();
+  REQUIRE(cellData != nullptr);
+  auto* otherData = AttributeMatrix::Create(ds, "Other Cell Data", cellData->getShape(), imageGeom->getId());
+  REQUIRE(otherData != nullptr);
+  auto* misplacedIds = UnitTest::CreateTestDataArray<int32>(ds, "MisplacedFeatureIds", otherData->getShape(), {1}, otherData->getId());
+  REQUIRE(misplacedIds != nullptr);
+  misplacedIds->fill(1);
+
+  RegularizeZSpacingFilter filter;
+  Arguments args = MakeFeatureRegularizeArgs(true, true);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Other Cell Data", "MisplacedFeatureIds"})));
+
+  SECTION("Renumber ON rejects Feature Ids in another Attribute Matrix")
+  {
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == -67433);
+    CHECK(result.outputActions.errors().front().message ==
+          "**Cell Feature Ids** DataArray 'Image/Other Cell Data/MisplacedFeatureIds' must be in the Cell Attribute Matrix 'Image/Cell Data' of the selected geometry 'Image'. "
+          "Select the DataArray from that Attribute Matrix.");
+  }
+  SECTION("Renumber OFF accepts Feature Ids in another Attribute Matrix")
+  {
+    args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  SECTION("Renumber ON accepts Feature Ids in the Cell Attribute Matrix")
+  {
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  SECTION("Renumber ON accepts another path to the same Cell Attribute Matrix")
+  {
+    auto* aliasParent = DataGroup::Create(ds, "Alias");
+    REQUIRE(aliasParent != nullptr);
+    REQUIRE(ds.setAdditionalParent(cellData->getId(), aliasParent->getId()));
+    args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Alias", "Cell Data", "FeatureIds"})));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const auto* ids = ds.getDataAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+    REQUIRE(ids != nullptr);
+    REQUIRE(ids->getNumberOfTuples() == 2);
+    CHECK((*ids)[0] == 1);
+    CHECK((*ids)[1] == 2);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber requires one Feature Id per cell", "[SimplnxCore][RegularizeZSpacingFilter][StrictFeatureIds]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRegularizeFixture();
+  auto* cellData = ds.getDataAs<AttributeMatrix>(DataPath({"Image", "Cell Data"}));
+  REQUIRE(cellData != nullptr);
+  auto resizeResult = cellData->resizeTuples({3, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  RegularizeZSpacingFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, true));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors().front().code == -67434);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber validates source Feature Id range", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRegularizeFixture();
+  auto* ids = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids != nullptr);
+  const int32 invalidId = GENERATE(-1, 5);
+  // Slice 1 is not sampled. Validation must still reject its invalid source ID.
+  (*ids)[1] = invalidId;
+  RegularizeZSpacingFilter filter;
+  auto args = MakeFeatureRegularizeArgs(true, true);
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == (invalidId < 0 ? -5355 : -5351));
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON Feature AM errors", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  // An Attribute Matrix that is not a child of "Image".
+  REQUIRE(AttributeMatrix::Create(ds, "Elsewhere", std::vector<usize>{5}) != nullptr);
+  RegularizeZSpacingFilter filter;
+
+  Arguments args = MakeFeatureRegularizeArgs(true, false);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
+  auto notChild = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
+  REQUIRE(notChild.outputActions.errors().size() == 1);
+  CHECK(notChild.outputActions.errors().front().code == -67431);
+
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data"})));
+  auto isCellAm = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.outputActions);
+  REQUIRE(isCellAm.outputActions.errors().size() == 1);
+  CHECK(isCellAm.outputActions.errors().front().code == -67432);
+
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Missing"})));
+  auto missing = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(missing.outputActions);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON accepts shared parent paths", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRegularizeFixture();
+  auto* aliases = DataGroup::Create(ds, "Aliases");
+  REQUIRE(aliases != nullptr);
+  const auto* imageGeom = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(imageGeom != nullptr);
+  const auto* featureAm = ds.getDataAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"}));
+  REQUIRE(featureAm != nullptr);
+  REQUIRE(ds.setAdditionalParent(imageGeom->getCellData()->getId(), aliases->getId()));
+  REQUIRE(ds.setAdditionalParent(featureAm->getId(), aliases->getId()));
+  const bool renumber = GENERATE(false, true);
+  auto args = MakeFeatureRegularizeArgs(true, renumber);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Aliases", "Cell Data", "FeatureIds"})));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Aliases", "Cell Feature Data"})));
+  RegularizeZSpacingFilter filter;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  CHECK(am.getSize() == 0);
+  CHECK(am.getNumberOfTuples() == (renumber ? 3 : 5));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  CHECK(ids[0] == 1);
+  CHECK(ids[1] == (renumber ? 2 : 3));
+  CHECK(featureAm->getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF execute", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  auto result = filter.execute(ds, MakeFeatureRegularizeArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  CHECK(am.getShape() == std::vector<usize>{5});
+  CHECK(am.getSize() == 0);
+  // The cell FeatureIds keep their original values (1 and 3 for source Z slices 0 and 2).
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  const std::array<int32, 2> expectedIds = {1, 3};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  // The Ensemble AM is copied unchanged.
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  // The source geometry is untouched (debugging route).
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
+  CHECK(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})).getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber ON execute", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  auto preflight = filter.preflight(ds, MakeFeatureRegularizeArgs(true, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto info = std::find_if(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
+  REQUIRE(info != preflight.outputValues.end());
+  CHECK(info->value.find("Recompute any of the following Data Arrays:\n") != std::string::npos);
+  CHECK(info->value.find("\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.") != std::string::npos);
+  auto result = filter.execute(ds, MakeFeatureRegularizeArgs(true, true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  // Features 1 and 3 remain, plus row 0.
+  CHECK(am.getShape() == std::vector<usize>{3});
+  CHECK(am.getSize() == 0);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  const std::array<int32, 2> expectedIds = {1, 2};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  const bool renumber = GENERATE(false, true);
+  CAPTURE(renumber);
+  auto result = filter.execute(ds, MakeFeatureRegularizeArgs(false, renumber));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Feature Data", "NumElements"})));
+  const auto& numElements = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Feature Data", "NumElements"}));
+  REQUIRE(numElements.getNumberOfTuples() == 5);
+  const std::array<int32, 5> expectedNumElements = {0, 1, 1, 1, 1};
+  for(usize i = 0; i < expectedNumElements.size(); ++i)
+  {
+    CHECK(numElements[i] == expectedNumElements[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
+  CHECK(am.getShape() == std::vector<usize>{5});
+  CHECK(am.getSize() == 3);
+  REQUIRE_NOTHROW(ds.getDataRefAs<NeighborList<int32>>(DataPath({"Regularized", "Cell Feature Data", "NeighborList"})));
+  const auto& neighbors = ds.getDataRefAs<NeighborList<int32>>(DataPath({"Regularized", "Cell Feature Data", "NeighborList"}));
+  const std::vector<std::vector<int32>> expectedNeighbors = {{}, {2}, {1, 3}, {2, 4}, {3}};
+  REQUIRE(neighbors.getNumberOfTuples() == expectedNeighbors.size());
+  for(usize i = 0; i < expectedNeighbors.size(); ++i)
+  {
+    CHECK(neighbors.getList(static_cast<int32>(i)) == expectedNeighbors[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<StringArray>(DataPath({"Regularized", "Cell Feature Data", "Names"})));
+  const auto& names = ds.getDataRefAs<StringArray>(DataPath({"Regularized", "Cell Feature Data", "Names"}));
+  const std::array<std::string, 5> expectedNames = {"Background", "One", "Two", "Three", "Four"};
+  REQUIRE(names.getNumberOfTuples() == expectedNames.size());
+  for(usize i = 0; i < expectedNames.size(); ++i)
+  {
+    CHECK(names[i] == expectedNames[i]);
+  }
+  // The stored renumber=true is ignored.
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  const std::array<int32, 2> expectedIds = {1, 3};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON in place", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureRegularizeFixture();
+  RegularizeZSpacingFilter filter;
+  Arguments args = MakeFeatureRegularizeArgs(true, true);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
+  const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"}));
+  CHECK(am.getSize() == 0);
+  CHECK(am.getShape() == std::vector<usize>{3});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  const auto& imageGeom = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  CHECK(imageGeom.getDimensions() == SizeVec3(1, 1, 2));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  const std::array<int32, 2> expectedIds = {1, 2};
+  for(usize i = 0; i < expectedIds.size(); ++i)
+  {
+    CHECK(ids[i] == expectedIds[i]);
+  }
+  CHECK(ds.getData(DataPath({"Regularized"})) == nullptr);
+  CHECK(ds.getData(DataPath({".Image"})) == nullptr);
+  CHECK(ds.getData(DataPath({".regularized_image_geometry"})) == nullptr);
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = ds.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE(xtal.getNumberOfTuples() == 2);
+  CHECK(xtal[0] == 999);
+  CHECK(xtal[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
