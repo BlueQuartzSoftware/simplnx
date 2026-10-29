@@ -27,6 +27,10 @@ public:
   static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
   static constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
   static constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteral k_VertexFeatureIdsPath_Key = "vertex_feature_ids_path";
+  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
