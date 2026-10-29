@@ -79,8 +79,8 @@ Parameters ReadOnScaleTableFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The OnScale table file to import. Any file extension is accepted.", fs::path(""),
-                                                          FileSystemPathParameter::ExtensionsType{".flxtbl"}, FileSystemPathParameter::PathType::InputFile, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The OnScale table file to import. The file must have the .flxtbl extension.", fs::path(""),
+                                                          FileSystemPathParameter::ExtensionsType{".flxtbl"}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Fallback Origin", "The origin for each axis that is absent from the file.", VectorFloat32Parameter::ValueType{0.0F, 0.0F, 0.0F},
                                                          VectorFloat32Parameter::NamesType{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Fallback Spacing", "The spacing for each axis that is absent from the file.",

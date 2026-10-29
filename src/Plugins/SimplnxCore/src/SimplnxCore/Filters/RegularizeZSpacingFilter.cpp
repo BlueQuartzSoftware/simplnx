@@ -79,12 +79,11 @@ Parameters RegularizeZSpacingFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  // acceptAllExtensions = true: ".txt" is only a file-dialog hint. The legacy filter treated its
-  // "*.txt" string as a GUI filter and executed on any readable file, so converted pipelines may
-  // reference .dat/.csv/extensionless files and must not fail extension validation here.
+  // These extensions are the file types the Z-positions reader accepts. Keep acceptAllExtensions off
+  // so DREAM3D-NX only offers this filter for those extensions on file drop.
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Current Z Positions File",
                                                           "Path to a whitespace-delimited text file that contains the current Z position of each slice boundary (ZPoints + 1 float values).",
-                                                          fs::path(""), FileSystemPathParameter::ExtensionsType{".txt"}, FileSystemPathParameter::PathType::InputFile, true));
+                                                          fs::path(""), FileSystemPathParameter::ExtensionsType{".txt", ".dat", ".csv"}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<Float32Parameter>(k_NewZRes_Key, "New Z Spacing", "The new, regular spacing to use along the Z axis. Must be greater than 0.", 1.0F));
 
   params.insertLinkableParameter(
