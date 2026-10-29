@@ -19,11 +19,17 @@ GridMontage::GridMontage(DataStructure& dataStructure, std::string name, IdType 
 
 GridMontage::GridMontage(const GridMontage& other)
 : AbstractMontage(other)
+, m_ColumnCount(other.m_ColumnCount)
+, m_RowCount(other.m_RowCount)
+, m_DepthCount(other.m_DepthCount)
 {
 }
 
 GridMontage::GridMontage(GridMontage&& other)
 : AbstractMontage(std::move(other))
+, m_ColumnCount(other.m_ColumnCount)
+, m_RowCount(other.m_RowCount)
+, m_DepthCount(other.m_DepthCount)
 {
 }
 
