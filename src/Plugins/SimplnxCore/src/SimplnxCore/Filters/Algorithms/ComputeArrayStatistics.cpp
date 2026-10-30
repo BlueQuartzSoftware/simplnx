@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ChunkAlignedTransfer.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -15,11 +16,18 @@
 
 #include <nonstd/span.hpp>
 
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/enumerable_thread_specific.h>
+#endif
+
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <cmath>
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -1233,10 +1241,14 @@ struct ComputeArrayStatisticsByFeatureFunctor
     algorithm.resetProgress(numFeatures * (data.getNumberOfTuples() * tuplePasses + 1));
     if(CheckArraysInMemory(indexAlgArrays))
     {
+#ifdef SIMPLNX_ENABLE_MULTICORE
       const tbb::simple_partitioner simplePartitioner;
       const usize grainSize = 500;
       tbb::blocked_range<usize> tbbRange(0, numFeatures, grainSize);
       tbb::parallel_for(tbbRange, std::move(classToExecute), simplePartitioner);
+#else
+      classToExecute(Range(0, numFeatures));
+#endif
     }
     else
     {
@@ -1834,6 +1846,1162 @@ Result<> writeStatisticsOutput(DataArray<T>* outputArray, const T* values, usize
 }
 
 /**
+ * @brief Rewrites each byte of a bool buffer to 0 or 1.
+ * @param buffer Bool objects that can hold any byte.
+ *
+ * A store can move bool values as raw bytes. A file from h5py, MATLAB, or a legacy writer can then supply bytes
+ * such as 255. Reading a bool object that holds such a byte is undefined behavior. In an optimized build the byte
+ * can index past a two-counter histogram or add a mask weight of 255. The bytes are read and written through
+ * unsigned char, which is defined for any object representation.
+ */
+void canonicalizeBoolBytes(nonstd::span<bool> buffer)
+{
+  static_assert(sizeof(bool) == 1, "Bool canonicalization rewrites one byte for each bool object.");
+  auto* bytes = reinterpret_cast<unsigned char*>(buffer.data());
+  for(usize index = 0; index < buffer.size(); ++index)
+  {
+    bytes[index] = static_cast<unsigned char>(bytes[index] != 0);
+  }
+}
+
+/**
+ * @brief Bulk-reads one tuple range and names the array and range in any error.
+ * @tparam U Store value type.
+ * @param store Source store.
+ * @param offset First tuple.
+ * @param buffer Destination with one value for each tuple.
+ * @param arrayPath Array path for diagnostics.
+ * @return Bulk-read result.
+ *
+ * Every value and mask page of the scanline statistics is filled here. A bool buffer is canonicalized after a
+ * successful read, so every nonzero byte is one true value for all engines that read the page.
+ */
+template <typename U>
+Result<> readStatisticsTuples(const AbstractDataStore<U>& store, usize offset, nonstd::span<U> buffer, const DataPath& arrayPath)
+{
+  Result<> result = store.copyIntoBuffer(offset, buffer);
+  if(result.invalid())
+  {
+    for(auto& error : result.errors())
+    {
+      error.message = fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", arrayPath.toString(), offset, offset + buffer.size(), error.message);
+    }
+    return result;
+  }
+  if constexpr(std::is_same_v<U, bool>)
+  {
+    canonicalizeBoolBytes(buffer);
+  }
+  return result;
+}
+
+/**
+ * @brief Writes one output only when its statistic is requested.
+ * @tparam U Output value type.
+ * @param dataStructure Owns the output array.
+ * @param isRequested True when the filter requests this statistic.
+ * @param path Output array path.
+ * @param values Source values.
+ * @param count Number of values.
+ * @return Validation or bulk-write result.
+ */
+template <typename U>
+Result<> writeRequestedStatisticsOutput(DataStructure& dataStructure, bool isRequested, const DataPath& path, const U* values, usize count)
+{
+  if(!isRequested)
+  {
+    return {};
+  }
+  return writeStatisticsOutput(dataStructure.getDataAs<DataArray<U>>(path), values, count, path);
+}
+
+/**
+ * @struct ScalarStatisticsValues
+ * @brief Borrows the per-group scalar results that the bounded implementations write.
+ * @tparam T Input and extrema value type.
+ */
+template <typename T>
+struct ScalarStatisticsValues
+{
+  usize GroupCount = 0;                        // Number of values in each result array.
+  const uint64* Lengths = nullptr;             // Selected-value counts.
+  const T* Minimums = nullptr;                 // Minimum values.
+  const T* Maximums = nullptr;                 // Maximum values.
+  const float32* Means = nullptr;              // Means.
+  const float32* Medians = nullptr;            // Medians.
+  const float32* StandardDeviations = nullptr; // Population standard deviations.
+  const float32* Summations = nullptr;         // Sums.
+  const int32* UniqueCounts = nullptr;         // Unique-value counts.
+};
+
+/**
+ * @brief Bulk-writes the requested scalar outputs in a fixed order.
+ * @tparam T Input and extrema value type.
+ * @param dataStructure Owns the output arrays.
+ * @param inputValues Selected statistics and output paths.
+ * @param values Results for every output group.
+ * @param shouldCancel Checked before each output write.
+ * @return First validation or bulk-write error; cancellation returns a valid result and leaves later outputs unwritten.
+ */
+template <typename T>
+Result<> writeScalarStatisticsOutputs(DataStructure& dataStructure, const ComputeArrayStatisticsInputValues& inputValues, const ScalarStatisticsValues<T>& values, const std::atomic_bool& shouldCancel)
+{
+  const usize count = values.GroupCount;
+  const std::array<std::function<Result<>()>, 8> writes = {
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindLength, inputValues.LengthArrayName, values.Lengths, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindMin, inputValues.MinimumArrayName, values.Minimums, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindMax, inputValues.MaximumArrayName, values.Maximums, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindMean, inputValues.MeanArrayName, values.Means, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindMedian, inputValues.MedianArrayName, values.Medians, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindStdDeviation, inputValues.StdDeviationArrayName, values.StandardDeviations, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindSummation, inputValues.SummationArrayName, values.Summations, count); },
+      [&]() { return writeRequestedStatisticsOutput(dataStructure, inputValues.FindNumUniqueValues, inputValues.NumUniqueValuesName, values.UniqueCounts, count); },
+  };
+  for(const auto& write : writes)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    Result<> writeResult = write();
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
+  }
+  return {};
+}
+
+/**
+ * @brief Removes existing Mode entries and sizes the Mode output to the output groups.
+ * @tparam T Input value type.
+ * @param modeArray Mode output.
+ * @param groupCount Number of output groups.
+ * @param modePath Mode output path for diagnostics.
+ * @return Resize or storage error.
+ */
+template <typename T>
+Result<> resetModeOutput(NeighborList<T>& modeArray, usize groupCount, const DataPath& modePath)
+{
+  try
+  {
+    modeArray.clearAllLists();
+    Result<> resizeResult = modeArray.resizeTuples({groupCount});
+    if(resizeResult.invalid())
+    {
+      for(auto& error : resizeResult.errors())
+      {
+        error.message = fmt::format("ComputeArrayStatistics: could not resize Mode output '{}' to {} tuples: {}", modePath.toString(), groupCount, error.message);
+      }
+    }
+    return resizeResult;
+  } catch(const std::exception& exception)
+  {
+    return MakeErrorResult(-57309, fmt::format("ComputeArrayStatistics: could not initialize Mode output '{}': {}", modePath.toString(), exception.what()));
+  }
+}
+
+/**
+ * @brief Appends one Mode value to one output group.
+ * @tparam T Input value type.
+ * @param modeArray Mode output.
+ * @param group Output group.
+ * @param value Mode value.
+ * @param modePath Mode output path for diagnostics.
+ * @return Storage error.
+ */
+template <typename T>
+Result<> appendModeValue(NeighborList<T>& modeArray, usize group, const T& value, const DataPath& modePath)
+{
+  try
+  {
+    modeArray.addEntry(static_cast<int32>(group), value);
+  } catch(const std::exception& exception)
+  {
+    return MakeErrorResult(-57314, fmt::format("ComputeArrayStatistics: could not append a Mode value to output group {} in '{}': {}", group, modePath.toString(), exception.what()));
+  }
+  return {};
+}
+
+// A page of this size lets one bulk read inflate many chunks of an out-of-core store in parallel.
+constexpr usize k_ScanPageBytes = 32ULL * 1024ULL * 1024ULL;
+// A block is the unit of parallel work. Blocks lie on a global tuple grid, so ordered merges do not depend on the page size.
+constexpr usize k_ScanBlockBytes = 1024ULL * 1024ULL;
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+std::atomic<usize> g_ScanPageBytesOverride{0};   // Test page byte budget; 0 selects the production size.
+std::atomic<usize> g_ScanBlockTuplesOverride{0}; // Test block tuple count; 0 selects the production size.
+std::atomic<usize> g_HistogramPages{0};          // Parallel histogram page dispatches.
+std::atomic<usize> g_MomentPages{0};             // Parallel count, extrema, and sum page dispatches.
+std::atomic<usize> g_DeviationPages{0};          // Parallel squared-difference page dispatches.
+std::atomic<usize> g_StandardizePages{0};        // Parallel standardization page dispatches.
+#endif
+
+/**
+ * @enum ScanPageKind
+ * @brief Names the work of one parallel page dispatch.
+ */
+enum class ScanPageKind : uint8
+{
+  Histogram,
+  Moment,
+  Deviation,
+  Standardize
+};
+
+/**
+ * @brief Returns the page byte budget.
+ * @return Budget over every buffer that one page reads or writes.
+ */
+usize scanPageBytes()
+{
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  if(const usize pageBytes = g_ScanPageBytesOverride.load(std::memory_order_relaxed); pageBytes != 0)
+  {
+    return pageBytes;
+  }
+#endif
+  return k_ScanPageBytes;
+}
+
+/**
+ * @brief Returns the tuples in one parallel block.
+ * @tparam T Input value type.
+ * @return Block size in tuples of T, so it does not depend on the presence of a mask.
+ */
+template <typename T>
+usize scanBlockTuples()
+{
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  if(const usize blockTuples = g_ScanBlockTuplesOverride.load(std::memory_order_relaxed); blockTuples != 0)
+  {
+    return blockTuples;
+  }
+#endif
+  return k_ScanBlockBytes / sizeof(T);
+}
+
+/**
+ * @struct ReductionPagePlan
+ * @brief Page and block sizes of one reduction pass.
+ *
+ * PageTuples is a whole multiple of BlockTuples, and every page starts at a multiple of PageTuples. Thus global
+ * block b always covers tuples [b * BlockTuples, (b + 1) * BlockTuples). The page size has no effect on it.
+ */
+struct ReductionPagePlan
+{
+  usize BlockTuples = 1; // Tuples in one block.
+  usize PageTuples = 1;  // Tuples in one page.
+};
+
+/**
+ * @brief Plans the pages of a reduction pass.
+ * @tparam T Input value type.
+ * @param bytesPerTuple Bytes that one tuple occupies in every page buffer.
+ * @return Plan whose page holds at least one block.
+ */
+template <typename T>
+ReductionPagePlan planReductionPages(usize bytesPerTuple)
+{
+  const usize blockTuples = scanBlockTuples<T>();
+  const usize budgetTuples = scanPageBytes() / bytesPerTuple;
+  return {blockTuples, std::max(blockTuples, (budgetTuples / blockTuples) * blockTuples)};
+}
+
+/**
+ * @brief Runs one function for each block of one resident page on all cores.
+ * @tparam BlockFunction Callable that accepts a block index of the page.
+ * @param blockCount Blocks in the page.
+ * @param kind Work type for the test witness.
+ * @param shouldCancel Checked before each block; a cancelled page leaves the remaining blocks unprocessed.
+ * @param blockFunction Reduces or transforms one block of caller-owned buffers.
+ *
+ * The workers touch only resident buffers that the caller owns. Store I/O stays on the calling thread. Thus the
+ * parallel loop does not depend on the store type, and the parallel algorithm receives no store.
+ */
+template <typename BlockFunction>
+void runPageBlocks(usize blockCount, ScanPageKind kind, const std::atomic_bool& shouldCancel, const BlockFunction& blockFunction)
+{
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  switch(kind)
+  {
+  case ScanPageKind::Histogram:
+    g_HistogramPages.fetch_add(1, std::memory_order_relaxed);
+    break;
+  case ScanPageKind::Moment:
+    g_MomentPages.fetch_add(1, std::memory_order_relaxed);
+    break;
+  case ScanPageKind::Deviation:
+    g_DeviationPages.fetch_add(1, std::memory_order_relaxed);
+    break;
+  case ScanPageKind::Standardize:
+    g_StandardizePages.fetch_add(1, std::memory_order_relaxed);
+    break;
+  }
+#else
+  (void)kind;
+#endif
+  ParallelDataAlgorithm algorithm;
+  algorithm.setRange(0, blockCount);
+  algorithm.execute([&](const Range& range) {
+    for(usize blockIndex = range.min(); blockIndex < range.max(); ++blockIndex)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      blockFunction(blockIndex);
+    }
+  });
+}
+
+/**
+ * @class StatisticsPageReader
+ * @brief Owns the value and mask page buffers of one whole-array scan and fills them with serial bulk reads.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ */
+template <typename T, typename MaskT>
+class StatisticsPageReader
+{
+public:
+  /**
+   * @brief Allocates page buffers.
+   * @param valueStore Input values.
+   * @param maskStore Optional mask.
+   * @param inputValues Supplies array paths for diagnostics.
+   * @param capacityTuples Largest page.
+   * @pre Every argument outlives the reader.
+   */
+  StatisticsPageReader(const AbstractDataStore<T>& valueStore, const AbstractDataStore<MaskT>* maskStore, const ComputeArrayStatisticsInputValues& inputValues, usize capacityTuples)
+  : m_ValueStore(valueStore)
+  , m_MaskStore(maskStore)
+  , m_InputValues(inputValues)
+  , m_Values(std::make_unique_for_overwrite<T[]>(capacityTuples))
+  , m_Mask(maskStore == nullptr ? nullptr : std::make_unique_for_overwrite<MaskT[]>(capacityTuples))
+  {
+  }
+
+  /**
+   * @brief Reads values, then the mask, for one tuple range.
+   * @param offset First tuple.
+   * @param count Tuples to read; at most the capacity.
+   * @return First bulk-read error.
+   *
+   * readStatisticsTuples() canonicalizes a bool value or mask page, so every byte of it is 0 or 1.
+   */
+  Result<> read(usize offset, usize count)
+  {
+    Result<> result = readStatisticsTuples(m_ValueStore, offset, nonstd::span<T>(m_Values.get(), count), m_InputValues.SelectedArrayPath);
+    if(result.invalid() || m_MaskStore == nullptr)
+    {
+      return result;
+    }
+    return readStatisticsTuples(*m_MaskStore, offset, nonstd::span<MaskT>(m_Mask.get(), count), m_InputValues.MaskArrayPath);
+  }
+
+  /**
+   * @brief Returns the value page.
+   * @return Values of the last read.
+   */
+  const T* values() const
+  {
+    return m_Values.get();
+  }
+
+  /**
+   * @brief Returns the mask page.
+   * @return Mask of the last read, or nullptr when every tuple is selected.
+   */
+  const MaskT* mask() const
+  {
+    return m_Mask.get();
+  }
+
+private:
+  const AbstractDataStore<T>& m_ValueStore;
+  const AbstractDataStore<MaskT>* m_MaskStore = nullptr;
+  const ComputeArrayStatisticsInputValues& m_InputValues;
+  std::unique_ptr<T[]> m_Values;
+  std::unique_ptr<MaskT[]> m_Mask;
+};
+
+/**
+ * @brief Returns the bytes that one tuple occupies in the value and mask page buffers.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ * @param maskStore Optional mask.
+ * @return Value bytes plus mask bytes of one tuple.
+ */
+template <typename T, typename MaskT>
+usize valueAndMaskTupleBytes(const AbstractDataStore<MaskT>* maskStore)
+{
+  return sizeof(T) + (maskStore == nullptr ? 0 : sizeof(MaskT));
+}
+
+/**
+ * @brief Tells if one page tuple is selected.
+ * @tparam MaskT Mask value type.
+ * @param mask Mask page, or nullptr when every tuple is selected.
+ * @param index Tuple index in the page.
+ * @return True when the tuple takes part in the statistics.
+ */
+template <typename MaskT>
+bool isSelected(const MaskT* mask, usize index)
+{
+  return mask == nullptr || static_cast<bool>(mask[index]);
+}
+
+/**
+ * @struct WholeArrayStatistics
+ * @brief Results of one ungrouped bounded scan.
+ * @tparam T Input and extrema value type.
+ */
+template <typename T>
+struct WholeArrayStatistics
+{
+  uint64 Length = 0;                // Selected values.
+  T Minimum = {};                   // Minimum; T{} for an empty selection.
+  T Maximum = {};                   // Maximum; T{} for an empty selection.
+  float32 Summation = 0.0F;         // Float32 cast of the exact or Float64 sum.
+  float32 Mean = 0.0F;              // Summation divided by the Float32 length.
+  float32 Median = 0.0F;            // Median; computed by the histogram engine only.
+  float32 StandardDeviation = 0.0F; // Population deviation; computed only when requested.
+  int32 UniqueCount = 0;            // Unique values; computed by the histogram engine only.
+  std::vector<T> Modes;             // Values with the largest count in ascending order; histogram engine only.
+};
+
+/**
+ * @brief Tells if the one-pass histogram engine covers a value type.
+ * @tparam T Input value type.
+ *
+ * A histogram of Boolean or 8/16-bit values has at most 65536 counters. It gives every whole-array statistic
+ * exactly, including median, mode, and unique counts.
+ */
+template <typename T>
+constexpr bool k_UsesHistogramEngine = std::is_same_v<T, bool> || (std::is_integral_v<T> && sizeof(T) <= 2);
+
+/**
+ * @brief Number of histogram counters: one for each representable value.
+ * @tparam T Boolean or 8/16-bit input type.
+ */
+template <typename T>
+constexpr usize k_HistogramBins = std::is_same_v<T, bool> ? 2 : (usize{1} << (8 * sizeof(T)));
+
+/**
+ * @brief Maps a value to its counter.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @param value Input value.
+ * @return Counter index. Ascending counters are ascending values, also for signed types.
+ */
+template <typename T>
+usize histogramBin(T value)
+{
+  return static_cast<usize>(static_cast<int32>(value) - static_cast<int32>(std::numeric_limits<T>::min()));
+}
+
+/**
+ * @brief Maps a counter back to its value.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @param bin Counter index.
+ * @return Value that the counter counts.
+ */
+template <typename T>
+T histogramValue(usize bin)
+{
+  return static_cast<T>(static_cast<int32>(bin) + static_cast<int32>(std::numeric_limits<T>::min()));
+}
+
+/**
+ * @brief Largest histogram that countBlockValues() counts in a stack-local array: 2 KiB of counters.
+ */
+constexpr usize k_MaxStackHistogramBins = 256;
+
+/**
+ * @brief Adds the selected values of one block to counters.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @tparam MaskT Mask value type.
+ * @param values Block values.
+ * @param mask Block mask, or nullptr when every tuple is selected.
+ * @param count Tuples in the block.
+ * @param histogram Counters that only the calling thread uses.
+ */
+template <typename T, typename MaskT>
+void addBlockValues(const T* values, const MaskT* mask, usize count, uint64* histogram)
+{
+  if(mask == nullptr)
+  {
+    for(usize index = 0; index < count; ++index)
+    {
+      ++histogram[histogramBin(values[index])];
+    }
+    return;
+  }
+  // Adding the selection flag keeps the loop free of a data-dependent branch.
+  for(usize index = 0; index < count; ++index)
+  {
+    histogram[histogramBin(values[index])] += static_cast<uint64>(static_cast<bool>(mask[index]));
+  }
+}
+
+/**
+ * @brief Adds the selected values of one block to the histogram of the calling thread.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @tparam MaskT Mask value type.
+ * @param values Block values.
+ * @param mask Block mask, or nullptr when every tuple is selected.
+ * @param count Tuples in the block.
+ * @param histogram Counters of the calling thread.
+ *
+ * The small histograms of Boolean and 8-bit input of different threads can share a cache line. Thus a histogram
+ * of at most k_MaxStackHistogramBins counters counts the block in a stack-local array and adds it to the thread's
+ * counters once. Integer counts commute, so the result does not change.
+ */
+template <typename T, typename MaskT>
+void countBlockValues(const T* values, const MaskT* mask, usize count, uint64* histogram)
+{
+  if constexpr(k_HistogramBins<T> <= k_MaxStackHistogramBins)
+  {
+    std::array<uint64, k_HistogramBins<T>> blockHistogram = {};
+    addBlockValues(values, mask, count, blockHistogram.data());
+    for(usize bin = 0; bin < blockHistogram.size(); ++bin)
+    {
+      histogram[bin] += blockHistogram[bin];
+    }
+  }
+  else
+  {
+    addBlockValues(values, mask, count, histogram);
+  }
+}
+
+/**
+ * @class ThreadHistograms
+ * @brief One histogram for each thread that takes part in a scan.
+ * @tparam T Input value type.
+ *
+ * The histograms live for the whole scan and are merged once at the end. Integer counts commute, so the merged
+ * result does not depend on which thread counted which block. For 16-bit input each participating thread holds
+ * 512 KiB of counters. This scratch memory is outside the cache budget, like the page buffers.
+ */
+template <typename T>
+class ThreadHistograms
+{
+public:
+  /**
+   * @brief Prepares one zeroed histogram for each thread that asks for one.
+   */
+  ThreadHistograms()
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  : m_Histograms([]() { return std::vector<uint64>(k_HistogramBins<T>, 0); })
+#else
+  : m_Histogram(k_HistogramBins<T>, 0)
+#endif
+  {
+  }
+
+  /**
+   * @brief Returns the counters of the calling thread.
+   * @return First counter; the calling thread is the only user of these counters.
+   */
+  uint64* local()
+  {
+#ifdef SIMPLNX_ENABLE_MULTICORE
+    return m_Histograms.local().data();
+#else
+    return m_Histogram.data();
+#endif
+  }
+
+  /**
+   * @brief Returns the sum of every thread's counters.
+   * @return Merged counters.
+   * @pre No worker uses the histograms.
+   */
+  std::vector<uint64> merge()
+  {
+#ifdef SIMPLNX_ENABLE_MULTICORE
+    std::vector<uint64> merged(k_HistogramBins<T>, 0);
+    m_Histograms.combine_each([&merged](const std::vector<uint64>& histogram) {
+      for(usize bin = 0; bin < merged.size(); ++bin)
+      {
+        merged[bin] += histogram[bin];
+      }
+    });
+    return merged;
+#else
+    return m_Histogram;
+#endif
+  }
+
+private:
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  tbb::enumerable_thread_specific<std::vector<uint64>> m_Histograms;
+#else
+  std::vector<uint64> m_Histogram;
+#endif
+};
+
+/**
+ * @brief Derives every whole-array statistic from a merged value histogram.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @param histogram Count of each value.
+ * @param findStdDeviation True when the deviation is requested.
+ * @return Statistics that equal the element-order bounded formulas.
+ *
+ * Length, extrema, sum, mean, median, modes, and unique count are exact. The deviation uses the element-order
+ * expression Float64(value - mean) for each value and weights its square by the count. Thus only the order of the
+ * Float64 summation differs, and the result equals the element-order result within summation rounding.
+ */
+template <typename T>
+WholeArrayStatistics<T> summarizeHistogram(const std::vector<uint64>& histogram, bool findStdDeviation)
+{
+  using GlobalSumType = std::conditional_t<std::is_signed_v<T>, int64, uint64>;
+  WholeArrayStatistics<T> statistics;
+  // Unsigned accumulation wraps in a defined way; the cast back gives the signed sum.
+  uint64 sumBits = 0;
+  uint64 maximumCount = 0;
+  std::optional<usize> firstBin;
+  usize lastBin = 0;
+  for(usize bin = 0; bin < histogram.size(); ++bin)
+  {
+    const uint64 count = histogram[bin];
+    if(count == 0)
+    {
+      continue;
+    }
+    if(!firstBin.has_value())
+    {
+      firstBin = bin;
+    }
+    lastBin = bin;
+    statistics.Length += count;
+    sumBits += static_cast<uint64>(static_cast<int64>(histogramValue<T>(bin))) * count;
+    maximumCount = std::max(maximumCount, count);
+    ++statistics.UniqueCount;
+  }
+  if(!firstBin.has_value())
+  {
+    return statistics;
+  }
+  statistics.Minimum = histogramValue<T>(*firstBin);
+  statistics.Maximum = histogramValue<T>(lastBin);
+  statistics.Summation = static_cast<float32>(static_cast<GlobalSumType>(sumBits));
+  statistics.Mean = statistics.Summation / static_cast<float32>(statistics.Length);
+
+  const uint64 lowerPosition = (statistics.Length - 1) / 2;
+  const uint64 upperPosition = statistics.Length / 2;
+  T medianLower = {};
+  T medianUpper = {};
+  float64 sumOfDifferences = 0.0;
+  uint64 runPosition = 0;
+  for(usize bin = *firstBin; bin <= lastBin; ++bin)
+  {
+    const uint64 count = histogram[bin];
+    if(count == 0)
+    {
+      continue;
+    }
+    const T value = histogramValue<T>(bin);
+    const uint64 runEnd = runPosition + count;
+    if(runPosition <= lowerPosition && lowerPosition < runEnd)
+    {
+      medianLower = value;
+    }
+    if(runPosition <= upperPosition && upperPosition < runEnd)
+    {
+      medianUpper = value;
+    }
+    runPosition = runEnd;
+    if(count == maximumCount)
+    {
+      statistics.Modes.push_back(value);
+    }
+    if(findStdDeviation)
+    {
+      const float64 difference = static_cast<float64>(value - statistics.Mean);
+      sumOfDifferences += static_cast<float64>(count) * (difference * difference);
+    }
+  }
+  statistics.Median = statistics.Length % 2 == 1 ? static_cast<float32>(medianUpper) : static_cast<float32>((medianLower + medianUpper) * 0.5F);
+  if(findStdDeviation)
+  {
+    statistics.StandardDeviation = static_cast<float32>(std::sqrt(sumOfDifferences / static_cast<float64>(statistics.Length)));
+  }
+  return statistics;
+}
+
+/**
+ * @brief Computes whole-array statistics of Boolean or 8/16-bit input in one bounded pass.
+ * @tparam T Boolean or 8/16-bit input type.
+ * @tparam MaskT Mask value type.
+ * @param inputStore Input values.
+ * @param maskStore Optional mask.
+ * @param inputValues Selected statistics and array paths.
+ * @param shouldCancel Checked between pages and before each block.
+ * @return Bulk-read error, or statistics; after cancellation the statistics are incomplete.
+ */
+template <typename T, typename MaskT>
+Result<WholeArrayStatistics<T>> computeHistogramStatistics(const AbstractDataStore<T>& inputStore, const AbstractDataStore<MaskT>* maskStore, const ComputeArrayStatisticsInputValues& inputValues,
+                                                           const std::atomic_bool& shouldCancel)
+{
+  const usize tupleCount = inputStore.getNumberOfTuples();
+  const ReductionPagePlan plan = planReductionPages<T>(valueAndMaskTupleBytes<T>(maskStore));
+  StatisticsPageReader<T, MaskT> reader(inputStore, maskStore, inputValues, std::min(plan.PageTuples, tupleCount));
+  ThreadHistograms<T> histograms;
+  for(usize offset = 0; offset < tupleCount; offset += plan.PageTuples)
+  {
+    if(shouldCancel)
+    {
+      return {WholeArrayStatistics<T>{}};
+    }
+    const usize count = std::min(plan.PageTuples, tupleCount - offset);
+    Result<> readResult = reader.read(offset, count);
+    if(readResult.invalid())
+    {
+      return ConvertInvalidResult<WholeArrayStatistics<T>>(std::move(readResult));
+    }
+    if(shouldCancel)
+    {
+      return {WholeArrayStatistics<T>{}};
+    }
+    const usize blockCount = (count + plan.BlockTuples - 1) / plan.BlockTuples;
+    runPageBlocks(blockCount, ScanPageKind::Histogram, shouldCancel, [&](usize blockIndex) {
+      const usize blockStart = blockIndex * plan.BlockTuples;
+      const MaskT* mask = reader.mask();
+      countBlockValues(reader.values() + blockStart, mask == nullptr ? nullptr : mask + blockStart, std::min(plan.BlockTuples, count - blockStart), histograms.local());
+    });
+  }
+  if(shouldCancel)
+  {
+    return {WholeArrayStatistics<T>{}};
+  }
+  return {summarizeHistogram<T>(histograms.merge(), inputValues.FindStdDeviation)};
+}
+
+/**
+ * @brief Accumulator type of block sums.
+ * @tparam T Input value type.
+ *
+ * Integer inputs sum in UInt64, so wraparound is defined in any order. Floating-point inputs sum in Float64.
+ */
+template <typename T>
+using MomentSumType = std::conditional_t<std::is_integral_v<T>, uint64, float64>;
+
+/**
+ * @struct BlockMoments
+ * @brief Count, extrema, and sum of the selected values of one block.
+ * @tparam T Input value type.
+ *
+ * Extrema start at the max() and lowest() sentinels and change only on a strict comparison. Thus NaN never
+ * becomes an extremum, and the first of equal values (for example -0 before +0) is kept.
+ */
+template <typename T>
+struct BlockMoments
+{
+  uint64 Count = 0;                             // Selected values.
+  T Minimum = std::numeric_limits<T>::max();    // Minimum or sentinel.
+  T Maximum = std::numeric_limits<T>::lowest(); // Maximum or sentinel.
+  MomentSumType<T> Sum = 0;                     // Sum; NaN propagates.
+};
+
+/**
+ * @brief Reduces the selected values of one block to count, extrema, and sum.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ * @param values Block values.
+ * @param mask Block mask, or nullptr when every tuple is selected.
+ * @param count Tuples in the block.
+ * @return Block partial.
+ */
+template <typename T, typename MaskT>
+BlockMoments<T> reduceBlockMoments(const T* values, const MaskT* mask, usize count)
+{
+  BlockMoments<T> moments;
+  for(usize index = 0; index < count; ++index)
+  {
+    if(!isSelected(mask, index))
+    {
+      continue;
+    }
+    const T value = values[index];
+    ++moments.Count;
+    if(value < moments.Minimum)
+    {
+      moments.Minimum = value;
+    }
+    if(value > moments.Maximum)
+    {
+      moments.Maximum = value;
+    }
+    moments.Sum += static_cast<MomentSumType<T>>(value);
+  }
+  return moments;
+}
+
+/**
+ * @brief Merges one block into the running total.
+ * @tparam T Input value type.
+ * @param total Running total of all earlier blocks.
+ * @param block Next block in ascending block order.
+ *
+ * The strict comparisons make the merged extrema equal to one element-order scan. An empty block is skipped.
+ */
+template <typename T>
+void mergeBlockMoments(BlockMoments<T>& total, const BlockMoments<T>& block)
+{
+  if(block.Count == 0)
+  {
+    return;
+  }
+  total.Count += block.Count;
+  if(block.Minimum < total.Minimum)
+  {
+    total.Minimum = block.Minimum;
+  }
+  if(block.Maximum > total.Maximum)
+  {
+    total.Maximum = block.Maximum;
+  }
+  total.Sum += block.Sum;
+}
+
+/**
+ * @struct BlockDeviation
+ * @brief Selected-value count and Float64 sum of squared differences from the mean of one block.
+ */
+struct BlockDeviation
+{
+  uint64 Count = 0;           // Selected values.
+  float64 SumOfSquares = 0.0; // Sum of Float64(value - mean) squared.
+};
+
+/**
+ * @brief Sums the squared differences of the selected values of one block from the mean.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ * @param values Block values.
+ * @param mask Block mask, or nullptr when every tuple is selected.
+ * @param count Tuples in the block.
+ * @param mean Whole-array Float32 mean.
+ * @return Block partial.
+ *
+ * The difference uses the element-order expression. The subtraction is in the promoted type of T and Float32,
+ * and only its result converts to Float64.
+ */
+template <typename T, typename MaskT>
+BlockDeviation reduceBlockDeviation(const T* values, const MaskT* mask, usize count, float32 mean)
+{
+  BlockDeviation deviation;
+  for(usize index = 0; index < count; ++index)
+  {
+    if(!isSelected(mask, index))
+    {
+      continue;
+    }
+    const float64 difference = static_cast<float64>(values[index] - mean);
+    deviation.SumOfSquares += difference * difference;
+    ++deviation.Count;
+  }
+  return deviation;
+}
+
+/**
+ * @brief Computes whole-array count, extrema, sum, mean, and optional deviation of any numeric input in two passes.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ * @param inputStore Input values.
+ * @param maskStore Optional mask.
+ * @param inputValues Selected statistics and array paths.
+ * @param shouldCancel Checked between pages and before each block.
+ * @return Bulk-read error, or statistics without median, modes, and unique count; after cancellation the statistics
+ * are incomplete.
+ *
+ * Each pass reduces fixed blocks into per-block slots on all cores, then merges the slots in block order on the
+ * calling thread. The merge order depends only on the global block grid, so the result is the same for every
+ * thread count and page size. Integer sums are exact. The mean and the per-element deviation expression are the
+ * element-order formulas; only Float64 sums regroup by block.
+ */
+template <typename T, typename MaskT>
+Result<WholeArrayStatistics<T>> computeMomentStatistics(const AbstractDataStore<T>& inputStore, const AbstractDataStore<MaskT>* maskStore, const ComputeArrayStatisticsInputValues& inputValues,
+                                                        const std::atomic_bool& shouldCancel)
+{
+  using GlobalSumType = std::conditional_t<std::is_integral_v<T>, std::conditional_t<std::is_signed_v<T>, int64, uint64>, float64>;
+  const usize tupleCount = inputStore.getNumberOfTuples();
+  const ReductionPagePlan plan = planReductionPages<T>(valueAndMaskTupleBytes<T>(maskStore));
+  const usize capacityTuples = std::min(plan.PageTuples, tupleCount);
+  StatisticsPageReader<T, MaskT> reader(inputStore, maskStore, inputValues, capacityTuples);
+  const usize maximumBlocks = (capacityTuples + plan.BlockTuples - 1) / plan.BlockTuples;
+
+  // Reads every page, reduces its blocks into slots in parallel, then merges the slots in block order.
+  const auto scanPages = [&](ScanPageKind kind, auto& slots, const auto& reduceBlock, const auto& mergeSlot) -> Result<> {
+    for(usize offset = 0; offset < tupleCount; offset += plan.PageTuples)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+      const usize count = std::min(plan.PageTuples, tupleCount - offset);
+      Result<> readResult = reader.read(offset, count);
+      if(readResult.invalid())
+      {
+        return readResult;
+      }
+      if(shouldCancel)
+      {
+        return {};
+      }
+      const usize blockCount = (count + plan.BlockTuples - 1) / plan.BlockTuples;
+      runPageBlocks(blockCount, kind, shouldCancel, [&](usize blockIndex) {
+        const usize blockStart = blockIndex * plan.BlockTuples;
+        const MaskT* mask = reader.mask();
+        slots[blockIndex] = reduceBlock(reader.values() + blockStart, mask == nullptr ? nullptr : mask + blockStart, std::min(plan.BlockTuples, count - blockStart));
+      });
+      if(shouldCancel)
+      {
+        return {};
+      }
+      for(usize blockIndex = 0; blockIndex < blockCount; ++blockIndex)
+      {
+        mergeSlot(slots[blockIndex]);
+      }
+    }
+    return {};
+  };
+
+  WholeArrayStatistics<T> statistics;
+  BlockMoments<T> total;
+  {
+    std::vector<BlockMoments<T>> slots(maximumBlocks);
+    Result<> passResult = scanPages(
+        ScanPageKind::Moment, slots, [](const T* values, const MaskT* mask, usize count) { return reduceBlockMoments(values, mask, count); },
+        [&total](const BlockMoments<T>& block) { mergeBlockMoments(total, block); });
+    if(passResult.invalid())
+    {
+      return ConvertInvalidResult<WholeArrayStatistics<T>>(std::move(passResult));
+    }
+    if(shouldCancel)
+    {
+      return {statistics};
+    }
+  }
+  statistics.Length = total.Count;
+  if(statistics.Length == 0)
+  {
+    return {statistics};
+  }
+  statistics.Minimum = total.Minimum;
+  statistics.Maximum = total.Maximum;
+  statistics.Summation = static_cast<float32>(static_cast<GlobalSumType>(total.Sum));
+  statistics.Mean = statistics.Summation / static_cast<float32>(statistics.Length);
+
+  if(inputValues.FindStdDeviation)
+  {
+    float64 sumOfDifferences = 0.0;
+    std::vector<BlockDeviation> slots(maximumBlocks);
+    const float32 mean = statistics.Mean;
+    Result<> passResult = scanPages(
+        ScanPageKind::Deviation, slots, [mean](const T* values, const MaskT* mask, usize count) { return reduceBlockDeviation(values, mask, count, mean); },
+        [&sumOfDifferences](const BlockDeviation& block) {
+          if(block.Count != 0)
+          {
+            sumOfDifferences += block.SumOfSquares;
+          }
+        });
+    if(passResult.invalid())
+    {
+      return ConvertInvalidResult<WholeArrayStatistics<T>>(std::move(passResult));
+    }
+    if(shouldCancel)
+    {
+      return {statistics};
+    }
+    statistics.StandardDeviation = static_cast<float32>(std::sqrt(sumOfDifferences / static_cast<float64>(statistics.Length)));
+  }
+  return {statistics};
+}
+
+/**
+ * @brief Writes the standardized value of every selected tuple in bounded pieces.
+ * @tparam T Input value type.
+ * @tparam MaskT Mask value type.
+ * @param inputStore Input values.
+ * @param maskStore Optional mask; unselected tuples keep their current standardized value.
+ * @param standardizedStore Standardized output with the input tuple count.
+ * @param mean Whole-array mean.
+ * @param standardDeviation Whole-array deviation.
+ * @param inputValues Supplies array paths for diagnostics.
+ * @param shouldCancel Checked between pieces and before each block.
+ * @return First bulk-read or bulk-write error.
+ *
+ * Pieces follow the chunk grid of the standardized store when it has one, so an out-of-core output takes the
+ * whole-chunk write path. Without a mask every tuple of a piece is written, so the current values are not read.
+ */
+template <typename T, typename MaskT>
+Result<> standardizeWholeArray(const AbstractDataStore<T>& inputStore, const AbstractDataStore<MaskT>* maskStore, AbstractDataStore<float32>& standardizedStore, float32 mean,
+                               float32 standardDeviation, const ComputeArrayStatisticsInputValues& inputValues, const std::atomic_bool& shouldCancel)
+{
+  const usize tupleCount = inputStore.getNumberOfTuples();
+  const usize pieceCapacity = std::min(tupleCount, std::max<usize>(1, scanPageBytes() / (valueAndMaskTupleBytes<T>(maskStore) + sizeof(float32))));
+  const usize blockTuples = scanBlockTuples<T>();
+  StatisticsPageReader<T, MaskT> reader(inputStore, maskStore, inputValues, pieceCapacity);
+  auto standardizedBuffer = std::make_unique_for_overwrite<float32[]>(pieceCapacity);
+  const ShapeType tupleShape = standardizedStore.getTupleShape();
+  for(usize offset = 0; offset < tupleCount;)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    // The grid is queried for each piece, because the first write can promote the store to a new grid.
+    const ShapeType chunkShape = standardizedStore.getChunkShape().value_or(ShapeType{});
+    const usize count = ComputeNextChunkAlignedPiece(tupleShape, chunkShape, offset, tupleCount - offset, pieceCapacity).tupleCount;
+    Result<> readResult = reader.read(offset, count);
+    if(readResult.invalid())
+    {
+      return readResult;
+    }
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const nonstd::span<float32> standardized(standardizedBuffer.get(), count);
+    if(maskStore != nullptr)
+    {
+      readResult = standardizedStore.copyIntoBuffer(offset, standardized);
+      if(readResult.invalid())
+      {
+        return readResult;
+      }
+    }
+    const usize blockCount = (count + blockTuples - 1) / blockTuples;
+    runPageBlocks(blockCount, ScanPageKind::Standardize, shouldCancel, [&](usize blockIndex) {
+      const usize blockStart = blockIndex * blockTuples;
+      const usize blockEnd = blockStart + std::min(blockTuples, count - blockStart);
+      const T* values = reader.values();
+      const MaskT* mask = reader.mask();
+      for(usize index = blockStart; index < blockEnd; ++index)
+      {
+        if(isSelected(mask, index))
+        {
+          standardized[index] = (static_cast<float32>(values[index]) - mean) / standardDeviation;
+        }
+      }
+    });
+    if(shouldCancel)
+    {
+      return {};
+    }
+    Result<> writeResult = standardizedStore.copyFromBuffer(offset, nonstd::span<const float32>(standardized.data(), count));
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
+    offset += count;
+  }
+  return {};
+}
+
+/**
+ * @brief Tells if an ungrouped scan of type T uses a parallel whole-array engine.
+ * @tparam T Input value type.
+ * @param inputValues Selected statistics.
+ * @return True when a parallel engine covers every requested statistic.
+ *
+ * The histogram engine covers every request for its types. For other types, the two-pass engine covers requests
+ * without median, mode, or unique count; those requests keep the sorted exact implementation.
+ */
+template <typename T>
+bool usesParallelWholeArrayEngine(const ComputeArrayStatisticsInputValues& inputValues)
+{
+  return k_UsesHistogramEngine<T> || !(inputValues.FindMedian || inputValues.FindMode || inputValues.FindNumUniqueValues);
+}
+
+/**
+ * @brief Computes and writes ungrouped statistics with the parallel whole-array engines.
+ * @tparam T Input and extrema value type.
+ * @tparam MaskT Mask value type.
+ * @param dataStructure Owns the output arrays.
+ * @param inputStore Input values.
+ * @param maskStore Optional mask.
+ * @param standardizedArray Standardized output, or nullptr when standardization is not requested.
+ * @param inputValues Selected statistics and output paths.
+ * @param shouldCancel Cancellation flag.
+ * @return First bulk-I/O or output error; cancellation returns a valid result and leaves later outputs unwritten.
+ * @pre usesParallelWholeArrayEngine<T>(inputValues) is true, and the caller validated the requested outputs.
+ */
+template <typename T, typename MaskT>
+Result<> generateWholeArrayStatistics(DataStructure& dataStructure, const AbstractDataStore<T>& inputStore, const AbstractDataStore<MaskT>* maskStore, Float32Array* standardizedArray,
+                                      const ComputeArrayStatisticsInputValues& inputValues, const std::atomic_bool& shouldCancel)
+{
+  Result<WholeArrayStatistics<T>> statisticsResult = [&]() {
+    if constexpr(k_UsesHistogramEngine<T>)
+    {
+      return computeHistogramStatistics<T, MaskT>(inputStore, maskStore, inputValues, shouldCancel);
+    }
+    else
+    {
+      return computeMomentStatistics<T, MaskT>(inputStore, maskStore, inputValues, shouldCancel);
+    }
+  }();
+  if(statisticsResult.invalid() || shouldCancel)
+  {
+    return ConvertResult(std::move(statisticsResult));
+  }
+  const WholeArrayStatistics<T>& statistics = statisticsResult.value();
+
+  if constexpr(!std::is_same_v<T, bool>)
+  {
+    if(inputValues.FindMode)
+    {
+      auto* modeArray = dataStructure.getDataAs<NeighborList<T>>(inputValues.ModeArrayName);
+      if(shouldCancel)
+      {
+        return {};
+      }
+      Result<> resetResult = resetModeOutput(*modeArray, 1, inputValues.ModeArrayName);
+      if(resetResult.invalid())
+      {
+        return resetResult;
+      }
+      for(const T& mode : statistics.Modes)
+      {
+        if(shouldCancel)
+        {
+          return {};
+        }
+        Result<> appendResult = appendModeValue(*modeArray, 0, mode, inputValues.ModeArrayName);
+        if(appendResult.invalid())
+        {
+          return appendResult;
+        }
+      }
+    }
+  }
+
+  if(shouldCancel)
+  {
+    return {};
+  }
+  ScalarStatisticsValues<T> values;
+  values.GroupCount = 1;
+  values.Lengths = &statistics.Length;
+  values.Minimums = &statistics.Minimum;
+  values.Maximums = &statistics.Maximum;
+  values.Means = &statistics.Mean;
+  values.Medians = &statistics.Median;
+  values.StandardDeviations = &statistics.StandardDeviation;
+  values.Summations = &statistics.Summation;
+  values.UniqueCounts = &statistics.UniqueCount;
+  Result<> writeResult = writeScalarStatisticsOutputs(dataStructure, inputValues, values, shouldCancel);
+  if(writeResult.invalid() || shouldCancel || !inputValues.StandardizeData)
+  {
+    return writeResult;
+  }
+  return standardizeWholeArray<T, MaskT>(inputStore, maskStore, standardizedArray->getDataStoreRef(), statistics.Mean, statistics.StandardDeviation, inputValues, shouldCancel);
+}
+
+/**
  * @brief Computes bounded statistics for one runtime-selected value and mask type.
  * @tparam T Input and extrema value type.
  * @tparam MaskT Mask value type.
@@ -1871,14 +3039,6 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
 
   const usize groupCount = layout.GroupCount;
   auto* featureHasDataArray = inputValues.ComputeByIndex ? dataStructure.getDataAs<BoolArray>(inputValues.FeatureHasDataArrayName) : nullptr;
-  auto* lengthArray = inputValues.FindLength ? dataStructure.getDataAs<UInt64Array>(inputValues.LengthArrayName) : nullptr;
-  auto* minimumArray = inputValues.FindMin ? dataStructure.getDataAs<DataArray<T>>(inputValues.MinimumArrayName) : nullptr;
-  auto* maximumArray = inputValues.FindMax ? dataStructure.getDataAs<DataArray<T>>(inputValues.MaximumArrayName) : nullptr;
-  auto* meanArray = inputValues.FindMean ? dataStructure.getDataAs<Float32Array>(inputValues.MeanArrayName) : nullptr;
-  auto* medianArray = inputValues.FindMedian ? dataStructure.getDataAs<Float32Array>(inputValues.MedianArrayName) : nullptr;
-  auto* stdDeviationArray = inputValues.FindStdDeviation ? dataStructure.getDataAs<Float32Array>(inputValues.StdDeviationArrayName) : nullptr;
-  auto* summationArray = inputValues.FindSummation ? dataStructure.getDataAs<Float32Array>(inputValues.SummationArrayName) : nullptr;
-  auto* uniqueValuesArray = inputValues.FindNumUniqueValues ? dataStructure.getDataAs<Int32Array>(inputValues.NumUniqueValuesName) : nullptr;
   auto* standardizedArray = inputValues.StandardizeData ? dataStructure.getDataAs<Float32Array>(inputValues.StandardizedArrayName) : nullptr;
   if(inputValues.ComputeByIndex && featureHasDataArray == nullptr)
   {
@@ -1899,6 +3059,10 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
   {
     return MakeErrorResult(-57306, fmt::format("ComputeArrayStatistics: standardized output '{}' is missing, has the wrong type, or does not contain {} tuples.",
                                                inputValues.StandardizedArrayName.toString(), tupleCount));
+  }
+  if(!layout.ComputeByIndex && groupCount == 1 && usesParallelWholeArrayEngine<T>(inputValues))
+  {
+    return generateWholeArrayStatistics<T, MaskT>(dataStructure, inputStore, maskStore, standardizedArray, inputValues, shouldCancel);
   }
 
   std::vector<uint64> lengths(groupCount, 0);
@@ -1949,40 +3113,22 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
   auto featureBuffer = featureIdsStore == nullptr ? nullptr : std::make_unique<int32[]>(k_ChunkTuples);
   auto maskBuffer = maskStore == nullptr ? nullptr : std::make_unique<MaskT[]>(k_ChunkTuples);
   const auto readChunk = [&](usize offset, usize count) -> Result<> {
-    Result<> result = inputStore.copyIntoBuffer(offset, nonstd::span<T>(valueBuffer.get(), count));
+    Result<> result = readStatisticsTuples(inputStore, offset, nonstd::span<T>(valueBuffer.get(), count), inputValues.SelectedArrayPath);
     if(result.invalid())
     {
-      for(auto& error : result.errors())
-      {
-        error.message =
-            fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", inputValues.SelectedArrayPath.toString(), offset, offset + count, error.message);
-      }
       return result;
     }
     if(featureIdsStore != nullptr)
     {
-      result = featureIdsStore->copyIntoBuffer(offset, nonstd::span<int32>(featureBuffer.get(), count));
+      result = readStatisticsTuples(*featureIdsStore, offset, nonstd::span<int32>(featureBuffer.get(), count), inputValues.FeatureIdsArrayPath);
       if(result.invalid())
       {
-        for(auto& error : result.errors())
-        {
-          error.message =
-              fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", inputValues.FeatureIdsArrayPath.toString(), offset, offset + count, error.message);
-        }
         return result;
       }
     }
     if(maskStore != nullptr)
     {
-      result = maskStore->copyIntoBuffer(offset, nonstd::span<MaskT>(maskBuffer.get(), count));
-      if(result.invalid())
-      {
-        for(auto& error : result.errors())
-        {
-          error.message =
-              fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", inputValues.MaskArrayPath.toString(), offset, offset + count, error.message);
-        }
-      }
+      result = readStatisticsTuples(*maskStore, offset, nonstd::span<MaskT>(maskBuffer.get(), count), inputValues.MaskArrayPath);
     }
     return result;
   };
@@ -2089,14 +3235,8 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
     }
     if constexpr(std::is_same_v<T, bool>)
     {
-      if(layout.ComputeByIndex)
-      {
-        means[group] = static_cast<float32>(sums[group] >= (static_cast<float32>(tupleCount) - sums[group]));
-      }
-      else
-      {
-        means[group] = sums[group] / static_cast<float32>(lengths[group]);
-      }
+      // Ungrouped Boolean input always takes the histogram engine, so only grouped statistics reach this loop.
+      means[group] = static_cast<float32>(sums[group] >= (static_cast<float32>(tupleCount) - sums[group]));
     }
     else
     {
@@ -2327,36 +3467,17 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
       {
         return {};
       }
-      try
+      Result<> resetResult = resetModeOutput(*modeArray, groupCount, inputValues.ModeArrayName);
+      if(resetResult.invalid())
       {
-        modeArray->clearAllLists();
-        Result<> resizeResult = modeArray->resizeTuples({groupCount});
-        if(resizeResult.invalid())
-        {
-          for(auto& error : resizeResult.errors())
-          {
-            error.message = fmt::format("ComputeArrayStatistics: could not resize Mode output '{}' to {} tuples: {}", inputValues.ModeArrayName.toString(), groupCount, error.message);
-          }
-          return resizeResult;
-        }
-      } catch(const std::exception& exception)
-      {
-        return MakeErrorResult(-57309, fmt::format("ComputeArrayStatistics: could not initialize Mode output '{}': {}", inputValues.ModeArrayName.toString(), exception.what()));
+        return resetResult;
       }
       const auto appendMode = [&](usize group, const T& value) -> Result<> {
         if(shouldCancel)
         {
           return {};
         }
-        try
-        {
-          modeArray->addEntry(static_cast<int32>(group), value);
-        } catch(const std::exception& exception)
-        {
-          return MakeErrorResult(-57314,
-                                 fmt::format("ComputeArrayStatistics: could not append a Mode value to output group {} in '{}': {}", group, inputValues.ModeArrayName.toString(), exception.what()));
-        }
-        return {};
+        return appendModeValue(*modeArray, group, value, inputValues.ModeArrayName);
       };
       if(externalSort != nullptr)
       {
@@ -2482,101 +3603,20 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
       return writeResult;
     }
   }
-  if(shouldCancel)
+  ScalarStatisticsValues<T> scalarValues;
+  scalarValues.GroupCount = groupCount;
+  scalarValues.Lengths = lengths.data();
+  scalarValues.Minimums = minimums.get();
+  scalarValues.Maximums = maximums.get();
+  scalarValues.Means = means.data();
+  scalarValues.Medians = medians.data();
+  scalarValues.StandardDeviations = standardDeviations.data();
+  scalarValues.Summations = sums.data();
+  scalarValues.UniqueCounts = uniqueCounts.data();
+  Result<> scalarWriteResult = writeScalarStatisticsOutputs(dataStructure, inputValues, scalarValues, shouldCancel);
+  if(scalarWriteResult.invalid())
   {
-    return {};
-  }
-  if(inputValues.FindLength)
-  {
-    Result<> writeResult = writeStatisticsOutput(lengthArray, lengths.data(), groupCount, inputValues.LengthArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindMin)
-  {
-    Result<> writeResult = writeStatisticsOutput(minimumArray, minimums.get(), groupCount, inputValues.MinimumArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindMax)
-  {
-    Result<> writeResult = writeStatisticsOutput(maximumArray, maximums.get(), groupCount, inputValues.MaximumArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindMean)
-  {
-    Result<> writeResult = writeStatisticsOutput(meanArray, means.data(), groupCount, inputValues.MeanArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindMedian)
-  {
-    Result<> writeResult = writeStatisticsOutput(medianArray, medians.data(), groupCount, inputValues.MedianArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindStdDeviation)
-  {
-    Result<> writeResult = writeStatisticsOutput(stdDeviationArray, standardDeviations.data(), groupCount, inputValues.StdDeviationArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindSummation)
-  {
-    Result<> writeResult = writeStatisticsOutput(summationArray, sums.data(), groupCount, inputValues.SummationArrayName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(inputValues.FindNumUniqueValues)
-  {
-    Result<> writeResult = writeStatisticsOutput(uniqueValuesArray, uniqueCounts.data(), groupCount, inputValues.NumUniqueValuesName);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
+    return scalarWriteResult;
   }
 
   if(shouldCancel)
@@ -2974,3 +4014,33 @@ void ComputeArrayStatistics::sendThreadSafeProgressMessage(usize completedWork)
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   m_Throttle.incrementPercent(completedWork);
 }
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+void nx::core::SetComputeArrayStatisticsPageBytesForTesting(usize pageBytes)
+{
+  g_ScanPageBytesOverride.store(pageBytes, std::memory_order_relaxed);
+}
+
+void nx::core::SetComputeArrayStatisticsBlockTuplesForTesting(usize blockTuples)
+{
+  g_ScanBlockTuplesOverride.store(blockTuples, std::memory_order_relaxed);
+}
+
+ComputeArrayStatisticsScanWitness nx::core::GetComputeArrayStatisticsScanWitnessForTesting()
+{
+  ComputeArrayStatisticsScanWitness witness;
+  witness.HistogramPages = g_HistogramPages.load(std::memory_order_relaxed);
+  witness.MomentPages = g_MomentPages.load(std::memory_order_relaxed);
+  witness.DeviationPages = g_DeviationPages.load(std::memory_order_relaxed);
+  witness.StandardizePages = g_StandardizePages.load(std::memory_order_relaxed);
+  return witness;
+}
+
+void nx::core::ResetComputeArrayStatisticsScanWitnessForTesting()
+{
+  g_HistogramPages.store(0, std::memory_order_relaxed);
+  g_MomentPages.store(0, std::memory_order_relaxed);
+  g_DeviationPages.store(0, std::memory_order_relaxed);
+  g_StandardizePages.store(0, std::memory_order_relaxed);
+}
+#endif

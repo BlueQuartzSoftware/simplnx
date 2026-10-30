@@ -1,5 +1,7 @@
 #include "DataStructureWriter.hpp"
 
+#include "simplnx/Common/PathText.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
@@ -10,8 +12,92 @@
 
 #include <fmt/format.h>
 
+#include <iterator>
+#include <memory>
+#include <vector>
+
 namespace nx::core::HDF5
 {
+namespace
+{
+/**
+ * @brief Runs the file-write hook on the final path of a path-based write before the write changes it.
+ * @param dataStructure Structure that the writer writes.
+ * @param filepath File that the writer creates, truncates or opens for writing.
+ * @return The hook's result: valid with its warnings, or its error, which the writer returns without a change to filepath.
+ */
+Result<> RunFileWriteHook(const DataStructure& dataStructure, const std::filesystem::path& filepath)
+{
+  const std::shared_ptr<Application> application = Application::GetOrCreateInstance();
+  return application->getIOCollection().beforeFileWrite(dataStructure, filepath);
+}
+
+/**
+ * @brief Puts the hook's warnings in front of the warnings of a writer result and keeps the result's validity and errors.
+ * @param hookResult Valid result of RunFileWriteHook().
+ * @param writerResult Result of the write that followed the hook.
+ * @return writerResult with the hook's warnings first.
+ */
+Result<> PrependHookWarnings(Result<> hookResult, Result<> writerResult)
+{
+  std::vector<Warning>& warnings = writerResult.warnings();
+  warnings.insert(warnings.begin(), std::make_move_iterator(hookResult.warnings().begin()), std::make_move_iterator(hookResult.warnings().end()));
+  return writerResult;
+}
+
+/**
+ * @brief Creates an HDF5 file, writes a DataStructure and closes the file.
+ * @param dataStructure Source data structure.
+ * @param filepath File to create or replace.
+ * @param options Dataset encoding options.
+ * @return Creation, write or close error, or success.
+ * @pre The file-write hook has run on filepath.
+ */
+Result<> WriteFileAfterHook(const DataStructure& dataStructure, const std::filesystem::path& filepath, const DataStructureWriter::WriteOptions& options)
+{
+  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
+  if(fileWriter.isValid() == false)
+  {
+    return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", PathToUtf8Text(filepath)));
+  }
+  Result<> writeResult = DataStructureWriter::WriteFile(dataStructure, fileWriter, options);
+  if(writeResult.invalid())
+  {
+    // The first error wins; the destructor closes the file best-effort.
+    return writeResult;
+  }
+  // Every child handle of the write is closed. A file that does not close completely is not reported as written.
+  return MergeResults(std::move(writeResult), fileWriter.closeChecked());
+}
+
+/**
+ * @brief Opens an existing HDF5 file, appends one top-level object and closes the file.
+ * @param filepath Existing destination file.
+ * @param dataStructure Source data structure.
+ * @param dataPath Top-level object path.
+ * @param options Dataset encoding options.
+ * @return Open, validation, write or close error, or success.
+ * @pre The file-write hook has run on filepath.
+ */
+Result<> AppendFileAfterHook(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const DataStructureWriter::WriteOptions& options)
+{
+  auto file = FileIO::AppendFile(filepath);
+  if(!file.isValid())
+  {
+    return MakeErrorResult(-4, fmt::format("Unable to open file '{}'", PathToUtf8Text(filepath)));
+  }
+
+  Result<> appendResult = DataStructureWriter::AppendFile(file, dataStructure, dataPath, options);
+  if(appendResult.invalid())
+  {
+    // The first error wins; the destructor closes the file best-effort.
+    return appendResult;
+  }
+  // The file may already hold the appended object when the close fails; the error does not promise a rollback.
+  return MergeResults(std::move(appendResult), file.closeChecked());
+}
+} // namespace
+
 DataStructureWriter::DataStructureWriter()
 {
   auto instance = Application::GetOrCreateInstance();
@@ -37,12 +123,12 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, cons
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options)
 {
-  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
-  if(fileWriter.isValid() == false)
+  Result<> hookResult = RunFileWriteHook(dataStructure, filepath);
+  if(hookResult.invalid())
   {
-    return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", filepath.string()));
+    return hookResult;
   }
-  return WriteFile(dataStructure, fileWriter, options);
+  return PrependHookWarnings(std::move(hookResult), WriteFileAfterHook(dataStructure, filepath, options));
 }
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO)
@@ -131,17 +217,24 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
 
 Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options)
 {
-  auto file = FileIO::AppendFile(filepath);
-  if(!file.isValid())
+  Result<> hookResult = RunFileWriteHook(dataStructure, filepath);
+  if(hookResult.invalid())
   {
-    return MakeErrorResult(-4, fmt::format("Unable to open file '{}'", filepath.string()));
+    return hookResult;
   }
-
-  return AppendFile(file, dataStructure, dataPath, options);
+  return PrependHookWarnings(std::move(hookResult), AppendFileAfterHook(filepath, dataStructure, dataPath, options));
 }
 
 Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
+  // A call from outside the writer with no structure set writes the structure that owns dataObject, for this call only.
+  const bool setsWrittenStructure = m_WrittenStructure == nullptr && dataObject != nullptr;
+  if(setsWrittenStructure)
+  {
+    m_WrittenStructure = dataObject->getDataStructure();
+  }
+  ScopeGuard clearWrittenStructure([this]() noexcept { m_WrittenStructure = nullptr; }, setsWrittenStructure);
+
   if(hasDataBeenWritten(dataObject))
   {
     // Reuse the existing object through an HDF5 hard link.
@@ -193,6 +286,8 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
     std::string ss = "Failed to write DataStructure to HDF5 group";
     return MakeErrorResult(-700, ss);
   }
+  // A writer writes one structure; only its objects are recorded for hard links from here on.
+  m_WrittenStructure = &dataStructure;
   groupIO.writeScalarAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
   return writeDataMap(dataStructure.getDataMap(), groupIO);
 }
@@ -274,8 +369,21 @@ void DataStructureWriter::clearIdMap()
   m_IdMap.clear();
 }
 
-void DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, DataObject::IdType objectId)
+Result<> DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, const DataObject& dataObject)
 {
-  m_IdMap[objectId] = objectWriter.getObjectPath();
+  // Objects of temporary structures (the NeighborList counts array) can reuse an identifier of the written structure.
+  if(m_WrittenStructure == nullptr || dataObject.getDataStructure() != m_WrittenStructure)
+  {
+    return {};
+  }
+
+  const DataObject::IdType objectId = dataObject.getId();
+  const std::string objectPath = objectWriter.getObjectPath();
+  const auto [recordedEntry, isNewEntry] = m_IdMap.try_emplace(objectId, objectPath);
+  if(!isNewEntry && recordedEntry->second != objectPath)
+  {
+    return MakeErrorResult(-6055, fmt::format("Cannot record object '{}' at '{}': object id {} is already written at '{}'", dataObject.getName(), objectPath, objectId, recordedEntry->second));
+  }
+  return {};
 }
 } // namespace nx::core::HDF5

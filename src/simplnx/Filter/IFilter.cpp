@@ -208,6 +208,21 @@ Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter,
     throw std::runtime_error("Invalid parameter type");
   }
 }
+
+/**
+ * @brief Puts earlier warnings in front of a result's own warnings and keeps the result's validity and errors as they are.
+ * @param earlier Result whose warnings were reported first, such as the preflight actions' result. Its validity is ignored.
+ * @param later Result that decides validity and errors.
+ * @return later, with the warnings of earlier followed by its own.
+ *
+ * MergeResults() rebuilds validity from the error count, so it turns an invalid result with an empty error collection into a
+ * success. An execute result that a file write hook refused can be exactly that, so the execute path keeps it as it is.
+ */
+Result<> PrependWarnings(const Result<>& earlier, Result<> later)
+{
+  later.warnings().insert(later.warnings().begin(), earlier.warnings().begin(), earlier.warnings().end());
+  return later;
+}
 } // namespace
 
 namespace nx::core
@@ -362,19 +377,21 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     }
     executeImplResult = MakeErrorResult(-2, std::move(message));
   }
-  // A cancellation must not bury a failure that already happened, so the cancellation
-  // error is only reported when execution itself succeeded.
-  if(shouldCancel && executeImplResult.valid())
+  // The first invalid result wins as it is: an invalid result may carry no error, and merging would rebuild it as a success.
+  if(executeImplResult.invalid())
   {
-    return ExecuteResult{MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), std::move(preflightResult.outputValues)};
+    return ExecuteResult{PrependWarnings(preflightActionsResult, std::move(executeImplResult)), std::move(preflightResult.outputValues)};
+  }
+  // A cancellation must not bury a failure that already happened, so the cancellation error is only reported when execution
+  // itself succeeded. The warnings that execution reported before it saw the cancellation stay with the result.
+  if(shouldCancel)
+  {
+    Result<> cancelResult = MakeErrorResult(-1, "Filter cancelled");
+    cancelResult.warnings() = std::move(executeImplResult.warnings());
+    return ExecuteResult{PrependWarnings(preflightActionsResult, std::move(cancelResult)), std::move(preflightResult.outputValues)};
   }
 
   Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
-
-  if(preflightActionsExecuteResult.invalid())
-  {
-    return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
-  }
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
   Result<> postDeferredResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
   if(postDeferredResult.invalid())
