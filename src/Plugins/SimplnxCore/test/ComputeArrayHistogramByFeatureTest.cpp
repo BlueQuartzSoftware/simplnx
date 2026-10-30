@@ -889,3 +889,21 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired 
   // The tied modes 1 and 2 occupy [0, 2] and [2, 4] in ascending value order.
   CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, featureIds, 2, 0.0, 4.0, true, DataPath({"TiedBins"})) == std::vector<int32>{0, 2, 2, 4});
 }
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired bin offsets", "[SimplnxCore][ComputeArrayHistogramByFeature]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  std::vector<uint64> counts;
+  std::vector<int32> ranges;
+  std::vector<std::vector<int32>> modal;
+  executeInt32ModalCase(scope, {2}, {1}, 2, 0.0, 4.0, true, DataPath({"PairedOffsets"}), &counts, &ranges, &modal);
+  REQUIRE(counts.size() == 4);
+  REQUIRE(ranges.size() == 8);
+  REQUIRE(modal.size() == 2);
+  // Width (4 - 0) / 2 = 2 puts value 2 in bin 1: one count and bounds [2,4).
+  CHECK(std::vector<uint64>(counts.begin() + 2, counts.end()) == std::vector<uint64>{0, 1});
+  CHECK(std::vector<int32>(ranges.begin() + 4, ranges.end()) == std::vector<int32>{0, 2, 2, 4});
+  CHECK(modal[1] == std::vector<int32>{2, 4});
+}
