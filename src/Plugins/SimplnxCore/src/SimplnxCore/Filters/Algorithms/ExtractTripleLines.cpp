@@ -2,19 +2,28 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <fmt/format.h>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <limits>
+#include <memory>
+#include <new>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -30,6 +39,7 @@ constexpr int32 k_EmptyLabel = std::numeric_limits<int32>::min();
 
 /**
  * @brief Stores a bounded number of unique normalized Feature Ids without per-Feature allocations.
+ * @tparam Capacity Limits the retained Feature Id count.
  */
 template <usize Capacity>
 struct FeatureSet
@@ -72,6 +82,208 @@ constexpr int32 NormalizeLabel(int32 label)
 constexpr uint64 MakeEdgeKey(uint64 vertex0, uint64 vertex1)
 {
   return (vertex0 < vertex1) ? ((vertex0 << 32) | vertex1) : ((vertex1 << 32) | vertex0);
+}
+
+// -----------------------------------------------------------------------------
+/**
+ * @brief Copies sorted source vertices through one retained read page and one output block.
+ * @param source Provides source XYZ tuples.
+ * @param destination Receives compact XYZ tuples.
+ * @param indices Supplies ascending, unique source vertex indices.
+ * @param sourceNodes Supplies optional Node Types paired with destinationNodes.
+ * @param destinationNodes Receives optional compact Node Types.
+ * @param shouldCancel Signals cancellation between transfers and gathered vertices.
+ * @param progress Receives completed block progress.
+ * @return The first transfer error, admission/allocation error, or accumulated warnings.
+ * @pre Indices refer to source tuples. Node Types pointers are paired and have compatible extents.
+ */
+Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32AbstractDataStore& destination, nonstd::span<const uint64> indices, const Int8AbstractDataStore* sourceNodes,
+                                Int8AbstractDataStore* destinationNodes, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
+{
+  if(indices.empty() || shouldCancel)
+  {
+    return {};
+  }
+  const bool copyNodes = sourceNodes != nullptr;
+  const usize bytesPerVertex = (6 * sizeof(float32)) + (copyNodes ? 2 * sizeof(int8) : 0);
+  const usize maximum = std::numeric_limits<usize>::max();
+  if(indices.size() > maximum / bytesPerVertex || source.getNumberOfTuples() > maximum / 3)
+  {
+    return MakeErrorResult(-57407, "Triple line vertex transfer sizes exceed addressable memory. Reduce the mesh size before extracting triple lines.");
+  }
+  const usize requestedBytes = indices.size() * bytesPerVertex;
+  auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / bytesPerVertex, indices.size()));
+  if(capacity == 0)
+  {
+    return MakeErrorResult(-57408, fmt::format("Triple line vertex copying requested {} working bytes and received {}. At least {} bytes are required. Increase the cache memory budget or finish "
+                                               "other processing before retrying.",
+                                               requestedBytes, reservation.sizeBytes(), bytesPerVertex));
+  }
+  reservation.shrinkTo(capacity * bytesPerVertex);
+  Result<> result;
+  try
+  {
+    auto page = std::make_unique<std::vector<float32>>(capacity * 3);
+    auto output = std::make_unique<std::vector<float32>>(capacity * 3);
+    auto nodePage = copyNodes ? std::make_unique<std::vector<int8>>(capacity) : nullptr;
+    auto nodeOutput = copyNodes ? std::make_unique<std::vector<int8>>(capacity) : nullptr;
+    usize pageBegin = 0;
+    usize pageEnd = 0;
+    for(usize begin = 0; begin < indices.size();)
+    {
+      const usize count = std::min(capacity, indices.size() - begin);
+      for(usize local = 0; local < count; ++local)
+      {
+        if(shouldCancel)
+        {
+          return result;
+        }
+        const usize original = static_cast<usize>(indices[begin + local]);
+        if(original >= pageEnd)
+        {
+          pageBegin = original;
+          const usize pageCount = std::min(capacity, source.getNumberOfTuples() - pageBegin);
+          pageEnd = pageBegin + pageCount;
+          // Keep accumulated diagnostics until both the transfer and its merge succeed.
+          auto readResult = source.copyIntoBuffer(pageBegin * 3, {page->data(), pageCount * 3});
+          result = MergeResults(result, std::move(readResult));
+          if(result.invalid() || shouldCancel)
+          {
+            return result;
+          }
+          if(copyNodes)
+          {
+            auto nodeReadResult = sourceNodes->copyIntoBuffer(pageBegin, {nodePage->data(), pageCount});
+            result = MergeResults(result, std::move(nodeReadResult));
+            if(result.invalid() || shouldCancel)
+            {
+              return result;
+            }
+          }
+        }
+        const usize pageIndex = original - pageBegin;
+        for(usize component = 0; component < 3; ++component)
+        {
+          (*output)[(local * 3) + component] = (*page)[(pageIndex * 3) + component];
+        }
+        if(copyNodes)
+        {
+          (*nodeOutput)[local] = (*nodePage)[pageIndex];
+        }
+      }
+      if(shouldCancel)
+      {
+        return result;
+      }
+      auto writeResult = destination.copyFromBuffer(begin * 3, {output->data(), count * 3});
+      result = MergeResults(result, std::move(writeResult));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+      if(copyNodes)
+      {
+        auto nodeWriteResult = destinationNodes->copyFromBuffer(begin, {nodeOutput->data(), count});
+        result = MergeResults(result, std::move(nodeWriteResult));
+        if(result.invalid() || shouldCancel)
+        {
+          return result;
+        }
+      }
+      begin += count;
+      progress.updatePercent(begin);
+    }
+  } catch(const std::bad_alloc&)
+  {
+    return MergeResults(result, MakeErrorResult(-57410, "Triple line vertex buffer allocation failed. Free memory or reduce the cache memory budget before retrying."));
+  } catch(const std::length_error&)
+  {
+    return MergeResults(result, MakeErrorResult(-57410, "Triple line vertex buffer size exceeds the container limit. Reduce the mesh size before retrying."));
+  }
+  return result;
+}
+
+// -----------------------------------------------------------------------------
+/**
+ * @brief Publishes compact edge endpoints and region counts in admitted contiguous blocks.
+ * @param destination Receives two compact vertex indices per edge.
+ * @param counts Receives one region count per edge.
+ * @param edges Supplies sorted source edge keys and saturated region counts.
+ * @param indices Supplies ascending compact-to-source vertex indices.
+ * @param shouldCancel Signals cancellation between transfers and compacted edges.
+ * @param progress Receives completed block progress.
+ * @return The first transfer error, admission/allocation error, or accumulated warnings.
+ */
+Result<> writeTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& destination, Int8AbstractDataStore& counts, nonstd::span<const std::pair<uint64, uint8>> edges,
+                              const std::vector<uint64>& indices, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
+{
+  if(edges.empty() || shouldCancel)
+  {
+    return {};
+  }
+  constexpr usize bytesPerEdge = (2 * sizeof(IGeometry::MeshIndexType)) + sizeof(int8);
+  if(edges.size() > std::numeric_limits<usize>::max() / bytesPerEdge)
+  {
+    return MakeErrorResult(-57411, "Triple line edge transfer sizes exceed addressable memory. Reduce the mesh size before extracting triple lines.");
+  }
+  const usize requestedBytes = edges.size() * bytesPerEdge;
+  auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / bytesPerEdge, edges.size()));
+  if(capacity == 0)
+  {
+    return MakeErrorResult(-57409, fmt::format("Triple line edge writing requested {} working bytes and received {}. At least {} bytes are required. Increase the cache memory budget or finish "
+                                               "other processing before retrying.",
+                                               requestedBytes, reservation.sizeBytes(), bytesPerEdge));
+  }
+  reservation.shrinkTo(capacity * bytesPerEdge);
+  Result<> result;
+  try
+  {
+    auto endpoints = std::make_unique<std::vector<IGeometry::MeshIndexType>>(capacity * 2);
+    auto regionCounts = std::make_unique<std::vector<int8>>(capacity);
+    for(usize begin = 0; begin < edges.size();)
+    {
+      const usize count = std::min(capacity, edges.size() - begin);
+      for(usize local = 0; local < count; ++local)
+      {
+        if(shouldCancel)
+        {
+          return result;
+        }
+        const auto [key, regions] = edges[begin + local];
+        (*endpoints)[local * 2] = static_cast<uint64>(std::ranges::lower_bound(indices, key >> 32) - indices.begin());
+        (*endpoints)[(local * 2) + 1] = static_cast<uint64>(std::ranges::lower_bound(indices, key & k_VertexIndexMask) - indices.begin());
+        (*regionCounts)[local] = static_cast<int8>(regions);
+      }
+      if(shouldCancel)
+      {
+        return result;
+      }
+      // Copy the accumulator so a throwing merge cannot consume its earlier diagnostics.
+      auto writeResult = destination.copyFromBuffer(begin * 2, {endpoints->data(), count * 2});
+      result = MergeResults(result, std::move(writeResult));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+      auto countWriteResult = counts.copyFromBuffer(begin, {regionCounts->data(), count});
+      result = MergeResults(result, std::move(countWriteResult));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+      begin += count;
+      progress.updatePercent(begin);
+    }
+  } catch(const std::bad_alloc&)
+  {
+    return MergeResults(result, MakeErrorResult(-57412, "Triple line edge buffer allocation failed. Free memory or reduce the cache memory budget before retrying."));
+  } catch(const std::length_error&)
+  {
+    return MergeResults(result, MakeErrorResult(-57412, "Triple line edge buffer size exceeds the container limit. Reduce the mesh size before retrying."));
+  }
+  return result;
 }
 } // namespace
 
@@ -263,40 +475,70 @@ Result<> ExtractTripleLines::operator()()
   progressThrottle.reset(numTripleLineVertices, "Triple Lines: Copying vertices");
   const auto& sourceVertsRef = triangleGeom.getVertices()->getDataStoreRef();
   auto& destVertsRef = tripleLineGeom.getVertices()->getDataStoreRef();
-  for(usize vertexIdx = 0; vertexIdx < numTripleLineVertices; vertexIdx++)
+  const bool copyVerticesInBlocks = sourceVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore || destVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore ||
+                                    (m_InputValues->SourceNodeTypes != nullptr && (m_InputValues->SourceNodeTypes->getStoreType() == IDataStore::StoreType::OutOfCore ||
+                                                                                   m_InputValues->DestinationNodeTypes->getStoreType() == IDataStore::StoreType::OutOfCore));
+  Result<> publicationResult;
+  if(copyVerticesInBlocks)
   {
-    if(m_ShouldCancel)
+    publicationResult = copyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->SourceNodeTypes, m_InputValues->DestinationNodeTypes,
+                                               m_ShouldCancel, progressThrottle);
+    if(publicationResult.invalid() || m_ShouldCancel)
     {
-      return {};
+      return publicationResult;
     }
-    const uint64 originalVertex = compactToOriginal[vertexIdx];
-    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    progressThrottle.flush();
+  }
+  else
+  {
+    for(usize vertexIdx = 0; vertexIdx < numTripleLineVertices; vertexIdx++)
     {
-      destVertsRef[vertexIdx * 3 + compIdx] = sourceVertsRef[originalVertex * 3 + compIdx];
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      const uint64 originalVertex = compactToOriginal[vertexIdx];
+      for(usize compIdx = 0; compIdx < 3; compIdx++)
+      {
+        destVertsRef[vertexIdx * 3 + compIdx] = sourceVertsRef[originalVertex * 3 + compIdx];
+      }
+      if(m_InputValues->SourceNodeTypes != nullptr && m_InputValues->DestinationNodeTypes != nullptr)
+      {
+        (*m_InputValues->DestinationNodeTypes)[vertexIdx] = (*m_InputValues->SourceNodeTypes)[originalVertex];
+      }
+      progressThrottle.updatePercent(vertexIdx + 1);
     }
-    if(m_InputValues->SourceNodeTypes != nullptr && m_InputValues->DestinationNodeTypes != nullptr)
-    {
-      (*m_InputValues->DestinationNodeTypes)[vertexIdx] = (*m_InputValues->SourceNodeTypes)[originalVertex];
-    }
-    progressThrottle.updatePercent(vertexIdx + 1);
   }
 
   progressThrottle.reset(numTripleLineEdges, "Triple Lines: Writing edges");
   auto& destEdgesRef = tripleLineGeom.getEdges()->getDataStoreRef();
-  for(usize edgeIdx = 0; edgeIdx < numTripleLineEdges; edgeIdx++)
+  if(destEdgesRef.getStoreType() == IDataStore::StoreType::OutOfCore || numFeaturesRef.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
-    if(m_ShouldCancel)
+    publicationResult =
+        MergeResults(std::move(publicationResult), writeTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
+    if(publicationResult.invalid() || m_ShouldCancel)
     {
-      return {};
+      return publicationResult;
     }
-    const auto [edgeKey, count] = keptEdges[edgeIdx];
-    const std::array<uint64, 2> endpoints = {edgeKey >> 32, edgeKey & k_VertexIndexMask};
-    for(usize endpointIdx = 0; endpointIdx < endpoints.size(); endpointIdx++)
+    progressThrottle.flush();
+  }
+  else
+  {
+    for(usize edgeIdx = 0; edgeIdx < numTripleLineEdges; edgeIdx++)
     {
-      destEdgesRef[edgeIdx * 2 + endpointIdx] = static_cast<uint64>(std::lower_bound(compactToOriginal.begin(), compactToOriginal.end(), endpoints[endpointIdx]) - compactToOriginal.begin());
+      if(m_ShouldCancel)
+      {
+        return publicationResult;
+      }
+      const auto [edgeKey, count] = keptEdges[edgeIdx];
+      const std::array<uint64, 2> endpoints = {edgeKey >> 32, edgeKey & k_VertexIndexMask};
+      for(usize endpointIdx = 0; endpointIdx < endpoints.size(); endpointIdx++)
+      {
+        destEdgesRef[edgeIdx * 2 + endpointIdx] = static_cast<uint64>(std::lower_bound(compactToOriginal.begin(), compactToOriginal.end(), endpoints[endpointIdx]) - compactToOriginal.begin());
+      }
+      numFeaturesRef[edgeIdx] = static_cast<int8>(count);
+      progressThrottle.updatePercent(edgeIdx + 1);
     }
-    numFeaturesRef[edgeIdx] = static_cast<int8>(count);
-    progressThrottle.updatePercent(edgeIdx + 1);
   }
   if(!m_ShouldCancel && numTripleLineEdges == 0)
   {
@@ -305,6 +547,6 @@ Result<> ExtractTripleLines::operator()()
                             "A mesh with duplicated vertices, such as an imported STL, has no shared edges; merge coincident vertices first.",
                             m_InputValues->IncludeExteriorLines));
   }
-  return {};
+  return publicationResult;
 }
 } // namespace nx::core
