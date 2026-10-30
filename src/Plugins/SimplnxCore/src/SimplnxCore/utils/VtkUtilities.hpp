@@ -265,12 +265,9 @@ struct WriteVtkDataArrayFunctor
           {
             buffer.append(fmt::format(" {:d}", static_cast<int>(values[localIndex])));
           }
-          else if constexpr(std::is_floating_point_v<T>)
-          {
-            buffer.append(fmt::format(" {:f}", values[localIndex]));
-          }
           else
           {
+            // '{}' writes the shortest text that round-trips float and double values.
             buffer.append(fmt::format(" {}", values[localIndex]));
           }
           if(buffer.size() > (k_BufferDumpVal - 32))
