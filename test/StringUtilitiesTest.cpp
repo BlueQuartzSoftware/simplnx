@@ -176,3 +176,10 @@ TEST_CASE("Simplnx::StringUtilities Utility Function Test3", "[Simplnx][StringUt
 
   REQUIRE(result == std::vector<std::string>{"", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
+
+TEST_CASE("Simplnx::StringUtilities::Split preserves keep-empty contract", "[Simplnx][StringUtilities]")
+{
+  const std::array<char, 1> delimiters = {' '};
+  REQUIRE(StringUtilities::split("1  2   3", delimiters, true) == std::vector<std::string>{"1", "", "2", "", "", "3"});
+  REQUIRE(StringUtilities::split("1  2   3", delimiters, false) == std::vector<std::string>{"1", "2", "3"});
+}

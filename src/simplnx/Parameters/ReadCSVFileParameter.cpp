@@ -115,7 +115,6 @@ constexpr StringLiteral k_DelimitersKey = "Wizard_Delimiters";
 constexpr StringLiteral k_HeaderLineKey = "Wizard_HeaderLine";
 constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
 constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
-constexpr StringLiteral k_ConsecutiveDelimitersKey = "Wizard_ConsecutiveDelimiters";
 constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
 
 std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
@@ -186,7 +185,9 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
     value.headerMode = ValueType::HeaderMode::LINE;
   }
 
-  value.consecutiveDelimiters = static_cast<bool>(json[k_ConsecutiveDelimitersKey].get<int32>());
+  // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was, and saved its column counts that way.
+  // Collapse delimiters so converted pipelines read the same columns.
+  value.consecutiveDelimiters = true;
 
   return {std::move(value)};
 }
