@@ -486,7 +486,7 @@ template <class T>
 std::vector<T> BinaryOracle(const std::vector<T>& in, usize dimX, usize dimY, usize dimZ, const StructuringElement& se, MorphOp op, T fg, T bg, bool boundaryToForeground)
 {
   const bool dilate = (op == MorphOp::Dilate);
-  const usize numOffsets = se.offsets.size();
+  const usize numOffsets = dimZ == 1 ? static_cast<usize>(std::count_if(se.offsets.begin(), se.offsets.end(), [](const SEOffset& off) { return off.dz == 0; })) : se.offsets.size();
   std::vector<T> out(in.size());
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -497,6 +497,11 @@ std::vector<T> BinaryOracle(const std::vector<T>& in, usize dimX, usize dimY, us
         usize fgCount = 0;
         for(const SEOffset& off : se.offsets)
         {
+          // A 2D kernel has no out-of-plane neighbors; only X/Y bounds apply.
+          if(dimZ == 1 && off.dz != 0)
+          {
+            continue;
+          }
           const int64 nx = static_cast<int64>(x) + off.dx;
           const int64 ny = static_cast<int64>(y) + off.dy;
           const int64 nz = static_cast<int64>(z) + off.dz;
@@ -985,6 +990,179 @@ TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline uses tr
       REQUIRE(input.readValues() == count);
       REQUIRE(output.writtenValues() == count);
     }
+  }
+}
+
+TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: binary 2D boundary ignores absent Z neighbors", "[ImageProcessing][MorphologyEngine][Binary2DBoundaryRegression]", BinaryDilateImageFilter,
+                   BinaryErodeImageFilter)
+{
+  UnitTest::LoadPlugins();
+  using FilterT = TestType;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool boundaryToForeground = GENERATE(false, true);
+  CAPTURE(scenario, boundaryToForeground);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  constexpr bool k_Dilate = std::is_same_v<FilterT, BinaryDilateImageFilter>;
+
+  // A radius-one 2D Cross contains the center and its four axial neighbors.
+  // Dilation of one point yields that cross. Foreground outside X/Y adds the perimeter.
+  // Erosion of the cross leaves only its center, with either boundary setting.
+  const std::vector<uint8> cross = {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+  const std::vector<uint8> point = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const std::vector<uint8> crossAndPerimeter = {1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1};
+  const auto& input = k_Dilate ? point : cross;
+  const auto& expected = k_Dilate ? (boundaryToForeground ? crossAndPerimeter : cross) : point;
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({5, 5, 1});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 5, 5}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  const DataPath inputPath({"Image Geometry", "CellData", "Input"});
+  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, ShapeType{1, 5, 5}, ShapeType{1});
+  auto copyInputResult = store->copyFromBuffer(0, nonstd::span<const uint8>(input.data(), input.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(copyInputResult);
+  auto* inputArray = DataArray<uint8>::Create(dataStructure, "Input", store, cellData->getId());
+  REQUIRE(inputArray != nullptr);
+  scope.requireExpectedStore(*inputArray);
+
+  FilterT filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Cross)));
+  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(FilterT::k_ForegroundValue_Key, std::make_any<float64>(1.0));
+  args.insertOrAssign(FilterT::k_BackgroundValue_Key, std::make_any<float64>(0.0));
+  args.insertOrAssign(FilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const DataArray<uint8>* output = nullptr;
+  REQUIRE_NOTHROW(output = &dataStructure.getDataRefAs<DataArray<uint8>>(DataPath({"Image Geometry", "CellData", "Output"})));
+  scope.requireExpectedStore(*output);
+  std::vector<uint8> actual(expected.size());
+  auto copyOutputResult = output->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(copyOutputResult);
+  REQUIRE(actual == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: empty XY binary kernel preserves input", "[ImageProcessing][MorphologyEngine][Binary2DEmptyKernelRegression]", BinaryDilateImageFilter,
+                   BinaryErodeImageFilter)
+{
+  UnitTest::LoadPlugins();
+  using FilterT = TestType;
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool boundaryToForeground = GENERATE(false, true);
+  const uint32 radiusZ = GENERATE(uint32{0}, uint32{1}, uint32{3});
+  CAPTURE(scenario, boundaryToForeground, radiusZ);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  // An Annulus with zero X/Y radii has no XY offsets, regardless of its Z radius.
+  // Mixed input distinguishes copy-through from a constant boundary value.
+  const std::vector<uint8> expected = {7, 3, 7};
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{1, 1, 3}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+  const DataPath inputPath({"Image Geometry", "CellData", "Input"});
+  auto storePtr = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, ShapeType{1, 1, 3}, ShapeType{1});
+  auto copyInputResult = storePtr->copyFromBuffer(0, nonstd::span<const uint8>(expected.data(), expected.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(copyInputResult);
+  auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", storePtr, cellDataPtr->getId());
+  REQUIRE(inputArrayPtr != nullptr);
+  scope.requireExpectedStore(*inputArrayPtr);
+
+  FilterT filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Annulus)));
+  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{0, 0, radiusZ}));
+  args.insertOrAssign(FilterT::k_ForegroundValue_Key, std::make_any<float64>(7.0));
+  args.insertOrAssign(FilterT::k_BackgroundValue_Key, std::make_any<float64>(3.0));
+  args.insertOrAssign(FilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const DataArray<uint8>* outputPtr = nullptr;
+  REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<DataArray<uint8>>(DataPath({"Image Geometry", "CellData", "Output"})));
+  scope.requireExpectedStore(*outputPtr);
+  std::vector<uint8> actual(expected.size());
+  auto copyOutputResult = outputPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(copyOutputResult);
+  REQUIRE(actual == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::MorphologyEngine: binary composite empty XY kernel preserves input", "[ImageProcessing][MorphologyEngine][Binary2DCompositeEmptyKernelRegression]")
+{
+  UnitTest::LoadPlugins();
+  std::atomic_bool shouldCancel{false};
+
+  for(const int32 radiusZ : {1, 3})
+  {
+    for(const bool opening : {true, false})
+    {
+      for(const bool safeBorder : {false, true})
+      {
+        if(opening && safeBorder)
+        {
+          continue;
+        }
+        DYNAMIC_SECTION("Empty in-plane Annulus: radiusZ=" << radiusZ << ", opening=" << opening << ", safeBorder=" << safeBorder)
+        {
+          const MorphOp firstOp = opening ? MorphOp::Erode : MorphOp::Dilate;
+          const MorphOp secondOp = opening ? MorphOp::Dilate : MorphOp::Erode;
+          const SizeVec3 dims{3, 1, 1};
+          const StructuringElement se = MakeStructuringElement(KernelType::Annulus, {0, 0, radiusZ});
+          const std::vector<uint8> values = {7, 3, 7};
+          // No in-plane offsets remain, so both stages copy the input.
+          const std::vector<uint8> expected = {7, 3, 7};
+          DataStore<uint8> input(ShapeType{1, 1, 3}, ShapeType{1}, 0);
+          DataStore<uint8> output(ShapeType{1, 1, 3}, ShapeType{1}, 9);
+          auto copyInputResult = input.copyFromBuffer(0, nonstd::span<const uint8>(values.data(), values.size()));
+          SIMPLNX_RESULT_REQUIRE_VALID(copyInputResult);
+          auto requiredBytesResult = CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes<uint8>(dims, se, safeBorder);
+          SIMPLNX_RESULT_REQUIRE_VALID(requiredBytesResult);
+          auto result = ApplyBinaryMorphologyCompositePipeline<uint8>(input, output, dims, se, firstOp, secondOp, safeBorder, uint8{7}, uint8{3}, shouldCancel, requiredBytesResult.value());
+          SIMPLNX_RESULT_REQUIRE_VALID(result);
+          std::vector<uint8> actual(expected.size());
+          auto copyOutputResult = output.copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+          SIMPLNX_RESULT_REQUIRE_VALID(copyOutputResult);
+          REQUIRE(actual == expected);
+        }
+      }
+    }
+  }
+
+  SECTION("Cross Opening removes the inner corner of a foreground block")
+  {
+    const SizeVec3 dims{5, 5, 1};
+    const StructuringElement se = MakeStructuringElement(KernelType::Cross, {1, 1, 1});
+    const std::vector<uint8> values = {1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // The corner block survives except for its inner corner at (2, 2).
+    const std::vector<uint8> expected = {1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    DataStore<uint8> input(ShapeType{1, 5, 5}, ShapeType{1}, 0);
+    DataStore<uint8> output(ShapeType{1, 5, 5}, ShapeType{1}, 9);
+    auto copyInputResult = input.copyFromBuffer(0, nonstd::span<const uint8>(values.data(), values.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(copyInputResult);
+    auto requiredBytesResult = CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes<uint8>(dims, se, false);
+    SIMPLNX_RESULT_REQUIRE_VALID(requiredBytesResult);
+    auto result = ApplyBinaryMorphologyCompositePipeline<uint8>(input, output, dims, se, MorphOp::Erode, MorphOp::Dilate, false, uint8{1}, uint8{0}, shouldCancel, requiredBytesResult.value());
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    std::vector<uint8> actual(expected.size());
+    auto copyOutputResult = output.copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(copyOutputResult);
+    REQUIRE(actual == expected);
   }
 }
 
