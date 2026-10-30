@@ -16,6 +16,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 namespace fs = std::filesystem;
 using namespace nx::core;
 
@@ -145,4 +146,33 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[
       CHECK(args.value<int32>(ExecuteProcessFilter::k_Timeout_Key) == 5);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ExecuteProcessFilter: Execution captures standard error", "[SimplnxCore][ExecuteProcessFilter]")
+{
+  const bool blocking = GENERATE(true, false);
+  CAPTURE(blocking);
+  ExecuteProcessFilter filter;
+  DataStructure dataStructure;
+  auto args = filter.getDefaultArguments();
+  const fs::path logPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("c01-process-{}.log", blocking ? "blocking" : "nonblocking");
+#if NDEBUG
+  const fs::path childPath = fs::path(unit_test::k_BuildDir.view()) / "SimplnxCoreProcessOutputTestChild";
+#else
+  const fs::path childPath = fs::path(unit_test::k_BuildDir.view()) / "SimplnxCoreProcessOutputTestChild_d";
+#endif
+  args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<std::string>(fmt::format("\"{}\"", childPath.string())));
+  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(blocking));
+  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(5000));
+  args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<fs::path>(logPath));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  std::ifstream log(logPath);
+  REQUIRE(log.is_open());
+  std::stringstream content;
+  content << log.rdbuf();
+  // The deterministic child writes these fixed markers to separate streams and returns zero.
+  CHECK(content.str().find("C01_STDOUT") != std::string::npos);
+  CHECK(content.str().find("C01_STDERR") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

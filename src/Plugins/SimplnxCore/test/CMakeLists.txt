@@ -180,6 +180,14 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
+add_executable(${PLUGIN_NAME}ProcessOutputTestChild ExecuteProcessTestChild.cpp)
+set_target_properties(${PLUGIN_NAME}ProcessOutputTestChild PROPERTIES
+  DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
+  RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
+)
+simplnx_enable_warnings(TARGET ${PLUGIN_NAME}ProcessOutputTestChild)
+add_dependencies(${PLUGIN_NAME}UnitTest ${PLUGIN_NAME}ProcessOutputTestChild)
+
 if(DREAM3DNX_ENABLE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
