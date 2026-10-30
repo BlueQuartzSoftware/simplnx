@@ -16,6 +16,8 @@ The principal directions can have their signs flipped: they come from eigenvecto
 
 *Note*: Computing the Weingarten matrix values is an experimental feature, and there is no guarantee at this time that the values are correct.
 
+The fitting neighborhood contains the triangle itself and its neighbors within the **Neighborhood Ring Count**. Only neighbors with the same pair of **Face Labels** are included. If this neighborhood initially contains fewer than two triangles, the filter returns an error. Otherwise, triangles with a NaN component in their face normal or face centroid are excluded from the fit. If the evaluated triangle is excluded, all of its requested outputs are NaN. The outputs are also NaN if this exclusion leaves fewer than two triangles. The evaluated triangle counts toward this minimum.
+
 ### Units
 
 Principal curvatures and mean curvature are reported in **1/length** (the reciprocal of the geometry length units; the radius of the best-fit circle is its reciprocal). Gaussian curvature, being a product of two curvatures, is reported in **1/length^2**. Principal directions are **dimensionless** unit 3-vectors.

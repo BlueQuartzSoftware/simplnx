@@ -43,6 +43,8 @@
 
 #include <Eigen/Dense>
 
+#include <limits>
+
 namespace nx::core
 {
 namespace
@@ -65,10 +67,6 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
     if(std::isnan(data[t * 3]) || std::isnan(data[t * 3 + 1]) || std::isnan(data[t * 3 + 2]))
     {
       iter = triPatch.erase(iter);
-      if(*iter == triId)
-      {
-        triId = *(triPatch.begin());
-      }
     }
     else
     {
@@ -76,18 +74,13 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
     }
   }
 
-  if(triPatch.empty())
+  // Keep the requested seed and require a neighbor to construct the local frame.
+  if(triPatch.size() < 2 || triPatch.count(triId) == 0)
   {
     return nullptr;
   }
 
-  size_t totalTuples = triPatch.size();
-  if(triPatch.count(triId) == 0)
-  {
-    totalTuples++;
-  }
-
-  ShapeType tupleShape = {totalTuples};
+  ShapeType tupleShape = {triPatch.size()};
   std::optional<float64> initValue = {};
   std::shared_ptr<Float64DataStore> extractedData = std::make_shared<Float64DataStore>(tupleShape, cDims, initValue);
   // This little chunk makes sure the current seed triangles centroid and normal data appear
@@ -217,11 +210,25 @@ void CalculateTriangleGroupCurvatures::operator()() const
       throw std::runtime_error("NRingNeighbor failed to find more than one triangles.");
     }
 
+    const auto markInvalid = [this, triId]() {
+      for(auto* output : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
+      {
+        if(output != nullptr)
+        {
+          for(usize component = 0; component < output->getNumberOfComponents(); ++component)
+          {
+            output->setComponent(triId, component, std::numeric_limits<float64>::quiet_NaN());
+          }
+        }
+      }
+    };
+
     size_t beforeSize = triPatch.size();
     std::shared_ptr<Float64DataStore> patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
-    // if every triangle got removed because of NaN values in the Normals, then bail from this iteration of the loop
+    // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchNormals)
     {
+      markInvalid();
       continue;
     }
 
@@ -233,9 +240,10 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     beforeSize = triPatch.size();
     std::shared_ptr<Float64DataStore> patchCentroids = extractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
-    // if every triangle got removed because of NaN values in the Normals, then bail from this iteration of the loop
+    // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchCentroids)
     {
+      markInvalid();
       continue;
     }
 
