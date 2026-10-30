@@ -20,7 +20,7 @@ Visual style and file conventions for figures generated to support filter docume
 ## Font
 
 ```
-'Segoe UI', 'Helvetica Neue', Arial, sans-serif
+'Helvetica Neue', Arial, sans-serif
 ```
 
 | Element | Size | Weight | Color |
