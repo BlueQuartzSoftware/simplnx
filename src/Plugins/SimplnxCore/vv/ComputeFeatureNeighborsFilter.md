@@ -1,118 +1,148 @@
 # V&V Report: ComputeFeatureNeighborsFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID               | `7177e88c-c3ab-4169-abe9-1fdaff20e598`                              |
-| SIMPLNX Human Name         | Compute Feature Neighbors                                           |
-| DREAM3D 6.5.171 equivalent | `FindNeighbors` (SIMPL UUID `97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac`) — `Source/Plugins/Statistics/StatisticsFilters/FindNeighbors.{h,cpp}` |
-| Verified commit            | *<filled at SBIR deliverable assembly>*                             |
-| Status                     | COMPLETE          |
-| Sign-off                   | Nathan Young, 06-23-2026                                               |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `7177e88c-c3ab-4169-abe9-1fdaff20e598` |
+| SIMPLNX Human Name | Compute Feature Neighbors |
+| DREAM.3D v6.5.171 equivalent | `FindNeighbors` (SIMPL UUID `97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Nathan Young, 2026-06-23; second engineer: Michael Jackson, 2026-06-30 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Minor changes** of legacy `FindNeighbors::execute()`. Same core adjacency-scan algorithm; SIMPLNX adds explicit 2D/1D/single-voxel dimensionality dispatch via `NeighborUtilities`, template-specializes on the four `(StoreSurface, StoreBoundary)` combinations, and fixes two legacy bugs (D1 — SSA formula wrong for non-Z-normal faces; D2 — SurfaceFeatures incorrectly marks all features as surface for 1D and 2D EmptyY/EmptyX images). |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 37 structured TEST_CASEs with inline hand-derived expected outputs for all five output arrays across all 8 image dimensionalities and all 4 optional-output combinations. All pass.                           |
-| Code paths enumerated | 19 of 21 listed paths exercised. The feature-range guard and cancellation remain explicitly untested. |
-| Tests today | 37 registered cases plus one hidden real-HDF5 five-slice analytical case; both CTest selections pass 37/37. |
-| Exemplar archive       | `6_6_stats_test_v2.tar.gz` — shared SmallIn100 input used for legacy comparison only; no oracle outputs (inline expected values used for all structured tests). SSA arrays in the archive reflect the buggy 6.5.171 output and are explicitly skipped in the legacy comparison test. |
-| Legacy comparison      | **Run** on the SmallIn100 fixture (`6_6_stats_test_v2.tar.gz`): NumNeighbors, NeighborList, SurfaceFeatures bit-identical (3D dataset). **Plus a targeted A/B (2026-06-29)** on degenerate/anisotropic inputs through stock 6.5.171 and SIMPLNX that **proves both D1 and D2** via a surgically patched local build of the legacy source: D1 SSA `[8,8]`→`[24,24]`==NX (anisotropic), D2 SurfaceFeatures `[0,1,1]`→`[0,1,0]`==NX (EmptyY). The legacy-source patches reproduce SIMPLNX exactly; NumNeighbors/NeighborList/BoundaryCells byte-identical across all three. See deviations file. |
-| Bug flags              | **D1** — SharedSurfaceAreaList uses wrong area formula for non-Z-normal faces in 6.5.171. **D2** — SurfaceFeatures incorrectly marks all features as surface for 1D images and 2D EmptyY/EmptyX images in 6.5.171.                               |
-| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds a real-HDF5 oracle for Scanline slice reads and all five outputs. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to `FindNeighbors` in DREAM.3D v6.5.171. SIMPLNX keeps face adjacency and corrects face areas and surface flags. |
+| Oracle (confirmed) | Class 1 analytical expectations are encoded in 35 ordinary cases in `test/ComputeFeatureNeighborsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 25 of 35 exercised by the mapped tests. Other error returns, cancellation, negative IDs and the unreachable dispatch fallback have no direct fixture. |
+| Tests today | 39 test cases: 35 analytical cases, one archive regression, one SIMPL conversion case, one tuple-count validation case and one hidden HDF5 case. The analytical cases cover eight dimensionality states and all four optional-output combinations. |
+| Exemplar archive | `6_6_stats_test_v2.tar.gz` supplies Small IN100 inputs and three regression reference arrays. Shared surface areas use independent inline expectations. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 4 cases matches; the differences come from `ComputeFeatureNeighborsFilter-D1` and `ComputeFeatureNeighborsFilter-D2`. A local proof version with those fixes matches DREAM3D-NX in 4 of 4 cases. |
+| Bug flags | None. |
+| V&V phase | COMPLETE. |
 
 ## Summary
 
-`ComputeFeatureNeighborsFilter` identifies contiguous neighboring features in an ImageGeometry by scanning face-adjacent voxel pairs with differing non-zero feature IDs, accumulating the shared surface area per feature-neighbor pair. Verification used **Class 1 (Analytical) inline oracles** across 37 hand-built test cases spanning all 8 image dimensionalities (including 1D, 2D, 3D, and single-voxel), all four optional-output combinations, and non-square 2D regression fixtures that guard a previously-fixed stride bug. Review of the legacy `FindNeighbors.cpp` source found two bugs fixed by the SIMPLNX rewrite: D1 — the SSA formula at line 431 (`float area = float(number) * xRes * yRes`) uses X×Y face area for all faces regardless of face-normal direction; D2 — the SurfaceFeatures boundary check (lines 330–343) only handles the ZPoints==1 special case, incorrectly marking every feature as surface for any image with YPoints==1 or XPoints==1. NumNeighbors, NeighborList, and BoundaryCells are bit-identical to 6.5.171 on the 3D SmallIn100 fixture.
+`ComputeFeatureNeighborsFilter` finds features that share voxel faces and sums their shared face areas. Class 1 fixtures check neighbor counts, neighbor lists, areas, boundary-cell counts and surface-feature flags. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Minor changes** ~~| Port | Rewrite | New filter~~
+*Classification:* Minor changes
 
-*Evidence:* Same SIMPL UUID retained (`97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac`). SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/ComputeFeatureNeighborsFilter.json`. Core algorithm (face-adjacent voxel scan, per-feature-pair surface-area accumulation) is preserved. The SIMPLNX implementation adds template dispatch over 8 image dimensionality states and 4 optional-output combinations, which did not exist in the legacy. The SSA computation was also corrected (see D1).
-
-*Port-time deltas:*
-
-1. **Dimensionality dispatch** — legacy operated on 3D coordinates uniformly; SIMPLNX dispatches to one of 8 `ImageDimensionStateT` specializations (`SingleVoxelImage`, `ZImage1D`, `YImage1D`, `XImage1D`, `EmptyZImage2D`, `EmptyYImage2D`, `EmptyXImage2D`, `Image3D`) via `NeighborUtilities`. This also fixes the SurfaceFeatures bug for 1D and 2D EmptyY/X geometries (D2 — see below).
-2. **SSA formula corrected** — legacy finalization at `FindNeighbors.cpp:431`: `float area = float(number) * xRes * yRes` uses X×Y spacing for every shared face regardless of face orientation. SIMPLNX uses `computeFaceSurfaceAreas<ImageDimensionStateT>(spacing)` (`NeighborUtilities.hpp:322`) which returns `{zFace, yFace, xFace, xFace, yFace, zFace}` = `{sx*sy, sx*sz, sy*sz, sy*sz, sx*sz, sx*sy}` and accumulates per-contact directly. This is D1.
-3. **`std::map` accumulation** — accumulates `{neighborFeatureId → sharedSurfaceArea}` per feature into a sorted map; iterating the map populates NeighborList and SSA in ascending neighbor-ID order. Legacy used a two-pass approach: raw per-contact push into `vector<vector<int32_t>>` followed by deduplication via `QMap<int32_t, int32_t>` count — yielding the same NumNeighbors and NeighborList but the wrong SSA (D1).
-4. **SurfaceFeatures 2D/1D fix** — legacy `FindNeighbors.cpp:330–343` only handles `ZPoints==1` explicitly; the 3D branch fires for any image with `YPoints==1` or `XPoints==1` and always triggers on `row==0` or `column==0` (both always true when that axis has length 1), marking every feature as surface. SIMPLNX uses per-dimensionality specializations that only mark corner cells (1D), corner+edge cells (2D), or all boundary cells (3D) as surface. This is D2.
-5. **Two-stage boundary split** — Stage 1 processes corner/edge/face boundary cells with explicit face-validity checks; Stage 2 processes internal cells without validity overhead. Structure is new; behavior-equivalent for 3D inputs.
-6. **Template specialization on optional outputs** — `ComputeFeatureNeighborsFunctor<ProcessSurfaceFeatures, ProcessBoundaryCells>` avoids runtime branches in the per-voxel hot path. Performance only; no behavior delta.
-7. **Throttled progress** — legacy used direct `notifyStatusMessage`; SIMPLNX emits throttled progress feedback. UX-only.
-
-*Material PRs since baseline (2025-10-01):*
-
-- **PR #1590** — "ENH: Standardize 2D Image Handling" (2026-03-xx) — extracted `NeighborUtilities` as a shared module; added explicit 2D/1D dimensionality dispatch to this filter. Non-square 2D regression tests added during V&V catch the stride bug, since resolved.
+*Evidence:* `FindNeighbors::execute()` and the current Direct and Scanline implementations use distinct positive face-neighbor IDs; SIMPLNX adds dimensionality dispatch and the two corrections below.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary.
+*Class:* 1 (Analytical).
 
-*Applied:* Expected outputs for all five arrays (NumNeighbors, NeighborList, SharedSurfaceAreaList, BoundaryCells, SurfaceFeatures) are derived by hand from the input FeatureIds array and the geometry's dimensions and spacing. For each geometry fixture, the engineer traced every face-adjacent voxel pair, identified pairs with differing non-zero feature IDs, accumulated the per-pair face area (= product of the two spacings perpendicular to the face normal), and summed shared areas per feature-neighbor pair. BoundaryCells counts = the number of distinct-feature face neighbors for each voxel. SurfaceFeatures = true for features that have any voxel on the image boundary. The derivations are embedded as inline `std::array` literals directly adjacent to the `REQUIRE`-equivalent comparisons in the test source.
+*Applied:* Hand-specified FeatureIds define adjacency, face counts, direction-specific face areas and image-boundary contact in each active dimension.
 
-*Encoded:* `test/ComputeFeatureNeighborsTest.cpp` — 37 TEST_CASEs. The `ExecuteFilter()` helper executes the filter and compares all requested outputs against the hand-derived inline exemplar arrays via `UnitTest::CompareArrays` and `UnitTest::CompareNeighborLists`. All 37 pass at the verified commit.
+*Encoded:* `src/Plugins/SimplnxCore/test/ComputeFeatureNeighborsTest.cpp::SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution` and the other `Case` tests encode 11 geometry fixtures in 35 cases. All pass in CI.
 
-*Second-engineer review:* **Signed off by Nathan Young, 2026-06-23.** Review focus: the 3D 5×5×5 fixture (125-voxel, 6-feature, 7-neighbor-pair) and the non-square 2D stride regression fixtures as the highest-complexity cases.
+*Second-engineer review:* Michael Jackson, 2026-06-30.
 
 ## Bugs found and fixed
 
-Existing D1 and D2 corrections remain in the branch and are described in the deviation sidecar. This OOC recertification changes no production algorithm and found no new defect.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `ComputeFeatureNeighborsFilter-D1` and `ComputeFeatureNeighborsFilter-D2`.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeFeatureNeighborsFilter-D1` | Shared areas used X spacing times Y spacing for every face direction. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Each contact contributes the product of the two spacings perpendicular to its face normal. |
+| `ComputeFeatureNeighborsFilter-D2` | A unit X or Y dimension caused interior features to be marked as surface features. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Only boundary contact in active dimensions sets the flag; a single voxel is a surface feature. |
 
 ## Code path coverage
 
-19 of 21 listed paths exercised.
+25 of 35 paths exercised. Each uncovered path states why it has no direct fixture.
 
-Source: `Algorithms/ComputeFeatureNeighbors.cpp` (26 lines), `ComputeFeatureNeighborsDirect.cpp` (394 lines), and `ComputeFeatureNeighborsScanline.cpp` (250 lines).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.cpp` (26 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsDirect.cpp` (394 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsScanline.cpp` (250 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeFeatureNeighborsFilter.cpp` (230 lines), and `src/simplnx/Utilities/NeighborUtilities.hpp` (634 lines).
 
-The algorithm has four logical stages: **(a) Guard** — validates maxFeatureId and sets up geometry; **(b) Dispatch** — selects dimensionality template and optional-output template; **(c) Stage 1** — processes boundary voxels (corners, then edges, then face-interior boundary cells); **(d) Stage 2** — processes interior voxels (3D only); **(e) Finalize** — builds NumNeighbors + NeighborList + SharedSurfaceAreaList from the per-feature map.
+Test names below omit the common `SimplnxCore::ComputeFeatureNeighborsFilter:` prefix. Direct separates boundary and interior cells; Scanline uses three rolling slices.
 
-| #  | Stage       | Path                                         | Test case                                         |
-|----|-------------|---------------------|--------------------------|
-| 1  | (a) Guard   | `maxFeatureId >= totalFeatures` → error result                                                    | *Not directly tested. Low-value guard; exercised implicitly when FeatureIds and FeatureAM are mismatched at the filter level.* |
-| 2  | (b) Dispatch | `StoreSurface=true, StoreBoundary=true`     | `Case *.*.0: * - Full Execution` (all dimensionalities)                                               |
-| 3  | (b) Dispatch | `StoreSurface=true, StoreBoundary=false`     | `Case *.*.1: * - No Boundary` (all dimensionalities)                                                 |
-| 4  | (b) Dispatch | `StoreSurface=false, StoreBoundary=true`     | `Case *.*.2: * - No Surface Features` (all dimensionalities)                                         |
-| 5  | (b) Dispatch | `StoreSurface=false, StoreBoundary=false`     | `Case *.*.3: * - No Optionals` (all dimensionalities)                                                |
-| 6  | (b) Dispatch | Dimensionality → `SingleVoxelImage`          | `Case 0.0.*: Single Voxel`                       |
-| 7  | (b) Dispatch | Dimensionality → `ZImage1D` / `YImage1D` / `XImage1D`                                            | `Case 1.0.*` / `Case 1.1.*` / `Case 1.2.*`      |
-| 8  | (b) Dispatch | Dimensionality → `EmptyZImage2D` / `EmptyYImage2D` / `EmptyXImage2D` (square)                    | `Case 2.0.*` / `Case 2.1.*` / `Case 2.2.*`      |
-| 9  | (b) Dispatch | Dimensionality → `EmptyZImage2D` / `EmptyYImage2D` / `EmptyXImage2D` (non-square stride regression) | `Case 2.0.4` / `Case 2.1.4` / `Case 2.2.4`  |
-| 10 | (b) Dispatch | Dimensionality → `Image3D`                   | `Case 3.0.*: 3D`                                 |
-| 11 | (c) Stage 1  | `featureId == 0` → skip voxel (no surface/boundary contribution)                                 | 1D test (`featureIdsArray[5] = 0`) + 3D test (multiple zero voxels)                                  |
-| 12 | (c)/(d)      | `neighborFeatureId == 0` → skip face (background neighbor)                                       | 1D test + 3D test (background voxels present)    |
-| 13 | (c) Stage 1  | `!isValidFaceNeighbor[faceIndex]` → skip face (image boundary)                                   | All tests — every fixture has at least one image-boundary voxel                                        |
-| 14 | (c)/(d)      | `neighborFeatureId == feature` → skip face (same-feature neighbor)                               | All multi-voxel tests (interior voxels within a feature)                                              |
-| 15 | (c)/(d)      | Normal accumulation — different non-zero features → `neighborSurfaceAreas[feature][nbr] += area` | All multi-feature tests                           |
-| 16 | (c) Stage 1  | `ProcessSurfaceFeaturesV=true` → `surfaceFeatures->setValue(feature, true)` for boundary voxel   | `Case *.*.0` and `Case *.*.1` (Full Execution + No Boundary variants)                                |
-| 17 | (c)/(d)      | `ProcessBoundaryCellsV=true` → `boundaryCells->setValue(voxelIndex, numDiffNeighbors)`           | `Case *.*.0` and `Case *.*.2` (Full Execution + No Surface Features variants)                        |
-| 18 | (c) Stage 1  | Edge cell processing path (ProcessEdges — skipped for SingleVoxelImage)                          | `Case 1.0.*` through `Case 3.0.*`                |
-| 19 | (c) Stage 1  | Face cell processing path (ProcessFaces — 2D and 3D only, no validity check needed)              | `Case 2.*.*` and `Case 3.0.*`                    |
-| 20 | (d) Stage 2  | `shouldCancel` → early return from 3D internal loop                                               | *Not directly tested. Requires cancel-signal injection infrastructure not present in this test suite.* |
-| 21 | Scanline | Contacts span five rolling 25-cell slices with HDF5 inputs and outputs | `real HDF5 five-slice analytical oracle` — original hand-derived counts, adjacency, areas, boundary flags, and surface flags |
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Validation | Maximum FeatureId exceeds the feature array bounds; return `-24500` | *Not directly tested. No fixture supplies an out-of-range positive ID.* |
+| 2 | Optional outputs | Store both surface flags and boundary counts | `Case 0.0.0` through `Case 3.0.0` — Full Execution variants |
+| 3 | Optional outputs | Store surface flags only | `Case 0.0.1` through `Case 3.0.1` — No Boundary variants |
+| 4 | Optional outputs | Store boundary counts only | `Case 0.0.2` through `Case 3.0.2` — No Surface Features variants |
+| 5 | Optional outputs | Store neither optional output | `Case 0.0.3` through `Case 3.0.3` — No Optionals variants |
+| 6 | Dimensions | Single voxel | `Case 0.0.0` through `Case 0.0.3` |
+| 7 | Dimensions | 1D along Z, Y or X | `Case 1.0.0`, `Case 1.1.0`, `Case 1.2.0` |
+| 8 | Dimensions | Square 2D with unit Z, Y or X | `Case 2.0.0`, `Case 2.1.0`, `Case 2.2.0` |
+| 9 | Dimensions | Non-square 2D with unit Z, Y or X | `Case 2.0.4`, `Case 2.1.4`, `Case 2.2.4` |
+| 10 | Dimensions | Full 3D image | `Case 3.0.0` through `Case 3.0.3` |
+| 11 | Cell scan | FeatureId zero contributes no contacts or surface flag | `Case 1.0.0`, `Case 3.0.0` |
+| 12 | Neighbor scan | Neighbor ID zero contributes no face | `Case 1.0.0`, `Case 3.0.0` |
+| 13 | Neighbor scan | Face outside the image is skipped | `Case 0.0.0`, `Case 3.0.0` |
+| 14 | Neighbor scan | Same-feature face is skipped | `Case 1.0.0`, `Case 3.0.0` |
+| 15 | Accumulation | Distinct positive neighbor adds its direction-specific face area | `Case 2.0.0`, `Case 2.1.0`, `Case 2.2.0`, `Case 3.0.0` |
+| 16 | Surface flags | Mark boundary features and leave interior features false | `Case 1.0.0`, `Case 2.1.0`, `Case 2.2.0`, `Case 3.0.0` |
+| 17 | Boundary counts | Write the number of distinct-feature face contacts for each cell | `Case 1.0.0`, `Case 3.0.0` |
+| 18 | Direct boundary | Process edge cells; omit them for a single voxel | `Case 0.0.0`, `Case 1.0.0`, `Case 2.0.0`, `Case 3.0.0` |
+| 19 | Direct boundary | Process face interiors in 2D and 3D | `Case 2.0.0`, `Case 3.0.0` |
+| 20 | Cancellation | Return during the Direct interior sweep or Scanline slice loop | *Not directly tested. No fixture injects cancellation.* |
+| 21 | Scanline | Read first and second slices, rotate buffers, then read later slices | `Case 3.0.0` — in-memory algorithm scenarios |
+| 22 | Direct validation | Missing surface store returns `-789620` | *Not directly tested. Normal filter execution creates the requested output.* |
+| 23 | Direct validation | Missing boundary store returns `-789621` | *Not directly tested. Normal filter execution creates the requested output.* |
+| 24 | Scanline I/O | First input-slice read fails | *Not directly tested. Requires an injected store read failure.* |
+| 25 | Scanline I/O | Second input-slice read fails | *Not directly tested. Requires an injected store read failure.* |
+| 26 | Scanline I/O | Later input-slice read fails after buffer rotation | *Not directly tested. Requires an injected store read failure.* |
+| 27 | Scanline I/O | Boundary-slice write fails | *Not directly tested. Requires an injected store write failure.* |
+| 28 | Cell scan | Negative feature or neighbor ID contributes no contact | *Not directly tested. Fixtures use nonnegative IDs.* |
+| 29 | Finalize | Write sorted neighbor IDs, counts and areas; isolated features have empty lists | `Case 1.0.0`, `Case 3.0.0` |
+| 30 | Dispatch | Select Direct and assert output values | `Case 0.0.0` through `Case 3.0.3` — in-memory algorithm scenarios |
+| 31 | Dispatch | Select Scanline and assert output values | `Case 0.0.0` through `Case 3.0.3` — in-memory algorithm scenarios |
+| 32 | Preflight | Create required outputs and selected optional outputs | `Case 0.0.0` through `Case 0.0.3` — preflight succeeds and execution checks requested outputs |
+| 33 | Direct interior | Accumulate all six faces without image-boundary guards | `Case 3.0.0` |
+| 34 | Direct dispatch | Return after no dimensionality specialization matches | *Not directly tested. The eight dimensionality states exhaust all unit-axis combinations.* |
+| 35 | Preflight | FeatureIds tuple count differs from the selected geometry's cell count; return `-24501` | `Geometry cell tuple count` — 0, 11 and 13 tuples for a 12-cell geometry |
 
 ## Test inventory
 
-| Test case                                 | Status      | Notes                                                |
-|------------------|-------------|-----------------------------|
-| `Case 0.0.0` through `Case 0.0.3`: Single Voxel (4 cases)                                     | kept        | 1-voxel geometry, 1 feature; verifies zero-neighbor result and optional-output combinations              |
-| `Case 1.0.0` through `Case 1.0.3`: 1D Z (4 cases)                                             | kept        | 7-cell 1D Z strip, 4 features + background; verifies 1D neighbor detection and SSA = face area          |
-| `Case 1.1.0` through `Case 1.1.3`: 1D Y (4 cases)                                             | kept        | Same layout rotated to Y axis; same expected values with Y spacing applied                               |
-| `Case 1.2.0` through `Case 1.2.3`: 1D X (4 cases)                                             | kept        | Same layout rotated to X axis; same expected values with X spacing applied                               |
-| `Case 2.0.0` through `Case 2.0.3`: 2D Empty Z, square 5×5×1 (4 cases)                         | kept        | 5×5×1 geometry, 5 features + background; non-trivial 2D neighbor graph with anisotropic spacing         |
-| `Case 2.1.0` through `Case 2.1.3`: 2D Empty Y, square 5×1×5 (4 cases)                         | kept        | Same layout rotated to Z-X plane                    |
-| `Case 2.2.0` through `Case 2.2.3`: 2D Empty X, square 1×5×5 (4 cases)                         | kept        | Same layout rotated to Y-Z plane                    |
-| `Case 2.0.4`: 2D Empty Z, non-square 3×2×1| new-for-V&V | Stride regression: dims[0] ≠ dims[1]; wrong stride produces SSA = 2×area instead of 3×area              |
-| `Case 2.1.4`: 2D Empty Y, non-square 3×1×2| new-for-V&V | Same stride regression rotated to Z-X plane         |
-| `Case 2.2.4`: 2D Empty X, non-square 1×3×2| new-for-V&V | Same stride regression rotated to Y-Z plane         |
-| `Case 3.0.0` through `Case 3.0.3`: 3D 5×5×5 (4 cases)                                         | kept        | 125-voxel, 6-feature, fully 3D geometry with anisotropic spacing; 7 feature-pair SSA values hand-derived |
-| `Legacy: SmallIn100`                       | kept        | Legacy comparison on `6_6_stats_test_v2.tar.gz`; compares NumNeighbors, NeighborList, SurfaceFeatures; SSA skipped (D1) |
-| `SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs: "SIMPL 6.5 (UUID)", "SIMPL 6.4 (Filter_Name)") | kept   | Validates UUID + argument-key + parameter-value decoding from SIMPL JSON; does not execute the filter    |
-| `real HDF5 five-slice analytical oracle` | new-for-V&V | Reuses Create3DDataStructure and ExecuteFilter; all five analytical outputs match while target-only counters prove OOC-on-OOC dispatch. |
+The 38 ordinary test cases cover analytical expectations, archive regression, conversion and tuple-count validation. The 35 analytical cases, archive regression and conversion case pass in CI.
 
-On 2026-09-21, the registered selections pass 37/37 in both DREAM3DNX builds. The hidden HDF5 case passes 73 assertions. FeatureIds and the three fixed-size output arrays are asserted HDF5-OOC; both output NeighborLists are asserted out-of-core. The existing 125-cell fixture spans five algorithm slices, so a missing Z neighbor or incorrect rolling buffer changes independently specified outputs. Existing upstream assertions and tolerances are preserved. Historical D1/D2 dispositions remain valid; no new legacy binary run is claimed.
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `SimplnxCore::ComputeFeatureNeighborsFilter: real HDF5 five-slice analytical oracle` | new-for-V&V | Hidden. Reuses the 5×5×5 analytical fixture; checks all five outputs, HDF5 stores and the selected algorithm counter. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution` | kept | One voxel: zero neighbors, empty lists and a surface feature. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.1: Single Voxel - No Boundary` | kept | One voxel: zero neighbors, empty lists and a surface feature. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.2: Single Voxel - No Surface Features` | kept | One voxel: zero neighbors, empty lists and a surface feature. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.3: Single Voxel - No Optionals` | kept | One voxel: zero neighbors, empty lists and a surface feature. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.0: 1D Z - Full Execution` | kept | Seven cells along Z: two neighbor pairs and one isolated feature. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.1: 1D Z - No Boundary` | kept | Seven cells along Z: two neighbor pairs and one isolated feature. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.2: 1D Z - No Surface Features` | kept | Seven cells along Z: two neighbor pairs and one isolated feature. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.3: 1D Z - No Optionals` | kept | Seven cells along Z: two neighbor pairs and one isolated feature. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.0: 1D Y - Full Execution` | kept | Seven cells along Y: two neighbor pairs and one isolated feature. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.1: 1D Y - No Boundary` | kept | Seven cells along Y: two neighbor pairs and one isolated feature. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.2: 1D Y - No Surface Features` | kept | Seven cells along Y: two neighbor pairs and one isolated feature. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.3: 1D Y - No Optionals` | kept | Seven cells along Y: two neighbor pairs and one isolated feature. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.0: 1D X - Full Execution` | kept | Seven cells along X: two neighbor pairs and one isolated feature. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.1: 1D X - No Boundary` | kept | Seven cells along X: two neighbor pairs and one isolated feature. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.2: 1D X - No Surface Features` | kept | Seven cells along X: two neighbor pairs and one isolated feature. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.3: 1D X - No Optionals` | kept | Seven cells along X: two neighbor pairs and one isolated feature. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.0: 2D Empty Z - Full Execution` | kept | 5×5×1 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.1: 2D Empty Z - No Boundary` | kept | 5×5×1 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.2: 2D Empty Z - No Surface Features` | kept | 5×5×1 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.3: 2D Empty Z - No Optionals` | kept | 5×5×1 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.0: 2D Empty Y - Full Execution` | kept | 5×1×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.1: 2D Empty Y - No Boundary` | kept | 5×1×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.2: 2D Empty Y - No Surface Features` | kept | 5×1×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.3: 2D Empty Y - No Optionals` | kept | 5×1×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.0: 2D Empty X - Full Execution` | kept | 1×5×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.1: 2D Empty X - No Boundary` | kept | 1×5×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.2: 2D Empty X - No Surface Features` | kept | 1×5×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.3: 2D Empty X - No Optionals` | kept | 1×5×5 cells: areas 22.6, 6.8 and 23.8; two interior features. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.0: 3D - Full Execution` | kept | 125 cells: ten feature-pair areas, an isolated feature and an interior feature. Checks all five outputs. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.1: 3D - No Boundary` | kept | 125 cells: ten feature-pair areas, an isolated feature and an interior feature. Checks counts, lists, areas and surface flags. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.2: 3D - No Surface Features` | kept | 125 cells: ten feature-pair areas, an isolated feature and an interior feature. Checks counts, lists, areas and boundary counts. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.3: 3D - No Optionals` | kept | 125 cells: ten feature-pair areas, an isolated feature and an interior feature. Checks counts, lists and areas. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.4: 2D Empty Z - Non-Square {3,2,1}` | new-for-V&V | Six cells in two feature rows: checks one neighbor per feature, shared area 6, all boundary counts 1 and both surface flags true. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.4: 2D Empty Y - Non-Square {3,1,2}` | new-for-V&V | Six cells in two feature rows: checks one neighbor per feature, shared area 6, all boundary counts 1 and both surface flags true. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.4: 2D Empty X - Non-Square {1,3,2}` | new-for-V&V | Six cells in two feature rows: checks one neighbor per feature, shared area 6, all boundary counts 1 and both surface flags true. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100` | kept | Compares SurfaceFeatures, NumNeighbors and NeighborList with the Small IN100 archive. SharedSurfaceAreaList and BoundaryCells are not compared. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check identity, comments and ten converted arguments. |
+| `SimplnxCore::ComputeFeatureNeighborsFilter: Geometry cell tuple count` | new-for-V&V | Checks error `-24501` for 0, 11 and 13 FeatureIds tuples against 12 geometry cells, including the input path and counts in the message. Accepts 12 tuples in another Attribute Matrix with a different tuple shape. |
 
 ## Exemplar archive
 
@@ -120,9 +150,11 @@ On 2026-09-21, the registered selections pass 37/37 in both DREAM3DNX builds. Th
 - **SHA512:** `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723`
 - **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/ComputeFeatureNeighborsFilter.md`
 
-The archive is a shared SmallIn100 dataset used by multiple statistics filters. For `ComputeFeatureNeighborsFilter` it is consumed only by the `Legacy: SmallIn100` test as a legacy-comparison input+output fixture. Oracle outputs for all structured tests (Cases 0–3) are inline hand-derived values; no archive is needed. The archive's SSA arrays reflect the buggy 6.5.171 output and are not compared (see D1).
+## Deviations from DREAM.3D v6.5.171
 
-## Deviations from DREAM3D 6.5.171
+See `vv/deviations/ComputeFeatureNeighborsFilter.md` for the root cause, affected users and recommendation for each Part 1 entry.
 
-- `ComputeFeatureNeighborsFilter-D1` — SharedSurfaceAreaList uses `count * xRes * yRes` for all faces in legacy; correct formula is `Σ area(face_direction)` — see `vv/deviations/ComputeFeatureNeighborsFilter.md`
-- `ComputeFeatureNeighborsFilter-D2` — SurfaceFeatures incorrectly marks all features as surface for any image with `XPoints==1` or `YPoints==1` in legacy — see `vv/deviations/ComputeFeatureNeighborsFilter.md`
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeFeatureNeighborsFilter-D1` | Shared areas use each face direction's area instead of X spacing times Y spacing for all contacts. |
+| `ComputeFeatureNeighborsFilter-D2` | Surface flags use only active dimensions; interior features in 1D and unit-X or unit-Y 2D images remain false. |

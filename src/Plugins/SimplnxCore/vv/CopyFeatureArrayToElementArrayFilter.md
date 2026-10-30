@@ -1,134 +1,133 @@
 # V&V Report: CopyFeatureArrayToElementArrayFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID                | `4c8c976a-993d-438b-bd8e-99f71114b9a1`          |
-| SIMPLNX Human Name          | Create Element Array from Feature Array         |
-| DREAM3D 6.5.171 equivalent  | `CopyFeatureArrayToElementArray` (SIMPLib CoreFilters) — SIMPL UUID `99836b75-144b-5126-b261-b411133b5e8a` |
-| Verified commit             | *<filled at SBIR deliverable assembly>*         |
-| Status                      | COMPLETE |
-| Sign-off                    | Michael A. Jackson <mike.jackson@bluequartz.net> (V&V author). Second engineer: Nathan Young, 2026-07-28 (PR #1689 review). |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `4c8c976a-993d-438b-bd8e-99f71114b9a1` |
+| SIMPLNX Human Name | Create Element Array from Feature Array |
+| DREAM.3D v6.5.171 equivalent | `CopyFeatureArrayToElementArray` (SIMPLib CoreFilters, UUID `99836b75-144b-5126-b261-b411133b5e8a`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-07-24; second engineer: Nathan Young, 2026-07-28 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Minor changes** — same indirection-copy kernel as SIMPL `CopyFeatureArrayToElementArray`; NX deliberately adds multi-array selection, suffix-based output naming, TBB parallelization, and different feature-count validation semantics. |
-| Oracle (confirmed)    | **Class 1 (Analytical)** — pure indirection lookup `out[i*C+c] = feature[featureIds[i]*C+c]`; hand-derived expected values on a 4×3×1 fixture (float32/1-comp, int32/3-comp, bool). **Class 4 (Invariant)** companion — piecewise constancy within each feature. Encoded as `CopyFeatureArrayToElementArrayTest.cpp::"Analytical Oracle (Class 1)"`; all pass. |
-| Code paths enumerated | 15 of 15 enumerated paths exercised. Direct and Scanline implementations have runtime dispatch witnesses; the real-HDF5 tail test supplements them. |
-| Tests today | 24 registered CTest entries plus 1 hidden OOC contract test. The DREAM3DNX OOC build registers the HDF5-OOC manager, and the new 65,536-block tail fixture asserts real input and output stores. |
-| Exemplar archive      | None — all fixtures are in-memory `AnalyticalFixtures` built in test code; no `download_test_data()` archive required. |
-| Legacy comparison     | **Run 2026-07-23** (re-run after the kernel fast-path change). Bit-identical numeric output on the main fixture (float32, int32×3, bool). 3 deviations, all naming/validation semantics: D1 (output naming for converted pipelines), D2 (over-provisioned feature array accepted in NX, error -5555 in legacy), D3 (negative ids: silent out-of-bounds garbage in legacy, hard error -5355 in NX). |
-| Bug flags             | `CopyFeatureArrayToElementArrayFilter-D3` — legacy 6.5.171 silently produces undefined values for negative feature ids (unchecked out-of-bounds read). SIMPLNX behavior is correct. |
-| V&V phase | The historical COMPLETE status and sign-off remain. The current DREAM3DNX builds close the previously documented backend gap with real-HDF5 boundary evidence. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to DREAM.3D v6.5.171 `CopyFeatureArrayToElementArray`. SIMPLNX copies the same feature tuples, with multiple input arrays, suffix-based names and different input checks. |
+| Oracle (confirmed) | Classes 1 and 4: literal scalar, RGB and boolean outputs plus equal-feature invariants in `test/CopyFeatureArrayToElementArrayTest.cpp`. All pass in CI. |
+| Code paths enumerated | 20 of 28 exercised. Uncovered paths include defensive guards, the Direct fallback, cancellation boundaries and the full-block tail case. |
+| Tests today | 16 test definitions: 15 `TEST_CASE` definitions and one template over 10 numeric types. They cover values, validation, bulk I/O failures, cancellation and pipeline conversion; one definition is hidden. |
+| Exemplar archive | None. Tests construct inputs and expected values in C++. |
+| Legacy comparison | Not run for the current algorithm. The available DREAM.3D v6.5.171 comparison is dated 2026-07-23. |
+| Bug flags | None |
+| V&V phase | Oracle and regression checks are complete. The current algorithm still requires a legacy comparison. |
 
 ## Summary
 
-`CopyFeatureArrayToElementArrayFilter` copies each selected Feature-level array down to the Element (cell) level: for every cell `i`, the output tuple is the source array's tuple at index `featureIds[i]`. Verification used a Class 1 analytical oracle (hand-derived expected values for a 12-cell, 4-feature fixture across single- and multi-component arrays and three data types) plus Class 4 piecewise-constancy invariants; SIMPLNX matched the oracle exactly with zero discrepancies. A/B comparison against DREAM3D 6.5.171 was bit-identical on valid input, with 3 documented deviations in naming/validation semantics — including one legacy bug (silent undefined output for negative feature ids, D3).
+`CopyFeatureArrayToElementArrayFilter` copies each selected feature tuple to every cell with that FeatureId. Class 1 literal expectations and Class 4 equal-feature invariants check the copied values. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Minor changes**
+*Classification:* Minor changes
 
-*Evidence:* SIMPL UUID `99836b75-144b-5126-b261-b411133b5e8a` is registered for conversion via `FromSIMPLJson()` (fixtures at `test/simpl_conversion/6_5/` and `6_4/`). The copy kernel is semantically identical to legacy `copyData<T>()` (SIMPL `CopyFeatureArrayToElementArray.cpp:159-191`) — a per-tuple indirection copy. The surrounding filter deliberately changed.
-
-*Port-time deltas:*
-
-1. **Multi-array selection** — legacy selects ONE feature array per filter instance; NX takes a `MultiArraySelectionParameter` and loops. Does not change per-array output values.
-2. **Output naming** — legacy takes an explicit created-array *name*; NX builds the name as `<sourceArrayName><suffix>`. Same numeric output, different output DataPath for converted pipelines (see Deviations D1).
-3. **Feature-count validation relaxed** — legacy `execute()` errors (-5555) BOTH when `maxFeatureId >= numFeatures` AND when the feature array is over-provisioned (`maxFeatureId != numFeatures-1`). NX (`ValidateFeatureIdsToFeatureAttributeMatrixIndexing`, `ignoreNegativeValues=false`) errors only when `maxFeatureId >= numFeatures` (-5351); an over-sized feature array is accepted (see Deviations D2).
-4. **Negative feature ids** — legacy performs an unchecked negative index into the feature array (undefined behavior / garbage read); NX errors with -5355 (see Deviations D3).
-5. **Kernel form** — Direct handles resident arrays; Scanline bulk-loads feature values and copies cells through 65,536-tuple buffers. Both implement the same indirection and perform no floating-point arithmetic.
-6. **Type dispatch** — legacy if/else `CanDynamicCast` chain over 11 types (bool + 8 int + 2 float); NX `ExecuteParallelFunction` with `ArrayUseAllTypes` over the same 11 types. No behavioral difference.
-7. **Tuple-count precheck (new in NX)** — preflight requires all selected feature arrays to share a tuple count (error -3020). Legacy has no equivalent because it only ever operates on one array.
-
-*Material PRs since baseline:* #1644 (added -3020 preflight test), #1588 (SIMPL backwards-compat test redesign), #1544 (executeImpl → Algorithm class extraction). None changed the copy kernel.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; both kernels copy `source[FeatureIds[i] * C + c]`, while SIMPLNX adds multiple-array selection and changes naming and validation.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary + **4 (Invariant)** companion. Classes 2/3/5 N/A — no external library or paper needed for an indirection lookup (this filter is the literal "Indirection lookups" example in `oracle_classes.md`).
+*Class:* 1 (Analytical), with 4 (Invariant).
 
-*Applied:* Hand-built 4×3×1 `ImageGeom` fixture, 12 cells, 4 features. `FeatureIds = [0,1,1,2, 2,0,3,1, 3,3,0,2]`. Feature arrays: `AvgTemp` (float32, 1 comp) `= [10.5, 20.25, -30.75, 40.125]` and `RGB` (int32, 3 comp) `= [(1,2,3), (40,50,60), (-7,8,-9), (100,200,127)]`. Expected cell outputs are derived by hand (spreadsheet-free — 12 lookups) and embedded as inline constants with derivation comments:
+*Applied:* A 12-cell, four-feature fixture defines 60 literal scalar, RGB and boolean values; cells with equal FeatureIds must have equal RGB tuples.
 
-- `AvgTemp_Cell = [10.5, 20.25, 20.25, -30.75, -30.75, 10.5, 40.125, 20.25, 40.125, 40.125, 10.5, -30.75]`
-- `RGB_Cell` tuple `i` = RGB tuple `FeatureIds[i]`, e.g. cell 3 (fid 2) = `(-7,8,-9)`; cell 6 (fid 3) = `(100,200,127)`.
+*Encoded:* `src/Plugins/SimplnxCore/test/CopyFeatureArrayToElementArrayTest.cpp::Analytical Oracle (Class 1)` and `Over-provisioned Feature array accepted` — two fixtures with 60 and 6 literal value checks. All pass in CI.
 
-Class 4 companion invariants: (a) every pair of cells with the same feature id has identical output tuples; (b) each output tuple equals the source feature tuple exactly (bit-identical, no arithmetic performed).
-
-*Encoded:* `test/CopyFeatureArrayToElementArrayTest.cpp::"Analytical Oracle (Class 1)"` — 12+36+12 element-wise Class 1 assertions (AvgTemp_Cell, RGB_Cell, Active_Cell) with the derivation embedded as comments, plus the Class 4 piecewise-constancy invariant loop. All pass in both builds. A secondary hand-derived fixture lives in `"Over-provisioned Feature array accepted"` (6 assertions).
-
-*Second-engineer review:* **Signed off by Nathan Young, 2026-07-28** (PR #1689) — covering the oracle design and the test changes. The V&V work was authored by Michael A. Jackson, so the review is independent of the author.
+*Second-engineer review:* Nathan Young, 2026-07-28.
 
 ## Bugs found and fixed
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|-----------|--------|----------------------------|---------------------------|
-| `CopyFeatureArrayToElementArrayFilter-D3` | Negative feature identifiers cause unchecked source reads in legacy. | DREAM.3D 6.5.171 only; SIMPLNX rejects these identifiers. | Existing validation returns error -5355. |
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for D4, D5 and D6. DREAM3D-NX v7.0.0 already rejects the negative identifiers described by D3.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `CopyFeatureArrayToElementArrayFilter-D3` | Negative FeatureIds cause reads outside the source array. | DREAM.3D v6.5.171 was affected. DREAM3D-NX v7.0.0 through v7.4.2 were not affected. | Execution rejects negative FeatureIds with error `-5355` before copying. |
+| `CopyFeatureArrayToElementArrayFilter-D4` | Selecting a non-DataArray throws `std::bad_cast` during preflight. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Parameter validation restricts the selection to DataArray objects. |
+| `CopyFeatureArrayToElementArrayFilter-D5` | A slash in the suffix throws `std::invalid_argument`. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Preflight rejects a slash with error `-3021`. |
+| `CopyFeatureArrayToElementArrayFilter-D6` | Empty FeatureIds cause an invalid iterator read during range validation. | DREAM3D-NX v7.2.1 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Empty FeatureIds produce empty output arrays without reading an iterator. |
 
 ## Code path coverage
 
-15 of 15 enumerated paths exercised. Existing failure and cancellation tests are retained; this update adds only the numerical boundary regression.
+20 of 28 paths exercised. Each uncovered path has a reason below.
 
-Source: `Algorithms/CopyFeatureArrayToElementArray.cpp` (41 lines), `CopyFeatureArrayToElementArrayDirect.cpp` (147 lines), and `CopyFeatureArrayToElementArrayScanline.cpp` (148 lines), plus filter preflight.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CopyFeatureArrayToElementArray.cpp` (41 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CopyFeatureArrayToElementArrayDirect.cpp` (147 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/CopyFeatureArrayToElementArrayScanline.cpp` (148 lines), `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/CopyFeatureArrayToElementArrayFilter.cpp` (164 lines), and `src/simplnx/Utilities/DataArrayUtilities.cpp` (515 lines).
 
-Logical phases: (a) parameter/preflight validation and output creation, (b) execute validation, (c) Direct or Scanline copy.
+Test names below omit the common `SimplnxCore::CopyFeatureArrayToElementArrayFilter: ` prefix. Direct and Scanline value fixtures use in-memory stores.
 
-| #  | Phase         | Path                                | Test case |
-|----|---------------|-------------------------------------------------------------------------------------------|-----------|
-| 1  | (a) Preflight | empty selection list → error `k_Validate_Empty_Value` (filter's own guard, preflight AND execute) | `Preflight Error - Empty selection (filter guard)` — FeatureIds path is valid so parameter validation passes and the filter guard is what fires |
-| 2  | (a) Preflight | non-`IDataArray` selection (NeighborList/StringArray) → rejected by parameter validation. The `ArrayType::DataArray` constraint is what rejects it; `MultiArraySelectionParameter::AllowedDataTypes` is stored but not enforced by the framework | `Preflight Error - Non-DataArray selection rejected` |
-| 3  | (a) Preflight | suffix contains `/` → error -3021    | `Preflight Error - Suffix contains '/' (-3021)` |
-| 4  | (a) Preflight | selected feature arrays disagree on tuple count → error -3020                             | `Preflight Error - Feature array tuple count mismatch (-3020)` |
-| 5  | (a) Preflight | valid → one `CreateArrayAction` per selected array (tuple shape from FeatureIds, component shape from source, name `<source><suffix>`) | `Analytical Oracle (Class 1)` — 3 arrays created in the Cell AM |
-| 6  | (a) Actions   | created path collides with an existing object → error -266 at action application (execute in unit tests; pipeline preflight in the GUI); original array untouched | `Execute Error - Created name collides with existing array (-266)` |
-| 7  | (b) Execute   | negative feature id → error -5355 (`ValidateFeatureIdsToFeatureAttributeMatrixIndexing`, called once — preflight -3020 guarantees equal tuple counts across selected arrays) | `Execute Error - Negative FeatureIds (-5355)` |
-| 8  | (b) Execute   | `maxFeatureId >= numFeatures` → error -5351                                               | `Execute Error - FeatureId exceeds Feature tuple count (-5351)` |
-| 9  | (b) Execute   | over-provisioned feature array (`numFeatures > maxId+1`) → accepted (deviation D2 pin)    | `Over-provisioned Feature array accepted` |
-| 10 | (b) Execute   | zero-tuple FeatureIds → valid no-op (validator's empty guard), empty outputs              | `Zero-tuple FeatureIds accepted` |
-| 11 | Execution | Pre-cancel and cancel after a bulk read | `Pre-cancelled Scanline does not write`; `Cancellation after FeatureIds chunk read does not write` |
-| 12 | (c) Kernel    | 11-way type dispatch (bool + 8 int + 2 float)                                             | TEMPLATE_LIST `Valid filter execution` (10 numeric); `Analytical Oracle (Class 1)` (bool, float32, int32) |
-| 13 | Direct | In-core type-dispatched component copy | `Analytical Oracle (Class 1)` — explicit in-core dispatch witness and literal scalar/RGB/bool outputs |
-| 14 | Scanline | Feature cache plus 65,536-cell I/O blocks and partial tail | `Analytical Oracle (Class 1)` — OOC dispatch witness; `genuine HDF5 65536-block tail oracle` — exact 3-component values on disk |
-| 15 | Bulk I/O | Read/write failures propagate before partial writes | `Scanline propagates bulk failures before partial writes` |
-
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Reject an empty selection in preflight and execution | `Preflight Error - Empty selection (filter guard)` |
+| 2 | Parameters | Reject non-DataArray selections | `Preflight Error - Non-DataArray selection rejected` — NeighborList input |
+| 3 | Preflight | Reject a slash in the suffix with `-3021` | `Preflight Error - Suffix contains '/' (-3021)` |
+| 4 | Preflight | Reject different feature-array tuple counts with `-3020` | `Preflight Error - Feature array tuple count mismatch (-3020)` |
+| 5 | Preflight | Create one output per source, with cell tuple shape and source component shape | `Analytical Oracle (Class 1)` |
+| 6 | Actions | Reject an existing output path with `-266`; preserve the original array | `Execute Error - Created name collides with existing array (-266)` |
+| 7 | Validation | Reject negative FeatureIds with `-5355`; leave outputs at zero | `Execute Error - Negative FeatureIds (-5355)` |
+| 8 | Validation | Reject FeatureIds at or above the feature tuple count with `-5351` | `Execute Error - FeatureId exceeds Feature tuple count (-5351)` |
+| 9 | Validation | Accept unused feature tuples | `Over-provisioned Feature array accepted` |
+| 10 | Validation | Accept empty FeatureIds and create empty outputs | `Zero-tuple FeatureIds accepted` |
+| 11 | Dispatch | Return early for an empty algorithm selection | *Not directly tested. Filter validation rejects the empty selection before these defensive guards.* |
+| 12 | Dispatch | Copy all 11 scalar types | `Valid filter execution` — 10 numeric types; `Analytical Oracle (Class 1)` — boolean values |
+| 13 | Direct | Copy components through raw pointers | `Analytical Oracle (Class 1)`; `Valid filter execution` |
+| 14 | Direct | Copy through the generic store fallback | *Not directly tested. The fixtures use concrete DataStore objects.* |
+| 15 | Direct | Cancel before copying a selected array | *Not directly tested. The cancellation fixtures invoke Scanline only.* |
+| 16 | Direct | Cancel inside the raw-pointer cell loop | *Not directly tested. Requires cancellation during the Direct copy.* |
+| 17 | Direct | Cancel inside the generic store loop | *Not directly tested. Requires a fallback store and cancellation during the copy.* |
+| 18 | Scanline | Cache feature values and copy a partial cell block | `Analytical Oracle (Class 1)` — literal scalar, RGB and boolean outputs |
+| 19 | Scanline | Copy a full 65,536-cell block and a partial tail | *Not directly tested. The matching `genuine HDF5 65536-block tail oracle` fixture is hidden and requires an HDF5 store manager.* |
+| 20 | Validation | Propagate a FeatureIds read failure | `Scanline propagates bulk failures before partial writes` / `validator FeatureIds read fails` |
+| 21 | Scanline | Propagate a feature-cache read failure | `Scanline propagates bulk failures before partial writes` / `feature cache read fails` |
+| 22 | Scanline | Propagate a cell-block read failure | `Scanline propagates bulk failures before partial writes` / `FeatureIds transfer read fails after validation` |
+| 23 | Scanline | Propagate an output write failure | `Scanline propagates bulk failures before partial writes` / `output write fails` |
+| 24 | Scanline | Honor cancellation before validation and array copying | `Pre-cancelled Scanline does not write` |
+| 25 | Scanline | Honor cancellation after reading a cell block, before copying its values | `Cancellation after FeatureIds chunk read does not write` |
+| 26 | Scanline | Cancel at the start of a later cell block | *Not directly tested. Requires cancellation between two block transfers.* |
+| 27 | Scanline | Cancel after filling the output buffer, before writing it | *Not directly tested. Requires cancellation at this write boundary.* |
+| 28 | Conversion | Convert the selected path and FeatureIds path; leave the suffix empty | `SIMPL Backwards Compatibility` — both conversion fixtures |
 
 ## Test inventory
 
+Test names omit the common `SimplnxCore::CopyFeatureArrayToElementArrayFilter: ` prefix.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Preflight Error - Empty selection (filter guard)` | new-for-V&V | Supplies a valid FeatureIds array so the filter's own empty-selection guard is what fires, in both preflight and execute. Replaces `Parameter Check` (see the retired row below). |
-| `Preflight Error - Feature array tuple count mismatch (-3020)` | kept | Two feature arrays with 3 vs 4 tuples → -3020. |
-| `Preflight Error - Non-DataArray selection rejected` | new-for-V&V | Pins the `ArrayType::DataArray` parameter constraint: selecting a `NeighborList` previously threw an uncaught `std::bad_cast` out of preflight. |
-| `Preflight Error - Suffix contains '/' (-3021)` | new-for-V&V | Pins the -3021 suffix validation: a suffix containing `/` previously threw an uncaught `std::invalid_argument` from `DataObject` name validation. |
-| `Execute Error - Created name collides with existing array (-266)` | new-for-V&V | Empty suffix + self-selection → -266 when the output actions are applied (execute in unit tests, pipeline preflight in the GUI, since `IFilter::preflight` does not apply actions); asserts the source array is untouched (no silent overwrite). |
-| `Analytical Oracle (Class 1)` | new-for-V&V | ImageGeom fixture; 60 element-wise Class 1 assertions vs hand-derived constants (float32/1, int32/3, bool/1) + Class 4 piecewise-constancy loop + `CheckArraysInheritTupleDims`. |
-| `Execute Error - Negative FeatureIds (-5355)` | new-for-V&V | Passes preflight, fails execute; pins deviation D3's SIMPLNX side. |
-| `Execute Error - FeatureId exceeds Feature tuple count (-5351)` | new-for-V&V | id 4 vs 4-tuple feature array. |
-| `Over-provisioned Feature array accepted` | new-for-V&V | 8-tuple feature array, max id 2 → success + 6 hand-derived value assertions; pins deviation D2. |
-| `Zero-tuple FeatureIds accepted` | new-for-V&V | Degenerate no-op case; also pins the empty-store guard in `ValidateFeatureIdsToFeatureAttributeMatrixIndexing`, which previously dereferenced `end()` on a zero-tuple FeatureIds array (UB). |
-| `Valid filter execution` (TEMPLATE_LIST ×10 types) | kept (modified) | Was comparing never-initialized feature data (indeterminate values) and all-zero temperature data — an indexing bug could not have been detected. Now initialized with distinct per-feature values `[5,15,25]` / `[1,4,7]`. Added `REQUIRE_NOTHROW`, `CAPTURE(i)`, `CheckArraysInheritTupleDims`. |
-| `SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs) | kept (modified) | UUID + argument conversion round-trip for 6.4 and 6.5 fixtures; now also asserts the converted multi-path selection value (was previously unasserted). |
-| `Parameter Check` | retired | Its empty-selection assertion supplied an empty FeatureIds path, which failed *parameter* validation before `preflightImpl()` ran, so the filter's own empty-selection guard was never reached. Replaced by `Preflight Error - Empty selection (filter guard)`. |
-| `Scanline propagates bulk failures before partial writes` | kept | Existing read/write failure regressions. |
-| `Pre-cancelled Scanline does not write` | kept | Existing cancellation regression. |
-| `Cancellation after FeatureIds chunk read does not write` | kept | Existing cancellation regression after I/O. |
-| `genuine HDF5 65536-block tail oracle` | new-for-V&V | 65,537 cell identifiers and int32 RGB tuples. Checks literal outputs at cell 0, cell 65,535, and the one-cell tail. |
-
-
-The upstream/develop independent expected values and tolerances are preserved. The registered oracle runs both Direct and Scanline implementations through runtime witnesses. The hidden test requires HDF5-OOC and checks exact output tuples [1,2,3], [40,50,60], and [-7,8,-9]. Existing DREAM3D 6.5.171 deviations D1–D3 remain unchanged.
-
-OOC recertification, 2026-09-18: serial CTest passed 24/24 in `NX-Com-Qt69-Vtk96-Rel` and 24/24 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 22 assertions in the OOC binary and is included in the OOC-only `SimplnxCoreOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
+| `Preflight Error - Empty selection (filter guard)` | new-for-V&V | Uses a valid FeatureIds path and checks the filter's empty-selection error in preflight and execution. |
+| `Preflight Error - Feature array tuple count mismatch (-3020)` | kept | Selects arrays with three and four tuples; checks `-3020`. |
+| `Preflight Error - Non-DataArray selection rejected` | new-for-V&V | Selects a NeighborList and checks invalid preflight. Covers D4. |
+| `Preflight Error - Suffix contains '/' (-3021)` | new-for-V&V | Checks `-3021` for a slash in the suffix. Covers D5. |
+| `Execute Error - Created name collides with existing array (-266)` | new-for-V&V | Checks the action error and every original FeatureIds value. |
+| `Analytical Oracle (Class 1)` | new-for-V&V | Checks 60 literal scalar, RGB and boolean values, equal-feature RGB invariants and inherited tuple dimensions. |
+| `genuine HDF5 65536-block tail oracle` | new-for-V&V | Hidden (`[.OocStoreContract]`). Requires HDF5 input and output stores; checks literal RGB tuples at cells 0, 65,535 and 65,536. |
+| `Scanline propagates bulk failures before partial writes` | kept | Injects four read/write errors; checks error codes and unchanged output sentinels for the read failures. |
+| `Pre-cancelled Scanline does not write` | kept | Sets cancellation before execution and checks all output sentinels. |
+| `Cancellation after FeatureIds chunk read does not write` | kept | Cancels after the second FeatureIds read and checks all output sentinels. |
+| `Execute Error - Negative FeatureIds (-5355)` | new-for-V&V | Checks `-5355` after successful preflight and verifies all three output arrays remain zero. Covers D3. |
+| `Execute Error - FeatureId exceeds Feature tuple count (-5351)` | new-for-V&V | Uses ID 4 with four feature tuples; checks `-5351` and zero output arrays. |
+| `Over-provisioned Feature array accepted` | new-for-V&V | Uses eight feature tuples with maximum ID 2; checks six literal outputs. Covers D2. |
+| `Zero-tuple FeatureIds accepted` | new-for-V&V | Checks successful execution and zero output tuples. Covers D6. |
+| `Valid filter execution` | kept | Template over 10 numeric types; checks two 30-cell outputs and tuple dimensions. V&V replaced uninitialized or constant inputs with distinct feature values. |
+| `SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check UUID and arguments, including the selected path and empty suffix. |
 
 ## Exemplar archive
 
-- **Archive:** None. All fixtures are built in-memory in the test file (`AnalyticalFixtures`); no exemplar `.dream3d`/`download_test_data()` entry exists or is needed for this filter.
-- **Provenance:** N/A (no archive). The A/B comparison inputs are minted by `make_input.py` in the comparison bundle (OneDrive archive), reproducible from the checked-in oracle constants.
+- **Archive:** None. Fixtures are constructed in `src/Plugins/SimplnxCore/test/CopyFeatureArrayToElementArrayTest.cpp`.
+- **SHA512:** Not applicable. `src/Plugins/SimplnxCore/test/CMakeLists.txt` registers no archive for this filter.
+- **Provenance:** Not applicable; no exemplar archive. Comparison evidence is cited in `src/Plugins/SimplnxCore/vv/deviations/CopyFeatureArrayToElementArrayFilter.md`.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Comparison run 2026-07-23 on the analytical fixture (main case) plus two targeted probes. **Numeric output bit-identical on valid input** (float32/1-comp, int32/3-comp, bool arrays).
+See `vv/deviations/CopyFeatureArrayToElementArrayFilter.md` for root causes, affected users and recommendations.
 
-- `CopyFeatureArrayToElementArrayFilter-D1` — converted legacy pipelines produce differently *named* output arrays (`<source><suffix>` vs explicit legacy name) — see `vv/deviations/CopyFeatureArrayToElementArrayFilter.md`
-- `CopyFeatureArrayToElementArrayFilter-D2` — over-provisioned feature array errors in 6.5.171 (-5555) but succeeds in SIMPLNX — see `vv/deviations/CopyFeatureArrayToElementArrayFilter.md`
-- `CopyFeatureArrayToElementArrayFilter-D3` — **legacy bug**: negative feature ids silently produce undefined values in 6.5.171 (unchecked out-of-bounds read); SIMPLNX errors -5355 — see `vv/deviations/CopyFeatureArrayToElementArrayFilter.md`
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `CopyFeatureArrayToElementArrayFilter-D1` | Converted pipelines retain the source array name in SIMPLNX; DREAM.3D uses the explicit output name. |
+| `CopyFeatureArrayToElementArrayFilter-D2` | SIMPLNX accepts unused feature tuples; DREAM.3D requires the feature tuple count to equal the largest FeatureId plus one. |
+| `CopyFeatureArrayToElementArrayFilter-D3` | SIMPLNX rejects negative FeatureIds; DREAM.3D can read outside the source array. |

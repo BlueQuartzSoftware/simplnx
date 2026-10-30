@@ -188,6 +188,55 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
   }
 }
 
+TEMPLATE_TEST_CASE("SimplnxCore::IdentifySampleFilter: unit dimensions hole filling", "[SimplnxCore][IdentifySampleFilter]", bool, uint8)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto dims = GENERATE(SizeVec3{5, 5, 1}, SizeVec3{5, 1, 5}, SizeVec3{1, 5, 5}, SizeVec3{1, 1, 1});
+  const bool fillHoles = GENERATE(false, true);
+  CAPTURE(scenario, dims[0], dims[1], dims[2], fillHoles);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions(dims);
+  geometry->setSpacing({1.0F, 1.0F, 1.0F});
+  geometry->setOrigin({0.0F, 0.0F, 0.0F});
+  const ShapeType shape{dims[2], dims[1], dims[0]};
+  auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", shape, geometry->getId());
+  REQUIRE(cellData != nullptr);
+  geometry->setCellData(*cellData);
+  auto store = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, k_NonSquareMaskPath, shape, {1});
+  auto* mask = DataArray<TestType>::Create(dataStructure, "Mask", store, cellData->getId());
+  REQUIRE(mask != nullptr);
+
+  // Each 5 by 5 plane has one enclosed center hole and one bad corner.
+  // The corner (or the sole voxel in a 1 by 1 by 1 image) must stay bad.
+  mask->fill(static_cast<TestType>(true));
+  mask->setValue(0, static_cast<TestType>(false));
+  if(mask->getNumberOfTuples() > 1)
+  {
+    mask->setValue(12, static_cast<TestType>(false));
+  }
+
+  IdentifySampleFilter filter;
+  auto args = CreateNonSquareArguments();
+  args.insertOrAssign(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(fillHoles));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  for(usize i = 0; i < mask->getNumberOfTuples(); i++)
+  {
+    CAPTURE(i);
+    const bool expected = i != 0 && (i != 12 || fillHoles);
+    CHECK(mask->getValue(i) == static_cast<TestType>(expected));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and slice oracle", "[SimplnxCore][IdentifySampleFilter][.OocStoreContract]")
 {
   UnitTest::LoadPlugins();

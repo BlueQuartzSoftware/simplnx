@@ -1,125 +1,113 @@
-# Deviations from DREAM3D 6.5.171: ComputeAvgCAxesFilter
+# Deviations from DREAM.3D v6.5.171: ComputeAvgCAxesFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
-
-Entries are referenced by stable ID (`ComputeAvgCAxesFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-**Headline result of the comparison** (all values float32, 11-cell hand-built fixture; expected once the normalize fix is re-applied to the local build of the legacy source):
-
-| Feature | 6.5.171 (official) | Patched legacy (post-normalize) | SIMPLNX (post-normalize) | Notes |
-|---|---|---|---|---|
-| **0** | **(0, 0, 0)** | **(NaN, NaN, NaN)** | **(NaN, NaN, NaN)** | **placeholder — D1 (counter==0)** |
-| 1 | (0, 0, 1.000) | (0, 0, 1.000) | (0, 0, 1.000) | identity quaternion, all match |
-| 2 | (0, 0.866, 0.500) | (0, 0.866, 0.500) | (0, 0.866, 0.500) | +60° X, all match |
-| 3 | (0, 0, 1.000) | (0, 0, 1.000) | (0, 0, 1.000) | 3 aligned cells, all match |
-| 4 | (0, 0, 1.000) | (0, 0, 1.000) | (0, 0, 1.000) | antipodal pair, all match |
-| **5** | **(0, 0, 1.000)** | **(NaN, NaN, NaN)** | **(NaN, NaN, NaN)** | **no cells assigned — D1** |
-| **6** | **(0, 0, 1.000)** | **(NaN, NaN, NaN)** | **(NaN, NaN, NaN)** | **all cells non-hex — D1** |
-| **7** | **(0, 0, 0.667)** | **(0, 0.866, 0.500)** | **(0, 0.866, 0.500)** | **antipodal-flip boundary, post-normalize — D2** |
-
-SIMPLNX is expected to be bit-identical to the patched local build of the legacy source (once the patch's normalize step lands). 6.5.171 differs at F0/F5/F6 (D1) and F7 (D2). The Phase-7 changes applied surgically to the legacy build (precision + matrix-math style + counter==0 → NaN at finalize + final per-feature normalize) explain all 4 deviations completely.
+Part 1 lists the output differences from DREAM.3D v6.5.171 (D1 and D2). Part 2 lists fixed SIMPLNX defects (D3 through D5). Both parts use one stable ID sequence. The Filter UUID is the permanent cross-reference anchor.
 
 ---
 
-## ComputeAvgCAxesFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
-| **Deviation ID** | `ComputeAvgCAxesFilter-D1`             |
-| **Filter UUID**  | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
-| **Status**       | active                                 |
+### ComputeAvgCAxesFilter-D1
 
-**Symptom:** For any feature `i` whose `counter[i] == 0` at the final computation — meaning zero hex-phase voxels contributed to the feature — SIMPLNX writes `(NaN, NaN, NaN)` into that feature's `AvgCAxes` slot. Legacy DREAM3D 6.5.171 instead falls into a "counter==0 rescue" branch and writes `(0, 0, 1)` — a confusingly valid-looking c-axis output for a feature with no contributing data.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgCAxesFilter-D1` |
+| **Filter UUID** | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
+| **Status** | active |
 
-This symptom manifests in three distinct scenarios:
+**Symptom:** SIMPLNX writes three NaN components for a feature with no hexagonal contribution. DREAM.3D v6.5.171 leaves feature zero at `(0,0,0)` and writes `(0,0,1)` for an empty positive feature.
 
-| Scenario | Example in V&V dataset | SIMPLNX | 6.5.171 |
-|---|---|---|---|
-| Placeholder feature 0 (never referenced by any cell) | F0 | NaN | (0, 0, 0) — initial state, untouched by legacy finalize loop |
-| Feature has no cells assigned | F5 — declared in CellFeatureData with 8 tuples but no cell has `FeatureId == 5` | NaN | (0, 0, 1) — rescue fires |
-| Feature has cells but all are non-hex | F6 — sole cell of F6 is Cubic_High phase, skipped in cell loop, counter never incremented | NaN | (0, 0, 1) — rescue fires |
+**Root cause:** Algorithmic choice. DREAM.3D v6.5.171 `FindAvgCAxes` has no Cell Phases or Crystal Structures inputs. It includes every cell with a positive FeatureId. Its final loop starts at feature 1 and supplies `(0,0,1)` when the count is zero. SIMPLNX accepts only Hexagonal_High and Hexagonal_Low contributions, finalizes from feature zero, and writes NaN when the count is zero. The current code also preserves hexagonal contributions when a feature contains both hexagonal and non-hexagonal cells. DREAM3D-NX v7.0.0 through v7.4.1 wrote NaN into the sum when a non-hexagonal cell occurred. DREAM3D-NX v7.4.2 decides whether to write NaN during finalization.
 
-(For F0 specifically, legacy 6.5.171's finalize loop starts at index 1 and never visits feature 0; the array slot stays at its zero-initialized state. SIMPLNX's finalize loop starts at index 0 and writes NaN.)
+**Affected users:** Users with empty features, non-hexagonal phases, or mixed-phase features. Downstream calculations must handle NaN values.
 
-**Root cause:** **Algorithmic choice** during the SIMPLNX port. The refactored algorithm consolidates "no valid contributions" handling at the per-feature finalize loop:
+**Recommendation:** Trust SIMPLNX for hexagonal C-axis statistics. Exclude features with NaN averages from downstream direction calculations.
 
-```cpp
-// Cell loop: non-hex cells skip without writing anything
-if(currentCrystalStructure != ebsdlib::CrystalStructure::Hexagonal_High &&
-   currentCrystalStructure != ebsdlib::CrystalStructure::Hexagonal_Low)
-{
-  continue;
-}
-cellCount[currentFeatureId]++;
-
-// ... per-cell accumulation ...
-
-// Per-feature finalize loop (starts at index 0):
-if(cellCount[currentFeatureId] == 0)
-{
-  avgCAxes[cAxesIndex]     = NAN;
-  avgCAxes[cAxesIndex + 1] = NAN;
-  avgCAxes[cAxesIndex + 2] = NAN;
-}
-else
-{
-  // divide by cellCount, then normalize
-}
-```
-
-The legacy DREAM3D 6.5.171 `FindAvgCAxes` instead writes `(0, 0, 1)` at the counter==0 case, and starts the finalize loop at index 1. A surgical fix applied to a local build of the legacy source retrofits both the SIMPLNX-style `counter==0 → NaN` write and the finalize-loop start-at-0 into the legacy code, producing **bit-identical** SIMPLNX output across F0, F5, and F6.
-
-**Affected users:** Anyone running the filter on EBSD data with one or more of:
-- Multi-phase data including non-hexagonal phases (some features may end up all-non-hex)
-- CellFeatureData with declared feature tuples that don't have cells assigned (sparse feature space)
-- Pole-figure or texture-statistics pipelines that consume `AvgCAxes` downstream — the (0, 0, 1) legacy rescue value would silently propagate as a "real" c-axis; the SIMPLNX NaN allows correct downstream filtering.
-
-**Recommendation:** **Trust SIMPLNX.** Writing `NaN` is a more honest signal that the value is undefined for these features. The legacy `(0, 0, 1)` rescue was a side effect of the rescue branch design, not a meaningful crystallographic c-axis. Downstream consumers of `AvgCAxes` should expect and handle NaN appropriately (e.g., filter out NaN-valued features before computing pole figures or texture statistics).
+**Evidence:** PR #1631 (`ec22ac375`) moved the NaN decision to finalization. DREAM.3D tag `v6.5.171`, `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindAvgCAxes.cpp`, compared with `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgCAxes.cpp`. `Class 1 Oracle (hand-built dataset)` checks NaN values for F0 (no assigned cells), F5 (empty positive feature), and F6 (one identity cell marked Cubic_High). The legacy source leaves F0 at zero and writes `(0,0,1)` for F5 and F6. The fixture does not contain a feature with both hexagonal and non-hexagonal cells.
 
 ---
 
-## ComputeAvgCAxesFilter-D2
+### ComputeAvgCAxesFilter-D2
 
-| Field            | Value                                  |
-|------------------|----------------------------------------|
-| **Deviation ID** | `ComputeAvgCAxesFilter-D2`             |
-| **Filter UUID**  | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
-| **Status**       | active                                 |
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgCAxesFilter-D2` |
+| **Filter UUID** | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
+| **Status** | active |
 
-**Symptom:** For features whose cell c-axes lie on the *antipodal-flip cancellation boundary* — where the running-average dot product evaluates to exactly zero in math but is precision-dependent in float32 — SIMPLNX and 6.5.171 produce different per-feature `AvgCAxes` outputs. After the Phase-7 normalize-at-finalize step, both implementations yield unit vectors, but with different magnitudes vs 6.5.171 (1.0 in SIMPLNX, 2/3 in 6.5.171) AND different directions.
+**Symptom:** SIMPLNX returns a unit average C-axis. DREAM.3D v6.5.171 returns an unnormalized mean. Rounding near a zero dot product can also change the selected direction.
 
-In the V&V hand-built fixture this fires at F7: three cells with c-axes `(0, 0, 1)`, `(0, +√3/2, 0.5)`, `(0, -√3/2, 0.5)`. The legacy 6.5.171 float-precision path takes the "no flip" branch and produces `(0, 0, 0.667)`. The SIMPLNX double-precision-Eigen path takes the "flip fires" branch and produces `(0, 0.866, 0.500)` (post-normalize). These are genuinely different c-axis directions (60° apart in 3D), NOT hex c≡-c equivalents — both are valid "average c-axes" of the same cell set under different sign-assignment choices.
+**Root cause:** Precision and algorithmic choice. DREAM.3D v6.5.171 uses float orientation calculations and float sums. SIMPLNX uses double orientation matrices, vectors, and cosine calculations, but accumulates components in float32. Both implementations flip a contribution when its cosine with the running direction is negative. SIMPLNX increments the count before this decision and normalizes the final mean; DREAM.3D v6.5.171 increments it afterward and does not normalize the final mean.
 
-**Root cause:** **Precision + matrix-math style**.
+**Affected users:** Users who compare magnitudes with DREAM.3D v6.5.171, or whose inputs put the sign decision near a zero dot product.
 
-The relevant lines in `Algorithms/ComputeAvgCAxes.cpp` lines 118–122 compute the running-average reference and the antipodal-flip decision:
+**Recommendation:** Trust SIMPLNX for unit-direction output. At the sign boundary, use the documented unit-magnitude invariant; the test does not select one expected direction.
 
-```cpp
-float64 cosAngle = ImageRotationUtilities::CosBetweenVectors(cellCAxis, runningCAxisAvg);
-if(cosAngle < 0.0)
-{
-  cellCAxis *= -1.0f;
-}
-```
-
-At F7 cell 10, the mathematically exact cosAngle is zero — the cell's c-axis is perpendicular to the running average. In SIMPLNX's `Eigen::Vector3d` double-precision path the computed `cosAngle` lands at a tiny negative value, firing the flip. In legacy 6.5.171's float-only path (or in a pure-double NumPy replay), the computed cosAngle lands at a tiny positive value, NOT firing the flip. The accumulated sums diverge to genuinely different directions.
-
-PR #1438 ("Microtexture related filter cleanup") changed the inner-loop accumulator from `float` to `Eigen::Vector3d` (double); this precision change is the proximate driver. The EbsdLib API refactor (PR #1472) replaced explicit `qu2om` + helper calls with inline `toOrientationMatrix()` — verified functionally equivalent by the matching output of the patched local build of the legacy source. The Phase-7 normalize-at-finalize step (V&V cycle) widens the deviation: pre-normalize, both implementations had magnitude 2/3 at F7; post-normalize, SIMPLNX has magnitude 1.0 while 6.5.171 still has 2/3 (since the legacy code never normalized).
-
-**Affected users:** Anyone running the filter on EBSD data containing features whose cell-level c-axes are arranged near the antipodal-flip cancellation boundary. In practice this is rare in natural EBSD data — it requires several cells with c-axes that summed (without flip) would lie nearly orthogonal to a previously-accumulated direction. The deliberately-pathological F7 test case demonstrates the sensitivity. **Users computing pole figures or per-feature texture statistics will get different magnitudes (1.0 vs ≤ 1.0) between SIMPLNX and 6.5.171, with the SIMPLNX magnitude being more predictable across pipelines (always unit-vector).**
-
-**Recommendation:** **Trust SIMPLNX.** The unit-vector contract matches the natural interpretation of "average c-axis direction" and is what downstream filters (`ComputeFeatureReferenceCAxisMisorientations`, `ComputeFeatureNeighborCAxisMisalignments`) need anyway (those filters compute `acos(dot(a, b))` and require unit-magnitude inputs). Where direction differs at the precision boundary, both directions are valid c-axis representatives of the underlying cells — there is no objectively "right" answer at exact cancellation.
+**Evidence:** PR #1438 (`e6896714b`) introduced double orientation calculations and removed the final normalization then present in SIMPLNX. PR #1472 (`413e6fa46`) changed the EbsdLib matrix API. PR #1631 (`ec22ac375`) restored final normalization. Current code narrows each contribution before adding it to the float32 sum; the PR #1631 implementation narrowed the result of the addition. The tagged legacy source and the current algorithm contain the stated arithmetic. `Class 1 Oracle (hand-built dataset)` checks F7 magnitude and the general unit-vector invariant with tolerance `1e-5`. The last ideal F7 axis has zero dot product with the preceding sum. Keeping or flipping the last axis gives unit directions that are 60 degrees apart. The full derivation is in `../provenance/ComputeAvgCAxesFilter.md`.
 
 ---
 
-## Comparison build & library nuance
+## Part 2 — SIMPLNX defects and behavior changes
 
-Legacy DREAM3D 6.5.171 (and the patched local build of its source) uses the **built-in EbsdLib/OrientationLib** inside the DREAM3D source tree (frozen at the 6.5.171 release point, with the targeted surgical patches applied on top). SIMPLNX uses an **independent, vcpkg-installed EbsdLib** that is actively updated. Both implement Rowenhorst conventions but the underlying code differs. The patched legacy build reproduces SIMPLNX *functional behavior*, not *identical library code* — sufficient to isolate the design-choice drivers of the deviations.
+### ComputeAvgCAxesFilter-D3
 
-The patched legacy build's purpose is **root-cause proof**. If every observed SIMPLNX-vs-6.5.171 difference disappears when the targeted changes are applied to the legacy code, those targeted changes are conclusively the cause. They are.
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgCAxesFilter-D3` |
+| **Filter UUID** | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
 
-**Comparison fixtures:**
-- `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_171_compute_avg_c_axis.dream3d` — official DREAM3D 6.5.171 release output
-- a second output file alongside it in `output_legacy/` — output of the surgically patched local build of the legacy source (pending re-run after the normalize fix)
-- `output_simplnx/simplnx_compute_avg_caxes.dream3d` — SIMPLNX output
-- Three-way diff report: `vv/comparisons/ComputeAvgCAxesFilter/results/three_way_comparison.txt`
+**Symptom:** A participating cell with a negative or out-of-range phase could read outside Crystal Structures.
+
+**Root cause:** Bug. Released algorithms use `crystalStructures[cellPhases[i]]`, or the equivalent lookup through `currentCellPhase`, without a bounds check. The current algorithm rejects a negative phase or a phase at or above the ensemble tuple count with `-76404`. It skips nonpositive FeatureIds before checking the phase. DREAM.3D v6.5.171 has no phase lookup and was not affected.
+
+**Affected users:** Users whose positive-FeatureId cells contain invalid phase indices.
+
+**Recommendation:** Trust SIMPLNX with the fix. Correct any participating phase identified by error `-76404`.
+
+**Evidence:** PR #1568 (`4ec21e93f`) adds the phase bounds check. `Phase Index Bounds` checks phase -1 and phase 2 with two ensemble tuples, on participating and background cells. The current guard is in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgCAxes.cpp`. Direct inspection of that path in every release branch from `upstream/release/v7.0.0` through `upstream/release/v7.4.2` finds the unchecked lookup.
+
+---
+
+### ComputeAvgCAxesFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgCAxesFilter-D4` |
+| **Filter UUID** | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Converted SIMPL pipelines selected a cell matrix for feature output and supplied AttributeMatrix paths where the filter required phase and crystal-structure arrays.
+
+**Root cause:** Bug. `FromSIMPLJson()` derived the feature matrix from Quats, the phase path from the FeatureIds matrix, and the crystal-structure path from the AvgCAxes matrix. The correction derives the feature matrix from the output AvgCAxes path. It places `Phases` beside FeatureIds and `CrystalStructures` in the same container's `CellEnsembleData`. DREAM.3D v6.5.171 has no SIMPL-to-SIMPLNX conversion path and was not affected.
+
+**Affected users:** Users who import legacy `FindAvgCAxes` pipelines into the affected DREAM3D-NX releases.
+
+**Recommendation:** Trust SIMPLNX with the fix. After conversion, select the phase and crystal-structure arrays manually if their names differ from the conventional names.
+
+**Evidence:** PR #1682 (`5eb69f359`) corrects the converted array paths. `SIMPL Backwards Compatibility` checks six arguments in the `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections. Both fixtures use `CellData` for the input and output matrix, so they do not isolate the corrected feature-matrix selection. Direct inspection of `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeAvgCAxesFilter.cpp` in every release branch finds the wrong mappings through v7.4.1 and the correction in v7.4.2.
+
+---
+
+### ComputeAvgCAxesFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ComputeAvgCAxesFilter-D5` |
+| **Filter UUID** | `453cdb58-7bbb-4576-ad5e-f75a1c54d348` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.0. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.1 |
+
+**Symptom:** Conversion rejected the legacy AvgCAxes output path instead of extracting its array name.
+
+**Root cause:** Bug. `DataArrayNameFilterParameterConverter` requires a JSON string, but the legacy output parameter is a path object. `DataArrayCreationToDataObjectNameFilterParameterConverter` reads the array-name field from that object. DREAM.3D v6.5.171 has no SIMPL-to-SIMPLNX conversion path and was not affected.
+
+**Affected users:** Users who import legacy `FindAvgCAxes` pipelines into the affected DREAM3D-NX releases.
+
+**Recommendation:** Trust SIMPLNX with the fix. D4 also requires DREAM3D-NX v7.4.2 or later for the array-path mappings.
+
+**Evidence:** PR #1476 (`e45bca2a5`) corrects the output-name converter. `SIMPL Backwards Compatibility` checks the converted output name `TestArray` for both legacy fixtures. The converter implementations are in `src/simplnx/Parameters/DataObjectNameParameter.cpp`. Direct inspection of `ComputeAvgCAxesFilter.cpp` in every release branch finds the string converter through v7.4.0 and the path-object converter in v7.4.1 and v7.4.2.

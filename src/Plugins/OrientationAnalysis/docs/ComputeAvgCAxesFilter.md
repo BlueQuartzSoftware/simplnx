@@ -49,7 +49,7 @@ All cell-level arrays (feature IDs, phases, quaternions) and the feature-level o
 
 ### Out-of-Core Path
 
-Cell-level data is read in sequential 4096-tuple chunks via `copyIntoBuffer`, with separate buffers for feature IDs, cell phases, and quaternions. Feature-level accumulation is performed in a local buffer (`avgCAxesCache`) that is bulk-read at the start and bulk-written back via `copyFromBuffer` after the normalization pass. The ensemble-level crystal structures array is cached locally at startup to avoid per-element OOC overhead.
+Cell-level data is read in sequential 4096-tuple chunks via `copyIntoBuffer`, with separate buffers for feature IDs, cell phases, and quaternions. Feature-level directions are accumulated and normalized in a local float64 buffer to limit rounding error for large features. Each final component is converted once to float32 and bulk-written via `copyFromBuffer`. The ensemble-level crystal structures array is cached locally at startup to avoid per-element OOC overhead.
 
 ### Performance
 

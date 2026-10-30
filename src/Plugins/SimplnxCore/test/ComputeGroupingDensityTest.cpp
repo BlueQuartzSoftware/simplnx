@@ -61,7 +61,7 @@ constexpr usize k_NumParents = 3;
 //
 // The v2 exemplar archive was hand-reviewed and signed off by the filter author,
 // and the SIMPLNX outputs in it were independently confirmed bit-identical to
-// the legacy DREAM3D 6.5.172 `FindGroupingDensity` filter (the pre-SIMPLNX port
+// the `FindGroupingDensity` filter in a locally patched legacy build (the pre-SIMPLNX port
 // source) — see src/Plugins/SimplnxCore/vv/ComputeGroupingDensityFilter.md and
 // src/Plugins/SimplnxCore/vv/deviations/ComputeGroupingDensityFilter.md.
 //

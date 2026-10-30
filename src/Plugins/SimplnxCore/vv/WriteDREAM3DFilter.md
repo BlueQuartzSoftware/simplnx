@@ -1,156 +1,129 @@
 # V&V Report: WriteDREAM3DFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID                | `b3a95784-2ced-41ec-8d3d-0242ac130003`                                     |
-| SIMPLNX Human Name          | Write DREAM3D-NX File |
-| DREAM3D 6.5.171 equivalent  | `DataContainerWriter` — SIMPL UUID `3fcd4c43-9d75-5b86-aad4-4441bc914f37`  |
-| Verified commit             | *<filled at SBIR deliverable assembly>*                                   |
-| Status                      | COMPLETE — 2026-08-20 |
-| Sign-off                    | Matthew Marine (V&V author, PR #1683). Second engineer: Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-20 (PR #1683 review). |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `b3a95784-2ced-41ec-8d3d-0242ac130003` |
+| SIMPLNX Human Name | Write DREAM3D-NX File |
+| DREAM.3D v6.5.171 equivalent | `DataContainerWriter` (SIMPL UUID `3fcd4c43-9d75-5b86-aad4-4441bc914f37`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Matthew Marine, 2026-07-23; second engineer: Michael Jackson, 2026-08-20 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Rewrite** — same UUID/role as legacy `DataContainerWriter`, but the on-disk format is entirely new (v8 `DataStructure` HDF5 layout + `AtomicFile` atomic-write + optional gzip compression), not a translation of the legacy writer's code. |
-| Oracle (confirmed)     | **Class 1 (Analytical)** — expected content is the hand-built in-memory `DataStructure`/`Pipeline` the test itself constructed; expected HDF5 physical layout (contiguous vs. chunked+deflate) is a closed-form function of array byte-size and the two compression parameters. 20 Write-related fixtures across `DREAM3DFileTest.cpp`, all pass. |
-| Code paths enumerated  | **16 of 20** exercised; the 4 remaining gaps are defensive/unreachable-via-public-API guards (see table). |
-| Tests today | 22 registered entries in the focused selection, plus one hidden HDF5 boundary case. Paired selections pass 22/22. |
-| Exemplar archive       | **None.** Every test builds its `DataStructure` inline in C++ and round-trips it through `WriteFile`/`ReadFile` in the same run — no cached `.tar.gz` golden file is used or needed for a Class 1 oracle. |
-| Legacy comparison      | **Not run — and not applicable.** The two writers target deliberately different on-disk contracts, so a byte/dataset-level A/B against 6.5.171 `DataContainerWriter` output would be 100% noise by design, not signal. `ReadDREAM3DFilter` is the only tool in either codebase that understands both formats; fidelity is instead verified independently via round-trip Class 1 tests. |
-| Bug flags              | One, since resolved: `WriteXdmfNodeGeometry1D/2D/3D` (`Dream3dIO.cpp`) forwarded to the next-lower writer with `geomName` and `hdf5FilePath` transposed (both `std::string_view`, so it compiled silently), producing `.xdmf` node-attribute references that ParaView/VisIt could not resolve. Fixed alongside a content-level `.xdmf` oracle (`CheckXdmfFile`) that would have caught it. |
-| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds independent HDF5 boundary evidence and paired CTest checks. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Rewrite of DREAM.3D v6.5.171 `DataContainerWriter`. SIMPLNX writes the version 8 HDF5 layout, with atomic file replacement and optional compression. |
+| Oracle (confirmed) | Class 1 constructed values, HDF5 layout checks and XDMF filename checks, with a Class 4 compression-size check. The ordinary tests in `test/DREAM3DFileTest.cpp` encode these checks. All pass in CI. |
+| Code paths enumerated | 15 of 21 exercised. Failure injection, detached-pipeline, cancellation and hidden storage-boundary paths have no ordinary-test witness. |
+| Tests today | 24 test cases in the shared file: 23 ordinary cases and 1 hidden storage-boundary case. They cover writing, reading, compression, geometry ownership and SIMPL conversion. |
+| Exemplar archive | None for writer verification. The writer fixtures construct their input and expected values in C++. |
+| Legacy comparison | Not run — comparison artifacts are not available. |
+| Bug flags | None |
+| V&V phase | COMPLETE. |
 
 ## Summary
 
-`WriteDREAM3DFilter` serializes the current `DataStructure` (and, when run inside a pipeline, the preceding `Pipeline`) to an HDF5 `.dream3d` file, with an optional companion `.xdmf` sidecar and optional gzip compression of array datasets. It replaces legacy SIMPL's `DataContainerWriter` under the same conceptual role but with an intentionally new v8 file format, so verification is independent of 6.5.171: correctness is established by writing hand-built `DataStructure`s covering every geometry and `DataObject` type, then reading them back and asserting exact structural/content equality (Class 1 Analytical), plus closed-form assertions on the resulting HDF5 physical layout under each compression setting. All 20 test cases pass. One defect is resolved: the `.xdmf` node-geometry writers in the shared `Dream3dIO` utility transposed the geometry name and HDF5 file path when forwarding between levels, producing sidecar attribute references ParaView could not resolve (see Bug flags above). `StatsDataArray`/`StructArray` (SIMPL's per-ensemble statistics types) are out of scope for this cycle — those `DataObject` types do not yet exist in this branch of simplnx (see deviation D2). Separately, two `DataObject` types have no registered HDF5 IO factory and therefore cannot be written by this or any filter: a bare `DynamicListArray` (as opposed to its `NeighborList` specialization), and `GridMontage` — whose IO class exists but is never registered even though `CreateGridMontageAction` is public core API. Both are recorded under Code path coverage as observations about current behavior; neither is presented as a defect with a known fix, and montage support in particular is an unsettled design question this report takes no position on. The resulting write-failure contract is pinned by a dedicated test.
+`WriteDREAM3DFilter` saves a DataStructure and its preceding pipeline in a `.dream3d` file, with optional compression and an XDMF sidecar. Constructed values and direct HDF5 layout checks verify the writer; the ordinary tests all pass in CI. DREAM3D-NX v7.4.2 contains the two shared-I/O defect fixes found during V&V.
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite** ~~| Port | Minor changes | New filter~~
+*Classification:* Rewrite
 
-`WriteDREAM3DFilter` keeps the SIMPL UUID mapping (`3fcd4c43-9d75-5b86-aad4-4441bc914f37` → `WriteDREAM3DFilter`, `SimplnxCoreLegacyUUIDMapping.hpp:170`) and the legacy `DataContainerWriter` role, but the algorithm (`Algorithms/WriteDREAM3D.cpp`, 82 lines) was designed from the start for the current v8 `DataStructure` HDF5 layout, `AtomicFile`-based atomic writes, and (as of PR #1606) optional gzip compression — none of which exist in the legacy 6.5.171 writer. This has never been a line-by-line port of the legacy C++; the file format itself is a clean-sheet design (`k_CurrentFileVersion = "8.0"` vs. legacy's `"7.0"`/`DataContainers` group tag, see `Dream3dIO.hpp:31`).
-
-*Evidence:* `parametersVersion()` is at 2 (compression parameters added after the filter's initial release); `git log --follow` on the algorithm/filter files shows the write path has been restructured multiple times since inception (out-of-core support #1253, atomic-file rework #900, algorithm-class extraction #1544) without ever tracking legacy DataContainerWriter's implementation.
-
-*Port-time deltas (SIMPL → SIMPLNX argument mapping, `WriteDREAM3DFilter::FromSIMPLJson`):*
-
-1. `OutputFile` → `export_file_path`, `WriteXdmfFile` → `write_xdmf_file`: direct 1:1 mapping, no behavior change.
-2. SIMPL's "Write Time Series" parameter has no SIMPLNX equivalent (dropped) — legacy time-series writing is not part of this filter's scope in NX; not a regression since no NX pipeline concept maps to it.
-3. `use_compression` is force-overridden to `false` for any pipeline converted from SIMPL JSON (`WriteDREAM3DFilter.cpp:130`), even though SIMPLNX's own default is `true`. This is deliberate: SIMPL v6 pipelines never wrote compressed files, so a converted pipeline preserves the exact on-disk encoding it shipped with rather than silently changing file size/behavior on re-run.
-
-*Material PRs since baseline:* #1606 (added HDF5 compression parameters/behavior), #1544 (moved `executeImpl` logic into the `WriteDREAM3D` algorithm class, no behavior change), #1253 (out-of-core support).
+*Evidence:* `SimplnxCoreLegacyUUIDMapping.hpp` maps `DataContainerWriter` to this filter; `Dream3dIO.hpp` defines version 8.0 with a `DataStructure` layout instead of the legacy version 7.0 `DataContainers` layout.
 
 ## Oracle
 
-*Class:* **1 (Analytical)**, primary. `Compression_LevelsRoundTrip` also carries a **Class 4 (Invariant)** companion check (file size must be non-increasing as gzip level rises) alongside its per-level content round-trip.
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-*Applied:* Every test constructs its expected answer directly, without ever running the filter to "produce" the expected value:
+*Applied:* Constructed values define expected arrays and geometry links; HDF5 probes check compression, and XDMF text checks require the output filename in data references.
 
-- **Content fidelity:** each test builds a `DataStructure` in C++ (`CreateTestDataStructure()`, or an inline array/geometry), writes it, reads it back, and asserts the read-back content equals what was built — by construction, not by comparison to a previously-captured file. `CheckTestDataStructure()` walks every `DataObject` kind the filter must support (nested `DataGroup`s, `AttributeMatrix`, `NeighborList`, `StringArray`, and all eight geometry types: Vertex/Edge/Triangle/Quad/Tetrahedral/Hexahedral/Image/RectGrid) and asserts exact values against the hand-known fill pattern from `FillDataStore()`.
-- **Xdmf sidecar:** `CheckXdmfFile()` asserts the sidecar exists and that every heavy-data reference in it (`<file>:/DataStructure/<path>` DataItems) resolves to the `.dream3d` file that was written — a content-level check, not an existence-only check. The test fixture includes a vertex `AttributeMatrix` on a node geometry so node-centered attribute references are actually emitted and validated.
-- **HDF5 physical layout:** the filter's documented compression policy (`docs/WriteDREAM3DFilter.md`) states arrays under 16 KiB always stay contiguous/uncompressed regardless of settings, and any larger array is chunked+deflated at the requested level when compression is enabled. This is a closed-form predicate on `(array byte size, UseCompression, CompressionLevel)` — tests assert it directly via `UnitTest::ProbeHdf5Dataset` rather than trusting the filter's own claim about what it wrote.
-- **Pipeline embedding:** when run inside an actual `Pipeline`, the written file's embedded pipeline JSON must reproduce the exact filter sequence and count that was executed — asserted against the hand-built pipeline (`pipeline.size() == 3`, filter names checked by index).
+*Encoded:* `src/Plugins/SimplnxCore/test/DREAM3DFileTest.cpp::WriteDREAM3DFilter:Valid Parameters`, [File I/O test](../test/DREAM3DFileTest.cpp#L1318), and the five `WriteDREAM3DFilter: Compression_*` cases provide seven content, layout and validation fixtures. All pass in CI.
 
-**Encoded tests:** `src/Plugins/SimplnxCore/test/DREAM3DFileTest.cpp` (20 of the file's 23 `TEST_CASE`s touch Write, several parameterized via `GENERATE`/`DYNAMIC_SECTION`) — all pass. See Test inventory below for the full list and for the three `ReadDREAM3DFilter`-only cases that are deliberately out of scope.
-
-*Second-engineer review:* **Signed off by Michael A. Jackson <mike.jackson@bluequartz.net>, 2026-08-20** (PR #1683 review, per sign-off convention). The V&V work was authored by Matthew Marine, so the review is independent of the author. Reviewed across three passes (2026-07-23, 2026-08-12, and this closing pass):
-
-- **Oracle design.** Confirmed Class 1 is correct and non-circular: every fixture builds its own `DataStructure` in C++ and asserts the read-back against the hand-known fill pattern, so no previously-captured file is ever the source of truth. The HDF5 physical-layout assertions are a genuine closed-form predicate on `(byte size, UseCompression, CompressionLevel)` checked via `ProbeHdf5Dataset`, not a restatement of what the filter reported writing.
-- **Class 4 companion.** The file-size monotonicity invariant in `Compression_LevelsRoundTrip` is a legitimate invariant check, not a substitute for the per-level content round-trip that runs alongside it.
-- **Scope boundary (D2).** Confirmed by inspection that `StatsDataArray`/`StructArray` do not exist in this branch, so the exclusion is a real scope boundary rather than an untested path.
-- **The 4 uncovered defensive paths.** Each was independently confirmed unreachable through the public API, and each appears as its own row in the code-path table rather than being omitted.
-- **Bugs found during review.** Three transposed `std::string_view` arguments in `WriteXdmfNodeGeometry1D/2D/3D` and a wrong-`Result` test in `DREAM3D::ReadFile` are resolved; both are recorded under Bug flags with the tests that now pin them.
+*Second-engineer review:* Michael Jackson, 2026-08-20.
 
 ## Bugs found and fixed
 
-No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.1. DREAM3D-NX v7.4.2 contains the fix for `WriteDREAM3DFilter-D3`. DREAM3D-NX v7.4.2 contains the fix for `WriteDREAM3DFilter-D4`.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `WriteDREAM3DFilter-D3` | XDMF node-geometry helpers exchanged the geometry name and HDF5 filename, which broke attribute references. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | Each helper forwards the geometry name and filename in the correct order. |
+| `WriteDREAM3DFilter-D4` | The shared `ReadFile` utility checked the pipeline result twice and could access a failed DataStructure result. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The reader returns DataStructure import errors before it accesses the value. |
 
 ## Code path coverage
 
-**14 of 19** paths exercised. The 5 gaps are all defensive guards that require conditions unreachable through the public filter/pipeline API (invalid destination mid-write after preflight already validated it, or a detached `PipelineFilter`) rather than genuine untested behavior.
+15 of 21 paths exercised. The table distinguishes ordinary-test coverage from failure paths and the hidden storage-boundary fixture.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D.cpp` (86 lines). Preflight guards below live in the sibling `Filters/WriteDREAM3DFilter.cpp` (`preflightImpl`), which the policy still treats as in-scope algorithm surface (parameter validation gates that the Algorithm class depends on).
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/WriteDREAM3D.cpp` (86 lines) and `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/WriteDREAM3DFilter.cpp` (142 lines). Shared I/O checks use `src/simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.cpp` (3302 lines).
 
-| #  | Phase              | Path                                   | Test case |
-|----|--------------------|----------------------------------------------------------------------------------------------|-----------|
-| 1  | Preflight          | `export_file_path` empty → error `-1`   | `"WriteDREAM3DFilter:Invalid Parameters"` § `Empty FilePath` |
-| 2  | Preflight          | `use_compression=true`, `compression_level < 1` → error `-2`                                  | `"WriteDREAM3DFilter:Invalid Parameters"` § `Bad Compression Level`; `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=0) |
-| 3  | Preflight          | `use_compression=true`, `compression_level > 9` → error `-2`                                  | `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=10) |
-| 4  | Preflight          | `use_compression=false` → `compression_level` ignored even if out of `[1,9]`                  | `"WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel"` (level=0, compression off) |
-| 5  | Preflight          | Valid parameters → success              | `"WriteDREAM3DFilter:Valid Parameters"`; implicitly, every passing execute-path test below |
-| 6  | Execute — setup    | `AtomicFile::Create` fails (unwritable/invalid destination directory)                        | *Not directly tested.* Preflight only rejects an empty path; a directory-permission failure at execute time would require a filesystem fixture (e.g., a read-only directory) not set up by the current suite. |
-| 7  | Execute — setup    | `AtomicFile::Create` succeeds            | Every passing execute-path test |
-| 8  | Execute — pipeline | `PipelineNode != nullptr` and `getPrecedingPipeline()` returns `nullptr` → error `-15`         | *Not directly tested.* Only reachable if a `PipelineFilter` is detached from its parent `Pipeline`, which normal `filter.execute()`/`pipeline.execute()` usage never produces. |
-| 9  | Execute — pipeline | `PipelineNode != nullptr`, preceding pipeline retrieved successfully → embedded in file        | `"DREAM3DFileTest:Import/Export DREAM3D Filter Test"` (`exportPipeline.execute()`); `"DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test"` (`CreateMultiExportFiles()`) |
-| 10 | Execute — pipeline | `PipelineNode == nullptr` → empty pipeline written                                            | `"WriteDREAM3DFilter:Valid Parameters"`, `"DREAM3DFileTest::StringArray"`, all `Compression_*` tests (all call `filter.execute(ds, args)` directly) |
-| 11 | Execute — options  | `use_compression=true` → `writeOptions.compressionLevel = CompressionLevel`                   | `"...Compression_On_IsChunkedAndDeflated"`, `"...Compression_SmallArray_Bypasses"`, `"...Compression_LevelsRoundTrip"` |
-| 12 | Execute — options  | `use_compression=false` → `writeOptions.compressionLevel = 0`                                 | `"...Compression_Off_IsContiguous"`; `"WriteDREAM3DFilter:Valid Parameters"` |
-| 13 | Execute — write    | `DREAM3D::WriteFile(...)` returns invalid → skip commit, return the error                     | `"WriteDREAM3DFilter:Unwritable DataObject Type"` — writes a `DataStructure` holding a `GridMontage`, a type with no registered HDF5 IO factory. Asserts preflight still succeeds, execute fails with exactly one error of code `-5` ("Could not find IO factory for datatype: …"), and the destination file does **not** exist afterward (i.e. the `AtomicFile` was never committed). See the capability-boundary note at the end of this section. |
-| 14 | Execute — write    | `DREAM3D::WriteFile(...)` returns valid → proceed to commit                                   | Every passing execute-path test |
-| 15 | Execute — commit   | `atomicFile.commit()` fails (rename onto final destination fails)                             | *Not directly tested.* Would require the destination path to become invalid between `AtomicFile::Create` and `commit()` (e.g., concurrent deletion of the parent directory) — a race not exercised by the suite. |
-| 16 | Execute — commit   | `atomicFile.commit()` succeeds           | Every passing execute-path test (the output file is present and re-readable in every round-trip test) |
-| 17 | Execute — xdmf     | `write_xdmf_file=true` → rename temp `.xdmf` into place, succeeds                              | `"DREAM3DFileTest:DREAM3D File IO Test"` (writeXdmf=true), `CreateExportPipeline()`/`CreateMultiExportFiles()` (`write_xdmf_file=true`) |
-| 18 | Execute — xdmf     | `write_xdmf_file=true`, rename fails → `MakeErrorResult` with system error message             | *Not directly tested.* Would require the `.xdmf` destination to become unwritable between the HDF5 write succeeding and the rename — not portably reproducible in the current suite. |
-| 19 | Execute — xdmf     | `write_xdmf_file=false` → skip rename, return `WriteFile`'s result directly                   | Most `Compression_*` tests, `"DREAM3DFileTest::StringArray"`, `"WriteDREAM3DFilter:Valid Parameters"` |
-| 20 | OOC storage | chunk-tail raw-read oracle | `real HDF5 chunk-tail raw-read oracle` — independent exact values across the boundary |
-
-
-**Capability boundary behind Path 13 — `DataObject` types the shared HDF5 IO layer cannot write.**
-
-`HDF5::DataIOManager::addCoreFactories()` (`DataStructure/IO/HDF5/DataIOManager.cpp:33-81`) registers factories per concrete `DataArray<T>` type, per `NeighborList<T>` specialization, per `ScalarData<T>` type, the eight geometries, `AttributeMatrix`, `DataGroup`, and `StringArray`. Two `DataObject` types reachable in the current codebase are **not** registered, and any `DataStructure` containing one cannot be written: `HDF5::DataStructureWriter::WriteFile` hits its "no factory found" guard (`DataStructureWriter.cpp:153-157`) and fails with error `-5` ("Could not find IO factory for datatype: …"), surfacing through `WriteDREAM3DFilter` as Path 13 above.
-
-1. **`DynamicListArray<T>`** — the generic variable-length per-tuple list container that `NeighborList<T>` is itself built on. It has no IO class at all in `DataStructure/IO/HDF5/`, so nothing could be registered. Only reachable by constructing one directly; no shipped filter creates a bare `DynamicListArray` outside of a `NeighborList` specialization.
-
-2. **`GridMontage`** — unlike the above, this type *does* have an IO class (`DataStructure/IO/HDF5/GridMontageIO.cpp`, with both `readData` and `writeData` bodies), but that class is never passed to `addFactory<>()`, so it is unreachable and the type is unwritable in practice. `GridMontage` is more reachable than `DynamicListArray`: `CreateGridMontageAction` (`src/simplnx/Filter/Actions/CreateGridMontageAction.cpp`) is public core API that any filter may use to create one. No filter in this repository currently does, so no shipped pipeline can hit this today — but a plugin filter using that public Action would produce a `DataStructure` that `WriteDREAM3DFilter` cannot save.
-
-   **This is recorded as an observation, not as a defect with a known fix.** Montage support in SIMPLNX is an open design question that has deliberately not been settled yet, and the existing `GridMontage`/`GridMontageIO`/`CreateGridMontageAction` code predates that decision — it should be treated as an unfinished sketch inherited from the legacy SIMPL montage design, not as a foundation that merely needs switching on. Simply calling `addFactory<GridMontageIO>()` would *not* be a correct fix: `GridMontageIO::writeData` already creates a `groupWriter` it never uses and then passes `parentGroup` to `WriteBaseGroupData`, so registering it as-is would write montage contents into the wrong group. How montages should be represented on disk (and whether `GridMontage` is even the right in-memory abstraction) needs to be designed before any of this code is revived. This V&V cycle's only claim is the one its test makes: **today**, a `DataStructure` containing a `GridMontage` fails to write with error `-5` and leaves no partial file behind.
-
-Both are gaps in the shared HDF5 IO layer, not in `WriteDREAM3DFilter`'s own algorithm — the same gaps affect `ReadDREAM3DFilter` for the same types. Neither is raised as a formal Deviation because there is no confirmed 6.5.171 pipeline behavior being compared against (unlike D2, which names concrete legacy types); they are recorded here as known capability boundaries of what this filter can serialize. The failure mode itself is no longer untested: `"WriteDREAM3DFilter:Unwritable DataObject Type"` pins it via `GridMontage`, asserting the `-5` error and that no partial file is committed.
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Empty output path is rejected | `WriteDREAM3DFilter:Invalid Parameters` — `Empty FilePath` checks an invalid result, not a specific error code |
+| 2 | Preflight | Compression enabled, level below 1 → error `-2` | `WriteDREAM3DFilter:Invalid Parameters`; `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` |
+| 3 | Preflight | Compression enabled, level above 9 → error `-2` | `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` |
+| 4 | Preflight | Compression disabled → ignore an out-of-range level | `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` |
+| 5 | Preflight | Valid parameters → success | `WriteDREAM3DFilter:Valid Parameters` |
+| 6 | Setup | `AtomicFile::Create` fails → return its error | *Not directly tested. No fixture injects a destination or permission failure at creation.* |
+| 7 | Setup | `AtomicFile::Create` succeeds | `WriteDREAM3DFilter:Valid Parameters` |
+| 8 | Pipeline | A pipeline node has no preceding pipeline → error `-15` | *Not directly tested. No fixture supplies a detached pipeline node.* |
+| 9 | Pipeline | A pipeline node supplies its preceding pipeline | [Single-file import/export test](../test/DREAM3DFileTest.cpp#L1402); [Multiple-file import/export test](../test/DREAM3DFileTest.cpp#L1513) |
+| 10 | Pipeline | No pipeline node → write an empty pipeline | `WriteDREAM3DFilter:Valid Parameters` — combined reader accepts the saved pipeline and data |
+| 11 | Compression | Enabled → use the selected compression level | `WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated`; `WriteDREAM3DFilter: Compression_SmallArray_Bypasses`; `WriteDREAM3DFilter: Compression_LevelsRoundTrip` |
+| 12 | Compression | Disabled → set compression level to zero | `WriteDREAM3DFilter: Compression_Off_IsContiguous` |
+| 13 | Write | `WriteFile` fails → return its error without file replacement | `WriteDREAM3DFilter:Unwritable DataObject Type` — error `-5`, no destination file |
+| 14 | Write | `WriteFile` succeeds | `WriteDREAM3DFilter:Valid Parameters` — expected data values survive the round trip |
+| 15 | File replacement | Atomic file replacement fails → return its error | *Not directly tested. No fixture injects a failure after the temporary file is written.* |
+| 16 | File replacement | Atomic file replacement succeeds | `WriteDREAM3DFilter:Valid Parameters` — destination exists and can be read |
+| 17 | XDMF | Enabled → rename the sidecar successfully | [Single-file import/export test](../test/DREAM3DFileTest.cpp#L1402) exercises the rename; [Pipeline and XDMF combinations test](../test/DREAM3DFileTest.cpp#L1210) checks references from the shared writer |
+| 18 | XDMF | Sidecar rename fails → return the system error | *Not directly tested. No fixture injects a sidecar rename failure.* |
+| 19 | XDMF | Disabled → skip sidecar rename | `WriteDREAM3DFilter:Valid Parameters`; `WriteDREAM3DFilter: Compression_Off_IsContiguous` |
+| 20 | Storage boundary | Write a full source chunk and one extra tuple | *Not directly tested. The dedicated `SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle` is hidden and requires the HDF5-OOC manager.* |
+| 21 | Cancellation | Cancellation after a successful write → return `-1` before file replacement | *Not directly tested. No fixture sets the cancellation flag at this point.* |
 
 ## Test inventory
 
+`src/Plugins/SimplnxCore/test/DREAM3DFileTest.cpp` contains all 24 cases below. The 23 ordinary cases run in the in-core configuration. All pass in CI. Linked test labels point to the exact declarations in this file.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `WriteDREAM3DFilter:Invalid Parameters` (§ Empty FilePath, § Bad Compression Level) | kept | Preflight-only, empty `DataStructure` (the guards never touch data). Covers Paths 1, 2. |
-| `WriteDREAM3DFilter:Valid Parameters` | kept | Preflight + full execute, full `CreateTestDataStructure()` fixture, compression off, own output file. Covers Paths 5, 7, 10, 12, 14, 16, 19. |
-| `WriteDREAM3D:Pipeline / WriteXdmf combinations` | kept | Calls `DREAM3D::WriteFile(path, ds, pipeline, writeXdmf)` directly (bypasses `AtomicFile`/the Algorithm class) across `writeXdmf × {real pipeline, empty pipeline}` (4 cases), own output file. Exercises the shared write utility the Algorithm depends on, not the Algorithm's own guards; validates the `.xdmf` sidecar's heavy-data references via `CheckXdmfFile`. |
-| `WriteDREAM3D:FileData Overload` | new-for-V&V | Writes through the exported `DREAM3D::WriteFile(HDF5::FileIO&, const FileData&)` forwarder (via `CreateFileData()`) and round-trips the full fixture — keeps the overload's pipeline/DataStructure argument ordering covered. |
-| `WriteDREAM3D:Invalid File` | kept | Same free-function call with an empty path (4 cases via `GENERATE`); asserts the underlying `HDF5::FileIO::WriteFile` failure is surfaced, not `AtomicFile`'s. No sidecar check — a failed write has no target whose sidecar could exist. |
-| `WriteDREAM3DFilter:Unwritable DataObject Type` | new-for-V&V | Full filter execute on a `DataStructure` containing a `GridMontage` (no registered IO factory). Pins the write-failure contract end to end: preflight valid, execute invalid with exactly one error of code `-5`, and no file left at the destination — the only test covering Path 13 and the `AtomicFile`-not-committed guarantee. GridMontage is only the vehicle for reaching that path, not the subject of the test (see the capability-boundary note under Code path coverage). |
-| `DREAM3DFileTest:DREAM3D File IO Test` | kept | The primary Class 1 content-fidelity test. Builds every geometry/`DataObject` type (`CreateTestDataStructure`), writes + reads back (`writeXdmf ∈ {true,false}`), and asserts full structural/content equality (`CheckTestDataStructure`) plus pipeline round-trip (`pipeline.size()==3`, filter names by index). |
-| `DREAM3DFileTest::StringArray` | kept | Round-trips a `StringArray` through the actual `WriteDREAM3DFilter`/`ReadDREAM3DFilter` classes (not the free function) — covers Path 10 with real filter execution. |
-| `DREAM3DFileTest:Import/Export DREAM3D Filter Test` | kept | Executes `WriteDREAM3DFilter` inside a real `Pipeline` (`exportPipeline.execute()`) — the only test exercising Path 9 (non-null `PipelineNode` with a real preceding pipeline). Also checks preflight-imported vs. executed array store types on the read side. |
-| `DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test` | kept | Two independent export pipelines (`CreateMultiExportFiles`) each executing `WriteDREAM3DFilter` in-pipeline, then a single import pipeline consuming both files. Second confirmation of Path 9. |
-| `DREAM3DFileTest: Preflight imports geometry connectivity as metadata-only stores` | kept | Read-side only (consumes a pre-existing `geoms.dream3d` asset); does not exercise `WriteDREAM3DFilter`. Listed for completeness since it shares the tag set. |
-| `SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.5 (UUID-keyed) and 6.4 (name-keyed) `DataContainerWriter` fixtures. Asserts UUID resolution, empty comments, and `export_file_path`/`write_xdmf_file` value conversion. Not an oracle test — argument-mapping check only. |
-| `DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOptions requests it` | kept | Calls the `WriteOptions`-aware free function directly with a 2 MB array; asserts chunked+deflate layout at level 5 via `ProbeHdf5Dataset`, then round-trips content. Covers the compression-options contract the Algorithm class relies on. |
-| `WriteDREAM3DFilter: Compression_Off_IsContiguous` | kept | Full filter execute, `use_compression=false`. Asserts contiguous/no-deflate layout. Covers Path 12. |
-| `WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated` | kept | Full filter execute, `use_compression=true`, level 5, 500K-element array. Asserts chunked+deflate layout and round-trips content. Covers Path 11. |
-| `WriteDREAM3DFilter: Compression_SmallArray_Bypasses` | kept | Full filter execute with one <16 KiB and one >16 KiB array in the same `DataStructure`, `use_compression=true`. Asserts the small array stays contiguous/uncompressed while the large one is chunked+deflated — the Class 1 closed-form threshold check. |
-| `WriteDREAM3DFilter: Compression_LevelsRoundTrip` | kept | Full filter execute at levels {1,5,9} on the same 1M-element pattern. Round-trips content at each level and asserts non-increasing file size as level rises (Class 4 companion invariant). |
-| `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` | kept | Three sequential preflight-only checks: level=0 (invalid), level=10 (invalid), level=0 with compression off (valid — ignored). Covers Paths 2, 3, 4. |
-| `DREAM3DFileTest: PreflightCache avoids re-reading unchanged files` | kept | Uses `DREAM3D::WriteFile` only to create read-side fixture files; does not exercise `WriteDREAM3DFilter`'s own behavior. Listed for completeness since it shares source-file/tag space. |
-| `DREAM3DFileTest: Geometry Nested In DataGroup Round Trip` | kept | Executes `WriteDREAM3DFilter` directly across all 8 geometry types, each at top level and nested inside a `DataGroup` (issue #1642 regression coverage), `write_xdmf_file=false`. Covers Paths 7, 10, 14, 16, 19 with per-geometry fixtures. |
-| `real HDF5 chunk-tail raw-read oracle` | new-for-V&V | 27 assertions; The numeric source is HDF5-OOC with 65,536 four-component uint32 tuples per 1 MiB chunk and one extra tuple. WriteDREAM3DFilter runs with compression disabled/enabled. Direct HDF5 dataset reads, without a DataStructure round trip, match all 262,148 independently constructed integer values. The physical deflate flag also matches the requested compression option. The 22-entry CTest selection includes shared DREAM3D file-I/O cases. |
-
-**Deliberately out of scope (3 of the file's 23 `TEST_CASE`s).** `DREAM3DFileTest.cpp` is shared between the read and write sides of DREAM3D file IO. These three exercise `ReadDREAM3DFilter` only and belong to its V&V, not this one: `DREAM3DFileTest: Existing Data Objects Test` (importing into a populated `DataStructure`), `DREAM3DFileTest: Path Import Policy Tests` (read-side path-collision policy), and `SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility` (read-side SIMPL argument conversion). They are named here rather than silently omitted so the exclusion can be audited.
-
-**Dual-build verification at sign-off:** the DREAM3D file IO tests pass **32/32 in both** the in-core (`NX-Com-Qt69-Vtk96-Rel`) and out-of-core (`NX-OOC-Qt69-Vtk95-Rel`) Release builds, at the rebased head. The full `SimplnxCore::` suite also passes 979/979 in-core.
-
-OOC recertification (2026-09-21): 22/22 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 chunk-tail raw-read oracle` passes 27 assertions. The numeric source is HDF5-OOC with 65,536 four-component uint32 tuples per 1 MiB chunk and one extra tuple. WriteDREAM3DFilter runs with compression disabled/enabled. Direct HDF5 dataset reads, without a DataStructure round trip, match all 262,148 independently constructed integer values. The physical deflate flag also matches the requested compression option. The 22-entry CTest selection includes shared DREAM3D file-I/O cases. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
+| `WriteDREAM3DFilter:Invalid Parameters` | kept | Rejects an empty output path and compression level 0 when compression is enabled. |
+| `SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle` | new-for-V&V | Hidden. Direct HDF5 reads compare 262,148 uint32 values across a 65,536-tuple boundary, with compression off and on; checks the deflate flag. |
+| `WriteDREAM3DFilter:Valid Parameters` | kept | Executes the filter and checks constructed values, geometry links and tuple shapes after reading the result. |
+| [Pipeline and XDMF combinations test](../test/DREAM3DFileTest.cpp#L1210) | kept | Calls the shared writer for four pipeline/sidecar combinations. Checks XDMF filename prefixes when enabled. |
+| [FileData overload test](../test/DREAM3DFileTest.cpp#L1231) | new-for-V&V | Calls the FileData overload and checks pipeline size, constructed values and tuple shapes after reading. |
+| [Invalid-file test](../test/DREAM3DFileTest.cpp#L1256) | kept | Checks failure for an empty path in all four pipeline/sidecar combinations. |
+| `WriteDREAM3DFilter:Unwritable DataObject Type` | new-for-V&V | A GridMontage has no registered HDF5 factory. Checks error `-5` and no destination file. |
+| [File I/O test](../test/DREAM3DFileTest.cpp#L1318) | kept | Checks arrays, scalar values, eight geometry types and links, pipeline size and filter names; validates XDMF filename prefixes. |
+| `DREAM3DFileTest::StringArray` | kept | Writes and reads `foo`, `bar`, `baz` through the filters and compares every string. |
+| [Single-file import/export test](../test/DREAM3DFileTest.cpp#L1402) | kept | Executes an export pipeline; checks imported objects and the difference between execution stores and metadata-only preflight stores. |
+| `DREAM3DFileTest: Preflight imports geometry connectivity as metadata-only stores` | kept | Reader check on `geoms.dream3d`: ten connectivity/bounds paths in each of the `Preflight`, `Execute` and `DataStructureReader::ReadFile` dynamic-section groups. Checks store type and tuple count. |
+| [Multiple-file import/export test](../test/DREAM3DFileTest.cpp#L1513) | kept | Imports two exported files; checks both top-level groups and tuple shapes. |
+| `DREAM3DFileTest: Existing Data Objects Test` | kept | Reader check: imports Small IN100 into a populated DataStructure and checks tuple shapes. |
+| `DREAM3DFileTest: Path Import Policy Tests` | kept | Reader check: imports all paths or includes/excludes selected leaves and parents from Small IN100. |
+| `SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility` | kept | Reader conversion check in `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` dynamic sections; checks filter identity and pipeline size. |
+| `SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility` | kept | The same two conversion sections check UUID, comments, output path, XDMF setting and disabled compression. |
+| `DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOptions requests it` | kept | Shared writer: 500,000 float32 values, level 5 deflate, chunked layout and exact array round trip. |
+| `WriteDREAM3DFilter: Compression_Off_IsContiguous` | kept | Checks contiguous layout and no deflate for 200,000 float32 values. |
+| `WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated` | kept | Checks chunked layout, level 5 deflate and an exact round trip of 500,000 float32 values. |
+| `WriteDREAM3DFilter: Compression_SmallArray_Bypasses` | kept | A 400-byte array stays contiguous; a 2 MB array uses chunking and deflate. |
+| `WriteDREAM3DFilter: Compression_LevelsRoundTrip` | kept | Checks one million repeating values at levels 1, 5 and 9, then requires non-increasing file size for this fixture. |
+| `DREAM3DFileTest: Geometry Nested In DataGroup Round Trip` | kept | Eight dynamic sections: VertexGeom, EdgeGeom, TriangleGeom, QuadGeom, TetrahedralGeom, HexahedralGeom, ImageGeom and RectGridGeom. Checks concrete types at top level and inside a group. |
+| `WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel` | kept | Rejects levels 0 and 10 with compression enabled; accepts level 0 with compression disabled. |
+| `DREAM3DFileTest: PreflightCache avoids re-reading unchanged files` | kept | Reader cache check: repeated preflight adds no miss or file open; execution reads values, and file replacement invalidates the cache. |
 
 ## Exemplar archive
 
-None. Every test above builds its input `DataStructure` inline in C++ and never loads a downloaded `.tar.gz` exemplar — the Class 1 oracle's "expected output" is the test's own hand-built input, so no cached golden file is required or used. (`Small_IN100_dream3d_v3.tar.gz`, referenced elsewhere in this test file, backs unrelated `ReadDREAM3DFilter`-only test cases and is not consumed by any Write-side test.)
+- **Archive:** None for writer verification. The two Small IN100 reader cases use `Small_IN100_dream3d_v3.tar.gz`; writer expectations are constructed in C++.
+- **SHA512:** No writer archive. The shared reader archive matches `test/CMakeLists.txt`: `bfa9547e787b0f8e8122702da0eb4e519f48a48bf4f94aad020f72479d071d32dfc96a1425705874c68507a61ed391d28606d9c4f4acd559043ef0ace64fd33f`.
+- **Provenance:** Not applicable to the constructed writer fixtures; their builders and expected values are in `src/Plugins/SimplnxCore/test/DREAM3DFileTest.cpp`.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-No byte/dataset-level A/B was run against 6.5.171 `DataContainerWriter` output, and none is warranted: the two writers target deliberately different on-disk contracts (see D1), so such a diff would be 100% noise by design, not signal. `ReadDREAM3DFilter` is the only tool that understands both formats, and cross-format fidelity is its concern, not this filter's. Two scope/format deviations are documented instead:
+See `vv/deviations/WriteDREAM3DFilter.md` for the root cause, affected users and recommendation. These Part 1 differences follow from source inspection.
 
-- `WriteDREAM3DFilter-D1` — on-disk file format is a deliberate, complete rewrite (v8 `DataStructure` layout vs. legacy v7 `DataContainers` layout; optional gzip compression; atomic write) — see `vv/deviations/WriteDREAM3DFilter.md`.
-- `WriteDREAM3DFilter-D2` — `StatsDataArray`/`StructArray` (SIMPL ensemble-statistics types) cannot currently be written because those `DataObject` types do not yet exist in this branch of simplnx — see `vv/deviations/WriteDREAM3DFilter.md`.
-
-Neither is a bug: D1 is the intended outcome of the Rewrite classification (defended above), and D2 is a scope boundary pending a separate in-progress port of those data types.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `WriteDREAM3DFilter-D1` | SIMPLNX writes version 8 `DataStructure` files instead of version 7 `DataContainers` files. |
+| `WriteDREAM3DFilter-D2` | SIMPLNX imports legacy statistics as groups and arrays; it does not write legacy `StatsDataArray` or `StructArray` objects. |

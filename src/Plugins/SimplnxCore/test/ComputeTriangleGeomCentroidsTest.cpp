@@ -11,6 +11,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <limits>
+
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
@@ -67,10 +69,10 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTri
     const DataPath kExemplarArrayPath = k_FeatureAttributeMatrixPath.createChildPath(kExemplarArrayName);
     const DataPath kNxArrayPath = k_FeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
-
-    CompareDataArrays<float32>(kExemplarsArray, kNxArray);
+    // The archive matches legacy float32 accumulation exactly. Float64 accumulation changes its
+    // centroids by at most 0.041534423828125 (feature 518, X). Keep the archive and allow 0.05 absolute
+    // error here; the Large Coordinate Analytical Mean test checks the corrected precision exactly.
+    CompareFloatArraysWithNans<float32>(dataStructure, kExemplarArrayPath, kNxArrayPath, 0.05F);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -82,6 +84,17 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTri
 
 namespace
 {
+Arguments CentroidArguments(bool isPeriodic = false)
+{
+  Arguments args;
+  args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(k_GeometryPath));
+  args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+  args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
+  args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsArrayName));
+  args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+  return args;
+}
+
 // Builds a tiny triangle mesh on a periodic domain X in [0, 4]. All vertices sit at z = 0 and each feature
 // occupies a distinct y value, so ONLY the X axis can trip the periodic (both-opposing-faces) condition;
 // the whole-geometry bounding box is exactly x=[0,4], y=[1,3], z=[0,0]. Face labels group triangles into
@@ -218,4 +231,125 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Ora
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Face Labels Tuple Count", "[SimplnxCore][ComputeTriangleGeomCentroids]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = BuildPeriodicToyMesh();
+  const usize labelTuples = GENERATE(usize{7}, usize{9});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()));
+  {
+    const auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()).resizeTuples({labelTuples});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+
+  ComputeTriangleGeomCentroidsFilter filter;
+  const auto result = filter.preflight(dataStructure, CentroidArguments());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -12902);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Empty Face Labels", "[SimplnxCore][ComputeTriangleGeomCentroids]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = BuildPeriodicToyMesh();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath));
+  auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath);
+  {
+    const auto resizeResult = geometry.getFaceAttributeMatrix()->resizeTuples({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+  {
+    const auto resizeResult = geometry.getVertexAttributeMatrix()->resizeTuples({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()));
+  {
+    const auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()).resizeTuples({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+
+  ComputeTriangleGeomCentroidsFilter filter;
+  const auto result = filter.preflight(dataStructure, CentroidArguments());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -12903);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Nonpositive Face Labels", "[SimplnxCore][ComputeTriangleGeomCentroids]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = BuildPeriodicToyMesh();
+  const int32 label = GENERATE(int32{-2}, std::numeric_limits<int32>::min(), int32{-1}, int32{0});
+  const bool isPeriodic = GENERATE(false, true);
+  CAPTURE(label, isPeriodic);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath));
+  dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath).fill(label);
+
+  ComputeTriangleGeomCentroidsFilter filter;
+  const auto result = filter.execute(dataStructure, CentroidArguments(isPeriodic));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAttributeMatrixPath));
+  REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAttributeMatrixPath).getNumberOfTuples() == 5);
+  const DataPath centroidsPath = k_FeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(centroidsPath));
+  const auto& centroids = dataStructure.getDataRefAs<Float32Array>(centroidsPath);
+  for(usize index = 0; index < centroids.getSize(); index++)
+  {
+    REQUIRE(centroids[index] == 0.0F);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Large Coordinate Analytical Mean", "[SimplnxCore][ComputeTriangleGeomCentroids]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = BuildPeriodicToyMesh();
+  constexpr usize k_NumFaces = 1000;
+  constexpr usize k_NumVertices = 3 * k_NumFaces;
+  constexpr float32 k_Offset = 100000000.0F;
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath));
+  auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath);
+  {
+    const auto resizeResult = geometry.getVertexAttributeMatrix()->resizeTuples({k_NumVertices});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+  {
+    const auto resizeResult = geometry.getFaceAttributeMatrix()->resizeTuples({k_NumFaces});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()));
+  {
+    const auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(k_FaceLabelsPath.getParent()).resizeTuples({k_NumFaces});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath));
+  auto& labels = dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath);
+  for(usize vertex = 0; vertex < k_NumVertices; vertex++)
+  {
+    (*geometry.getVertices())[3 * vertex] = k_Offset + (vertex % 3 == 1 ? 8.0F : 0.0F);
+    (*geometry.getVertices())[3 * vertex + 1] = -k_Offset + (vertex % 3 == 2 ? 8.0F : 0.0F);
+    (*geometry.getVertices())[3 * vertex + 2] = 64.0F;
+    (*geometry.getFaces())[vertex] = vertex;
+  }
+  for(usize face = 0; face < k_NumFaces; face++)
+  {
+    labels[2 * face] = 1;
+    labels[2 * face + 1] = -1;
+  }
+
+  ComputeTriangleGeomCentroidsFilter filter;
+  const auto result = filter.execute(dataStructure, CentroidArguments());
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath centroidsPath = k_FeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(centroidsPath));
+  const auto& centroids = dataStructure.getDataRefAs<Float32Array>(centroidsPath);
+  // Each coordinate has 1000 identical triples. Exact means are offset + 8/3, -offset + 8/3, and 64.
+  // At this offset float32 spacing is 8, so the correctly rounded first two means equal +/-offset.
+  REQUIRE(centroids[3] == k_Offset);
+  REQUIRE(centroids[4] == -k_Offset);
+  REQUIRE(centroids[5] == 64.0F);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

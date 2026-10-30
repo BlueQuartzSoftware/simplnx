@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
+#include <array>
+
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -40,15 +42,15 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
   const BoundingBox3Df boundingBox = triangleGeom.getBoundingBox();
 
-  // Get the faceLabels array and then get the min and max values
+  // Preflight ensures Face Labels is nonempty and has one tuple per triangle.
   const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
-  auto [minFeatureId, maxFeatureId] = std::minmax_element(faceLabels.begin(), faceLabels.end());
+  const int64 maxFeatureId = *std::max_element(faceLabels.begin(), faceLabels.end());
 
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
-  if(featAttrMat.getNumberOfTuples() < *maxFeatureId + 1)
+  if(maxFeatureId > 0 && featAttrMat.getNumberOfTuples() < static_cast<usize>(maxFeatureId + 1))
   {
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
-    Result<> resizeResult = featAttrMat.resizeTuples(ShapeType{static_cast<usize>(*maxFeatureId + 1)});
+    Result<> resizeResult = featAttrMat.resizeTuples(ShapeType{static_cast<usize>(maxFeatureId + 1)});
     if(resizeResult.invalid())
     {
       return resizeResult;
@@ -93,17 +95,19 @@ Result<> ComputeTriangleGeomCentroids::operator()()
     const std::set<MeshIndexType>& vertexSet = vertexSets[i];
     auto periodicFaces = GeometryHelpers::Topology::FindElementPeriodicFaces(boundingBox, vertexCoords, vertexSet);
 
+    std::array<float64, 3> coordinateSums = {};
     for(const auto& vert : vertexSets[i])
     {
-      centroids[3 * i + 0] += vertexCoords[3 * vert + 0];
-      centroids[3 * i + 1] += vertexCoords[3 * vert + 1];
-      centroids[3 * i + 2] += vertexCoords[3 * vert + 2];
+      coordinateSums[0] += vertexCoords[3 * vert + 0];
+      coordinateSums[1] += vertexCoords[3 * vert + 1];
+      coordinateSums[2] += vertexCoords[3 * vert + 2];
     }
     if(!vertexSets[i].empty())
     {
-      centroids[3 * i + 0] /= static_cast<float32>(vertexSets[i].size());
-      centroids[3 * i + 1] /= static_cast<float32>(vertexSets[i].size());
-      centroids[3 * i + 2] /= static_cast<float32>(vertexSets[i].size());
+      const float64 numVertices = static_cast<float64>(vertexSets[i].size());
+      centroids[3 * i + 0] = static_cast<float32>(coordinateSums[0] / numVertices);
+      centroids[3 * i + 1] = static_cast<float32>(coordinateSums[1] / numVertices);
+      centroids[3 * i + 2] = static_cast<float32>(coordinateSums[2] / numVertices);
 
       if(m_InputValues->IsPeriodic)
       {
