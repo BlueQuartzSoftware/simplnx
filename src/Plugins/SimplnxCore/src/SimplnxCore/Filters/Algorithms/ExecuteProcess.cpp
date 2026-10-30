@@ -73,6 +73,8 @@ Result<> ExecuteProcess::operator()()
   reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_InputValues->Timeout)}, {reproc::stop::kill, reproc::milliseconds(m_InputValues->Timeout)}};
   reproc::options options;
   options.stop = stop;
+  // reproc sends stderr to the parent by default; a pipe lets both drain modes write it to the log.
+  options.redirect.err.type = reproc::redirect::pipe;
   std::error_code ec = process.start(args, options);
 
   if(ec == std::errc::no_such_file_or_directory)
@@ -90,7 +92,7 @@ Result<> ExecuteProcess::operator()()
   if(m_InputValues->Blocking)
   {
     reproc::sink::string sink(output);
-    ec = reproc::drain(process, sink, reproc::sink::null);
+    ec = reproc::drain(process, sink, sink);
     if(ec)
     {
       outFile.close();
