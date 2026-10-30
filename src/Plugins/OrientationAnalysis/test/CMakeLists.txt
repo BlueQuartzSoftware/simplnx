@@ -85,7 +85,7 @@ create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 if(DREAM3DNX_USE_OOC)
   add_test(NAME OrientationAnalysisOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
-  set_tests_properties(OrientationAnalysisOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+  set_tests_properties(OrientationAnalysisOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
 endif()
 
 # Compile the cross-module dispatch probe into the plugin, not the test
