@@ -47,9 +47,8 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
  * final IDs. Cancellation or an error can therefore leave provisional or partly
  * resolved output. Feature data is resized only after CCL completes.
  *
- * Two LRU slots retain scalar and mask Z slices. Scalar values widen to float64
- * so one comparison path serves all input types. Distinct int64 or uint64 values
- * above exact float64 precision can compare as equal. Buffered Boolean values use
+ * Two LRU slots retain scalar and mask Z slices. The int64 and uint64 inputs use
+ * exact unsigned differences. Other scalar types widen to float64. Buffered Boolean values use
  * numeric difference, so a tolerance of one or more joins false and true. The
  * direct fallback instead compares Boolean values for exact equality. A
  * negative tolerance prevents every finite buffered neighbor match.
@@ -126,8 +125,9 @@ protected:
    * @param point2 Flat index of its neighbor.
    * @return True when point2 is valid and the scalar difference is within tolerance.
    *
-   * Active buffering compares widened float64 values and rejects unloaded
-   * slices. Inactive buffering uses the native typed comparator. Signed native
+   * Active buffering preserves 64-bit integer precision and rejects unloaded
+   * slices. Other scalar types use float64. Inactive buffering uses the native
+   * typed comparator with unsigned differences for int64. Other signed native
    * subtraction requires a representable difference.
    */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
@@ -168,6 +168,7 @@ private:
   IDataArray* m_InputDataArray = nullptr;
 
   std::vector<float64> m_ScalarBuffer;
+  std::vector<uint64> m_IntegerScalarBuffer;
   std::vector<uint8> m_MaskBuffer;
   int64 m_BufSliceSize = 0;
   std::array<int64, 2> m_BufferedSliceZ = {-1, -1};
