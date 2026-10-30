@@ -168,8 +168,8 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 
     DataType type = targetArray.getDataType();
     auto tDims = targetArray.getNumberOfTuples();
-    auto cDims = targetArray.getNumberOfComponents();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, std::vector<usize>{cDims}, croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
+    auto cDims = targetArray.getComponentShape();
+    auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, cDims, croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
     actions.appendAction(std::move(createArrayAction));
   }
 
