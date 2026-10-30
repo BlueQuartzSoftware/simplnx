@@ -327,7 +327,7 @@ SIMPLNX_EXPORT Result<> FlushParsers(const ParsersVector& dataParsers);
  * @param dataParsers Supplies one parser or null entry for each column.
  * @param headers Supplies column names for diagnostics.
  * @param delimiters Specifies accepted delimiters.
- * @param consecutiveDelimiters Selects whether adjacent delimiters form empty tokens.
+ * @param consecutiveDelimiters Treats adjacent delimiters as one separator when true; retains empty fields when false.
  * @param lineNumber Specifies the current one-based file line.
  * @param beginIndex Specifies the one-based line that maps to destination index zero.
  * @param flushRequired Receives true when one or more bounded parser buffers become full.
@@ -367,7 +367,7 @@ SIMPLNX_EXPORT bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLine
  * @param inputFilePath Identifies the CSV file.
  * @param headersLineNum Specifies the one-based header line.
  * @param delimiters Specifies accepted delimiters.
- * @param consecutiveDelimiters Selects whether adjacent delimiters form empty tokens.
+ * @param consecutiveDelimiters Treats adjacent delimiters as one separator when true; retains empty fields when false.
  * @return Header tokens, or a file-open or line-position error.
  * @pre headersLineNum is at least one.
  */

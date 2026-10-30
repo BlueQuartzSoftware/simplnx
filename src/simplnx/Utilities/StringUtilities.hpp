@@ -302,9 +302,9 @@ inline std::vector<std::string> specific_split(std::string_view str, nonstd::spa
   return {};
 }
 
-inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
+inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool keepEmptyTokens)
 {
-  if(consecutiveDelimiters)
+  if(keepEmptyTokens)
   {
     // Split Allow All was selected to match QString's base split functionality
     return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
