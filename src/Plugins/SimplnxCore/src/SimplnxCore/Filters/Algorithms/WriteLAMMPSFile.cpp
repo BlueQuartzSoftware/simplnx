@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
+#include <algorithm>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -130,7 +131,7 @@ Result<> WriteLAMMPSFile::operator()()
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
-  usize increment = numVerts / 1000;
+  usize increment = std::max<usize>(numVerts / 1000, 1);
   for(usize i = 0; i < numVerts; i++)
   {
     if(m_ShouldCancel)
