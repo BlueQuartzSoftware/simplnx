@@ -4,11 +4,12 @@ This file collects lessons learned from real defects in simplnx and its plugins.
 made, why it happened, how it was found, and the rule that prevents it. The audience is developers and the coding
 agents that work in this repository. Read the rules before you write or review code in the area they cover.
 
-Add a new entry when a defect taught something that the code itself does not make obvious. Keep the entries short. State
-the rule first, then the evidence. Cite pull requests and issues by number, but do not say whether they are open, merged
-or closed: that changes, and the entry would go stale. Refer to code by file and function or test name, not by line
-number, because line numbers change with every edit; a line number belongs only in a link that is pinned to a commit. A
-project convention that does not come from a defect belongs in [the code style guide](Code_Style_Guide.md) instead.
+Add or update an entry when a defect taught a rule, as "Where new rules go" in `AGENTS.md` describes. Keep the entries
+short. State the rule first, then the evidence. Cite pull requests and issues by number, but do not say whether they are
+open, merged or closed: that changes, and the entry would go stale. Refer to code by file and function or test name, not
+by line number, because line numbers change with every edit; a line number belongs only in a link that is pinned to a
+commit. A project convention that does not come from a defect belongs in [the code style guide](Code_Style_Guide.md)
+instead.
 
 ## Index
 
