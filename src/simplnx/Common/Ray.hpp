@@ -224,7 +224,7 @@ protected:
 
     // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
     Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
-    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
+    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * sin3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
     Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
 
     return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
