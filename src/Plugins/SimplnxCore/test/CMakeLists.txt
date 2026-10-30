@@ -7,6 +7,7 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   # ReadDeformKeyFileV12Test.cpp
+  ReadDeformKeyFileV12RegressionTest.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
