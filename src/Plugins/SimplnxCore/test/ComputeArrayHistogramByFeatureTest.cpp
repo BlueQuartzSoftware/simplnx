@@ -426,16 +426,18 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     REQUIRE((*mostPopulatedBinArray)[4] == 0);
     REQUIRE((*mostPopulatedBinArray)[5] == 2);
 
+    // Widths are 73/5, 16/5, and 13/5; paired bin bounds truncate to integer values.
+    // Modes {1,73}, {20}, and {10,22} select bins {0,4}, {4}, and {0,4}.
     REQUIRE(modalBinRange0[0] == 1);
     REQUIRE(modalBinRange0[1] == 15);
-    REQUIRE(modalBinRange0[2] == 30);
-    REQUIRE(modalBinRange0[3] == 44);
-    REQUIRE(modalBinRange1[0] == 11);
-    REQUIRE(modalBinRange1[1] == 14);
+    REQUIRE(modalBinRange0[2] == 59);
+    REQUIRE(modalBinRange0[3] == 74);
+    REQUIRE(modalBinRange1[0] == 17);
+    REQUIRE(modalBinRange1[1] == 21);
     REQUIRE(modalBinRange2[0] == 10);
     REQUIRE(modalBinRange2[1] == 12);
-    REQUIRE(modalBinRange2[2] == 15);
-    REQUIRE(modalBinRange2[3] == 17);
+    REQUIRE(modalBinRange2[2] == 20);
+    REQUIRE(modalBinRange2[3] == 23);
   }
 
   // No mask keeps the Scanline path on bulk reads without a mask buffer.
@@ -540,7 +542,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline bounded modal f
   // exercise the no-external-sort bounded fallback on an in-memory store.
   UnitTest::AlgorithmTestScope scope(*scanlineScenario);
   const std::vector<int32> oneFeature(4, 0);
-  CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 2, 0.0, 4.0, true, DataPath({"TiedAscending"})) == std::vector<int32>{0, 2, 2, 2});
+  // Width (4 - 0) / 2 = 2 gives paired intervals [0,2) and [2,4).
+  CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 2, 0.0, 4.0, true, DataPath({"TiedAscending"})) == std::vector<int32>{0, 2, 2, 4});
   CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 1, 0.0, 4.0, true, DataPath({"DuplicatePairs"})) == std::vector<int32>{0, 4, 0, 4});
   std::vector<int32> uniqueValues(1024);
   std::iota(uniqueValues.begin(), uniqueValues.end(), 0);
@@ -816,4 +819,22 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
     REQUIRE(ranges.size() == k_FeatureCount * 4);
     REQUIRE(std::all_of(ranges.begin(), ranges.end(), [](int32 value) { return value == 7; }));
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired bin offsets", "[SimplnxCore][ComputeArrayHistogramByFeature]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  std::vector<uint64> counts;
+  std::vector<int32> ranges;
+  std::vector<std::vector<int32>> modal;
+  executeInt32ModalCase(scope, {2}, {1}, 2, 0.0, 4.0, true, DataPath({"PairedOffsets"}), &counts, &ranges, &modal);
+  REQUIRE(counts.size() == 4);
+  REQUIRE(ranges.size() == 8);
+  REQUIRE(modal.size() == 2);
+  // Width (4 - 0) / 2 = 2 puts value 2 in bin 1: one count and bounds [2,4).
+  CHECK(std::vector<uint64>(counts.begin() + 2, counts.end()) == std::vector<uint64>{0, 1});
+  CHECK(std::vector<int32>(ranges.begin() + 4, ranges.end()) == std::vector<int32>{0, 2, 2, 4});
+  CHECK(modal[1] == std::vector<int32>{2, 4});
 }
