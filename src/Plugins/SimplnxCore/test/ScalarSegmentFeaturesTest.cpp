@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/ScalarSegmentFeatures.hpp"
 #include "SimplnxCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -17,6 +18,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
+#include <limits>
 #include <set>
 
 using namespace nx::core;
@@ -597,5 +600,103 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Geometry cell tuple count", "[Sim
     REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+  }
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Exact 64-bit Integer Differences", "[SimplnxCore][ScalarSegmentFeatures][IntegerPrecision]", int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool alongZ = GENERATE(false, true);
+  const auto neighborScheme = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  CAPTURE(alongZ, neighborScheme);
+
+  constexpr TestType k_Large = TestType{1} << 53;
+  constexpr TestType k_Min = std::numeric_limits<TestType>::min();
+  constexpr TestType k_Max = std::numeric_limits<TestType>::max();
+  constexpr int32 k_MaxTolerance = std::numeric_limits<int32>::max();
+  struct Fixture
+  {
+    std::array<TestType, 3> values;
+    int32 tolerance;
+    std::array<int32, 3> expectedIds;
+  };
+  // Hand oracle: unequal neighbors stay separate at tolerance zero; the repeated
+  // pair joins. Differences of one join at tolerance one. The full type range
+  // exceeds one, while max - (max - INT32_MAX) equals INT32_MAX exactly.
+  const std::array<Fixture, 8> fixtures = {{
+      {{k_Large, k_Large + 1, k_Large + 1}, 0, {1, 2, 2}},
+      {{k_Large + 1, k_Large, k_Large}, 0, {1, 2, 2}},
+      {{k_Max, k_Max - 1, k_Max - 1}, 0, {1, 2, 2}},
+      {{k_Min, k_Min + 1, k_Min + 1}, 0, {1, 2, 2}},
+      {{k_Min, k_Max, k_Max}, 0, {1, 2, 2}},
+      {{k_Large, k_Large + 1, k_Large + 1}, 1, {1, 1, 1}},
+      {{k_Max, k_Min, k_Min}, 1, {1, 2, 2}},
+      {{k_Max, k_Max - k_MaxTolerance, k_Max - k_MaxTolerance}, k_MaxTolerance, {1, 1, 1}},
+  }};
+  for(usize fixtureIndex = 0; fixtureIndex < fixtures.size(); fixtureIndex++)
+  {
+    DYNAMIC_SECTION("Fixture " << fixtureIndex)
+    {
+      const auto& fixture = fixtures[fixtureIndex];
+      CAPTURE(fixture.values, fixture.tolerance);
+      DataStructure dataStructure;
+      auto* imageGeom = ImageGeom::Create(dataStructure, std::string(k_GeomName));
+      REQUIRE(imageGeom != nullptr);
+      imageGeom->setDimensions(alongZ ? SizeVec3{1, 1, 3} : SizeVec3{3, 1, 1});
+      const ShapeType cellShape = alongZ ? ShapeType{3, 1, 1} : ShapeType{1, 1, 3};
+      auto* cellAM = AttributeMatrix::Create(dataStructure, std::string(k_CellDataName), cellShape, imageGeom->getId());
+      REQUIRE(cellAM != nullptr);
+      imageGeom->setCellData(*cellAM);
+      const DataPath scalarPath = k_GeomPath.createChildPath(k_CellDataName).createChildPath("ScalarData");
+      auto scalarStore = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, scalarPath, cellShape, {1});
+      auto* scalarArray = DataArray<TestType>::Create(dataStructure, "ScalarData", scalarStore, cellAM->getId());
+      REQUIRE(scalarArray != nullptr);
+      auto writeResult = scalarStore->copyFromBuffer(0, nonstd::span<const TestType>(fixture.values.data(), fixture.values.size()));
+      SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+      ScalarSegmentFeaturesFilter filter;
+      Arguments args;
+      SetupArgs(args, false, false, fixture.tolerance, neighborScheme, false);
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = scope.executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+      std::array<int32, 3> actualIds = {};
+      auto readResult = featureIds.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actualIds.data(), actualIds.size()));
+      SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+      CHECK(actualIds == fixture.expectedIds);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+      CHECK(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath).getNumberOfTuples() == static_cast<usize>(fixture.expectedIds.back() + 1));
+
+      // The public CCL entry point remains callable after operator() releases its
+      // slice buffers. Its native comparator must obey the same integer oracle.
+      ScalarSegmentFeaturesInputValues inputValues{};
+      inputValues.ScalarTolerance = fixture.tolerance;
+      inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(neighborScheme);
+      inputValues.ImageGeometryPath = k_GeomPath;
+      inputValues.InputDataPath = scalarPath;
+      inputValues.FeatureIdsArrayPath = k_FeatureIdsPath;
+      inputValues.CellFeatureAttributeMatrixPath = k_ActivePath.getParent();
+      inputValues.ActiveArrayPath = k_ActivePath;
+      const std::atomic_bool shouldCancel = false;
+      const IFilter::MessageHandler messageHandler;
+      ScalarSegmentFeatures algorithm(dataStructure, &inputValues, shouldCancel, messageHandler);
+      auto initializeResult = scope.execute([&] { return algorithm(); });
+      SIMPLNX_RESULT_REQUIRE_VALID(initializeResult);
+      auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+      auto unbufferedResult = scope.execute([&] { return algorithm.executeCCL(imageGeom, featureIdsStoreRef); });
+      SIMPLNX_RESULT_REQUIRE_VALID(unbufferedResult);
+      auto unbufferedReadResult = featureIdsStoreRef.copyIntoBuffer(0, nonstd::span<int32>(actualIds.data(), actualIds.size()));
+      SIMPLNX_RESULT_REQUIRE_VALID(unbufferedReadResult);
+      INFO("Public CCL after slice-buffer release");
+      CHECK(actualIds == fixture.expectedIds);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
   }
 }

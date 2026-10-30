@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <type_traits>
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
@@ -73,9 +74,9 @@ private:
  * @brief Compares resident scalar values in their native type.
  * @tparam T Specifies the scalar value type.
  *
- * The buffered CCL normally compares preloaded float64 slice values; this
- * fallback preserves native typed behavior outside that window. Signed
- * subtraction requires a representable absolute difference.
+ * The buffered CCL compares preloaded slice values; this fallback preserves
+ * native typed behavior outside that window. The int64 difference uses unsigned
+ * arithmetic. Other signed differences must be representable in their native type.
  */
 template <class T>
 class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
@@ -108,13 +109,23 @@ public:
    * @param neighIndex Neighbor flat value index.
    * @return True when both indexes are in range and their difference is within tolerance.
    * @pre index and neighIndex are nonnegative.
-   * @pre Signed differences are representable in T.
+   * @pre Signed differences for types other than int64 are representable in T.
    */
   bool compare(int64 index, int64 neighIndex) override
   {
     if(index >= m_Length || neighIndex >= m_Length)
     {
       return false;
+    }
+
+    if constexpr(std::is_same_v<T, int64>)
+    {
+      const int64 value = m_Data[index];
+      const int64 neighborValue = m_Data[neighIndex];
+      // Order the signed values before unsigned subtraction. Modular arithmetic
+      // then gives the exact difference even when the values span zero.
+      const uint64 difference = value >= neighborValue ? static_cast<uint64>(value) - static_cast<uint64>(neighborValue) : static_cast<uint64>(neighborValue) - static_cast<uint64>(value);
+      return m_Tolerance >= 0 && difference <= static_cast<uint64>(m_Tolerance);
     }
 
     if(m_Data[index] >= m_Data[neighIndex])
@@ -132,7 +143,7 @@ private:
 
 /**
  * @struct FillScalarSliceBufferFunctor
- * @brief Bulk-reads one typed scalar slice and widens it to float64.
+ * @brief Bulk-reads one scalar slice and preserves 64-bit integer precision.
  */
 struct FillScalarSliceBufferFunctor
 {
@@ -142,14 +153,15 @@ struct FillScalarSliceBufferFunctor
    * @param dataArray Supplies scalar values.
    * @param baseIndex First flat source value.
    * @param sliceSize Number of values to read.
-   * @param buffer Receives widened values.
+   * @param buffer Receives values that fit float64.
+   * @param integerBuffer Receives exact, ordered 64-bit integer values.
    * @param bufferOffset First destination-buffer index.
    * @return Source bulk-read result.
    * @pre baseIndex is nonnegative.
    * @pre Source and destination ranges contain sliceSize values.
    */
   template <typename T>
-  Result<> operator()(IDataArray* dataArray, int64 baseIndex, usize sliceSize, std::vector<float64>& buffer, usize bufferOffset)
+  Result<> operator()(IDataArray* dataArray, int64 baseIndex, usize sliceSize, std::vector<float64>& buffer, std::vector<uint64>& integerBuffer, usize bufferOffset)
   {
     auto& store = dataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     // A raw buffer provides contiguous storage for every dispatched type.
@@ -161,7 +173,20 @@ struct FillScalarSliceBufferFunctor
     }
     for(usize i = 0; i < sliceSize; i++)
     {
-      buffer[bufferOffset + i] = static_cast<float64>(tempBuffer[i]);
+      if constexpr(std::is_same_v<T, int64>)
+      {
+        // Map [INT64_MIN, INT64_MAX] to [0, UINT64_MAX] without signed arithmetic.
+        // This constant offset preserves ordering and absolute differences.
+        integerBuffer[bufferOffset + i] = static_cast<uint64>(tempBuffer[i]) ^ (uint64{1} << 63);
+      }
+      else if constexpr(std::is_same_v<T, uint64>)
+      {
+        integerBuffer[bufferOffset + i] = tempBuffer[i];
+      }
+      else
+      {
+        buffer[bufferOffset + i] = static_cast<float64>(tempBuffer[i]);
+      }
     }
     return {};
   }
@@ -355,7 +380,15 @@ bool ScalarSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) cons
         return false;
       }
 
-      // Widened comparison avoids type dispatch in the CCL neighbor loop.
+      if(!m_IntegerScalarBuffer.empty())
+      {
+        const uint64 val1 = m_IntegerScalarBuffer[off1];
+        const uint64 val2 = m_IntegerScalarBuffer[off2];
+        const uint64 diff = val1 >= val2 ? val1 - val2 : val2 - val1;
+        return m_InputValues->ScalarTolerance >= 0 && diff <= static_cast<uint64>(m_InputValues->ScalarTolerance);
+      }
+
+      // Other scalar types use the float64 buffer.
       float64 val1 = m_ScalarBuffer[off1];
       float64 val2 = m_ScalarBuffer[off2];
       float64 diff = val1 >= val2 ? (val1 - val2) : (val2 - val1);
@@ -376,7 +409,15 @@ void ScalarSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
 {
   m_BufSliceSize = dimX * dimY;
   const usize sliceSize = static_cast<usize>(m_BufSliceSize);
-  m_ScalarBuffer.resize(2 * sliceSize);
+  const DataType dataType = m_InputDataArray->getDataType();
+  if(dataType == DataType::int64 || dataType == DataType::uint64)
+  {
+    m_IntegerScalarBuffer.resize(2 * sliceSize);
+  }
+  else
+  {
+    m_ScalarBuffer.resize(2 * sliceSize);
+  }
   m_MaskBuffer.resize(2 * sliceSize);
   m_BufferedSliceZ[0] = -1;
   m_BufferedSliceZ[1] = -1;
@@ -389,6 +430,7 @@ void ScalarSegmentFeatures::deallocateSliceBuffers()
 {
   m_UseSliceBuffers = false;
   m_ScalarBuffer = std::vector<float64>();
+  m_IntegerScalarBuffer = std::vector<uint64>();
   m_MaskBuffer = std::vector<uint8>();
   m_BufferedSliceZ[0] = -1;
   m_BufferedSliceZ[1] = -1;
@@ -431,7 +473,7 @@ Result<> ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY
   const usize slotOffset = static_cast<usize>(slot) * sliceSize;
   const int64 baseIndex = iz * m_BufSliceSize;
 
-  // Widen one scalar slice into the selected LRU slot.
+  // Load one scalar slice into the selected LRU slot without losing integer precision.
   DataType dataType = m_InputDataArray->getDataType();
   if(dataType == DataType::boolean)
   {
@@ -450,7 +492,7 @@ Result<> ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY
   }
   else
   {
-    auto readResult = ExecuteDataFunctionNoBool(FillScalarSliceBufferFunctor{}, dataType, m_InputDataArray, baseIndex, sliceSize, m_ScalarBuffer, slotOffset);
+    auto readResult = ExecuteDataFunctionNoBool(FillScalarSliceBufferFunctor{}, dataType, m_InputDataArray, baseIndex, sliceSize, m_ScalarBuffer, m_IntegerScalarBuffer, slotOffset);
     if(readResult.invalid())
     {
       return readResult;
