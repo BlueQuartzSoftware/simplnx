@@ -57,6 +57,7 @@ set(SIMPLNX_TEST_SRCS
   H5Test.cpp
   H5IOTest.cpp
   IntersectionUtilitiesTest.cpp
+  RayTest.cpp
   IOFormat.cpp
   IParallelAlgorithmTest.cpp
   CacheMemoryBudgetManagerTest.cpp
