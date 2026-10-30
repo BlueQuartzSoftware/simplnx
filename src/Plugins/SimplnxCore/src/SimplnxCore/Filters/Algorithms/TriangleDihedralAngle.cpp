@@ -63,11 +63,11 @@ public:
       else
       {
         std::vector<float64> dihedralAnglesVec;
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC))));
+        dihedralAnglesVec.push_back(k_radToDeg * acos(std::clamp(vecAB.dot(vecAC) / (magAB * magAC), -1.0, 1.0)));
 
-        // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC)))));
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC))));
+        // vecAB points out of B and vecBC points into B, so subtract their angle from 180 to get the interior angle at B.
+        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos(std::clamp(vecAB.dot(vecBC) / (magAB * magBC), -1.0, 1.0))));
+        dihedralAnglesVec.push_back(k_radToDeg * acos(std::clamp(vecBC.dot(vecAC) / (magBC * magAC), -1.0, 1.0)));
 
         m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
       }
