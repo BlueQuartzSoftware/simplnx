@@ -27,6 +27,57 @@ DataPath eulerAnglesPath = ebsdPath.createChildPath(Constants::k_EulerAngles);
 const std::string k_VecColorsNX = "Vector Colors";
 } // namespace
 
+TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Repeated unmasked execution creates only colors", "[SimplnxCore][ComputeVectorColorsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  const DataPath vectorsPath({"Vectors"});
+  auto vectorsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vectorsPath, {2}, {3});
+  REQUIRE(Float32Array::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
+  const std::array<float32, 6> vectors = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+  const auto writeResult = vectorsStore->copyFromBuffer(0, nonstd::span<const float32>(vectors.data(), vectors.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  // Hand calculation: +X has trend 0 and plunge 90, giving pure red.
+  // +Z has plunge 0, so every channel blends fully to white.
+  const std::array<uint8, 6> expectedColors = {255, 0, 0, 255, 255, 255};
+  std::vector<DataPath> expectedPaths = {vectorsPath};
+  for(const std::string outputName : {"First Colors", "Second Colors"})
+  {
+    CAPTURE(outputName);
+    ComputeVectorColorsFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeVectorColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(vectorsPath));
+    args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(outputName));
+
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    const auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const DataPath colorsPath({outputName});
+    expectedPaths.push_back(colorsPath);
+    CHECK(dataStructure.getData(DataPath({"mask array"})) == nullptr);
+    CHECK(dataStructure.getAllDataPaths().size() == expectedPaths.size());
+    for(const auto& path : expectedPaths)
+    {
+      CHECK(dataStructure.getData(path) != nullptr);
+    }
+
+    const auto* colors = dataStructure.getDataAs<UInt8Array>(colorsPath);
+    REQUIRE(colors != nullptr);
+    CHECK(colors->getTupleShape() == ShapeType{2});
+    CHECK(colors->getComponentShape() == ShapeType{3});
+    std::array<uint8, 6> actualColors = {};
+    const auto readResult = colors->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    CHECK(actualColors == expectedColors);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Valid Filter Execution", "[SimplnxCore][ComputeVectorColorsFilter]")
 {
   UnitTest::LoadPlugins();
