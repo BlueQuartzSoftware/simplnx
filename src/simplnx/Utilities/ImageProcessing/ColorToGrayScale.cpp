@@ -585,7 +585,12 @@ const std::atomic_bool& ConvertColorToGrayScale::getCancel()
 
 Result<> ConvertColorToGrayScale::operator()()
 {
-  // Current behavior reuses the first output path for every selected input path.
+  if(m_InputValues->OutputDataArrayPaths.size() != m_InputValues->InputDataArrayPaths.size())
+  {
+    return MakeErrorResult(-10706, fmt::format("Grayscale conversion needs one output path for each input path. Input paths: {}. Output paths: {}.", m_InputValues->InputDataArrayPaths.size(),
+                                               m_InputValues->OutputDataArrayPaths.size()));
+  }
+
   auto outputPathIter = m_InputValues->OutputDataArrayPaths.begin();
   for(const auto& arrayPath : m_InputValues->InputDataArrayPaths)
   {
@@ -608,6 +613,7 @@ Result<> ConvertColorToGrayScale::operator()()
     {
       return result;
     }
+    ++outputPathIter;
   }
 
   return {};
