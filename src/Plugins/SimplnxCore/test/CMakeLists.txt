@@ -182,7 +182,7 @@ create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 if(DREAM3DNX_USE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
-  set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+  set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
 endif()
 
 # ------------------------------------------------------------------------------
