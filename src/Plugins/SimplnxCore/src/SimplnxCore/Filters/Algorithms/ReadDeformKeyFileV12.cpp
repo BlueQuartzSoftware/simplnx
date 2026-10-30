@@ -196,12 +196,13 @@ private:
   std::vector<DataPath> m_UserDefinedArrays = {};
 
   // helper functions
-  [[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens)
+  [[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize tokenOffset = 0)
   {
     usize numComp = data.getNumberOfComponents();
-    if(numComp > tokens.size())
+    if(tokenOffset > tokens.size() || numComp > tokens.size() - tokenOffset)
     {
-      std::string msg = fmt::format("Error at line {}: Unable to process line because the read in token count was {} and the expected amount was {}", m_LineCount, tokens.size(), numComp);
+      std::string msg = fmt::format("Cannot read data array '{}' at record {} (line {}): {} tokens are available, but offset {} requires {} components.", data.getName(), tuple + 1, m_LineCount,
+                                    tokens.size(), tokenOffset, numComp);
       return MakeErrorResult(-2023, msg);
     }
     for(usize comp = 0; comp < numComp; comp++)
@@ -209,11 +210,11 @@ private:
       float32 value;
       try
       {
-        value = std::stof(tokens[comp]);
+        value = std::stof(tokens[tokenOffset + comp]);
       } catch(const std::exception& e)
       {
-        std::string msg = fmt::format(R"(Error at line {}: Unable to convert data array {}'s string value "{}" to float.  Threw standard exception with text: "{}")", m_LineCount, data.getName(),
-                                      tokens[comp], e.what());
+        std::string msg = fmt::format(R"(Error at line {}, record {}: Unable to convert data array '{}' string value '{}' to float. Reported error: '{}'.)", m_LineCount, tuple + 1, data.getName(),
+                                      tokens[tokenOffset + comp], e.what());
         return MakeErrorResult(-2008, msg);
       }
       data[tuple * numComp + comp] = value;
@@ -445,7 +446,11 @@ private:
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
             auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
-            setResult = setTuple(0, data, tokens);
+            setResult = setTuple(0, data, tokens, i);
+            if(setResult.invalid())
+            {
+              return setResult;
+            }
           }
         }
         else
@@ -502,7 +507,11 @@ private:
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
             auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
-            setResult = setTuple(0, data, tokens);
+            setResult = setTuple(tupleIndex, data, tokens, i);
+            if(setResult.invalid())
+            {
+              return setResult;
+            }
           }
         }
         else
