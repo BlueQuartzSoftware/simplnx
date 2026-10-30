@@ -15,7 +15,11 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/IO/HKL/H5CtfImporter.h>
 #include <EbsdLib/IO/TSL/AngConstants.h>
+#include <H5Support/H5Lite.h>
+#include <H5Support/H5ScopedSentinel.h>
+#include <H5Support/H5Utilities.h>
 
 #include <catch2/catch.hpp>
 #include <cstring>
@@ -29,6 +33,57 @@ namespace fs = std::filesystem;
 namespace
 {
 const std::string k_MaterialName("MaterialName");
+
+fs::path WriteHexagonalH5EbsdFixture()
+{
+  const fs::path outputDir(unit_test::k_BinaryTestOutputDir.view());
+  const auto ctfPath = outputDir / "read_h5ebsd_hex_selection.ctf";
+  {
+    std::ofstream file(ctfPath);
+    REQUIRE(file.is_open());
+    file << "Channel Text File\n"
+            "Prj\tHex selection regression\nAuthor\tUnitTest\nJobMode\tGrid\n"
+            "XCells\t3\nYCells\t1\nXStep\t1\nYStep\t1\n"
+            "AcqE1\t0\nAcqE2\t0\nAcqE3\t0\n"
+            "Euler angles refer to Sample Coordinate system (CS0)!\tMag\t2000\tCoverage\t100\tDevice\t0\tKV\t20\tTiltAngle\t70\tTiltAxis\t0\n"
+            "Phases\t2\n"
+            "2.5;2.5;4.25\t90;90;120\tHexagonal\t9\tHex phase\n"
+            "3.625;3.625;3.625\t90;90;90\tCubic\t11\tCubic phase\n"
+            "Phase\tX\tY\tBands\tError\tEuler1\tEuler2\tEuler3\tMAD\tBC\tBS\n"
+            "1\t0\t0\t7\t0\t30\t45\t60\t0\t100\t100\n"
+            "2\t1\t0\t7\t0\t30\t45\t60\t0\t100\t100\n"
+            "0\t2\t0\t0\t0\t30\t45\t60\t0\t100\t100\n";
+    file.close();
+    REQUIRE(file.good());
+  }
+  const auto h5Path = outputDir / "read_h5ebsd_hex_selection.h5ebsd";
+  const hid_t fileId = H5Support::H5Utilities::createFile(h5Path.string());
+  REQUIRE(fileId >= 0);
+  H5Support::H5ScopedFileSentinel sentinel(fileId, true);
+  auto importer = ebsdlib::H5CtfImporter::New();
+  REQUIRE(importer->importFile(fileId, 0, ctfPath.string()) >= 0);
+  REQUIRE(importer->getErrorCode() == 0);
+  namespace H5Lite = H5Support::H5Lite;
+  REQUIRE(H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ctf::Manufacturer) >= 0);
+  REQUIRE(H5Lite::writeScalarDataset<int32>(fileId, ebsdlib::H5Ebsd::ZStartIndex, 0) >= 0);
+  REQUIRE(H5Lite::writeScalarDataset<int32>(fileId, ebsdlib::H5Ebsd::ZEndIndex, 0) >= 0);
+  REQUIRE(H5Lite::writeScalarDataset<int64>(fileId, ebsdlib::H5Ebsd::XPoints, 3) >= 0);
+  REQUIRE(H5Lite::writeScalarDataset<int64>(fileId, ebsdlib::H5Ebsd::YPoints, 1) >= 0);
+  for(const auto& name : {ebsdlib::H5Ebsd::XResolution, ebsdlib::H5Ebsd::YResolution, ebsdlib::H5Ebsd::ZResolution})
+  {
+    REQUIRE(H5Lite::writeScalarDataset<float32>(fileId, name, 1.0F) >= 0);
+  }
+  REQUIRE(H5Lite::writeScalarDataset<uint32>(fileId, ebsdlib::H5Ebsd::StackingOrder, 0) >= 0);
+  for(const auto& name : {ebsdlib::H5Ebsd::SampleTransformationAngle, ebsdlib::H5Ebsd::EulerTransformationAngle})
+  {
+    REQUIRE(H5Lite::writeScalarDataset<float32>(fileId, name, 0.0F) >= 0);
+  }
+  for(const auto& name : {ebsdlib::H5Ebsd::SampleTransformationAxis, ebsdlib::H5Ebsd::EulerTransformationAxis})
+  {
+    REQUIRE(H5Lite::writeVectorDataset<float32>(fileId, name, {3}, {0.0F, 0.0F, 1.0F}) >= 0);
+  }
+  return h5Path;
+}
 
 // 189 x 201 points at 0.25 spacing span [0,47.25] x [0,50.25].
 // A 180-degree Y rotation negates X and Z: minima are -47.25 and -sliceCount * 0.25.
@@ -232,6 +287,82 @@ void CompareImportedArrays(const DataStructure& automatic, const DataStructure& 
   }
 }
 } // namespace
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HKL hex correction is independent of phase selection", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const auto inputPath = WriteHexagonalH5EbsdFixture();
+  const bool convertToRadians = GENERATE(true, false);
+  CAPTURE(convertToRadians);
+  // Hand calculation: only phase 1 is hexagonal, so phi2 is 60 + 30 = 90 degrees.
+  // The cubic and unindexed cells keep 60 degrees. Other channels keep 30 and 45 degrees.
+  constexpr float64 k_Pi = 3.14159265358979323846;
+  const std::array<float64, 9> expectedRadians = {k_Pi / 6, k_Pi / 4, k_Pi / 2, k_Pi / 6, k_Pi / 4, k_Pi / 3, k_Pi / 6, k_Pi / 4, k_Pi / 3};
+  const std::array<float64, 9> expectedDegrees = {30, 45, 90, 30, 45, 60, 30, 45, 60};
+  const auto& expected = convertToRadians ? expectedRadians : expectedDegrees;
+  std::array<float32, 9> eulersOnly = {};
+  for(const auto& selection : std::vector<std::vector<std::string>>{{Constants::k_EulerAngles}, {Constants::k_EulerAngles, Constants::k_Phases}, {Constants::k_Phases}})
+  {
+    CAPTURE(selection);
+    const bool hasEuler = selection.front() == Constants::k_EulerAngles;
+    const bool hasPhases = selection.back() == Constants::k_Phases;
+    ReadH5EbsdFileParameter::ValueType input;
+    input.inputFilePath = inputPath.string();
+    input.startSlice = 0;
+    input.endSlice = 0;
+    input.eulerRepresentation = ebsdlib::AngleRepresentation::Degrees;
+    input.useRecommendedTransform = convertToRadians;
+    input.selectedArrayNames = selection;
+    Arguments args;
+    args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
+    ReadH5EbsdFilter filter;
+    DataStructure dataStructure;
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const auto eulerPath = Constants::k_CellAttributeMatrix.createChildPath(Constants::k_EulerAngles);
+    const auto phasePath = Constants::k_CellAttributeMatrix.createChildPath(Constants::k_Phases);
+    CHECK(dataStructure.containsData(eulerPath) == hasEuler);
+    CHECK(dataStructure.containsData(phasePath) == hasPhases);
+    if(hasEuler)
+    {
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
+      const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulerPath);
+      REQUIRE(eulers.getSize() == expected.size());
+      std::array<float32, 9> values = {};
+      const auto copyResult = eulers.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values));
+      SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+      for(usize i = 0; i < values.size(); ++i)
+      {
+        CAPTURE(i);
+        CHECK(values[i] == Approx(expected[i]).epsilon(0).margin(1.0e-6));
+      }
+      if(hasPhases)
+      {
+        CHECK(values == eulersOnly);
+      }
+      else
+      {
+        eulersOnly = values;
+      }
+    }
+    if(hasPhases)
+    {
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasePath));
+      const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasePath);
+      REQUIRE(phases.getSize() == 3);
+      std::array<int32, 3> values = {};
+      const auto copyResult = phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(values));
+      SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+      CHECK(values == std::array<int32, 3>{1, 2, 0});
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[OrientationAnalysis][ReadH5Ebsd]")
 {
