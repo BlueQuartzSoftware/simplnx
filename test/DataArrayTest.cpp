@@ -47,6 +47,64 @@
 
 using namespace nx::core;
 
+TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[simplnx][DataArrayUtilities][FeatureIdsValidation]")
+{
+  UnitTest::LoadPlugins();
+
+  const usize components = GENERATE(usize{1}, usize{2});
+  const int32 lastId = GENERATE(-1, 1, 2);
+  const bool ignoreNegativeValues = GENERATE(false, true);
+  const bool useFeatureArray = GENERATE(false, true);
+  CAPTURE(components, lastId, ignoreNegativeValues, useFeatureArray);
+
+  DataStructure dataStructure;
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Features", ShapeType{2});
+  REQUIRE(featureAM != nullptr);
+  const DataPath featureArrayPath({"Features", "Values"});
+  auto featureStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureArrayPath, ShapeType{2}, ShapeType{1});
+  REQUIRE(Int32Array::Create(dataStructure, "Values", featureStore, featureAM->getId()) != nullptr);
+
+  const DataPath idsPath({"FeatureIds"});
+  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, ShapeType{2}, ShapeType{components});
+  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", idsStore);
+  REQUIRE(featureIds != nullptr);
+  std::vector<int32> ids(2 * components, 0);
+  ids.back() = lastId;
+  const auto copyResult = idsStore->copyFromBuffer(0, nonstd::span<const int32>(ids.data(), ids.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+
+  // Two feature tuples have valid indices 0 and 1. Index 2 is outside the array;
+  // -1 is valid only when negative labels are explicitly ignored.
+  const auto sourcePath = useFeatureArray ? featureArrayPath : DataPath({"Features"});
+  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, sourcePath, *featureIds, ignoreNegativeValues, {});
+  if(lastId == 2 || (lastId == -1 && !ignoreNegativeValues))
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    REQUIRE(result.errors()[0].code == (lastId == -1 ? -5355 : -5351));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("DataArrayUtilities::ValidateFeatureIds accepts empty arrays", "[simplnx][DataArrayUtilities][FeatureIdsValidation]")
+{
+  UnitTest::LoadPlugins();
+
+  const usize components = GENERATE(usize{1}, usize{2});
+  DataStructure dataStructure;
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Features", ShapeType{0}) != nullptr);
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FeatureIds"}), ShapeType{0}, ShapeType{components});
+  auto* featureIds = Int32Array::Create(dataStructure, "FeatureIds", store);
+  REQUIRE(featureIds != nullptr);
+  const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, DataPath({"Features"}), *featureIds, false, {});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtilities]")
 {
   const bool useRectGrid = GENERATE(false, true);
