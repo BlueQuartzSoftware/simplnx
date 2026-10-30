@@ -1,7 +1,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -10,6 +13,7 @@
 
 #include "SimplnxCore/Filters/WriteLAMMPSFileFilter.hpp"
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 
@@ -92,6 +96,76 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[Simpln
   }
 
   ::CompareResults();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Eight Vertices", "[SimplnxCore][WriteLAMMPSFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  CreateVertexGeometryAction createGeometry(k_VertexGeom, 8, Constants::k_Vertex_Data, VertexGeom::k_SharedVertexListName);
+  auto geometryResult = createGeometry.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(geometryResult);
+  CreateArrayAction createLabels(DataType::int32, {8}, {1}, k_AtomLabelsGeom);
+  auto labelsResult = createLabels.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(labelsResult);
+
+  auto* vertices = dataStructure.getDataAs<Float32Array>(k_VertexGeom.createChildPath(VertexGeom::k_SharedVertexListName));
+  auto* labels = dataStructure.getDataAs<Int32Array>(k_AtomLabelsGeom);
+  REQUIRE(vertices != nullptr);
+  REQUIRE(labels != nullptr);
+  // Eight corners of a box, with distinct axis extents and two atom types.
+  const std::array<float32, 24> coordinates = {0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 1.0F, 2.0F, 0.0F, 0.0F, 0.0F, 3.0F, 1.0F, 0.0F, 3.0F, 0.0F, 2.0F, 3.0F, 1.0F, 2.0F, 3.0F};
+  const std::array<int32, 8> atomLabels = {1, 2, 1, 2, 2, 1, 2, 1};
+  auto coordinatesWriteResult = vertices->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coordinates.data(), coordinates.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(coordinatesWriteResult);
+  auto labelsWriteResult = labels->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(atomLabels.data(), atomLabels.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(labelsWriteResult);
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "LAMMPSEightVertices.txt";
+  auto outputFileGuard = MakeScopeGuard([&outputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(outputPath, errorCode);
+  });
+
+  WriteLAMMPSFileFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteLAMMPSFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteLAMMPSFileFilter::k_VertexGeomPath, std::make_any<DataPath>(k_VertexGeom));
+  args.insertOrAssign(WriteLAMMPSFileFilter::k_AtomLabelsPath_Key, std::make_any<DataPath>(k_AtomLabelsGeom));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // Hand-written oracle: ids are one-based; labels and coordinates are unchanged.
+  const std::string expected = "LAMMPS data file\n"
+                               "\n"
+                               "8 atoms\n"
+                               "\n"
+                               "2 atom types\n"
+                               "\n"
+                               "0.000000 1.000000 xlo xhi\n"
+                               "0.000000 2.000000 ylo yhi\n"
+                               "0.000000 3.000000 zlo zhi\n"
+                               "\n"
+                               "Atoms\n"
+                               "\n"
+                               "1 1 0.000000 0.000000 0.000000 0 0 0\n"
+                               "2 2 1.000000 0.000000 0.000000 0 0 0\n"
+                               "3 1 0.000000 2.000000 0.000000 0 0 0\n"
+                               "4 2 1.000000 2.000000 0.000000 0 0 0\n"
+                               "5 2 0.000000 0.000000 3.000000 0 0 0\n"
+                               "6 1 1.000000 0.000000 3.000000 0 0 0\n"
+                               "7 2 0.000000 2.000000 3.000000 0 0 0\n"
+                               "8 1 1.000000 2.000000 3.000000 0 0 0\n"
+                               "\n";
+  REQUIRE(fs::exists(outputPath));
+  const std::vector<char> contents = readIn(outputPath);
+  REQUIRE(std::string(contents.begin(), contents.end()) == expected);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
