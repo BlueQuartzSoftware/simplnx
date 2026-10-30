@@ -216,7 +216,13 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   ebsdReader->setSliceStart(mInputValues->startSlice);
   ebsdReader->setSliceEnd(mInputValues->endSlice);
   ebsdReader->readAllArrays(false);
-  ebsdReader->setArraysToRead(selectedArrayNames);
+  auto arraysToRead = selectedArrayNames;
+  if(manufacturer == ebsdlib::Ctf::Manufacturer && selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
+  {
+    // HKL Euler correction needs source phases even when they are not an output.
+    arraysToRead.insert(eulerNames[3]);
+  }
+  ebsdReader->setArraysToRead(arraysToRead);
   err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], mRefFrameZDir);
   if(err < 0)
   {
@@ -235,11 +241,9 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   auto* phasePtr = reinterpret_cast<int32*>(ebsdReader->getPointerByName(eulerNames[3]));
   nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases);
-  nx::core::Int32Array* phaseDataArrayPtr = nullptr;
-
   if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
   {
-    phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32Array>(phaseDataPath);
+    auto* phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32Array>(phaseDataPath);
     if(nx::core::Result<> ioResult = phaseDataArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalPoints)); ioResult.invalid())
     {
       return nx::core::ConvertResult(std::move(ioResult));
@@ -264,18 +268,11 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     constexpr usize k_ChunkTuples = 65536;
     auto eulerBuf = std::make_unique<float32[]>(k_ChunkTuples * 3);
 
-    // Oxford correction caches all cell phases to avoid random out-of-core reads.
-    // This cache is volume-sized and makes the correction path unbounded.
-    std::unique_ptr<int32[]> phaseCache;
+    // Reuse the reader-owned phase buffer; cache only the ensemble crystal structures.
     std::unique_ptr<uint32[]> xtalCache;
-    bool applyHexCorrection = (manufacturer == ebsdlib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr);
+    bool applyHexCorrection = (manufacturer == ebsdlib::Ctf::Manufacturer);
     if(applyHexCorrection)
     {
-      phaseCache = std::make_unique<int32[]>(totalPoints);
-      if(nx::core::Result<> ioResult = phaseDataArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phaseCache.get(), totalPoints)); ioResult.invalid())
-      {
-        return nx::core::ConvertResult(std::move(ioResult));
-      }
       usize numXtal = xtalData.getSize();
       xtalCache = std::make_unique<uint32[]>(numXtal);
       if(nx::core::Result<> ioResult = xtalData.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(xtalCache.get(), numXtal)); ioResult.invalid())
@@ -294,7 +291,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
         eulerBuf[i * 3] = euler0[srcIdx] * degToRad;
         eulerBuf[i * 3 + 1] = euler1[srcIdx] * degToRad;
         eulerBuf[i * 3 + 2] = euler2[srcIdx] * degToRad;
-        if(applyHexCorrection && xtalCache[phaseCache[srcIdx]] == ebsdlib::CrystalStructure::Hexagonal_High)
+        if(applyHexCorrection && xtalCache[phasePtr[srcIdx]] == ebsdlib::CrystalStructure::Hexagonal_High)
         {
           eulerBuf[i * 3 + 2] += (30.0F * degToRad);
         }
