@@ -115,6 +115,24 @@ DataStructure createDataStructure()
 
   return dataStructure;
 }
+
+DataStructure CreateComponentShapeDataStructure()
+{
+  DataStructure ds;
+  auto* am = AttributeMatrix::Create(ds, k_AttributeMatrix, {1});
+  REQUIRE(am != nullptr);
+  auto* arrayA = Float64Array::CreateWithStore<Float64DataStore>(ds, "A", {1}, {3}, am->getId());
+  auto* arrayB = Float64Array::CreateWithStore<Float64DataStore>(ds, "B", {1}, {3}, am->getId());
+  REQUIRE(arrayA != nullptr);
+  REQUIRE(arrayB != nullptr);
+  (*arrayA)[0] = 1;
+  (*arrayA)[1] = 2;
+  (*arrayA)[2] = 4;
+  (*arrayB)[0] = 10;
+  (*arrayB)[1] = 20;
+  (*arrayB)[2] = 40;
+  return ds;
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -1425,6 +1443,71 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Preflight rejects missing binary 
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InvalidEquation));
   REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape mismatch after extraction", "[SimplnxCore][ArrayCalculatorFilter][ComponentShapeRegression]")
+{
+  UnitTest::LoadPlugins();
+  const std::string equation = GENERATE("A + (B)[0]", "(B)[0] + A");
+  CAPTURE(equation);
+  DataStructure ds = CreateComponentShapeDataStructure();
+  ArrayCalculatorFilter filter;
+  Arguments args;
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, equation, CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+
+  // Component extraction leaves an array with one component, not a broadcast scalar.
+  // Its component count differs from A's three components in either operand order.
+  const auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  REQUIRE(result.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
+  REQUIRE_FALSE(ds.containsData(k_AttributeArrayPath));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Component shape and scalar broadcast controls", "[SimplnxCore][ArrayCalculatorFilter][ComponentShapeRegression]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateComponentShapeDataStructure();
+  ArrayCalculatorFilter filter;
+  std::string equation;
+  std::vector<float64> expected;
+  // Hand calculation for A = (1, 2, 4) and B = (10, 20, 40).
+  SECTION("Matching three-component arrays")
+  {
+    equation = "A + B";
+    expected = {11, 22, 44};
+  }
+  SECTION("Matching extracted components")
+  {
+    equation = "(A)[1] + (B)[0]";
+    expected = {12};
+  }
+  SECTION("Scalar on the right")
+  {
+    equation = "A + 5";
+    expected = {6, 7, 9};
+  }
+  SECTION("Scalar on the left")
+  {
+    equation = "5 + A";
+    expected = {6, 7, 9};
+  }
+
+  const auto result = createAndExecuteArrayCalculatorFilter(equation, k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+  const auto& output = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+  REQUIRE(output.getNumberOfTuples() == 1);
+  REQUIRE(output.getNumberOfComponents() == expected.size());
+  for(usize i = 0; i < expected.size(); i++)
+  {
+    REQUIRE(output[i] == expected[i]);
+  }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
