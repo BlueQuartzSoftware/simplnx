@@ -172,17 +172,12 @@ struct SumReduce
 };
 
 /**
- * @brief Associative standard-deviation reducer. Accumulates a Kahan-compensated running sum and a
- *        Kahan-compensated running sum-of-squares plus a count per output slot; finalize() returns the
- *        SAMPLE standard deviation, i.e. the one-pass algebraic form of the legacy ITK
- *        StandardDeviationProjectionImageFilter accumulator
- *        (itkStandardDeviationProjectionImageFilter.h, Functor::StandardDeviationAccumulator::GetValue():
- *        mean = sum / N; squaredSum = sum_i (x_i - mean)^2; return sqrt(squaredSum / (N - 1))). ITK forms
- *        the mean with the POPULATION divisor N but divides the squared-deviation total by (N - 1)
- *        (SAMPLE variance), and guards N <= 1 by returning 0 -- both replicated here. The output type is
- *        Float64 (the façade's AlwaysFloat64 OutTypeMap), matching the legacy filter's double
- *        FilterOutputType. Parity against ITK's two-pass form is algebraic (see the identity below), not
- *        bit-identical, so the projection parity tests compare within a tolerance.
+ * @brief Computes sample standard deviation with Welford's online update.
+ *
+ * Each output slot retains a mean, a sum of squared deviations, and a count.
+ * This avoids cancellation between large squared sums and requires constant memory per slot.
+ * The sample divisor (N - 1) and zero result for N <= 1 match ITK's StandardDeviationAccumulator.
+ * The filter emits Float64 values. Comparisons with ITK's two-pass calculation use a tolerance.
  */
 struct StdDevReduce
 {
@@ -191,10 +186,8 @@ struct StdDevReduce
   template <class TOut>
   struct State
   {
-    float64 sum = 0.0;
-    float64 sumComp = 0.0;   // Kahan compensation for the running sum
-    float64 sumSq = 0.0;     // running sum of squares
-    float64 sumSqComp = 0.0; // Kahan compensation for the running sum of squares
+    float64 mean = 0.0;
+    float64 sumSquaredDeviations = 0.0;
     usize count = 0;
   };
 
@@ -202,22 +195,11 @@ struct StdDevReduce
   void accumulate(State<TOut>& state, TIn value) const
   {
     const float64 dv = static_cast<float64>(value);
-    // Kahan-compensated running sum.
-    {
-      const float64 y = dv - state.sumComp;
-      const float64 t = state.sum + y;
-      state.sumComp = (t - state.sum) - y;
-      state.sum = t;
-    }
-    // Kahan-compensated running sum of squares.
-    {
-      const float64 sq = dv * dv;
-      const float64 y = sq - state.sumSqComp;
-      const float64 t = state.sumSq + y;
-      state.sumSqComp = (t - state.sumSq) - y;
-      state.sumSq = t;
-    }
     ++state.count;
+    // Welford's update uses deviations from the old and new means, without subtracting large squared sums.
+    const float64 delta = dv - state.mean;
+    state.mean += delta / static_cast<float64>(state.count);
+    state.sumSquaredDeviations += delta * (dv - state.mean);
   }
 
   template <class TOut>
@@ -228,13 +210,8 @@ struct StdDevReduce
     {
       return TOut{};
     }
-    const float64 n = static_cast<float64>(state.count);
-    // One-pass algebraic identity for ITK's two-pass sum_i (x_i - mean)^2 with mean = sum / N:
-    //   sum_i (x_i - mean)^2 == sumSq - (sum * sum) / N
-    // then the SAMPLE variance divides by (N - 1), exactly as ITK does.
-    float64 variance = (state.sumSq - (state.sum * state.sum) / n) / (n - 1.0);
-    // Guard the tiny negative that catastrophic cancellation can produce when every value along the
-    // pencil is (nearly) equal, so std::sqrt never sees a negative argument.
+    float64 variance = state.sumSquaredDeviations / static_cast<float64>(state.count - 1);
+    // Guard against a negative variance from rounding before taking the square root.
     if(variance < 0.0)
     {
       variance = 0.0;

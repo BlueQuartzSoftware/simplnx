@@ -3,20 +3,22 @@
 
 #include "ImageProcessing/Filters/StandardDeviationProjectionImageFilter.hpp"
 
+#include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ProjectionReducers.hpp"
+
 #include <nonstd/span.hpp>
 
+#include <array>
 #include <cmath>
 #include <memory>
+#include <type_traits>
 
 using namespace nx::core;
 
 namespace
 {
-// Tolerance for the Float64 standard-deviation output. This reducer computes the standard deviation with
-// the one-pass algebraic identity (sumSq - sum^2/N)/(N-1) instead of ITK's two-pass sum of squared
-// deviations; the two are only ALGEBRAICALLY equal, so a slightly looser tolerance than the exact-integer
-// Sum/Mean is used. It is still ~4 orders of magnitude tighter than the SAMPLE-vs-POPULATION difference
-// (a factor of sqrt(N/(N-1))), so the test still fails hard if the (N-1) sample convention were wrong.
+// Welford's update and the closed-form oracle can differ through rounding. These tolerances remain
+// much smaller than the difference between sample and population standard deviation.
 constexpr float64 k_StdDevAbsTol = 1.0e-4;
 constexpr float64 k_StdDevRelTol = 1.0e-7;
 
@@ -42,6 +44,94 @@ float64 StdDevExpectedForSlot(uint32 projDim, usize /*slot*/, usize dim)
   return commonDiff * baseStdDev;
 }
 } // namespace
+
+TEMPLATE_TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: large-offset sample deviation", "[ImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]", float64,
+                   float32, int32)
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  const uint32 projDim = GENERATE(0u, 1u, 2u);
+  CAPTURE(projDim);
+
+  // For {a, a+d, a+2d}, the mean is a+d and sample variance is (d*d + 0 + d*d)/(3-1) = d*d.
+  // Float32 spacing at 1e9 is 64; using increments of 1 would round all three inputs to the same value.
+  constexpr float64 k_Step = std::is_same_v<TestType, float32> ? 64.0 : 1.0;
+  const std::array<TestType, 3> values = {static_cast<TestType>(1.0e9), static_cast<TestType>(1.0e9 + k_Step), static_cast<TestType>(1.0e9 + 2.0 * k_Step)};
+  SizeVec3 dims = {1, 1, 1};
+  dims[projDim] = 3;
+  const ShapeType cellShape = {dims[2], dims[1], dims[0]};
+  DataStructure ds;
+  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
+  imageGeom->setDimensions(dims);
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+  const DataPath inputPath({"Image Geometry", "CellData", "Input"});
+  auto store = DataStoreUtilities::CreateDataStore<TestType>(ds, inputPath, cellShape, {1});
+  auto* array = DataArray<TestType>::Create(ds, "Input", store, cellAM->getId());
+  REQUIRE(array != nullptr);
+  const auto writeResult = store->copyFromBuffer(0, nonstd::span<const TestType>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  StandardDeviationProjectionImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_ProjectionDimension_Key, std::make_any<uint32>(projDim));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // ApplyAxisProjection selects by store type and has no AlgorithmTestScope force flags or path witness.
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const DataPath outputPath({"Projected Image", "CellData", "Output"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
+  const auto& output = ds.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE(output.getNumberOfTuples() == 1);
+  REQUIRE(output[0] == Approx(k_Step).margin(1.0e-12));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: large-offset staged and bounded deviation", "[ImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]")
+{
+  UnitTest::LoadPlugins();
+  namespace projection_detail = nx::core::ImageProcessing::detail;
+  using nx::core::ImageProcessing::StdDevReduce;
+  const usize projDim = GENERATE(0, 1, 2);
+  CAPTURE(projDim);
+  SizeVec3 dims = {1, 1, 1};
+  dims[projDim] = 3;
+  DataStore<float64> input({dims[2], dims[1], dims[0]}, {1}, 0.0);
+  DataStore<float64> output({1, 1, 1}, {1}, 0.0);
+  const std::array<float64, 3> values = {1.0e9, 1.0e9 + 1.0, 1.0e9 + 2.0};
+  const auto writeResult = input.copyFromBuffer(0, nonstd::span<const float64>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const auto shape = projection_detail::ValidateAxisProjection(input, output, dims, projDim);
+  REQUIRE(shape.valid());
+  const std::atomic_bool shouldCancel = false;
+
+  // Call the existing engine entry points directly: these routes cannot be forced by AlgorithmTestScope.
+  // In-memory buffers exercise the algorithms here, not a real disk-backed store.
+  SECTION("resident slab staging")
+  {
+    const auto result = projection_detail::ApplyAxisProjectionResident(input, output, shape.value(), projDim, StdDevReduce{}, shouldCancel, IFilter::MessageHandler{});
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(output[0] == Approx(1.0).margin(1.0e-12)); // deviations {-1, 0, 1}: sqrt(2/(3-1)) = 1
+  }
+  if(projDim < 2)
+  {
+    SECTION("bounded true-2-D rows")
+    {
+      const auto result = projection_detail::ApplyAxisProjection2D(input, output, shape.value(), projDim, StdDevReduce{}, shouldCancel, projection_detail::k_AxisProjection2DTargetBytes);
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+      REQUIRE(output[0] == Approx(1.0).margin(1.0e-12));
+    }
+  }
+}
 
 // -----------------------------------------------------------------------------
 // (1) Computed-expected correctness grid (in-core). The legacy ITK Standard Deviation Projection filter is
@@ -76,10 +166,9 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Computed-exp
 }
 
 // -----------------------------------------------------------------------------
-// (2) Reducer edges (StdDevReduce). Two branches the ramp grids never reach:
+// (2) Reducer edges (StdDevReduce). Two cases the ramp grids never reach:
 //     - the N <= 1 guard, when a projected column has a single sample (projected axis extent 1);
-//     - the variance < 0 clamp, when a column is constant (catastrophic cancellation can make the algebraic
-//       one-pass variance a tiny negative before the clamp).
+//     - zero variance, when every value in a column is the same.
 //     Both must produce a finite, exact 0 standard deviation.
 // -----------------------------------------------------------------------------
 TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: single-sample column (N<=1 guard) -> 0", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
@@ -130,7 +219,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: single-sampl
   }
 }
 
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: constant column (variance clamp) -> 0", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: constant column -> 0", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
