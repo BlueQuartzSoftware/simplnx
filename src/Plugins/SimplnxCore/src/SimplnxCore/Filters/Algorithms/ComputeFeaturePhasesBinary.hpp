@@ -23,7 +23,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeaturePhasesBinaryInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType CellDataAttributeMatrixPath;
+  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
   ArraySelectionParameter::ValueType FeatureIdsArrayPath;
   DataObjectNameParameter::ValueType FeaturePhasesArrayName;
   ArraySelectionParameter::ValueType MaskArrayPath;
@@ -31,11 +31,12 @@ struct SIMPLNXCORE_EXPORT ComputeFeaturePhasesBinaryInputValues
 
 /**
  * @class ComputeFeaturePhasesBinary
- * @brief Assigns each referenced feature a binary phase from its cells' mask values.
+ * @brief Assigns binary Feature phases from a Cell or Feature mask.
  *
  * Cell Feature IDs and mask values use 1,000,000-tuple bulk buffers. Serial cell order preserves
  * last-cell-wins mask semantics. The feature cache grows only to the largest referenced Feature ID
- * and retains existing values for unreferenced output features.
+ * and leaves unreferenced output Features at zero. A mask in the selected Feature Attribute Matrix
+ * is converted directly in bounded chunks without reading Cell Feature IDs.
  */
 class SIMPLNXCORE_EXPORT ComputeFeaturePhasesBinary
 {
@@ -64,8 +65,8 @@ public:
    * @brief Assigns binary phases from mask values.
    * @return Success, or a mask-type, Feature ID, or bulk-I/O error.
    *
-   * When a chunk checkpoint observes cancellation, the method returns success before the output
-   * bulk write. Cancellation during that write is not checked.
+   * Cancellation is checked between chunks. Cell-mask mode returns before its final output write;
+   * Feature-mask mode can leave earlier output chunks written. Bulk I/O is not interrupted.
    */
   Result<> operator()();
 
