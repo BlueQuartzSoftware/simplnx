@@ -120,4 +120,4 @@ See `vv/deviations/ComputeFeaturePhasesFilter.md` for full entries and compariso
 
 ## Note: ComputeFeaturePhasesBinaryFilter
 
-`ComputeFeaturePhasesBinaryFilter` (UUID `16010080-a913-443a-b5b3-bd43391fe3c0`, SIMPL equivalent `FindFeaturePhasesBinary` UUID `64d20c7b-697c-5ff1-9d1d-8a27b071f363`) is a distinct algorithm requiring its own V&V document at `vv/ComputeFeaturePhasesBinaryFilter.md`. Its existing execution test (`bin_feature_phases.tar.gz`) should be audited for circular-oracle issues.
+`ComputeFeaturePhasesBinaryFilter` (UUID `16010080-a913-443a-b5b3-bd43391fe3c0`, SIMPL equivalent `FindFeaturePhasesBinary` UUID `64d20c7b-697c-5ff1-9d1d-8a27b071f363`) is a distinct algorithm requiring its own V&V document at `vv/ComputeFeaturePhasesBinaryFilter.md`. Its tests use hand-computed Feature-level expectations for Cell-mask and Feature-mask modes. The `bin_feature_phases.tar.gz` archive contains only a Cell-level `BinaryPhases` output and is not used as a correctness oracle.

@@ -11,8 +11,12 @@
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -157,5 +161,85 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: SIMPL Backwards Compatibili
       CHECK(args.value<std::string>(TriangleDihedralAngleFilter::k_SurfaceMeshTriangleDihedralAnglesArrayName_Key) == "TestArray");
       CHECK(args.value<DataPath>(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key) == DataPath({"DataContainer"}));
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: Permutation invariant minimum", "[SimplnxCore][TriangleDihedralAngleFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Issue #1790 (70-30-80 degrees); a right triangle with atan(1/10) at B; an obtuse triangle (135 degrees at A);
+  // a collinear face (C = -2B exactly in float32) whose normalized dot products round past +/-1 without the clamp.
+  const std::array<std::array<float32, 9>, 4> fixtures = {
+      {{{0, 0, 0, 1, 0, 0, 0.1736481785774231F, 0.477094441652298F, 0}}, {{0, 0, 0, 10, 0, 0, 0, 1, 0}}, {{0, 0, 0, 1, 0, 0, -0.5F, 0.5F, 0}}, {{0, 0, 0, 0.7F, 3.0F, 0.1F, -1.4F, -6.0F, -0.2F}}}};
+  // Closed-form minimum interior angle of each fixture, in degrees.
+  const float64 radToDeg = 180.0 / std::acos(-1.0);
+  const std::array<float64, 4> closedFormMinimums = {{30.0, std::atan(0.1) * radToDeg, std::atan(1.0 / 3.0) * radToDeg, 0.0}};
+  // ABC, BCA, CAB, followed by their reversed windings.
+  const std::array<usize, 18> orders = {{0, 1, 2, 1, 2, 0, 2, 0, 1, 0, 2, 1, 2, 1, 0, 1, 0, 2}};
+  for(usize fixture = 0; fixture < fixtures.size(); ++fixture)
+  {
+    CAPTURE(fixture);
+    DataStructure dataStructure;
+    auto* geom = TriangleGeom::Create(dataStructure, "Triangles");
+    REQUIRE(geom != nullptr);
+    auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", std::vector<usize>{6}, geom->getId());
+    auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", std::vector<usize>{3}, geom->getId());
+    REQUIRE(faceData != nullptr);
+    REQUIRE(vertexData != nullptr);
+    geom->setFaceAttributeMatrix(*faceData);
+    geom->setVertexAttributeMatrix(*vertexData);
+    auto* vertices = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", std::vector<usize>{3}, std::vector<usize>{3}, geom->getId());
+    auto* faces = DataArray<IGeometry::MeshIndexType>::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", std::vector<usize>{6}, std::vector<usize>{3}, geom->getId());
+    REQUIRE(vertices != nullptr);
+    REQUIRE(faces != nullptr);
+    for(usize i = 0; i < 9; ++i)
+    {
+      (*vertices)[i] = fixtures[fixture][i];
+    }
+    for(usize i = 0; i < orders.size(); ++i)
+    {
+      (*faces)[i] = orders[i];
+    }
+    geom->setVertices(*vertices);
+    geom->setFaceList(*faces);
+
+    // Independent reference: atan2 of each corner's cross magnitude and dot.
+    float64 expected = std::numeric_limits<float64>::infinity();
+    for(usize corner = 0; corner < 3; ++corner)
+    {
+      std::array<float64, 3> toNext{};
+      std::array<float64, 3> toPrev{};
+      for(usize axis = 0; axis < 3; ++axis)
+      {
+        toNext[axis] = static_cast<float64>((*vertices)[3 * ((corner + 1) % 3) + axis]) - (*vertices)[3 * corner + axis];
+        toPrev[axis] = static_cast<float64>((*vertices)[3 * ((corner + 2) % 3) + axis]) - (*vertices)[3 * corner + axis];
+      }
+      const std::array<float64, 3> cross = {{toNext[1] * toPrev[2] - toNext[2] * toPrev[1], toNext[2] * toPrev[0] - toNext[0] * toPrev[2], toNext[0] * toPrev[1] - toNext[1] * toPrev[0]}};
+      const float64 dot = toNext[0] * toPrev[0] + toNext[1] * toPrev[1] + toNext[2] * toPrev[2];
+      const float64 magnitude = std::sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
+      expected = std::min(expected, std::atan2(magnitude, dot) * radToDeg);
+    }
+    // The computed oracle must agree with the hand-derived closed form.
+    REQUIRE(std::abs(expected - closedFormMinimums[fixture]) < 1.0e-5);
+    TriangleDihedralAngleFilter filter;
+    Arguments args;
+    args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Triangles"})));
+    args.insertOrAssign(TriangleDihedralAngleFilter::k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, std::make_any<std::string>("Minimum"));
+    auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Triangles", "Face Data", "Minimum"})));
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(DataPath({"Triangles", "Face Data", "Minimum"}));
+    for(usize face = 0; face < 6; ++face)
+    {
+      CAPTURE(face, expected, output[face]);
+      CHECK(std::isfinite(output[face]));
+      // Allow float32 edge-subtraction rounding; the oracle subtracts in float64.
+      CHECK(std::abs(output[face] - expected) < 1.0e-5);
+      CHECK(output[face] <= 60.0 + 1.0e-5);
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

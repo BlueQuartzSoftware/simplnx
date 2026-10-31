@@ -117,7 +117,7 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 
     if(currentLine == readCsvData.headersLine)
     {
-      auto headers = StringUtilities::split(line, readCsvData.delimiters, readCsvData.consecutiveDelimiters);
+      auto headers = StringUtilities::split(line, readCsvData.delimiters, !readCsvData.consecutiveDelimiters);
       s_HeaderCache[instanceId].Headers = headers;
       s_HeaderCache[instanceId].HeadersLine = readCsvData.headersLine;
       break;

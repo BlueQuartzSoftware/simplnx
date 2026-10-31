@@ -366,18 +366,18 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   }
 
   // Fixed-size bulk reads avoid one virtual store and cache operation per feature ID.
-  const usize totalTuples = featureIdsStore.getNumberOfTuples();
+  const usize totalValues = featureIdsStore.getSize();
   constexpr usize k_BatchSize = 40000;
   int32 globalMin = std::numeric_limits<int32>::max();
   int32 globalMax = std::numeric_limits<int32>::lowest();
   std::vector<int32> batch(k_BatchSize);
-  for(usize offset = 0; offset < totalTuples; offset += k_BatchSize)
+  for(usize offset = 0; offset < totalValues; offset += k_BatchSize)
   {
     if(shouldCancel != nullptr && *shouldCancel)
     {
       return {};
     }
-    const usize count = std::min(k_BatchSize, totalTuples - offset);
+    const usize count = std::min(k_BatchSize, totalValues - offset);
     auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(batch.data(), count));
     if(readResult.invalid())
     {

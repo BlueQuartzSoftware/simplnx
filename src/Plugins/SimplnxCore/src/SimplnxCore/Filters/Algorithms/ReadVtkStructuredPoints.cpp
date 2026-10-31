@@ -187,7 +187,7 @@ Result<> SkipBinaryData(std::istream& in, usize numElements, const DataPath& dat
 }
 
 /**
- * @brief Skips one ASCII or binary array during preflight.
+ * @brief Skips one ASCII or binary array without storing its values.
  * @tparam T Specifies the declared scalar type.
  * @param in Provides the VTK stream at the first value.
  * @param binary Selects binary or ASCII parsing.
@@ -428,7 +428,7 @@ char* LowerCase(char* str, const usize len)
 }
 
 /**
- * @brief Dispatches a preflight data-block skip from an NX DataType.
+ * @brief Dispatches a data-block skip from an NX DataType.
  * @param nxDType Specifies the converted VTK scalar type.
  * @param in Provides the VTK stream at the first value.
  * @param binary Selects binary or ASCII parsing.
@@ -865,9 +865,10 @@ Result<> ReadVtkStructuredPoints::readFile()
       return {};
     }
 
-    if(sectionType == k_CellDataKeyword && m_InputValues->ReadCellData)
+    // Traverse an unselected first section when the other section is requested.
+    if(sectionType == k_CellDataKeyword && (m_InputValues->ReadCellData || (i == 0 && m_InputValues->ReadPointData)))
     {
-      if(cellDims[0] * cellDims[1] * cellDims[2] != numValues)
+      if(m_InputValues->ReadCellData && cellDims[0] * cellDims[1] * cellDims[2] != numValues)
       {
         return MakeErrorResult(to_underlying(ErrorCodes::MismatchedCellsAndTuplesErr),
                                fmt::format("Number of cells ({}) does not match number of tuples ({}) in the Attribute Matrix.", cellDims[0] * cellDims[1] * cellDims[2], numValues));
@@ -882,9 +883,9 @@ Result<> ReadVtkStructuredPoints::readFile()
       numValues = dtResult.value();
       sectionType = numValues > 0 ? k_PointDataKeyword : "";
     }
-    else if(sectionType == k_PointDataKeyword && m_InputValues->ReadPointData)
+    else if(sectionType == k_PointDataKeyword && (m_InputValues->ReadPointData || (i == 0 && m_InputValues->ReadCellData)))
     {
-      if(pointDims[0] * pointDims[1] * pointDims[2] != numValues)
+      if(m_InputValues->ReadPointData && pointDims[0] * pointDims[1] * pointDims[2] != numValues)
       {
         return MakeErrorResult(to_underlying(ErrorCodes::MismatchedPointsAndTuplesErr),
                                fmt::format("Number of points ({}) does not match number of tuples ({}) in the Attribute Matrix.", pointDims[0] * pointDims[1] * pointDims[2], numValues));
@@ -1159,7 +1160,8 @@ Result<> ReadVtkStructuredPoints::readDataArray(std::istream& in, int32 numPts, 
     arrayDataPath = m_InputValues->ImageGeomPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(name);
   }
 
-  if(m_Preflight)
+  const bool skipArray = m_CurrentSectionType == CurrentSectionType::Cell ? !m_InputValues->ReadCellData : !m_InputValues->ReadPointData;
+  if(m_Preflight || skipArray)
   {
     Result<nx::core::DataType> nxDTypeResult = ConvertVtkDataType(scalarType);
     if(nxDTypeResult.invalid())
@@ -1168,9 +1170,12 @@ Result<> ReadVtkStructuredPoints::readDataArray(std::istream& in, int32 numPts, 
     }
     const nx::core::DataType nxDType = nxDTypeResult.value();
 
-    ShapeType tupleShape = {m_CurrentGeomDims[2], m_CurrentGeomDims[1], m_CurrentGeomDims[0]};
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nxDType, tupleShape, std::vector<usize>{numComp}, arrayDataPath);
-    m_OutputActions.value().appendAction(std::move(createArrayAction));
+    if(!skipArray)
+    {
+      ShapeType tupleShape = {m_CurrentGeomDims[2], m_CurrentGeomDims[1], m_CurrentGeomDims[0]};
+      auto createArrayAction = std::make_unique<CreateArrayAction>(nxDType, tupleShape, std::vector<usize>{numComp}, arrayDataPath);
+      m_OutputActions.value().appendAction(std::move(createArrayAction));
+    }
     return preflightSkipVolume(nxDType, in, m_FileIsBinary, static_cast<usize>(numPts) * numComp, arrayDataPath, m_ShouldCancel);
   }
 

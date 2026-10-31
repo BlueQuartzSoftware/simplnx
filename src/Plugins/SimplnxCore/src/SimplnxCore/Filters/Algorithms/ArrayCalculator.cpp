@@ -547,6 +547,13 @@ Result<ShapeSimResult> simulateShapes(const DataStructure& dataStructure, const 
         stack.pop_back();
         const RpnNodeShape left = stack.back();
         stack.pop_back();
+        if(!left.isScalar && !right.isScalar && left.numComponents != right.numComponents)
+        {
+          return MakeErrorResult<ShapeSimResult>(
+              static_cast<int32>(CalculatorErrorCode::InconsistentCompDims),
+              fmt::format("Operator '{}' has array operands with mismatching component counts (left: {}, right: {}). Use arrays with the same number of components or a scalar operand.", op->token,
+                          left.numComponents, right.numComponents));
+        }
         const bool resultScalar = left.isScalar && right.isScalar;
         const usize numComps = left.isScalar ? right.numComponents : left.numComponents;
         stack.push_back({resultScalar, resultScalar ? 1 : numComps});

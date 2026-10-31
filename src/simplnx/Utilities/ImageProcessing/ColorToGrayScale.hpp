@@ -76,7 +76,7 @@ public:
 
   /**
    * @brief Converts selected RGB arrays to grayscale arrays.
-   * @return Error from the selected conversion, or success after cancellation.
+   * @return Error for unequal input/output path counts or from the selected conversion, or success after cancellation.
    *
    * The Direct path does not test cancellation within an array. The Scanline path checks before each chunk.
    */
@@ -105,7 +105,7 @@ SIMPLNX_EXPORT IFilter::PreflightResult PreflightColorToGrayScale(const DataStru
  * @param inputValues Contains conversion settings and array paths.
  * @param messageHandler Receives algorithm messages.
  * @param shouldCancel Stops conversion when the value is true.
- * @return An error if a bulk datastore operation fails.
+ * @return An error if explicit input/output path counts differ or a bulk datastore operation fails.
  */
 SIMPLNX_EXPORT Result<> ConvertColorToGrayScaleArrays(DataStructure& dataStructure, const ConvertColorToGrayScaleInputValues& inputValues, const IFilter::MessageHandler& messageHandler,
                                                       const std::atomic_bool& shouldCancel);

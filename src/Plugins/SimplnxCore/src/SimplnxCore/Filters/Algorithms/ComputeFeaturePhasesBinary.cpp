@@ -117,6 +117,45 @@ struct ComputeFeaturePhasesBinaryFunctor
     return featurePhasesStore.copyFromBuffer(0, nonstd::span<const int32>(featurePhasesCache.data(), featurePhasesCache.size()));
   }
 };
+/**
+ * @brief Converts a Feature mask directly with bounded bulk buffers; Feature IDs are not accessed.
+ */
+struct ConvertFeatureMaskFunctor
+{
+  template <typename MaskType>
+  Result<> operator()(const IDataArray& maskArray, IDataArray& featurePhasesArray, const std::atomic_bool& shouldCancel) const
+  {
+    const auto& maskStore = maskArray.getIDataStoreRefAs<AbstractDataStore<MaskType>>();
+    auto& outputStore = featurePhasesArray.getIDataStoreRefAs<AbstractDataStore<int32>>();
+    const usize numFeatures = maskStore.getNumberOfTuples();
+    const usize chunkTuples = std::min(k_TargetChunkTuples, numFeatures);
+    auto maskBuffer = std::make_unique<MaskType[]>(chunkTuples);
+    auto outputBuffer = std::make_unique<int32[]>(chunkTuples);
+    for(usize offset = 0; offset < numFeatures; offset += chunkTuples)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+      const usize count = std::min(chunkTuples, numFeatures - offset);
+      auto result = maskStore.copyIntoBuffer(offset, nonstd::span<MaskType>(maskBuffer.get(), count));
+      if(result.invalid())
+      {
+        return result;
+      }
+      for(usize index = 0; index < count; index++)
+      {
+        outputBuffer[index] = maskBuffer[index] != static_cast<MaskType>(0) ? 1 : 0;
+      }
+      result = outputStore.copyFromBuffer(offset, nonstd::span<const int32>(outputBuffer.get(), count));
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    return {};
+  }
+};
 } // namespace
 
 ComputeFeaturePhasesBinary::ComputeFeaturePhasesBinary(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -132,9 +171,8 @@ ComputeFeaturePhasesBinary::~ComputeFeaturePhasesBinary() noexcept = default;
 
 Result<> ComputeFeaturePhasesBinary::operator()()
 {
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
   const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const DataPath featurePhasesPath = m_InputValues->CellDataAttributeMatrixPath.createChildPath(m_InputValues->FeaturePhasesArrayName);
+  const DataPath featurePhasesPath = m_InputValues->CellFeatureAttributeMatrixPath.createChildPath(m_InputValues->FeaturePhasesArrayName);
   auto& featurePhasesArray = m_DataStructure.getDataRefAs<IDataArray>(featurePhasesPath);
 
   if(maskArray.getDataType() != DataType::boolean && maskArray.getDataType() != DataType::uint8)
@@ -148,6 +186,12 @@ Result<> ComputeFeaturePhasesBinary::operator()()
     return {};
   }
 
+  if(m_DataStructure.getData(m_InputValues->MaskArrayPath.getParent()) == m_DataStructure.getData(m_InputValues->CellFeatureAttributeMatrixPath))
+  {
+    return ExecuteDataFunction(ConvertFeatureMaskFunctor{}, maskArray.getDataType(), maskArray, featurePhasesArray, m_ShouldCancel);
+  }
+
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
   return ExecuteDataFunction(ComputeFeaturePhasesBinaryFunctor{}, maskArray.getDataType(), featureIdsArray, maskArray, featurePhasesArray, m_InputValues->FeatureIdsArrayPath, featurePhasesPath,
                              m_ShouldCancel);
 }

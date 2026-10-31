@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class ComputeFeaturePhasesBinaryFilter
- * @brief This filter will ....
+ * @brief Assigns a binary phase to each Feature from a Cell or Feature mask.
  */
 class SIMPLNXCORE_EXPORT ComputeFeaturePhasesBinaryFilter : public IFilter
 {
@@ -27,7 +27,9 @@ public:
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static constexpr StringLiteral k_FeaturePhasesArrayName_Key = "feature_phases_array_name";
-  static constexpr StringLiteral k_CellDataAMPath_Key = "cell_data_attribute_matrix_path";
+  static constexpr StringLiteral k_CellFeatureAMPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteral k_CreateCellEnsembleAM_Key = "create_cell_ensemble_attribute_matrix";
+  static constexpr StringLiteral k_CellEnsembleAMName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

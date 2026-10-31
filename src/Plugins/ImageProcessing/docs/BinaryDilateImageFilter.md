@@ -18,6 +18,8 @@ The input array must be single-component (scalar) and have an integer type. Mode
 
 The *Boundary To Foreground* parameter controls how neighbors that fall outside the image bounds are treated: when enabled, an out-of-image neighbor counts as foreground; when disabled (the default for dilation), it counts as background.
 
+For a single-slice image (Z = 1), the filter uses only the kernel offsets in the XY plane. It ignores offsets that have a Z component. The boundary setting applies only at the X and Y edges. An Annulus kernel with X and Y radius 0 has no XY offsets. In that case, the output is a copy of the input.
+
 ### Kernel Type
 
 The *Kernel Type* parameter selects the structuring element used for the morphological operation:

@@ -1,4 +1,5 @@
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/TupleTransfer.hpp"
 #include "SimplnxCore/Filters/ComputeTriangleAreasFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -20,9 +21,12 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <type_traits>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -278,4 +282,172 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: SIMPL Backwards Compa
       CHECK(args.value<std::string>(PointSampleTriangleGeometryFilter::k_VertexDataGroupName_Key) == "TestName");
     }
   }
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete face tuples", "[SimplnxCore][PointSampleTriangleGeometryFilter]", int8, uint8, int16, uint16, int32, uint32,
+                   int64, uint64, float32, float64, bool)
+{
+  UnitTest::LoadPlugins();
+  const usize numComponents = GENERATE(usize{3}, usize{1}, usize{2});
+  const usize numTriangles = GENERATE(usize{4}, usize{1});
+  const int32 numSamples = GENERATE(2, 8);
+  CAPTURE(numComponents, numTriangles, numSamples);
+
+  DataStructure dataStructure;
+  auto* triangles = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(triangles != nullptr);
+  auto* coordinates = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3 * numTriangles}, {3}, triangles->getId());
+  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {numTriangles}, {3}, triangles->getId());
+  REQUIRE(coordinates != nullptr);
+  REQUIRE(faces != nullptr);
+  for(usize face = 0; face < numTriangles; ++face)
+  {
+    // Each triangle has A=(0,0,z), B=(2,0,z), C=(1,2,z), with a separate plane.
+    const std::array<float32, 9> vertices = {0, 0, static_cast<float32>(10 * face), 2, 0, static_cast<float32>(10 * face), 1, 2, static_cast<float32>(10 * face)};
+    for(usize index = 0; index < vertices.size(); ++index)
+    {
+      (*coordinates)[9 * face + index] = vertices[index];
+    }
+    for(usize corner = 0; corner < 3; ++corner)
+    {
+      (*faces)[3 * face + corner] = 3 * face + corner;
+    }
+  }
+  triangles->setVertices(*coordinates);
+  triangles->setFaceList(*faces);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {numTriangles}, triangles->getId());
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {3 * numTriangles}, triangles->getId());
+  REQUIRE(faceData != nullptr);
+  REQUIRE(vertexData != nullptr);
+  triangles->setFaceAttributeMatrix(*faceData);
+  triangles->setVertexAttributeMatrix(*vertexData);
+  auto* areas = UnitTest::CreateTestDataArray<float64>(dataStructure, "Areas", {numTriangles}, {1}, faceData->getId());
+  auto* values = UnitTest::CreateTestDataArray<TestType>(dataStructure, "Values", {numTriangles}, {numComponents}, faceData->getId());
+  REQUIRE(areas != nullptr);
+  REQUIRE(values != nullptr);
+  areas->fill(2.0);
+  const auto expectedValue = [](usize face, usize component) -> TestType {
+    if constexpr(std::is_same_v<TestType, bool>)
+    {
+      constexpr std::array<std::array<bool, 3>, 4> k_Values = {{{false, true, false}, {true, false, true}, {true, true, false}, {false, false, true}}};
+      return k_Values[face][component];
+    }
+    else
+    {
+      constexpr std::array<std::array<int32, 3>, 4> k_Values = {{{11, 12, 13}, {21, 22, 23}, {31, 32, 33}, {41, 42, 43}}};
+      return static_cast<TestType>(k_Values[face][component]);
+    }
+  };
+  for(usize face = 0; face < numTriangles; ++face)
+  {
+    for(usize component = 0; component < numComponents; ++component)
+    {
+      (*values)[face * numComponents + component] = expectedValue(face, component);
+    }
+  }
+
+  PointSampleTriangleGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, std::make_any<int32>(numSamples));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseSeed_Key, std::make_any<bool>(true));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SeedValue_Key, std::make_any<uint64>(2205));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleGeometry_Key, std::make_any<DataPath>(DataPath({"Triangles"})));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleAreasArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Face Data", "Areas"})));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({"Triangles", "Face Data", "Values"})}));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath({"Samples"})));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const DataPath outputPath({"Samples"});
+  const DataPath outputValuesPath({"Samples", "Vertex Data", "Values"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(outputPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputValuesPath));
+  const auto& output = dataStructure.getDataRefAs<VertexGeom>(outputPath);
+  const auto& outputValues = dataStructure.getDataRefAs<DataArray<TestType>>(outputValuesPath);
+  REQUIRE(output.getNumberOfVertices() == static_cast<usize>(numSamples));
+  REQUIRE(outputValues.getNumberOfTuples() == static_cast<usize>(numSamples));
+  REQUIRE(outputValues.getNumberOfComponents() == numComponents);
+  for(usize sample = 0; sample < static_cast<usize>(numSamples); ++sample)
+  {
+    const auto point = output.getVertexCoordinate(sample);
+    // Solve P=A+v(B-A)+w(C-A): w=y/2, v=(x-w)/2, u=1-v-w.
+    const float64 w = point[1] / 2.0;
+    const float64 v = (point[0] - w) / 2.0;
+    const float64 u = 1.0 - v - w;
+    constexpr float64 k_Tolerance = 1.0e-5;
+    usize containingTriangle = numTriangles;
+    usize matches = 0;
+    for(usize face = 0; face < numTriangles; ++face)
+    {
+      if(std::abs(point[2] - static_cast<float64>(10 * face)) <= k_Tolerance && u >= -k_Tolerance && v >= -k_Tolerance && w >= -k_Tolerance)
+      {
+        containingTriangle = face;
+        ++matches;
+      }
+    }
+    CAPTURE(sample, containingTriangle);
+    REQUIRE(matches == 1);
+    for(usize component = 0; component < numComponents; ++component)
+    {
+      CAPTURE(component);
+      CHECK(outputValues[sample * numComponents + component] == expectedValue(containingTriangle, component));
+    }
+  }
+  for(usize face = 0; face < numTriangles; ++face)
+  {
+    CHECK((*areas)[face] == 2.0);
+    for(usize component = 0; component < numComponents; ++component)
+    {
+      CHECK((*values)[face * numComponents + component] == expectedValue(face, component));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete feature tuples", "[SimplnxCore][PointSampleTriangleGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* features = UnitTest::CreateTestDataArray<int32>(dataStructure, "Features", {3}, {3});
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {2}, {1});
+  auto* samples = UnitTest::CreateTestDataArray<int32>(dataStructure, "Samples", {8}, {3});
+  REQUIRE(features != nullptr);
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(samples != nullptr);
+  const std::array<int32, 9> expected = {11, 12, 13, 21, 22, 23, 31, 32, 33};
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    (*features)[index] = expected[index];
+  }
+  (*featureIds)[0] = 2;
+  (*featureIds)[1] = 1;
+  samples->fill(-1);
+  TransferFeatureTuple<int32, int32> transfer(dataStructure, DataPath({"Features"}), DataPath({"Samples"}), DataPath({"FeatureIds"}));
+  // This shared override is not exposed by the filter, but uses the same tuple-index contract.
+  transfer.pointSampleTransfer(1, 0);
+  for(usize component = 0; component < 3; ++component)
+  {
+    REQUIRE((*samples)[component] == expected[3 + component]);
+  }
+  transfer.pointSampleTransfer(0, 7);
+  for(usize component = 0; component < 3; ++component)
+  {
+    CHECK((*samples)[21 + component] == expected[6 + component]);
+  }
+  for(usize index = 3; index < 21; ++index)
+  {
+    CHECK((*samples)[index] == -1);
+  }
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CHECK((*features)[index] == expected[index]);
+  }
+  CHECK((*featureIds)[0] == 2);
+  CHECK((*featureIds)[1] == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

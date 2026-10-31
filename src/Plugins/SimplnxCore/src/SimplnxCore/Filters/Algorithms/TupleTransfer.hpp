@@ -592,10 +592,10 @@ public:
 
   /**
    * @brief Copies one tuple for point-sampled triangle output.
-   * @param faceIndex First destination value index.
-   * @param firstcIndex First source value index or source cell index, by subclass.
+   * @param triangleIndex Source triangle tuple index.
+   * @param vertexIndex Destination vertex tuple index.
    */
-  virtual void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) = 0;
+  virtual void pointSampleTransfer(size_t triangleIndex, size_t vertexIndex) = 0;
 
   /**
    * @brief Copies adjacent tuples to one QuickSurfaceMesh face by value access.
@@ -694,16 +694,16 @@ public:
   TransferTuple& operator=(TransferTuple&&) noexcept = delete;
 
   /**
-   * @brief Copies one source value range to a destination value range.
-   * @param faceIndex First destination value index.
-   * @param firstcIndex First source value index.
-   * @pre Both value ranges contain m_NumComps values.
+   * @brief Copies a complete triangle tuple to a sampled vertex tuple.
+   * @param triangleIndex Source triangle tuple index.
+   * @param vertexIndex Destination vertex tuple index.
+   * @pre Both tuple indexes are valid. Source and destination component counts match.
    */
-  void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) override
+  void pointSampleTransfer(size_t triangleIndex, size_t vertexIndex) override
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
-      m_FaceRef[faceIndex + i] = m_CellRef[firstcIndex + i];
+      m_FaceRef[vertexIndex * m_NumComps + i] = m_CellRef[triangleIndex * m_NumComps + i];
     }
   }
 
@@ -852,21 +852,18 @@ public:
   TransferFeatureTuple& operator=(TransferFeatureTuple&&) noexcept = delete;
 
   /**
-   * @brief Copies feature values through the current flat-offset point-sample rule.
-   * @param faceIndex First destination value index.
-   * @param firstcIndex Source cell index.
-   * @pre The resolved Feature ID and destination range are valid.
-   *
-   * This method uses Feature ID as the first flat feature-data value. It does not
-   * multiply by m_NumComps. Multi-component input therefore does not select the
-   * complete tuple at that Feature ID.
+   * @brief Copies a complete feature tuple to a sampled vertex tuple.
+   * @param triangleIndex Source triangle index in the Feature ID array.
+   * @param vertexIndex Destination vertex tuple index.
+   * @pre The triangle index, resolved Feature ID, and destination tuple index are valid.
+   * @pre Source and destination component counts match.
    */
-  void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) override
+  void pointSampleTransfer(size_t triangleIndex, size_t vertexIndex) override
   {
-    K firstFeatureId = m_FeatureIdsRef[firstcIndex];
+    K firstFeatureId = m_FeatureIdsRef[triangleIndex];
     for(size_t i = 0; i < m_NumComps; i++)
     {
-      m_FaceRef[faceIndex + i] = m_FeatureDataRef[firstFeatureId + i];
+      m_FaceRef[vertexIndex * m_NumComps + i] = m_FeatureDataRef[firstFeatureId * m_NumComps + i];
     }
   }
 
