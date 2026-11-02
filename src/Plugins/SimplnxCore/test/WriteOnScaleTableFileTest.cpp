@@ -203,6 +203,7 @@ void RotateFeatureIds(DataStructure& dataStructure, const Eigen::Matrix3f& rotat
 {
   RotateSampleRefFrameFilter rotateFilter;
   Arguments rotateArgs = rotateFilter.getDefaultArguments();
+  rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                             std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
   rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertRotationMatrixToTable(rotationMatrix)));
