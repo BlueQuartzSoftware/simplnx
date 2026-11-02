@@ -14,8 +14,6 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include <catch2/catch.hpp>
 #include <utility>
 #include <vector>
