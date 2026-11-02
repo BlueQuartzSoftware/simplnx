@@ -65,6 +65,10 @@ simplnx_utilities.check_filter_result(nximgproc.SigmoidImageFilter, result)
 # Filter 4: Otsu Multiple Thresholds Image Filter
 result = nximgproc.OtsuMultipleThresholdsImageFilter.execute(
     data_structure=data_structure,
+    mask_array_path=nx.DataPath(''),
+    masked_label=255,
+    nonfinite_input_handling_index=0,
+    use_mask_array=False,
     input_image_data_path=nx.DataPath('Melt Pool Image/Cell Data/Sigmoid Contrast'),
     input_image_geometry_path=nx.DataPath('Melt Pool Image'),
     label_offset=0,
@@ -95,6 +99,7 @@ simplnx_utilities.check_filter_result(nximgproc.DoubleThresholdImageFilter, resu
 # Filter 6: Connected Component Image Filter
 result = nximgproc.ConnectedComponentImageFilter.execute(
     data_structure=data_structure,
+    provisional_label_limit_handling_index=0,
     fully_connected=True,
     input_image_data_path=nx.DataPath('Melt Pool Image/Cell Data/Track Mask'),
     input_image_geometry_path=nx.DataPath('Melt Pool Image'),
@@ -127,6 +132,7 @@ simplnx_utilities.check_filter_result(nximgproc.LabelContourImageFilter, result)
 # Filter 9: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=True,
     file_name='Data/Output/ImageProcessing_Examples/03_AM_Melt_Pool/track_contours.tif',

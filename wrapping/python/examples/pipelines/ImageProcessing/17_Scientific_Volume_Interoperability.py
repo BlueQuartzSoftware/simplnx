@@ -64,6 +64,7 @@ simplnx_utilities.check_filter_result(nximgproc.ReadNIfTIFileFilter, result)
 # Filter 3: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=False,
     file_name='Data/Output/ImageProcessing_Examples/13_Scientific_IO/mha_round_trip.mha',
@@ -84,6 +85,7 @@ simplnx_utilities.check_filter_result(nximgproc.WriteImageFilter, result)
 # Filter 4: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=False,
     file_name='Data/Output/ImageProcessing_Examples/13_Scientific_IO/nifti_slice.tif',

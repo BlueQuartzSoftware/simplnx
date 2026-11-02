@@ -172,6 +172,7 @@ Key parameters:
 - `input_image_geometry_path`: `"Powder Bed Layers"`
 - `inside_value`: `1`
 - `minimum_object_size_in_pixels`: `16`
+- `nonfinite_input_handling_index`: `0`
 - `output_array_name`: `"Automatic Anomaly Mask"`
 - `outside_value`: `0`
 - `upper_boundary`: `255.0`
@@ -228,6 +229,7 @@ Key parameters:
 - `invalid_color_value`: `[0,0,0]`
 - `leading_digit_character`: `"0"`
 - `mask_array_path`: `""`
+- `nonfinite_input_handling_index`: `0`
 - `plane_index`: `0`
 - `selected_preset`: `"Black-Body Radiation"`
 - `total_index_digits`: `3`

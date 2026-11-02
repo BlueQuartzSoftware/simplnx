@@ -316,7 +316,11 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 5,
+        "nonfinite_input_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 6,
         "plane_index": {
           "value": 0,
           "version": 1
@@ -434,7 +438,11 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 5,
+        "nonfinite_input_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 6,
         "plane_index": {
           "value": 0,
           "version": 1
@@ -552,7 +560,11 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 5,
+        "nonfinite_input_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 6,
         "plane_index": {
           "value": 0,
           "version": 1

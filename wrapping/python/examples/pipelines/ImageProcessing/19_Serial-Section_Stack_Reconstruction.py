@@ -57,6 +57,7 @@ simplnx_utilities.check_filter_result(nximgproc.ReadImageStackFilter, result)
 # Filter 2: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=False,
     file_name=str(nxtest.get_data_directory() / 'Output/ImageProcessing_Examples/15_Serial_Sections/section_preview.tif'),
