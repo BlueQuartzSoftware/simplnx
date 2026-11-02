@@ -1,4 +1,6 @@
 #include "CliObserver.hpp"
+#include "simplnx/Common/Result.hpp"
+#include <cstdint>
 
 #include "simplnx/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
@@ -22,6 +24,24 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   {
     return;
   }
+  m_SignalConnections.emplace_back(pipeline->getFilterFaultDetailSignal().connect([](AbstractPipelineNode*, int32_t, const WarningCollection& warnings, const ErrorCollection& errors) {
+    if(!warnings.empty())
+    {
+      std::cout << "Pipeline completion warnings" << std::endl;
+    }
+    for(const auto& warning : warnings)
+    {
+      std::cout << "    Code: " << warning.code << "    Message: " << warning.message << std::endl;
+    }
+    if(!errors.empty())
+    {
+      std::cout << "Pipeline completion errors" << std::endl;
+    }
+    for(const auto& error : errors)
+    {
+      std::cout << "    Code: " << error.code << "    Message: " << error.message << std::endl;
+    }
+  }));
   int32_t currentFilterIndex = 0;
   for(const auto& cxFilter : *pipeline)
   {

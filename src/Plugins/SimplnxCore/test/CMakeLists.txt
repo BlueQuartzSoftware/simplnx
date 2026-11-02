@@ -14,6 +14,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AppendImageGeometryTest.cpp
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
+  AvizoWriterTest.cpp
   ArrayCalculatorTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
@@ -103,6 +104,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   KeepRemoveRankedFeaturesTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  LaplacianSmoothingNumericalTest.cpp
+  LaplacianSmoothingTransferTest.cpp
   M3CSurfaceMeshingTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
@@ -157,6 +160,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
   UncertainRegularGridSampleSurfaceMeshTest.cpp
+  RepairTriangleWindingTransferTest.cpp
   VerifyTriangleWindingTest.cpp
   WriteAbaqusCrystalPlasticityTest.cpp
   WriteAbaqusHexahedronTest.cpp
@@ -179,10 +183,69 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
+add_test(NAME SimplnxCoreIdentifySampleBatchCorrectnessTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleBatchCorrectness]" --reporter compact)
+set_tests_properties(SimplnxCoreIdentifySampleBatchCorrectnessTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleObservationTest.cpp")
+add_test(NAME SimplnxCoreIdentifySampleObservationTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleObservation]" --reporter compact --warn NoTests)
+set_tests_properties(SimplnxCoreIdentifySampleObservationTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleBatchFailureTest.cpp")
+add_test(NAME SimplnxCoreIdentifySampleBatchFailureTests
+  COMMAND ${PLUGIN_NAME}UnitTest "[.IdentifySampleBatchFailures]" --reporter compact --warn NoTests)
+set_tests_properties(SimplnxCoreIdentifySampleBatchFailureTests PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+# These headless cases use the normal SimplnxCoreUnitTest runtime and do not require Qt discovery.
+option(SIMPLNX_ENABLE_IDENTIFY_SAMPLE_YZ_RESIDENT_BENCHMARKS "Register explicit resident Identify Sample YZ measurements" OFF)
+if(SIMPLNX_ENABLE_IDENTIFY_SAMPLE_YZ_RESIDENT_BENCHMARKS)
+  target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/IdentifySampleYzResidentBenchmark.cpp")
+  if(NOT "${SIMPLNX_TEST_ALGORITHM_PATH}" STREQUAL "1")
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_Bool_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS bool noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_Bool_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_Bool_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS bool holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_Bool_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_UInt8_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS uint8 noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_UInt8_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_BFS_UInt8_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident BFS uint8 holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_BFS_UInt8_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+  endif()
+  if(NOT "${SIMPLNX_TEST_ALGORITHM_PATH}" STREQUAL "2")
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_Bool_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL bool noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_Bool_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_Bool_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL bool holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_Bool_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_UInt8_NoHoles
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL uint8 noholes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_UInt8_NoHoles PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+    add_test(NAME SimplnxCoreIdentifySampleYzResident_CCL_UInt8_Holes
+      COMMAND $<TARGET_FILE:${PLUGIN_NAME}UnitTest> "IdentifySample YZ resident CCL uint8 holes" --reporter compact --warn NoTests)
+    set_tests_properties(SimplnxCoreIdentifySampleYzResident_CCL_UInt8_Holes PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 WORKING_DIRECTORY $<TARGET_FILE_DIR:${PLUGIN_NAME}UnitTest>)
+  endif()
+endif()
+
 if(DREAM3DNX_USE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
   set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+
+  # One process must retain the OOC resolver after the C8 test changes the default policy.
+  add_test(NAME SimplnxCoreC8ResolverIsolation
+    COMMAND ${PLUGIN_NAME}UnitTest
+      "C8 ReadDREAM3DFilter plans selected data in the destination context,SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle"
+      --order lex --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreC8ResolverIsolation PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+  add_test(NAME SimplnxCoreLaplacianOocNumerical
+    COMMAND ${PLUGIN_NAME}UnitTest "[.LaplacianSmoothingOoc]" --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreLaplacianOocNumerical PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -337,3 +400,13 @@ set(PREBUILT_PIPELINE_NAMES
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 )
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
+target_sources(${PLUGIN_NAME}UnitTest PRIVATE "${simplnx_SOURCE_DIR}/test/ProfileIsolationContract.cpp")
+
+add_test(NAME "${PLUGIN_NAME}_test_profile_isolation"
+  COMMAND ${CMAKE_COMMAND}
+    "-DPROFILE_TEST_EXECUTABLE=$<TARGET_FILE:${PLUGIN_NAME}UnitTest>"
+    "-DPROFILE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/ProfileIsolation"
+    -DPROFILE_RUNNER_ONLY=TRUE
+    -P "${simplnx_SOURCE_DIR}/test/VerifyTestProfileLifecycle.cmake")
+set_tests_properties("${PLUGIN_NAME}_test_profile_isolation" PROPERTIES RUN_SERIAL TRUE TIMEOUT 60)

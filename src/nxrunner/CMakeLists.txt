@@ -34,6 +34,18 @@ include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 simplnx_enable_warnings(TARGET nxrunner)
 
 if(BUILD_TESTING)
+  add_executable(P1PreferencesDefaultsProbe test/PreferencesDefaultsProbe.cpp)
+  target_link_libraries(P1PreferencesDefaultsProbe PRIVATE simplnx::simplnx)
+  simplnx_enable_warnings(TARGET P1PreferencesDefaultsProbe)
+  add_test(NAME "nxrunner OOC threshold preferences"
+    COMMAND ${CMAKE_COMMAND}
+      "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
+      "-DDEFAULTS_PROBE=$<TARGET_FILE:P1PreferencesDefaultsProbe>"
+      "-DPIPELINE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/test/ooc_failure_pipeline.d3dpipeline"
+      "-DP1_ROOT_BASE=${CMAKE_CURRENT_BINARY_DIR}/P1ThresholdProfiles"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/test/OocThresholdPreferencesTest.cmake")
+  set_tests_properties("nxrunner OOC threshold preferences" PROPERTIES RUN_SERIAL TRUE TIMEOUT 750)
+
   add_test(
     NAME "nxrunner cache memory budget CLI"
     COMMAND ${CMAKE_COMMAND}

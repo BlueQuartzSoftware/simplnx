@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <mutex>
 #include <utility>
 
 #include "simplnx/Utilities/MemoryUtilities.hpp"
@@ -134,7 +135,7 @@ std::pair<CacheMemoryBudgetManager::AllocationHandle, std::vector<CacheMemoryBud
                                                                                                                                                   uint64 sizeBytes, EvictionCallback onEvict,
                                                                                                                                                   const AllocationOptions& options)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
 
   std::vector<AllocationHandle> evicted = makeRoom(sizeBytes);
 
@@ -159,7 +160,7 @@ std::pair<CacheMemoryBudgetManager::AllocationHandle, std::vector<CacheMemoryBud
 
 std::optional<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager::reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   if(m_PinnedBytes > m_BudgetBytes || sizeBytes > m_BudgetBytes - m_PinnedBytes)
   {
     return std::nullopt;
@@ -182,7 +183,7 @@ std::optional<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManag
 
 bool CacheMemoryBudgetManager::pin(AllocationHandle handle)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
   if(iter == m_Entries.end())
   {
@@ -200,7 +201,7 @@ bool CacheMemoryBudgetManager::pin(AllocationHandle handle)
 
 CacheMemoryBudgetManager::PinResult CacheMemoryBudgetManager::pinWithinBudget(AllocationHandle handle)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
   if(iter == m_Entries.end())
   {
@@ -222,7 +223,7 @@ CacheMemoryBudgetManager::PinResult CacheMemoryBudgetManager::pinWithinBudget(Al
 
 bool CacheMemoryBudgetManager::unpin(AllocationHandle handle)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
   if(iter == m_Entries.end())
   {
@@ -245,7 +246,7 @@ bool CacheMemoryBudgetManager::unpin(AllocationHandle handle)
 
 void CacheMemoryBudgetManager::touch(AllocationHandle handle)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   auto it = m_Entries.find(handle);
   if(it != m_Entries.end())
   {
@@ -255,13 +256,13 @@ void CacheMemoryBudgetManager::touch(AllocationHandle handle)
 
 void CacheMemoryBudgetManager::registerSubsystem(const std::string& subsystem, SubsystemEvictionHandler handler)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   m_SubsystemHandlers[subsystem] = std::move(handler);
 }
 
 void CacheMemoryBudgetManager::release(AllocationHandle handle)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   auto it = m_Entries.find(handle);
   if(it != m_Entries.end())
   {
@@ -276,7 +277,7 @@ void CacheMemoryBudgetManager::release(AllocationHandle handle)
 
 CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::reserveWorkingMemory(uint64 requestedBytes)
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   const uint64 maximumWorkingBytes = m_BudgetBytes / 4;
   const uint64 remainingWorkingBytes = maximumWorkingBytes > m_ReservedWorkingMemoryBytes ? maximumWorkingBytes - m_ReservedWorkingMemoryBytes : 0;
   const uint64 grantedBytes = std::min(requestedBytes, remainingWorkingBytes);
@@ -290,6 +291,23 @@ CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::res
   return WorkingMemoryReservation(WorkingMemoryReservationKey{}, this, grantedBytes);
 }
 
+CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::tryReserveWorkingMemoryWithoutEviction(uint64 requestedBytes)
+{
+  const std::lock_guard<std::mutex> lock(m_Mutex);
+  const uint64 maximumWorkingBytes = m_BudgetBytes / 4;
+  if(requestedBytes == 0 || m_ReservedWorkingMemoryBytes > maximumWorkingBytes || requestedBytes > maximumWorkingBytes - m_ReservedWorkingMemoryBytes)
+  {
+    return {};
+  }
+  if(m_UsedBytes > m_BudgetBytes || m_ReservedWorkingMemoryBytes > m_BudgetBytes - m_UsedBytes || requestedBytes > m_BudgetBytes - m_UsedBytes - m_ReservedWorkingMemoryBytes)
+  {
+    return {};
+  }
+
+  m_ReservedWorkingMemoryBytes += requestedBytes;
+  return WorkingMemoryReservation(WorkingMemoryReservationKey{}, this, requestedBytes);
+}
+
 bool CacheMemoryBudgetManager::setBudgetBytes(uint64 bytes)
 {
   // Clamp only the upper bound. Calculate the machine limit before acquiring m_Mutex.
@@ -301,50 +319,50 @@ bool CacheMemoryBudgetManager::setBudgetBytes(uint64 bytes)
     clamped = true;
   }
 
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   m_BudgetBytes = bytes;
   return clamped;
 }
 
 uint64 CacheMemoryBudgetManager::budgetBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_BudgetBytes;
 }
 
 uint64 CacheMemoryBudgetManager::usedBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_UsedBytes;
 }
 
 uint64 CacheMemoryBudgetManager::pinnedBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_PinnedBytes;
 }
 
 uint64 CacheMemoryBudgetManager::maximumWorkingMemoryBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_BudgetBytes / 4;
 }
 
 uint64 CacheMemoryBudgetManager::reservedWorkingMemoryBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_ReservedWorkingMemoryBytes;
 }
 
 uint64 CacheMemoryBudgetManager::effectiveCacheBudgetBytes() const
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   return m_BudgetBytes > m_ReservedWorkingMemoryBytes ? m_BudgetBytes - m_ReservedWorkingMemoryBytes : 0;
 }
 
 void CacheMemoryBudgetManager::clear()
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   m_Entries.clear();
   m_UsedBytes = 0;
   m_PinnedBytes = 0;
@@ -410,7 +428,7 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
 
 void CacheMemoryBudgetManager::releaseWorkingMemory(uint64 sizeBytes) noexcept
 {
-  std::lock_guard<std::mutex> lock(m_Mutex);
+  const std::lock_guard<std::mutex> lock(m_Mutex);
   m_ReservedWorkingMemoryBytes = sizeBytes <= m_ReservedWorkingMemoryBytes ? m_ReservedWorkingMemoryBytes - sizeBytes : 0;
 }
 

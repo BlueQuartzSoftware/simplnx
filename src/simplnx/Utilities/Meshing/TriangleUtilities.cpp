@@ -1,14 +1,27 @@
 #include "TriangleUtilities.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include <array>
+#include <utility>
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
 #include "simplnx/DataStructure/IO/Generic/ITemporaryRecordStore.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/BoundedRecordPageCache.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -18,6 +31,7 @@
 #include <memory>
 #include <new>
 #include <queue>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -26,6 +40,10 @@ using namespace nx::core;
 namespace
 {
 using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
+using WindingFaceType = std::array<IGeometry::MeshIndexType, 3>;
+
+static_assert(std::is_trivially_copyable_v<WindingFaceType>);
+static_assert(sizeof(WindingFaceType) == 3 * sizeof(IGeometry::MeshIndexType));
 
 inline constexpr uint64 k_WindingBatchRecords = 4096;
 inline constexpr usize k_WindingCachePages = 8;
@@ -398,7 +416,7 @@ private:
 
 /**
  * @class WindingDataStoreCache
- * @brief Provides bounded LRU tuple access to one DataStore.
+ * @brief Provides bounded read-only LRU tuple access to one DataStore.
  * @tparam T Specifies the scalar type.
  */
 template <typename T>
@@ -413,20 +431,6 @@ public:
    */
   WindingDataStoreCache(const AbstractDataStore<T>& store, uint64 tuplesPerPage, usize maximumPages)
   : m_Store(store)
-  , m_TuplesPerPage(tuplesPerPage)
-  , m_MaximumPages(maximumPages)
-  {
-  }
-
-  /**
-   * @brief Creates a mutable tuple cache.
-   * @param store Provides and receives tuples.
-   * @param tuplesPerPage Specifies page tuple count.
-   * @param maximumPages Limits resident pages.
-   */
-  WindingDataStoreCache(AbstractDataStore<T>& store, uint64 tuplesPerPage, usize maximumPages)
-  : m_Store(store)
-  , m_MutableStore(&store)
   , m_TuplesPerPage(tuplesPerPage)
   , m_MaximumPages(maximumPages)
   {
@@ -455,61 +459,15 @@ public:
     return {};
   }
 
-  /**
-   * @brief Updates one cached tuple and marks its page dirty.
-   * @param tupleIndex Specifies the tuple.
-   * @param tuple Provides all tuple components.
-   * @return Mutability, shape, range, allocation, or source-read error, or success.
-   */
-  Result<> writeTuple(uint64 tupleIndex, nonstd::span<const T> tuple)
-  {
-    if(m_MutableStore == nullptr)
-    {
-      return MakeErrorResult(-65787, "Triangle winding attempted to modify a read-only DataStore cache.");
-    }
-    if(tuple.size() != m_Store.getNumberOfComponents())
-    {
-      return MakeErrorResult(-65786, "Triangle winding DataStore cache received a tuple with the wrong component count.");
-    }
-    auto pageResult = loadPage(tupleIndex);
-    if(pageResult.invalid())
-    {
-      return ConvertResult(std::move(pageResult));
-    }
-    Page& page = pageResult.value().get();
-    const usize localTuple = static_cast<usize>(tupleIndex - page.FirstTuple);
-    std::copy(tuple.begin(), tuple.end(), page.Values.data() + localTuple * tuple.size());
-    page.Dirty = true;
-    return {};
-  }
-
-  /**
-   * @brief Flushes all dirty pages.
-   * @return First destination-write error, or success.
-   */
-  Result<> flush()
-  {
-    for(Page& page : m_Pages)
-    {
-      auto result = flushPage(page);
-      if(result.invalid())
-      {
-        return result;
-      }
-    }
-    return {};
-  }
-
 private:
   /**
    * @struct Page
-   * @brief Stores one tuple page and its dirty state.
+   * @brief Stores one read-only tuple page.
    */
   struct Page
   {
     uint64 FirstTuple = 0;
     uint64 TupleCount = 0;
-    bool Dirty = false;
     std::vector<T> Values;
   };
 
@@ -535,11 +493,6 @@ private:
     }
     if(m_Pages.size() == m_MaximumPages)
     {
-      auto flushResult = flushPage(m_Pages.back());
-      if(flushResult.invalid())
-      {
-        return ConvertInvalidResult<std::reference_wrapper<Page>>(std::move(flushResult));
-      }
       m_Pages.pop_back();
     }
     Page page;
@@ -568,36 +521,57 @@ private:
     return {std::ref(m_Pages.front())};
   }
 
-  /**
-   * @brief Writes one dirty page to the mutable store.
-   * @param page Provides cached values and destination range.
-   * @return Mutability or destination-write error, or success.
-   */
-  Result<> flushPage(Page& page)
-  {
-    if(!page.Dirty)
-    {
-      return {};
-    }
-    if(m_MutableStore == nullptr)
-    {
-      return MakeErrorResult(-65787, "Triangle winding attempted to flush a read-only DataStore cache.");
-    }
-    const usize componentCount = m_Store.getNumberOfComponents();
-    auto result = m_MutableStore->copyFromBuffer(static_cast<usize>(page.FirstTuple) * componentCount, nonstd::span<const T>(page.Values.data(), page.Values.size()));
-    if(result.valid())
-    {
-      page.Dirty = false;
-    }
-    return result;
-  }
-
   const AbstractDataStore<T>& m_Store;
-  AbstractDataStore<T>* m_MutableStore = nullptr;
   uint64 m_TuplesPerPage = 0;
   usize m_MaximumPages = 0;
   std::list<Page> m_Pages;
 };
+
+/**
+ * @brief Copies repaired scratch connectivity back in bounded sequential batches.
+ * @param triangles Receives the repaired connectivity.
+ * @param faceStore Provides the scratch connectivity.
+ * @param faceCache Provides pending scratch writes.
+ * @param buffer Reuses the initial connectivity scan buffer.
+ * @param facesModified Skips destination writes when no triangle was flipped.
+ * @return Scratch flush/read or destination-write error, or success.
+ * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
+ */
+Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
+                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified)
+{
+  if(!facesModified)
+  {
+    return {};
+  }
+  // Preserve completed flips when traversal is cancelled.
+  const std::atomic_bool neverCancel = false;
+  auto flushResult = faceCache.flush(neverCancel);
+  if(flushResult.invalid())
+  {
+    return flushResult;
+  }
+  for(uint64 offset = 0; offset < faceStore.recordCount(); offset += k_WindingBatchRecords)
+  {
+    const uint64 count = std::min<uint64>(k_WindingBatchRecords, faceStore.recordCount() - offset);
+    auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(buffer.data()), static_cast<usize>(count * sizeof(WindingFaceType)));
+    auto readResult = faceStore.read(offset, count, bytes, neverCancel);
+    if(readResult.invalid())
+    {
+      return ConvertResult(std::move(readResult));
+    }
+    if(readResult.value() != count)
+    {
+      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, readResult.value(), count));
+    }
+    auto writeResult = triangles.copyFromBuffer(static_cast<usize>(offset * 3), nonstd::span<const IGeometry::MeshIndexType>(buffer.data(), static_cast<usize>(count * 3)));
+    if(writeResult.invalid())
+    {
+      return writeResult;
+    }
+  }
+  return {};
+}
 
 /**
  * @brief Finalizes one external winding sort.
@@ -1037,6 +1011,16 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   WindingSortAppender<VertexOccurrence> occurrenceAppender(*occurrences, shouldCancel);
   WindingSortAppender<FeatureSeed> seedAppender(*seeds, shouldCancel);
 
+  // Stage connectivity during the existing scan. Dirty page evictions then target
+  // uncompressed scratch records, not HDF5 chunks that the next read must compress
+  // and inflate again. Copy back only when traversal completes or is cancelled.
+  auto faceStoreResult = CreateWindingRecordStore<WindingFaceType>(triangleCount);
+  if(faceStoreResult.invalid())
+  {
+    return ConvertResult(std::move(faceStoreResult));
+  }
+  const std::unique_ptr<ITemporaryRecordStore> faceStore = std::move(faceStoreResult.value());
+
   std::vector<IGeometry::MeshIndexType> faceBuffer;
   std::vector<int32> idBuffer;
   try
@@ -1063,6 +1047,12 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     if(faceReadResult.invalid())
     {
       return faceReadResult;
+    }
+    auto faceStageResult =
+        faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFaceType))), shouldCancel);
+    if(faceStageResult.invalid())
+    {
+      return faceStageResult;
     }
     auto idReadResult = idsStore.copyIntoBuffer(static_cast<usize>(offset * componentCount), nonstd::span<int32>(idBuffer.data(), static_cast<usize>(count * componentCount)));
     if(idReadResult.invalid())
@@ -1331,7 +1321,10 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     neighborOffset = groupEnd;
   }
 
-  WindingDataStoreCache<IGeometry::MeshIndexType> faceCache(triangles, k_WindingBatchRecords, k_WindingCachePages);
+  BoundedRecordPageCache<WindingFaceType> faceCache(*faceStore, k_WindingBatchRecords, k_WindingCachePages);
+  // Keep face access non-cancelling, as before; traversal owns cancellation checks.
+  const std::atomic_bool neverCancel = false;
+  bool facesModified = false;
   WindingDataStoreCache<int32> idCache(idsStore, k_WindingBatchRecords, k_WindingCachePages);
   WindingSortReader<FeatureSeed> seedReader(*seeds, shouldCancel);
 
@@ -1346,7 +1339,13 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     return {labels[0] == feature || (componentCount == 2 && labels[1] == feature)};
   };
   const auto readFace = [&](uint64 triangle, std::array<IGeometry::MeshIndexType, 3>& face) -> Result<> {
-    return faceCache.readTuple(triangle, nonstd::span<IGeometry::MeshIndexType>(face.data(), face.size()));
+    auto readResult = faceCache.read(triangle, neverCancel);
+    if(readResult.invalid())
+    {
+      return ConvertResult(std::move(readResult));
+    }
+    face = readResult.value();
+    return {};
   };
 
   uint64 unrepairedCount = 0;
@@ -1357,7 +1356,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   {
     if(shouldCancel)
     {
-      return faceCache.flush();
+      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
     }
     auto seedRecordResult = seedReader.read(seedOffset);
     if(seedRecordResult.invalid())
@@ -1452,7 +1451,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     {
       if(shouldCancel)
       {
-        return faceCache.flush();
+        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
       }
       auto queuedResult = queueCache.read(queueHead, shouldCancel);
       if(queuedResult.invalid())
@@ -1560,11 +1559,12 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
         else
         {
           std::swap(face[0], face[2]);
-          auto faceWriteResult = faceCache.writeTuple(triangle, nonstd::span<const IGeometry::MeshIndexType>(face.data(), face.size()));
+          auto faceWriteResult = faceCache.write(triangle, face, neverCancel);
           if(faceWriteResult.invalid())
           {
             return faceWriteResult;
           }
+          facesModified = true;
         }
       }
     }
@@ -1572,7 +1572,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     seedOffset = nextFeatureOffset;
   }
 
-  auto faceFlushResult = faceCache.flush();
+  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
   if(faceFlushResult.invalid())
   {
     return faceFlushResult;
@@ -1626,6 +1626,301 @@ void MeshingUtilities::CalculateNormalsImpl::generate(nx::core::types::usize sta
 void MeshingUtilities::CalculateNormalsImpl::operator()(const nx::core::Range& range) const
 {
   generate(range.min(), range.max());
+}
+
+namespace
+{
+constexpr usize k_NormalBlockTriangles = 262144;
+constexpr usize k_NormalFastBytesPerFace = (3 * sizeof(IGeometry::MeshIndexType)) + (3 * sizeof(float64));
+constexpr usize k_NormalGatherBytesPerFace = k_NormalFastBytesPerFace + (3 * sizeof(usize)) + (18 * sizeof(float32));
+static_assert(k_NormalBlockTriangles <= std::numeric_limits<usize>::max() / k_NormalGatherBytesPerFace);
+
+struct TriangleNormalWorkingPlan
+{
+  bool CacheVertices = false;
+  usize FaceCapacity = 0;
+  usize PageVertices = 0;
+  usize PayloadBytes = 0;
+};
+
+/**
+ * @brief Plans coordinate and face buffers within the supplied byte limit.
+ * @param triangles Supplies the face count for connectivity and normal buffers.
+ * @param vertices Supplies the vertex count for a coordinate cache or read page.
+ * @param availableBytes Limits the combined buffer payload in bytes.
+ * @return Plan with its total payload, or zero face capacity when no face fits.
+ * @pre The caller checks three-component shapes and addressable coordinate and face sizes.
+ * @note The caller must reserve working memory and plan again from the actual grant before allocating buffers.
+ */
+TriangleNormalWorkingPlan planNormalWorkingMemory(const AbstractDataStore<IGeometry::MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, usize availableBytes)
+{
+  const usize maximumTriangles = std::min(k_NormalBlockTriangles, triangles.getNumberOfTuples());
+  const usize vertexCount = vertices.getNumberOfTuples();
+  const usize vertexBytes = vertexCount * 3 * sizeof(float32);
+  const usize gatherTriangles = std::min(maximumTriangles, availableBytes / k_NormalGatherBytesPerFace);
+  const usize admissionTriangles = std::max(usize{1}, gatherTriangles);
+  // Retaining coordinates must preserve the gathered route's available face capacity.
+  const bool cacheVertices = vertexBytes <= availableBytes && admissionTriangles * k_NormalFastBytesPerFace <= availableBytes - vertexBytes;
+  const usize faceCapacity = cacheVertices ? std::min(maximumTriangles, (availableBytes - vertexBytes) / k_NormalFastBytesPerFace) : gatherTriangles;
+  if(faceCapacity == 0)
+  {
+    return {};
+  }
+  const usize pageVertices = cacheVertices ? 0 : std::min(vertexCount, faceCapacity * 3);
+  const usize coordinateBytes = cacheVertices ? vertexBytes : pageVertices * 3 * sizeof(float32);
+  const usize bytesPerFace = k_NormalFastBytesPerFace + (cacheVertices ? 0 : (3 * sizeof(usize)) + (9 * sizeof(float32)));
+  if(coordinateBytes > availableBytes || faceCapacity > (availableBytes - coordinateBytes) / bytesPerFace)
+  {
+    return {};
+  }
+  return {.CacheVertices = cacheVertices, .FaceCapacity = faceCapacity, .PageVertices = pageVertices, .PayloadBytes = coordinateBytes + (faceCapacity * bytesPerFace)};
+}
+
+/**
+ * @brief Builds the error for a working grant that cannot fund one face.
+ * @param code Distinguishes the initial admission from the admission after the first-normal publication.
+ * @param requestedBytes Bytes requested from the working-memory budget.
+ * @param grantedBytes Bytes actually granted.
+ * @param vertexBytes Bytes needed to cache every vertex coordinate.
+ * @return Error result with the requested, granted, and minimum byte counts.
+ */
+Result<> MakeNormalAdmissionError(int32 code, uint64 requestedBytes, usize grantedBytes, usize vertexBytes)
+{
+  return MakeErrorResult(code, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached "
+                                           "vertices and one face. Retry after other operations finish.",
+                                           requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
+}
+
+/**
+ * @brief Calculates the normal of triangle 0 from its inputs and writes it before compute buffers are admitted.
+ * @param triangles Provides the three vertex indexes of triangle 0.
+ * @param verts Provides the XYZ coordinates of those vertices.
+ * @param normals Receives the normal of triangle 0.
+ * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.
+ * @return Transfer warnings, or error -65817 for an input read, -65813 for an invalid vertex index, or -65818 for the write.
+ *
+ * A store's first write can need its own working reservation, for example to create a writable copy of a
+ * read-only imported source. Running that write while the caller holds no reservation keeps it from competing
+ * with the compute buffers. The stored normals are never read, so an imported output chunk is never decoded here.
+ * The function reads only the inputs that the block loop reads again; that loop later writes the same value again.
+ */
+Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+                            MeshingUtilities::detail::TriangleNormalCalculator calculateNormal)
+{
+  const usize numVertices = verts.getNumberOfTuples();
+  std::array<IGeometry::MeshIndexType, 3> face{};
+  auto result = triangles.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(face.data(), face.size()));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65817, "Error reading the connectivity of triangle 0 before recalculating triangle normals."));
+  }
+  std::array<float32, 9> coordinates{};
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    const auto vertexIndex = face[corner];
+    if(vertexIndex >= numVertices)
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.", 0,
+                                                                                 vertexIndex, numVertices, numVertices)));
+    }
+  }
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    result = MergeResults(std::move(result), verts.copyIntoBuffer(face[corner] * 3, nonstd::span<float32>(coordinates.data() + (corner * 3), 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65817, "Error reading the vertex coordinates of triangle 0 before recalculating triangle normals."));
+    }
+  }
+  const auto normal = calculateNormal(coordinates.data(), coordinates.data() + 3, coordinates.data() + 6);
+  const std::array<float64, 3> values{normal[0], normal[1], normal[2]};
+  result = MergeResults(std::move(result), normals.copyFromBuffer(0, nonstd::span<const float64>(values.data(), values.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65818, "Error writing the normal of triangle 0 before recalculating triangle normals."));
+  }
+  return result;
+}
+} // namespace
+
+Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+                                                            Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal)
+{
+  const usize numTriangles = triangles.getNumberOfTuples();
+  const usize numVertices = verts.getNumberOfTuples();
+  if(shouldCancel || numTriangles == 0)
+  {
+    return {};
+  }
+
+  constexpr usize maximum = std::numeric_limits<usize>::max();
+  const usize maximumTriangles = std::min(k_NormalBlockTriangles, numTriangles);
+  if(verts.getNumberOfComponents() != 3 || triangles.getNumberOfComponents() != 3 || numVertices > maximum / (3 * sizeof(float32)) || numTriangles > maximum / 3 ||
+     numVertices * (3 * sizeof(float32)) > maximum - maximumTriangles * k_NormalFastBytesPerFace)
+  {
+    return MakeErrorResult(-65814, "Triangle normal buffers require addressable three-component vertex and face arrays. Reduce the mesh size or repair the array shapes.");
+  }
+  const usize vertexBytes = numVertices * 3 * sizeof(float32);
+  const usize desiredBytes = vertexBytes + (maximumTriangles * k_NormalFastBytesPerFace);
+  auto& budget = CacheMemoryBudgetManager::instance();
+  const uint64 maximumWorkingBytes = budget.maximumWorkingMemoryBytes();
+  const uint64 reservedBytes = budget.reservedWorkingMemoryBytes();
+  const usize observedHeadroom = static_cast<usize>(std::min<uint64>(maximumWorkingBytes > reservedBytes ? maximumWorkingBytes - reservedBytes : 0, maximum));
+  const auto observedPlan = planNormalWorkingMemory(triangles, verts, observedHeadroom);
+  const usize preferredBytes = std::min(desiredBytes, maximumTriangles * k_NormalGatherBytesPerFace);
+  const uint64 requestedBytes = std::min<uint64>(observedPlan.FaceCapacity == 0 ? preferredBytes : observedPlan.PayloadBytes, budget.maximumWorkingMemoryBytes());
+  // A snapshot avoids known excess admission; a racing reservation can still reduce the actual grant.
+  auto reservation = budget.reserveWorkingMemory(requestedBytes);
+  usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+  auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  if(plan.FaceCapacity == 0)
+  {
+    return MakeNormalAdmissionError(-65815, requestedBytes, grantedBytes, vertexBytes);
+  }
+  Result<> result;
+  if(normals.getStoreType() == IDataStore::StoreType::OutOfCore)
+  {
+    // A store of type OutOfCore can reserve its own working memory on its first write. Release the admission
+    // while the normal of triangle 0 is calculated and written, then admit the checked plan again. No buffer
+    // exists yet, so the released bytes fund nothing. If the new admission fails, triangle 0 keeps its new
+    // normal and every later triangle keeps its old value.
+    const usize admittedBytes = plan.PayloadBytes;
+    reservation = {};
+    result = PublishFirstNormal(triangles, verts, normals, calculateNormal);
+    if(result.invalid())
+    {
+      return result;
+    }
+    // Cancellation during the publication stops before the second admission, buffer allocation, or any block transfer.
+    if(shouldCancel)
+    {
+      return result;
+    }
+    reservation = budget.reserveWorkingMemory(static_cast<uint64>(admittedBytes));
+    grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+    if(grantedBytes < admittedBytes)
+    {
+      plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+      if(plan.FaceCapacity == 0)
+      {
+        return MergeResults(std::move(result), MakeNormalAdmissionError(-65819, admittedBytes, grantedBytes, vertexBytes));
+      }
+    }
+  }
+  const bool cacheVertices = plan.CacheVertices;
+  const usize bufferTriangles = plan.FaceCapacity;
+  const usize pageVertices = plan.PageVertices;
+  // The checked plan fits the actual grant; release any remainder before allocations or I/O.
+  reservation.shrinkTo(plan.PayloadBytes);
+  try
+  {
+    std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
+    if(cacheVertices)
+    {
+      result = MergeResults(std::move(result), verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."));
+      }
+    }
+    std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
+    std::vector<float32> gathered(cacheVertices ? 0 : bufferTriangles * 9);
+    std::vector<float32> page(pageVertices * 3);
+    std::vector<IGeometry::MeshIndexType> triangleBuffer(bufferTriangles * 3);
+    std::vector<float64> normalBuffer(bufferTriangles * 3);
+    for(usize start = 0; start < numTriangles;)
+    {
+      if(shouldCancel)
+      {
+        return result;
+      }
+      const usize count = std::min(bufferTriangles, numTriangles - start);
+      result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+      }
+
+      for(usize triangle = 0; triangle < count; ++triangle)
+      {
+        const usize index = triangle * 3;
+        for(usize vertex = 0; vertex < 3; ++vertex)
+        {
+          const auto vertexIndex = triangleBuffer[index + vertex];
+          if(vertexIndex >= numVertices)
+          {
+            return MergeResults(std::move(result),
+                                MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.",
+                                                                    start + triangle, vertexIndex, numVertices, numVertices)));
+          }
+        }
+      }
+      if(!cacheVertices)
+      {
+        result =
+            MergeResults(std::move(result), GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
+        if(result.invalid())
+        {
+          return MergeResults(std::move(result), MakeErrorResult(-65810, fmt::format("Error reading vertex coordinates for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+        }
+      }
+      for(usize triangle = 0; triangle < count; ++triangle)
+      {
+        const usize index = triangle * 3;
+        const nonstd::span<const float32> coordinates =
+            cacheVertices ? nonstd::span<const float32>(vertices.data(), vertices.size()) : nonstd::span<const float32>(gathered.data(), gathered.size()).subspan(triangle * 9, 9);
+        const usize firstVertex = cacheVertices ? triangleBuffer[index] * 3 : 0;
+        const usize secondVertex = cacheVertices ? triangleBuffer[index + 1] * 3 : 3;
+        const usize thirdVertex = cacheVertices ? triangleBuffer[index + 2] * 3 : 6;
+        const auto normal = calculateNormal(coordinates.subspan(firstVertex, 3).data(), coordinates.subspan(secondVertex, 3).data(), coordinates.subspan(thirdVertex, 3).data());
+        normalBuffer[index] = normal[0];
+        normalBuffer[index + 1] = normal[1];
+        normalBuffer[index + 2] = normal[2];
+      }
+
+      result = MergeResults(std::move(result), normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)));
+      }
+      start += count;
+    }
+    return result;
+  } catch(const std::bad_alloc&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65816, "Triangle normal calculation could not allocate its admitted working buffers. Reduce the mesh size or free memory."));
+  } catch(const std::length_error&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65816, "Triangle normal calculation exceeded the supported buffer allocation size. Reduce the mesh size."));
+  }
+}
+
+Result<> MeshingUtilities::CalculateNormals(const INodeGeometry2D::SharedFaceList& triangles, const INodeGeometry2D::SharedVertexList& verts, Float64AbstractDataStore& normals,
+                                            const std::atomic_bool& shouldCancel)
+{
+  // The output is a borrowed store rather than a DataArray, so include its residency explicitly.
+  const bool usesOutOfCoreStore = AnyOutOfCore({&triangles, &verts}) || normals.getStoreType() == IDataStore::StoreType::OutOfCore;
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    return detail::CalculateNormalsInBlocks(triangles.getDataStoreRef(), verts.getDataStoreRef(), normals, shouldCancel,
+                                            [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
+                                              const Eigen::Vector3d vertA = Eigen::Vector3d{a[0], a[1], a[2]};
+                                              const Eigen::Vector3d vertB = Eigen::Vector3d{b[0], b[1], b[2]};
+                                              const Eigen::Vector3d vertC = Eigen::Vector3d{c[0], c[1], c[2]};
+                                              const Eigen::Vector3d vecA = vertB - vertA;
+                                              const Eigen::Vector3d vecB = vertC - vertA;
+                                              Eigen::Vector3d normal = vecA.cross(vecB);
+                                              normal.normalize();
+                                              return {normal[0], normal[1], normal[2]};
+                                            });
+  }
+
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, triangles.getNumberOfTuples());
+  dataAlg.execute(CalculateNormalsImpl(triangles.getDataStoreRef(), verts.getDataStoreRef(), normals, shouldCancel));
+  return {};
 }
 
 Result<> MeshingUtilities::MakeEmptyMeshWarning(const DataPath& triangleGeomPath, usize numCells, usize numVertices)

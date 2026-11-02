@@ -32,11 +32,9 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureCentroidsInputValues
  * @brief Computes ImageGeom feature centroids with Kahan summation.
  *
  * Feature IDs use 65,536-tuple bulk reads. Kahan sums, counts, and periodic ranges use
- * feature-sized vectors. This avoids per-voxel DataStore access without cell-sized resident memory.
- * The centroid array uses one final bulk write.
- *
- * Current bulk-I/O Result values are not inspected. A storage failure can leave output state while
- * the method returns success.
+ * feature-sized vectors. The periodic path uses a bounded occupied-coordinate bitset and
+ * an additional weighted Kahan pass for adjusted axes. It does not retain per-voxel
+ * coordinates in memory. The centroid array uses one final bulk write.
  */
 class SIMPLNXCORE_EXPORT ComputeFeatureCentroids
 {
@@ -63,10 +61,10 @@ public:
 
   /**
    * @brief Computes feature centroids.
-   * @return Success, or a Feature ID indexing-validation error.
+   * @return Success or a validation, working-memory, or store I/O error.
    *
-   * When a chunk checkpoint observes cancellation, the method returns success before the centroid
-   * bulk write. The periodic adjustment does not check cancellation after that write starts.
+   * When a checkpoint observes cancellation, the method returns before the final centroid
+   * bulk write. A failed final write follows the store's existing partial-write contract.
    */
   Result<> operator()();
 

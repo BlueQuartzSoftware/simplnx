@@ -1,5 +1,8 @@
 #include "AlgorithmDispatchTestSupport.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -10,6 +13,10 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
+#include <limits>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace nx::core;
@@ -100,6 +107,84 @@ Result<> dispatchEmptyForTest(bool& usedDirect)
 {
   return DispatchAlgorithm<DirectDispatchProbe, ScanlineDispatchProbe>({}, usedDirect);
 }
+
+/**
+ * @class AlgorithmScopeStateGuard
+ * @brief Restores test state if an assertion interrupts the scope restoration test.
+ *
+ * This guard does not use the scope or preference sentinel under test.
+ */
+class AlgorithmScopeStateGuard
+{
+public:
+  /**
+   * @brief Saves the preferences and dispatch state before the test changes them.
+   * @param preferences Supplies the process preferences that outlive this guard.
+   */
+  explicit AlgorithmScopeStateGuard(Preferences& preferences)
+  : m_Preferences(preferences)
+  , m_HadMode(preferences.contains(Preferences::k_DataStorageMode_Key))
+  , m_Mode(preferences.value(Preferences::k_DataStorageMode_Key))
+  , m_HadThreshold(preferences.contains(Preferences::k_LargeDataSize_Key))
+  , m_Threshold(preferences.value(Preferences::k_LargeDataSize_Key))
+  , m_ForceInCore(ForceInCoreAlgorithm())
+  , m_ForceOutOfCore(ForceOocAlgorithm())
+  , m_Counts(GetAlgorithmPathExecutionCounts())
+  {
+  }
+
+  /**
+   * @brief Restores saved state without writing a preferences file.
+   */
+  ~AlgorithmScopeStateGuard()
+  {
+    ForceInCoreAlgorithm() = m_ForceInCore;
+    ForceOocAlgorithm() = m_ForceOutOfCore;
+    SetAlgorithmPathExecutionCounts(m_Counts);
+    if(m_HadMode)
+    {
+      m_Preferences.setValue(Preferences::k_DataStorageMode_Key, m_Mode);
+    }
+    else
+    {
+      m_Preferences.removeValue(Preferences::k_DataStorageMode_Key);
+    }
+    if(m_HadThreshold)
+    {
+      m_Preferences.setValue(Preferences::k_LargeDataSize_Key, m_Threshold);
+    }
+    else
+    {
+      m_Preferences.removeValue(Preferences::k_LargeDataSize_Key);
+    }
+  }
+
+  AlgorithmScopeStateGuard(const AlgorithmScopeStateGuard&) = delete;
+  AlgorithmScopeStateGuard(AlgorithmScopeStateGuard&&) = delete;
+  AlgorithmScopeStateGuard& operator=(const AlgorithmScopeStateGuard&) = delete;
+  AlgorithmScopeStateGuard& operator=(AlgorithmScopeStateGuard&&) = delete;
+
+private:
+  Preferences& m_Preferences;
+  bool m_HadMode;
+  nlohmann::json m_Mode;
+  bool m_HadThreshold;
+  nlohmann::json m_Threshold;
+  bool m_ForceInCore;
+  bool m_ForceOutOfCore;
+  AlgorithmPathExecutionCounts m_Counts;
+};
+
+void checkDispatchCounts(const AlgorithmPathExecutionCounts& expected)
+{
+  const auto actual = GetAlgorithmPathExecutionCounts();
+  CHECK(actual.InCore == expected.InCore);
+  CHECK(actual.OutOfCore == expected.OutOfCore);
+  CHECK(actual.InCoreOnInMemoryStore == expected.InCoreOnInMemoryStore);
+  CHECK(actual.InCoreOnOutOfCoreStore == expected.InCoreOnOutOfCoreStore);
+  CHECK(actual.OutOfCoreOnInMemoryStore == expected.OutOfCoreOnInMemoryStore);
+  CHECK(actual.OutOfCoreOnOutOfCoreStore == expected.OutOfCoreOnOutOfCoreStore);
+}
 } // namespace
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residency", "[OrientationAnalysis][AlgorithmDispatch]")
@@ -156,29 +241,51 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin boundary", "[OrientationAnalysis][AlgorithmDispatch]")
 {
+  UnitTest::LoadPlugins();
   using Path = UnitTest::AlgorithmDispatchPath;
-
-  REQUIRE_FALSE(ForceInCoreAlgorithm());
-
+  struct SelectionCase
   {
-    const ForceOocAlgorithmGuard forceDirect(false);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Direct);
-  }
+    bool ForceInCore = false;
+    bool ForceOoc = false;
+    Path ExpectedPath = Path::Direct;
+    AlgorithmPathExecutionCounts ExpectedCounts{};
+  };
+  const std::array<SelectionCase, 4> cases = {{
+      {.ForceInCore = false,
+       .ForceOoc = false,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = false,
+       .ForceOoc = true,
+       .ExpectedPath = Path::Scanline,
+       .ExpectedCounts = {.InCore = 0, .OutOfCore = 1, .InCoreOnInMemoryStore = 0, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 1, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = true,
+       .ForceOoc = false,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = true,
+       .ForceOoc = true,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+  }};
+  const bool originalInCore = ForceInCoreAlgorithm();
+  const bool originalOoc = ForceOocAlgorithm();
+  const auto originalCounts = GetAlgorithmPathExecutionCounts();
+  const auto restoreState = MakeScopeGuard([=]() noexcept {
+    ForceInCoreAlgorithm() = originalInCore;
+    ForceOocAlgorithm() = originalOoc;
+    SetAlgorithmPathExecutionCounts(originalCounts);
+  });
 
+  for(const auto& selection : cases)
   {
-    const ForceOocAlgorithmGuard forceScanline(true);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Scanline);
-
-    {
-      const ForceInCoreAlgorithmGuard forceDirect;
-      REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Direct);
-    }
-
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Scanline);
+    CAPTURE(selection.ForceInCore, selection.ForceOoc);
+    ForceInCoreAlgorithm() = selection.ForceInCore;
+    ForceOocAlgorithm() = selection.ForceOoc;
+    ResetAlgorithmPathExecutionCounts();
+    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.ExpectedPath);
+    checkDispatchCounts(selection.ExpectedCounts);
   }
-
-  REQUIRE_FALSE(ForceOocAlgorithm());
-  REQUIRE_FALSE(ForceInCoreAlgorithm());
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin path", "[OrientationAnalysis][AlgorithmDispatch]")
@@ -288,4 +395,85 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope runs OOC algorithm on in-memo
   REQUIRE(values != nullptr);
   scope.requireExpectedStore(*values);
   CHECK(scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); }) == Path::Scanline);
+}
+
+TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the target throws", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool hadMode = GENERATE(false, true);
+  const bool hadThreshold = GENERATE(false, true);
+  const bool originalForceInCore = GENERATE(false, true);
+  const bool originalForceOutOfCore = GENERATE(false, true);
+  CAPTURE(scenario, hadMode, hadThreshold, originalForceInCore, originalForceOutOfCore);
+
+  UnitTest::LoadPlugins();
+  auto* preferences = Application::GetOrCreateInstance()->getPreferences();
+  const AlgorithmScopeStateGuard restoreTestState(*preferences);
+
+  if(hadMode)
+  {
+    preferences->setDataStorageMode(DataStorageMode::Adaptive);
+  }
+  else
+  {
+    preferences->removeValue(Preferences::k_DataStorageMode_Key);
+  }
+  if(hadThreshold)
+  {
+    preferences->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
+  }
+  else
+  {
+    preferences->removeValue(Preferences::k_LargeDataSize_Key);
+  }
+  const auto originalMode = preferences->value(Preferences::k_DataStorageMode_Key);
+  const auto originalThreshold = preferences->value(Preferences::k_LargeDataSize_Key);
+  const AlgorithmPathExecutionCounts originalCounts{11, 13, 17, 19, 23, 29};
+  ForceInCoreAlgorithm() = originalForceInCore;
+  ForceOocAlgorithm() = originalForceOutOfCore;
+  SetAlgorithmPathExecutionCounts(originalCounts);
+
+  {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    const bool expectsOutOfCore = scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
+    bool caughtExpectedException = false;
+    // The outer handler keeps the original exception alive for the identity check.
+    try
+    {
+      throw std::runtime_error("public algorithm scope target failure");
+    } catch(const std::runtime_error& expected)
+    {
+      try
+      {
+        scope.execute([&] {
+          CHECK(ForceInCoreAlgorithm() == !expectsOutOfCore);
+          CHECK(ForceOocAlgorithm() == expectsOutOfCore);
+          checkDispatchCounts({});
+          REQUIRE(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
+          REQUIRE(preferences->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
+          REQUIRE(preferences->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
+          // The synthetic event tests scope cleanup; it does not represent a filter execution.
+          RecordAlgorithmPathExecution(expectsOutOfCore ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, false);
+          throw;
+        });
+      } catch(const std::runtime_error& actual)
+      {
+        caughtExpectedException = true;
+        CHECK(&actual == &expected);
+        CHECK(std::string(actual.what()) == "public algorithm scope target failure");
+      }
+    }
+    REQUIRE(caughtExpectedException);
+    CHECK(ForceInCoreAlgorithm() == originalForceInCore);
+    CHECK(ForceOocAlgorithm() == originalForceOutOfCore);
+    checkDispatchCounts(originalCounts);
+    CHECK(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
+  }
+
+  CHECK(preferences->contains(Preferences::k_DataStorageMode_Key) == hadMode);
+  CHECK(preferences->value(Preferences::k_DataStorageMode_Key).type() == originalMode.type());
+  CHECK(preferences->value(Preferences::k_DataStorageMode_Key) == originalMode);
+  CHECK(preferences->contains(Preferences::k_LargeDataSize_Key) == hadThreshold);
+  CHECK(preferences->value(Preferences::k_LargeDataSize_Key).type() == originalThreshold.type());
+  CHECK(preferences->value(Preferences::k_LargeDataSize_Key) == originalThreshold);
 }

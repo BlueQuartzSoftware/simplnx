@@ -26,19 +26,21 @@ Result<> BaseGroupIO::WriteBaseGroupData(DataStructureWriter& dataStructureWrite
     return result;
   }
 
-  return WriteDataMap(dataStructureWriter, baseGroup.getDataMap(), groupWriter, importable);
+  AppendWriteResult(result, WriteDataMap(dataStructureWriter, baseGroup.getDataMap(), groupWriter, importable));
+  return result;
 }
 
 Result<> BaseGroupIO::WriteDataMap(DataStructureWriter& dataStructureWriter, const DataMap& dataMap, group_writer_type& parentGroupWriter, bool importable)
 {
+  Result<> result;
   for(const auto& [id, dataObject] : dataMap)
   {
-    Result<> result = dataStructureWriter.writeDataObject(dataObject.get(), parentGroupWriter);
+    AppendWriteResult(result, dataStructureWriter.writeDataObject(dataObject.get(), parentGroupWriter));
     if(result.invalid())
     {
       return result;
     }
   }
-  return {};
+  return result;
 }
 } // namespace nx::core::HDF5
