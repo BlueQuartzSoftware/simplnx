@@ -23,7 +23,9 @@ enables the **Headers Line Number** spin box where the user can select which lin
 
 ![Setting the headers line number and start import line number](Images/Read_CSV_2.png)
 
-The user can choose how the data is delimited: comma (,), tab, semicolon (;) or space ( ). The user may also elect to ignore consecutive delimiters, which treats consecutive delimiters as one delimiter.
+The user can choose how the data is delimited: comma (,), tab, semicolon (;) or space ( ). The user may also elect to ignore consecutive delimiters, which treats consecutive delimiters as one delimiter. When **Ignore Consecutive Delimiters** is off, each delimiter starts a new field, so two adjacent delimiters make an empty field and a delimiter at the end of a line adds an empty last field. The filter shows warning -201 when the header line or the first import row has empty fields while the option is off.
+
+*NOTE*: Earlier versions of DREAM3D-NX applied this option in reverse: with the option off, they treated consecutive delimiters as one delimiter. A saved pipeline that reads space-aligned columns, or lines that end with a delimiter, with the option off now keeps the empty fields. Turn on **Ignore Consecutive Delimiters** in that pipeline.
 
 ![Choosing the column delimiter](Images/Read_CSV_3.png)
 

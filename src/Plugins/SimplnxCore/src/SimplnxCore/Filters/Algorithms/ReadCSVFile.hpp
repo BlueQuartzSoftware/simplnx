@@ -43,7 +43,8 @@ public:
     HEADER_LINE_OUT_OF_RANGE = -120,      ///< Reports a header row outside the file.
     START_IMPORT_ROW_OUT_OF_RANGE = -121, ///< Reports an import row outside the file.
     EMPTY_HEADERS = -122,                 ///< Reports an empty header set.
-    IGNORED_TUPLE_DIMS = -200             ///< Reports tuple dimensions ignored by an existing group.
+    IGNORED_TUPLE_DIMS = -200,            ///< Reports tuple dimensions ignored by an existing group.
+    EMPTY_FIELDS = -201                   ///< Warns that kept empty fields can change the column count.
   };
 
   /**

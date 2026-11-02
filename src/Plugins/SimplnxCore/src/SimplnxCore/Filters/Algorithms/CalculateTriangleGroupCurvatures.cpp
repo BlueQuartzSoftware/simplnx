@@ -148,6 +148,22 @@ void subtractVector3d(Float64AbstractDataStore& data, double* v)
 }
 
 // -----------------------------------------------------------------------------
+void CalculateTriangleGroupCurvatures::markOutputsInvalid(int64 triId) const
+{
+  for(Float64Array* output : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
+  {
+    if(output == nullptr)
+    {
+      continue;
+    }
+    for(usize component = 0; component < output->getNumberOfComponents(); ++component)
+    {
+      output->setComponent(triId, component, std::numeric_limits<float64>::quiet_NaN());
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
 void CalculateTriangleGroupCurvatures::operator()() const
 {
   if(m_TriangleIds.empty())
@@ -210,25 +226,12 @@ void CalculateTriangleGroupCurvatures::operator()() const
       throw std::runtime_error("NRingNeighbor failed to find more than one triangles.");
     }
 
-    const auto markInvalid = [this, triId]() {
-      for(auto* output : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
-      {
-        if(output != nullptr)
-        {
-          for(usize component = 0; component < output->getNumberOfComponents(); ++component)
-          {
-            output->setComponent(triId, component, std::numeric_limits<float64>::quiet_NaN());
-          }
-        }
-      }
-    };
-
     size_t beforeSize = triPatch.size();
     std::shared_ptr<Float64DataStore> patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchNormals)
     {
-      markInvalid();
+      markOutputsInvalid(triId);
       continue;
     }
 
@@ -243,7 +246,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchCentroids)
     {
-      markInvalid();
+      markOutputsInvalid(triId);
       continue;
     }
 

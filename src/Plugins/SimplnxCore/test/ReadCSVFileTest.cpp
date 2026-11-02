@@ -1,7 +1,10 @@
+#include "SimplnxCore/Filters/Algorithms/ReadCSVFile.hpp"
 #include "SimplnxCore/Filters/CreateDataGroupFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -744,6 +747,10 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters collapse space
 
   fs::create_directories(k_TestInput.parent_path());
   const fs::path inputPath = k_TestInput.parent_path() / "ConsecutiveDelimiters.txt";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
   {
     std::ofstream file(inputPath);
     REQUIRE(file.is_open());
@@ -790,6 +797,10 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters off preserves 
   UnitTest::LoadPlugins();
   fs::create_directories(k_TestInput.parent_path());
   const fs::path inputPath = k_TestInput.parent_path() / "EmptyDelimiterFields.txt";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
   {
     std::ofstream file(inputPath);
     REQUIRE(file.is_open());
@@ -835,6 +846,10 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters header tokens"
   CAPTURE(consecutiveDelimiters);
   fs::create_directories(k_TestInput.parent_path());
   const fs::path inputPath = k_TestInput.parent_path() / "DelimiterHeaders.txt";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
   {
     std::ofstream file(inputPath);
     REQUIRE(file.is_open());
@@ -845,4 +860,160 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: Consecutive delimiters header tokens"
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const std::vector<std::string> expected = consecutiveDelimiters ? std::vector<std::string>{"A", "B", "C"} : std::vector<std::string>{"A", "", "B", "", "", "C"};
   REQUIRE(result.value() == expected);
+}
+
+namespace
+{
+constexpr int32 k_EmptyFieldsWarning = to_underlying(ReadCSVFile::IssueCodes::EMPTY_FIELDS);
+constexpr int32 k_InconsistentColumnsError = -104;
+
+// -----------------------------------------------------------------------------
+void writeDelimiterInput(const fs::path& inputPath, const std::string& contents)
+{
+  fs::create_directories(inputPath.parent_path());
+  std::ofstream file(inputPath);
+  REQUIRE(file.is_open());
+  file << contents;
+}
+
+// -----------------------------------------------------------------------------
+ReadCSVData createDelimiterData(const fs::path& inputPath, ReadCSVData::HeaderMode headerMode, const std::vector<char>& delimiters, bool consecutiveDelimiters)
+{
+  ReadCSVData data;
+  data.inputFilePath = inputPath.string();
+  data.headerMode = headerMode;
+  data.headersLine = 1;
+  data.startImportRow = headerMode == ReadCSVData::HeaderMode::LINE ? 2 : 1;
+  data.customHeaders = {"A", "B", "C"};
+  data.delimiters = delimiters;
+  data.consecutiveDelimiters = consecutiveDelimiters;
+  data.dataTypes = {CSVType::int32, CSVType::int32, CSVType::int32};
+  data.skippedArrayMask = {false, false, false};
+  data.tupleDims = {1};
+  return data;
+}
+
+// -----------------------------------------------------------------------------
+Arguments createDelimiterArguments(const ReadCSVData& data)
+{
+  Arguments args;
+  args.insertOrAssign(ReadCSVFileFilter::k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
+  args.insertOrAssign(ReadCSVFileFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadCSVFileFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  return args;
+}
+
+// -----------------------------------------------------------------------------
+bool hasWarningCode(const std::vector<Warning>& warnings, int32 code)
+{
+  return std::any_of(warnings.begin(), warnings.end(), [code](const Warning& warning) { return warning.code == code; });
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ReadCSVFileFilter: Empty fields warn while consecutive delimiters are kept", "[SimplnxCore][ReadCSVFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path inputPath = k_TestInput.parent_path() / "EmptyFieldsWarning.txt";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
+  ReadCSVFileFilter filter;
+  DataStructure dataStructure;
+
+  SECTION("First import row")
+  {
+    writeDelimiterInput(inputPath, "1  2   3\n");
+    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {' '}, false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == k_EmptyFieldsWarning);
+    REQUIRE(StringUtilities::contains(preflightResult.outputActions.warnings()[0].message, "Line #1 of"));
+
+    // Six kept fields do not match three columns; the warning stays with the import error.
+    const auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == k_InconsistentColumnsError);
+    REQUIRE(hasWarningCode(executeResult.result.warnings(), k_EmptyFieldsWarning));
+  }
+
+  SECTION("Header line")
+  {
+    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == to_underlying(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT));
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == k_EmptyFieldsWarning);
+    REQUIRE(StringUtilities::contains(preflightResult.outputActions.warnings()[0].message, "Line #1 of"));
+  }
+
+  SECTION("Trailing delimiter")
+  {
+    writeDelimiterInput(inputPath, "1,2,3,\n");
+    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::CUSTOM, {','}, false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+  }
+
+  SECTION("No empty fields")
+  {
+    writeDelimiterInput(inputPath, "A B C\n1 2 3\n");
+    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false));
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE_FALSE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+  }
+
+  SECTION("Consecutive delimiters ignored")
+  {
+    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    const Arguments args = createDelimiterArguments(createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, true));
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE_FALSE(hasWarningCode(preflightResult.outputActions.warnings(), k_EmptyFieldsWarning));
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadCSVFileFilter: Changed split settings reload cached headers", "[SimplnxCore][ReadCSVFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path inputPath = k_TestInput.parent_path() / "HeaderCacheReload.txt";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
+  // One filter instance keeps its header cache between preflights; the file does not change.
+  ReadCSVFileFilter filter;
+  DataStructure dataStructure;
+  constexpr int32 k_DataTypeCountError = to_underlying(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT);
+
+  SECTION("Ignore Consecutive Delimiters")
+  {
+    writeDelimiterInput(inputPath, "A  B   C\n1  2   3\n");
+    ReadCSVData data = createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {' '}, false);
+    const auto keptResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    SIMPLNX_RESULT_REQUIRE_INVALID(keptResult.outputActions);
+    REQUIRE(keptResult.outputActions.errors()[0].code == k_DataTypeCountError);
+
+    data.consecutiveDelimiters = true;
+    const auto ignoredResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    SIMPLNX_RESULT_REQUIRE_VALID(ignoredResult.outputActions);
+  }
+
+  SECTION("Delimiters")
+  {
+    writeDelimiterInput(inputPath, "A,B;C\n1,2;3\n");
+    ReadCSVData data = createDelimiterData(inputPath, ReadCSVData::HeaderMode::LINE, {','}, false);
+    const auto commaResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    SIMPLNX_RESULT_REQUIRE_INVALID(commaResult.outputActions);
+    REQUIRE(commaResult.outputActions.errors()[0].code == k_DataTypeCountError);
+
+    data.delimiters = {',', ';'};
+    const auto bothResult = filter.preflight(dataStructure, createDelimiterArguments(data));
+    SIMPLNX_RESULT_REQUIRE_VALID(bothResult.outputActions);
+  }
 }

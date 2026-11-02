@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -26,6 +27,7 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <system_error>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -38,6 +40,11 @@ fs::path WriteHexagonalH5EbsdFixture()
 {
   const fs::path outputDir(unit_test::k_BinaryTestOutputDir.view());
   const auto ctfPath = outputDir / "read_h5ebsd_hex_selection.ctf";
+  // The .ctf file is only the import source for the .h5ebsd fixture.
+  auto ctfFileGuard = MakeScopeGuard([&ctfPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(ctfPath, errorCode);
+  });
   {
     std::ofstream file(ctfPath);
     REQUIRE(file.is_open());
@@ -292,6 +299,10 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HKL hex correction is independent of
 {
   UnitTest::LoadPlugins();
   const auto inputPath = WriteHexagonalH5EbsdFixture();
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
   const bool convertToRadians = GENERATE(true, false);
   CAPTURE(convertToRadians);
   // Hand calculation: only phase 1 is hexagonal, so phi2 is 60 + 30 = 90 degrees.

@@ -117,11 +117,20 @@ struct ComputeFeaturePhasesBinaryFunctor
     return featurePhasesStore.copyFromBuffer(0, nonstd::span<const int32>(featurePhasesCache.data(), featurePhasesCache.size()));
   }
 };
+
 /**
  * @brief Converts a Feature mask directly with bounded bulk buffers; Feature IDs are not accessed.
  */
 struct ConvertFeatureMaskFunctor
 {
+  /**
+   * @brief Converts a Feature mask to binary Feature phases in bounded chunks.
+   * @tparam MaskType Specifies the mask element type (bool or uint8).
+   * @param maskArray Supplies one mask value for each Feature.
+   * @param featurePhasesArray Receives 0 for a zero mask value and 1 otherwise.
+   * @param shouldCancel Stops the conversion between chunks.
+   * @return Success, or the first bulk-I/O error.
+   */
   template <typename MaskType>
   Result<> operator()(const IDataArray& maskArray, IDataArray& featurePhasesArray, const std::atomic_bool& shouldCancel) const
   {
@@ -129,8 +138,9 @@ struct ConvertFeatureMaskFunctor
     auto& outputStore = featurePhasesArray.getIDataStoreRefAs<AbstractDataStore<int32>>();
     const usize numFeatures = maskStore.getNumberOfTuples();
     const usize chunkTuples = std::min(k_TargetChunkTuples, numFeatures);
+    // MaskType may be bool; std::vector<bool> has no contiguous storage.
     auto maskBuffer = std::make_unique<MaskType[]>(chunkTuples);
-    auto outputBuffer = std::make_unique<int32[]>(chunkTuples);
+    auto outputBuffer = std::make_unique<std::vector<int32>>(chunkTuples);
     for(usize offset = 0; offset < numFeatures; offset += chunkTuples)
     {
       if(shouldCancel)
@@ -145,9 +155,9 @@ struct ConvertFeatureMaskFunctor
       }
       for(usize index = 0; index < count; index++)
       {
-        outputBuffer[index] = maskBuffer[index] != static_cast<MaskType>(0) ? 1 : 0;
+        (*outputBuffer)[index] = maskBuffer[index] != static_cast<MaskType>(0) ? 1 : 0;
       }
-      result = outputStore.copyFromBuffer(offset, nonstd::span<const int32>(outputBuffer.get(), count));
+      result = outputStore.copyFromBuffer(offset, nonstd::span<const int32>(outputBuffer->data(), count));
       if(result.invalid())
       {
         return result;
