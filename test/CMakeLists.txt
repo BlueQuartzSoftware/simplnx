@@ -136,6 +136,7 @@ target_compile_definitions(simplnx_test
 target_compile_options(simplnx_test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
+    $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
 
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
