@@ -1,99 +1,109 @@
-# Deviations from DREAM3D 6.5.171: ConvertOrientationsFilter
+# Deviations from DREAM.3D v6.5.171: ConvertOrientationsFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`ConvertOrientations`, SIMPL UUID `e5629880-98c4-5656-82b8-c9fe2b9744de`).
+Part 1 lists the differences from DREAM.3D v6.5.171. D1 is retired; D2 through D5 are active. The shared ID sequence is `ConvertOrientationsFilter-D<N>`, and the Filter UUID is the permanent cross-reference anchor.
 
-Entries are referenced by stable ID (`ConvertOrientationsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-The SIMPLNX algorithm is a **Rewrite** of the filter plumbing under the retained UUID (see `../ConvertOrientationsFilter.md`). All four deviations below are consequences of that rewrite. SIMPLNX is verified-correct independently of 6.5.171 against the Class 3 (Rowenhorst 2015) / Class 1 / Class 4 oracle encoded in `test/ConvertOrientationsTest.cpp` (1032 assertions); these entries are diff-explanation, not correctness findings.
-
-> **Comparison status:** D1, D2, D4 are derived from a side-by-side reading of both implementations (`DREAM3D/.../OrientationAnalysisFilters/ConvertOrientations.cpp` @ 6.5.171 vs `Algorithms/ConvertOrientations.cpp`). A live A/B run is tracked in the report's `Legacy comparison` row.
+The filter dispatch is a rewrite. The shared representations retain their conversion roles; D2 through D5 define the input, capability, validation, and Euler-normalization differences. The test source checks all 56 cross-type pairs against EbsdLib reference values and independently checks the stereographic formula.
 
 ---
 
-## ConvertOrientationsFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ConvertOrientationsFilter-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ConvertOrientationsFilter-D1` |
-| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
-| **Status** | active |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
+| **Status** | retired 2026-09-17 |
 
-**Symptom:** For a given (input, output) representation pair, SIMPLNX and 6.5.171 may differ in the last 1–2 significant figures of float32 output. **Measured** on the toy orientation (Euler 45°/30°/60°): eu→Quaternion, eu→Axis-Angle, eu→Rodrigues, eu→Homochoric are **bit-identical**; eu→OrientationMatrix differs by ≤ 1.5e-8; eu→Cubochoric by ≤ 1.8e-6 (worst single component). Overall max |Δ| = **1.78e-6**. *Scope: the A/B measured only the six Euler-input pairs on a single in-range orientation; the other 36 legacy-shared pairs were compared by source reading only, so the numeric bound above is established for eu→X and inferred (not measured) elsewhere.*
+**Symptom:** The claimed maximum difference of `1.78e-6` did not compare against DREAM.3D v6.5.171. The legacy output came from a local proof version.
 
-**Root cause:** *library-generation drift (OrientationLib vs EbsdLib 3.x).* Both implementations dispatch each requested pair to a **direct** pairwise transform — 6.5.171 `OrientationConverter::convertRepresentationTo()` calls per-pair `toX()` methods that invoke e.g. `eu2om` (the Euler closed form, `OC_CONVERT_BODY(9, OrientationMatrix, eu2om, Eu2Om)`, `OrientationConverter.hpp:492`) and `eu2cu` (which chains `eu2ho→ho2cu`, `:517`); SIMPLNX calls the EbsdLib `input.toX()` members which take the same nominal routes. The residual deltas come from implementation differences accumulated between legacy **OrientationLib** and **EbsdLib 3.x** (constant definitions, expression ordering, series-evaluation details) — largest for Cubochoric, whose cube-root + series expansion is most sensitive to intermediate float32 round-off. That four of six conversions are bit-identical is consistent with this: those transforms' code paths are unchanged between library generations. Both implement the same Rowenhorst 2015 equations; neither is "more correct." *(An earlier draft of this entry attributed the deltas to legacy routing everything through a quaternion intermediate; a source check of `OrientationConverter.hpp` disproved that mechanism and it was corrected here.)* See `../comparisons/ConvertOrientationsFilter/results/comparison.md`.
+**Root cause:** Library. The comparison used the wrong legacy application. The official DREAM.3D v6.5.171 comparison on 2026-09-17 gives identical components for all six shared Euler-input conversions on the original 45°/30°/60° tuple and on 1,288 interior tuples. Both DREAM3D-NX v7.4.1 and v7.4.2 match. These results do not establish a library precision difference.
 
-**Affected users:** Anyone diffing SIMPLNX output bit-for-bit against archived 6.5.171 output. Differences (≤ ~2e-6) are below visualization and typical downstream-analysis thresholds.
+**Affected users:** None for the claimed precision difference on these fixtures. The Euler-boundary defect is documented separately in D5.
 
-**Recommendation:** *either acceptable within tolerance ~1e-5.* Trust SIMPLNX; both satisfy the Rowenhorst oracle within float32 precision, and the measured A/B difference is ≤ 1.8e-6.
+**Recommendation:** Either application gives identical results on the tested interior fixtures. Do not use the withdrawn `1.78e-6` value as a tolerance bound for other orientations or representation pairs.
+
+**Evidence:** `vv_work:ConvertOrientationsFilter/ReadMe.md` identifies the official `PipelineRunner 1.2.828` and withdraws the earlier result. `vv_work:ConvertOrientationsFilter/results/proof_matrix.json` and `vv_work:ConvertOrientationsFilter/results/proof_matrix.md` record zero differing components for all six interior conversions. The algorithm later changed in `4ec21e93f` (2026-09-20, PR #1568) and `a33c370ca` (2026-09-25, PR #1697); the saved run compares the named releases, not the current algorithm.
 
 ---
 
-## ConvertOrientationsFilter-D2
+### ConvertOrientationsFilter-D2
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ConvertOrientationsFilter-D2` |
-| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
 | **Status** | active |
 
-**Symptom:** A pipeline that supplied a **`double`** (float64) orientation array to 6.5.171 cannot supply one to SIMPLNX (the input parameter accepts float32 only), and the output dtype is float32 rather than float64.
+**Symptom:** SIMPLNX rejects float64 orientation arrays that DREAM.3D v6.5.171 accepts.
 
-**Root cause:** *precision (deliberate scope reduction).* 6.5.171 `ConvertOrientations::execute()` branched on the input array type and ran the conversion in `double` for `DoubleArrayType` inputs (`generateRepresentation<double>`). SIMPLNX restricts the input `ArraySelectionParameter` to `DataType::float32` and converts in float32 only. For float64 inputs the legacy intermediate math carried ~16 digits vs SIMPLNX's ~7.
+**Root cause:** Algorithmic choice. DREAM.3D selects `generateRepresentation<float>` or `generateRepresentation<double>` from the input type. SIMPLNX restricts `ArraySelectionParameter` to `DataType::float32` and converts float32 tuples.
 
-**Affected users:** The small number of legacy pipelines that stored orientations as `double`. Standard EBSD ingest produces float32 orientations, which are unaffected.
+**Affected users:** Users whose input orientation arrays use float64.
 
-**Recommendation:** *trust SIMPLNX for float32 workflows.* Users with float64 orientation arrays who require double-precision conversion should note this scope reduction; for EBSD-scale data float32 is the native precision and the difference is immaterial.
+**Recommendation:** Trust SIMPLNX for float32 input. Convert float64 input to float32 only when that precision meets the application requirements; DREAM.3D v6.5.171 retains float64 conversion support.
+
+**Evidence:** The DREAM.3D v6.5.171 source `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ConvertOrientations.cpp` contains both conversion types. `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ConvertOrientationsFilter.cpp` accepts only float32. Every inspected DREAM3D-NX release from v7.0.0 through v7.4.2 has that restriction.
 
 ---
 
-## ConvertOrientationsFilter-D3
+### ConvertOrientationsFilter-D3
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ConvertOrientationsFilter-D3` |
-| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
 | **Status** | active |
 
-**Symptom:** SIMPLNX offers a **Stereographic** representation (input/output type index 7) that 6.5.171 does not.
+**Symptom:** SIMPLNX offers Stereographic as input and output type 7; DREAM.3D v6.5.171 does not.
 
-**Root cause:** *algorithmic choice (new capability).* 6.5.171 `generateRepresentation<T>` constructed a 7-element converter vector (Euler, OrientationMatrix, Quaternion, AxisAngle, Rodrigues, Homochoric, Cubochoric); Stereographic did not exist. SIMPLNX adds the 8th type, verified analytically (Class 1, `st = (x,y,z)/(1+w)`) in the unit test.
+**Root cause:** Algorithmic choice. DREAM.3D creates seven converter classes. SIMPLNX dispatches eight representations, including Stereographic.
 
-**Affected users:** None negatively — purely additive. There is no 6.5.171 output to compare against for any conversion involving Stereographic.
+**Affected users:** Users who select Stereographic. DREAM.3D v6.5.171 has no equivalent conversion path.
 
-**Recommendation:** *trust SIMPLNX.* New capability with an independent analytical oracle; no legacy equivalent exists.
+**Recommendation:** Trust SIMPLNX. `Stereographic closed form (Class 1)` checks Quaternion-to-Stereographic values from `(qx,qy,qz)/(1+qw)`; the dispatch matrix checks the other Stereographic pairs against EbsdLib reference values.
+
+**Evidence:** The seven legacy converters are in `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ConvertOrientations.cpp`. The eight current dispatch groups are in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ConvertOrientations.cpp`; the checks are in `src/Plugins/OrientationAnalysis/test/ConvertOrientationsTest.cpp`.
 
 ---
 
-## ConvertOrientationsFilter-D4
+### ConvertOrientationsFilter-D4
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ConvertOrientationsFilter-D4` |
-| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
 | **Status** | active |
 
-**Symptom:** Selecting the same representation for input and output produces an error in SIMPLNX (`-67005`) before any computation; 6.5.171 errored similarly (`-1000`) but with a different code/message, and 6.5.171 additionally emitted distinct error codes for out-of-range type indices (`-1001`/`-1002`).
+**Symptom:** Invalid inputs return different error codes in SIMPLNX and DREAM.3D v6.5.171.
 
-**Root cause:** *algorithmic choice (preflight refactor).* SIMPLNX delegates input/output type-range validation to the `ChoicesParameter` (which emits the framework `k_Validate_OutOfRange_Error`) and keeps only the same-type check (`-67005`) and array-shape checks (`-67003`/`-67004`) in `preflightImpl`. The legacy `-1001`/`-1002`/`-1004` (converter-failure) error codes have no SIMPLNX equivalent.
+**Root cause:** Algorithmic choice. SIMPLNX returns `-67005` for equal representation types and `-67004` for an incorrect component count. DREAM.3D uses `-1000` and `-1006`. SIMPLNX delegates out-of-range type indices to `ChoicesParameter`; DREAM.3D uses `-1001` and `-1002` for input and output indices. SIMPLNX also rejects multidimensional component shapes with `-67003`.
 
-**Affected users:** Scripts or tests that matched on the legacy numeric error codes `-1000`/`-1001`/`-1002`. No effect on successful conversions.
+**Affected users:** Scripts and tests that match numeric error codes from DREAM.3D v6.5.171.
 
-**Recommendation:** *trust SIMPLNX.* Behavior is equivalent (invalid configurations are still rejected at preflight); only the error-code surface changed.
+**Recommendation:** Trust SIMPLNX. Update numeric error checks to the SIMPLNX codes; both applications reject equal types, out-of-range indices, and incorrect component counts.
+
+**Evidence:** Compare DREAM.3D v6.5.171 `ConvertOrientations::dataCheck()` with current `ConvertOrientationsFilter::preflightImpl()`. `Invalid preflight` checks the index and component-count errors; `Equal Representations` checks all eight equal-type choices.
 
 ---
 
-## ConvertOrientationsFilter-D5
+### ConvertOrientationsFilter-D5
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ConvertOrientationsFilter-D5` |
-| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` |
 | **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.0 changed the converted orientation through Euler normalization. DREAM.3D v6.5.171 was affected and also changed the stored input. |
+| **Fixed in** | DREAM3D-NX v7.4.1 |
 
-**Symptom:** For Euler-angle **input** outside `[0,2π]×[0,π]×[0,2π]`, 6.5.171 and SIMPLNX produce **genuinely different orientations** (not float round-off), and 6.5.171 additionally **mutated the user's stored input array** while SIMPLNX leaves it untouched.
+**Symptom:** Euler normalization can change the represented rotation for negative angles, out-of-range `Phi`, or float32 `Phi = pi`. DREAM.3D v6.5.171 also overwrites the stored Euler tuple.
 
-**Root cause:** *algorithmic choice (sanitization removed).* Every legacy `toX()` ran `sanityCheckInputData()` (`OC_CONVERT_BODY`, `OrientationConverter.hpp:386,403`); for Euler input, `EulerConverter::sanityCheckInputData()` ran `EulerSanityCheck` (`:425-446`) **in place on the actual stored array**: `fmod(φ1, 2π)`, `fmod(Φ, π)`, `fmod(φ2, 2π)` followed by sign flips for negative values. Two consequences: (a) the persisted `EulerAngles` array was silently modified as a side effect of running the filter; (b) `fmod(Φ, π)` and the sign flips are **not rotation-preserving**, so for out-of-range input the legacy conversion result corresponds to a *different orientation* than the one stored. SIMPLNX copies each tuple into a local `OrientationF` and never normalizes, converting exactly the orientation the user supplied. The A/B comparison (D1) used only in-range angles, so this difference did not appear in the measured deltas.
+**Root cause:** Bug. DREAM.3D calls `EulerConverter::sanityCheckInputData()` before conversion. It applies modulo `2*pi`, `pi`, and `2*pi`, then changes negative values to positive values. These operations do not preserve every rotation. The float32 value of `pi` exceeds the double modulo constant, so the middle angle can wrap to nearly zero. DREAM3D-NX v7.0.0 through v7.4.0 apply the same normalization to a local tuple, without changing the stored array. DREAM3D-NX v7.4.1 and later omit this normalization and convert the supplied tuple.
 
-**Affected users:** Pipelines feeding Euler angles outside the fundamental Bunge ranges (e.g. negative angles from upstream arithmetic, or Φ ∈ (π, 2π)). Under 6.5.171 those inputs were silently rewritten and converted as a different orientation; under SIMPLNX they convert as-supplied (EbsdLib's transforms are periodic in φ1/φ2, so only Φ out of `[0,π]` yields a mathematically distinct rotation description).
+**Affected users:** Users with these Euler inputs in the affected releases. Changed rotations can alter downstream orientation analysis. On the comparison matrix, DREAM.3D v6.5.171 changed 143 of 1,288 stored tuples at the float32 `Phi = pi` boundary.
 
-**Recommendation:** *trust SIMPLNX.* Mutating input data as a side effect was a defect-prone behavior, and `fmod(Φ, π)` silently changed the orientation. Users with out-of-range Euler data should normalize it explicitly (upstream) rather than rely on a lossy implicit rewrite.
+**Recommendation:** Trust SIMPLNX. Use DREAM3D-NX v7.4.1 or later, which preserves the input and omits the lossy normalization. Recalculate outputs produced from affected Euler tuples in earlier releases.
+
+**Evidence:** The DREAM.3D v6.5.171 source `Source/OrientationLib/OrientationMath/OrientationConverter.hpp` applies `EulerSanityCheck` to the stored input. Source on every `upstream/release/v7.0.0` through `upstream/release/v7.4.0` calls `m_CheckFunc(input.data())` after copying a tuple in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ConvertOrientationsFilter.cpp`. The v7.4.1 and v7.4.2 algorithm sources call `inputInstance.to##TO_REP()` without that check. The 2026-09-17 artifacts `vv_work:ConvertOrientationsFilter/results/proof_matrix.json`, `vv_work:ConvertOrientationsFilter/results/proof_matrix.md`, and `vv_work:ConvertOrientationsFilter/LegacyPatch.md` isolate the legacy normalization with a local proof version. For `(-0.75, 4.0, 7.0)`, removing the normalization preserves the input and brings all six outputs within `1.2e-7` of DREAM3D-NX v7.4.2. On the boundary matrix, corrected orientation matrices agree within `5.96e-8` and quaternions are identical; raw Rodrigues and Cubochoric representations still differ at the 180-degree singularity. The current filter tests do not include negative-angle or `Phi = pi` regression fixtures.

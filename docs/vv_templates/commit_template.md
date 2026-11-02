@@ -9,7 +9,7 @@ VV: <Filter Human Name> fully V&V'ed
 
 Summary:
 - Found and fixed <N> bug(s) (<one-line per bug, or "Confirmed no bugs">);
-- documented <M> deviation(s) from DREAM3D 6.5.171 (<D1 …, D2 …>);
+- documented <M> deviation(s) from DREAM.3D v6.5.171 (<D1 …, D2 …>);
 - retired <P> tests (<reason: circular oracle / UNIMPLEMENTED stub / etc., or "none">);
 - unit tests replaced with <Q> inlined *<Class X (Name) + Class Y (Name)>* test fixtures;
 - added 3 V&V source-tree deliverables (report, deviations, provenance);
@@ -40,7 +40,7 @@ VV: Compute Feature Neighbor Misorientations fully V&V'ed
 
 Summary:
 - Found and fixed 1 bug (divisor clobbered inside inner j-loop of algorithm.cpp);
-- documented 2 deviations from DREAM3D 6.5.171 (D1 divisor bug, D2 EbsdLib 2.4.1 precision);
+- documented 2 deviations from DREAM.3D v6.5.171 (D1 divisor bug, D2 EbsdLib 2.4.1 precision);
 - retired 2 tests (circular-oracle exemplar consumer + UNIMPLEMENTED stub);
 - unit tests replaced with 4 inlined *Class 1 (Analytical) + Class 4 (Invariant)* test fixtures;
 - added 3 V&V source-tree deliverables (report, deviations, provenance);
@@ -52,7 +52,7 @@ Summary:
 | Situation                                          | Bullet phrasing                                                       |
 |----------------------------------------------------|-----------------------------------------------------------------------|
 | Clean Port, no bugs found                          | `Confirmed no bugs (clean Port);`                                     |
-| No deviations from legacy                          | `Confirmed no deviations from DREAM3D 6.5.171;`                       |
+| No deviations from legacy                          | `Confirmed no deviations from DREAM.3D v6.5.171;`                       |
 | Fresh V&V, no prior tests to retire                | `No prior tests retired (fresh V&V cycle);`                           |
 | Existing tests kept, only new ones added           | `Augmented existing tests with <Q> inlined …;`                        |
 | Doc was already correct                            | *omit the last bullet entirely (it's the only optional one)*          |

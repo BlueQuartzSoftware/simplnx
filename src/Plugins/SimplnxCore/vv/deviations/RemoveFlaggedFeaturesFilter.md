@@ -1,50 +1,12 @@
-# Deviations from DREAM3D 6.5.171: RemoveFlaggedFeaturesFilter
+# Deviations from DREAM.3D v6.5.171: RemoveFlaggedFeaturesFilter
 
-This file lists every documented behavioral difference between SIMPLNX `RemoveFlaggedFeaturesFilter` and its DREAM3D 6.5.171 equivalents, `RemoveFlaggedFeatures` (*Remove*) and `ExtractFlaggedFeatures` (*Extract*).
-
-Entries are referenced by stable ID (`RemoveFlaggedFeaturesFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-On valid input (every FeatureId in range, at least one unflagged feature that owns cells, every flagged feature owning at least one cell) the removal and fill outputs of the two implementations are bit-identical on every fixture run, and the extracted geometry's dimensions, origin and cell arrays match. The deviations below concern inputs outside that envelope, two SIMPLNX-only defects that are fixed, and the packaging of extracted geometries.
+Part 1 lists current differences from DREAM.3D v6.5.171. Part 2 lists fixed SIMPLNX defects. All entries share one stable ID sequence.
 
 ---
 
-## RemoveFlaggedFeaturesFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
 
-| Field | Value |
-|---|---|
-| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D1` |
-| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
-| **Status** | retired 2026-08-13 (fixed in DREAM3D-NX v7.4.2 by PR #1700); regression test added 2026-09-02 |
-
-**Symptom:** With *Fill-in Removed Features* enabled, DREAM3D-NX v7.0.0 through v7.4.1 never returned when a vacated cell's valid face neighbors all belonged to distinct features, or when it had a single valid neighbor. DREAM3D 6.5.171 completed and filled the cell. Reported as GitHub issue #1698.
-
-**Root cause:** `bug` in SIMPLNX. The per-cell tally in `IdentifyNeighbors()` pushed a newly seen feature onto `discoveredFeatures` without incrementing its hit count, so a fill source was only recorded on the second sighting of the same feature. A cell with no repeated neighbor feature never received a source, `FindVoxelArrays()` copied nothing into it, it stayed at -1, and the `do { } while(shouldLoop)` loop repeated the same pass forever. The legacy `n[feature]++` tally counted the first sighting. On large 3D volumes most vacated cells have two face neighbors in the same feature, which hid the defect; it surfaces on thin volumes and on small or isolated removed regions.
-
-**Affected users:** Anyone who enabled *Fill-in Removed Features* on DREAM3D-NX v7.0.0 through v7.4.1 with thin geometries (one slice or one voxel deep) or with small isolated removed features. The pipeline had to be killed; no output was written.
-
-**Recommendation:** `trust SIMPLNX` v7.4.2 or later, whose output is identical to 6.5.171 on the issue's 5x2x1 case and on every other fixture in this V&V. Users on v7.4.1 or earlier must upgrade or disable fill.
-
----
-
-## RemoveFlaggedFeaturesFilter-D2
-
-| Field | Value |
-|---|---|
-| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D2` |
-| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
-| **Status** | retired 2026-09-02 (fixed on the V&V branch) |
-
-**Symptom:** With *Fill-in Removed Features* enabled, DREAM3D-NX v7.0.0 through v7.4.2 never returned when the Feature Ids array contained any cell with FeatureId 0. DREAM3D 6.5.171 completed and left the background cells at 0.
-
-**Root cause:** `bug` in SIMPLNX. `IdentifyNeighbors()` skipped cells with `featureName > 0`, so background cells (0) were treated as unresolved and set `shouldLoop`, but `FindVoxelArrays()` only copies into cells with `featureName < 0`. Background cells were therefore never overwritten and every pass ended with `shouldLoop == true`. The legacy loop tests `featurename < 0`. SIMPLNX now tests `featureName >= 0 -> skip`, matching 6.5.171: background is never a fill target but remains a legal fill source (see the note at the end of the V&V report).
-
-**Affected users:** Anyone who enabled fill on data with unassigned (background) cells, which is the common case after a segmentation with a mask. The pipeline had to be killed.
-
-**Recommendation:** `trust SIMPLNX` at or after this fix; its output is identical to 6.5.171 on the 4x4x1 background fixture. Users on v7.4.2 or earlier must disable fill on data with background cells.
-
----
-
-## RemoveFlaggedFeaturesFilter-D3
+### RemoveFlaggedFeaturesFilter-D3
 
 | Field | Value |
 |---|---|
@@ -52,17 +14,17 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** With fill enabled, when every cell belongs to a flagged feature and the unflagged features own no cells, SIMPLNX returns error `-45436` and leaves the cells at -1; DREAM3D 6.5.171 loops forever. Reproduced on a 4x1x1 volume with `FeatureIds = [1, 1, 1, 1]`, three feature tuples, and only feature 1 flagged: 6.5.171 was still running when killed after 30 seconds.
+**Symptom:** SIMPLNX returns `-45436` when no removed cell can be filled; DREAM.3D loops forever. SIMPLNX also prevents FeatureIds from being ignored and emits warning `-45438`.
 
-**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). The all-flagged guard only inspects the flag array, so an unflagged feature that owns no cells satisfies it. After marking, no cell is non-negative, so no vacated cell ever finds a fill source and neither implementation detected the lack of progress. SIMPLNX now counts the cells that each pass actually fills and stops with a deterministic error when vacated cells remain and the count is zero. A second route to the same non-termination, listing the Feature Ids array itself in *Attribute Arrays to Ignore* so that sources were chosen but the Feature Ids array was never overwritten, is closed by always copying that array and warning (`-45438`). 6.5.171 also loops forever in that case (`voxelArrayNames.removeAll` honors the request). This is the same class of defect as `RequireMinNumNeighborsFilter-D3`.
+**Root cause:** bug. An unflagged feature with no cells passes the all-flagged check but cannot supply fill values. Neither earlier implementation detected a pass without progress. Ignoring FeatureIds also prevented progress. The current algorithm checks progress and always copies FeatureIds.
 
-**Affected users:** Users whose feature Attribute Matrix contains features that own no cells, when the flag array removes every feature that does own cells; and users who list the Feature Ids array in *Attribute Arrays to Ignore* with fill enabled. Other inputs are unaffected.
+**Affected users:** Users who flag every occupied feature or include FeatureIds among the ignored arrays with fill enabled. DREAM3D-NX v7.0.0 through v7.4.2 and DREAM.3D v6.5.171 were affected.
 
-**Recommendation:** `trust SIMPLNX`. The error names the array and explains the two ways to correct the input; the legacy behavior is an unbounded execution.
+**Recommendation:** Trust SIMPLNX. The fix will be in the DREAM3D-NX release after v7.4.2. Keep an unflagged feature that owns cells, or disable fill; after `-45436`, removed cells remain -1.
 
----
+**Evidence:** The tagged legacy removal source and every release source through v7.4.2 omit the progress guard. `Execute Error - no fill progress (-45436)` and `Fill cannot ignore the Feature Ids array (-45438 warning)` cover the fixes. `vv_work:RemoveFlaggedFeaturesFilter/ReadMe.md` and `vv_work:RemoveFlaggedFeaturesFilter/log_6_5_171_C_hang.txt` record the legacy timeout.
 
-## RemoveFlaggedFeaturesFilter-D4
+### RemoveFlaggedFeaturesFilter-D4
 
 | Field | Value |
 |---|---|
@@ -70,35 +32,17 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** When a FeatureId is negative or not less than the feature tuple count, SIMPLNX returns error `-45435` before it modifies anything; DREAM3D 6.5.171 indexed its flag vector out of bounds. In the A/B run (5x2x1, cell 6 set to 5 with five feature tuples) 6.5.171 completed and silently zeroed that cell. The result depended on whatever memory followed the vector.
+**Symptom:** SIMPLNX rejects invalid FeatureIds or tuple counts before removal; DREAM.3D can read beyond an array.
 
-**Root cause:** `bug` in DREAM3D 6.5.171 (and in SIMPLNX before this branch). `remove_flaggedfeatures()` evaluates `activeObjects[gnum]` for every cell without validating `gnum`. SIMPLNX now validates every FeatureId against the flag count in a read-only pass before the marking pass, and also returns `-45437` when the Feature Ids tuple count differs from the geometry cell count, which neither implementation checked before. This is the same class of defect as `RequireMinNumNeighborsFilter-D2`.
+**Root cause:** bug. Earlier removal code indexed the active-feature vector without checking each ID. It also accepted a FeatureIds tuple count that differed from the geometry cell count. Remove and Extract then Remove now validate both before modification, with errors `-45435` and `-45437`.
 
-**Affected users:** Users with a Feature Ids array that does not correspond to the selected feature Attribute Matrix, for example after selecting the wrong Attribute Matrix or after a partial renumbering. Valid inputs are unaffected.
+**Affected users:** Users whose FeatureIds do not match the selected feature data or geometry. DREAM3D-NX v7.0.0 through v7.4.2 and DREAM.3D v6.5.171 were affected.
 
-**Recommendation:** `trust SIMPLNX`. The error names the cell, the value and the valid range, and no data is modified.
+**Recommendation:** Trust SIMPLNX. The fix will be in the DREAM3D-NX release after v7.4.2. Correct the selected arrays or IDs before removal; validation errors leave the data unchanged.
 
----
+**Evidence:** The tagged legacy source and every release source through v7.4.2 contain unchecked marking. The two execute-error tests assert the error codes and unchanged IDs. `vv_work:RemoveFlaggedFeaturesFilter/ReadMe.md` records the legacy out-of-range result on fixture D.
 
-## RemoveFlaggedFeaturesFilter-D5
-
-| Field | Value |
-|---|---|
-| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D5` |
-| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
-| **Status** | retired 2026-09-02 (fixed on the V&V branch) |
-
-**Symptom:** In *Extract* and *Extract then Remove*, DREAM3D-NX v7.0.0 through v7.4.2 ignored a failure of the bounding-box or crop sub-filter's execute step and continued with unset bounds, and reported a sub-filter preflight failure by throwing `std::runtime_error` rather than returning a filter error. Not applicable to 6.5.171, whose extract filter calls `CropImageGeometry` directly and checks no result.
-
-**Root cause:** `bug` in SIMPLNX. After each `filter.execute()` the code tested `preflightResult.outputActions.invalid()` instead of `executeResult.result.invalid()`. SIMPLNX now returns errors `-53901`/`-53902` (bounding box preflight/execute) and `-53903`/`-53904` (crop preflight/execute) carrying the sub-filter's own message.
-
-**Affected users:** Users whose extract run hit a sub-filter failure, chiefly the empty-feature case in D6. Successful extractions were unaffected.
-
-**Recommendation:** `trust SIMPLNX`. Failures are now reported as ordinary filter errors with the cause attached.
-
----
-
-## RemoveFlaggedFeaturesFilter-D6
+### RemoveFlaggedFeaturesFilter-D6
 
 | Field | Value |
 |---|---|
@@ -106,17 +50,17 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** When a flagged feature owns no cell, SIMPLNX emits warning `-53905` and creates no geometry for it; DREAM3D 6.5.171 creates a 1x1x1 geometry named `Feature_<id>` at origin (-1, -1, -1) that contains cell 0 of the source volume. Reproduced on the 4x4x1 fixture with an unused fifth feature flagged: 6.5.171 produced `Feature_4` with `FeatureIds = [0]` and `CellValue = [100]`. DREAM3D-NX v7.0.0 through v7.4.2 threw an uncaught exception on the same input (see D5).
+**Symptom:** SIMPLNX skips an empty flagged feature with warning `-53905`; DREAM.3D can create a false one-cell geometry at origin (-1,-1,-1). Earlier DREAM3D-NX releases threw an exception.
 
-**Root cause:** `bug` in DREAM3D 6.5.171 (bogus output) and in SIMPLNX before this branch (uncaught exception). Legacy `find_feature_bounds()` initializes every bound to -1 and only updates bounds for features that own cells, so an empty feature keeps (-1, -1, -1) to (-1, -1, -1), which `CropImageGeometry` accepts as a one-voxel crop. In SIMPLNX `ComputeFeatureRect` leaves minimum > maximum for an empty feature; the crop preflight rejected that and the algorithm threw. SIMPLNX now detects minimum > maximum, warns, and skips the feature.
+**Root cause:** bug. DREAM.3D initialized empty bounds to -1. Earlier SIMPLNX passed minimum bounds greater than maximum bounds to the crop. The current algorithm detects empty bounds, skips those features and lists them in one warning.
 
-**Affected users:** Users extracting from a feature Attribute Matrix with unused tuples, for example after a filter that removed features without compacting, or with a flag array that marks unused ids. The legacy output contains a geometry that does not correspond to any feature.
+**Affected users:** Users who flag feature tuples that own no cells. DREAM3D-NX v7.0.0 through v7.4.2 and DREAM.3D v6.5.171 were affected.
 
-**Recommendation:** `trust SIMPLNX`. The warning names the feature and the array; no spurious geometry is written.
+**Recommendation:** Trust SIMPLNX. The fix will be in the DREAM3D-NX release after v7.4.2. No geometry should represent a feature that has no cells.
 
----
+**Evidence:** `vv_work:RemoveFlaggedFeaturesFilter/ReadMe.md` records fixture F: DREAM.3D created `Feature_4` with ID 0 and CellValue 100. Tagged legacy extraction initializes bounds to -1. All DREAM3D-NX release sources through v7.4.2 omit the skip check. The empty-feature test asserts one warning and absent geometries.
 
-## RemoveFlaggedFeaturesFilter-D7
+### RemoveFlaggedFeaturesFilter-D7
 
 | Field | Value |
 |---|---|
@@ -124,10 +68,116 @@ On valid input (every FeatureId in range, at least one unflagged feature that ow
 | **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
 | **Status** | active |
 
-**Symptom:** An extracted geometry is named `<Created Image Geometry Prefix>-<id>` with the id zero-padded to the width of the feature count (for example `Extracted_Feature-03` when there are 12 feature tuples) and carries a copy of the source feature Attribute Matrix; DREAM3D 6.5.171 names it `Feature_<id>` with no padding and copies only the cell Attribute Matrix. The geometry's dimensions, origin, spacing and cell arrays are identical in both.
+**Symptom:** SIMPLNX names extracted geometries `<prefix>-<zero-padded id>` and copies the source Feature Attribute Matrix. DREAM.3D uses `Feature_<id>` and copies only cell data.
 
-**Root cause:** `algorithmic choice`. SIMPLNX exposes the prefix as a parameter and pads so that geometries sort in id order; it reuses `CropImageGeometryFilter` with feature renumbering off, which copies the feature Attribute Matrix so feature-level attributes stay available in the extracted geometry.
+**Root cause:** algorithmic choice. SIMPLNX exposes a prefix and pads IDs to the width of the feature tuple count. It delegates extraction to CropImageGeometry with feature renumbering disabled, which copies feature attributes without recomputing them.
 
-**Affected users:** Pipelines or scripts that reference extracted geometries by the legacy `Feature_<id>` name, and users who expect the extracted geometry to contain only cell data.
+**Affected users:** Users whose scripts use legacy geometry names or expect feature attributes to describe only the crop.
 
-**Recommendation:** `trust SIMPLNX`. Set the prefix to `Feature_` for a closer match; note that the id is still zero-padded and the feature Attribute Matrix is still carried.
+**Recommendation:** Trust SIMPLNX. Update geometry paths for the mandatory hyphen and padded ID. Recompute feature attributes when they must describe the cropped cells.
+
+**Evidence:** The Class 1 extraction tests assert names, crop bounds, cell values and unchanged copied feature arrays. The tagged legacy source builds `Feature_` names. `vv_work:RemoveFlaggedFeaturesFilter/ReadMe.md` records the packaging difference for fixture B.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### RemoveFlaggedFeaturesFilter-D1
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D1` |
+| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
+| **Status** | retired 2026-08-13 |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Fill could run forever when a removed cell had one valid face neighbor or when all valid neighbors had different feature IDs.
+
+**Root cause:** bug. The tally recorded a source only after a feature appeared twice. The first sighting now counts as one hit and can supply the cell. DREAM.3D counted the first sighting.
+
+**Affected users:** Users who enable fill on thin geometries or isolated removed regions.
+
+**Recommendation:** Trust SIMPLNX in DREAM3D-NX v7.4.2 or later. Earlier releases require fill to be disabled for these inputs.
+
+**Evidence:** Release sources through v7.4.1 omit the initial hit; v7.4.2 sets it in `FeatureRemovalUtilities.cpp`. The Class 1 distinct-neighbor fixture checks the exact IDs and copy sources. PR #1700 fixed the defect.
+
+### RemoveFlaggedFeaturesFilter-D2
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D2` |
+| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
+| **Status** | retired 2026-09-02 |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** Fill could run forever when input cells had FeatureId 0.
+
+**Root cause:** bug. The neighbor search treated background cells as unresolved, but tuple copying only changed negative IDs. The search now skips all nonnegative IDs. Background remains a valid fill source.
+
+**Affected users:** Users who enable fill on data with background cells.
+
+**Recommendation:** Trust SIMPLNX with the fix. In DREAM3D-NX v7.4.2 or earlier, disable fill when background cells are present.
+
+**Evidence:** Every release source through v7.4.2 uses `featureName > 0` to skip targets. The current Direct and Scanline sources use `>= 0`. The background Class 1 fixture and termination test cover this defect.
+
+### RemoveFlaggedFeaturesFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D5` |
+| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
+| **Status** | retired 2026-09-02 |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected by this result-handling defect. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** Extraction ignored delegated execution failures and threw an exception for delegated preflight failures.
+
+**Root cause:** bug. After execute, SIMPLNX tested the earlier preflight result instead of the execution result. The filter now checks each result and returns errors `-53901` through `-53904` with the delegated message. DREAM.3D had no corresponding Result-based check.
+
+**Affected users:** Users whose bounds computation or crop fails during extraction.
+
+**Recommendation:** Trust SIMPLNX. Use the returned error message to correct the input.
+
+**Evidence:** Every release source through v7.4.2 repeats `preflightResult.outputActions.invalid()` after execute and throws on preflight failure. The current Direct, Scanline and common crop sources return errors. These delegated failure paths have no direct fixture.
+
+### RemoveFlaggedFeaturesFilter-D8
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D8` |
+| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** Extraction left the internal `tempBounds` array in the source and copied it into extracted feature data.
+
+**Root cause:** bug. The bounds sub-filter created an array in the Feature Attribute Matrix, and extraction left it there during cropping. The current algorithm copies bounds into a local buffer and removes the array before cropping. It also removes the array when bounds execution fails. DREAM.3D kept its bounds in a private array.
+
+**Affected users:** Users who extract features and inspect, save or process the resulting feature arrays.
+
+**Recommendation:** Trust SIMPLNX. Extracted feature data no longer contains the internal bounds array.
+
+**Evidence:** All release versions through v7.4.2 read `TempBoundsPath` without removing it. PR #1736 adds the cleanup. `Class 1 Oracle - Extract crops the bounding box of each flagged feature` asserts that `tempBounds` is absent from source and output.
+
+### RemoveFlaggedFeaturesFilter-D9
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RemoveFlaggedFeaturesFilter-D9` |
+| **Filter UUID** | `6e8cc6ec-8b9b-402e-9deb-85bd1cdba743` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
+
+**Symptom:** Preflight reported the same NeighborList deletion through two warnings.
+
+**Root cause:** bug. The filter emitted `-11505` and then invoked the shared helper, which emitted `-5558`. The current preflight uses only the helper for operations that remove features. DREAM.3D did not use this pair of warnings.
+
+**Affected users:** Users who remove features from a Feature Attribute Matrix with NeighborLists.
+
+**Recommendation:** Trust SIMPLNX. One warning identifies the NeighborLists that removal will delete; extraction alone keeps them.
+
+**Evidence:** Every release filter source through v7.4.2 contains both the local warning and `NeighborListRemovalPreflightCode`. PR #1736 removes the local warning. `Preflight Warning - NeighborLists are removed (-5558)` checks one warning for both removal modes and none for extraction.

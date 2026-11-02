@@ -1,107 +1,106 @@
 # V&V Report: RotateEulerRefFrameFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
 | SIMPLNX UUID | `0458edcd-3655-4465-adc8-b036d76138b5` |
 | SIMPLNX Human Name | Rotate Euler Reference Frame |
-| DREAM3D 6.5.171 equivalent | `RotateEulerRefFrame` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/RotateEulerRefFrame.{h,cpp}` |
+| DREAM.3D v6.5.171 equivalent | `RotateEulerRefFrame` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
+| Sign-off | Michael Jackson, 2026-07-05; second engineer: Nathan Young, 2026-07-10 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port** of legacy `RotateEulerRefFrame::execute()`. Same per-tuple kernel `gNew = normalize_cols(eu2om(euler) * ax2om(axis, angle))` → `om2eu`; library swaps only (OrientationLib → EbsdLib, hand-rolled `MatrixMath` → Eigen) plus a double-precision degree→radian conversion and progress/cancel plumbing. |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 8 hand/script-derived fixtures (`AnalyticalFixtures::k_Fixtures`) with closed-form derivations for Z-axis (`phi1' = phi1 - w mod 2pi`), identity + X/111 axes, normalization, and zero-angle cases. **Class 4 (Invariant) companion** — output-range bounds, (n,w)/(-n,w) round-trip, 45°+45° = 90° composability. Cross-checked by an independent numpy script (Rowenhorst 2015 Eq. A.5/A.9 + first-principles frame-rotation derivation). All pass. |
-| Code paths enumerated | 6 of 8 exercised; both cancellation branches remain outside this scope. |
-| Tests today | 5 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 5/5. |
-| Exemplar archive       | `ASCIIData.tar.gz` (pre-existing, shared archive) — provides the 480k-tuple legacy-parity input/comparison CSVs only. **Not an oracle** (legacy-DREAM3D provenance); the Class 1 oracle is inline in the test source. No new archive needed. |
-| Legacy comparison      | **Run** against DREAM3D 6.5.171 on 6 axis/angle cases × 12 orientations (shared CSV input). Max wrap-aware diff 7.2e-7 rad (float32 ULP level). Both implementations independently match the numpy oracle (NX 2.3e-7, legacy 8.1e-7). No deviations; two non-deviations documented. |
-| Bug flags              | None affecting output. Two robustness/policy items addressed: (1) zero-length rotation axis previously produced silent NaN corruption — preflight now rejects it (`-96200`) and the Algorithm class guards it as well (`-67050`); (2) the parallel kernel writes the in-place Euler array via `operator[]` from TBB workers — per the project thread-safety policy this is now gated with `requireArraysInMemory` so parallelization is only enabled for in-core stores (the codebase-sanctioned pattern). Legacy 6.5.171 retains the zero-axis NaN behavior (documented as a non-deviation — not output-correctness). |
-| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Port of `RotateEulerRefFrame` in DREAM.3D v6.5.171. SIMPLNX retains the matrix composition and uses double-precision transforms with serial buffered traversal. |
+| Oracle (confirmed) | Class 1 analytical expectations and Class 4 invariants are encoded in `test/RotateEulerRefFrameTest.cpp`. All pass in CI. |
+| Code paths enumerated | 9 of 15 exercised. Cancellation, direct algorithm rejection, empty input and I/O failures have no direct fixtures. |
+| Tests today | 6 test cases: an archive regression, SIMPL conversion, eight analytical fixtures, axis rejection, three invariant sections and a hidden storage-boundary case. |
+| Exemplar archive | `ASCIIData.tar.gz` supplies 480,000 input Euler tuples and comparison values. Independent expectations are defined in the test source. |
+| Legacy comparison | Not run for the current algorithm against DREAM.3D v6.5.171. The 2026-09-17 comparison used DREAM3D-NX v7.4.1 and v7.4.2, before the buffered traversal change. |
+| Bug flags | None. |
+| V&V phase | COMPLETE. |
 
 ## Summary
 
-`RotateEulerRefFrameFilter` performs a passive rotation of the sample reference frame by a user-supplied axis-angle pair (degrees), rewriting a float32 3-component Bunge ZXZ Euler-angle array in place via `gNew = normalize_cols(eu2om(euler) · ax2om(axis, w))` → `om2eu`. Verification used a **Class 1 (Analytical) oracle** — 8 fixtures with closed-form expected outputs derived from first principles (g' = g·R_active(n,w)) and Rowenhorst 2015 conversion equations, validated by an independent numpy script — plus **Class 4 invariants** (canonical output ranges, inverse-rotation round-trip, angle composability). SIMPLNX matched the oracle on every fixture with zero discrepancies; the 6.5.171 A/B comparison across 6 axis/angle cases shows ULP-level agreement and no deviations.
+`RotateEulerRefFrameFilter` rotates the sample reference frame and replaces a three-component float32 Euler-angle array in place. Eight analytical fixtures and three invariant sections check the rotation, and an archive test checks 480,000 tuples. All pass in CI.
 
 ## Algorithm Relationship
 
-*Classification:* **Port**
+*Classification:* Port
 
-*Evidence:* Near line-by-line translation of legacy `RotateEulerRefFrame::execute()` + `RotateEulerRefFrameImpl::convert()` (SIMPL UUID `{ef9420b2-8c46-55f3-8ae4-f53790639de4}` retained in the legacy-UUID map; SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/RotateEulerRefFrameFilter.json`). Identical control flow: normalize axis → per-tuple eu2om, multiply by ax2om rotation matrix, column-normalize, om2eu, write back in place, parallel over tuples (now gated with `requireArraysInMemory` per the project thread-safety policy — a non-functional change from legacy).
-
-*Port-time deltas:*
-
-1. **Orientation library**: OrientationLib `DOrientTransformsType::{ax2om, eu2om, om2eu}` → EbsdLib `ebsdlib::{AxisAngleDType, EulerDType, OrientationMatrixDType}`. EbsdLib is the direct descendant of OrientationLib; same Rowenhorst-convention equations (`epsijk = +1`). No output change (confirmed by A/B).
-2. **Matrix math**: hand-rolled `MatrixMath::Multiply3x3with3x3D` + `Normalize3x3D` → Eigen row-major multiply + `colwise().normalized()`. Semantically identical column-wise normalization; legacy's per-entry `>1` clamp is unreachable except through rounding. No output change.
-3. **Degree→radian conversion precision**: legacy computes `float rotAngle = angle * pi / 180.0` in **float** before the double-precision transforms; SIMPLNX converts in **double**. ULP-level output difference only (see non-deviation N1).
-4. **Progress reporting + cancel checking**: legacy has neither; SIMPLNX adds throttled progress feedback and per-element `m_ShouldCancel` checks. UX-only.
-5. **Zero-axis preflight guard (SIMPLNX addition)**: preflight error `-96200` for a zero-length rotation axis, which previously NaN-corrupted the array silently in both codebases. Behavior change only for invalid input.
-
-*Material PRs since baseline:* none identified for this filter beyond routine EbsdLib version bumps and the progress-messaging framework migration.
+*Evidence:* `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/OrientationAnalysisLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; both implementations compose orientation and rotation matrices, normalize columns and convert back to Euler angles.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary + **4 (Invariant)** companion. Class 3 (Paper-based) partially inherent — the eu2om/om2eu/ax2om conversions follow Rowenhorst et al 2015 (doi:10.1088/0965-0393/23/8/083501) Eq. A.5/A.9, but those conversions are EbsdLib's own V&V responsibility; this filter's verifiable claim is the composition `g' = g · R_active(n, w)`.
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-*Applied:* Expected outputs derived independently of all three codebases (SIMPLNX, EbsdLib, legacy). First-principles derivation: rotating the sample reference frame by +w (right-hand rule) about unit axis n gives new-frame coordinates `u_new = P(w)·u_old` (P = passive matrix), hence `g' = g·P(w)ᵀ = g·R_active(n,w)` with R_active the Rodrigues rotation matrix. Closed forms follow: Z-axis rotation ⇒ `phi1' = phi1 − w (mod 2π)`, Φ/phi2 unchanged; identity orientation ⇒ `g' = R_active(n,w)`, om2eu by hand (fixtures F1–F7 each carry the derivation as a source comment). A pure-numpy script implementing the derivation + Rowenhorst equations (numpy 2.0.2; no random seed — all fixtures deterministic) validates every closed form and generates the one non-closed-form fixture (F8). Script archived in the verification working folder and reproduced in the provenance sidecar.
+*Applied:* Independent expectations use `g′ = g · R_active(n,w)`; invariants check output ranges, inverse rotation and composition of two 45° rotations.
 
-*Encoded:* `test/RotateEulerRefFrameTest.cpp::"OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures"` — 8 fixtures (`AnalyticalFixtures::k_Fixtures`), tolerance 1e-5 rad, all pass. Invariants: `...::"OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants"` — 3 sections (range bounds, (n,w)/(−n,w) round-trip, 45°+45°=90° composability) over a 6-orientation batch, all pass.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/RotateEulerRefFrameTest.cpp::OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures` contains eight fixtures; `Class 4 Invariants` contains three sections over six orientations. All pass in CI.
 
-*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
+*Second-engineer review:* Michael Jackson, 2026-07-16, as recorded in the oracle review.
 
 ## Bugs found and fixed
 
-No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains both fixes.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `RotateEulerRefFrameFilter-D1` | A zero rotation axis passed validation and entered a calculation with no defined rotation direction. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Preflight rejects axis magnitudes below float32 epsilon with `-96200`; direct algorithm calls return `-67050`. |
+| `RotateEulerRefFrameFilter-D2` | Parallel workers accessed the Euler store without a residency check, permitting unsafe access to nonresident stores. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The current algorithm reads, rotates and writes bounded buffers serially. |
 
 ## Code path coverage
 
-*6 of 8 paths exercised. The 2 gaps (paths 1 and 6) are both cancel branches whose true path is never taken without cancel-signal injection.*
+9 of 15 paths exercised. Each uncovered path has a reason below.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.cpp` (90 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.cpp` (99 lines) and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/RotateEulerRefFrameFilter.cpp` (142 lines).
 
-The algorithm is flat: (a) entry/setup in `operator()` (cancel check, axis normalization, parallel dispatch), (b) per-tuple kernel in `RotateEulerRefFrameImpl::convert`.
+Test names below omit the `OrientationAnalysis::RotateEulerRefFrameFilter:` prefix, except for the archive test `OrientationAnalysis::RotateEulerRefFrame`.
 
-| # | Stage | Path | Test case |
+| # | Phase | Path | Test case |
 |---|-------|------|-----------|
-| 1 | (a) Entry | Cancel-before-start → early return | *Not directly tested. Requires cancel-signal injection; two-line guard, same accepted gap as prior V&V reports.* |
-| 2 | (a) Entry | Axis normalization (`axis.normalize()`) | `Class 1 Analytical Fixtures` — F5 (axis (2,0,0) ≡ (1,0,0)) |
-| 3 | (a) Entry | Zero-length axis → preflight error `-96200` (SIMPLNX addition) | `Zero-Length Axis Fails Preflight` |
-| 4 | (b) Kernel | Per-tuple rotate: eu2om → multiply → column-normalize → om2eu → write-back | All Class 1 fixtures + Class 4 sections + legacy-parity ASCIIData test |
-| 5 | (b) Kernel | om2eu gimbal-degenerate branch (`|g22| ≈ 1`) | `Class 1 Analytical Fixtures` — F1, F6 (Φ = 0 outputs) |
-| 6 | (b) Kernel | Mid-loop cancel check → early return | *Not directly tested — only the false branch runs; the true (cancel) path needs cancel-signal injection (see path 1).* |
-| 7 | (b) Kernel | Progress messaging (`counter >= counterIncrement`, incl. `counterIncrement == 0` for ranges < 100) | Exercised implicitly by every test (1-tuple fixtures take the `counterIncrement == 0` branch; the 480k-tuple ASCIIData test takes the batched branch). |
-| 8 | OOC boundary | 65536-block rotation oracle | `real HDF5 65536-block rotation oracle` — independent expected outputs on actual HDF5 stores |
+| 1 | Entry | Cancel before setup | *Not directly tested. Requires cancellation injection before execution.* |
+| 2 | Preflight | Reject an axis magnitude below float32 epsilon | `Zero-Length Axis Fails Preflight` checks rejection of `(0,0,0)`. |
+| 3 | Entry | Reject an invalid axis in a direct algorithm call with `-67050` | *Not directly tested. Existing fixtures call the filter and reject the axis in preflight.* |
+| 4 | Entry | Normalize a non-unit axis | `Class 1 Analytical Fixtures` — `F5 unnormalized axis x90`. |
+| 5 | Entry | Convert degrees and form the rotation matrix | `Class 1 Analytical Fixtures` — X, Y, Z and `(1,1,1)` rotations, including zero angle. |
+| 6 | Rotation | Compose matrices, normalize columns and convert a general orientation | `Class 1 Analytical Fixtures` — F2, F3 and F8; `Class 4 Invariants`. |
+| 7 | Rotation | Convert an orientation at the Euler singularity | `Class 1 Analytical Fixtures` — F1 has output Phi equal to zero. |
+| 8 | Traversal | Process a full 65,536-tuple buffer | `OrientationAnalysis::RotateEulerRefFrame` checks all values across seven full buffers. |
+| 9 | Traversal | Process a partial final buffer | `OrientationAnalysis::RotateEulerRefFrame` checks the 21,248-tuple tail; `Class 1 Analytical Fixtures` checks one-tuple inputs. |
+| 10 | Traversal | Cancel before processing a buffer | *Not directly tested. Requires cancellation injection during traversal.* |
+| 11 | I/O | Return a buffer-read error | *Not directly tested. No fixture injects a store read failure.* |
+| 12 | I/O | Return a buffer-write error | *Not directly tested. No fixture injects a store write failure.* |
+| 13 | I/O | Write rotated values back into the same array | `Class 1 Analytical Fixtures`; `OrientationAnalysis::RotateEulerRefFrame`. |
+| 14 | Progress | Update progress after a successful buffer write | `OrientationAnalysis::RotateEulerRefFrame` traverses multiple buffers; message contents are not asserted. |
+| 15 | Traversal | Skip the buffer loop for zero tuples | *Not directly tested. All fixtures contain at least one tuple.* |
 
 ## Test inventory
 
+The five ordinary cases pass on Linux, macOS and Windows. All pass in CI.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `OrientationAnalysis::RotateEulerRefFrame` | kept — **reclassified as legacy-parity regression pin** | 480k-tuple ASCIIData run, axis (1,1,1) w=30°, compared to `EulersRotated.csv` (legacy-DREAM3D-generated — *not an oracle*, see provenance). Retained for large-array/parallel-path coverage and historical parity; 1.44M element-wise assertions at 1e-4 tolerance. |
-| `OrientationAnalysis::RotateEulerRefFrameFilter: SIMPL Backwards Compatibility` | kept | DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + `FloatVec3p1FilterParameterConverter` axis+angle merge + array-path decoding. |
-| `OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures` | new-for-V&V | 8 DYNAMIC_SECTIONs (F1–F8), each with derivation comment and 3 component assertions at 1e-5 rad against the independent oracle. |
-| `OrientationAnalysis::RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight` | new-for-V&V | Pins the `-96200` preflight guard added during the algorithm-review pass (previously silent NaN corruption). |
-| `OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants` | new-for-V&V | 3 SECTIONs over a 6-orientation batch: canonical range bounds; (n,w)/(−n,w) round-trip at 1e-4; 45°+45° = 90° composability at 1e-4. |
-| `real HDF5 65536-block rotation oracle` | new-for-V&V | 18 assertions; The existing identity and wraparound analytical fixtures are placed at tuples 65,535 and 65,536. A +90-degree frame rotation about Z gives [3*pi/2,0,0] and [3*pi/2+0.1,0.5,0.3], within the original 1e-5-radian absolute tolerance. The in-place Euler store is HDF5-OOC before and after execution. |
-
-All 5 TEST_CASEs (13 ctest sections) pass at the working commit (in-core build). OOC/dual-build run deferred: the algorithm has no OOC-specific variant (direct `Float32Array` access) and no OOC build is configured in this workspace — same disposition as `BadDataNeighborOrientationCheckFilter`.
-
-OOC recertification (2026-09-21): serial CTest passed 5/5 target entries in each DREAM3DNX build. The hidden `real HDF5 65536-block rotation oracle` passed 18 assertions in the OOC binary. The existing identity and wraparound analytical fixtures are placed at tuples 65,535 and 65,536. A +90-degree frame rotation about Z gives [3*pi/2,0,0] and [3*pi/2+0.1,0.5,0.3], within the original 1e-5-radian absolute tolerance. The in-place Euler store is HDF5-OOC before and after execution. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
+| `OrientationAnalysis::RotateEulerRefFrame` | kept | Imports 480,000 Euler tuples, rotates 30° about `(1,1,1)` and checks all 1,440,000 values against `EulersRotated.csv` at absolute tolerance `1e-4`. This is an archive regression. |
+| `OrientationAnalysis::RotateEulerRefFrameFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check successful loading, filter identity, empty comments and the Euler array path. |
+| `OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures` | new-for-V&V | Eight dynamic sections check three components each at `1e-5` rad: identity, general orientation, wraparound, X rotation, axis normalization, zero angle, `(1,1,1)` rotation and Y rotation. |
+| `OrientationAnalysis::RotateEulerRefFrameFilter: real HDF5 65536-block rotation oracle` | new-for-V&V | Hidden case. Checks six Euler values at tuples 65,535 and 65,536 against independent expectations at `1e-5` rad, and checks the store format before and after execution. |
+| `OrientationAnalysis::RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight` | new-for-V&V | Requires invalid preflight for axis `(0,0,0)`; it does not assert the error code. Covers `RotateEulerRefFrameFilter-D1`. |
+| `OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants` | new-for-V&V | Three sections check inclusive float32 output ranges, inverse-rotation recovery and 45°+45° equivalence to 90° over six orientations; the latter two use `1e-4` tolerance. |
 
 ## Exemplar archive
 
-- **Archive:** `ASCIIData.tar.gz` (pre-existing shared archive; declared in `src/Plugins/SimplnxCore/CMakeLists.txt`)
-- **SHA512:** *(shared archive; see `src/Plugins/SimplnxCore/CMakeLists.txt` — not duplicated here because this filter neither created nor versioned it)*
+- **Archive:** `ASCIIData.tar.gz`
+- **SHA512:** `70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370`
 - **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/RotateEulerRefFrameFilter.md`
 
-No new exemplar archive was created for this V&V cycle: the Class 1 oracle is encoded entirely as inline expected values in the test source, and the Class 4 invariants need no expected output. `EulersRotated.csv` inside `ASCIIData.tar.gz` is legacy-DREAM3D output (circular-oracle provenance) and is retained **only** as a legacy-parity regression pin, explicitly not as a correctness oracle.
+## Deviations from DREAM.3D v6.5.171
 
-## Deviations from DREAM3D 6.5.171
+See `vv/deviations/RotateEulerRefFrameFilter.md` for the root cause, affected users and recommendation. Only Part 1 entries appear here.
 
-- **No deviations observed.** Comparison run on 6 axis/angle cases × 12 orientations (`Code_Review/RotateEulerRefFrame/euler_input.csv`); max wrap-aware difference 7.2e-7 rad. Two non-deviations documented for future-engineer awareness in `vv/deviations/RotateEulerRefFrameFilter.md`:
-  - **N1 (precision)** — float vs double degree→radian conversion; ULP-level only.
-  - **N2 (precision, representation)** — 0 vs 2π canonical representation at the exact wrap boundary (observed for input (π/2, π/4, ¾π) rotated z-90°). Same physical angle.
-**SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `Non-deviation`.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `RotateEulerRefFrameFilter-D1` | SIMPLNX rejects a zero rotation axis before changing the Euler array; DREAM.3D v6.5.171 accepts it. |

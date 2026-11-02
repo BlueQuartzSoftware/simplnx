@@ -1,72 +1,68 @@
 # V&V Report: GroupMicroTextureRegionsFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
 | SIMPLNX UUID | `3f695987-81b1-47c3-8cff-b49cfa219be0` |
-| DREAM3D 6.5.171 equivalent | `GroupMicroTextureRegions` (private filter; not registered for pipeline use) |
+| SIMPLNX Human Name | Group MicroTexture Regions |
+| DREAM.3D v6.5.171 equivalent | `GroupMicroTextureRegions` (private filter; not registered for pipeline use) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
 | Status | COMPLETE |
-| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-08-27 Second engineer: Joey Kleingers, 2026-09-20 |
+| Sign-off | Michael Jackson, 2026-08-27; second engineer: Joey Kleingers, 2026-09-20 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port with minor algorithm improvements and updates for the SIMPLNX API.** The port retains the legacy BFS grouping algorithm and adds reproducibility controls, two-sided Laue validation, and explicit output handling. |
-| Oracle (confirmed) | **Class 1 (Analytical) with Class 4 (Invariant) support.** Five inline analytical fixtures derive expected groups from pure-Bunge c-axis angles, phase classes, volumes, and neighbor lists. |
-| Code paths enumerated | **14 of 20 exercised.** Six defensive or low-value paths remain uncovered and are listed below. |
-| Tests today | **8 ctest cases and 225 assertions.** Tests cover both comparison targets, tolerance acceptance and rejection, mixed-Laue rejection, non-contiguous neighbors, parent-ID randomization, output invariants, and SIMPL conversion. |
-| Exemplar archive | **None for this filter.** The oracle data is generated inline in the unit test. |
-| Legacy comparison | **Run — DREAM3D-NX versus DREAM.3D 6.6.382 (`107b8d51b`).** DREAM.3D 6.5.171 could not instantiate the filter because it was not registered. |
-| Bug flags | **None.** D6 is fixed in this branch. |
-| V&V phase | **COMPLETE.** Second-engineer review and sign-off remain. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes. The filter retains the DREAM.3D v6.5.171 grouping method and changes defaults, random-seed controls, validation, and outputs. |
+| Oracle (confirmed) | Classes 1 and 4: five analytical fixtures and output invariants in `test/GroupMicroTextureRegionsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 20 of 35 exercised. Gaps include cancellation, data-access failures, full cell batches, and selected edge conditions. |
+| Tests today | 9 test cases cover analytical grouping, randomization, phase bounds, optional neighbors, and SIMPL conversion. All pass in CI. |
+| Exemplar archive | None. The tests construct their inputs inline. |
+| Legacy comparison | Not run against DREAM.3D v6.5.171: the filter is private. The 2026-08-27 local proof comparison predates changes to the current algorithm. |
+| Bug flags | None |
+| V&V phase | COMPLETE. Sign-off is recorded above. |
 
 ## Summary
 
-`GroupMicroTextureRegionsFilter` groups neighboring hexagonal Features whose c-axes satisfy a selected angular tolerance. Verification uses inline Class 1 analytical fixtures and Class 4 invariants. The V&V found and fixed one reproducibility defect and documents six active deviations from DREAM.3D 6.5.171.
+`GroupMicroTextureRegionsFilter` groups neighboring hexagonal Features whose c-axes satisfy an angular tolerance. Five Class 1 fixtures and Class 4 invariants check the output, and a regression test checks phase-index errors. All pass in CI.
 
 ## Algorithm Relationship
 
-**Port with minor algorithm improvements and updates for the SIMPLNX API.**
+*Classification:* Minor changes
 
-*Evidence:* SIMPLNX preserves the legacy random-seed selection, BFS traversal, contiguous and optional non-contiguous neighbor processing, c-axis comparison, volume-weighted running average, parent assignment, and optional label shuffle. The SIMPL UUID maps to the SIMPLNX UUID.
-
-Material updates:
-
-1. **SIMPLNX API and validation.** SIMPLNX uses selection parameters, output actions, `DataPath` values, and a separate algorithm class. It inlines the legacy `GroupFeatures` base-class control flow.
-2. **Reproducibility controls.** SIMPLNX exposes parent-ID randomization and seed controls. It uses one generator per execution. See D2 and D6.
-3. **Corrected Laue validation.** SIMPLNX validates both Features when the running average is enabled. See D3.
-4. **Output and precision updates.** SIMPLNX retires the unused `Active` output and uses float32 tolerance conversion. See D5 and D7.
+*Evidence:* `GroupFeatures::execute()` and `GroupMicroTextureRegions::determineGrouping()` in DREAM.3D v6.5.171 supply the same neighbor traversal and c-axis tests; SIMPLNX adds seed controls, two-sided Laue checks, phase bounds, and revised outputs.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** with **4 (Invariant)** support.
+*Class:* 1 (Analytical), with 4 (Invariant).
 
-*Applied:* Pure-Bunge angles `(0, Phi, 0)` give a sample-frame c-axis of `(0, sin Phi, cos Phi)`. Therefore, the c-axis distance is derived directly from the selected `Phi` values. Fixed phase classes, volumes, and neighbor lists then give the expected group partition without using DREAM.3D output.
+*Applied:* Pure-Bunge angles give known c-axis separations; explicit neighbor lists, phases, and unit volumes determine the expected groups.
 
-*Encoded:* `test/GroupMicroTextureRegionsTest.cpp` contains five Class 1 fixtures: `Pure-Phi Bunge`, `Tolerance Boundary`, `Running Average`, `Mixed-Laue Rejection`, and `Non-contiguous neighbor grouping`. Class 4 assertions verify group count, equivalence classes, cell-to-Feature parent consistency, parent Attribute Matrix size, parent-ID positivity, seed roundtrip, randomization invariance, and same-seed determinism. All eight ctest cases pass.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/GroupMicroTextureRegionsTest.cpp` — `Class 1 Analytical (Pure-Phi Bunge)`, `(Tolerance Boundary)`, `(Running Average)`, `(Mixed-Laue Rejection)`, and `Non-contiguous neighbor grouping`: five fixtures, plus `RandomizeParentIds invariants`. All pass in CI.
 
-*Second-engineer review:* Adam L. Pilchak reviewed the metallurgical intent on 2026-08-11. Software implementation and test review are pending PR review.
+*Second-engineer review:* Joey Kleingers, 2026-09-20; Adam Pilchak reviewed metallurgical intent on 2026-08-11.
 
 ## Bugs found and fixed
 
-This branch fixes the defect in this table. The fix will be in the DREAM3D-NX release after v7.4.1.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `GroupMicroTextureRegionsFilter-D3` and `GroupMicroTextureRegionsFilter-D6`. The fix for `GroupMicroTextureRegionsFilter-D8` will be in the DREAM3D-NX release after v7.4.2.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|---|---|---|---|
-| `GroupMicroTextureRegionsFilter-D6` | The default used a clock-derived seed while the running-average comparison was enabled by default. Repeated runs of the same pipeline could produce different region partitions. | DREAM3D-NX v7.0.0 through v7.4.1. | `UseSeed` is enabled by default. The filter stores the seed so the run can be repeated. |
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `GroupMicroTextureRegionsFilter-D3` | The running-average mode could join a cubic Feature to a hexagonal Feature. | No DREAM3D-NX release. DREAM.3D v6.5.171 was affected in its private filter source. | Both Features must have the hexagonal-high Laue class. |
+| `GroupMicroTextureRegionsFilter-D6` | A clock-derived default seed made running-average partitions vary between runs. | No DREAM3D-NX release. DREAM.3D v6.5.171 was affected in its private filter source when running average was enabled. | Fixed-seed execution is enabled by default, and the seed is stored. |
+| `GroupMicroTextureRegionsFilter-D8` | A positive phase beyond Crystal Structures could cause an out-of-bounds read. | DREAM3D-NX v7.4.2. DREAM.3D v6.5.171 was affected in its private filter source. | A participating reference or neighbor with an invalid positive phase returns `-87001`. |
 
 ## Code path coverage
 
-14 of 20 paths exercised. Six defensive or low-value gaps remain.
+20 of 35 paths exercised. Each uncovered path and its test gap are listed below.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/GroupMicroTextureRegions.cpp` (333 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/GroupMicroTextureRegions.cpp` (423 lines); `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/GroupMicroTextureRegionsFilter.cpp` (244 lines).
 
-The algorithm has four logical phases: seed initialization, BFS traversal, grouping decisions, and output finalization.
+Short test names below refer to the full names in Test inventory.
 
 | # | Phase | Path | Test case |
-|---|---|---|---|
+|---|-------|------|-----------|
 | 1 | Seed initialization | Use the supplied RNG seed. | All analytical tests; the Pure-Phi test also verifies the stored seed. |
 | 2 | Seed initialization | Derive the seed from the system clock. | *Not directly tested. This nondeterministic path cannot have a fixed expected parent array.* |
 | 3 | BFS traversal | Disable non-contiguous neighbors. | `Pure-Phi Bunge`; `Default contiguous-only neighbor mode` |
@@ -74,51 +70,65 @@ The algorithm has four logical phases: seed initialization, BFS traversal, group
 | 5 | BFS traversal | Return `-99345` when an enabled non-contiguous list is missing. | *Not directly tested. Selection-parameter validation prevents a missing list during normal filter execution.* |
 | 6 | BFS traversal | Traverse a contiguous neighbor edge. | `Pure-Phi Bunge`; `Tolerance Boundary`; `Running Average`; `Mixed-Laue Rejection` |
 | 7 | BFS traversal | Traverse a non-contiguous neighbor edge. | `Non-contiguous neighbor grouping` |
-| 8 | BFS traversal | Skip an invalid or self neighbor. | *Not directly tested. Valid generated neighbor lists do not contain invalid or self entries.* |
+| 8 | BFS traversal | Skip a negative or self neighbor. | *Not directly tested. The fixtures contain no negative or self entries.* |
 | 9 | Grouping decision | Skip a neighbor that already has a parent. | `Pure-Phi Bunge` exercises reverse edges after a Feature joins a group. |
 | 10 | Grouping decision | Skip a phase-0 reference or candidate. | *Not directly tested. Feature 0 is not present in the generated neighbor lists.* |
 | 11 | Grouping decision | Reject different or non-hexagonal Laue classes. | `Mixed-Laue Rejection` verifies 20 cubic/hexagonal pairs. |
 | 12 | Grouping decision | Compare against the touching Feature. | `Pure-Phi Bunge`; `Tolerance Boundary` |
-| 13 | Grouping decision | Compare against and update the volume-weighted running average. | `Running Average`; `Mixed-Laue Rejection` |
+| 13 | Grouping decision | Compare against and update the running average with unit volumes. | `Running Average`; `Mixed-Laue Rejection` |
 | 14 | Grouping decision | Accept direct angular distance within tolerance. | `Pure-Phi Bunge`; `Running Average`; `Non-contiguous neighbor grouping` |
-| 15 | Grouping decision | Accept the antipodal `pi - w` branch. | *Not directly tested. The analytical fixtures use c-axes in one hemisphere.* |
+| 15 | Grouping decision | Accept the antipodal `pi - w` condition. | *Not directly tested. The analytical fixtures use c-axes in one hemisphere.* |
 | 16 | Grouping decision | Reject angular distance outside tolerance. | `Pure-Phi Bunge`; `Tolerance Boundary`; `Running Average` |
 | 17 | Finalization | Keep sequential parent IDs. | All analytical fixtures |
 | 18 | Finalization | Randomize parent IDs. | `RandomizeParentIds invariants` |
-| 19 | Finalization | Return `-87000` when fewer than two parent tuples exist. | *Not directly tested. Valid fixtures contain real Features and produce at least one parent plus the reserved tuple.* |
+| 19 | Finalization | Return `-87000` when fewer than two parent tuples exist. | *Not directly tested. Every fixture has Feature tuples and produces parents.* |
 | 20 | Finalization | Resize the parent Attribute Matrix and backfill cell parent IDs. | `Pure-Phi Bunge`; `RandomizeParentIds invariants` |
+| 21 | Grouping decision | Reject a positive reference phase beyond Crystal Structures with `-87001`. | `Phase Index Bounds` |
+| 22 | Grouping decision | Reject a positive neighbor phase beyond Crystal Structures with `-87001`. | `Phase Index Bounds` |
+| 23 | Grouping decision | Leave an isolated Feature's invalid phase unused. | `Phase Index Bounds` — isolated Feature section |
+| 24 | Data access | Read Feature arrays into buffers and write Feature parent IDs successfully. | `Class 1 Analytical (Pure-Phi Bunge)` |
+| 25 | Data access | Propagate a failed read of phases, crystal structures, quaternions, or volumes. | *Not directly tested. Requires a failing data store.* |
+| 26 | Data access | Propagate a failed Feature-parent write. | *Not directly tested. Requires a failing data store.* |
+| 27 | Cell mapping | Map a full 65,536-cell batch and advance to another batch. | *Not directly tested. All executing fixtures have fewer cells.* |
+| 28 | Cell mapping | Map a partial final batch. | `Class 1 Analytical (Pure-Phi Bunge)`; `RandomizeParentIds invariants` |
+| 29 | Cell mapping | Propagate a failed cell-array read or write. | *Not directly tested. Requires a failing data store.* |
+| 30 | Cancellation | Stop before selecting the next group seed. | *Not directly tested. Requires cancellation injection.* |
+| 31 | Cancellation | Stop after grouping and before output finalization. | *Not directly tested. Requires cancellation injection.* |
+| 32 | Cancellation | Stop during cell-parent mapping. | *Not directly tested. Requires cancellation injection.* |
+| 33 | Finalization | Propagate a parent Attribute Matrix resize error. | *Not directly tested. Requires a failing resize.* |
+| 34 | Seed search | Stop when all Features have a parent. | `Pure-Phi Bunge`; `RandomizeParentIds invariants` |
+| 35 | Seed search | Wrap the search index to zero after the final Feature. | *Not directly tested. No fixture isolates the wrap condition.* |
 
 ## Test inventory
 
+All pass in CI.
+
 | Test case | Status | Notes |
-|---|---|---|
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Pure-Phi Bunge)` | new-for-V&V, modified | Verifies three analytical groups, cell-to-Feature parent consistency, parent Attribute Matrix size, retired `Active` output absence (D5), and seed roundtrip. 39 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: RandomizeParentIds invariants` | new-for-V&V | Verifies equivalence-class preservation, group count, cell-to-Feature consistency, positivity, same-seed determinism, and shuffle execution. 49 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Tolerance Boundary)` | new-for-V&V | Verifies one 8 degree acceptance and one 12 degree rejection at a 10 degree tolerance. 21 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Running Average)` | new-for-V&V | Verifies that a 0/9/18 degree chain produces two groups under the running-average comparison for every seed order. 20 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Mixed-Laue Rejection)` | new-for-V&V | Verifies that 20 aligned cubic/hexagonal pairs remain separate. A temporary D3 restoration caused 14 pair assertions to fail. 37 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Non-contiguous neighbor grouping` | new-for-V&V | Verifies grouping through an optional non-contiguous list when all contiguous lists are empty. 18 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Default contiguous-only neighbor mode` | new-for-V&V | Verifies that the default contiguous-only configuration executes successfully. 2 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: SIMPL Backwards Compatibility` | kept, modified | Converts the SIMPL 6.4 and 6.5 fixtures after the obsolete `ActiveArrayName` mapping was removed. 39 assertions. |
-| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Valid Filter Execution` (`[UNIMPLEMENTED][!mayfail]`) | retired | The test used empty paths and could not execute the algorithm. The analytical fixtures replace it. |
+|-----------|--------|-------|
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Phase Index Bounds` | kept | Checks `-87001` for invalid reference and neighbor phases; permits an invalid phase on an isolated Feature. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Pure-Phi Bunge)` | new-for-V&V | Checks three groups, cell-to-Feature parent consistency, parent matrix size, absent `Active` output (D5), and stored seed. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: RandomizeParentIds invariants` | new-for-V&V | Checks group membership, group count, cell mapping, positive labels, same-seed determinism, and changed labels when randomization is enabled. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Tolerance Boundary)` | new-for-V&V | Checks 8-degree acceptance and 12-degree rejection at a 10-degree tolerance. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Running Average)` | new-for-V&V | Checks that the 0/9/18-degree chain gives two groups at a 10-degree tolerance with unit volumes and seed 42. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Class 1 Analytical (Mixed-Laue Rejection)` | new-for-V&V | Checks that all 20 aligned cubic/hexagonal pairs remain separate. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Non-contiguous neighbor grouping` | new-for-V&V | Checks grouping through the optional list with empty contiguous lists. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: Default contiguous-only neighbor mode` | new-for-V&V | Checks successful preflight and execution with optional neighbors disabled; does not assert parent values. |
+| `OrientationAnalysis::GroupMicroTextureRegionsFilter: SIMPL Backwards Compatibility` | kept | Checks loaded parameters in `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections; the obsolete `ActiveArrayName` is ignored. |
 
 ## Exemplar archive
 
-- **Archive:** None. The test creates all oracle inputs inline.
-- **SHA512:** N/A
+- **Archive:** None. All oracle inputs are constructed inline.
+- **SHA512:** Not applicable. `src/Plugins/OrientationAnalysis/test/CMakeLists.txt` has no archive registration for this filter.
 - **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/GroupMicroTextureRegionsFilter.md`
 
-## Deviations from DREAM.3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-DREAM.3D 6.5.171 contains the filter source but does not register the filter. Therefore, a direct pipeline comparison is not possible. The empirical A/B comparison used DREAM.3D 6.6.382, built from commit `107b8d51b`, because that version registers the filter. Both implementations ran only Group MicroTexture Regions on byte-identical input. The independent Class 1 and Class 4 oracle establishes correctness. The DREAM.3D 6.6.382 comparison provides deviation and migration evidence.
-
-See `vv/deviations/GroupMicroTextureRegionsFilter.md` for the root cause, affected users, and recommendation for each deviation.
+See `vv/deviations/GroupMicroTextureRegionsFilter.md` for the root cause, affected users, and recommendation. These differences follow from the private DREAM.3D v6.5.171 source.
 
 | Deviation | Observed difference |
-|---|---|
-| `GroupMicroTextureRegionsFilter-D2` | DREAM.3D always randomizes parent labels. DREAM3D-NX uses reproducible sequential labels by default and provides optional seeded randomization. |
-| `GroupMicroTextureRegionsFilter-D3` | With the running average enabled, DREAM.3D can group a non-hexagonal Feature with a hexagonal Feature. DREAM3D-NX validates both Laue classes and rejects the pair. |
-| `GroupMicroTextureRegionsFilter-D4` | DREAM.3D defaults to the touching-Feature comparison. DREAM3D-NX defaults to the running-average comparison. |
-| `GroupMicroTextureRegionsFilter-D5` | DREAM.3D creates an unused `Active` array. DREAM3D-NX retires this output and retains the parent Attribute Matrix. |
-| `GroupMicroTextureRegionsFilter-D6` | Released DREAM3D-NX versions used a clock-derived seed by default. The verified branch enables a fixed seed by default. |
-| `GroupMicroTextureRegionsFilter-D7` | DREAM.3D and DREAM3D-NX use different pi precision when converting the tolerance to radians. A candidate at the float32 boundary can produce a different result. |
+|-----------|---------------------|
+| `GroupMicroTextureRegionsFilter-D2` | DREAM.3D randomizes parent labels by default. SIMPLNX exposes label randomization and fixed-seed controls. |
+| `GroupMicroTextureRegionsFilter-D3` | SIMPLNX checks both Features' Laue classes in running-average mode. DREAM.3D checks only the candidate's class. |
+| `GroupMicroTextureRegionsFilter-D4` | SIMPLNX defaults to running-average comparison and a 20-degree tolerance. DREAM.3D defaults to touching-Feature comparison and 1 degree. |
+| `GroupMicroTextureRegionsFilter-D5` | SIMPLNX omits the unused `Active` output and retains the parent Attribute Matrix. |
+| `GroupMicroTextureRegionsFilter-D7` | Float32 tolerance conversion in SIMPLNX can change a decision at the acceptance boundary. |

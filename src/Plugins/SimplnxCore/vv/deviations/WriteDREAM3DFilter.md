@@ -1,12 +1,12 @@
-# Deviations from DREAM3D 6.5.171: WriteDREAM3DFilter
+# Deviations from DREAM.3D v6.5.171: WriteDREAM3DFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent (`DataContainerWriter`).
-
-Entries are referenced by stable ID (`WriteDREAM3DFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
+Part 1 lists file-format and data-representation differences from `DataContainerWriter` in DREAM.3D v6.5.171. Part 2 lists shared-I/O defects found and fixed during this filter's V&V. Both parts use the stable `WriteDREAM3DFilter-D<N>` sequence.
 
 ---
 
-## WriteDREAM3DFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### WriteDREAM3DFilter-D1
 
 | Field | Value |
 |---|---|
@@ -14,19 +14,19 @@ Entries are referenced by stable ID (`WriteDREAM3DFilter-D<N>`) from the V&V rep
 | **Filter UUID** | `b3a95784-2ced-41ec-8d3d-0242ac130003` |
 | **Status** | active |
 
-**Symptom:** A `.dream3d` file written by SIMPLNX is not byte-compatible with, and cannot be opened by, a DREAM3D 6.5.171 install expecting the legacy layout — and the reverse is only possible through SIMPLNX's dedicated legacy-import code path (`ReadDREAM3DFilter`'s legacy `DataContainers` reader), not by treating the file as interchangeable.
+**Symptom:** A SIMPLNX `.dream3d` file uses a different HDF5 layout from a DREAM.3D v6.5.171 file and cannot serve as a legacy-format replacement.
 
-**Root cause:** Algorithmic choice. SIMPLNX writes a clean-sheet v8 HDF5 layout: a top-level `DataStructure` group (vs. legacy's `DataContainers` group), a `FileVersion` attribute of `"8.0"` (vs. legacy `"7.0"`), an embedded JSON pipeline representation (vs. legacy's own pipeline serialization), atomic-rename write semantics (`AtomicFile`, so a crash mid-write cannot leave a corrupt file at the destination path), and an optional gzip/deflate compression scheme for `DataArray`/`NeighborList` datasets that has no legacy equivalent. This has been true since the filter's introduction — it was never a translation of legacy `DataContainerWriter`'s C++ (see Algorithm Relationship in the V&V report).
+**Root cause:** Algorithmic choice. SIMPLNX writes file version 8.0 with a `DataStructure` group. DREAM.3D v6.5.171 writes version 7.0 with a `DataContainers` group. The new writer supports nested data objects, optional gzip compression and atomic replacement of the HDF5 destination. The legacy UUID mapping preserves the save-data role and converts the output-path and XDMF parameters; it does not promise the same file layout. Converted SIMPL pipelines disable compression, and the legacy time-series option has no corresponding writer parameter.
 
-**Affected users:** Anyone attempting to open a SIMPLNX-written `.dream3d` file directly in a DREAM3D 6.5.171 install, or vice versa, outside of DREAM3D-NX's own dual-format `ReadDREAM3DFilter`. Users staying entirely within DREAM3D-NX (write with `WriteDREAM3DFilter`, read with `ReadDREAM3DFilter`) never observe this — round-trip fidelity within the new format is verified by the Class 1 tests in the V&V report.
+**Affected users:** Users who exchange `.dream3d` files with DREAM.3D v6.5.171 or read the HDF5 layout directly.
 
-**Why no A/B comparison was attempted:** Because the two writers deliberately target different on-disk contracts, a byte-level or dataset-level A/B diff between a SIMPLNX-written file and a 6.5.171-written file would not measure anything meaningful — every dataset path, group name, and file-version tag differs by construction, so the diff would be 100% noise, not signal. This is why the V&V report's "Legacy comparison" is marked **Not run — and not applicable** rather than "deferred." `ReadDREAM3DFilter` is the only tool in either codebase that understands both the legacy `DataContainers` layout and the current `DataStructure` layout; it is the correct place to verify cross-format fidelity (import old → re-export new → confirm no data loss), not a Write-side A/B.
+**Recommendation:** Trust SIMPLNX for the new file format. Use `ReadDREAM3DFilter` to import legacy files into DREAM3D-NX, and update external readers to the version 8 layout.
 
-**Recommendation:** Trust SIMPLNX. The new format is a deliberate design improvement (atomicity, compression, JSON pipeline embedding) required for capabilities legacy DREAM3D never had (out-of-core datasets, versioned pipeline metadata). It is not "wrong" relative to 6.5.171; it is a different, and newer, on-disk contract. DREAM3D-NX remains able to *read* legacy 6.5.171 files via `ReadDREAM3DFilter`'s legacy import path, so migration is one-directional by design (import old, export new) rather than bidirectional.
+**Evidence:** `src/simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp` defines versions 7.0 and 8.0. `WriteDREAM3DFilter::FromSIMPLJson()` defines the parameter conversion. SIMPL source `0afaa6854` (the last revision before the DREAM.3D v6.5.171 tag date) defines version 7.0 and `DataContainers` in `Source/SIMPLib/Common/Constants.h`; `Source/SIMPLib/CoreFilters/DataContainerWriter.cpp` writes that layout. The round-trip tests compare constructed values, not bytes from a legacy file.
 
 ---
 
-## WriteDREAM3DFilter-D2
+### WriteDREAM3DFilter-D2
 
 | Field | Value |
 |---|---|
@@ -34,10 +34,58 @@ Entries are referenced by stable ID (`WriteDREAM3DFilter-D<N>`) from the V&V rep
 | **Filter UUID** | `b3a95784-2ced-41ec-8d3d-0242ac130003` |
 | **Status** | active |
 
-**Symptom:** A pipeline that would have produced `StatsDataArray` or `StructArray` objects in legacy DREAM3D (e.g., ensemble statistics from a "Generate Ensemble Statistics"-style filter) cannot have those objects written to a `.dream3d` file by `WriteDREAM3DFilter` in the current develop branch — there is nothing in the `DataStructure` for the writer to serialize, because the types themselves do not exist yet.
+**Symptom:** Imported legacy statistics use groups and arrays in SIMPLNX instead of native `StatsDataArray` and `StructArray` objects.
 
-**Root cause:** Library (incomplete port, out of scope for this V&V cycle). `StatsDataArray` and `StructArray` are DREAM3D 6.5.171 `DataObject` types whose simplnx equivalents are being implemented on a separate, not-yet-merged branch. `WriteDREAM3DFilter`'s own write path (`Algorithms/WriteDREAM3D.cpp`) has no special-case logic to reject or special-case these types — the gap is entirely upstream, in `DataStructure`/`HDF5::DataStructureWriter` not yet having a type to construct. This V&V pass covers everything `WriteDREAM3DFilter` can currently write; it makes no claim about statistics data because that data cannot currently exist in a simplnx `DataStructure`.
+**Root cause:** Library. SIMPLNX has no `StatsDataArray` or `StructArray` DataObject type. Its legacy reader recognizes the `Statistics` object type, creates a `Statistics` DataGroup and recursively imports supported child groups, datasets and attributes. The writer has HDF5 factories for the resulting groups and arrays. The absence of the legacy C++ types does not mean that statistics must be absent from exported files.
 
-**Affected users:** Anyone migrating a legacy pipeline that computes per-ensemble statistics. Their exported SIMPLNX `.dream3d` file will simply lack the statistics group entirely (there being no such object to write) until the separate `StatsDataArray`/`StructArray` port lands and this filter is re-verified against it.
+**Affected users:** Users who migrate legacy statistics or use software that expects the legacy statistics object types and schema.
 
-**Recommendation:** Trust 6.5.171 for statistics data until the pending port lands. This is a temporary feature gap, not a correctness defect in `WriteDREAM3DFilter` itself — re-run this V&V cycle's oracle tests once `StatsDataArray`/`StructArray` exist in this branch to confirm the writer handles them correctly.
+**Recommendation:** Trust SIMPLNX for saving its supported groups and arrays. Adapt consumers to the imported representation instead of expecting legacy object types or a legacy-format export.
+
+**Evidence:** `src/simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.cpp` implements `readLegacyStatsDataArray()` and `readLegacyStatsDataArrayChild()`. `src/simplnx/DataStructure/IO/HDF5/DataIOManager.cpp` registers DataGroup, numeric-array and StringArray factories. SIMPL source `0afaa6854` contains `Source/SIMPLib/DataArrays/StatsDataArray.cpp` and `StructArray.hpp`. The writer test file has no statistics-specific import/export fixture.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### WriteDREAM3DFilter-D3
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `WriteDREAM3DFilter-D3` |
+| **Filter UUID** | `b3a95784-2ced-41ec-8d3d-0242ac130003` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** XDMF attribute references on node geometries could contain the geometry name where the HDF5 filename was required.
+
+**Root cause:** Bug. `WriteXdmfNodeGeometry1D`, `WriteXdmfNodeGeometry2D` and `WriteXdmfNodeGeometry3D` exchanged two `std::string_view` arguments when they called the lower-dimensional helper. The compiler accepted the swapped arguments. The helpers now preserve the geometry-name and filename order. DREAM.3D v6.5.171 uses a different writer and has no such forwarding chain.
+
+**Affected users:** Users who generate XDMF sidecars for edge, surface or volume node geometries with attributes handled by a lower-dimensional helper.
+
+**Recommendation:** Trust SIMPLNX. Regenerate affected sidecars with DREAM3D-NX v7.4.2 or later.
+
+**Evidence:** PR #1683 (`9bcf794e9`) fixes all three calls in `src/simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.cpp`. Direct source checks of every `upstream/release/v7.0.0` through `upstream/release/v7.4.1` show the exchanged arguments; `upstream/release/v7.4.2` has the corrections. `CheckXdmfFile()` in `src/Plugins/SimplnxCore/test/DREAM3DFileTest.cpp` checks filename prefixes in the pipeline/sidecar combination and file-I/O tests. It does not resolve every referenced HDF5 dataset. SIMPL `0afaa6854`, `Source/SIMPLib/DataContainers/DataContainer.cpp`, passes the container name and HDF5 filename separately to its geometry and attribute writers.
+
+---
+
+### WriteDREAM3DFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `WriteDREAM3DFilter-D4` |
+| **Filter UUID** | `b3a95784-2ced-41ec-8d3d-0242ac130003` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** The shared file reader could access an invalid result instead of returning a DataStructure import error.
+
+**Root cause:** Bug. After a successful pipeline import, the shared `ReadFile()` utility imported the DataStructure but checked `pipeline.invalid()` again. A failed DataStructure import then reached `dataStructure.value()`. The reader now tests `dataStructure.invalid()` and returns its errors. DREAM.3D v6.5.171 does not use this combined Result-based reader.
+
+**Affected users:** Callers of the shared `ReadFile` utility, including writer round-trip checks, when pipeline import succeeds but DataStructure import fails.
+
+**Recommendation:** Trust SIMPLNX. Use DREAM3D-NX v7.4.2 or later to receive the DataStructure import error.
+
+**Evidence:** PR #1683 (`9bcf794e9`) changes the tested result in `src/simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.cpp`. Every release source from `upstream/release/v7.0.0` through `upstream/release/v7.4.1` repeats the pipeline check; `upstream/release/v7.4.2` checks the DataStructure result. SIMPL `0afaa6854`, `Source/SIMPLib/CoreFilters/DataContainerReader.cpp`, uses a separate DataContainerArray reader. The writer tests cover successful combined reads but do not inject this DataStructure import failure.

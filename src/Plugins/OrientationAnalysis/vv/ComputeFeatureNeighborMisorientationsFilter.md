@@ -1,156 +1,111 @@
 # V&V Report: ComputeFeatureNeighborMisorientationsFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
-| SIMPLNX UUID               | `0b68fe25-b5ef-4805-ae32-20acb8d4e823`                |
-| SIMPLNX Human Name         | Compute Feature Neighbor Misorientations              |
-| DREAM3D 6.5.171 equivalent | `FindMisorientations` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.{h,cpp}` (UUID `286dd493-4fea-54f4-b59e-459dd13bbe57`) |
-| Verified commit            | *<filled at SBIR deliverable assembly>*               |
-| Status | COMPLETE     |
-| Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion + divisor bug fix, 2026-06-02)*                                             |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
+| SIMPLNX UUID | `0b68fe25-b5ef-4805-ae32-20acb8d4e823` |
+| SIMPLNX Human Name | Compute Feature Neighbor Misorientations |
+| DREAM.3D v6.5.171 equivalent | `FindMisorientations` (UUID `286dd493-4fea-54f4-b59e-459dd13bbe57`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-06-02; second engineer: Nathan Young, 2026-06-09 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Port with one inherited bug corrected** — same per-feature/per-neighbor loop structure + phase-match gate. `QuatF`→`QuatD`; `getMisoQuat`→`calculateMisorientation`. D1 (divisor reassignment inside inner j-loop) corrected during this V&V cycle. UUID reassigned; `Find`→`Compute` rename.       |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 3 hand-derived data fixtures + 1 Class 4 invariants test covering single-phase, mixed-phase neighbor-order variants (incl. the bug-exposing configuration), and the per-feature-averaging skip path. **Class 4 (Invariant) companion** — non-negativity, cubic max-angle bound, NaN-on-mismatch convention, and the canonical per-feature averaging formula `sum-of-non-NaN-entries / count-of-non-NaN-entries` asserted in the dedicated Invariants test.                                                                        |
-| Code paths enumerated | 7 of 10 exercised. Cancellation, average-disabled output, and an asserted all-mismatch average remain gaps described below. |
-| Tests today | 7 registered tests plus 1 hidden HDF5 chunk-tail test; analytical values, invariants, bounds, tuple validation, and SIMPL conversion. |
-| Exemplar archive       | **None — inline-constructed in test source.** The pre-existing main exemplar TEST_CASE (consumed `6_6_stats_test_v2.tar.gz`) and the `[.][UNIMPLEMENTED][!mayfail]` `Misorientation Per Feature` stub TEST_CASE were **retired 2026-06-02** because (a) the exemplar arrays were a circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output) and (b) the UNIMPLEMENTED stub left `ComputeAvgMisors=true` with zero CI coverage, which is precisely why the divisor bug (D1) went undetected. The 4 hand-derived data fixtures cover all 5 algorithmic paths and replace both retired tests. |
-| Legacy comparison      | **Source-inspection comparison against DREAM3D 6.5.171** completed. Two deviations observed: **D1 (divisor bug)** — legacy `FindMisorientations.cpp` has the same `tempMisoList = featureNeighborList.size();` reassignment inside the inner j-loop; SIMPLNX corrected the bug during this V&V cycle; users will observe per-feature `AvgMisorientations` values shift on mixed-phase data when migrating from 6.5.171. **D2 (EbsdLib 2.4.1 CubicOps precision improvement)** — precision-class deviation analogous to ComputeFeatureReferenceMisorientations D1 and BadDataNeighborOrientationCheck non-deviation; non-observable on the data fixtures (no sym-op-aligned features), observable on real EBSD data at the per-feature average level.    |
-| Bug flags              | **One legacy bug, resolved in SIMPLNX** — D1, divisor reassigned inside inner j-loop. Confirmed in bug_triage.md and traced to algorithm.cpp:75 (pre-fix). Fixed 2026-06-02; verified by the `Mixed Phase Neighbors (exposes divisor bug)` test which FAILED on the pre-fix code and PASSES on the post-fix code.                                                    |
-| V&V phase              | **All V&V work complete per V2 policy.** Class 1 + Class 4 oracle confirmed against 5-test suite; divisor bug fixed; circular-oracle archive + UNIMPLEMENTED stub retired; legacy A/B by source inspection; user-facing doc updated. Three source-tree deliverables (this report + `vv/deviations/...` + `vv/provenance/...`) are in place. **V&V complete and signed off by Michael Jackson (technical authority), 2026-06-02.**                                                   |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes. The port of DREAM.3D v6.5.171 `FindMisorientations` corrects the averaging divisor and checks phase bounds. |
+| Oracle (confirmed) | Classes 1 and 4: three analytical fixtures and one invariant fixture in `test/ComputeFeatureNeighborMisorientationsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 8 of 17 exercised. Gaps include cancellation, disabled averaging, zero-divisor output assertions, other Laue classes, and storage-boundary execution. |
+| Tests today | 8 test cases: 3 analytical, 1 invariant, 2 validation, 1 conversion, and 1 hidden storage-boundary case. |
+| Exemplar archive | `6_6_stats_test_v2.tar.gz` is retired for this filter's tests. Inline analytical fixtures define the expected outputs. |
+| Legacy comparison | Not run on the current algorithm. The DREAM.3D v6.5.171 comparison dated 2026-09-17 predates the phase-bounds fix. |
+| Bug flags | None |
+| V&V phase | Oracle fixtures, source review, and defect corrections are complete. A legacy comparison with the current algorithm remains open. |
 
 ## Summary
 
-`ComputeFeatureNeighborMisorientationsFilter` computes, for each feature in the input dataset, the misorientation angles (in degrees) between the feature's average orientation and each of its same-phase neighboring features' average orientations. Misorientations are stored as a per-feature list (`MisorientationList`, a `NeighborList<float32>`). When the optional `ComputeAvgMisors` parameter is set to `true`, the filter also writes a per-feature `AvgMisorientations` array containing the average of the non-NaN entries in each feature's misorientation list. Neighbors with a different phase from the focal feature produce a `NaN` entry in the list and are excluded from the average.
-
-Verification is via a **Class 1 (Analytical) hand-derived data-fixture set of 3 unit tests + 1 Class 4 invariants test**. The fixtures use pure φ1-rotation quaternions (Bunge ZXZ Euler `(φ1, 0, 0)`) so that misorientation values are closed-form derivable: for Δφ1 ∈ {0°, 5°, 10°} and cubic symmetry, the symmetry-reduced misorientation equals `|Δφ1|`. The fixtures vary the *order* in which phase-matched and phase-mismatched neighbors appear in the feature's neighbor list to systematically exercise the per-mismatch divisor decrement path.
-
-**One inherited bug is resolved.** The legacy DREAM3D 6.5.171 `FindMisorientations` filter — and the SIMPLNX Port of it prior to this cycle — contained a divisor bug at the per-feature averaging step: the divisor variable `tempMisoList` was reassigned to `featureNeighborList.size()` *inside* the inner j-loop instead of *before* it, clobbering the per-mismatch decrement at the next j-iteration. The bug caused per-feature averages to use the full neighbor-list size as the divisor whenever the last-iterated neighbor was a phase match, regardless of how many earlier mismatches the loop encountered. The bug went undetected for the lifetime of both implementations because the `ComputeAvgMisors=true` test in the SIMPLNX suite was an `[.][UNIMPLEMENTED][!mayfail]` stub with zero CI coverage. The V&V cycle's `Mixed Phase Neighbors (exposes divisor bug)` data fixture — which constructs a neighbor list `[match, mismatch, match]` and asserts the correct average `(5 + 10) / 2 = 7.5°` — failed on the pre-fix code (producing the buggy `15 / 3 = 5.0°`) and passes on the post-fix code. The fix moves the `tempMisoList = featureNeighborList.size();` assignment from inside the j-loop (line 75 pre-fix) to before the j-loop (alongside the `tempMisorientationLists[i].assign(...)` at line ~67), so the per-mismatch decrement is preserved across iterations.
-
-A pre-existing `6_6_stats_test_v2.tar.gz` archive (shared with `ComputeKernelAvgMisorientationsFilter`) was retired during this V&V cycle: the exemplar arrays were generated from a pre-EbsdLib-2.4.1 SIMPLNX run (circular oracle), and the EbsdLib 2.4.1 `CubicOps::calculateMisorientationInternal` precision improvement shifted the exemplar values beyond the regression-check epsilon. The data fixtures cover all 5 algorithmic paths analytically and remove the circular-oracle dependency. Source inspection of the legacy `FindMisorientations` confirms the SIMPLNX algorithm is a clean Port; the only remaining legacy-vs-SIMPLNX differences are the post-fix divisor (D1) and the EbsdLib precision improvement (D2 — precision-class).
+`ComputeFeatureNeighborMisorientationsFilter` calculates neighbor misorientation angles in degrees when the two features have the same valid Laue class. It can also calculate the mean of those angles, excluding incompatible neighbors. Three Class 1 fixtures and one Class 4 fixture check the outputs; the divisor and phase-bounds defects are fixed.
 
 ## Algorithm Relationship
 
-*Classification:* **Port (with UUID reassignment, name rename, and one divisor-bug fix)** ~~| Minor changes | Rewrite | New filter~~
+*Classification:* Minor changes
 
-*Evidence:* The SIMPLNX algorithm at `Algorithms/ComputeFeatureNeighborMisorientations.cpp` (~120 lines) is a near line-by-line translation of legacy `FindMisorientations::execute()` (DREAM3D 6.5.171). Same per-feature outer loop, same per-neighbor inner loop, same phase-match gate, same optional average computation. SIMPLNX was assigned a new UUID (`0b68fe25-...` vs legacy `286dd493-...`) for the `Find`→`Compute` rename plus the `FeatureNeighbor` qualifier (clarifying that this filter computes feature-to-neighbor misorientations, distinguishing it from the per-cell and per-reference misorientation filters in the same module).
-
-*Port-time deltas:*
-
-1. **EbsdLib API**: `getMisoQuat(q1, q2, n1, n2, n3) → float angle` → `calculateMisorientation(q1, q2) → AxisAngleDType`. Same math via `LaueOps`.
-2. **Quaternion precision**: `QuatF` (float32) → `QuatD` (double internal). Float32 stored values are promoted to double for the math; per-neighbor misorientations are cast back to `float32` for storage in the `NeighborList<float32>`.
-3. **Cancel checks**: SIMPLNX adds `m_ShouldCancel.load()` at the outer-loop top; legacy had no cancel mechanism.
-4. **EbsdLib 2.4.1 CubicOps precision improvement** (external dependency change): manifests on real EBSD data with cubic-phase sym-op-aligned grain-pair boundaries; non-observable on the V&V data fixtures (pure φ1 rotations). See D2.
-5. **Divisor bug fix** (2026-06-02): `tempMisoList = featureNeighborList.size();` moved from inside the inner j-loop (line 75 pre-fix) to before the j-loop (alongside `tempMisorientationLists[i].assign(...)` at line ~67). See D1.
-
-*Material PRs since baseline (2025-10-01):* None identified that materially change this filter's algorithm.
+*Evidence:* DREAM.3D v6.5.171 `FindMisorientations::execute()` and the current algorithm use the same nested loops and crystal-structure gate. SIMPLNX corrects the averaging divisor and checks phase bounds.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary + **4 (Invariant)** companion. Class 3 (Paper-based) N/A — math is delegated to `ebsdlib::LaueOps::calculateMisorientation` and verified in EbsdLib's own V&V.
+*Class:* 1 (Analytical), with 4 (Invariant).
 
-### Applied (Class 1 — Analytical)
+*Applied:* Cubic rotations about Z give 5° and 10° neighbor angles and a 7.5° mean; incompatible crystal structures give NaN entries, and the invariant fixture checks finite-entry bounds and the mean formula.
 
-Per-neighbor misorientation values are derived in closed form from the input `AvgQuats` + `FeaturePhases` + `NeighborList` + `CrystalStructures` arrays by hand-tracing the algorithm. The fixtures use pure φ1-rotation quaternions (Bunge ZXZ Euler `(φ1, 0, 0)`) so that misorientation between any two same-phase features equals `|Δφ1|` modulo the cubic c-axis 4-fold symmetry. For Δφ1 ∈ {0°, 5°, 10°}, no symmetry reduction applies (`5°`, `10°` are below the 45° fold) so expected per-neighbor entries are `|Δφ1|` exactly; phase-mismatched neighbors produce `NaN`. The expected per-feature average is `sum-of-non-NaN-entries / count-of-non-NaN-entries`. The three Class 1 fixtures differ in the *order* in which phase-matched and phase-mismatched neighbors appear in the list, systematically exercising the per-mismatch divisor decrement.
+*Encoded:* `src/Plugins/OrientationAnalysis/test/ComputeFeatureNeighborMisorientationsTest.cpp` — `Class 1 - Single Phase Two Neighbors`, `Class 1 - Mixed Phase Neighbors (exposes divisor bug)`, `Class 1 - Mismatch Last Order`, and `Class 4 - Invariants`; 4 fixtures. All pass in CI.
 
-### Applied (Class 4 — Invariant)
-
-Three invariants every filter run must satisfy regardless of input configuration:
-
-- **Per-entry validity**: each `MisorientationList[fid][j]` is either `NaN` (phase mismatch) or a non-negative misorientation bounded above by the cubic max symmetry-reduced angle (`62.8°`).
-- **Per-feature averaging formula**: `AvgMisorientations[fid]` equals `sum(non-NaN entries in MisorientationList[fid]) / count(non-NaN entries in MisorientationList[fid])`. The formula is invariant under neighbor-list reordering — re-ordering the input neighbor list should NOT change the per-feature average value (it WILL change the order of entries within the per-feature list, but the average is order-independent).
-- **All-mismatch case**: when every neighbor in a feature's list is a phase mismatch, the per-feature average is `NaN` (no valid entries to average).
-
-### Encoded
-
-- **Class 1 (Analytical)**: `test/ComputeFeatureNeighborMisorientationsTest.cpp` — 3 `TEST_CASE` blocks under the `Class 1 - …` family. Per-neighbor expected values asserted via `Approx().margin(1e-3f)`; per-feature averages asserted via `Approx().margin(1e-3f)`.
-- **Class 4 (Invariant)**: `Class 4 - Invariants` test — runs a 5-feature 3-neighbor configuration and asserts the per-entry validity invariant and the per-feature averaging formula derived from the per-entry values.
-- *(kept)* `SIMPL Backwards Compatibility` — SIMPL 6.4 + 6.5 conversion paths via `DYNAMIC_SECTION`.
-
-### Second-engineer review
-
-*Pending — recommend an OA-domain engineer (Joey Kleingers or similar) review:*
-- *The Class 1 hand-derivations in the 3 data fixtures + 1 invariants test.*
-- *The divisor-bug fix at `Algorithms/ComputeFeatureNeighborMisorientations.cpp` line ~70 (the new assignment location) and the corresponding test that exercises the fix (`Class 1 - Mixed Phase Neighbors (exposes divisor bug)`).*
-- *The decision to retire the `6_6_stats_test_v2.tar.gz` Small-IN100 exemplar archive in favor of inline data fixtures (shared retirement with `ComputeKernelAvgMisorientationsFilter`).*
+*Second-engineer review:* Nathan Young, 2026-06-09.
 
 ## Bugs found and fixed
 
-The branch retains the existing divisor correction.
+All defects in this table are fixed. The fixes will be in the DREAM3D-NX release after v7.4.2. DREAM3D-NX v7.4.2 contains the fix for `ComputeFeatureNeighborMisorientationsFilter-D1`.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|-----------|--------|----------------------------|---------------------------|
-| `ComputeFeatureNeighborMisorientationsFilter-D1` | Excluded neighbors could still contribute to the averaging divisor. | DREAM.3D 6.5.171; DREAM3D-NX v7.0.0 through v7.4.1. | Initialize the divisor once per feature so mismatch deductions persist. |
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeFeatureNeighborMisorientationsFilter-D1` | Resetting the divisor for each neighbor discarded earlier exclusions and made the mean depend on neighbor order. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | The filter initializes the divisor once per feature and decrements it for each incompatible neighbor. |
+| `ComputeFeatureNeighborMisorientationsFilter-D3` | A negative or out-of-range phase index could read outside Crystal Structures. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was affected. | The filter checks current and neighbor phase indices before each ensemble lookup and returns `-34502` for an invalid index. |
 
 ## Code path coverage
 
-7 of 10 paths exercised. The boundary test supplements the preserved upstream analytical assertions.
+8 of 17 paths exercised. The count uses the supplied in-core CI evidence and the assertions in the current tests.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.cpp` (126 lines).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.cpp` (126 lines) and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeFeatureNeighborMisorientationsFilter.cpp` (217 lines).
 
-The algorithm has one logical pass: a per-feature outer loop, with a per-neighbor inner loop inside it. Cancel check at the outer-loop top.
+Test names below omit the common `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter:` prefix.
 
-| # | Pass        | Path                               | Test case                                                 |
-|---|-------------|-------------------------------------------------------------------------------------------------------------------------------|--------------------|
-| 1 | Per-feature | Cancel check at outer-loop top (`m_ShouldCancel.load()` → early return)                                                       | *Not directly tested.* Failure mode would manifest as test hang in any test; not specifically exercised. Low-value gap.                            |
-| 2 | Per-neighbor | Phase match (`laueClass1 == xtalType2 && laueClass1 < orientationOps.size()`) → write list entry; if `ComputeAvgMisors`, accumulate | All Class 1 fixtures; primary algorithmic path            |
-| 3 | Per-neighbor | Phase mismatch → write `NaN` entry; if `ComputeAvgMisors`, decrement `tempMisoList` divisor                                  | `Mixed Phase Neighbors (exposes divisor bug)` + `Mismatch Last Order` + `Class 4 - Invariants`                                                       |
-| 4 | Per-feature (finalize) | `tempMisoList != 0` → `(*avgMisorientations)[i] /= tempMisoList`                                                    | All Class 1 fixtures + Class 4 invariants                 |
-| 5 | Per-feature (finalize) | `tempMisoList == 0` (all neighbors mismatched) → `(*avgMisorientations)[i] = NaN`                                  | *Not directly tested.* Algorithm path is exercised whenever a feature has only phase-mismatched neighbors; no data fixture currently constructs this configuration but the invariant `count == 0 → avg == NaN` is asserted in the Class 4 invariants helper if such a feature were present. Low-value gap. |
-| 6 | Validation | Unequal tuple counts → -34501 | `Preflight Error - Feature array tuple count mismatch (-34501)` |
-| 7 | Per-feature | Invalid current phase → -34502 | `Phase Index Bounds / Current Feature Phase returns an error` |
-| 8 | Per-neighbor | Invalid neighbor phase → -34502 | `Phase Index Bounds / Neighbor Feature Phase returns an error` |
-| 9 | Storage | Quaternion chunk boundary and one-tuple tail | `genuine HDF5 1MiB-chunk tail oracle` — literal 15° and 30° pair and average values |
-| 10 | Optional output | Average disabled | *Not directly tested. A minimal follow-up can use Single Phase Two Neighbors with the option off, check [5°, 10°], and check that the average array is absent.* |
-
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Per-feature | Cancellation → return before calculation | *Not directly tested. No fixture injects cancellation.* |
+| 2 | Per-neighbor | Same valid cubic Laue class → calculate the angle and accumulate it | `Class 1 - Single Phase Two Neighbors` |
+| 3 | Per-neighbor | Different Laue classes → NaN entry and divisor decrement | `Class 1 - Mixed Phase Neighbors (exposes divisor bug)`; `Class 1 - Mismatch Last Order` |
+| 4 | Finalize | Nonzero divisor → divide the sum by the compatible-neighbor count | All three `Class 1` cases; `Class 4 - Invariants` |
+| 5 | Finalize | No neighbors or no compatible neighbors → NaN average | *Not directly tested. Fixtures execute empty lists without checking their averages; no test asserts an all-incompatible list.* |
+| 6 | Preflight | Feature tuple counts differ → error `-34501` | `Preflight Error - Feature array tuple count mismatch (-34501)` |
+| 7 | Per-feature | Current phase is negative or beyond the ensemble array → error `-34502` | `Phase Index Bounds` — `Current Feature Phase returns an error`, values -1 and 2 |
+| 8 | Per-neighbor | Neighbor phase is negative or beyond the ensemble array → error `-34502` | `Phase Index Bounds` — `Neighbor Feature Phase returns an error`, values -1 and 2 |
+| 9 | Storage | Quaternion data crosses a 65,536-tuple chunk boundary into a one-tuple tail | *Not directly tested. The hidden `genuine HDF5 1MiB-chunk tail oracle` supplies assertions for a separate storage configuration.* |
+| 10 | Optional output | Averaging disabled → omit the average array and calculate lists only | *Not directly tested. Execution fixtures enable averaging.* |
+| 11 | Preflight | Quaternion component count is not four → error `-34500` | *Not directly tested. Parameter validation already requires four components.* |
+| 12 | Per-feature | Skip background feature zero | `Phase Index Bounds` — `Feature zero is ignored` checks successful execution with invalid background phases |
+| 13 | Per-neighbor | Different phase IDs with the same valid Laue class → calculate the angle | *Not directly tested. The mixed-phase fixtures use different Laue classes.* |
+| 14 | Per-neighbor | Equal Laue indices outside the operator range → NaN entry | *Not directly tested. No fixture gives a participating pair equal invalid Laue indices.* |
+| 15 | Per-neighbor | Same valid non-cubic Laue class → select that orientation operator | *Not directly tested. Test angle assertions use cubic pairs; hexagonal features only supply incompatible neighbors.* |
+| 16 | Output | Copy calculated lists to the output NeighborList in input order | All three `Class 1` cases assert list lengths and entries |
+| 17 | Loop limits | Only background feature exists → no calculation or output-copy iteration | *Not directly tested. Every fixture contains non-background features.* |
 
 ## Test inventory
 
-| Test case                                     | Status      | Notes                  |
-|--------|-------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors`                                                       | new-for-V&V | 4 features; all phase 1; per-feature `MisorientationList[1] = [5°, 10°]`; expected avg = 7.5°. Verifies the basic per-feature averaging path with all phase-matched neighbors.                                    |
-| `ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mixed Phase Neighbors (exposes divisor bug)`                                      | new-for-V&V | Bug-exposing fixture. 5 features; feature 1 (phase 1) has neighbors `[2 (match), 4 (mismatch), 3 (match)]`. The last-iterated neighbor is a match, so the pre-fix bug reassigns the divisor to 3; the test asserts the correct avg = 7.5°. **Failed on pre-fix code (gave 5.0°); passes on post-fix code (gives 7.5°).**                                                                            |
-| `ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order`                                                              | new-for-V&V | Same features as the bug-exposing fixture but neighbor order `[2 (match), 3 (match), 4 (mismatch)]`. Last neighbor is a mismatch; the decrement at line 90 is the last write to `tempMisoList` so the bug doesn't fire. Both pre-fix and post-fix code produce 7.5°.                                     |
-| `ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants`                                                                       | new-for-V&V | Asserts per-entry validity (NaN or non-negative ≤ 62.8°) and the per-feature averaging formula (derived from the per-entry values, not a specific hard-coded number). Uses neighbor order `[4 (mismatch), 2 (match), 3 (match)]`. Catches future regressions that preserve specific values but break the invariant relationship.                                                                |
-| `ComputeFeatureNeighborMisorientationsFilter: SIMPL Backwards Compatibility`                                                              | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures. UUID + argument-key + parameter-value validation only. |
-| *(retired)* main `ComputeFeatureNeighborMisorientationsFilter` (consumed `6_6_stats_test_v2.tar.gz`)                                       | retired     | Removed 2026-06-02. Regression-against-archive test; archive's exemplar values were a circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output). Test was already failing as the EbsdLib precision fix shifted exemplar values beyond the regression-check epsilon. Replaced by inline Class 1 + Class 4 fixtures above.                                                                  |
-| *(retired)* `ComputeFeatureNeighborMisorientationsFilter: Misorientation Per Feature`                                                     | retired     | Removed 2026-06-02. The `[.][UNIMPLEMENTED][!mayfail]` stub left `ComputeAvgMisors=true` with zero CI coverage, which is precisely why the divisor bug at algorithm.cpp:75 went undetected. The 3 Class 1 fixtures above cover that parameter combination.                                               |
-| `Preflight Error - Feature array tuple count mismatch (-34501)` | kept | Rejects unequal feature tuple counts. |
-| `Phase Index Bounds` | kept | Rejects invalid current/neighbor phases and ignores feature zero. |
-| `genuine HDF5 1MiB-chunk tail oracle` | new-for-V&V | HDF5 quaternion chunk and partial-tail values; checks both per-neighbor and average output. |
+All names are in `src/Plugins/OrientationAnalysis/test/ComputeFeatureNeighborMisorientationsTest.cpp`. The seven ordinary cases run in the supplied CI configuration. All pass in CI.
 
-
-The hidden `genuine HDF5 1MiB-chunk tail oracle` extends the Class 1 oracle to 65,537 feature quaternions. It asserts the HDF5-OOC format and the actual 65,536-tuple chunk shape. Features 65,535 and 65,536 have literal 15° and 30° per-neighbor values and averages. The existing Class 1/4 expected values and tolerances from upstream/develop remain unchanged.
-
-The default CTest selection contains seven tests. The hidden test requires the OOC build and is run explicitly. Existing D1 and D2 dispositions are unchanged; this recertification does not rerun the legacy comparison.
-
-OOC recertification, 2026-09-18: serial CTest passed 7/7 in `NX-Com-Qt69-Vtk96-Rel` and 7/7 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 37 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Preflight Error - Feature array tuple count mismatch (-34501)` | kept | Ten quaternion and neighbor-list tuples versus nine phase tuples; expects preflight error `-34501`. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIMPL Backwards Compatibility` | kept | Dynamic sections `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check identity, comments, and all seven converted arguments. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors` | new-for-V&V | Four feature tuples including background; expects the focal list `[5°, 10°]` and mean 7.5°, within `1e-3°`. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mixed Phase Neighbors (exposes divisor bug)` | new-for-V&V | Five feature tuples; neighbor order `[2, 4, 3]` gives `[5°, NaN, 10°]` and mean 7.5°. Detects D1. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order` | new-for-V&V | Neighbor order `[2, 3, 4]` gives `[5°, 10°, NaN]` and mean 7.5°. Controls for neighbor order. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants` | new-for-V&V | Neighbor order `[4, 2, 3]`; focal rotations are 0°, 7.5°, and 12°. Checks finite entries in `[0°, 62.8°]`, a positive finite-entry count, and the mean within `1e-4°`. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: genuine HDF5 1MiB-chunk tail oracle` | new-for-V&V | Hidden (`[.OocStoreContract]`). Requires HDF5 stores and a 65,536-tuple quaternion chunk; asserts list and mean values of 15° and 30° across the boundary. |
+| `OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Phase Index Bounds` | kept | Tests phases -1 and 2 on current and neighbor features, expecting `-34502`; also checks that invalid background phases do not prevent execution. |
 
 ## Exemplar archive
 
-**None — data inlined in `test/ComputeFeatureNeighborMisorientationsTest.cpp` namespace `AnalyticalFixtures`.**
-
-The pre-existing `6_6_stats_test_v2.tar.gz` archive is being retired. See `src/Plugins/OrientationAnalysis/vv/provenance/ComputeFeatureNeighborMisorientationsFilter.md` for the retirement rationale.
-
-- **Archive:** None
-- **SHA512:** N/A
+- **Archive:** `6_6_stats_test_v2.tar.gz` — retired for this filter's tests; current expectations are inline.
+- **SHA512:** `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723`
 - **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/ComputeFeatureNeighborMisorientationsFilter.md`
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Two deviations documented:
+See `vv/deviations/ComputeFeatureNeighborMisorientationsFilter.md` for root causes, affected users, and recommendations. Only Part 1 entries appear here.
 
-### ComputeFeatureNeighborMisorientationsFilter-D1
-
-- **Symptom:** Per-feature `AvgMisorientations` values differ between SIMPLNX (post-2026-06-02 fix) and DREAM3D 6.5.171 on any dataset where features have mixed-phase neighbor lists (i.e., a feature has both same-phase and different-phase neighbors). SIMPLNX produces the mathematically correct average (sum-of-same-phase-misorientations / count-of-same-phase-misorientations); 6.5.171 produces an incorrect average using a divisor influenced by neighbor iteration order.
-- **Root cause:** **Bug** in DREAM3D 6.5.171 (also present in pre-fix SIMPLNX). See `vv/deviations/ComputeFeatureNeighborMisorientationsFilter.md` for the technical mechanism.
-
-### ComputeFeatureNeighborMisorientationsFilter-D2
-
-- **Symptom:** Per-neighbor `MisorientationList` values and per-feature `AvgMisorientations` values differ between SIMPLNX (EbsdLib 2.4.1+) and DREAM3D 6.5.171 on real EBSD data containing cubic-phase features with grain-pair boundaries near cubic symmetry operators. On the V&V data fixtures, no observable deviation.
-- **Root cause:** **Precision** — propagation of the EbsdLib 2.4.1 `CubicOps::calculateMisorientationInternal` precision improvement, characterized in `vv/deviations/BadDataNeighborOrientationCheckFilter.md`. See `vv/deviations/ComputeFeatureNeighborMisorientationsFilter.md` for the per-filter context.
-**SIMPLNX-side fix ships in DREAM3D-NX 7.4.2** — the deviation from legacy remains, since 6.5.171 is unchanged: `ComputeFeatureNeighborMisorientationsFilter-D1`.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeFeatureNeighborMisorientationsFilter-D1` | SIMPLNX excludes every incompatible neighbor from the averaging divisor; DREAM.3D v6.5.171 resets that divisor inside the neighbor loop. |
+| `ComputeFeatureNeighborMisorientationsFilter-D2` | Quaternion arithmetic and library precision change individual angles and their means. |

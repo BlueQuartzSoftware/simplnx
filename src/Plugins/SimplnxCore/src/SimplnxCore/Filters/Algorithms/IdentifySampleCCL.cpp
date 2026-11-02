@@ -973,7 +973,9 @@ struct IdentifySampleCCLFunctor
       auto boundaryResult = replayForwardCCL<T>(
           goodVoxels, dimX, dimY, dimZ, *holeCCL.value().equivalences, holeCondition,
           [&boundaryRoots, dimX, dimY, dimZ, &shouldCancel](T* /*data*/, usize /*inSlice*/, uint64 root, usize x, usize y, usize z) -> Result<bool> {
-            if(x == 0 || x == static_cast<usize>(dimX - 1) || y == 0 || y == static_cast<usize>(dimY - 1) || z == 0 || z == static_cast<usize>(dimZ - 1))
+            // Ignore collapsed axes, as BFS does, but keep a lone bad voxel outside hole filling.
+            if((dimX == 1 && dimY == 1 && dimZ == 1) || (dimX > 1 && (x == 0 || x == static_cast<usize>(dimX - 1))) || (dimY > 1 && (y == 0 || y == static_cast<usize>(dimY - 1))) ||
+               (dimZ > 1 && (z == 0 || z == static_cast<usize>(dimZ - 1))))
             {
               auto markResult = boundaryRoots->mark(root, shouldCancel);
               if(markResult.invalid())

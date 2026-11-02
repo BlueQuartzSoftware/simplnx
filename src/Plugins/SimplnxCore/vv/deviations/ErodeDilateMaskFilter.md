@@ -1,89 +1,51 @@
-# Deviations from DREAM3D 6.5.171: ErodeDilateMaskFilter
+# Deviations from DREAM.3D v6.5.171: ErodeDilateMaskFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
+This file has two parts. Part 1 records the validation difference from DREAM.3D v6.5.171 (D1). Part 2 records the fixed SIMPLNX direction-flag defect (D2). Both fixes will be in the DREAM3D-NX release after v7.4.2.
 
-Entries are referenced by stable ID (`ErodeDilateMaskFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-**Output parity:** the binary A/B run for this V&V — 14 combinations ({dilate, erode} × the 7 non-empty
-direction combinations, `NumIterations = 1`) on 2 fixtures, 28 pipeline pairs — produced **28/28
-element-wise matches** on the `Mask` array. **No output-value deviation was observed.** The one entry
-below is a validation-behaviour difference, not an output difference, and it has since been
-**resolved** — as of 2026-08-19 there are **no active deviations** for this filter.
+Entries use stable IDs (`ErodeDilateMaskFilter-D<N>`) from one sequence. The Filter UUID is the permanent cross-reference anchor. D1 keeps its original ID and retirement date; that date records the V&V decision, not a released fix.
 
 ---
 
-## ErodeDilateMaskFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ErodeDilateMaskFilter-D1
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ErodeDilateMaskFilter-D1` |
 | **Filter UUID** | `cab66cd1-f64c-42b4-8f94-18f0835a967f` |
-| **Status** | retired 2026-08-19 — difference eliminated in SIMPLNX by restoring the legacy guard (requester product decision, 2026-08-19). Retained for the historical record. |
+| **Status** | retired 2026-08-19 |
 
-**Symptom (as observed during this V&V, before the fix):** A pipeline that sets `Number of Iterations`
-to zero or a negative value fails preflight in DREAM3D 6.5.171 with
-`Error (-5555): The number of iterations (0) must be positive`, but ran to completion in SIMPLNX and
-wrote the mask out unchanged. A user migrating such a pipeline got a silently unchanged mask where
-they previously got a hard stop.
+**Symptom:** SIMPLNX accepted a zero or negative iteration count and returned the input mask unchanged; DREAM.3D v6.5.171 rejected the same setting.
 
-**Root cause:** Algorithmic choice — a validation guard that was not carried across in the port.
-Legacy `ErodeDilateMask::dataCheck()` (`Source/Plugins/Processing/ProcessingFilters/ErodeDilateMask.cpp`,
-in the `dataCheck` body) sets error condition `-5555` when `getNumIterations() <= 0`. SIMPLNX's
-`ErodeDilateMaskFilter::preflightImpl` performs no equivalent check — it only calls
-`MarkDataPathModified` — and `k_NumIterations_Key` is an unconstrained `Int32Parameter`. The
-algorithm's `for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)` loop
-then simply never executes, so the filter succeeds and the mask is untouched. Confirmed by running
-both binaries on the same input with `NumIterations = 0`
-(`ww_work/ErodeDilateMask/extra/`, "Extra probe" section of that folder's `ReadMe.md`).
+**Root cause:** Bug. The port omitted the positive-iteration check from `ErodeDilateMask::dataCheck()`. The algorithm loop did not run when `NumIterations < 1`. Current `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ErodeDilateMaskFilter.cpp:94-107` rejects these values with `-14701` and includes the value and mask path in the message. DREAM.3D v6.5.171 source, `Source/Plugins/Processing/ProcessingFilters/ErodeDilateMask.cpp:137-142`, uses `-5555` for the same condition.
 
-**Affected users:** Anyone who reaches `NumIterations <= 0`, which in practice means pipelines built
-by scripting or templating where the iteration count is computed rather than typed. Interactively the
-value is rarely zero. The consequence is a silent no-op rather than wrong data: the mask that comes
-out is bit-identical to the mask that went in, so downstream results are those of "filter not run",
-not those of a corrupted run.
+**Affected users:** Users of DREAM3D-NX v7.0.0 through v7.4.2 whose scripts or saved pipelines supply an iteration count below 1. These releases silently skipped morphology. DREAM.3D v6.5.171 was not affected.
 
-**Recommendation:** Trust SIMPLNX — **no remaining difference.** The V&V pass as first written left
-this open, because adding a preflight error is a behavioural change to a shipping filter and therefore
-a product decision rather than a verification finding. The requester made that decision on
-**2026-08-19: match legacy, add the preflight error.** Rationale recorded with the decision — it
-restores 6.5.171 parity, has zero migration impact (a `NumIterations <= 0` pipeline already errored in
-legacy, so no working legacy pipeline can be relying on the SIMPLNX no-op), and needs no
-parameter-version bump because no parameter key changes.
+**Recommendation:** Trust current SIMPLNX. Supply at least one iteration; the filter now reports invalid counts before execution. The error code differs from DREAM.3D v6.5.171, but both reject the input. The fix will be in the DREAM3D-NX release after v7.4.2.
 
-**Resolution (2026-08-19):** `ErodeDilateMaskFilter::preflightImpl` now returns
-`MakeErrorResult<OutputActions>(k_InvalidNumIterationsError /* -14701 */, ...)` when
-`NumIterations < 1`, with the offending value in the message. SIMPLNX's error code is **-14701**, not
-legacy's `-5555`: `-5555` belongs to the legacy code space, and the SIMPLNX house convention is a
-file-local `constexpr int32 k_...Error` in an anonymous namespace drawn from a per-filter block —
-`-147xx` is the first free block adjacent to the sibling `ErodeDilateBadDataFilter`'s `-146xx`
-(`k_NoDirectionsError = -14601`, `k_NoGeometryDimensionsError = -14602`). Covered by
-`SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations`, which preflights `NumIterations`
-of `0` and `-2` and asserts both the invalid result and the code.
+**Evidence:** PR #1717 (`ba246bc7c`) adds the positive-iteration check. `SimplnxCore::ErodeDilateMaskFilter: Invalid Number of Iterations` checks invalid preflight and error `-14701` for 0 and -2. The requester chose the legacy validation behavior on 2026-08-19; no parameter key changed, and `parametersVersion()` remains 1. The zero-iteration comparison is recorded in `vv_work:ErodeDilateMaskFilter/ReadMe.md`, with inputs in `vv_work:ErodeDilateMaskFilter/extra/legacy_numiter0.json` and `vv_work:ErodeDilateMaskFilter/extra/nx_numiter0.d3dpipeline`. The test passes in CI at `01809c236`. All release branches from `upstream/release/v7.0.0` through `upstream/release/v7.4.2` omit the guard in `ErodeDilateMaskFilter.cpp`.
 
 ---
 
-## Confirmed non-deviations
+## Part 2 — SIMPLNX defects and behavior changes
 
-Recorded so they are not relitigated.
+### ErodeDilateMaskFilter-D2
 
-### Direction parameters ignored — SIMPLNX port regression, fixed; not a deviation
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ErodeDilateMaskFilter-D2` |
+| **Filter UUID** | `cab66cd1-f64c-42b4-8f94-18f0835a967f` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.4.1 through v7.4.2. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | The DREAM3D-NX release after v7.4.2 |
 
-Before this V&V pass, `Algorithms/ErodeDilateMask.cpp` never read `XDirOn`, `YDirOn`, or `ZDirOn`, so
-the `X Direction` / `Y Direction` / `Z Direction` parameters had no effect on which face neighbours
-participated. DREAM3D 6.5.171 honours all three (`ErodeDilateMask.cpp:227-247` gates each of the six
-neighbour indices on the corresponding flag), so legacy was correct and SIMPLNX was wrong. Under the
-bug-adjudication protocol that is a **port regression**, not a deviation from legacy behaviour: it was
-fixed in the same change that found it, and once fixed no difference remains, so it gets no deviation
-entry of its own. It is described in the V&V report's Summary and Bug Fixes sections. The
-post-fix binary A/B (28/28 matches) is the confirmation of parity.
+**Symptom:** Disabling X, Y or Z still allowed growth or erosion along that axis.
 
-Same defect class as `ErodeDilateBadDataFilter-D1` (PR #1687); the fix mirrors that pattern and the
-axis mapping was copied verbatim from `Algorithms/ErodeDilateBadData.cpp:64-80` rather than
-re-derived, per that entry's branch-history note.
+**Root cause:** Bug. A change from explicit face checks to neighbour utilities omitted the direction checks. The filter now applies each direction flag through `adjustValidNeighbors` in `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ErodeDilateMask.cpp`. The helper in `src/simplnx/Utilities/NeighborUtilities.hpp` applies each flag to the two matching faces. DREAM.3D v6.5.171 also checks the corresponding axis flag for each of the six neighbours.
 
-### `maskCopy` initial value
+**Affected users:** Users who disable an axis with valid face neighbours in DREAM3D-NX v7.4.1 through v7.4.2. All-directions-on examples cannot detect this defect.
 
-Legacy allocates `_INTERNAL_USE_ONLY_MaskCopy` and calls `initializeWithValue(false)`; SIMPLNX uses a
-`std::vector<bool>(totalPoints, false)`. Neither initial value can be observed: the first statement
-of every iteration copies `mask` over the whole of `maskCopy` before anything reads it. Not a
-deviation.
+**Recommendation:** Trust current SIMPLNX. The algorithm now honors each selected axis. The DREAM3D-NX release after v7.4.2 will contain the correction.
+
+**Evidence:** PR #1523 (`9bfcb01e4`) removed direction checks; PR #1568 (`4ec21e93f`) restored them, and PR #1717 (`ba246bc7c`) moved them into the shared helper. In `src/Plugins/SimplnxCore/test/ErodeDilateMaskTest.cpp`, the Class 1 direction tests check X-off, Y-off and Z-off; the one-dimensional test checks disabled-axis dilation and erosion on X and Z. These tests pass in CI at `01809c236`. The algorithm in `upstream/release/v7.0.0` through `upstream/release/v7.4.0` checks all six faces; `upstream/release/v7.4.1` and `upstream/release/v7.4.2` do not read the direction flags. DREAM.3D v6.5.171 checks all six faces in `Source/Plugins/Processing/ProcessingFilters/ErodeDilateMask.cpp:227-250`. The comparison recorded on 2026-08-18 has 28 of 28 matches; see `vv_work:ErodeDilateMaskFilter/ReadMe.md` and `vv_work:ErodeDilateMaskFilter/results_compare.txt`. That run predates the change to rolling slice buffers and does not verify the current algorithm.

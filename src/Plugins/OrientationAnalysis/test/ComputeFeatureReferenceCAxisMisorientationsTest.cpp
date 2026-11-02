@@ -16,6 +16,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -793,4 +794,134 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
       CHECK(errorRef.message.find("TupleGeometry") != std::string::npos);
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Feature Id bounds before statistics", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+  using namespace AnalyticalFixtures;
+  auto fixture = CreateScaffold(2, 1, 1, 2, 2);
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  const int32 invalidId = GENERATE(2, -1);
+  (*fixture.featureIds)[1] = invalidId;
+  (*fixture.cellPhases)[1] = 0;
+
+  // The old first pass skips phase zero, but the second pass indexes this invalid ID.
+  // Cancel at the intervening progress message so the RED test reports the missing
+  // validation error without executing the unsafe access. Correct validation returns
+  // before this guard is reached.
+  std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler guard{[&](const IFilter::Message& message) {
+    if(message.message.find("Computing per-feature average") != std::string::npos)
+    {
+      shouldCancel = true;
+    }
+  }};
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  const auto args = BuildArgs();
+  auto preflightResult = filter.preflight(fixture.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(fixture.ds, args, nullptr, guard, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -9806);
+  REQUIRE_FALSE(shouldCancel.load());
+  REQUIRE(executeResult.result.errors()[0].message.find("FeatureIds") != std::string::npos);
+  REQUIRE(executeResult.result.errors()[0].message.find("AvgCAxes") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Statistics exclude nonparticipating cells",
+          "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+  using namespace AnalyticalFixtures;
+  auto fixture = CreateScaffold(2, 1, 3, 3, 4);
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  (*fixture.crystalStructures)[2] = ebsdlib::CrystalStructure::Cubic_High;
+  (*fixture.crystalStructures)[3] = ebsdlib::CrystalStructure::Hexagonal_Low;
+  SetCellQuat(fixture, 0, QuatFromPhiDeg(10.0f));
+  SetCellQuat(fixture, 1, QuatFromPhiDeg(30.0f));
+  (*fixture.cellPhases)[1] = 3;
+  (*fixture.cellPhases)[2] = 0;
+  (*fixture.cellPhases)[3] = -1;
+  (*fixture.cellPhases)[4] = 2;
+  (*fixture.featureIds)[5] = 0;
+
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  auto executeResult = filter.execute(fixture.ds, BuildArgs());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto& cellMisos = GetOutputCellMisos(fixture.ds);
+  for(usize cellIdx = 2; cellIdx < 6; ++cellIdx)
+  {
+    REQUIRE(cellMisos[cellIdx] == 0.0f);
+  }
+  // Only 10 and 30 degrees contribute: mean = 20, population stdev = 10.
+  REQUIRE(GetOutputFeatureAvg(fixture.ds)[1] == Approx(20.0f).margin(1.0e-4f));
+  REQUIRE(GetOutputFeatureStdev(fixture.ds)[1] == Approx(10.0f).margin(1.0e-4f));
+  REQUIRE(std::isnan(GetOutputFeatureAvg(fixture.ds)[2]));
+  REQUIRE(std::isnan(GetOutputFeatureStdev(fixture.ds)[2]));
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Large constant-angle feature precision", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+  using namespace AnalyticalFixtures;
+  auto fixture = CreateScaffold(1000, 1000, 2, 2, 2);
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  constexpr float32 k_Angle = 13.1f;
+  const auto quat = QuatFromPhiDeg(k_Angle);
+  for(usize cellIdx = 0; cellIdx < fixture.totalCells; ++cellIdx)
+  {
+    SetCellQuat(fixture, cellIdx, quat);
+  }
+
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  auto executeResult = filter.execute(fixture.ds, BuildArgs());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  // A constant angle has that same mean and zero variance, independently of cell count.
+  REQUIRE(GetOutputCellMisos(fixture.ds)[0] == Approx(k_Angle).margin(1.0e-5f));
+  REQUIRE(GetOutputFeatureAvg(fixture.ds)[1] == Approx(k_Angle).margin(1.0e-5f));
+  REQUIRE(GetOutputFeatureStdev(fixture.ds)[1] == Approx(0.0f).margin(1.0e-5f));
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Empty arrays", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+  using namespace AnalyticalFixtures;
+  auto fixture = CreateScaffold(2, 1, 1, 2, 2);
+  (*fixture.crystalStructures)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+
+  SECTION("Empty cells have no contributing orientations")
+  {
+    auto resizeResult = fixture.cellAM->resizeTuples({0, 1, 2});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    fixture.geom->setDimensions({2, 1, 0});
+    auto executeResult = filter.execute(fixture.ds, BuildArgs());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(GetOutputCellMisos(fixture.ds).getNumberOfTuples() == 0);
+    REQUIRE(std::isnan(GetOutputFeatureAvg(fixture.ds)[1]));
+    REQUIRE(std::isnan(GetOutputFeatureStdev(fixture.ds)[1]));
+  }
+
+  SECTION("Empty Average C-Axes cannot be indexed by a cell")
+  {
+    auto resizeResult = fixture.featureAM->resizeTuples({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    auto executeResult = filter.execute(fixture.ds, BuildArgs());
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -9806);
+  }
+
+  SECTION("Empty Crystal Structures has no hexagonal phase")
+  {
+    auto resizeResult = fixture.ensembleAM->resizeTuples({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    auto executeResult = filter.execute(fixture.ds, BuildArgs());
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -9802);
+  }
+  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
 }

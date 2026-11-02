@@ -1,14 +1,12 @@
-# Deviations from DREAM3D 6.5.171: ReadCtfDataFilter
+# Deviations from DREAM.3D v6.5.171: ReadCtfDataFilter
 
-This file lists every documented behavioral difference between this SIMPLNX filter and its DREAM3D 6.5.171 equivalent.
-
-Entries are referenced by stable ID (`ReadCtfDataFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
-
-Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`PipelineRunner`): four runs over three byte-identical input files — a hand-authored 3×2 toy `.ctf` (two conversion-option combinations), the 550×400 production scan `Cugrid_after 2nd_15kv_2kx_2.ctf` (two phases — Cu3Ga hexagonal + Copper cubic — with 116,050 unindexed points), and a 2×2×2 multi-slice toy `.ctf`. On every run, all numeric outputs are **bit-identical** except the unindexed-point (Phase 0) family documented as D1/D2 (on the production scan: 543,950 of 660,000 Euler values match; the 116,050 differing values are all unindexed points' φ2). Three additional malformed-input fixtures were run through 6.5.171 to document its failure behavior (D3).
+Part 1 lists differences from DREAM.3D v6.5.171. Part 2 lists SIMPLNX defects whose fixes restore the legacy behavior. All entries use one stable ID sequence.
 
 ---
 
-## ReadCtfDataFilter-D1
+## Part 1 — Differences from DREAM.3D v6.5.171
+
+### ReadCtfDataFilter-D1
 
 | Field | Value |
 |---|---|
@@ -16,17 +14,19 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
 | **Status** | active |
 
-**Symptom:** Unindexed scan points ("zero solutions") carry `Phases == 0` in SIMPLNX but `Phases == 1` in 6.5.171. On the Cugrid production fixture this affects 116,050 of 220,000 points.
+**Symptom:** Unindexed points have phase 0 in SIMPLNX and phase 1 in DREAM.3D v6.5.171.
 
-**Root cause:** Algorithmic choice. 6.5.171's `ReadCtfData::copyRawEbsdData()` remaps every phase value `< 1` to `1` before storing the Phases array (a convention inherited from `H5CtfVolumeReader`: "the lowest value is One (1)"). SIMPLNX deliberately removed this remap in PR #937 (May 2024): a phase value of 0 is meaningful in `.ctf` files — it marks a point the indexing software could not solve — and rewriting it to 1 silently assigns those points to a real phase.
+**Root cause:** Algorithmic choice. DREAM.3D changes every phase value below 1 to 1 before storing the phase array. SIMPLNX preserves phase zero because it identifies an unindexed point.
 
-**Affected users:** Anyone importing `.ctf` files that contain unindexed points — which is nearly every real-world Oxford/HKL scan. Downstream workflows that segmented or masked using `Phases == 0` under legacy DREAM3D never saw phase 0 and instead thresholded on `Error > 0`; that workflow continues to work identically in SIMPLNX (`Error` is copied verbatim, bit-identical).
+**Affected users:** Users who import CTF files with unindexed points and select or mask data by phase.
 
-**Recommendation:** Trust SIMPLNX. Preserving the measured phase value is strictly more information; the legacy remap destroyed the unindexed marker and mislabeled unindexed points as phase 1. Users who need legacy-parity masks can threshold on `Error = 0` (recommended in the filter documentation) or replace phase-0 values explicitly.
+**Recommendation:** Trust SIMPLNX. Preserve phase zero to distinguish unindexed points from measured phase 1; use an explicit replacement if a workflow requires the old convention.
+
+**Evidence:** The DREAM.3D `v6.5.171` source at `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ReadCtfData.cpp` contains the remap. PR #937 removes it from SIMPLNX. `Class 1 Analytical Oracle` asserts phases `{1, 2, 0, 1, 2, 0}`. The stock comparison on 2026-07-24 records 116,050 changed phase values in the 220,000-point Cugrid scan: `vv_work:ReadCtfDataFilter/results/compare_ab_2026-07-24.txt`.
 
 ---
 
-## ReadCtfDataFilter-D2
+### ReadCtfDataFilter-D2
 
 | Field | Value |
 |---|---|
@@ -34,17 +34,19 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
 | **Status** | active |
 
-**Symptom:** When "Convert Hexagonal X-Axis to EDAX Standard" is enabled and the file's phase 1 is hexagonal (Laue group 9), the φ2 Euler angle of **unindexed** points differs by exactly 30° (0.5235988 rad): 6.5.171 applies the +30° shift to them, SIMPLNX does not. On the Cugrid fixture, all 116,050 unindexed points show legacy φ2 = 0.5235988 vs SIMPLNX φ2 = 0.0. Euler angles of every indexed point are bit-identical.
+**Symptom:** With EDAX alignment enabled and a 6/mmm phase 1, DREAM.3D v6.5.171 adds 30 degrees to unindexed points' phi2; SIMPLNX leaves those values unchanged.
 
-**Root cause:** Algorithmic choice (consequence of D1). Both versions decide the +30° hexagonal-alignment shift by looking up `CrystalStructures[Phases[i]]`. Legacy has already remapped unindexed points to phase 1, so they inherit phase 1's hexagonal classification and receive the shift; SIMPLNX looks up ensemble slot 0 (`UnknownCrystalStructure`, 999), which is never hexagonal, so unindexed points keep their file values.
+**Root cause:** Algorithmic choice. D1 makes DREAM.3D use phase 1's crystal structure for unindexed points. SIMPLNX uses the unknown-structure slot at phase zero, which does not receive a hexagonal correction.
 
-**Affected users:** Only workflows that read Euler angles of unindexed points under the EDAX-alignment option — those angles are meaningless by definition (the point was never indexed; the file stores 0.0 there).
+**Affected users:** Users who retain unindexed Euler angles with EDAX alignment enabled and a 6/mmm phase 1.
 
-**Recommendation:** Trust SIMPLNX. Applying a crystallographic correction to points with no crystallographic solution was an artifact of the D1 remap, not a deliberate feature.
+**Recommendation:** Trust SIMPLNX. A point without an indexed phase must not inherit the orientation correction for a measured phase.
+
+**Evidence:** `Euler Conversion Combinations` asserts unchanged unindexed values in all four modes. The 2026-07-24 stock comparison records 116,050 differing phi2 values in the Cugrid scan, each approximately 0.5235988 radians apart; the other 543,950 Euler components match exactly. See `vv_work:ReadCtfDataFilter/results/compare_ab_2026-07-24.txt`.
 
 ---
 
-## ReadCtfDataFilter-D3
+### ReadCtfDataFilter-D3
 
 | Field | Value |
 |---|---|
@@ -52,57 +54,100 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
 | **Status** | active |
 
-**Symptom:** Malformed `.ctf` files that crash or silently corrupt 6.5.171 are rejected by SIMPLNX with descriptive errors. Empirically demonstrated on three fixtures against the official 6.5.171 release:
+**Symptom:** Malformed CTF input can crash DREAM.3D v6.5.171 or produce incorrect output; SIMPLNX rejects the input with an error.
 
-| Malformed input | DREAM3D 6.5.171 (demonstrated) | SIMPLNX |
-|---|---|---|
-| Data section missing a standard column (no `BS`) | **Segfault** (exit 139; `memcpy` from null buffer) | Error `-19601` naming the missing column |
-| `Phases 0` header (no phase definitions) | **Segfault** (exit 139; reads a zero-tuple ensemble array out of bounds) | Error `-19600` |
-| Data row phase value out of range (`Phase 7` with 2 phases) | **Silent success** (exit 0) — the +30° decision reads `CrystalStructures[7]` out of bounds, so the output depends on heap contents | Error `-19602` naming the point and valid range |
-| Header `XCells`/`YCells` missing or 0 | Error at execute after a zero-sized preflight | Rejected at preflight with `-19604` |
-| Header `ZCells 0` | Not run (legacy sizes the geometry from the same header) | Rejected at execute with `-19603` |
+**Root cause:** Bug. The import paths lacked checks for missing column buffers, empty phase definitions, phase bounds, and inconsistent dimensions. SIMPLNX now checks these conditions before copying or indexing data. It also rejects phase counts that exceed the preflight allocation after a file change. Errors `-19600` through `-19605` identify these conditions; the current reader rejects the zero-Z fixture earlier with `-101105`.
 
-**Root cause:** Bug in 6.5.171 (out-of-bounds access on malformed input) — fixed in SIMPLNX by value-add guards added during this V&V pass. On well-formed files the guards never fire and outputs are unaffected.
+**Affected users:** Users of DREAM3D-NX v7.0.0 through v7.4.1 who import malformed files or change a file during import. DREAM.3D v6.5.171 was affected by the missing-column, empty-phase, and out-of-range-phase defects.
 
-**Affected users:** Anyone importing truncated, hand-edited, or non-standard `.ctf` files. No effect on well-formed files.
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 contains the guards; correct the reported input error before importing again.
 
-**Recommendation:** Trust SIMPLNX. A clean error is strictly better than a crash or a heap-dependent output.
+**Evidence:** All release sources from `upstream/release/v7.0.0` through `upstream/release/v7.4.1` lack the guards; v7.4.2 contains them. The tagged legacy source performs unchecked copies and phase lookups. `vv_work:ReadCtfDataFilter/ReadMe.md` records two stock crashes and an out-of-range phase accepted on 2026-07-24. `vv_work:ReadCtfDataFilter/LegacyPatch.md` records a local proof version that rejects all three inputs on 2026-09-17 and preserves 60 datasets across four well-formed cases. Current error tests assert `-19600`, `-19601`, `-19602`, and `-19604`; `-19603` and `-19605` require file-change injection.
 
 ---
 
-## ReadCtfDataFilter-D4
-
-| Field | Value |
-|---|---|
-| **Deviation ID** | `ReadCtfDataFilter-D4` |
-| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
-| **Status** | retired 2026-07-24 (resolved during this V&V pass — recorded for the migration guide) — fixed in DREAM3D-NX **7.4.2** |
-
-**Symptom:** Before this V&V pass, SIMPLNX imported only slice 0 of a multi-slice (3D) `.ctf` file (`ZCells > 1`) — silently — while 6.5.171 imported the full 3D volume.
-
-**Root cause:** Bug in the SIMPLNX port (the preflight hard-coded a z-extent of 1 and a z-spacing of 1.0, dropping the header's `ZCells`/`ZStep`). Restored during this pass; on the 2×2×2 fixture the SIMPLNX output now matches 6.5.171 bit-for-bit (dims, ZStep-derived spacing, and all nine cell arrays).
-
-**Affected users:** Anyone who imported a multi-slice `.ctf` with an earlier DREAM3D-NX release received a single-slice geometry with slice-0 data and no warning.
-
-**Recommendation:** Trust SIMPLNX (current). Re-import multi-slice `.ctf` files with a build containing this fix.
-
----
-
-## ReadCtfDataFilter-D5
+### ReadCtfDataFilter-D5
 
 | Field | Value |
 |---|---|
 | **Deviation ID** | `ReadCtfDataFilter-D5` |
 | **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
-| **Affected releases** | none through 7.4.2 — those releases matched 6.5.171 (6/mmm only) |
-| **Status** | active — intentional correction introduced by PR #1781 (2026-10-14) |
+| **Status** | active |
 
-**Symptom:** With EDAX hexagonal alignment enabled, simplnx adds 30 degrees to phi2 for both 6/m and 6/mmm phases; legacy DREAM3D 6.5 shifted only 6/mmm phases.
+**Symptom:** EDAX alignment omitted the 30-degree phi2 correction for 6/m phases.
 
-**Root cause:** The Oxford/HKL versus EDAX/TSL x-axis convention depends on the hexagonal lattice, so the correction also applies to `Hexagonal_Low` (6/m).
+**Root cause:** Bug. The condition selected only `Hexagonal_High` (6/mmm). The Oxford/HKL-to-EDAX axis correction applies to the hexagonal lattice in both 6/m and 6/mmm. The current condition accepts both classes and applies the correction before converting to radians.
 
-**Affected users:** Users importing 6/m phases with EDAX hexagonal alignment enabled.
+**Affected users:** Users of DREAM3D-NX v7.0.0 through v7.4.2 who import 6/m data with EDAX alignment enabled. DREAM.3D v6.5.171 was affected.
 
-**Correct behavior:** Both hexagonal Laue classes receive the same shift, before optional conversion to radians. Cubic and unindexed points remain unchanged; trigonal phases are outside this correction. Covered by `test/ReadCtfDataTest.cpp::"Euler Conversion Combinations"`.
+**Recommendation:** Trust SIMPLNX. The fix will be in the DREAM3D-NX release after v7.4.2; re-import 6/m data with that correction when EDAX alignment is required.
 
-**Recommendation:** Re-import 6/m data when EDAX alignment is required.
+**Evidence:** All ten release sources and the tagged legacy source select only `Hexagonal_High`. PR #1781 (`84c66066a`) introduces `IsHexagonalCrystalStructure()` in `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/EbsdReaderUtilities.hpp`. `Euler Conversion Combinations` checks both hexagonal classes, cubic points, and phase-zero points in all four modes.
+
+---
+
+## Part 2 — SIMPLNX defects and behavior changes
+
+### ReadCtfDataFilter-D4
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D4` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | retired 2026-07-24 |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** A multi-slice CTF file produced a single-slice geometry without a warning.
+
+**Root cause:** Bug. Preflight used a fixed Z extent and spacing of 1. It ignored the header's ZCells and ZStep, so the copy loop read only the first slice. The current filter uses ZCells and positive ZStep, with spacing 1 when ZStep is not positive.
+
+**Affected users:** Users who imported multi-slice CTF files in DREAM3D-NX v7.0.0 through v7.4.1.
+
+**Recommendation:** Trust SIMPLNX. Re-import these files with DREAM3D-NX v7.4.2 or later to recover all slices.
+
+**Evidence:** Every release source through `upstream/release/v7.4.1` fixes Z to 1; v7.4.2 and the tagged legacy source read the header's Z extent. `vv_work:ReadCtfDataFilter/results/release_matrix.md` records the 2026-09-17 comparison: v7.4.1 gives 2×2×1, while v7.4.2 gives 2×2×2 with Z spacing 0.75. All 24 Euler values match DREAM.3D v6.5.171; two phase values differ as D1 specifies. `3D Multi-Slice CTF` checks both slice-spacing variants.
+
+---
+
+### ReadCtfDataFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D6` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** Some converted Euler values differed from the double-intermediate result after rounding to float32.
+
+**Root cause:** Bug. The port used a float32 radians constant and float32 arithmetic. The current filter uses double-precision intermediates for the hexagonal shift and radian conversion, then stores float32 values. DREAM.3D v6.5.171 also used double-precision constants.
+
+**Affected users:** Users who compare converted Euler values exactly or rely on the final float32 rounding.
+
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 restores the more accurate conversion; re-import data when exact converted values matter.
+
+**Evidence:** All release sources through v7.4.1 use `k_PiOver180F`; v7.4.2 uses `k_PiOver180D` and explicit float64 intermediates. The tagged legacy filter uses `SIMPLib::Constants::k_PiOver180`, declared as double in `Source/SIMPLib/Math/SIMPLibMath.h` at the SIMPL snapshot `0afaa6854` selected by the legacy tag date. `Euler Conversion Combinations` checks 7.125, 3.375, 6.75, and shifted 37.125 degrees with literals that distinguish the two conversion methods.
+
+---
+
+### ReadCtfDataFilter-D7
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D7` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | active |
+| **Affected released versions** | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. |
+| **Fixed in** | DREAM3D-NX v7.4.2 |
+
+**Symptom:** A reader failure could produce a filter error with code zero instead of its negative error code.
+
+**Root cause:** Bug. The filter read only the reader's error-code member, which some failures leave at zero. The current preflight and execution paths use the negative return code when that member is not negative. DREAM.3D v6.5.171 used the return code directly.
+
+**Affected users:** Users who import files with a zero scan step or other reader failures that set only a return code and message.
+
+**Recommendation:** Trust SIMPLNX. DREAM3D-NX v7.4.2 reports the failure code needed to diagnose these inputs.
+
+**Evidence:** All release sources through v7.4.1 call `MakeErrorResult(reader.getErrorCode(), ...)`; v7.4.2 adds the fallback in both read paths. The tagged legacy `readDataFile()` uses `setErrorCondition(err)`. `EbsdLib Error Passthrough - Zero Step (-102)` checks the execution fallback. The header-read fallback has no direct test.

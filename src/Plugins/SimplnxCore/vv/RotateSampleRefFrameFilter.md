@@ -1,105 +1,128 @@
 # V&V Report: RotateSampleRefFrameFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
 | SIMPLNX UUID | `d2451dc1-a5a1-4ac2-a64d-7991669dcffc` |
 | SIMPLNX Human Name | Rotate Sample Reference Frame |
-| DREAM3D 6.5.171 equivalent | `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) — `Source/Plugins/Sampling/SamplingFilters/RotateSampleRefFrame.{h,cpp}` |
+| DREAM.3D v6.5.171 equivalent | `RotateSampleRefFrame` (Sampling plugin, SIMPL UUID `e25d9b4c-2b37-578c-b1de-cf7032b5ef19`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE — 2026-07-16 |
-| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-07-02; second engineer: Nathan Young, 2026-07-08 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Rewrite** — generalized Eigen 4×4-affine reimplementation (via shared `ImageRotationUtilities`) of the legacy hand-rolled `RotateSampleRefFrame`; different UUID (SIMPL→NX mapped), different NN rule (cell-center `computeCellIndex` vs truncation), new-geometry vs in-place, plus new `KeepInputGeometryOrigin` + Rotation-Matrix representation. |
-| Oracle (confirmed)     | **Class 1 (Analytical)** — exact voxel permutations: an explicit 180@Z slice reversal, **hand-derived 90-degree permutations about X/Y/Z that pin the rotation chirality** (a +90 and a -90 give different arrays, so an inverse-transform regression is caught), non-zero-origin placement, and anisotropic-spacing permutation. **Class 4 (Invariant)** — value-multiset conservation, zero background, full-circle composition = identity, and acceptance of the full octahedral group (120@(111)). Encoded in `test/RotateSampleRefFrameTest.cpp` (11 cases, all pass). |
-| Code paths enumerated  | 11 (filter preflight guard + geometry setup, and the NN-resample execute). 10 of 12 exercised.          |
-| Tests today | 12 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 12/12. |
-| Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                               |
-| Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. 1 deviation, on the *unsupported* arbitrary-rotation domain only.    |
-| Bug flags              | None. The single deviation (D1) is an intentional guard, not a bug.                                    |
-| V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Rewrite of `RotateSampleRefFrame` in DREAM.3D v6.5.171. SIMPLNX uses shared affine transformation utilities and restricts rotations to proper signed axis permutations. |
+| Oracle (confirmed) | Class 1 analytical permutations and geometry values, with Class 4 value conservation and composition checks. Nine cases in `test/RotateSampleRefFrameTest.cpp` encode these checks; all pass in CI. |
+| Code paths enumerated | 15 of 29 exercised. Gaps include in-place output, defensive guards, external storage, cancellation and I/O failures. |
+| Tests today | 14 test cases: 9 analytical or invariant cases, 2 rejection cases, 1 conversion case, 1 child-name regression and 1 hidden HDF5 case. |
+| Exemplar archive | None. Inline analytical expectations replace the retired `Rotate_Sample_Ref_Frame_Test_v2.tar.gz` and `Rotate_Sample_Ref_Frame_Test_v3.tar.gz` archives. |
+| Legacy comparison | Not run on the current algorithm. The saved DREAM.3D v6.5.171 comparison is dated 2026-07-02 and predates algorithm changes. |
+| Bug flags | None. |
+| V&V phase | Complete. Analytical checks and regressions for the two fixed defects are encoded. |
 
 ## Summary
 
-`RotateSampleRefFrame` rotates the reference frame of an **Image Geometry** by nearest-neighbor resampling. V&V established that the operation is a *lossless voxel permutation* — the only correct meaning of a reference-frame rotation — **if and only if** the rotation maps the cubic voxel grid onto itself, i.e. it is a member of the octahedral rotation group (the 90/180/270-degree rotations about X/Y/Z, plus 180 about a face-diagonal and 120/240 about a body-diagonal); for any other rotation it silently produces a lossy, background-padded resample (empirically demonstrated: 45@Z turns 24 voxels into 50 with 24 introduced zeros). A preflight **guard** was added to enforce the supported domain (error `-6850`, plus `-6851` for a slice-reordering slice-by-slice combination), the golden-file exemplar was retired in favor of an inlined **Class 1 analytical-permutation** oracle (+ Class 4 invariants), and a legacy A/B on four principal-90 fixtures showed SIMPLNX is **bit-identical** to DREAM3D 6.5.171 on the standard EBSD sample transforms.
+`RotateSampleRefFrameFilter` rotates Image Geometry cell data by nearest-neighbor sampling and supports whole-volume or slice-by-slice operation. Class 1 permutations and geometry values, with Class 4 conservation and composition checks, verify the supported rotations. The V&V records two fixed defects: an incorrect output origin and unwanted changes to copied child names.
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite** (same mapped UUID — a claim of functional equivalence, defended by the deviations file).
+*Classification:* Rewrite
 
-*Evidence:* The legacy `RotateSampleRefFrame::execute()` is a hand-rolled TBB `blocked_range3d` kernel using `float rotMat[3][3]`, `MatrixMath`, in-place mutation of the DataContainer, and a truncation source-index rule (`colOld = (int64)(coord/xRes)`, old-origin assumed 0). SIMPLNX reimplements this atop the shared `ImageRotationUtilities` as a generalized Eigen `Matrix4fR` 4×4 affine transform, resamples via origin-aware `ImageGeom::computeCellIndex` on each output **cell center**, creates a **new** geometry (or a rename/delete/rename dance for in-place), parallelizes across arrays (`ParallelTaskAlgorithm`), and adds two features with no legacy equivalent: `KeepInputGeometryOrigin` (PR #1355) and an explicit **Rotation Matrix** representation. The SIMPL UUID is preserved via `SimplnxCoreLegacyUUIDMapping.hpp` + 6.4/6.5 conversion fixtures.
-
-*Material changes:* (1) a preflight guard restricting the accepted rotations to the well-posed lossless-grid (octahedral-group) domain (see Deviation D1); (2) a fix to the transform-derived output origin — preflight previously added the input origin to the already-absolute transformed-bounding-box min corner, double-counting it for any non-zero input origin; the persisted output origin now equals the `RotateArgs::TransformedOrigin` the resample worker samples against (no change for the common origin-(0,0,0) case). The remaining review-driven edits (dead-code removal, the `IsPrincipalAxis90Rotation`→`IsLosslessGridRotation` rename, error-message wording) are non-functional.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps the legacy UUID to this filter; shared Eigen affine transforms and origin-aware cell-center sampling replace the legacy matrix kernel and truncated source indices.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary, **4 (Invariant)** companion. Class 2/3 N/A.
+*Class:* 1 (Analytical), with 4 (Invariant).
 
-*Applied:* For a 90/180/270-degree rotation about a principal axis, nearest-neighbor resampling maps the voxel grid exactly onto itself, so the output is a closed-form permutation of the input computable by hand: a 180@Z rotation of a single Z-slice is a full reversal (`1..6 → 6..1`), and the output dimensions are a deterministic axis permutation of the input dimensions. The invariant companion asserts that a principal-90 rotation is a bijection on the voxel set (output value-multiset equals input, no `0` background introduced) and that applying the rotation until it sums to 360 degrees returns the original array and dimensions exactly.
+*Applied:* Hand-derived permutations specify voxel order, dimensions, spacing and origin; value conservation and full-circle composition check the remaining positive fixtures.
 
-*Encoded:* `test/RotateSampleRefFrameTest.cpp` — `Class 1 - 180 about Z reverses a slice` (explicit expected array, both representations); `Class 1 - exact 90-degree permutation pins chirality` (hand-derived arrays for 90@X/Y/Z, distinguishing +90 from -90); `Class 1 - non-zero input origin` (transform-derived origin = absolute transformed min corner, plus keep-origin); `Class 1 - anisotropic spacing permutes with the axes`; `Class 1/4 - principal-90 rotations are lossless permutations` (9 rotations × 2 representations: exact dims + value bijection); `Class 4 - full-circle composition is identity`; `accepts 120-degree rotation about (111)`; `KeepInputGeometryOrigin controls output origin`; `slice-by-slice 180 about Y is a lossless per-slice flip`. 11 test cases, all pass (in-core).
+*Encoded:* `src/Plugins/SimplnxCore/test/RotateSampleRefFrameTest.cpp::SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice` and eight companion cases include 18 principal-axis rotation variants and three chirality fixtures. All pass in CI.
 
-*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
+*Second-engineer review:* Michael Jackson, 2026-07-16 (technical authority).
 
 ## Bugs found and fixed
 
-No new defect was found during this storage recertification. Existing fixes and deviation dispositions remain documented above and in the sidecar.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fix for `RotateSampleRefFrameFilter-D2`. The fix for `RotateSampleRefFrameFilter-D3` will be in the DREAM3D-NX release after v7.4.2.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `RotateSampleRefFrameFilter-D2` | The transform-derived output origin counted the nonzero input origin twice. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected. | The output origin equals the absolute minimum corner of the transformed bounding box. |
+| `RotateSampleRefFrameFilter-D3` | Copying geometry children replaced the geometry name inside child names and parent paths. | DREAM3D-NX v7.0.0 through v7.4.2. DREAM.3D v6.5.171 was not affected. | Copy actions replace only the source geometry path prefix and preserve child names. |
 
 ## Code path coverage
 
-*10 of 12 paths exercised. The 2 gaps are a defensive out-of-bounds branch (unreachable on the guarded lossless-rotation domain, where every output cell maps in-bounds by construction) and the cancel-signal branches (require mid-execution cancel injection). Neither is algorithmic logic.*
+15 of 29 paths exercised. Each uncovered row states the gap.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFilter.cpp` (preflight guard + geometry setup) and `src/SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.cpp` (112 lines) delegating to `src/simplnx/Utilities/ImageRotationUtilities.{hpp,cpp}` (nearest-neighbor path). Logical phases: (a) preflight — validate rotation + build output geometry/actions; (b) execute — per-array nearest-neighbor resample.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFilter.cpp` (406 lines); `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.cpp` (108 lines); `src/simplnx/Utilities/ImageRotationUtilities.hpp` (1345 lines); `src/simplnx/Utilities/ImageRotationUtilities.cpp` (288 lines).
 
-| #  | Phase        | Path                                                   | Test case                   |
-|----|--------------|-------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| 1  | (a) Preflight| Rotation is a proper signed-permutation (octahedral group) → proceed                                        | all valid tests (`Class 1`, `Class 1/4`, composition, origin, spacing, 120@(111)) |
-| 2  | (a) Preflight| Rotation is not a lossless grid rotation → error `-6850`                                                    | `rejects non-principal-90 rotations` (45@Z, 90@(1,1,1), arbitrary matrix)         |
-| 3  | (a) Preflight| slice-by-slice + rotation does not preserve Z (\|R(2,2)\|≠1) → error `-6851`                                | `rejects slice-by-slice with a slice-reordering rotation` (90@X + slice-by-slice) |
-| 4  | (a) Preflight| Representation = Axis-Angle → `GenerateRotationTransformationMatrix`                                         | all Axis-Angle sections     |
-| 5  | (a) Preflight| Representation = Rotation Matrix → `GenerateManualTransformationMatrix`                                      | `Class 1` + `Class 1/4` Rotation-Matrix sections                                 |
-| 6  | (b) Execute  | Nearest-neighbor resample, slice-by-slice = false (3D rotation)                                             | `Class 1`, `Class 1/4`, `full-circle composition`                                |
-| 7  | (b) Execute  | Nearest-neighbor resample, slice-by-slice = true, Z-preserving → per-slice flip                             | `slice-by-slice 180 about Y is a lossless per-slice flip`                        |
-| 8  | (b) Execute  | Inverse-mapped coordinate out of bounds → `fillTuple(destIndex, 0)`                                         | *Not directly tested. Unreachable on the guarded lossless-rotation domain (exact permutation maps every cell in-bounds); defensive branch.* |
-| 9  | (a) Preflight| `RemoveOriginalGeometry = true` → rename/delete/rename in-place                                             | legacy A/B pipelines (nxrunner, `remove_original_geometry=true`) + shipping pipelines |
-| 10 | (b) Execute  | `KeepInputGeometryOrigin` true (keep src origin) vs false (transform-derived origin)                        | `KeepInputGeometryOrigin controls output origin` (both branches, exact values)   |
-| 11 | (b) Execute  | Cancel checks (`m_ShouldCancel` in the array loop; `getCancel()` per output slice)                          | *Not tested. Requires cancel-signal injection; low-value.*                       |
-| 12 | OOC boundary | 1MiB-page permutation oracle | `real HDF5 1MiB-page permutation oracle` — independent expected outputs on actual HDF5 stores |
+Test names below omit the `SimplnxCore::RotateSampleRefFrame: ` prefix. Coverage refers to the mapped in-core tests and the nearest-neighbor code used by this filter.
+
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Accept a proper signed axis permutation | `accepts 120-degree rotation about (111)`; `Class 1/4 - principal-90 rotations are lossless permutations` |
+| 2 | Preflight | Reject a matrix entry outside the allowed tolerance with `-6850` | `rejects non-principal-90 rotations` — two axis-angle cases and one matrix case |
+| 3 | Preflight | Reject a matrix without exactly one signed unit entry in each row and column | *Not directly tested. No fixture supplies a degenerate matrix with only zero and signed unit entries.* |
+| 4 | Preflight | Reject a reflection with determinant -1 | *Not directly tested. No fixture supplies a reflection matrix.* |
+| 5 | Preflight | Reject slice-by-slice rotation that exchanges Z with another axis with `-6851` | `rejects slice-by-slice with a slice-reordering rotation` |
+| 6 | Transform | Construct the matrix from axis-angle parameters | `Class 1 - exact 90-degree permutation pins chirality` — X, Y and Z |
+| 7 | Transform | Read the supplied rotation matrix | `Class 1 - 180 about Z reverses a slice`; `Class 1/4 - principal-90 rotations are lossless permutations` — matrix variants |
+| 8 | Sampling | Inverse-map cell centers for a whole-volume rotation | `Class 1 - exact 90-degree permutation pins chirality`; `Class 4 - full-circle composition is identity` |
+| 9 | Sampling | Keep source Z equal to output Z in slice-by-slice mode | `slice-by-slice 180 about Y is a lossless per-slice flip` — value conservation and different results from whole-volume mode |
+| 10 | Geometry | Keep the input origin | `Class 1 - non-zero input origin` — keep-origin section |
+| 11 | Geometry | Use the transformed bounding-box origin | `Class 1 - non-zero input origin` — expects (-22,10,0) and exact voxel values |
+| 12 | Geometry | Create output at a separate geometry path | `Class 1 - 180 about Z reverses a slice` |
+| 13 | Geometry | Replace the input geometry through deferred rename and delete actions | *Not directly tested. Current test executions create separate output geometries.* |
+| 14 | Copy | Copy an additional group and declare its descendant paths | `Child names containing the geometry name are kept` — declared paths and copied objects |
+| 15 | Copy | Copy an additional non-group child | *Not directly tested. The child-name fixture adds an AttributeMatrix, not a direct array child.* |
+| 16 | Copy | No extra geometry children require copying | `Class 1 - 180 about Z reverses a slice` |
+| 17 | Preflight | Warn that copied feature AttributeMatrices can contain stale data | *Not directly tested. The child-name regression does not assert the warning.* |
+| 18 | Storage | Read source slabs, reuse overlapping slices and write output slices | `Class 1/4 - principal-90 rotations are lossless permutations`; `Class 4 - full-circle composition is identity` |
+| 19 | Storage | Use bounded source pages and serialize array tasks | *Not directly tested. The hidden `real HDF5 1MiB-page permutation oracle` requires external stores.* |
+| 20 | Sampling | A mapped coordinate is outside the source geometry; retain zero fill | *Not directly tested. Current fixtures map all output cell centers inside the source.* |
+| 21 | Sampling | A whole output slice is outside the source; write zeros | *Not directly tested. No fixture produces an exterior output slice.* |
+| 22 | Cancellation | Stop before an array task or output slice | *Not directly tested. No fixture injects cancellation.* |
+| 23 | Storage | Return a source read, page range or page allocation error | *Not directly tested. No fixture injects these failures.* |
+| 24 | Storage | Return a destination slice write error | *Not directly tested. No fixture injects a write failure.* |
+| 25 | Dispatch | Rotate a scalar Int32 cell array | `Class 1 - 180 about Z reverses a slice` |
+| 26 | Dispatch | Rotate another scalar type or a multi-component array | *Not directly tested. All rotation fixtures use scalar Int32 cell data.* |
+| 27 | Geometry | Permute unequal X and Y spacing for 90 degrees about Z | `Class 1 - anisotropic spacing permutes with the axes` — checks (5,2,1) |
+| 28 | Geometry | Clamp a computed zero output dimension to one | *Not directly tested. Fixtures have nonzero dimensions and positive spacing.* |
+| 29 | Sampling | A valid source Z is outside the cached slab; retain zero fill | *Not directly tested. The calculated slab contains the source cells used by the fixtures.* |
 
 ## Test inventory
 
+The 13 ordinary cases run in in-core CI. All pass in CI. The hidden case is listed separately in the inventory.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice` | new-for-V&V | Explicit hand-derived expected array `[6,5,4,3,2,1]` on a 3×2×1 volume; Axis-Angle + Rotation-Matrix sections (the matrix section incidentally cross-checks `GenerateRotationTransformationMatrix` against an Eigen-built matrix). |
-| `SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutation pins chirality` | new-for-V&V | Hand-derived exact output arrays for 90@Z (`[4,1,5,2,6,3]`), 90@X, 90@Y. Distinguishes +90 from -90, so a regression that dropped the inverse-transform (forward matrix instead of its inverse) is caught. Derivation method validated by reproducing the 180@Z result. |
-| `SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin` | new-for-V&V | Input origin (10,20,0), 90@Z → transform-derived origin (-22,10,0) (absolute transformed min corner), not the double-counted (-12,30,0); keep-origin branch preserves the input origin. Both branches also assert the value permutation is origin-invariant. |
-| `SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing permutes with the axes` | new-for-V&V | Input spacing (2,5,1), 90@Z → output spacing (5,2,1); pins the spacing permutation that isotropic fixtures cannot detect. |
-| `SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about (111)` | new-for-V&V | Confirms the guard accepts the full octahedral group (not just principal-90): 120@(111) is a lossless value bijection. Documents that the enforced domain is broader than "principal-axis 90s". |
-| `SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations are lossless permutations` | new-for-V&V | 9 rotations (90/180/270 × X/Y/Z) × 2 representations = 18 DYNAMIC_SECTIONs; asserts exact permuted output dims + value-multiset bijection + zero background. |
-| `SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition is identity` | new-for-V&V | 4×90@Z, 2×180@Z, 4×90@X, 4×90@Y each return the original array + dims exactly. |
-| `SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls output origin` | new-for-V&V | 90@Z on a 4×3×2 at origin (0,0,0): keep → (0,0,0); transform-derived → (-3,0,0). |
-| `SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lossless per-slice flip` | new-for-V&V | Value bijection for the slice-by-slice flip, and asserts it differs from the true 3D rotation (slice order preserved vs reversed). |
-| `SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations` | new-for-V&V | 45@Z, 90@(1,1,1), and an arbitrary 45° Rotation Matrix each return preflight error `-6850`. |
-| `SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slice-reordering rotation` | new-for-V&V | 90@X + slice-by-slice returns preflight error `-6851`. |
-| `SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility` | kept | Unchanged. DYNAMIC_SECTION over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + argument keys. |
-| `real HDF5 1MiB-page permutation oracle` | new-for-V&V | 528,425 assertions; The existing sequential-image builder creates 257×257×4 values. A half turn about Z must reverse each XY plane without changing Z order; every output value is checked. The 264,196 int32 values cross a full 262,144-element source-cache page and a partial second page. Both whole-volume and slice modes use HDF5 input/output and target-only OOC dispatch witnesses. |
-| `slice-by-slice 180 about Y is a lossless per-slice flip` | kept | Existing per-slice versus whole-volume permutation and bijection regression. |
-
-All non-retired tests pass in-core. Full `NX-Com-Qt69-Vtk96-Rel` build: affected tests pass, including `ReadH5Ebsd`, all EBSD readers, `ITKImportImageStack`, and this filter's SIMPL compat test. OOC dual-build run outstanding (guard is preflight-only; negligible OOC risk).
-
-OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in each DREAM3DNX build. The hidden `real HDF5 1MiB-page permutation oracle` passed 528,425 assertions in the OOC binary. The existing sequential-image builder creates 257×257×4 values. A half turn about Z must reverse each XY plane without changing Z order; every output value is checked. The 264,196 int32 values cross a full 262,144-element source-cache page and a partial second page. Both whole-volume and slice modes use HDF5 input/output and target-only OOC dispatch witnesses. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
+| `SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice` | new-for-V&V | Checks [6,5,4,3,2,1] on a 3×2×1 input in Axis-Angle and Rotation-Matrix sections. |
+| `SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutation pins chirality` | new-for-V&V | Three variants check exact dimensions and arrays for 90 degrees about Z, X and Y. The expected arrays distinguish positive from negative rotations. |
+| `SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing permutes with the axes` | new-for-V&V | Checks that 90 degrees about Z changes spacing (2,5,1) to (5,2,1). |
+| `SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about (111)` | new-for-V&V | Checks all 24 values form a bijection on a 2×3×4 input with unit spacing. |
+| `SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin` | new-for-V&V | Checks exact voxel values and origin (-22,10,0), or the preserved input origin (10,20,0). Covers D2. |
+| `SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations are lossless permutations` | new-for-V&V | Nine rotations (90, 180 and 270 degrees about X, Y and Z), each in both representations. Checks dimensions, all input values exactly once, and no zero fill. |
+| `SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition is identity` | new-for-V&V | Four variants: four 90-degree rotations about Z, X or Y, and two 180-degree rotations about Z. Checks the original dimensions and every original value. |
+| `SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls output origin` | new-for-V&V | Checks (0,0,0) with keep-origin enabled and (-3,0,0) with it disabled. |
+| `SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lossless per-slice flip` | new-for-V&V | Checks value conservation in both slice and whole-volume modes and requires their output arrays to differ. |
+| `SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations` | new-for-V&V | Checks `-6850` for 45 degrees about Z, 90 degrees about (111), and a 45-degree rotation matrix. |
+| `SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slice-reordering rotation` | new-for-V&V | Checks `-6851` for 90 degrees about X with slice-by-slice enabled. |
+| `SimplnxCore::RotateSampleRefFrame: real HDF5 1MiB-page permutation oracle` | new-for-V&V | Hidden. Checks HDF5 input and output stores, dispatch counters, and all 264,196 values against a per-plane reversal formula in both slice modes. |
+| `SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility` | kept | Two dynamic variants convert SIMPL 6.4 and 6.5 fixtures and check filter identity, comments and selected arguments. |
+| `SimplnxCore::RotateSampleRefFrame: Child names containing the geometry name are kept` | kept | Checks declared descendant paths and copied object names when `Geom` contains `Geom Feature Data/Geom Values`. Covers D3. |
 
 ## Exemplar archive
 
-- **Archive:** None. The prior golden-file exemplars `Rotate_Sample_Ref_Frame_Test_v2.tar.gz` / `_v3.tar.gz` were **retired** this V&V cycle (a regression-on-prior-output oracle) and replaced by an inlined Class 1 analytical oracle. The `download_test_data()` entries were removed from `test/CMakeLists.txt`.
-- **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/RotateSampleRefFrameFilter.md` (documents the retirement, the inline oracle, and the legacy A/B inputs).
+- **Archive:** None. The v2 and v3 rotation archives are retired; the oracle is inline in the test source.
+- **SHA512:** Not applicable. `src/Plugins/SimplnxCore/test/CMakeLists.txt` has no active archive registration for this filter.
+- **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/RotateSampleRefFrameFilter.md`
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Comparison run on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y) — see `vv/comparisons/RotateSampleRefFrameFilter/results.md`. On the supported domain, **no deviations** (bit-identical dims and voxel values). One deviation on the unsupported domain:
+See `vv/deviations/RotateSampleRefFrameFilter.md` for the root cause, affected users and recommendation. This table lists only Part 1.
 
-- `RotateSampleRefFrameFilter-D1` — legacy silently runs arbitrary (non-principal-90) rotations as a lossy resample; SIMPLNX rejects them in preflight (`-6850`). Root cause: algorithmic choice (intentional; not a bug). See `vv/deviations/RotateSampleRefFrameFilter.md`.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `RotateSampleRefFrameFilter-D1` | SIMPLNX rejects rotations outside the proper signed axis permutations (`-6850`) and rejects slice-by-slice rotations that exchange Z with another axis (`-6851`). DREAM.3D v6.5.171 has neither guard. |

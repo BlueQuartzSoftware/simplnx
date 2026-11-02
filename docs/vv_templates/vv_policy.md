@@ -1,6 +1,6 @@
 # DREAM3D-NX Filter V&V Policy (v2)
 
-This is the short-form policy for filter Verification & Validation (V&V) in DREAM3D-NX. It exists to support MTR SBIR deliverables and the public DREAM3D → DREAM3D-NX migration guide.
+This is the short-form policy for filter Verification & Validation (V&V) in DREAM3D-NX. It exists to support MTR SBIR deliverables and the public DREAM.3D → DREAM3D-NX migration guide.
 
 Read this once. The deliverable is a one-page report per filter; the working details live in the templates and gates docs alongside this file.
 
@@ -8,15 +8,21 @@ Read this once. The deliverable is a one-page report per filter; the working det
 
 ## Why
 
-DREAM3D 6.5.171 is trusted by reputation, not by proof. It has been in the field long enough that users rely on its numbers, but it was never subjected to V&V rigor. We therefore cannot treat "matches 6.5.171" as a correctness check — it is a **diff-explanation** check.
+DREAM.3D v6.5.171 is trusted by reputation, not by proof. It has been in the field long enough that users rely on its numbers, but it was never subjected to V&V rigor. We therefore cannot treat "matches 6.5.171" as a correctness check — it is a **diff-explanation** check.
 
 Each filter must first be shown correct **independently** of 6.5.171 against an oracle, and only then diffed against legacy to produce user-facing migration guidance.
 
 ## The one ordering rule
 
-> **Pick the oracle before running any DREAM3D 6.5.171 comparison.**
+> **Pick the oracle before running any DREAM.3D v6.5.171 comparison.**
 
 Everything else — code-path enumeration, test inventory, exemplar provenance, algorithm review, documentation — can be worked in any order.
+
+## Find bugs, not only document behavior
+
+An oracle shows that the filter agrees with the fixtures the engineer chose. It does not show that those fixtures can find a defect. Every V&V therefore includes a **defect hunt**: a bug-pattern review, a check that each mode has a value assertion, symmetry-breaking fixtures, and a mutation check of the tests. Do the defect hunt after code-path enumeration and before the oracle fixtures are final. See [`defect_hunt.md`](./defect_hunt.md).
+
+Reports that reached `READY FOR REVIEW` before 2026-10-02 do not need a `## Defect hunt` section until their next V&V change.
 
 ## Oracle classes
 
@@ -53,10 +59,16 @@ The verified state is pinned by **(commit hash, archive SHA512)**. The commit ca
 | File | What it is |
 |---|---|
 | [`report_template.md`](./report_template.md) | Empty report — copy into `src/Plugins/<P>/vv/<FilterName>.md` |
+| [`defect_hunt.md`](./defect_hunt.md) | Bug-pattern review, mode coverage, symmetry-breaking fixtures, and mutation check — required for every V&V |
 | [`report_gates.md`](./report_gates.md) | Per-section "Done when:" checklists — reference while filling in the report |
 | [`deviation_template.md`](./deviation_template.md) | Empty deviation file — copy into `src/Plugins/<P>/vv/deviations/<FilterName>.md` |
 | [`provenance_template.md`](./provenance_template.md) | Empty exemplar-provenance sidecar — copy per exemplar archive |
-| [`commit_template.md`](./commit_template.md) | Standard commit message format for landing a completed V&V cycle — use at step 6 of the engineer workflow below |
+| [`commit_template.md`](./commit_template.md) | Standard commit message format for landing a completed V&V cycle — use at step 7 of the engineer workflow below |
+| [`vv_recertification.md`](./vv_recertification.md) | When V&V work happens after a filter has a V&V record, the single V&V branch, and the legacy comparison packages |
+
+## After a filter has a V&V record
+
+A change to a V&V'd filter follows [`vv_recertification.md`](./vv_recertification.md). It says which changes need V&V work in the same PR, where that work is done, and how legacy comparisons are run again.
 
 ## Engineer workflow
 
@@ -64,9 +76,10 @@ The verified state is pinned by **(commit hash, archive SHA512)**. The commit ca
 2. Decide the oracle class for this filter (write it down).
 3. Run `python scripts/vv_init.py <FilterName>` to scaffold the report and deviation files in the plugin tree.
 4. Open `report_gates.md` in a second tab.
-5. Work each section in any order. A section is "done" when all its gates pass.
-6. When all gates green, set `Status: READY FOR REVIEW`, push a `vv/<FilterName>` branch with a commit following [`commit_template.md`](./commit_template.md).
-7. After sign-off, set `Status: COMPLETE`. Verified commit hash is filled in at SBIR deliverable assembly.
+5. After you enumerate the code paths, do the defect hunt ([`defect_hunt.md`](./defect_hunt.md)) before the oracle fixtures are final.
+6. Work each section in any order. A section is "done" when all its gates pass.
+7. When all gates green, set `Status: READY FOR REVIEW`, push a `vv/<FilterName>` branch with a commit following [`commit_template.md`](./commit_template.md).
+8. After sign-off, set `Status: COMPLETE`. Verified commit hash is filled in at SBIR deliverable assembly.
 
 ## Status tracking across filters
 

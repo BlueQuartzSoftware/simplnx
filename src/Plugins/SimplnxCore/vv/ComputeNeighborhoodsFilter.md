@@ -1,121 +1,114 @@
 # V&V Report: ComputeNeighborhoodsFilter
 
-|           |                  |
-|-----------|------------------|
-| Plugin    | SimplnxCore      |
-| SIMPLNX UUID               | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d`                              |
-| SIMPLNX Human Name         | Compute Feature Neighborhoods                                      |
-| DREAM3D 6.5.171 equivalent | `FindNeighborhoods` (SIMPL UUID `697ed3de-db33-5dd1-a64b-04fb71e7d63e`) — `Source/Plugins/Statistics/StatisticsFilters/FindNeighborhoods.{h,cpp}` |
-| Verified commit            | *<filled at SBIR deliverable assembly>*                            |
-| Status                     | COMPLETE — 2026-07-16                                               |
-| Sign-off                   | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16         |
+|        |              |
+|--------|--------------|
+| Plugin | SimplnxCore |
+| SIMPLNX UUID | `924c10e3-2f39-4c08-9d7a-7fe029f74f6d` |
+| SIMPLNX Human Name | Compute Feature Neighborhoods |
+| DREAM.3D v6.5.171 equivalent | `FindNeighborhoods` (Statistics plugin, SIMPL UUID `697ed3de-db33-5dd1-a64b-04fb71e7d63e`) |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | COMPLETE |
+| Sign-off | Michael Jackson, 2026-07-02; second engineer: Nathan Young, 2026-07-10 |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | **Rewrite** of legacy `FindNeighborhoods`. Legacy tested an axis-aligned box in normalized bin-space with a per-feature reach; NX tests a true Euclidean sphere. A real **NX regression is resolved** (see Bug flags). A new "Search Radius (microns)" mode and removal of the unused Feature Phases input were also added. |
-| Oracle (confirmed)     | **Class 1 (Analytical) + Class 4 (Invariant).** Two hand-built synthetic fixtures with exact neighbor counts (microns mode; per-feature multiples mode incl. an asymmetry case), plus count==list-size and symmetry/asymmetry invariants. Encoded in `test/ComputeNeighborhoodsTest.cpp`; all pass. |
-| Code paths enumerated  | 14 of 15 exercised; 1 uncovered (the cancel-signal path, which requires cancel-signal injection).                                  |
-| Tests today | 5 registered cases plus one hidden HDF5 boundary case. Both serial CTest selections pass 5/5. |
-| Exemplar archive       | **None.** All oracles are inline analytical values. The legacy comparison used the shared `6_6_stats_test_v2.tar.gz` Small IN100 stats dataset as input only (not a unit-test exemplar for this filter).                                     |
-| Legacy comparison      | **Run** on Small IN100 (`6_6_stats_test_v2.dream3d`, 620 features, mult=1) via 6.5.171 `PipelineRunner` vs `nxrunner`. After the fix, NX correlates **0.894** with legacy and finds **50.8%** as many neighbors — exactly the sphere/box volume ratio. One documented deviation (D1); phases removal (D2). |
-| Bug flags              | **Resolved NX regression** (not a legacy bug; PR #1485 landed 2026-01-08, so **7.4.1 is the only affected release**): the prior NX rewrite (PR #1485) introduced a `÷2` factor and a global (vs per-feature) radius, making the default `mult=1` find ~37× fewer neighbors than legacy (mean 0.29 vs 10.93). Fixed by restoring a per-feature Euclidean radius. |
-| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds independent HDF5 boundary evidence and paired runtime checks. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Rewrite of `FindNeighborhoods` in DREAM.3D v6.5.171. SIMPLNX uses a Euclidean sphere with a per-feature or absolute radius instead of a box in integer bin coordinates. |
+| Oracle (confirmed) | Class 1 counts and Class 4 invariants use two fixtures in `test/ComputeNeighborhoodsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 16 of 21 exercised by the five ordinary test cases. Gaps cover cancellation, empty input, background-only input, and external list storage. |
+| Tests today | Six test cases: two analytical, two preflight, one SIMPL conversion, and one hidden HDF5 fixture. The five ordinary cases cover both radius modes and input validation. |
+| Exemplar archive | None. Tests construct synthetic inputs and use inline analytical expectations. |
+| Legacy comparison | Run against DREAM.3D v6.5.171 on 2026-10-22: 1 of 3 cases match; the differences come from ComputeNeighborhoodsFilter-D1. A local proof version with those fixes matches DREAM3D-NX in 3 of 3 cases, using constant legacy diameters for the DREAM3D-NX-only absolute-radius case. |
+| Bug flags | None |
+| V&V phase | Verification records, second-engineer review and the legacy comparison are complete. |
 
 ## Summary
 
-`ComputeNeighborhoodsFilter` counts, for each feature, how many other features have their centroid within a search radius of that feature's centroid. Verification used a **Class 1 analytical oracle** (hand-built synthetic fixtures with exact, hand-derived neighbor counts for both the per-feature "Multiples" mode and the absolute "Search Radius (microns)" mode) together with **Class 4 invariants** (count == neighbor-list size; symmetry in microns mode; per-feature asymmetry in multiples mode). Reconciling SIMPLNX against this independent oracle — and then against legacy DREAM3D 6.5.171 on Small IN100 — surfaced a real regression in the prior NX rewrite: the search radius had been changed to `avgDiameter × mult ÷ 2` (a single global radius), which at the default `mult=1` found ~37× fewer neighbors than legacy. The fix restores a **per-feature Euclidean radius** `equivalentDiameter[i] × mult`, preserving the legitimate box→sphere improvement of the rewrite while recovering legacy's per-feature scale (post-fix correlation 0.894 with legacy; the residual 2× count difference is the geometrically-correct sphere-vs-box volume ratio).
+`ComputeNeighborhoodsFilter` counts and lists feature centroids within each feature's search radius. Class 1 fixtures check exact counts, and Class 4 invariants check list sizes and symmetric or asymmetric membership. The V&V fixed the global-radius regression and background-feature processing; DREAM3D-NX v7.4.2 contains both fixes.
 
 ## Algorithm Relationship
 
-*Classification:* **Rewrite** ~~| Port | Minor changes | New filter~~
+*Classification:* Rewrite
 
-*Evidence:* Same SIMPL UUID retained (`697ed3de-db33-5dd1-a64b-04fb71e7d63e`; SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/ComputeNeighborhoodsFilter.json`). The core inclusion test is fundamentally different from legacy, so this is a rewrite whose outputs diverge from legacy by design — defended in the Deviations file.
-
-*History (why this is a rewrite with a mid-flight fix):*
-
-1. The original NX port (pre-#1485) was a faithful translation of legacy: per-feature `criticalDistance[i] = eqDiam[i]·mult / aveDiam`, compared against integer bin differences on each axis (an axis-aligned **box** in normalized bin space).
-2. **PR #1485 ("BUG: New implementation")** correctly replaced the bin-membership proxy with a true **Euclidean distance** test — a genuine improvement — but in doing so redefined the radius as a single **global** `avgDiameter·mult ÷ 2`. The `÷2` and the global (rather than per-feature) radius were not present in legacy. The hand-verification used `mult=3.0`, which masked the effect; at the default `mult=1.0` the filter found almost no neighbors.
-3. **This V&V** restored the per-feature Euclidean radius `equivalentDiameter[i]·mult` (no `÷2`), keeping the box→sphere improvement. The `avgDiameter` is now used only to size the internal spatial-hash grid.
-
-*Port-time deltas vs legacy (current state):*
-
-1. **Box → sphere.** Legacy: `|Δbin| < cd` on each axis (Chebyshev box in bin space). NX: `distSq ≤ radius²` (Euclidean sphere in physical units). This is the intended correctness improvement; it is the sole remaining source of numeric divergence (D1).
-2. **Per-feature radius retained.** Both legacy and current NX scale the reach by each feature's own equivalent diameter, so large features have large neighborhoods and the relation is asymmetric.
-3. **Feature Phases removed.** Legacy required a `FeaturePhases` input but never used it in the computation; NX removes the parameter (D2).
-4. **New "Search Radius (microns)" mode.** No legacy equivalent; lets the user supply an absolute radius and does not require Equivalent Diameters.
-
-OOC source: `Algorithms/ComputeNeighborhoods.cpp` (320 lines). The new test targets the storage path documented below.
+*Evidence:* `src/Plugins/SimplnxCore/src/SimplnxCore/SimplnxCoreLegacyUUIDMapping.hpp` maps `FindNeighborhoods` to this filter; the legacy source compares integer bin differences, while `ComputeNeighborhoods.cpp` compares squared Euclidean distance with each feature's squared radius.
 
 ## Oracle
 
-*Class:* **1 (Analytical)** primary, **4 (Invariant)** companion.
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-*Applied:* Minimal synthetic geometries with hand-placed centroids (and, for multiples mode, hand-chosen equivalent diameters) make the expected neighbor counts derivable on paper. Microns mode: a constant radius of 3.5 on seven features gives counts `{0,1,2,1,1,0,1}`, including a pair (features 4 and 6) separated by exactly the search radius to pin the inclusive `distSq ≤ radius²` boundary. Multiples mode: `eqDiam = {6,2,2,2,2}`, `mult=1` gives per-feature radii `{6,2,2,2,2}`; the fixture is arranged so a large feature reaches a small one that does not reach back, yielding counts `{3,0,0,1,0}` and a checkable asymmetry. Both fixtures assert index 0 as well: the background feature 0 must end with a zero count and an empty list (the multiples fixture makes this discriminating by placing feature 0's centroid coincident with feature 1's). Class 4 invariants (`Neighborhoods[i] == NeighborList[i].size` for **every** index including 0, symmetry in microns mode, targeted per-feature asymmetry in multiples mode) are asserted alongside the exact values.
+*Applied:* Hand-placed centroids give counts `{0,1,2,1,1,0,1}` at radius 3.5 and `{0,3,0,0,1,0}` with per-feature diameters; list sizes, background exclusion, boundary inclusion, and symmetric or asymmetric membership are asserted.
 
-*Encoded:* `test/ComputeNeighborhoodsTest.cpp::ComputeNeighborhoods_SyntheticOracle` (microns) and `::ComputeNeighborhoods_MultiplesAnalyticalOracle` (per-feature). All pass at the verified commit.
+*Encoded:* `src/Plugins/SimplnxCore/test/ComputeNeighborhoodsTest.cpp::SimplnxCore::ComputeNeighborhoods_SyntheticOracle` and `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` — two fixtures. All pass in CI.
 
-*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
+*Second-engineer review:* Nathan Young, 2026-07-10.
 
 ## Bugs found and fixed
 
-No new defect was found during this OOC recertification. Existing defect and deviation dispositions in this report and its sidecar are retained.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `ComputeNeighborhoodsFilter-D4` and `ComputeNeighborhoodsFilter-D5`.
+
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeNeighborhoodsFilter-D4` | A single radius of `averageDiameter * multiplier / 2` replaced each feature's own radius and changed neighbor membership. | DREAM3D-NX v7.4.1. DREAM.3D v6.5.171 was not affected. | Multiples mode uses `equivalentDiameter[i] * multiplier`; the average diameter sizes the search bins only. |
+| `ComputeNeighborhoodsFilter-D5` | Background feature 0 could search for neighbors and obtain a nonzero count, while its output list stayed empty. | DREAM3D-NX v7.4.1. DREAM.3D v6.5.171 was not affected. | Search sources and candidates exclude feature 0; its count is zero and its list is empty. |
 
 ## Code path coverage
 
-*14 of 15 paths exercised.*
+16 of 21 paths exercised. Each uncovered row states the required fixture or signal.
 
-Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` (320 lines) + `ComputeNeighborhoodsFilter.cpp` preflight.
+Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` (322 lines) and `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/ComputeNeighborhoodsFilter.cpp` (269 lines).
 
-Logical phases: **(a) preflight validation/actions**, **(b) radius + bin setup**, **(c) parallel per-feature spatial scan**, **(d) neighbor-list finalize**.
+Test names below omit the `SimplnxCore::` prefix. The two analytical cases are `ComputeNeighborhoods_SyntheticOracle` and `ComputeNeighborhoods_MultiplesAnalyticalOracle`.
 
-| #  | Phase | Path | Test case |
-|----|-------|------|-----------|
-| 1  | (a) | Multiples mode, `multiples ≤ 0` → error `-5732` | `ComputeNeighborhoods_InvalidSearchRadius` (multiples section, code asserted) |
-| 2  | (a) | Microns mode, `searchRadius ≤ 0` → error `-5733` | `ComputeNeighborhoods_InvalidSearchRadius` (microns section, code asserted) |
-| 3  | (a) | Multiples mode, tuple mismatch (eqDiam vs centroids) → error `-5730` | `ComputeNeighborhoods_InvalidSearchRadius` (tuple-mismatch section, code asserted) |
-| 4  | (a) | Centroids parent is not an Attribute Matrix → error `-5731` | `ComputeNeighborhoods_InvalidSearchRadius` (loose-centroids section, code asserted) |
-| 5  | (a) | Report Input Image Geometry Info preflight value (both modes) | `..._SearchRadiusPreflightInfo` |
-| 6  | (a) | Microns sub-voxel radius → warning `-5734` | `..._SearchRadiusPreflightInfo` (sub-voxel section) |
-| 7  | (a) | Microns oversized radius → warning `-5735` | `..._SearchRadiusPreflightInfo` (oversized section) |
-| 8  | (b) | `SearchRadiusType == 0` → per-feature radii `eqDiam[i]·mult`, binSize = avgDiameter (excl. feature 0) | `..._MultiplesAnalyticalOracle` |
-| 9  | (b) | `SearchRadiusType == 1` → constant radii = searchRadius (feature 0 gets none), binSize = searchRadius | `..._SyntheticOracle` |
-| 10 | (c) | Neighbor within radius → `updateNeighborHood(i, j)` | both analytical oracles |
-| 11 | (c) | Per-feature asymmetry (radius varies by feature) | `..._MultiplesAnalyticalOracle` (asymmetry assertions) |
-| 12 | (c) | Self-skip (`j == i`) and background exclusion — feature 0 is excluded both as a search **source** (`Range(1, N)`) and as a **candidate** (`binToFeatures` built from feature 1) | Explicitly asserted in both oracles: `Neighborhoods[0] == 0` and `NeighborhoodList[0]` empty; the multiples fixture places feature 0's centroid coincident with feature 1's so a regression here fails the assertion |
-| 13 | (c) | `shouldCancel` → early return from the parallel scan | *Not directly tested. Requires cancel-signal injection.* |
-| 14 | (c) | Inclusive boundary: `distSq == radiusSq` counts as a neighbor | `..._SyntheticOracle` (features 4 and 6 at exactly radius distance, exactly representable in float32) |
-| 15 | Storage | HDF5 NeighborList output crosses three-tuple chunks | `real HDF5 list-chunk oracle` — exact directed lists and counts in both radius modes |
+| # | Phase | Path | Test case |
+|---|-------|------|-----------|
+| 1 | Preflight | Multiples mode, multiplier ≤ 0 → error `-5732` | `ComputeNeighborhoods_InvalidSearchRadius` — zero multiplier |
+| 2 | Preflight | Microns mode, radius ≤ 0 → error `-5733` | `ComputeNeighborhoods_InvalidSearchRadius` — zero radius |
+| 3 | Preflight | Diameter and centroid tuple counts differ → error `-5730` | `ComputeNeighborhoods_InvalidSearchRadius` — tuple mismatch |
+| 4 | Preflight | Centroids parent is not an Attribute Matrix → error `-5731` | `ComputeNeighborhoods_InvalidSearchRadius` — loose centroids |
+| 5 | Preflight | Report geometry information; accept a radius without warnings | `ComputeNeighborhoods_SearchRadiusPreflightInfo` — reasonable radius |
+| 6 | Preflight | Microns radius is below the minimum voxel spacing → warning `-5734` | `ComputeNeighborhoods_SearchRadiusPreflightInfo` — sub-voxel radius |
+| 7 | Preflight | Microns radius exceeds the largest geometry extent → warning `-5735` | `ComputeNeighborhoods_SearchRadiusPreflightInfo` — oversized radius |
+| 8 | Setup | Multiples mode computes per-feature radii and averages non-background diameters for bin size | `ComputeNeighborhoods_MultiplesAnalyticalOracle` |
+| 9 | Setup | Microns mode uses one radius and does not require Equivalent Diameters | `ComputeNeighborhoods_SyntheticOracle` |
+| 10 | Search | A candidate lies within the radius → increment count and append its ID | Both analytical cases |
+| 11 | Search | Different per-feature radii permit asymmetric membership | `ComputeNeighborhoods_MultiplesAnalyticalOracle` — feature 1 lists feature 2, but feature 2 does not list feature 1 |
+| 12 | Search | Skip self and exclude background as a source and candidate | Both analytical cases — exact counts include background; feature 0 coincides with feature 1 |
+| 13 | Search | Cancel during the per-feature scan → return | *Not directly tested. Requires cancel-signal injection during the scan.* |
+| 14 | Search | Squared distance equals squared radius → include the candidate | `ComputeNeighborhoods_SyntheticOracle` — features 4 and 6 are exactly 3.5 apart |
+| 15 | Storage | External NeighborList output crosses a three-tuple chunk boundary | *Not directly tested. Requires the hidden `ComputeNeighborhoods: real HDF5 list-chunk oracle` fixture.* |
+| 16 | Setup | No feature tuples → return before radius setup | *Not directly tested. No fixture has zero feature tuples.* |
+| 17 | Setup | Only background exists → skip averaging and all feature searches | *Not directly tested. No fixture contains only feature 0.* |
+| 18 | Setup | Cancel after bin construction → return before searching | *Not directly tested. Requires cancel-signal injection before dispatch.* |
+| 19 | Search | Bin has no candidate features → continue | Both analytical cases — sparse centroid layouts |
+| 20 | Search | Candidate is outside the feature's radius → exclude it | `ComputeNeighborhoods_MultiplesAnalyticalOracle` — feature 2 excludes feature 1 |
+| 21 | Finalize | Write every neighbor list, including empty lists and background | Both analytical cases — count/list-size checks at every index |
 
 ## Test inventory
 
+The five ordinary cases use analytical inputs or conversion JSON. All pass in CI.
+
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `ComputeNeighborhoods_SyntheticOracle` | new-for-V&V | Class 1 microns oracle (7 features, r=3.5, counts `{0,1,2,1,1,0,1}`) + Class 4 count==size and symmetry invariants + inclusive-boundary pin (exact radius-distance pair) + background-feature-0 exclusion assertions. No Equivalent Diameters array (proves microns mode does not require it). |
-| `ComputeNeighborhoods_MultiplesAnalyticalOracle` | new-for-V&V | Class 1 per-feature multiples oracle (counts `{0,3,0,0,1,0}`) + count==size invariant + explicit per-feature asymmetry checks + background-feature-0 exclusion assertions (feature 0 coincident with feature 1). |
-| `ComputeNeighborhoods_InvalidSearchRadius` | new-for-V&V | 4 SECTIONs: preflight rejects a non-positive search radius (`-5733`), a non-positive multiplier (`-5732`), an eqDiam/centroids tuple mismatch (`-5730`), and Centroids outside an Attribute Matrix (`-5731`) — all error codes asserted. Synthetic input (no archive). |
-| `ComputeNeighborhoods_SearchRadiusPreflightInfo` | new-for-V&V | 3 SECTIONs: geometry-info preflight value present; sub-voxel warning `-5734`; oversized warning `-5735`. |
-| `ComputeNeighborhoodsFilter: SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs) | kept | Validates UUID + argument decoding from SIMPL 6.4/6.5 JSON. |
-| `ComputeNeighborhoods_1` | retired | Circular exemplar comparison (golden `Neighborhoods_1` was not an independent oracle) and invalidated by the radius fix. Replaced by the Class 1 analytical oracle + legacy comparison. |
-| `ComputeNeighborhoods_3` | retired | Same as `_1` for `mult=3`. |
-| `ComputeNeighborhoods_SearchRadiusMicrons` | retired | Premise (microns ≡ multiples when `r = avgDiam/2`) is invalid under the per-feature fix. Microns mode is covered by `SyntheticOracle`. |
-| `real HDF5 list-chunk oracle` | new-for-V&V | Actual HDF5 input/output and independent boundary expectations; 79 assertions across the configured options. |
-
-All non-retired tests pass at the verified commit. *(In-core build confirmed; OOC build to be confirmed per dual-build protocol.)*
-
-OOC recertification (2026-09-21): serial CTest passed 5/5 in each DREAM3DNX build. `test/ComputeNeighborhoodsTest.cpp::real HDF5 list-chunk oracle` passed 79 assertions in the OOC binary. The hidden case reuses BuildSyntheticFeatures and gives the feature AttributeMatrix shape {3,1,3}. The HDF5 list factory creates three-tuple chunks, so features 2/3 straddle a real list chunk boundary. At positions x=0,3,6, the fixed-radius mode gives lists {3}, {2,4}, {3}; the diameter-based mode gives {3}, {}, {3}. All other features are isolated. Numeric inputs/output are HDF5-OOC; the output list is asserted out-of-core. Existing legacy deviation dispositions remain unchanged. Upstream/develop oracle assertions and tolerances remain intact. No fresh legacy binary comparison is claimed.
+| `SimplnxCore::ComputeNeighborhoods_SyntheticOracle` | new-for-V&V | Seven features; radius 3.5; exact counts `{0,1,2,1,1,0,1}`. Checks list sizes, symmetry, inclusive boundary, background exclusion, and operation without Equivalent Diameters. |
+| `SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle` | new-for-V&V | Six features; exact counts `{0,3,0,0,1,0}`. Checks list sizes, asymmetric and symmetric pairs, and background exclusion; covers D4 and D5. |
+| `SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius` | new-for-V&V | Four sections assert errors `-5733`, `-5732`, `-5730`, and `-5731` for zero radius, zero multiplier, tuple mismatch, and centroids outside an Attribute Matrix. |
+| `SimplnxCore::ComputeNeighborhoods_SearchRadiusPreflightInfo` | new-for-V&V | Three sections check geometry information, no warning for radius 5, warning `-5734` for radius 0.5, and warning `-5735` for radius 1000. |
+| `SimplnxCore::ComputeNeighborhoods: real HDF5 list-chunk oracle` | new-for-V&V | Hidden fixture with nine features and tuple shape `{3,1,3}`. Both radius modes assert exact directed lists, counts, storage types, and tuple dimensions across the features 2/3 chunk boundary. |
+| `SimplnxCore::ComputeNeighborhoodsFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` sections check filter identity, empty comments, and six converted argument values. |
 
 ## Exemplar archive
 
-- **Archive:** None. All oracle outputs are inline hand-derived values on synthetic inputs.
-- The retired tests previously consumed `compute_feature_neighborhoods.tar.gz`; its `download_test_data()` entry was removed from `test/CMakeLists.txt`.
-- The legacy comparison (below) used `6_6_stats_test_v2.tar.gz` (shared Small IN100 stats dataset) as **input only**.
+- **Archive:** None. All current correctness fixtures use synthetic inputs and inline expected values.
+- **SHA512:** Not applicable. `src/Plugins/SimplnxCore/test/CMakeLists.txt` has no archive registration for this filter.
+- **Provenance:** Not applicable. Fixture construction and analytical derivations are in `src/Plugins/SimplnxCore/test/ComputeNeighborhoodsTest.cpp`.
 
-## Deviations from DREAM3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-Comparison run on `6_6_stats_test_v2.dream3d` (Small IN100, 620 features, mult=1) through 6.5.171 `PipelineRunner` and `nxrunner`.
+See `vv/deviations/ComputeNeighborhoodsFilter.md` for the source evidence, affected users, and recommendation. Only Part 1 entries are listed here.
 
-- `ComputeNeighborhoodsFilter-D1` — NX counts neighbors with a Euclidean sphere (inclusive `≤` at the boundary); 6.5.171 used an axis-aligned box in normalized bin space with a strict `<`, so NX reports ~52% as many neighbors (correlation 0.894). See `vv/deviations/ComputeNeighborhoodsFilter.md`.
-- `ComputeNeighborhoodsFilter-D2` — the `FeaturePhases` required input was removed (unused by both implementations). See `vv/deviations/ComputeNeighborhoodsFilter.md`.
-- `ComputeNeighborhoodsFilter-D3` — NX rejects non-positive radius/multiplier values at preflight (`-5732`/`-5733`); 6.5.171 silently accepted them and produced all-zero output. See `vv/deviations/ComputeNeighborhoodsFilter.md`.
+| Deviation | Observed difference |
+|-----------|---------------------|
+| `ComputeNeighborhoodsFilter-D1` | SIMPLNX uses an inclusive Euclidean radius; DREAM.3D v6.5.171 uses strict comparisons in integer bin coordinates. SIMPLNX also offers an absolute-radius mode. |
+| `ComputeNeighborhoodsFilter-D2` | SIMPLNX removes the unused Feature Phases input. |
+| `ComputeNeighborhoodsFilter-D3` | SIMPLNX rejects non-positive multipliers; DREAM.3D v6.5.171 accepts them. The absolute-radius mode also rejects non-positive radii. |

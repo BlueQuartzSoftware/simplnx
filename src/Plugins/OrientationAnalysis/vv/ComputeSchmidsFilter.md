@@ -1,120 +1,67 @@
 # V&V Report: ComputeSchmidsFilter
 
-|           |                          |
-|-----------|--------------------------|
-| Plugin    | OrientationAnalysis      |
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
 | SIMPLNX UUID | `b4681855-0a3d-4237-97f2-5aec509115c4` |
-| DREAM3D 6.5.171 equivalent | `FindSchmids` (SIMPL UUID `e67ca06a-176f-58fc-a676-d6ee5553511a`) - `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindSchmids.{h,cpp}` |
+| SIMPLNX Human Name | Compute Schmid Factors |
+| DREAM.3D v6.5.171 equivalent | `FindSchmids` (SIMPL UUID `e67ca06a-176f-58fc-a676-d6ee5553511a`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | COMPLETE     |
-| Sign-off  | *Michael Jackson <mike.jackson@bluequartz.net>*  |
+| Status | READY FOR REVIEW |
+| Sign-off | Michael Jackson, 2026-08-21; second engineer: pending |
 
 ## At a glance
 
-| Aspect                 | Current state            |
-|------------------------|--------------------------|
-| Algorithm Relationship | Port with with bug fixes. See 'Dependency' section |
-| Oracle (confirmed) | Class 1 (Analytical) - **12 value-asserting fixtures**: 5 auto-path loading directions, 4 exactly-representable quaternions, and 3 override-path cases. Class 4 assertions cover the physical bound `0 <= m <= 0.5`, angle-component relationships, fixed-point `Poles`, scale invariance, and cubic-symmetry invariance. The fixtures are inline and independent of archived filter output. |
-| Code paths enumerated | 21 of 22 paths exercised - only the cancel path is untested. |
-| Tests today | 6 registered target cases plus one hidden HDF5 boundary test. Paired target selections pass 6/6. |
-| Exemplar archive | **None for this filter.** The circular `6_6_stats_test_v2.tar.gz` comparison was retired. |
-| Legacy comparison | **Run — SIMPLNX vs DREAM3D 6.5.171** One shared six-Feature input was exercised through 10 original pipeline pairs plus 3 zero-vector validation pairs. The independent rerun confirmed **291/291 expected relationships**: auto-path floats matched the exact D1 bias factors, auto-path `SlipSystems` and `Poles` were bit-identical, override-path floats agreed within `1.2e-7` relative, and D5 was traced to equivalent symmetry tables with different ordering and tied maxima. 6 deviations: **D1** truncated cubic normalizers; **D2** legacy `-301` skipped-row sentinel; **D3** undefined library outputs; **D4** mode-dependent angle units, names, and error reporting; **D5** table-relative override index; **D6** malformed-input validation. See the deviations document for root-cause detail. |
-| Bug flags | **Four bugs resolved in SIMPLNX or EbsdLib:** `ComputeSchmidsFilter-D1` (truncated cubic normalizers), `ComputeSchmidsFilter-D2` (legacy `-301` skipped-row initialization), `ComputeSchmidsFilter-D3` (undefined orientation-library outputs), and `ComputeSchmidsFilter-D6` (missing malformed-input validation). |
-| V&V phase | Historical status and sign-off retained. Section 4.3 recertification adds real-HDF5 analytical boundary evidence and paired runtime checks. |
+| Aspect | Current state |
+|--------|---------------|
+| Algorithm Relationship | Minor changes to `FindSchmids` in DREAM.3D v6.5.171. SIMPLNX retains the feature calculation with higher precision, input checks and corrected library outputs. |
+| Oracle (confirmed) | Classes 1 and 4 use 12 analytical fixtures in `test/ComputeSchmidsTest.cpp`. All pass in CI. |
+| Code paths enumerated | 20 of 25 exercised. Cancellation, the hidden storage fixture, the sentinel-only loop, other Laue classes and one option combination remain outside this count. |
+| Tests today | 7 test cases: 3 analytical, 2 option/input-validation and 1 conversion case, plus 1 hidden storage case. The six ordinary cases run in CI; all pass in CI. |
+| Exemplar archive | `6_6_stats_test_v2.tar.gz` is retired for this filter. Current tests construct their inputs and use analytical expectations. |
+| Legacy comparison | Not run for the current algorithm. The DREAM.3D v6.5.171 comparison dated 2026-08-20 precedes the latest algorithm change. |
+| Bug flags | None |
+| V&V phase | COMPLETE |
 
 ## Summary
 
-`ComputeSchmidsFilter` computes, for each Feature, the largest Schmid factor over the slip systems of that Feature's crystal structure, given a sample-frame loading direction and the Feature's average orientation. Verification uses inline Class 1 analytical fixtures plus Class 4 invariants; the circular production-scale exemplar was retired. The cycle found the original four defects plus two input-validation gaps during adversarial review and documents six deviations from DREAM3D 6.5.171.
-
-## Dependency state
-
-- EbsdLib version 3.1.1
+`ComputeSchmidsFilter` calculates each feature's maximum Schmid factor from its average orientation, crystal structure and loading direction. Twelve Class 1 fixtures and Class 4 invariants check the cubic calculations, with additional input and output checks. All pass in CI.
 
 ## Algorithm Relationship
 
-**Port with minor algorithm improvements and updates for the SIMPLNX API.**
+*Classification:* Minor changes
 
-*Evidence:* `ComputeSchmids::operator()` preserves the legacy `FindSchmids::execute()` feature iteration, loading-direction transformation, crystal-structure dispatch, and automatic/override slip-system calculations.
-
-Port-time updates:
-
-1. **Higher-precision calculations.** Legacy holds the orientation matrix, crystal-frame loading direction, Schmid factor, and angle components in `float`; SIMPLNX computes them in `double` and narrows only when storing the `float32` outputs. This improves numerical accuracy without changing the selected slip system.
-2. **SIMPLNX API updates and input validation.** Selection parameters validate the required arrays, output actions declare every created array, and preflight/execute guards reject mismatched tuple counts, empty arrays, invalid phase indices, and zero-length input vectors before unsafe access or normalization.
-3. **Improved error messages.** SIMPLNX identifies the offending array paths, tuple counts, vector components, phase values, and valid ranges so users can correct invalid inputs directly.
-
-**Material PRs since baseline:** none identified for this filter.
+*Evidence:* `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/OrientationAnalysisLegacyUUIDMapping.hpp` maps `FindSchmids` to this filter; both sources use the same feature loop and automatic/override calculations, with higher precision and added validation in SIMPLNX.
 
 ## Oracle
 
-**Class 1 (Analytical)** with **Class 4 (Invariant)** support, and Class 3 as corroboration only.
+*Class:* 1 (Analytical), with 4 (Invariant) companions.
 
-The oracle was derived by transcribing three sources by hand — `ComputeSchmids.cpp`, EbsdLib's `Quaternion<T>::toOrientationMatrix()`, and both `CubicOps::getSchmidFactorAndSS` overloads — into closed-form expressions, evaluating them exactly, and writing the results into the test as inline expected values with the derivation in a comment above each. The derivation is reproduced independently at 80 significant digits by `ww_work/ComputeSchmids/oracle.py`, which parses EbsdLib's own 24-element symmetry table out of the source rather than re-typing it.
+*Applied:* Closed-form cubic slip-system products define expected factors, angles, indices and poles; invariants check physical bounds, loading-scale invariance and cubic-symmetry invariance.
 
-Identity quaternion, `Cubic_High`, auto slip-system path:
+*Encoded:* `src/Plugins/OrientationAnalysis/test/ComputeSchmidsTest.cpp` — `Class 1 analytical oracle, auto slip system` (5 loadings), `orientation-matrix convention and equivariance` (4 quaternions), and `override slip system path` (3 loadings). All pass in CI.
 
-| Loading | m | cos phi (Phis) | cos lambda (Lambdas) | SlipSystems | Poles |
-|---|---|---|---|---|---|
-| `[0,0,1]` | `1/sqrt(6)` = 0.4082482904638630 | `1/sqrt(3)` = 0.5773502691896258 | `1/sqrt(2)` = 0.7071067811865476 | 0 | (0, 0, 100) |
-| `[1,1,1]` | `2/(3 sqrt(6))` = 0.2721655269759087 | `1/3` = 0.3333333333333333 | `2/sqrt(6)` = 0.8164965809277260 | 4 | (57, 57, 57) |
-| `[0,1,1]` | `1/sqrt(6)` = 0.4082482904638630 | `2/sqrt(6)` = 0.8164965809277260 | `1/2` = 0.5 | 1 | (0, 70, 70) |
-| `[1,2,3]` | `8/sqrt(294)` = 0.4665694748158435 | `4/sqrt(42)` = 0.6172133998483701 | `4/sqrt(28)` = 0.7559289460184544 | 10 | (26, 53, 80) |
-
-`[0,0,1]` and `[1,1,1]` and `[0,1,1]` all carry ties at the maximum and pin the strict-`>` tie-break to the lowest index. `[1,2,3]` has a unique maximum and pins the enumeration order. `[0,1,1]` is the row that separates `Phis` from `Lambdas` (0.8165 versus 0.5) — on the other three rows a swapped pair would go unnoticed. `[3,6,9]` repeats `[1,2,3]` to check that the loading direction is normalized.
-
-Rotated quaternions, loading `[1,2,3]`. Each is exactly representable in `float32` and produces an orientation matrix whose entries are all `0` or `+/-1`, so there is no floating-point slack in the expected `Poles`. All four are cubic symmetry operations, so `m` and both angle components must be identical across them while `SlipSystems` and `Poles` move — a Class 4 symmetry invariance riding on the Class 1 values:
-
-| Quaternion (x,y,z,w) | Orientation matrix | crystalLoading | SlipSystems | Poles |
-|---|---|---|---|---|
-| `(0,0,0,1)` identity | `I` | `(1,2,3)/sqrt(14)` | 10 | (26, 53, 80) |
-| `(0,0,1,0)` 180 deg about Z | `diag(-1,-1,1)` | `(-1,-2,3)/sqrt(14)` | 8 | (-26, -53, 80) |
-| `(0.5,0.5,0.5,0.5)` 120 deg about [111] | `[[0,0,1],[1,0,0],[0,1,0]]` | `(3,1,2)/sqrt(14)` | 6 | (80, 26, 53) |
-| `(1,0,0,0)` 180 deg about X | `diag(1,-1,-1)` | `(1,-2,-3)/sqrt(14)` | 1 | (26, -53, -80) |
-
-Override slip-system path (`(001)[100]`, identity quaternion) — a different EbsdLib overload with different semantics for both the index and the angle components:
-
-| Loading | m | symmetry-operator index | Phis (radians) | Lambdas (radians) |
-|---|---|---|---|---|
-| `[1,2,3]` | `3/7` = 0.4285714285714286 | 3 | 0.6405223126794245 | 1.0068536854342678 |
-| `[1,1,1]` | `1/3` = 0.3333333333333333 | 0 | 0.9553166181245093 | 0.9553166181245093 |
-| `[0,0,1]` | 0 | 0 | 0 | 0 |
-
-The three angle columns on this path are `acos` values, i.e. transcendental rather than surds, so they are not covered by `oracle.py`'s exact-arithmetic table. They were recomputed independently to 60 significant digits — `acos(3/sqrt(14)) = atan(sqrt(5)/3) = 0.640522312679424574143…`, `acos(2/sqrt(14)) = atan(sqrt(10)/2) = 1.006853685434267776537…`, `acos(1/sqrt(3)) = atan(sqrt(2)) = 0.955316618124509278163…` — and rounded to the nearest `double`. The asserted tolerance is `1e-6`, far looser than that rounding.
-
-Class 4 invariants asserted alongside the Class 1 values:
-
-- `0 <= m <= 0.5` — the physical bound for a cubic crystal. **This became assertable only after the EbsdLib fix**: EbsdLib <= 3.1.0 reached 0.500090176 at the maximizing direction. Verified over a 400 x 400 direction sweep in `oracle.py`.
-- `m == Phis * Lambdas` on the auto path (the stored values are cosines) and `m == cos(Phis) * cos(Lambdas)` on the override path (the stored values are angles). The pair of assertions is what proves the SC-3 unit flip is real behaviour rather than a documentation misreading.
-- `Poles[k] == trunc(100 * crystalLoading[k])`, including negative components, which is what distinguishes truncation from rounding.
-- Scale invariance: `[1,2,3]` and `[3,6,9]` agree on all five outputs.
-- Cubic-symmetry invariance: all four quaternions give the same `m`, `Phis` and `Lambdas`.
-
-**Class 3 corroboration (not the oracle):** the three canonical FCC anchors fall out of the table — `m = 0.408` for `<001>` and `<011>` loading and `m = 0.272` for `<111>` loading, with `phi = 54.74 deg` / `lambda = 45 deg` and `phi = 70.53 deg` / `lambda = 35.26 deg` respectively (Dieter, *Mechanical Metallurgy* 3rd ed. section 4-3; Schmid & Boas, *Kristallplastizität*). These are quoted as a sanity check on the Class 1 derivation, not as its source.
-
-**Encoded test references** (all greppable in `src/Plugins/OrientationAnalysis/test/ComputeSchmidsTest.cpp`):
-
-- `"OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle, auto slip system"`
-- `"OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convention and equivariance"`
-- `"OrientationAnalysis::ComputeSchmidsFilter: override slip system path"`
-- `"OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards"`
+*Second-engineer review:* No second engineer is named in the sign-off.
 
 ## Bugs found and fixed
 
-This branch fixes all defects in this table. The fixes will be in the DREAM3D-NX release after v7.4.1.
+All defects in this table are fixed. DREAM3D-NX v7.4.2 contains the fixes for `ComputeSchmidsFilter-D1`, `ComputeSchmidsFilter-D3`, `ComputeSchmidsFilter-D6` and `ComputeSchmidsFilter-D7`. DREAM3D-NX did not use the legacy angle sentinel described in `ComputeSchmidsFilter-D2`.
 
-| Deviation | Defect | Affected released versions | Resolution in this branch |
-|---|---|---|---|
-| `ComputeSchmidsFilter-D1` | The cubic calculation used truncated normalizers. The calculated Schmid factor could exceed the physical maximum of 0.5. | DREAM.3D 6.5.171; DREAM3D-NX v7.0.0 through v7.4.1. | EbsdLib 3.1.1 uses full-precision constants. |
-| `ComputeSchmidsFilter-D2` | DREAM.3D initialized uncomputed angle values to `-301`. The value was an error code that was used as an initialization value. | DREAM.3D 6.5.171 only. DREAM3D-NX was not affected. | SIMPLNX initializes all output arrays to zero. The algorithm also initializes Feature 0. |
-| `ComputeSchmidsFilter-D3` | The orientation library did not initialize all output values. The filter could reuse values from the previous Feature. | DREAM.3D 6.5.171; DREAM3D-NX v7.0.0 through v7.4.1. | EbsdLib 3.1.1 initializes all output values. The algorithm also initializes its output variables for each Feature. |
-| `ComputeSchmidsFilter-D6` | The filter accepted invalid phase values, empty arrays, arrays with different tuple counts, and zero direction vectors. These inputs could cause invalid output or invalid memory access. | DREAM.3D 6.5.171; DREAM3D-NX v7.0.0 through v7.4.1. | The algorithm rejects invalid phase values. Preflight rejects empty arrays, arrays with different tuple counts, and zero direction vectors. |
+| Deviation | Defect | Affected released versions | Resolution |
+|-----------|--------|----------------------------|------------|
+| `ComputeSchmidsFilter-D1` | Truncated cubic normalizers inflated factors and allowed values above 0.5. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | EbsdLib uses full-precision square-root constants. |
+| `ComputeSchmidsFilter-D2` | Skipped legacy angle rows retained the error-code value `-301`. | DREAM.3D v6.5.171 was affected. DREAM3D-NX was not affected. | Skipped output rows contain zero. |
+| `ComputeSchmidsFilter-D3` | Library routines left outputs unchanged or read a previous value, which could contaminate the next feature. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Library routines initialize outputs; the filter also resets local outputs for each feature. |
+| `ComputeSchmidsFilter-D6` | Invalid phases, malformed arrays and zero vectors could cause invalid reads or output. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was affected. | Preflight checks array sizes and vectors; execution checks phase bounds. |
+| `ComputeSchmidsFilter-D7` | Output actions omitted an explicit fill value, so skipped rows depended on store initialization. | DREAM3D-NX v7.0.0 through v7.4.1. DREAM.3D v6.5.171 was not affected by this omission. | All five output actions explicitly request zero initialization. |
 
 ## Code path coverage
 
-`Source: src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeSchmids.cpp (139 lines).`
+20 of 25 paths exercised. Each uncovered row states its gap.
 
-The algorithm is flat: a parameter setup block, a sentinel-row write, then one pass over Features.
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeSchmids.cpp` (139 lines) and `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/ComputeSchmidsFilter.cpp` (307 lines).
 
-21 of 22 paths exercised.
+Test names below omit the common `OrientationAnalysis::ComputeSchmidsFilter: ` prefix. Preflight validates inputs and declares outputs; execution initializes the sentinel and processes each remaining feature.
 
 | # | Phase | Path | Test case |
 |---|---|---|---|
@@ -122,7 +69,7 @@ The algorithm is flat: a parameter setup block, a sentinel-row write, then one p
 | 2 | *Preflight* | Reject empty Feature arrays (`-13504`) | "preflight input validation" / "Feature arrays must contain the sentinel tuple" |
 | 3 | *Preflight* | Reject an empty Crystal Structures array (`-13505`) | "preflight input validation" / "Crystal Structures must contain at least one ensemble" |
 | 4 | *Preflight* | Reject a zero Loading Direction (`-13506`) | "preflight input validation" / "Loading Direction must be non-zero" |
-| 5 | *Preflight* | Create the three unconditional output arrays with a zero fill | all executing V&V cases |
+| 5 | *Preflight* | Create the three unconditional output arrays with a zero fill | `Class 1 analytical oracle, auto slip system` |
 | 6 | *Preflight* | Create `Phis`/`Lambdas` when `StoreAngleComponents` is true | "Class 1 analytical oracle, auto slip system" |
 | 7 | *Preflight* | Skip `Phis`/`Lambdas` when `StoreAngleComponents` is false | "options, skip path and phase guards" / "StoreAngleComponents == false does not create Phis/Lambdas" |
 | 8 | *Preflight* | Reject a zero override Slip Plane (`-13507`) | "preflight input validation" / "Override Slip Plane must be non-zero" |
@@ -134,63 +81,45 @@ The algorithm is flat: a parameter setup block, a sentinel-row write, then one p
 | 14 | *Execute - per-Feature* | Negative phase id guard (`-13502`) | "options, skip path and phase guards" / "a negative phase id is an error" |
 | 15 | *Execute - per-Feature* | Out-of-range phase id guard (`-13501`) | "options, skip path and phase guards" / "a phase id beyond the ensemble count is an error" |
 | 16 | *Execute - per-Feature* | Skip a Feature whose Laue class is at or beyond `LaueGroupEnd` | "options, skip path and phase guards" / "Features whose Laue class is beyond LaueGroupEnd get defined zeros" |
-| 17 | *Execute - per-Feature* | Valid Laue class with no enumerated slip systems | "options, skip path and phase guards" / "Valid Laue classes without slip systems keep zero Schmid outputs and computed Poles" |
-| 18 | *Execute - per-Feature* | Auto slip-system path (`getSchmidFactorAndSS(load, ...)`) | "Class 1 analytical oracle, auto slip system"; "orientation-matrix convention and equivariance" |
-| 19 | *Execute - per-Feature* | Override slip-system path (`getSchmidFactorAndSS(load, plane, direction, ...)`) | "override slip system path" |
-| 20 | *Execute - per-Feature* | Store or omit angle components | auto, override, and StoreAngleComponents=false sections |
-| 21 | *Execute - per-Feature* | `m_ShouldCancel` early return | *Not directly tested. No cancel-signal injection infrastructure exists for algorithm classes; same gap as the rest of this plugin.* |
-| 22 | OOC storage | Quaternion chunk and one-feature tail have different analytical factors and poles | `real HDF5 quaternion-chunk tail oracle` |
+| 17 | *Execute - per-Feature* | Triclinic automatic mode has no enumerated slip systems | "options, skip path and phase guards" / "Valid Laue classes without slip systems keep zero Schmid outputs and computed Poles" |
+| 18 | *Execute - per-Feature* | Cubic-High automatic slip-system path | "Class 1 analytical oracle, auto slip system"; "orientation-matrix convention and equivariance" |
+| 19 | *Execute - per-Feature* | Cubic-High override path, including a zero maximum | "override slip system path" |
+| 20 | *Execute - per-Feature* | Store or omit angle components | `Class 1 analytical oracle, auto slip system`; `override slip system path`; `options, skip path and phase guards` |
+| 21 | *Execute - per-Feature* | `m_ShouldCancel` early return | *Not directly tested. No fixture injects cancellation.* |
+| 22 | Storage | Quaternion chunk and one-feature tail | *Not directly tested. The hidden `real HDF5 quaternion-chunk tail oracle` requires an HDF5 store.* |
+| 23 | Execute | Only Feature 0 exists; the feature loop is empty | *Not directly tested. No executing fixture has exactly one feature tuple.* |
+| 24 | Library selection | Other Laue classes in automatic mode; all non-Cubic-High classes in override mode | *Not directly tested. Fixtures select Cubic-High in both modes and Triclinic in automatic mode only.* |
+| 25 | Options | Override enabled with angle storage disabled | *Not directly tested. All executing override fixtures enable angle storage.* |
 
 ## Test inventory
 
+The six ordinary test cases run in CI. All pass in CI. The hidden case is listed for source completeness.
+
 | Test case | Status | Notes |
-|---|---|---|
-| `"OrientationAnalysis::ComputeSchmidsFilter"` | retired | Removed during adversarial review because `6_6_stats_test_v2.tar.gz` stores prior ComputeSchmids output and is a circular oracle. Its useful algorithmic behavior is covered by the inline Class 1 and Class 4 fixtures. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle, auto slip system"` | new-for-V&V | 5 `DYNAMIC_SECTION` loadings x (5 outputs + Class 4 invariants + the Feature-0 sentinel row). 236 assertions. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convention and equivariance"` | new-for-V&V | 4 `DYNAMIC_SECTION` quaternions pinning the `qu2om` convention, the no-transpose property, negative `Poles` truncation and cubic-symmetry invariance. 109 assertions. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: override slip system path"` | new-for-V&V | 3 `DYNAMIC_SECTION` loadings on the second EbsdLib overload, including the degenerate zero-Schmid case, plus the radians-versus-cosines assertion and the `-13500` preflight rejection. 93 assertions. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards"` | new-for-V&V | `StoreAngleComponents == false`; a 20 000-Feature `LaueGroupEnd` skip fixture; a valid no-slip-system Laue class; and the `-13501`/`-13502` phase-id guards. 108 assertions. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: preflight input validation"` | new-for-V&V | Mismatched/empty Feature arrays, empty Crystal Structures, and zero loading/override vectors (`-13503` through `-13508`). 19 assertions. |
-| `"OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility"` | kept, untouched | 2 `DYNAMIC_SECTION` conversion fixtures (SIMPL 6.5 UUID, SIMPL 6.4 Filter_Name). 33 assertions. |
-| `real HDF5 quaternion-chunk tail oracle` | new-for-V&V | Independent HDF5 boundary outputs; 37 assertions across the configured options. |
-
-**598 assertions total** (236 + 109 + 93 + 108 + 19 + 33), taken from a `ctest --verbose` run rather than tallied by hand. All 6 pass on the reviewed branch.
-
-Full `OrientationAnalysis::` regression after the internal-review fixes: **268 of 268 unit tests passed** in the EbsdLib 3.1.1 build.
-
-## Test sensitivity verification
-
-Test sensitivity verification introduces one temporary defect at a time and confirms that the applicable test fails.
-
-Seven temporary defects were evaluated. Each defect caused the expected V&V test to fail.
-
-| Temporary defect | Test that detected the defect | Result |
-|---|---|---|
-| Transpose the orientation matrix before rotating the loading direction. | Orientation-matrix convention and equivariance | Detected |
-| Swap quaternion components X and Y when the filter reads the quaternion. | Orientation-matrix convention and equivariance | Detected |
-| Round the `Poles` values instead of truncating them. | Class 1 analytical oracle, orientation-matrix convention, override path, and options and guards | Detected |
-| Change the EbsdLib cubic slip-system tie-break from `>` to `>=`. | Class 1 analytical oracle | Detected |
-| Remove both phase-index guards. | Options, skip path, and phase guards | Detected |
-| Disable the Feature-array tuple-count validation. | Preflight input validation | Detected |
-| Disable all three zero-vector guards. | Preflight input validation | Detected |
-
-OOC recertification (2026-09-21): 6/6 target CTest entries pass in both DREAM3DNX builds. The hidden `real HDF5 quaternion-chunk tail oracle` passes 37 assertions in the OOC binary. The input quaternion store reports a 65,536-tuple chunk. At its final full-chunk feature the identity orientation gives Schmid factor 0.5 and poles [70,0,70]. The tail quaternion (0,0,0.6,0.8) rotates the loading to (0.28,0.96,1)/sqrt(2); cubic equivalents give factor 0.48 and poles [19,67,70]. These expectations account for symmetry, unlike a 90-degree control which is symmetry-equivalent. Existing upstream/develop oracles and tolerances are preserved. No production algorithm or historical sign-off is changed, and no fresh legacy binary run is claimed.
+|-----------|--------|-------|
+| `OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle, auto slip system` | new-for-V&V | Five loading variants: `[0,0,1]`, `[1,1,1]`, `[0,1,1]`, `[1,2,3]`, `[3,6,9]`. Checks all five outputs, the sentinel, bounds and the cosine product. |
+| `OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convention and equivariance` | new-for-V&V | Four quaternion variants: identity, 180 degrees about Z, 120 degrees about [111], and 180 degrees about X. Checks factors, indices and signed poles. |
+| `OrientationAnalysis::ComputeSchmidsFilter: override slip system path` | new-for-V&V | Three loading variants: `[1,2,3]`, `[1,1,1]`, `[0,0,1]`. Checks all outputs, the positive-factor angle identity and the zero-result sentinel; rejects a nonperpendicular plane/direction pair. |
+| `OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards` | new-for-V&V | Checks angle storage off, all skipped rows in a 20,000-feature fixture, Triclinic zero outputs, and errors for negative/out-of-range phases. |
+| `OrientationAnalysis::ComputeSchmidsFilter: preflight input validation` | new-for-V&V | Checks unequal feature tuple counts, empty feature/ensemble arrays and three zero-vector errors (`-13503` through `-13508`). |
+| `OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk tail oracle` | new-for-V&V | Hidden. Requires HDF5 stores and a 65,536-tuple quaternion chunk; asserts factors 0.5 and 0.48, pole components and a skipped-row zero. |
+| `OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility` | kept | `SIMPL 6.5 (UUID)` and `SIMPL 6.4 (Filter_Name)` check filter identity, comments, booleans and array paths/names. |
 
 ## Exemplar archive
 
-The existing test archive contained output from an earlier run of this filter. It was a circular oracle and was retired for this filter. The replacement tests use inline Class 1 analytical data and Class 4 invariants.
+- **Archive:** `6_6_stats_test_v2.tar.gz` — retired for this filter; no current test consumes it.
+- **SHA512:** `e84999dec914d81efce4fc4237c49c9bf32e48381b1e79f58aa4df934f0d7606cd7a948f9a5e7b17a126a7944cc531b531cfdc70756ca3e2207b20734e089723` (retired archive; still registered for other plugin tests).
+- **Provenance:** Not applicable to the current inline fixtures in `src/Plugins/OrientationAnalysis/test/ComputeSchmidsTest.cpp`.
 
-## Deviations from DREAM.3D 6.5.171
+## Deviations from DREAM.3D v6.5.171
 
-See `vv/deviations/ComputeSchmidsFilter.md` for the root cause, affected users, and recommendation for each deviation.
-
-**Fixed in DREAM3D-NX 7.4.2:** `ComputeSchmidsFilter-D3`.
+See `vv/deviations/ComputeSchmidsFilter.md` for the root cause, affected users and recommendation. This table lists only Part 1 entries.
 
 | Deviation | Observed difference |
-|---|---|
-| `ComputeSchmidsFilter-D1` | DREAM.3D 6.5.171 and DREAM3D-NX through v7.4.1 used truncated cubic normalizers. The calculated Schmid factor and angle components were too large. |
-| `ComputeSchmidsFilter-D2` | DREAM.3D 6.5.171 initialized uncomputed angle values to `-301`. DREAM3D-NX initializes these values to zero. |
-| `ComputeSchmidsFilter-D3` | The orientation libraries did not initialize all Schmid output values. The filter could return undefined or previous Feature values. |
-| `ComputeSchmidsFilter-D4` | The angle outputs use cosines on the automatic path and radians on the override path. The default output names and error messages also differ. |
-| `ComputeSchmidsFilter-D5` | The override path returns an index from the library symmetry table. Different table orders can return different indices for the same physical result. |
-| `ComputeSchmidsFilter-D6` | SIMPLNX rejects invalid phase values, malformed arrays, and zero direction vectors. DREAM.3D 6.5.171 accepted these inputs and could produce invalid output or invalid memory access. |
+|-----------|---------------------|
+| `ComputeSchmidsFilter-D1` | The corrected cubic automatic calculation removes the legacy normalizer bias. |
+| `ComputeSchmidsFilter-D2` | Skipped angle rows contain zero instead of `-301`. |
+| `ComputeSchmidsFilter-D3` | Initialized library outputs prevent values from a previous feature from being reused. |
+| `ComputeSchmidsFilter-D4` | Default angle-array names and preflight error codes differ; mode-dependent angle units are shared behavior. |
+| `ComputeSchmidsFilter-D5` | Override indices differ because the libraries order tied symmetry operators differently. |
+| `ComputeSchmidsFilter-D6` | SIMPLNX rejects malformed inputs that DREAM.3D v6.5.171 accepted. |
