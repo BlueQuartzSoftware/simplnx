@@ -1,5 +1,7 @@
 #include "ComputeShapesTriangleGeom.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -7,13 +9,9 @@
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include <EbsdLib/Core/Orientation.hpp>
-#include <EbsdLib/Orientation/Euler.hpp>
-#include <EbsdLib/Orientation/OrientationFwd.hpp>
-#include <EbsdLib/Orientation/OrientationMatrix.hpp>
-
+#include <algorithm>
+#include <array>
 #include <numbers>
-#include <unordered_set>
 
 using namespace nx::core;
 
@@ -35,13 +33,6 @@ using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_ty
 //
 //   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
 // }
-
-struct AxialLengths
-{
-  IGeometry::SharedVertexList::value_type xLength = 0.0;
-  IGeometry::SharedVertexList::value_type yLength = 0.0;
-  IGeometry::SharedVertexList::value_type zLength = 0.0;
-};
 
 /**
  * @brief Buckets triangle faces by referenced feature IDs.
@@ -73,33 +64,23 @@ std::vector<std::vector<usize>> BuildFacesByFeature(const AbstractDataStore<int3
   return facesByFeature;
 }
 
-/**
- * @brief Computes principal-axis ray lengths for one feature.
- * @tparam T Specifies the vertex coordinate type.
- * @param orientationMatrix Provides the principal-axis frame.
- * @param featureFaces Provides feature face indices.
- * @param triStore Provides mesh triangle indices.
- * @param vertexStore Provides mesh vertices.
- * @param centroidsStore Provides feature centroids.
- * @param featureId Identifies the feature.
- * @param shouldCancel Signals cancellation.
- * @return Maximum intersection distances along the principal axes.
- */
-template <typename T = IGeometry::SharedVertexList::value_type>
-AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const std::vector<usize>& featureFaces, const AbstractDataStore<IGeometry::MeshIndexType>& triStore,
-                               const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore, const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId,
-                               const std::atomic_bool& shouldCancel)
-{
-  constexpr T epsilon = std::numeric_limits<T>::epsilon();
+} // namespace
 
-  AxialLengths lengths;
+namespace nx::core::ComputeShapesTriangleGeomDetail
+{
+AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>& orientationMatrix, const std::vector<usize>& featureFaces,
+                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
+                               const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
+{
+  using T = float64;
+
+  std::array<float64, 3> positive{};
+  std::array<float64, 3> negative{};
 
   using PointT = Eigen::Vector3<T>;
 
-  // derive the direction vector for each corresponding axis (using unit vectors)
-  const PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
-  const PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
-  const PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
+  // Each row is one unit principal axis; reversing it swaps the two distances.
+  const std::array<PointT, 3> directions = {orientationMatrix.row(0), orientationMatrix.row(1), orientationMatrix.row(2)};
 
   IntersectionUtilities::MTPointsCache<T> cache;
 
@@ -110,7 +91,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
   {
     if(shouldCancel)
     {
-      return lengths;
+      break;
     }
 
     // Here we are manually extracting the vertex points from the SharedVertexList
@@ -132,43 +113,30 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     cache.sDist = cache.origin - cache.pointA;
     cache.sCrossE1 = cache.sDist.cross(cache.edge1);
 
-    const std::optional<PointT> xIntersect = IntersectionUtilities::MTIntersection(xDirVec, cache);
-    if(xIntersect.has_value())
+    for(usize axis = 0; axis < directions.size(); axis++)
     {
-      // Ray intersection
-      T distance = std::sqrt((xIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > std::abs(lengths.xLength))
+      const auto positiveHit = IntersectionUtilities::MTIntersection(directions[axis], cache);
+      if(positiveHit.has_value())
       {
-        lengths.xLength = distance;
+        positive[axis] = std::max(positive[axis], (positiveHit.value() - cache.origin).norm());
       }
-    }
-
-    const std::optional<PointT> yIntersect = IntersectionUtilities::MTIntersection(yDirVec, cache);
-    if(yIntersect.has_value())
-    {
-      // Ray intersection
-      T distance = std::sqrt((yIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > std::abs(lengths.yLength))
+      const PointT oppositeDirection = -directions[axis];
+      const auto negativeHit = IntersectionUtilities::MTIntersection(oppositeDirection, cache);
+      if(negativeHit.has_value())
       {
-        lengths.yLength = distance;
-      }
-    }
-
-    const std::optional<PointT> zIntersect = IntersectionUtilities::MTIntersection(zDirVec, cache);
-    if(zIntersect.has_value())
-    {
-      // Ray intersection
-      T distance = std::sqrt((zIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > std::abs(lengths.zLength))
-      {
-        lengths.zLength = distance;
+        negative[axis] = std::max(negative[axis], (negativeHit.value() - cache.origin).norm());
       }
     }
   }
 
-  return lengths;
+  // Retain gaps between hits, including when the centroid lies outside the mesh.
+  return {(positive[0] + negative[0]) / 2.0, (positive[1] + negative[1]) / 2.0, (positive[2] + negative[2]) / 2.0};
 }
 
+} // namespace nx::core::ComputeShapesTriangleGeomDetail
+
+namespace
+{
 /**
  * @brief Extracts three coordinates for one triangle face.
  * @param triangleId Identifies the triangle face.
@@ -372,10 +340,10 @@ public:
       // Inertia-tensor eigenvectors define the principal axes.
       const Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
 
-      // The primary axis is the largest eigenvalue
+      // Sort by inertia eigenvalue; row 0 uses the smallest eigenvalue.
       Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
 
-      // This is the angular velocity vector, each row represents an axial alignment (principle axis)
+      // Eigenvectors are columns until the ordered principal frame is assembled below.
       Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
 
       /**
@@ -422,7 +390,7 @@ public:
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
 
-      auto euler = ebsdlib::OrientationMatrixDType(orientationMatrix.data()).toEuler();
+      const auto euler = OrientationUtilities::PrincipalAxisFrameToEuler(orientationMatrix);
 
       currentResult.axisEulerAngles[0] = static_cast<float32>(euler[0]);
       currentResult.axisEulerAngles[1] = static_cast<float32>(euler[1]);
@@ -434,7 +402,7 @@ public:
         return;
       }
 
-      const ::AxialLengths lengths = FindIntersections(orientationMatrix, featureFaces, triangleList, verts, m_Centroids, featureId, m_ShouldCancel);
+      const auto lengths = ComputeShapesTriangleGeomDetail::FindIntersections(orientationMatrix, featureFaces, triangleList, verts, m_Centroids, featureId, m_ShouldCancel);
 
       // Check for zeroes (zeroes = probably invalid)
       if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
@@ -450,10 +418,8 @@ public:
         currentResult.axisLengths[0] = static_cast<float32>(lengths.xLength);
         currentResult.axisLengths[1] = static_cast<float32>(lengths.yLength);
         currentResult.axisLengths[2] = static_cast<float32>(lengths.zLength);
-        auto bOverA = static_cast<float32>(lengths.yLength / lengths.xLength);
-        auto cOverA = static_cast<float32>(lengths.zLength / lengths.xLength);
-        currentResult.aspectRatios[0] = bOverA;
-        currentResult.aspectRatios[1] = cOverA;
+        currentResult.aspectRatios[0] = static_cast<float32>(lengths.yLength / lengths.xLength);
+        currentResult.aspectRatios[1] = static_cast<float32>(lengths.zLength / lengths.xLength);
       }
       results.push_back(currentResult);
     } // end
