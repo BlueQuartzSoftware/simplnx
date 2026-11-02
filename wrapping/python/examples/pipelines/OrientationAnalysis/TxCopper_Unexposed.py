@@ -92,6 +92,7 @@ nx_filter = nximgproc.WriteImageFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     file_name=nxtest.get_data_directory() / "Output/TexturedCopper/IPF_Unexposed.png",
     image_array_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001"),
     input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),

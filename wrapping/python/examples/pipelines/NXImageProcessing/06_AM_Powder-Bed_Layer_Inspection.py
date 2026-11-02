@@ -91,6 +91,7 @@ simplnx_utilities.check_filter_result(nximgproc.WhiteTopHatImageFilter, result)
 # Filter 5: Threshold Maximum Connected Components Image Filter
 result = nximgproc.ThresholdMaximumConnectedComponentsImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     input_image_data_path=nx.DataPath('Powder Bed Layers/Cell Data/Bright Anomalies'),
     input_image_geometry_path=nx.DataPath('Powder Bed Layers'),
     inside_value=1,
@@ -117,6 +118,7 @@ simplnx_utilities.check_filter_result(nximgproc.BinaryMorphologicalOpeningImageF
 # Filter 7: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=False,
     file_name='Data/Output/ImageProcessing_Examples/02_AM_Powder_Bed/anomaly_mask.tif',

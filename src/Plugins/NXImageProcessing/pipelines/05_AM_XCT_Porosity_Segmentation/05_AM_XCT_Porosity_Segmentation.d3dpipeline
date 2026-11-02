@@ -284,7 +284,11 @@
           "value": "Pore Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "provisional_label_limit_handling_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "Assign one label to each face-connected pore.",
       "filter": {
@@ -444,7 +448,11 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 5,
+        "nonfinite_input_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 6,
         "plane_index": {
           "value": 0,
           "version": 1
