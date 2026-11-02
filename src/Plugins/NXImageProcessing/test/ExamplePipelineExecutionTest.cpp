@@ -1,4 +1,4 @@
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -54,7 +54,7 @@ usize CountOocArrays(const DataStructure& dataStructure)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::Real-world examples execute with the selected storage mode", "[ImageProcessing][ExamplePipelines][Execution]")
+TEST_CASE("NXImageProcessing::Real-world examples execute with the selected storage mode", "[NXImageProcessing][ExamplePipelines][Execution]")
 {
   UnitTest::LoadPlugins();
   const bool hasOocManager = Application::Instance()->getIOCollection().getManager("HDF5-OOC") != nullptr;

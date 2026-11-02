@@ -323,7 +323,7 @@ std::vector<uint8> RunZeroCrossing(const std::vector<T>& field, usize dx, usize 
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::ZeroCrossingEngine: direct route matches the axial oracle", "[ImageProcessing][ZeroCrossingEngine]", int32, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: direct route matches the axial oracle", "[NXImageProcessing][ZeroCrossingEngine]", int32, float32, float64)
 {
   using T = TestType;
   constexpr uint8 k_Foreground = 7;
@@ -349,7 +349,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ZeroCrossingEngine: direct route matches th
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab route matches the axial oracle at every slab depth", "[ImageProcessing][ZeroCrossingEngine][WorkingMemory]", int32, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route matches the axial oracle at every slab depth", "[NXImageProcessing][ZeroCrossingEngine][WorkingMemory]", int32, float32)
 {
   using T = TestType;
   constexpr uint8 k_Foreground = 7;
@@ -398,7 +398,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab route matches the 
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: a 1D sign flip marks the closer-to-zero side", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: a 1D sign flip marks the closer-to-zero side", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   // Row: -2 -1 1 2. Crossing between x=1 (val -1) and x=2 (val 1). |−1|==|1| -> tie -> the POSITIVE-direction neighbor
   // wins, so x=1 (whose +x neighbor is x=2) is marked; x=2's crossing neighbor is x=1 (negative direction) with equal
@@ -411,7 +411,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: a 1D sign flip marks the closer-
   REQUIRE(out[3] == 0u);
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: unequal magnitudes mark the smaller-|.| side on both directions", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: unequal magnitudes mark the smaller-|.| side on both directions", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   // Row: -1 3. Crossing between them; |−1| < |3| -> x=0 marked (its +x neighbor 3). x=1 (|3|) is not closer -> not marked.
   const std::vector<int32> field = {-1, 3};
@@ -420,7 +420,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: unequal magnitudes mark the smal
   REQUIRE(out[1] == 0u);
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: exact-zero pixel adjacent to nonzero is a crossing", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: exact-zero pixel adjacent to nonzero is a crossing", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   // Row: 0 5. |0| < |5| -> x=0 (the zero) is marked (exact-zero vs nonzero counts as a sign change).
   const std::vector<int32> field = {0, 5};
@@ -429,7 +429,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: exact-zero pixel adjacent to non
   REQUIRE(out[1] == 0u);
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: no crossing in a monotone-positive field", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: no crossing in a monotone-positive field", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   const std::vector<int32> field = {1, 2, 3, 4};
   const std::vector<uint8> out = RunZeroCrossing<int32>(field, 4, 1, 1);
@@ -439,7 +439,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: no crossing in a monotone-positi
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: determinism + tall-Z analytic check (float plane crossing)", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: determinism + tall-Z analytic check (float plane crossing)", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   const usize dx = 5, dy = 5, dz = 30;
   std::vector<float32> field(dx * dy * dz);
@@ -474,7 +474,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: determinism + tall-Z analytic ch
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab plan derives the plane count from the grant", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab plan derives the plane count from the grant", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 largeDims{1024, 1024, 256};
@@ -502,7 +502,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab plan derives the plane coun
   REQUIRE(emptyResult.value() == 0);
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab reservation follows the grant", "[ImageProcessing][ZeroCrossingEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab reservation follows the grant", "[NXImageProcessing][ZeroCrossingEngine][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 dims{512, 512, 128};
@@ -534,7 +534,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab reservation follows the gra
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab route transfers follow the plan", "[ImageProcessing][ZeroCrossingEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route transfers follow the plan", "[NXImageProcessing][ZeroCrossingEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -564,7 +564,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: slab route transfers follow the 
   REQUIRE(completeResult.maxWriteValues == field.size());
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: in-core direct route performs no bulk transfers", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: in-core direct route performs no bulk transfers", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   constexpr usize dimX = 17;
   constexpr usize dimY = 13;
@@ -595,7 +595,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: in-core direct route performs no
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: pre-cancelled run leaves the output untouched", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: pre-cancelled run leaves the output untouched", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 8;
@@ -651,7 +651,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: pre-cancelled run leaves the out
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles preserve axial order", "[ImageProcessing][ZeroCrossingEngine]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles preserve axial order", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -709,7 +709,7 @@ TEST_CASE("ImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pres
   }
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingEngine: resident flag precedence has an execution witness", "[ImageProcessing][ZeroCrossingEngine][ZeroCrossingSelection]")
+TEST_CASE("NXImageProcessing::ZeroCrossingEngine: resident flag precedence has an execution witness", "[NXImageProcessing][ZeroCrossingEngine][ZeroCrossingSelection]")
 {
   UnitTest::LoadPlugins();
   // Low-level selector tests use raw flags to cover the otherwise conflicting force controls.

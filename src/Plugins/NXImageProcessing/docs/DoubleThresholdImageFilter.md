@@ -4,7 +4,7 @@ Binarize an input image using double thresholding.
 
 ## Group (Subgroup)
 
-ImageProcessing (MathematicalMorphology)
+NXImageProcessing (MathematicalMorphology)
 
 ## Description
 

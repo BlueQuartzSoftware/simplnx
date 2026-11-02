@@ -56,7 +56,7 @@ std::string BinaryThresholdImageFilter::humanName() const
 }
 std::vector<std::string> BinaryThresholdImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryThreshold", "Pointwise"};
+  return {className(), "NXImageProcessing", "BinaryThreshold", "Pointwise"};
 }
 Parameters BinaryThresholdImageFilter::parameters() const
 {

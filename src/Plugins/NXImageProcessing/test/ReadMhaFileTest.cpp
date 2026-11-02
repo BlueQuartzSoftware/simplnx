@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
-#include "ImageProcessing/Filters/ReadMhaFileFilter.hpp"
-#include "ImageProcessing/utils/MetaImageUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
+#include "NXImageProcessing/Filters/ReadMhaFileFilter.hpp"
+#include "NXImageProcessing/utils/MetaImageUtilities.hpp"
 
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -105,7 +105,7 @@ void RequireMhaArrayEquals(const DataStructure& ds, const DataPath& arrPath, con
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: ElementType string -> DataType map", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: ElementType string -> DataType map", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   using mhd::MetTypeToSimplnx;
   REQUIRE(MetTypeToSimplnx("MET_CHAR").value().first == DataType::int8);
@@ -126,7 +126,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: ElementType string -> DataType m
   REQUIRE_FALSE(MetTypeToSimplnx("nonsense").has_value());
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: parse scalar 2D header (compressed)", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: parse scalar 2D header (compressed)", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   const fs::path p = MhaOutputDir() / "hdr_scalar2d.mha";
   WriteMhaAttached(p,
@@ -152,7 +152,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: parse scalar 2D header (compress
   REQUIRE(md.transformMatrix == std::vector<float64>{1, 0, 0, 1});
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: parse 3D multi-component raw header", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: parse 3D multi-component raw header", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   const fs::path p = MhaOutputDir() / "hdr_3d_multicomp.mha";
   WriteMhaAttached(p,
@@ -170,7 +170,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: parse 3D multi-component raw hea
   REQUIRE(md.encoding == mhd::Encoding::Raw);
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: big-endian flag sets byteSwapRequired", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: big-endian flag sets byteSwapRequired", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   const fs::path p = MhaOutputDir() / "hdr_bigendian.mha";
   WriteMhaAttached(p,
@@ -185,7 +185,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: big-endian flag sets byteSwapReq
   REQUIRE(md.byteSwapRequired == hostIsLittle);
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: detached .mhd resolves sibling .raw", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: detached .mhd resolves sibling .raw", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   // Create the sibling raw file, then a .mhd that points at it by name.
   const fs::path raw = MhaOutputDir() / "vol_detached.raw";
@@ -213,7 +213,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: detached .mhd resolves sibling .
   REQUIRE(md.dataFilePath.filename() == fs::path("vol_detached.raw"));
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: rejects bad headers", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: rejects bad headers", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   SECTION("unsupported ElementType")
   {
@@ -253,7 +253,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: rejects bad headers", "[ImagePro
   }
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: rejects nonzero HeaderSize", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: rejects nonzero HeaderSize", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   // MetaIO honors HeaderSize (metaImage.cxx ~2352/2367); this reader cannot, so a nonzero
   // value is rejected rather than silently dropped (which would read the wrong voxels).
@@ -282,7 +282,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: rejects nonzero HeaderSize", "[I
   }
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: numeric booleans and multi-alias precedence", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: numeric booleans and multi-alias precedence", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
 
@@ -350,7 +350,7 @@ TEST_CASE("ImageProcessing::MetaImageUtilities: numeric booleans and multi-alias
   }
 }
 
-TEST_CASE("ImageProcessing::MetaImageUtilities: ElementDataFile LIST vs single filename classification", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageUtilities: ElementDataFile LIST vs single filename classification", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   SECTION("a name whose first 4 chars are LIST is rejected (-35807)")
   {
@@ -402,7 +402,7 @@ std::vector<uint8_t> ZlibCompress(const std::vector<uint8_t>& data)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::MetaImageDataReader: raw + zlib readBytes", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::MetaImageDataReader: raw + zlib readBytes", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   std::vector<int16_t> values(4 * 3 * 2);
   for(size_t i = 0; i < values.size(); i++)
@@ -482,7 +482,7 @@ Result<> RunReadMhaFile(DataStructure& ds, const fs::path& inputFile, const Crop
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   constexpr usize X = 4, Y = 3, Z = 2;
   std::vector<int16_t> fileValues(X * Y * Z);
@@ -503,7 +503,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: scalar 3D streams X-fastest [Z,Y,X]", "
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   constexpr usize X = 4, Y = 3, Z = 1;
   std::vector<int16_t> logical(X * Y * Z);
@@ -533,7 +533,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: big-endian data is byteswapped", "[Imag
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trips", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trips", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   // Regression for the ParseBool fix: "CompressedData = 1" must decode as zlib, not be
   // read raw (which short-read errored before).
@@ -555,7 +555,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: numeric CompressedData = 1 round-trips"
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps to correct values", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps to correct values", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   // Regression for the ParseBool fix: the numeric-form true "T" must engage the byteswap
   // just like "True"; the old whole-string check left it off and produced wrong values.
@@ -587,7 +587,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: BinaryDataByteOrderMSB = T byteswaps to
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFile: multi-component interleaves channels", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: multi-component interleaves channels", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   constexpr usize comp = 2, X = 4, Y = 2, Z = 1;
   std::vector<float32> fileValues(comp * X * Y);
@@ -608,7 +608,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: multi-component interleaves channels", 
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the requested region", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the requested region", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   constexpr usize X = 4, Y = 3, Z = 2;
   std::vector<int16_t> fileValues(X * Y * Z);
@@ -637,7 +637,7 @@ TEST_CASE("ImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the req
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zlib)", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zlib)", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -681,7 +681,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zlib)
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: multi-component float32 round trip", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round trip", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   const usize X = 4, Y = 3, comp = 2;
@@ -711,7 +711,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: multi-component float32 round tri
 // box green-preflights (CropImageGeometryFilter clamps the bounds into the volume with a
 // warning) but the old execute path hard-errored (ImageGeom::getIndex returns nullopt for
 // an OOB coordinate). Execute now clamps identically, so preflight and execute agree.
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out-of-range bounds", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr usize X = 6, Y = 5, Z = 4;
@@ -751,7 +751,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out
   RequireMhaArrayEquals<uint16>(ds, arrPath, voxels);
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: rejects missing file and bad ObjectType", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: rejects missing file and bad ObjectType", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   SECTION("missing file")
@@ -774,7 +774,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: rejects missing file and bad Obje
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: apply-transform preflights against staged geometry", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply-transform preflights against staged geometry", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -813,7 +813,7 @@ namespace
 // The real ITK regression .mha files live under the ITKImageProcessing source tree.
 fs::path ItkMhaInputDir()
 {
-  return fs::path(std::string(nx::core::unit_test::k_SimplnxSourceDIr.view())) / "src" / "Plugins" / "ImageProcessing" / "data" / "ItkGolden";
+  return fs::path(std::string(nx::core::unit_test::k_SimplnxSourceDIr.view())) / "src" / "Plugins" / "NXImageProcessing" / "data" / "ItkGolden";
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
@@ -927,7 +927,7 @@ void RequireMhaOocMatchesInCore(const fs::path& p, const std::vector<T>& expecte
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: OOC output matches in-core (scalar + multi-component)", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (scalar + multi-component)", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -993,7 +993,7 @@ std::vector<float32> ReadSavedTransform(const fs::path& p, bool transpose)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: transform matrix 2D parse + save-as-array", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 2D parse + save-as-array", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   // 2D 90-degree rotation: [[0,-1],[1,0]] (row-major "0 -1 1 0"), determinant 1.
@@ -1021,7 +1021,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: transform matrix 2D parse + save-
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: transform matrix 3D parse + save-as-array", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 3D parse + save-as-array", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   // 3D 90-degree rotation about z: row-major "0 -1 0 1 0 0 0 0 1".
@@ -1040,7 +1040,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: transform matrix 3D parse + save-
   }
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: transpose of a non-rotation matrix errors -35852", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transpose of a non-rotation matrix errors -35852", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   // A 2D scale matrix (determinant 4) is not a pure rotation: transpose must error.
@@ -1067,7 +1067,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: transpose of a non-rotation matri
   REQUIRE(found);
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: apply transformation to geometry executes", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply transformation to geometry executes", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   // 2D 90-degree rotation applied to a small image via ApplyTransformationToGeometry.
@@ -1092,7 +1092,7 @@ TEST_CASE("ImageProcessing::ReadMhaFileFilter: apply transformation to geometry 
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
 }
 
-TEST_CASE("ImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadMhaFileFilter]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
   const DataPath geomPath({"Physical Crop"});

@@ -1,5 +1,5 @@
 import simplnx as nx
-import imageprocessing as nximgproc
+import nximageprocessing as nximgproc
 import orientationanalysis as nxor
 from pipeline_to_python import create_default_generator
 

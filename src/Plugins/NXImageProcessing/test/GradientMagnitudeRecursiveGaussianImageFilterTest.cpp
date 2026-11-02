@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GradientMagnitudeRecursiveGaussianImageFilter.hpp"
+#include "NXImageProcessing/Filters/GradientMagnitudeRecursiveGaussianImageFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -64,7 +64,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // (1) Preflight rejections: a too-small image (fewer than 4 pixels along a filtered axis) and a non-positive sigma.
 //     All scalar types are allowed, so there is no unsigned-rejection case.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: preflight rejections", "[ImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: preflight rejections", "[NXImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -173,7 +173,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: prefl
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fused plane path matches direct path", "[ImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fused plane path matches direct path", "[NXImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -214,7 +214,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: fused
 // -----------------------------------------------------------------------------
 // (2) FromSIMPLJson: the scalar Sigma double, the NormalizeAcrossScale bool, and the geometry/array/name DataPaths.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: FromSIMPLJson", "[ImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: FromSIMPLJson", "[NXImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
 {
   const nlohmann::json json = {
       {"Sigma", 2.5},
@@ -239,7 +239,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: FromS
 // at a tolerance of 0.0001 via ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32). The helper pins
 // ForceInCore.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][GradientMagnitudeRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][GradientMagnitudeRecursiveGaussianImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<GradientMagnitudeRecursiveGaussianImageFilter>("RA-Float.nrrd", "BasicFilters_GradientMagnitudeRecursiveGaussianImageFilter_default.nrrd", /*tolerance=*/0.0001);
 }

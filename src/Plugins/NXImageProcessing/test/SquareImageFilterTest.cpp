@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SquareImageFilter.hpp"
+#include "NXImageProcessing/Filters/SquareImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): the op is { double d = x; return static_cast<U>(d*d); }.
 // For x = 1e20 (representable in float32), d*d = 1e40 which exceeds FLT_MAX (~3.4e38), so the narrowing cast to
 // float32 yields +inf. ITK's Sqr functor squares the same way, so this pins the observed overflow to +inf.
-TEST_CASE("ImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overflows to +inf (domain edge)", "[ImageProcessing][SquareImageFilter]")
+TEST_CASE("NXImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overflows to +inf (domain edge)", "[NXImageProcessing][SquareImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -27,7 +27,7 @@ TEST_CASE("ImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overflo
 // Ramp-Zero-One-Float.nrrd (float32) through OUR reader, run OUR SquareImageFilter (defaults), then our output's
 // md5 must EQUAL ITK's committed hash. A match confirms the durable golden byte-for-byte (no re-freeze needed).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SquareImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][SquareImageFilter]")
+TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SquareImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

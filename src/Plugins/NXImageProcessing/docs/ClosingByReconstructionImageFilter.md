@@ -4,7 +4,7 @@ Grayscale closing by reconstruction: remove dark structures smaller than the str
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

@@ -35,7 +35,7 @@ private:
 };
 } // namespace
 
-TEST_CASE("ImageProcessing::WorkingMemory tuning override is scoped and nestable", "[ImageProcessing][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WorkingMemory tuning override is scoped and nestable", "[NXImageProcessing][WorkingMemory]")
 {
   using namespace ImageProcessing;
 
@@ -52,7 +52,7 @@ TEST_CASE("ImageProcessing::WorkingMemory tuning override is scoped and nestable
   REQUIRE(ResolvePreferredWorkingMemoryBytes(64 * k_MiB) == 64 * k_MiB);
 }
 
-TEST_CASE("ImageProcessing::WorkingMemory request clamps to useful bytes and the shared quarter-budget ceiling", "[ImageProcessing][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WorkingMemory request clamps to useful bytes and the shared quarter-budget ceiling", "[NXImageProcessing][WorkingMemory]")
 {
   using namespace ImageProcessing;
 
@@ -77,7 +77,7 @@ TEST_CASE("ImageProcessing::WorkingMemory request clamps to useful bytes and the
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 }
 
-TEST_CASE("ImageProcessing::WorkingMemory useful-state fractions scale with the dataset-specific useful size", "[ImageProcessing][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WorkingMemory useful-state fractions scale with the dataset-specific useful size", "[NXImageProcessing][WorkingMemory]")
 {
   using namespace ImageProcessing;
 

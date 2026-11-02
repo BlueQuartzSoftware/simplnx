@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/RegionalMaximaImageFilter.hpp"
+#include "NXImageProcessing/Filters/RegionalMaximaImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -33,7 +33,7 @@ rt::ReconParamSetter MaximaSetter(float64 fg, float64 bg, bool flatIsMaxima)
 //     foreground when FlatIsMaxima is On and all background when Off. The test checks both FlatIsMaxima values
 //     directly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: flat-image special case", "[ImageProcessing][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: flat-image special case", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -61,7 +61,7 @@ TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: flat-image special case",
 // (3) Hand-computed: on a small image with a central peak plateau, the peak becomes foreground and the surrounding
 //     field becomes background.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked", "[ImageProcessing][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -92,7 +92,7 @@ TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked
 //      skips the flat short-circuit and reaches the valued-extrema flood/sweep), so the scope proves both
 //      implementations mark the peak. The hand-computed expected labels are the non-circular oracle.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked (both algorithm paths)", "[ImageProcessing][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked (both algorithm paths)", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -133,7 +133,7 @@ TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked
 // (4) Preflight fg/bg range guard: for an integer input, an out-of-range Foreground Value is rejected; a valid one
 //     preflights cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: preflight fg/bg range guard", "[ImageProcessing][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: preflight fg/bg range guard", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -169,7 +169,7 @@ TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: preflight fg/bg range gua
   }
 }
 
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: FromSIMPLJson", "[ImageProcessing][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: FromSIMPLJson", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
   const nlohmann::json json = {{"ForegroundValue", 5.0},
                                {"BackgroundValue", 2.0},
@@ -196,7 +196,7 @@ TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: FromSIMPLJson", "[ImagePr
 // The output is a fixed uint32 label image, so the committed hash is over uint32. (B) live-ITK bit-exact + (A)
 // md5-validity-first.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMaximaImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][RegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][RegionalMaximaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RegionalMaximaImageFilter>("cthead1.png", "6839f3d9dc5b95e9513d723a3b7430f2");
 }

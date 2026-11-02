@@ -51,7 +51,7 @@ std::string BinaryDilateImageFilter::humanName() const
 }
 std::vector<std::string> BinaryDilateImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryDilate", "Binary", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BinaryDilate", "Binary", "Morphology", "MathematicalMorphology"};
 }
 Parameters BinaryDilateImageFilter::parameters() const
 {

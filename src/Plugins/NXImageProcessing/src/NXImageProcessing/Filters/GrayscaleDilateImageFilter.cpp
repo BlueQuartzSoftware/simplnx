@@ -36,7 +36,7 @@ std::string GrayscaleDilateImageFilter::humanName() const
 }
 std::vector<std::string> GrayscaleDilateImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "GrayscaleDilate", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "GrayscaleDilate", "Morphology", "MathematicalMorphology"};
 }
 Parameters GrayscaleDilateImageFilter::parameters() const
 {

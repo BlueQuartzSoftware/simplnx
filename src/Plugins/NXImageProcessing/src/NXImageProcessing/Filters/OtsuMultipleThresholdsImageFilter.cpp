@@ -65,7 +65,7 @@ std::string OtsuMultipleThresholdsImageFilter::humanName() const
 }
 std::vector<std::string> OtsuMultipleThresholdsImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "OtsuMultipleThresholds", "Thresholding"};
+  return {className(), "NXImageProcessing", "OtsuMultipleThresholds", "Thresholding"};
 }
 Parameters OtsuMultipleThresholdsImageFilter::parameters() const
 {

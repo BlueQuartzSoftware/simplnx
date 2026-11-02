@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SigmoidImageFilter.hpp"
+#include "NXImageProcessing/Filters/SigmoidImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // Ramp-Zero-One-Float.nrrd (float32) through OUR reader, run OUR SigmoidImageFilter with the ITK case's params
 // (defaults -- Alpha/Beta/OutputMin/OutputMax unset), then compare the output md5 with ITK's committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SigmoidImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][SigmoidImageFilter]")
+TEST_CASE("NXImageProcessing::SigmoidImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SigmoidImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

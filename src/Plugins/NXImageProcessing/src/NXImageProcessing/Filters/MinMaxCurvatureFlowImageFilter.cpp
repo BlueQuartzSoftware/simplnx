@@ -30,7 +30,7 @@ std::string MinMaxCurvatureFlowImageFilter::humanName() const
 }
 std::vector<std::string> MinMaxCurvatureFlowImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "CurvatureFlow", "MinMax", "PDE"};
+  return {className(), "NXImageProcessing", "Smoothing", "CurvatureFlow", "MinMax", "PDE"};
 }
 
 Parameters MinMaxCurvatureFlowImageFilter::parameters() const

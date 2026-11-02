@@ -4,7 +4,7 @@ Compute the signed Euclidean distance transform of an object using Maurer's exac
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

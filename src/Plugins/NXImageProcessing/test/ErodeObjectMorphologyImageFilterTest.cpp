@@ -1,6 +1,6 @@
 #include "ObjectMorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ErodeObjectMorphologyImageFilter.hpp"
+#include "NXImageProcessing/Filters/ErodeObjectMorphologyImageFilter.hpp"
 
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -82,7 +82,7 @@ const char* KernelName(KernelType kt)
 //     single-pass object-erosion semantics. All four kernels are covered (Annulus included, since it has no
 //     live-legacy oracle anyway -- the legacy SimpleITK Annulus kernel is empty).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected grid (all kernels)", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected grid (all kernels)", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0);
@@ -108,7 +108,7 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected 
 //     non-object. Input carries three labels {7 (object), 3 (existing label), 0 (background)}; eroded with
 //     BackgroundValue=3 (colliding) and, on a two-label {7,0} image, BackgroundValue=9 (distinct).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected varying Object/Background Value", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected varying Object/Background Value", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   const std::vector<KernelType> kernels = {KernelType::Ball, KernelType::Box, KernelType::Cross};
   const std::vector<std::array<int32, 3>> radii = {{1, 1, 1}, {2, 1, 1}};
@@ -140,7 +140,7 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected 
 // (3) float32 input: object morphology uses an EXACT-equality boundary test, so an exactly-representable
 //     Object Value (3.0f) must behave identically to an integer image. Validated computed-expected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: float32 exact-equality object value", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: float32 exact-equality object value", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(ds, dx, dy, dz, 3.0f, 0.0f); };
   const auto setParams = omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(3.0, 0.0);
@@ -154,7 +154,7 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: float32 exact-equa
 //     SIMPLNX_TEST_ALGORITHM_PATH). The output is compared to the independent scatter oracle over the actual
 //     block. Real-disk out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected (both algorithm paths)", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -261,7 +261,7 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected 
 //     out-of-range value (e.g. 1e300 > FLT_MAX) is rejected; a finite representable value is clean. Preflight
 //     validates Object Value first, returns early on the FIRST error, and accumulates truncation warnings.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-guard on Object + Background Value", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-guard on Object + Background Value", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -364,14 +364,14 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-gua
 // is a nondeterministic multithreaded data race, so a fresh legacy run is not a stable oracle) + (A) durable
 // ITK-captured baseline compare @ 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][ErodeObjectMorphologyImageFilter]")
 {
   object_morph_test::RunObjectMorphologyItkGoldenBaseline<ErodeObjectMorphologyImageFilter, float32>("RA-Slice-Float.nrrd", "BasicFilters_ErodeObjectMorphologyImageFilter_float.nrrd",
                                                                                                      ImageProcessing::ObjectMorphOp::Erode, 1.0f, 0.0f,
                                                                                                      object_morph_test::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0), 0.01);
 }
 
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][ErodeObjectMorphologyImageFilter]")
 {
   object_morph_test::RunObjectMorphologyItkGoldenBaseline<ErodeObjectMorphologyImageFilter, int16>("RA-Slice-Short.nrrd", "BasicFilters_ErodeObjectMorphologyImageFilter_short.nrrd",
                                                                                                    ImageProcessing::ObjectMorphOp::Erode, int16{1}, int16{0},
@@ -382,7 +382,7 @@ TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image gol
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8530) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   omt::RequirePreflightRejectsNonScalar<ErodeObjectMorphologyImageFilter, uint8>(-8530, omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0));
 }

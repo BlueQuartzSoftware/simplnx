@@ -224,7 +224,7 @@ void CheckObjectMorphology(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::ObjectMorphologyEngine: Scatter/Gather match the independent oracle (3D + 2D)", "[ImageProcessing][ObjectMorphologyEngine]", int32, uint8, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: Scatter/Gather match the independent oracle (3D + 2D)", "[NXImageProcessing][ObjectMorphologyEngine]", int32, uint8, float32)
 {
   using T = TestType;
   SECTION("3D non-cubic 10x11x9")
@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ObjectMorphologyEngine: Scatter/Gather matc
   }
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: 3D Gather reads each input value once", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: 3D Gather reads each input value once", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   constexpr usize dimX = 13;
   constexpr usize dimY = 11;
@@ -271,7 +271,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: 3D Gather reads each input v
   REQUIRE(outputStore.maxWriteValues() == input.size());
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preserve non-box object morphology transfers", "[ImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preserve non-box object morphology transfers", "[NXImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
 {
   constexpr usize dimX = 13;
   constexpr usize dimY = 11;
@@ -329,7 +329,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preserve
   REQUIRE(boundedPlanResult.value().outputBatchDepth == 1);
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -371,7 +371,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: resident state requires a co
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: real-OOC selector uses resident state only after a complete grant", "[ImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
 {
   constexpr usize dimX = 8;
   constexpr usize dimY = 7;
@@ -446,7 +446,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: real-OOC selector uses resid
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: bounded 2D planner accounts for input, mask, and output", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: bounded 2D planner accounts for input, mask, and output", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   using ImageProcessing::detail::CreateObjectMorphology2DPlan;
 
@@ -479,7 +479,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: bounded 2D planner accounts 
   }
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: bounded 2D full-width blocks and overwide tiles match the independent oracle", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: bounded 2D full-width blocks and overwide tiles match the independent oracle", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   constexpr usize dimX = 31;
   constexpr usize dimY = 9;
@@ -499,7 +499,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: bounded 2D full-width blocks
   }
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: explicit hand-computed single-object dilation", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: explicit hand-computed single-object dilation", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   // A single object voxel at the center of a 3x3x3 image (all else background). The center is a boundary
   // object pixel (all 26 neighbors are non-object), so a Box r{1,1,1} Dilate paints the whole 3x3x3 box:
@@ -519,7 +519,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: explicit hand-computed singl
   }
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: Erode with BackgroundValue colliding with an existing label", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: Erode with BackgroundValue colliding with an existing label", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   // Three-label volume: object=5 (a coarse block checkerboard), and among the non-object voxels a mix of an
   // existing label 2 and background 0. Erode paints the Background Value over the SE of each boundary object
@@ -584,7 +584,7 @@ TEST_CASE("ImageProcessing::ObjectMorphologyEngine: Erode with BackgroundValue c
   }
 }
 
-TEST_CASE("ImageProcessing::ObjectMorphologyEngine: solid all-object block is unchanged (no boundary voxels)", "[ImageProcessing][ObjectMorphologyEngine]")
+TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: solid all-object block is unchanged (no boundary voxels)", "[NXImageProcessing][ObjectMorphologyEngine]")
 {
   // A fully-object image has NO boundary object pixels: every voxel's in-bounds neighbors are all object, and
   // out-of-bounds neighbors are ignored. So nothing paints and Dilate leaves the image unchanged. Exercises

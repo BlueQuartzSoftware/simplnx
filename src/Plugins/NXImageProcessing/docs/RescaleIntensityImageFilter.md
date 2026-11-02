@@ -4,7 +4,7 @@ Applies a linear transformation to the intensity levels of the input image so th
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

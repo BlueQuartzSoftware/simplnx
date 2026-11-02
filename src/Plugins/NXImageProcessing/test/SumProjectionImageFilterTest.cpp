@@ -1,7 +1,7 @@
 #include "ProjectionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SumProjectionImageFilter.hpp"
+#include "NXImageProcessing/Filters/SumProjectionImageFilter.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -51,7 +51,7 @@ float64 SumExpectedForSlot(uint32 projDim, usize slot, usize dim)
 //     Float64. This is the correctness gate for the axis-projection façade (AllNumeric + AlwaysFloat64) +
 //     engine + SumReduce.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D)", "[ImageProcessing][SumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
   constexpr usize D = 12;
   projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0); },
@@ -63,7 +63,7 @@ TEST_CASE("ImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D
 //      above exercises only float32). value == flat index holds for any element type, so the same closed-form
 //      column-sum oracle applies; the sum accumulates in Float64. Small dim keeps the ramp within int16 range.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SumProjectionImageFilter: Computed-expected grid (int16 input)", "[ImageProcessing][SumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][SumProjectionImageFilter]")
 {
   constexpr usize D = 8;
   projection_test::RunProjectionComputedExpectedGrid<SumProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, D, 0.0, 1.0); },
@@ -77,7 +77,7 @@ TEST_CASE("ImageProcessing::SumProjectionImageFilter: Computed-expected grid (in
 // ITKImageProcessing FilterList (createFilter -> null / -9002), so no live-ITK (B) parity is available -- a real
 // coexistence finding, recorded (not an error).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SumProjectionImageFilter: ITK real-image golden (z_projection)", "[ImageProcessing][ItkGolden][SumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::SumProjectionImageFilter: ITK real-image golden (z_projection)", "[NXImageProcessing][ItkGolden][SumProjectionImageFilter]")
 {
   projection_test::RunProjectionBaselineItkGolden<SumProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_SumProjectionImageFilter_z_projection.nrrd", /*projDim=*/2, /*tolerance=*/0.0001);
 }

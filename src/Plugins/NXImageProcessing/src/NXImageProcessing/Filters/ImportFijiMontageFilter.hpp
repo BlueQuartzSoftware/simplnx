@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
-#include "ImageProcessing/utils/FijiMontageUtilities.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
+#include "NXImageProcessing/utils/FijiMontageUtilities.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  *        2D ImageGeometry positioned at the parsed origin. ITK-free replacement for the
  *        legacy ITKImportFijiMontageFilter (UUID 4c48ea16-...). No stitching is performed.
  */
-class IMAGEPROCESSING_EXPORT ImportFijiMontageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ImportFijiMontageFilter : public IFilter
 {
 public:
   ImportFijiMontageFilter() = default;

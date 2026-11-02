@@ -45,7 +45,7 @@ std::string SinImageFilter::humanName() const
 }
 std::vector<std::string> SinImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Sin", "Pointwise"};
+  return {className(), "NXImageProcessing", "Sin", "Pointwise"};
 }
 Parameters SinImageFilter::parameters() const
 {

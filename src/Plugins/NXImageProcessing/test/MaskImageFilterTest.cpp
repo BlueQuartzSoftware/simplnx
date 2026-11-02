@@ -1,4 +1,4 @@
-#include "ImageProcessing/Filters/MaskImageFilter.hpp"
+#include "NXImageProcessing/Filters/MaskImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
@@ -92,7 +92,7 @@ private:
 };
 } // namespace
 
-TEST_CASE("ImageProcessing::MaskEngine: adaptive OOC batches read the mask first and honor the live grant", "[ImageProcessing][MaskImageFilter][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaskEngine: adaptive OOC batches read the mask first and honor the live grant", "[NXImageProcessing][MaskImageFilter][WorkingMemory]")
 {
   constexpr usize k_NumTuples = 8;
   constexpr usize k_NumComponents = 1;
@@ -127,7 +127,7 @@ TEST_CASE("ImageProcessing::MaskEngine: adaptive OOC batches read the mask first
   }
 }
 
-TEST_CASE("ImageProcessing::MaskEngine: adaptive OOC batches keep multi-component tuples together", "[ImageProcessing][MaskImageFilter][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaskEngine: adaptive OOC batches keep multi-component tuples together", "[NXImageProcessing][MaskImageFilter][WorkingMemory]")
 {
   constexpr usize k_NumTuples = 4;
   constexpr usize k_NumComponents = 3;
@@ -168,7 +168,7 @@ TEST_CASE("ImageProcessing::MaskEngine: adaptive OOC batches keep multi-componen
   }
 }
 
-TEST_CASE("ImageProcessing::MaskEngine: cancellation before a chunk avoids all bulk transfers", "[ImageProcessing][MaskImageFilter][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaskEngine: cancellation before a chunk avoids all bulk transfers", "[NXImageProcessing][MaskImageFilter][WorkingMemory]")
 {
   const ShapeType tupleShape{4, 1, 1};
   MaskTransferCountingStore<int32> inputStore(tupleShape, ShapeType{1}, 1);
@@ -186,7 +186,7 @@ TEST_CASE("ImageProcessing::MaskEngine: cancellation before a chunk avoids all b
 // Preflight guards added by the adversarial-review remediation: the Float64 Outside Value is cast to the input
 // element type by the engine (undefined for a non-finite / out-of-range value on an integer type), and the mask
 // engine reads the mask as a single-component scalar.
-TEST_CASE("ImageProcessing::MaskImageFilter: Preflight guards (Outside Value range + mask components)", "[ImageProcessing][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value range + mask components)", "[NXImageProcessing][MaskImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -330,12 +330,12 @@ void RunMaskTypeKeepDiscard(MaskT nonzeroValue)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::MaskImageFilter: uint16 mask keep/discard", "[ImageProcessing][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: uint16 mask keep/discard", "[NXImageProcessing][MaskImageFilter]")
 {
   RunMaskTypeKeepDiscard<uint16>(uint16{40000}); // nonzero beyond the uint8 range, exercising the uint16 mask path
 }
 
-TEST_CASE("ImageProcessing::MaskImageFilter: uint32 mask keep/discard", "[ImageProcessing][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: uint32 mask keep/discard", "[NXImageProcessing][MaskImageFilter]")
 {
   RunMaskTypeKeepDiscard<uint32>(uint32{3000000000U}); // nonzero beyond the uint16 range, exercising the uint32 mask path
 }
@@ -344,7 +344,7 @@ TEST_CASE("ImageProcessing::MaskImageFilter: uint32 mask keep/discard", "[ImageP
 // uint8/uint16/uint32 (a valid-but-wrong integer type -> -8100), and must have the same tuple count as the
 // input (-8101). The mask param is restricted to integer scalar types, so int32 passes parameter validation
 // yet trips the filter's uint8/uint16/uint32-only guard.
-TEST_CASE("ImageProcessing::MaskImageFilter: Preflight rejects wrong mask type (-8100) and tuple mismatch (-8101)", "[ImageProcessing][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type (-8100) and tuple mismatch (-8101)", "[NXImageProcessing][MaskImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -450,13 +450,13 @@ void RunMaskItkGolden(const std::string& inputFile, const std::string& maskFile,
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::MaskImageFilter: ITK real-image golden (2d)", "[ImageProcessing][ItkGolden][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: ITK real-image golden (2d)", "[NXImageProcessing][ItkGolden][MaskImageFilter]")
 {
   RunMaskItkGolden("STAPLE1.png", "STAPLE2.png", "c57d7fda3e42374881c3c3181d15bf90");
 }
 
 // MHA-input case (plan Sec.5 "MHA rung"): the primary input cthead1-Float.mha is read via the delivered ReadMhaFileFilter.
-TEST_CASE("ImageProcessing::MaskImageFilter: ITK real-image golden (cthead1)", "[ImageProcessing][ItkGolden][MaskImageFilter]")
+TEST_CASE("NXImageProcessing::MaskImageFilter: ITK real-image golden (cthead1)", "[NXImageProcessing][ItkGolden][MaskImageFilter]")
 {
   RunMaskItkGolden("cthead1-Float.mha", "cthead1-mask.png", "0ef8943803bb4a21b2015b53f0164f1c");
 }

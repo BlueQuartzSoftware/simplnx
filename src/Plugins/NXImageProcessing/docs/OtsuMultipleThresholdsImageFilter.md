@@ -4,7 +4,7 @@ Threshold an image using multiple Otsu Thresholds.
 
 ## Group (Subgroup)
 
-ImageProcessing (Thresholding)
+NXImageProcessing (Thresholding)
 
 ## Description
 

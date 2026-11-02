@@ -4,7 +4,7 @@ Masks an image using a second image as the mask.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

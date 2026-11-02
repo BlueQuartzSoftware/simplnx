@@ -33,7 +33,7 @@ struct BenchmarkInputContext
 };
 
 /**
- * @brief One benchmark case: an ImageProcessing filter, the real input image its golden test uses, and an argument
+ * @brief One benchmark case: an NXImageProcessing filter, the real input image its golden test uses, and an argument
  *        preset that mirrors that test.
  */
 struct BenchmarkFilterSpec
@@ -57,7 +57,7 @@ struct BenchmarkFilterSpec
 };
 
 /**
- * @brief The benchmark registry: every registered ImageProcessing filter (the original 13-filter representative
+ * @brief The benchmark registry: every registered NXImageProcessing filter (the original 13-filter representative
  *        subset first, then the full-plugin expansion). Built once and cached. Consumed by `--filters all`.
  */
 const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry();

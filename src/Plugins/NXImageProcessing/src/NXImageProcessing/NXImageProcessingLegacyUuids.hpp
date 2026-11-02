@@ -3,16 +3,16 @@
 #include "simplnx/Common/Uuid.hpp"
 
 /**
- * @file ImageProcessingLegacyUuids.hpp
+ * @file NXImageProcessingLegacyUuids.hpp
  * @brief Holds the filter UUIDs of the removed ITKImageProcessing plugin.
  *
- * A stored pipeline can name one of these UUIDs. ImageProcessingLegacyUUIDMapping.hpp maps each one to
- * the equivalent ImageProcessing filter. The benchmark and the tests use the same constants, so one UUID
+ * A stored pipeline can name one of these UUIDs. NXImageProcessingLegacyUUIDMapping.hpp maps each one to
+ * the equivalent NXImageProcessing filter. The benchmark and the tests use the same constants, so one UUID
  * has one definition.
  *
  * Uuid::FromString is constexpr. A malformed UUID therefore stops the build instead of the test run.
  */
-namespace nx::core::ImageProcessingLegacyUuids
+namespace nx::core::NXImageProcessingLegacyUuids
 {
 inline constexpr Uuid k_ITKImageReader = *Uuid::FromString("d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2");
 inline constexpr Uuid k_ITKMhaFileReader = *Uuid::FromString("41c33a08-0052-4915-8d53-d503f85f30d9");
@@ -102,4 +102,4 @@ inline constexpr Uuid k_ITKValuedRegionalMinimaImageFilter = *Uuid::FromString("
 inline constexpr Uuid k_ITKWhiteTopHatImageFilter = *Uuid::FromString("2f377682-d0a8-4dea-8c68-60c2c523a074");
 inline constexpr Uuid k_ITKImageWriterFilter = *Uuid::FromString("a181ee3e-1678-4133-b9c5-a9dd7bfec62f");
 inline constexpr Uuid k_ITKZeroCrossingImageFilter = *Uuid::FromString("89a14057-776a-4e35-80b6-69361e078394");
-} // namespace nx::core::ImageProcessingLegacyUuids
+} // namespace nx::core::NXImageProcessingLegacyUuids

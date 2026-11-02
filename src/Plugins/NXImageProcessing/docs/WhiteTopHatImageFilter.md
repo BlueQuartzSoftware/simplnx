@@ -4,7 +4,7 @@ Grayscale white top-hat transform of an image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

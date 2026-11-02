@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -16,7 +16,7 @@ namespace nx::core
  * Erode Image Filter; unlike the legacy SimpleITK wrapper, the Annulus kernel produces a proper
  * (non-empty) thickness-1 shell.
  */
-class IMAGEPROCESSING_EXPORT GrayscaleErodeImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT GrayscaleErodeImageFilter : public IFilter
 {
 public:
   GrayscaleErodeImageFilter() = default;

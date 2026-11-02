@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "imageprocessing-python-generation-v1",
-  "title": "ImageProcessing pipeline to Python generation",
+  "id": "nximageprocessing-python-generation-v1",
+  "title": "NXImageProcessing pipeline to Python generation",
   "description": "Generate a temporary runnable Python program from an authoritative DREAM3D-NX pipeline.",
   "source_authority": ".d3dpipeline",
   "converter_api": "simplnx_utilities.generate_python_pipeline",
   "required_modules": [
     "simplnx",
-    "imageprocessing",
+    "nximageprocessing",
     "simplnx_utilities"
   ],
   "working_directory": "DREAM3D-NX application binary directory",
@@ -24,7 +24,7 @@
     "language": "Python",
     "minimum_python_version": "3.12",
     "steps": [
-      "Import simplnx, imageprocessing, and simplnx_utilities before loading the pipeline so all filters are registered.",
+      "Import simplnx, nximageprocessing, and simplnx_utilities before loading the pipeline so all filters are registered.",
       "Load the authoritative file with simplnx.Pipeline.from_file(pipeline_path).",
       "Call simplnx_utilities.generate_python_pipeline(pipeline).",
       "Compile the returned text before execution.",
@@ -33,7 +33,7 @@
       "Discard the temporary directory after the run."
     ],
     "reference_code": [
-      "import imageprocessing",
+      "import nximageprocessing",
       "import simplnx as nx",
       "import simplnx_utilities",
       "pipeline = nx.Pipeline.from_file(pipeline_path)",

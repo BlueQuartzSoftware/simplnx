@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/RescaleIntensityImageFilter.hpp"
+#include "NXImageProcessing/Filters/RescaleIntensityImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // not representable in int8, so the pre-fix code computed static_cast<int8>(255.0) (UB, typically -1), the clamp
 // bounds inverted, and the whole image collapsed to ~0. The fix clamps in the double domain then saturates to
 // int8's [-128, 127], so the input maximum maps to a saturated 127 (NOT 0) and every output is a valid int8.
-TEST_CASE("ImageProcessing::RescaleIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[ImageProcessing][RescaleIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[NXImageProcessing][RescaleIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -47,7 +47,7 @@ TEST_CASE("ImageProcessing::RescaleIntensityImageFilter: int8 output saturates (
 // map is degenerate. Two sub-branches: a constant NON-ZERO image (inMax != 0 -> scale = (outMax-outMin)/inMax)
 // and an ALL-ZEROS image (inMin == inMax == 0 -> the implicit scale = 0). Both must collapse the whole image to
 // OutputMinimum, matching ITK's RescaleIntensity (scale = 1, shift = outMin - inMin -> every voxel -> outMin).
-TEST_CASE("ImageProcessing::RescaleIntensityImageFilter: constant input maps to OutputMinimum", "[ImageProcessing][RescaleIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: constant input maps to OutputMinimum", "[NXImageProcessing][RescaleIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -92,7 +92,7 @@ TEST_CASE("ImageProcessing::RescaleIntensityImageFilter: constant input maps to 
 // our output to ITK's committed baseline .nrrd (type: float, SAME reader) at the ITK test's tolerance 1e-8 via
 // ip_golden::CompareImages.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RescaleIntensityImageFilter: ITK real-image golden (3d)", "[ImageProcessing][ItkGolden][RescaleIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden (3d)", "[NXImageProcessing][ItkGolden][RescaleIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

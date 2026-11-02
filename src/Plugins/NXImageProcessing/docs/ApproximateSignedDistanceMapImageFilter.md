@@ -4,7 +4,7 @@ Compute an approximate signed distance map of a mask (negative inside, positive 
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

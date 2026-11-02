@@ -4,7 +4,7 @@ Binary opening by reconstruction: remove foreground objects smaller than the str
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

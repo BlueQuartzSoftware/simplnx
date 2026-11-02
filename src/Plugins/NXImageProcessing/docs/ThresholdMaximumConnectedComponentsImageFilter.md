@@ -4,7 +4,7 @@ Finds the threshold value of an image based on maximizing the number of objects 
 
 ## Group (Subgroup)
 
-ImageProcessing (Segmentation)
+NXImageProcessing (Segmentation)
 
 ## Description
 

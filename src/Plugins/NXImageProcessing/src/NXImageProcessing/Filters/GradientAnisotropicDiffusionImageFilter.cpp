@@ -31,7 +31,7 @@ std::string GradientAnisotropicDiffusionImageFilter::humanName() const
 }
 std::vector<std::string> GradientAnisotropicDiffusionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "AnisotropicDiffusion", "PDE"};
+  return {className(), "NXImageProcessing", "Smoothing", "AnisotropicDiffusion", "PDE"};
 }
 
 Parameters GradientAnisotropicDiffusionImageFilter::parameters() const

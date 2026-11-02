@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-class IMAGEPROCESSING_EXPORT Log10ImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT Log10ImageFilter : public IFilter
 {
 public:
   Log10ImageFilter() = default;

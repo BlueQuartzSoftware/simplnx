@@ -67,9 +67,9 @@ set(SIMPLNX_TEST_ALGORITHM_PATH "0" CACHE STRING "Algorithm paths to test: 0=Bot
 option(SIMPLNX_ENABLE_SimplnxCore "Enable the SimplnxCore Plugin" ON)
 
 # ------------------------------------------------------------------------------
-# Is the ImageProcessing (ITK-free) Plugin enabled [DEFAULT=ON]
+# Is the NXImageProcessing (ITK-free) Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(SIMPLNX_ENABLE_ImageProcessing "Enable the ImageProcessing (ITK-free) plugin" ON)
+option(SIMPLNX_ENABLE_NXImageProcessing "Enable the NXImageProcessing (ITK-free) plugin" ON)
 
 # ------------------------------------------------------------------------------
 # Is the OrientationAnalysis Plugin enabled [DEFAULT=ON]
@@ -1003,8 +1003,8 @@ set(SIMPLNX_PLUGIN_LIST "")
 if(SIMPLNX_ENABLE_SimplnxCore)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} SimplnxCore)
 endif()
-if(SIMPLNX_ENABLE_ImageProcessing)
-  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ImageProcessing)
+if(SIMPLNX_ENABLE_NXImageProcessing)
+  set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} NXImageProcessing)
 endif()
 if(SIMPLNX_ENABLE_OrientationAnalysis)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} OrientationAnalysis)

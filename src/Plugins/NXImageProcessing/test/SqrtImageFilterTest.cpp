@@ -1,13 +1,13 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SqrtImageFilter.hpp"
+#include "NXImageProcessing/Filters/SqrtImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): sqrt is undefined for x<0. The op is
 // static_cast<U>(std::sqrt(static_cast<double>(x))) -- ITK's equally-unguarded Sqrt functor -- so sqrt(-4) is NaN.
-TEST_CASE("ImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain edge)", "[ImageProcessing][SqrtImageFilter]")
+TEST_CASE("NXImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain edge)", "[NXImageProcessing][SqrtImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -25,7 +25,7 @@ TEST_CASE("ImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain e
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01.
 // See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SqrtImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][SqrtImageFilter]")
+TEST_CASE("NXImageProcessing::SqrtImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SqrtImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

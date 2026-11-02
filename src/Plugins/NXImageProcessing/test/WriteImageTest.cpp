@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
-#include "ImageProcessing/Filters/ReadImageStackFilter.hpp"
-#include "ImageProcessing/Filters/ReadMhaFileFilter.hpp"
-#include "ImageProcessing/Filters/WriteImageFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/Filters/ReadImageFilter.hpp"
+#include "NXImageProcessing/Filters/ReadImageStackFilter.hpp"
+#include "NXImageProcessing/Filters/ReadMhaFileFilter.hpp"
+#include "NXImageProcessing/Filters/WriteImageFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -329,7 +329,7 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
 
 } // namespace
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Write Stack", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -457,7 +457,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Write Stack", "[ImageProcessing][W
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Single-slice write omits the index suffix", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Single-slice write omits the index suffix", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -517,7 +517,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Single-slice write omits the index
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::WriteImageFilter: MHA preserves ITK scalar data and plane metadata", "[ImageProcessing][WriteImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
+TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scalar data and plane metadata", "[NXImageProcessing][WriteImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64, float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -583,7 +583,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::WriteImageFilter: MHA preserves ITK scalar 
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: MHA maps metadata for every plane", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plane", "[NXImageProcessing][WriteImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -648,7 +648,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: MHA maps metadata for every plane"
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: MHA preserves ITK component counts", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component counts", "[NXImageProcessing][WriteImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -709,7 +709,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: MHA preserves ITK component counts
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: validates fill characters and previews the first output index", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: validates fill characters and previews the first output index", "[NXImageProcessing][WriteImageFilter]")
 {
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -737,7 +737,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: validates fill characters and prev
   REQUIRE(invalidFillResult.outputActions.errors()[0].code == -27018);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Color table preflight validation", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Color table preflight validation", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -778,7 +778,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Color table preflight validation",
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table across numeric input types", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table across numeric input types", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -826,7 +826,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table across numeric 
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table 3D multi-slice across planes", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slice across planes", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -973,7 +973,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table 3D multi-slice 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Format-aware write-type preflight", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Format-aware write-type preflight", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1046,7 +1046,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Format-aware write-type preflight"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table mask and constant-array handling", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and constant-array handling", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1220,7 +1220,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Inline color table mask and consta
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Flip output image about X or Y axis", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y axis", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1328,7 +1328,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Flip output image about X or Y axi
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Output flip composes with the color-table path", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the color-table path", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1442,7 +1442,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Output flip composes with the colo
   REQUIRE(flipYImage == expectedFlipYImage);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar preflight validation", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1526,7 +1526,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar preflight validation", "
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar pads the written image with a band", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image with a band", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1698,7 +1698,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar pads the written image w
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar composes with flip and RGB input", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and RGB input", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1769,7 +1769,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar composes with flip and R
   REQUIRE(readStore.getValue((2 * 3 + 0) * 3) == 255);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices locks per-plane dims and horizontal spacing", "[ImageProcessing][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices locks per-plane dims and horizontal spacing", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1855,7 +1855,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices locks
   REQUIRE(readStore.getValue((dimZ * dimX + 0) * 3) == 255);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: groups YZ slices into caller-owned bounded extents", "[ImageProcessing][WriteImageFilter][OOC]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1917,7 +1917,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: groups YZ slices into caller-owned
   REQUIRE(outputFileCount == dimX);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: groups color and mask YZ slices into caller-owned bounded extents", "[ImageProcessing][WriteImageFilter][OOC]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -1994,7 +1994,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: groups color and mask YZ slices in
   REQUIRE(outputFileCount == dimX);
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: reads direct XY slices into separate caller-owned extents", "[ImageProcessing][WriteImageFilter][OOC]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into separate caller-owned extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -2041,7 +2041,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: reads direct XY slices into separa
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: reads color and mask XY slices into separate caller-owned extents", "[ImageProcessing][WriteImageFilter][OOC]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices into separate caller-owned extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
@@ -2098,7 +2098,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: reads color and mask XY slices int
   }
 }
 
-TEST_CASE("ImageProcessing::WriteImageFilter: rejects a source-group grant smaller than one slice", "[ImageProcessing][WriteImageFilter][OOC]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant smaller than one slice", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();

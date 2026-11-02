@@ -33,7 +33,7 @@ std::string IsoContourDistanceImageFilter::humanName() const
 }
 std::vector<std::string> IsoContourDistanceImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "IsoContourDistance", "DistanceMap", "LevelSet", "Morphology"};
+  return {className(), "NXImageProcessing", "IsoContourDistance", "DistanceMap", "LevelSet", "Morphology"};
 }
 Parameters IsoContourDistanceImageFilter::parameters() const
 {

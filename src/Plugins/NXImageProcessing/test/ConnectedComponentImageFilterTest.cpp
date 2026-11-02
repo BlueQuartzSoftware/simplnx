@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ConnectedComponentImageFilter.hpp"
+#include "NXImageProcessing/Filters/ConnectedComponentImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -81,7 +81,7 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
 //     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: preflight guards", "[ImageProcessing][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", "[NXImageProcessing][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -141,19 +141,19 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: preflight guards", "[
 // three are ported below (the plan's Sec.6 table listed only the first two -- the (fullyconnected) case is added here
 // for faithful reproduction, since our filter exposes k_FullyConnected_Key).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ConnectedComponentImageFilter>("WhiteDots.png", "548f5184428db10d93e3bf377dee5253");
 }
 
 // The ITK "(mask)" case: 2th_cthead1.png with DEFAULT parameters (no mask input is set -- name is a misnomer).
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (2th_cthead1)", "[ImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (2th_cthead1)", "[NXImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ConnectedComponentImageFilter>("2th_cthead1.png", "769315132e427a391edd779191db446d");
 }
 
 // The ITK "(fullyconnected)" case: WhiteDots.png with FullyConnected = true.
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (fullyconnected)", "[ImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: ITK real-image golden (fullyconnected)", "[NXImageProcessing][ItkGolden][ConnectedComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ConnectedComponentImageFilter>("WhiteDots.png", "e40b7cdfc1b34ae2e6b13660d626cc29",
                                                                    [](Arguments& args) { args.insertOrAssign(ConnectedComponentImageFilter::k_FullyConnected_Key, std::make_any<bool>(true)); });

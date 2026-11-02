@@ -161,8 +161,8 @@ void CheckAheAgainstOracle(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: resident state requires a complete dataset-scaled reservation",
-          "[ImageProcessing][AdaptiveHistogramEqualizationEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: resident state requires a complete dataset-scaled reservation",
+          "[NXImageProcessing][AdaptiveHistogramEqualizationEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -204,8 +204,8 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: resident state 
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: real-OOC selector uses resident state only after a complete grant",
-          "[ImageProcessing][AdaptiveHistogramEqualizationEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: real-OOC selector uses resident state only after a complete grant",
+          "[NXImageProcessing][AdaptiveHistogramEqualizationEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -254,7 +254,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: real-OOC select
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fast and generic transfers", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fast and generic transfers", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -375,7 +375,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fast
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowDimPlanResult);
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D constant and cancellation preserve output", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D constant and cancellation preserve output", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -417,8 +417,8 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D cons
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: matches independent oracle (3D + 2D)", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]", uint8, int16, int32, float32,
-                   float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: matches independent oracle (3D + 2D)", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]", uint8, int16, int32,
+                   float32, float64)
 {
   using T = TestType;
   SECTION("3D non-cubic 10x11x9")
@@ -431,7 +431,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: matche
   }
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: constant image passes through (ITK would NaN)", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: constant image passes through (ITK would NaN)", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   // max == min => iscale == 0. ITK computes 0/0 = NaN; the engine passes the input through unchanged.
   constexpr usize D = 6;
@@ -453,7 +453,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: constant image 
   }
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: integer fallback (span exceeds LUT cap)", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: integer fallback (span exceeds LUT cap)", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   // Force the NON-LUT integer path. The difference-keyed LUT fast path is gated at kMaxAheLutEntries = 2^22
   // table entries (an integer gray span <= 2^21). The TEMPLATE grid above never trips the gate (its patterns
@@ -487,7 +487,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: integer fallbac
   }
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: alpha=beta=1 is the identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: alpha=beta=1 is the identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   // Closed form independent of the CF internals: with alpha=beta=1, cf = 0.5*s*ad - 0.5*s*ad + u = u for
   // every neighbor, so sum/ikernel = u and out = iscale*(u+0.5)+min = the original pixel. This is a strong
@@ -498,7 +498,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: alpha=beta=1 is
   RequireAheClose<float32>(out, input, /*atol=*/1e-2, /*rtol=*/1e-4, /*maxDiffFraction=*/0.0);
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: uint8 alpha=1 beta=0.25 moving-box path", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: uint8 alpha=1 beta=0.25 moving-box path", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   constexpr usize dimX = 17;
   constexpr usize dimY = 13;
@@ -511,7 +511,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: uint8 alpha=1 b
   RequireAheClose<uint8>(actual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: validates dimensions and stores", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: validates dimensions and stores", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   IFilter::MessageHandler messageHandler{};
   std::atomic_bool shouldCancel{false};

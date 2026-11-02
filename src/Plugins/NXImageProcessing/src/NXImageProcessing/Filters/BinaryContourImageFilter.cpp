@@ -19,7 +19,7 @@ using namespace nx::core;
 
 namespace
 {
-// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/ImageProcessing tree for
+// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree for
 // -84xx/-85xx codes: the -84xx blocks up to -8493 are already taken (grayscale composites -8390/-8400/-8410/
 // -8420, Binary Erode -8440..-8443, Binary Dilate -8460..-8463, Binary Opening -8480..-8483, Binary Closing
 // -8490..-8493), so this filter uses the still-unused -8500 block.
@@ -49,7 +49,7 @@ std::string BinaryContourImageFilter::humanName() const
 }
 std::vector<std::string> BinaryContourImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryContour", "Binary", "Contour", "ImageLabel"};
+  return {className(), "NXImageProcessing", "BinaryContour", "Binary", "Contour", "ImageLabel"};
 }
 Parameters BinaryContourImageFilter::parameters() const
 {

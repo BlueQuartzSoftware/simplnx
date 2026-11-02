@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -13,7 +13,7 @@ namespace nx::core
  *        Filter. Collapses one axis of a scalar Image Geometry by taking, for each column along the
  *        projected axis, the minimum value; the projected axis becomes size 1.
  */
-class IMAGEPROCESSING_EXPORT MinimumProjectionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT MinimumProjectionImageFilter : public IFilter
 {
 public:
   MinimumProjectionImageFilter() = default;

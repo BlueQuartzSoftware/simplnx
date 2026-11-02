@@ -137,7 +137,7 @@ target_compile_definitions(simplnx_test
   PRIVATE
     SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
     SIMPLNX_PLUGIN_COUNT=${SIMPLNX_PLUGIN_COUNT}
-    SIMPLNX_TEST_ALL_OPTIONAL_PLUGINS_ENABLED=$<AND:$<BOOL:${SIMPLNX_ENABLE_OrientationAnalysis}>,$<BOOL:${SIMPLNX_ENABLE_ImageProcessing}>>
+    SIMPLNX_TEST_ALL_OPTIONAL_PLUGINS_ENABLED=$<AND:$<BOOL:${SIMPLNX_ENABLE_OrientationAnalysis}>,$<BOOL:${SIMPLNX_ENABLE_NXImageProcessing}>>
 )
 
 target_compile_options(simplnx_test
@@ -172,7 +172,7 @@ add_test(NAME "simplnx_test_profile_lifecycle"
 set_tests_properties("simplnx_test_profile_lifecycle" PROPERTIES RUN_SERIAL TRUE TIMEOUT 150)
 
 add_executable(P1BenchmarkPreferenceSnapshotTest
-  ${simplnx_SOURCE_DIR}/src/Plugins/ImageProcessing/benchmark/BenchmarkPreferenceSnapshotTest.cpp)
+  ${simplnx_SOURCE_DIR}/src/Plugins/NXImageProcessing/benchmark/BenchmarkPreferenceSnapshotTest.cpp)
 target_link_libraries(P1BenchmarkPreferenceSnapshotTest PRIVATE simplnx::simplnx Catch2::Catch2)
 simplnx_enable_warnings(TARGET P1BenchmarkPreferenceSnapshotTest)
 add_test(NAME "P1 benchmark preference snapshot"

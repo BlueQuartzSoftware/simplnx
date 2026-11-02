@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * and float types, and is out-of-core capable: the reconstruction result never exceeds the input, so the
  * difference never underflows.
  */
-class IMAGEPROCESSING_EXPORT HConvexImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT HConvexImageFilter : public IFilter
 {
 public:
   HConvexImageFilter() = default;

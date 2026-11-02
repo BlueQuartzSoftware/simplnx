@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
+#include "NXImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -64,7 +64,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a FIXED
 //     float32 output array (AlwaysFloat32), regardless of the input element type.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeImageFilter: preflight guards", "[ImageProcessing][GradientMagnitudeImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "[NXImageProcessing][GradientMagnitudeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -134,7 +134,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeImageFilter: preflight guards", "[I
 // -----------------------------------------------------------------------------
 // (2) FromSIMPLJson: the UseImageSpacing bool and the geometry/array/name DataPaths.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeImageFilter: FromSIMPLJson", "[ImageProcessing][GradientMagnitudeImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: FromSIMPLJson", "[NXImageProcessing][GradientMagnitudeImageFilter]")
 {
   const nlohmann::json json = {
       {"UseImageSpacing", true},
@@ -157,7 +157,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeImageFilter: FromSIMPLJson", "[Imag
 // committed baseline BasicFilters_GradientMagnitudeImageFilter_default.nrrd at the ITK test's tolerance of 1e-05 via
 // ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32). The helper pins ForceInCore.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientMagnitudeImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][GradientMagnitudeImageFilter]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][GradientMagnitudeImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<GradientMagnitudeImageFilter>("RA-Float.nrrd", "BasicFilters_GradientMagnitudeImageFilter_default.nrrd", /*tolerance=*/1e-05);
 }

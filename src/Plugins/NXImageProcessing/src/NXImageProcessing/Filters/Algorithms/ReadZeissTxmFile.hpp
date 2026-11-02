@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -29,7 +29,7 @@ enum class ZeissTxmDataType : int32
   FLOAT_TYPE = 10,
 };
 
-struct IMAGEPROCESSING_EXPORT ReadZeissTxmFileInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFileInputValues
 {
   DataPath ImageGeometryPath;
   std::string CellAttributeMatrixName;
@@ -63,7 +63,7 @@ struct ZeissTxmHeaderMetadata
 /**
  * @brief
  */
-struct IMAGEPROCESSING_EXPORT ReadZeissTxmFilterFileCache
+struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFilterFileCache
 {
   fs::path inputFile;
   fs::file_time_type timeStamp;
@@ -104,7 +104,7 @@ Result<ZeissTxmHeaderMetadata> ReadHeaderMetaData(const std::string& inputFilePa
 /**
  * @class ReadZeissTxmFile
  */
-class IMAGEPROCESSING_EXPORT ReadZeissTxmFile
+class NXIMAGEPROCESSING_EXPORT ReadZeissTxmFile
 {
 
 public:

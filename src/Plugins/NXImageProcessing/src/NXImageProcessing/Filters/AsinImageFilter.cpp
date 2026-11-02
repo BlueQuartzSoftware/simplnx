@@ -45,7 +45,7 @@ std::string AsinImageFilter::humanName() const
 }
 std::vector<std::string> AsinImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Asin", "Pointwise"};
+  return {className(), "NXImageProcessing", "Asin", "Pointwise"};
 }
 Parameters AsinImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #include "ReadNrrdFile.hpp"
 
-#include "ImageProcessing/utils/NrrdUtilities.hpp"
+#include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"

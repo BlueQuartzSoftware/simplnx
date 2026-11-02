@@ -4,7 +4,7 @@ Computes `1 / (1 + x)` for each pixel.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

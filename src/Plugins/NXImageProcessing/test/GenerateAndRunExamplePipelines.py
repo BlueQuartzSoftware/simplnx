@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-import imageprocessing  # Registers ImageProcessing filters before pipeline loading.
+import nximageprocessing  # Registers NXImageProcessing filters before pipeline loading.
 import simplnx as nx
 import simplnx_utilities
 
@@ -57,7 +57,7 @@ def main():
         raise RuntimeError(f"Expected 16 example pipelines, found {len(pipeline_paths)}")
 
     environment = os.environ.copy()
-    with tempfile.TemporaryDirectory(prefix="imageprocessing-python-") as temporary_directory:
+    with tempfile.TemporaryDirectory(prefix="nximageprocessing-python-") as temporary_directory:
         temporary_path = Path(temporary_directory)
         for pipeline_path in pipeline_paths:
             pipeline_json = json.loads(pipeline_path.read_text(encoding="utf-8"))

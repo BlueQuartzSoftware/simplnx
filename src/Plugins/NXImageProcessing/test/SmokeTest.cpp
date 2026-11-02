@@ -9,10 +9,10 @@
 
 using namespace nx::core;
 
-TEST_CASE("ImageProcessing::Plugin loads", "[ImageProcessing]")
+TEST_CASE("NXImageProcessing::Plugin loads", "[NXImageProcessing]")
 {
   UnitTest::LoadPlugins();
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
-  const bool found = std::any_of(plugins.cbegin(), plugins.cend(), [](const AbstractPlugin* plugin) { return plugin->getName() == "ImageProcessing"; });
+  const bool found = std::any_of(plugins.cbegin(), plugins.cend(), [](const AbstractPlugin* plugin) { return plugin->getName() == "NXImageProcessing"; });
   REQUIRE(found);
 }

@@ -1,6 +1,6 @@
 #include "ProjectionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryProjectionImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryProjectionImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -66,7 +66,7 @@ DataPath BuildYCoordImage(DataStructure& ds, usize dim)
 //     filter must reject such parameters at preflight. In-range integer values (and any value on a float
 //     input, exercised elsewhere) must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[ImageProcessing][BinaryProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -107,7 +107,7 @@ TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: Preflight rejects non-f
 //     representable (it truncates toward zero), so preflight stays VALID but must carry the truncation warning.
 //     The error paths (non-finite / out-of-range) are covered above; this is the surviving warning branch.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: Fractional in-range fg on integer input -> warning (-8352)", "[ImageProcessing][BinaryProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: Fractional in-range fg on integer input -> warning (-8352)", "[NXImageProcessing][BinaryProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -146,11 +146,11 @@ TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: Fractional in-range fg 
 //   - "defaults": 2th_cthead1.mha read through OUR MHA reader; projection dimension 0, defaults fg=1/bg=0.
 //   - "another_dimension": WhiteDots.png; projection dimension 1, foreground value 255.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: ITK real-image golden (defaults, MHA)", "[ImageProcessing][ItkGolden][BinaryProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: ITK real-image golden (defaults, MHA)", "[NXImageProcessing][ItkGolden][BinaryProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<BinaryProjectionImageFilter>("2th_cthead1.mha", /*projDim=*/0, /*removeOriginalGeometry=*/true, "3fc3603b27bf51df592190227d6cd6ed");
 }
-TEST_CASE("ImageProcessing::BinaryProjectionImageFilter: ITK real-image golden (another_dimension)", "[ImageProcessing][ItkGolden][BinaryProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryProjectionImageFilter: ITK real-image golden (another_dimension)", "[NXImageProcessing][ItkGolden][BinaryProjectionImageFilter]")
 {
   const auto setForeground = [](Arguments& args) { args.insertOrAssign(BinaryProjectionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(255.0)); };
   projection_test::RunProjectionMd5ItkGolden<BinaryProjectionImageFilter>("WhiteDots.png", /*projDim=*/1, /*removeOriginalGeometry=*/true, "827f263ef9fb63d05499d14fcef32f60", setForeground);

@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ReadNIfTIFileFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
-#include "ImageProcessing/utils/nifti1.h"
+#include "NXImageProcessing/Filters/ReadNIfTIFileFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/utils/nifti1.h"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -259,7 +259,7 @@ void RequireFloatArrayApproxEquals(const DataStructure& ds, const DataPath& data
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .nii.gz)", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .nii.gz)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -325,7 +325,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .nii
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -388,7 +388,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform", 
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -428,7 +428,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[ImagePro
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -475,7 +475,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "[I
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -519,7 +519,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams only the selected region", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams only the selected region", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -611,7 +611,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams onl
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps physical bounds to voxels", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps physical bounds to voxels", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -703,7 +703,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps phy
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves RGB24 components", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves RGB24 components", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -784,7 +784,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves R
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pair", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pair", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -833,7 +833,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.im
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1D/2D volumes, and unsupported datatypes", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1D/2D volumes, and unsupported datatypes", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -919,7 +919,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1D/
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacing extraction", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacing extraction", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -968,7 +968,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacing 
   REQUIRE(std::fabs(outSpacing[2] - sz) < tol);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warning", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warning", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1012,7 +1012,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warning"
   REQUIRE(foundRotationWarning);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false falls back to pixdim + zero origin", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false falls back to pixdim + zero origin", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1055,7 +1055,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false falls 
   REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1099,7 +1099,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip", 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: round-trips remaining native datatypes", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native datatypes", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1188,7 +1188,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: round-trips remaining native da
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1344,7 +1344,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[ImageProces
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: identity scaling transform is not applied and does not promote", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is not applied and does not promote", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1384,7 +1384,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: identity scaling transform is n
   RequireArrayEquals<int16>(dataStructure, arrPath, voxels);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: header cache is reused across preflight calls", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across preflight calls", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1442,7 +1442,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: header cache is reused across p
   REQUIRE(freshPreflight.outputActions.invalid());
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
   const DataPath geomPath({"Physical Crop"});

@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ImportFijiMontageFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
-#include "ImageProcessing/utils/FijiMontageUtilities.hpp"
+#include "NXImageProcessing/Filters/ImportFijiMontageFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/utils/FijiMontageUtilities.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -47,7 +47,7 @@ void WriteConfig(const fs::path& path, const std::vector<std::string>& lines)
   }
 }
 
-// Writes a tiny grayscale uint8 tile (w*h, single component) via the ImageProcessing image-write path.
+// Writes a tiny grayscale uint8 tile (w*h, single component) via the NXImageProcessing image-write path.
 void WriteGrayTile(const fs::path& p, usize w, usize h, uint8 fill)
 {
   auto ioResult = nx::core::CreateImageIO(p);
@@ -187,7 +187,7 @@ void RequireArraysIdentical(const IDataArray& ours, const IDataArray& itk)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::FijiMontageUtilities: parse 2x2 TileConfiguration", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::FijiMontageUtilities: parse 2x2 TileConfiguration", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const fs::path cfg = FijiOutputDir() / "TileConfiguration.txt";
   WriteConfig(cfg, {"# Define the number of dimensions we are working on", "dim = 2", "", "# Define the image coordinates", "a.tif; ; (0.0, 0.0)", "b.tif; ; (700.27, 1.48)",
@@ -206,7 +206,7 @@ TEST_CASE("ImageProcessing::FijiMontageUtilities: parse 2x2 TileConfiguration", 
   REQUIRE(tiles[0].origin[2] == Approx(0.0f)); // 2D → Z=0
 }
 
-TEST_CASE("ImageProcessing::FijiMontageUtilities: name assignment + origin rebase", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::FijiMontageUtilities: name assignment + origin rebase", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   std::vector<fiji::FijiTile> tiles;
   tiles.push_back({fs::path("dir") / "a.tif", FloatVec3{10.0f, 20.0f, 0.0f}, ""});
@@ -224,7 +224,7 @@ TEST_CASE("ImageProcessing::FijiMontageUtilities: name assignment + origin rebas
   REQUIRE(tiles[1].origin[1] == Approx(120.0f));
 }
 
-TEST_CASE("ImageProcessing::FijiMontageUtilities: rejects bad config", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::FijiMontageUtilities: rejects bad config", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   SECTION("missing file")
   {
@@ -238,7 +238,7 @@ TEST_CASE("ImageProcessing::FijiMontageUtilities: rejects bad config", "[ImagePr
   }
 }
 
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -291,7 +291,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: synthetic 2x2 montage", "[I
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: change-origin rebase + no parent group", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: change-origin rebase + no parent group", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -319,7 +319,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: change-origin rebase + no p
   REQUIRE(geomB.getOrigin()[1] == Approx(120.0f));
 }
 
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: exemplar golden (real Zeiss montage)", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: exemplar golden (real Zeiss montage)", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "fiji_montage.tar.gz", "fiji_montage");
@@ -354,7 +354,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: exemplar golden (real Zeiss
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: grayscale conversion", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: grayscale conversion", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -407,7 +407,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: grayscale conversion", "[Im
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: set image data type (uint8 -> uint16)", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: set image data type (uint8 -> uint16)", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -454,7 +454,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: set image data type (uint8 
 // per-tile CreateArray, the ConvertColorToGrayScale sub-filter, and the removeData + rename dance --
 // with storage forced out-of-core. In an OOC super-build the stores are disk-backed; in an OOC-free
 // build ForceOutOfCore is inert and this degrades to in-memory, but the logic is still validated.
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: forced out-of-core grayscale montage", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: forced out-of-core grayscale montage", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -513,7 +513,7 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: forced out-of-core grayscal
 // with unchanged inputs must produce identical, correct output (a stale cache would corrupt it), and
 // a parameter edit (the image-geometry prefix) between runs must be honored (the cache must not serve
 // stale, prefix-dependent names -- only the file-derived parse + metadata are cached).
-TEST_CASE("ImageProcessing::ImportFijiMontageFilter: metadata cache correctness across repeated runs", "[ImageProcessing][ImportFijiMontageFilter]")
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: metadata cache correctness across repeated runs", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   UnitTest::LoadPlugins();
 

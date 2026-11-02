@@ -4,7 +4,7 @@ Projects a scalar image along one axis by taking the minimum value along that ax
 
 ## Group (Subgroup)
 
-ImageProcessing (Projection)
+NXImageProcessing (Projection)
 
 ## Description
 

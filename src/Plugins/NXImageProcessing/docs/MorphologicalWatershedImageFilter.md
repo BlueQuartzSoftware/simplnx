@@ -4,7 +4,7 @@ Applies a morphological watershed segmentation to a grayscale image, seeded auto
 
 ## Group (Subgroup)
 
-ImageProcessing (Watersheds / Segmentation)
+NXImageProcessing (Watersheds / Segmentation)
 
 ## Description
 

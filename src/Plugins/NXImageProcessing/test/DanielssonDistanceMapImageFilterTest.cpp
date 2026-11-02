@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/DanielssonDistanceMapImageFilter.hpp"
+#include "NXImageProcessing/Filters/DanielssonDistanceMapImageFilter.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -41,7 +41,7 @@ void RunDanielsson(IFilter& filter, DataStructure& ds, const DataPath& inputPath
 // (1) Hand-computed: a full seed plane at x==0 makes the distance purely 1D along x (= x, or x^2 squared), which is
 //     4SED-exact and hand-obvious.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -80,7 +80,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed
 //      and out-of-core algorithm paths on in-memory stores (selected by SIMPLNX_TEST_ALGORITHM_PATH) and the closed
 //      form x^2 is asserted directly -- an independent oracle, not the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane (both algorithm paths)", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane (both algorithm paths)", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -126,7 +126,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is output-neutral", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is output-neutral", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -155,7 +155,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is o
 // -----------------------------------------------------------------------------
 // (2) Preflight: a non-integer (float32) input is rejected by the IntegerOnly policy.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -177,7 +177,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects 
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -217,7 +217,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects 
 }
 
 // FromSIMPLJson maps every legacy SIMPL key (InputIsBinary/SquaredDistance/UseImageSpacing + both DataPaths).
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: FromSIMPLJson", "[ImageProcessing][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: FromSIMPLJson", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
   const nlohmann::json json = {
       {"InputIsBinary", true},
@@ -242,7 +242,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: FromSIMPLJson", "[
 // 2th_cthead1.png (uint8), ITK-default params, fixed float32 output. The test compares the output with the durable
 // ITK baseline at a tolerance of 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][DanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][DanielssonDistanceMapImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

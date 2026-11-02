@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ThresholdMaximumConnectedComponentsImageFilter.hpp"
+#include "NXImageProcessing/Filters/ThresholdMaximumConnectedComponentsImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -47,7 +47,7 @@ void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
 //     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[ImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[NXImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -94,12 +94,12 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pref
 //   parameters: cthead1.png, MinimumObjectSizeInPixels = 40 AND UpperBoundary = 150.
 //   float:      RA-Float.nrrd (float32 input, uint8 output), defaults.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ThresholdMaximumConnectedComponentsImageFilter>("cthead1.png", "c84b75c78c33844251a1095d9cbcffb9");
 }
 
-TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (parameters)", "[ImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (parameters)", "[NXImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ThresholdMaximumConnectedComponentsImageFilter>("cthead1.png", "27c6cf8494fcc4e414f1c420e7a9ca6f", [](Arguments& args) {
     args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(40u));
@@ -107,7 +107,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK 
   });
 }
 
-TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ThresholdMaximumConnectedComponentsImageFilter>("RA-Float.nrrd", "e475b27bd0dd66ede330c4eab93c17e9");
 }

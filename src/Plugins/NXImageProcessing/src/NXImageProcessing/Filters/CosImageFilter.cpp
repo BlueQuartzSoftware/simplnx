@@ -45,7 +45,7 @@ std::string CosImageFilter::humanName() const
 }
 std::vector<std::string> CosImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Cos", "Pointwise"};
+  return {className(), "NXImageProcessing", "Cos", "Pointwise"};
 }
 Parameters CosImageFilter::parameters() const
 {

@@ -4,7 +4,7 @@ Remove local maxima (bright peaks) not connected to the boundary of the image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

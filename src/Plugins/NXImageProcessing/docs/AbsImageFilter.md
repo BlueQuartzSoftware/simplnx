@@ -4,7 +4,7 @@ Computes the absolute value of each pixel.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

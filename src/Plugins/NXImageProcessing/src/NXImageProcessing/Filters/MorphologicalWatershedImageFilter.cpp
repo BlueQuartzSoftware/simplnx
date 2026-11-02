@@ -36,7 +36,7 @@ std::string MorphologicalWatershedImageFilter::humanName() const
 }
 std::vector<std::string> MorphologicalWatershedImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "MorphologicalWatershed", "Watersheds", "Segmentation"};
+  return {className(), "NXImageProcessing", "MorphologicalWatershed", "Watersheds", "Segmentation"};
 }
 
 Parameters MorphologicalWatershedImageFilter::parameters() const

@@ -36,7 +36,7 @@ std::string MorphologicalGradientImageFilter::humanName() const
 }
 std::vector<std::string> MorphologicalGradientImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "MorphologicalGradient", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "MorphologicalGradient", "Morphology", "MathematicalMorphology"};
 }
 Parameters MorphologicalGradientImageFilter::parameters() const
 {

@@ -84,7 +84,7 @@ When *Renumber Features* is enabled and the Cell Feature Attribute Matrix contai
 
 ### Required Input Sources
 
-- **Input Image Geometry** -- the geometry to crop. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
+- **Input Image Geometry** -- the geometry to crop. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
 % Auto generated parameter table will be inserted here
 

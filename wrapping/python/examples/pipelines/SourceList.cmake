@@ -90,12 +90,12 @@ CreatePythonTests(
 
 
 #------------------------------------------------------------------------------
-# Add the ImageProcessing Python Pipelines
+# Add the NXImageProcessing Python Pipelines
 #------------------------------------------------------------------------------
-set(ImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/ImageProcessing")
+set(NXImageProcessingDirPrefix "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipelines/NXImageProcessing")
 
-AddPythonTest(NAME "PY::ImageProcessing::02_Image_Segmentation" FILE "${ImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
-AddPythonTest(NAME "PY::ImageProcessing::03_Porosity_Mesh_Export" FILE "${ImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+AddPythonTest(NAME "PY::NXImageProcessing::02_Image_Segmentation" FILE "${NXImageProcessingDirPrefix}/02_Image_Segmentation.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+AddPythonTest(NAME "PY::NXImageProcessing::03_Porosity_Mesh_Export" FILE "${NXImageProcessingDirPrefix}/03_Porosity_Mesh_Export.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 
 set(SIMPLNX_PYTHON_TESTS
   "05_AM_XCT_Porosity_Segmentation"
@@ -116,6 +116,6 @@ set(SIMPLNX_PYTHON_TESTS
   "20_Fiji_Microscopy_Montage_Import"
 )
 foreach(test ${SIMPLNX_PYTHON_TESTS})
-  AddPythonTest(NAME "PY::ImageProcessing::${test}" FILE "${ImageProcessingDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
+  AddPythonTest(NAME "PY::NXImageProcessing::${test}" FILE "${NXImageProcessingDirPrefix}/${test}.py" PYTHONPATH "$<TARGET_FILE_DIR:simplnx>")
 endforeach(test ${})
 

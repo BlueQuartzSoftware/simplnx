@@ -1,9 +1,9 @@
 include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 
-set(PLUGIN_NAME "ImageProcessing")
+set(PLUGIN_NAME "NXImageProcessing")
 set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
-# All filters in the plugin. Keep them in ImageProcessing/src/ImageProcessing/Filters/.
+# All filters in the plugin. Keep them in NXImageProcessing/src/NXImageProcessing/Filters/.
 set(FilterList
   AbsImageFilter
   AcosImageFilter
@@ -198,12 +198,12 @@ if(SIMPLNX_BUILD_TESTS)
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 endif()
 
-# Standalone developer benchmark tool, plus tiny registered smoke tests for its custom input preparations. It reuses
-# the golden-test harness, Catch2 and the generated test-dirs header, so it is only available when SIMPLNX_BUILD_TESTS
-# is ON (default ON then) and is forced OFF otherwise. It is added after the test subdir.
+# Standalone developer benchmark tool, plus tiny registered smoke tests for its custom input preparations. Default ON
+# locally. It reuses the golden-test harness and generated test-dirs header.
+# It is only available when SIMPLNX_BUILD_TESTS is ON (default ON then) and is forced OFF otherwise. It is added after the test subdir.
 include(CMakeDependentOption)
-cmake_dependent_option(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool (requires SIMPLNX_BUILD_TESTS)" ON "SIMPLNX_BUILD_TESTS" OFF)
-if(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK)
+cmake_dependent_option(SIMPLNX_BUILD_NXIMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool (requires SIMPLNX_BUILD_TESTS)" ON "SIMPLNX_BUILD_TESTS" OFF)
+if(SIMPLNX_BUILD_NXIMAGEPROCESSING_BENCHMARK)
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
 endif()
 

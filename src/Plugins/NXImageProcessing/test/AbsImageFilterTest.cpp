@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/AbsImageFilter.hpp"
+#include "NXImageProcessing/Filters/AbsImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -17,7 +17,7 @@ using namespace nx::core;
 // so a MULTI-COMPONENT input is ACCEPTED and every component is transformed independently -- ApplyPointwise streams
 // the flat store whose length is tuples*components, applying the op to each value. This asserts that shared
 // requireScalar=false multi-component path once via Abs; it is identical for ALL the pointwise filters.
-TEST_CASE("ImageProcessing::AbsImageFilter: multi-component (vector) input is processed per-component", "[ImageProcessing][AbsImageFilter]")
+TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is processed per-component", "[NXImageProcessing][AbsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -55,7 +55,7 @@ TEST_CASE("ImageProcessing::AbsImageFilter: multi-component (vector) input is pr
 // Regression for the int64 precision loss: -(2^53 + 1) is representable in int64 but NOT in float64 (it rounds
 // to -(2^53)), so the pre-fix `static_cast<U>(std::abs(static_cast<double>(value)))` returned 2^53 (off by one).
 // The integer-domain abs returns the exact 2^53 + 1.
-TEST_CASE("ImageProcessing::AbsImageFilter: int64 abs is exact in the integer domain", "[ImageProcessing][AbsImageFilter]")
+TEST_CASE("NXImageProcessing::AbsImageFilter: int64 abs is exact in the integer domain", "[NXImageProcessing][AbsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -132,23 +132,23 @@ void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFi
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::AbsImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][AbsImageFilter]")
+TEST_CASE("NXImageProcessing::AbsImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][AbsImageFilter]")
 {
   RunAbsItkGolden("RA-Slice-Float.nrrd", "BasicFilters_AbsImageFilter_float.nrrd");
 }
 
-TEST_CASE("ImageProcessing::AbsImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][AbsImageFilter]")
+TEST_CASE("NXImageProcessing::AbsImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][AbsImageFilter]")
 {
   RunAbsItkGolden("RA-Slice-Short.nrrd", "BasicFilters_AbsImageFilter_short.nrrd");
 }
 
 // -----------------------------------------------------------------------------
 // Representative exercise of the SHARED PreflightImageFilter geometry-mismatch branch (k_GeometryMismatch,
-// -8001) used by EVERY ImageProcessing filter: when the input array's tuple count does not equal the Image
+// -8001) used by EVERY NXImageProcessing filter: when the input array's tuple count does not equal the Image
 // Geometry's cell count, preflight must fail. Asserted once here via Abs (the simplest single-impl pointwise
 // filter, whose preflightImpl calls the shared facade directly); the branch is identical for all filters.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::AbsImageFilter: Preflight rejects an array whose tuple count != geometry cell count", "[ImageProcessing][AbsImageFilter]")
+TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose tuple count != geometry cell count", "[NXImageProcessing][AbsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

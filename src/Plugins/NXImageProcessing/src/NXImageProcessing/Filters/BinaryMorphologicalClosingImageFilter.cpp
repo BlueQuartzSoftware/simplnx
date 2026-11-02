@@ -52,7 +52,7 @@ std::string BinaryMorphologicalClosingImageFilter::humanName() const
 }
 std::vector<std::string> BinaryMorphologicalClosingImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryMorphologicalClosing", "Binary", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BinaryMorphologicalClosing", "Binary", "Morphology", "MathematicalMorphology"};
 }
 Parameters BinaryMorphologicalClosingImageFilter::parameters() const
 {

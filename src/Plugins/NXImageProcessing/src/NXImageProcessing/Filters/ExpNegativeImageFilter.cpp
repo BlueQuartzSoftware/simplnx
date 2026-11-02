@@ -45,7 +45,7 @@ std::string ExpNegativeImageFilter::humanName() const
 }
 std::vector<std::string> ExpNegativeImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Exp Negative", "Pointwise"};
+  return {className(), "NXImageProcessing", "Exp Negative", "Pointwise"};
 }
 Parameters ExpNegativeImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #include "ReadImage.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadNrrdFile.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadNrrdFile.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"

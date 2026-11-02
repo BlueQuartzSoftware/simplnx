@@ -4,7 +4,7 @@ Compute the gradient magnitude of an image using separable recursive-Gaussian (D
 
 ## Group (Subgroup)
 
-ImageProcessing (EdgeDetection)
+NXImageProcessing (EdgeDetection)
 
 ## Description
 

@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/HConvexImageFilter.hpp"
+#include "NXImageProcessing/Filters/HConvexImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -24,7 +24,7 @@ constexpr int32 k_NegativeHeight = -8556;
 //     >= Height maps to exactly Height (its dome is capped); a bright bump whose contrast is < Height maps to its
 //     own contrast. HConvex(f, h) = f - HMaxima(f, h) = min(contrast, h) at each regional maximum, 0 elsewhere.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: hand-computed dome heights", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -64,7 +64,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: hand-computed dome heights", "[I
 //      both reconstruction implementations feed the correct dome; the hand-computed expected values are the
 //      non-circular oracle (not the filter's own in-core run).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: hand-computed dome heights (both algorithm paths)", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights (both algorithm paths)", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -113,7 +113,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: hand-computed dome heights (both
 //      reconstruction-by-dilation converges to the input and the h-dome (input - input) is 0 at every voxel.
 //      Preflight accepts Height 0 (only a negative Height is rejected); assert the entire output is zero.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: Height 0 yields an all-zero output", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: Height 0 yields an all-zero output", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -140,7 +140,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: Height 0 yields an all-zero outp
 //      is 0 everywhere, so HConvex = input - 0 = input. Assert the output equals the input exactly (the saturating
 //      marker cast, and the input-minus-reconstruction difference, are both well-defined at this extreme).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: Height beyond dynamic range returns the input (uint8 saturation)", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: Height beyond dynamic range returns the input (uint8 saturation)", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -169,7 +169,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: Height beyond dynamic range retu
 //      GrayscaleFillhole/GrayscaleGrindPeak have; the input ArraySelectionParameter imposes no component-shape
 //      restriction, so the guard lives in preflightImpl and returns k_NonScalarInput (-8550).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-component rejected)", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-component rejected)", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -197,7 +197,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-co
 // (4) Preflight: a non-finite Height (NaN or Inf) is rejected with the filter-local error code, because the
 //     saturating (input - Height) marker offset is undefined for a non-finite value.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: Preflight non-finite Height guard", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -245,7 +245,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: Preflight non-finite Height guar
   }
 }
 
-TEST_CASE("ImageProcessing::HConvexImageFilter: FromSIMPLJson", "[ImageProcessing][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: FromSIMPLJson", "[NXImageProcessing][HConvexImageFilter]")
 {
   const nlohmann::json json = {{"Height", 3.5},
                                {"FullyConnected", true},
@@ -266,7 +266,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: FromSIMPLJson", "[ImageProcessin
 // ITK-sourced real-image md5 golden -- duplicates ITKHConvexImageTest.cpp(HConvex): RA-Short.nrrd (int16),
 // Height 10000. (B) live-ITK bit-exact + (A) md5-validity-first vs the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex)", "[ImageProcessing][ItkGolden][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex)", "[NXImageProcessing][ItkGolden][HConvexImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<HConvexImageFilter>("RA-Short.nrrd", "f3a7b95a51710d51b3b73e0eb77eb1eb",
                                                         [](Arguments& args) { args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(10000.0)); });

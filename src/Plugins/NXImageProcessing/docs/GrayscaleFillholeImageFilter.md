@@ -4,7 +4,7 @@ Remove local minima (dark holes) not connected to the boundary of the image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

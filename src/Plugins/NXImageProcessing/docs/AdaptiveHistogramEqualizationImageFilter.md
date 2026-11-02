@@ -4,7 +4,7 @@ Adaptive contrast enhancement of an image (Stark 2000).
 
 ## Group (Subgroup)
 
-ImageProcessing (ImageStatistics)
+NXImageProcessing (ImageStatistics)
 
 ## Description
 

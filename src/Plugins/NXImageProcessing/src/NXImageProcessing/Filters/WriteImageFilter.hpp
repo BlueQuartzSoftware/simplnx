@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteImageFilter
  * @brief Writes two-dimensional slices from an Image Geometry through ITK-free image backends.
  */
-class IMAGEPROCESSING_EXPORT WriteImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT WriteImageFilter : public IFilter
 {
 public:
   WriteImageFilter() = default;

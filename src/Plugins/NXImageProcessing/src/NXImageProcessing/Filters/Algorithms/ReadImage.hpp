@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -20,7 +20,7 @@ namespace nx::core
  * @struct ReadImageInputValues
  * @brief Stores file, output, spatial, type-conversion, and crop settings.
  */
-struct IMAGEPROCESSING_EXPORT ReadImageInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadImageInputValues
 {
   std::filesystem::path inputFilePath;
   DataPath imageGeometryPath;
@@ -47,7 +47,7 @@ struct IMAGEPROCESSING_EXPORT ReadImageInputValues
  * The algorithm streams raster and multi-page TIFF data one page at a time.
  * The shared NRRD reader streams .nrrd and .nhdr volumes. Each Z slice uses one bulk destination write.
  */
-class IMAGEPROCESSING_EXPORT ReadImage
+class NXIMAGEPROCESSING_EXPORT ReadImage
 {
 public:
   /**

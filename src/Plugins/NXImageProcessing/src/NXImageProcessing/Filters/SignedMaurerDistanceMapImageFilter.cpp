@@ -95,7 +95,7 @@ std::string SignedMaurerDistanceMapImageFilter::humanName() const
 }
 std::vector<std::string> SignedMaurerDistanceMapImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "SignedMaurerDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "SignedMaurerDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
 }
 Parameters SignedMaurerDistanceMapImageFilter::parameters() const
 {

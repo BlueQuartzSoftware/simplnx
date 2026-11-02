@@ -1,6 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryDilateImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryDilateImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -21,7 +21,7 @@ using namespace nx::core;
 //     k_NonBinaryInput safeguard code. MorphologyEngineTest covers Annulus and zero-radius kernel correctness
 //     across all four kernels.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Rejects non-binary input at execute", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -75,7 +75,7 @@ TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Rejects non-binary input at
 //      unchanged (the passthrough copies the input verbatim), exercising the binary engine's offsets.empty()
 //      branch at the filter level.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   const auto buildBinary = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(ds, dx, dy, dz, uint8{41}, uint8{0}); };
   morph_test::RunMorphologyEmptySEPassthrough<BinaryDilateImageFilter, uint8>(buildBinary, 12, 12, 12, morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(41.0, 0.0, false));
@@ -88,7 +88,7 @@ TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Empty-SE passthrough (Annul
 //     test compares the output with the independent fgCount oracle computed over the actual input. Real-disk
 //     out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Computed-expected (both algorithm paths)", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -175,7 +175,7 @@ TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Computed-expected (both alg
 //     type; a non-finite or out-of-range value would be an undefined conversion, so the filter must reject it
 //     at preflight. In-range integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -219,7 +219,7 @@ TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Preflight rejects non-finit
 //     so it satisfies the binary-input contract with fg=255/bg=0. Ball radius {1,1,1}, BoundaryToForeground=false
 //     (the dilation default). The test compares our output md5 with the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: ITK real-image golden (WhiteDots)", "[ImageProcessing][ItkGolden][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: ITK real-image golden (WhiteDots)", "[NXImageProcessing][ItkGolden][BinaryDilateImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<BinaryDilateImageFilter>("WhiteDots.png", "dedb03952abb8a3a5f198c8c1a32a1d4", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                  morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(255.0, 0.0, /*boundaryToForeground=*/false));
@@ -229,7 +229,7 @@ TEST_CASE("ImageProcessing::BinaryDilateImageFilter: ITK real-image golden (Whit
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8460) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<BinaryDilateImageFilter, uint8>(-8460, morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }

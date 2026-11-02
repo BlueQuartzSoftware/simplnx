@@ -4,7 +4,7 @@ Scales image pixel intensities so that the sum of all pixels equals a user-defin
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

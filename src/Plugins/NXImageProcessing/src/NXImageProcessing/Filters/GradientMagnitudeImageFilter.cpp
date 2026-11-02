@@ -33,7 +33,7 @@ std::string GradientMagnitudeImageFilter::humanName() const
 }
 std::vector<std::string> GradientMagnitudeImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Gradient", "EdgeDetection"};
+  return {className(), "NXImageProcessing", "Gradient", "EdgeDetection"};
 }
 
 Parameters GradientMagnitudeImageFilter::parameters() const

@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/IntensityWindowingImageFilter.hpp"
+#include "NXImageProcessing/Filters/IntensityWindowingImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -44,17 +44,17 @@ void RunIntensityWindowingItkGolden(const std::string& inputFile, const std::str
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (2d)", "[ImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
+TEST_CASE("NXImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (2d)", "[NXImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
 {
   RunIntensityWindowingItkGolden("STAPLE1.png", "095f00a68a84df4396914fa758f34dcc");
 }
 
-TEST_CASE("ImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (3dFloat)", "[ImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
+TEST_CASE("NXImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (3dFloat)", "[NXImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
 {
   RunIntensityWindowingItkGolden("RA-Float.nrrd", "199c966fabac791c758766e14df9974c");
 }
 
-TEST_CASE("ImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (3dShort)", "[ImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
+TEST_CASE("NXImageProcessing::IntensityWindowingImageFilter: ITK real-image golden (3dShort)", "[NXImageProcessing][ItkGolden][IntensityWindowingImageFilter]")
 {
   RunIntensityWindowingItkGolden("RA-Short.nrrd", "2790c2bdfeb8610821e9ec8751f95516");
 }

@@ -65,7 +65,7 @@ std::string AbsImageFilter::humanName() const
 }
 std::vector<std::string> AbsImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Abs", "Pointwise"};
+  return {className(), "NXImageProcessing", "Abs", "Pointwise"};
 }
 Parameters AbsImageFilter::parameters() const
 {

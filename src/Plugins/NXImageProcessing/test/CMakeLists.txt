@@ -133,7 +133,7 @@ target_include_directories(${PLUGIN_NAME}UnitTest
     ${simplnx_SOURCE_DIR}/test
 )
 
-# WriteImageTest uses SimplnxCore's CreateColorMapFilter as test setup. The ImageProcessing plugin target remains independent.
+# WriteImageTest uses SimplnxCore's CreateColorMapFilter as test setup. The NXImageProcessing plugin target remains independent.
 target_link_libraries(${PLUGIN_NAME}UnitTest PRIVATE SimplnxCore)
 
 find_package(ZLIB REQUIRED)

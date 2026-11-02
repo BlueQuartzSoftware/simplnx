@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * input element type. Matches the legacy ITK Zero Crossing Image Filter exactly (byte-identical output values).
  * Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT ZeroCrossingImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ZeroCrossingImageFilter : public IFilter
 {
 public:
   ZeroCrossingImageFilter() = default;

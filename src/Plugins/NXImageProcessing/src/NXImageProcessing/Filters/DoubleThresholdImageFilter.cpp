@@ -39,7 +39,7 @@ std::string DoubleThresholdImageFilter::humanName() const
 }
 std::vector<std::string> DoubleThresholdImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "DoubleThreshold", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "DoubleThreshold", "MathematicalMorphology", "Morphology"};
 }
 
 Parameters DoubleThresholdImageFilter::parameters() const

@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SignedMaurerDistanceMapImageFilter.hpp"
+#include "NXImageProcessing/Filters/SignedMaurerDistanceMapImageFilter.hpp"
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -43,7 +43,7 @@ void RunMaurer(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bo
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm paths agree on in-memory stores", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm paths agree on in-memory stores", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr usize dimX = 5;
@@ -129,7 +129,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm paths 
 // (1) Hand-computed: a single object pixel at the center of a 5x5 background is a boundary feature, so the squared
 //     distance is the squared distance to that pixel; the center itself is 0.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -161,7 +161,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed si
 //      paths on in-memory stores (selected by SIMPLNX_TEST_ALGORITHM_PATH). The squared distance to the single
 //      boundary feature is asserted directly -- an independent oracle, not the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed (both algorithm paths)", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed (both algorithm paths)", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -203,7 +203,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed si
 // -----------------------------------------------------------------------------
 // The 3-D preflight action carries the bounded chunk plan into OOC store creation. True 2-D keeps the default layout.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds a bounded 3D chunk hint", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds a bounded 3D chunk hint", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   auto& budgetManager = CacheMemoryBudgetManager::instance();
@@ -249,7 +249,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds a
 // -----------------------------------------------------------------------------
 // (2) Preflight: a non-integer (float32) input is rejected by the IntegerOnly policy.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-integer input", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -272,7 +272,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reject
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -318,7 +318,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reject
 //     an out-of-range value is rejected (would be a UB float->integer cast at execute), and a fractional value is
 //     accepted with a truncation warning.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight validates BackgroundValue range", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight validates BackgroundValue range", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -362,7 +362,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight valida
 // -----------------------------------------------------------------------------
 // (4) FromSIMPLJson maps every legacy SIMPL key (the 4 params + both DataPaths) to the new parameter keys.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: FromSIMPLJson", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: FromSIMPLJson", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   const nlohmann::json json = {
       {"InsideIsPositive", true},
@@ -390,7 +390,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: FromSIMPLJson", 
 //     ValidateOneValueInRange's !std::isfinite guard rejects it up front with the filter-local k_NonFiniteBackgroundValue
 //     (-8560). The existing range test covers only out-of-range/fractional finite values, never the non-finite arm.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-finite BackgroundValue", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-finite BackgroundValue", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -441,7 +441,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reject
 //      out-of-range/undefined int64 cast -> rejected with k_BackgroundValueOutOfRange (-8561); a value just BELOW it
 //      (~9.2e18, and within int64's true max 9.223e18) is accepted.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight BackgroundValue int64 range bound", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight BackgroundValue int64 range bound", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -481,7 +481,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Backgr
 // 2th_cthead1.png (uint8), ITK-default params, fixed float32 output. The test compares the output with the durable
 // ITK baseline at a tolerance of 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][SignedMaurerDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SignedMaurerDistanceMapImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

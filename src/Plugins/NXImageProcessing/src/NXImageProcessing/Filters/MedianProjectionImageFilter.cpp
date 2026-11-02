@@ -43,7 +43,7 @@ std::string MedianProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MedianProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Median", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Median", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

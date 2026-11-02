@@ -1,6 +1,6 @@
-# ImageProcessing Real-World Examples
+# NXImageProcessing Real-World Examples
 
-This folder contains 16 independent DREAM3D-NX tutorials (05–20) and three inherited examples (02–04). The suite demonstrates all 92 filters in the ImageProcessing plugin.
+This folder contains 16 independent DREAM3D-NX tutorials (05–20) and three inherited examples (02–04). The suite demonstrates all 92 filters in the NXImageProcessing plugin.
 
 The examples focus on materials science and additive manufacturing. They include XCT pore analysis, powder-bed inspection, melt-pool segmentation, particle separation, morphology, distance metrology, image projections, calibration, and industrial image formats.
 
@@ -14,7 +14,7 @@ Each numbered example has its own source folder, using underscores instead of sp
 
 `PythonGeneration.yaml` is at the suite root. Each pipeline YAML references it. The file tells an LLM, MCP server, developer, or test how to generate temporary Python from the authoritative pipeline. Persistent Python sidecars are not stored.
 
-The runtime copy preserves the numbered folders under `pipelines/ImageProcessing`. Installation flattens the 19 pipelines, the 16 pairs of tutorial companions, and `PythonGeneration.yaml` into the installed `ImageProcessing` directory.
+The runtime copy preserves the numbered folders under `pipelines/NXImageProcessing`. Installation flattens the 19 pipelines, the 16 pairs of tutorial companions, and `PythonGeneration.yaml` into the installed `NXImageProcessing` directory.
 
 ## Input data
 
@@ -37,10 +37,10 @@ Each pipeline writes a final `.dream3d` file. Selected pipelines also write TIFF
 Run a pipeline from the application binary directory. This example runs the AM XCT workflow:
 
 ```bash
-./nxrunner --execute "pipelines/ImageProcessing/05_AM_XCT_Porosity_Segmentation/05_AM_XCT_Porosity_Segmentation.d3dpipeline"
+./nxrunner --execute "pipelines/NXImageProcessing/05_AM_XCT_Porosity_Segmentation/05_AM_XCT_Porosity_Segmentation.d3dpipeline"
 ```
 
-For an installed package, use `pipelines/ImageProcessing/05_AM_XCT_Porosity_Segmentation.d3dpipeline` instead.
+For an installed package, use `pipelines/NXImageProcessing/05_AM_XCT_Porosity_Segmentation.d3dpipeline` instead.
 
 The pipelines use relative paths. Start `nxrunner` or DREAM3D-NX from the application binary directory so `Data` resolves to the runtime data folder.
 
@@ -54,13 +54,13 @@ The temporary program uses the same relative input and output paths as the GUI p
 
 DREAM3D-NX scans the runtime `pipelines` folder at launch. The application shows these examples under:
 
-`pipelines -> ImageProcessing -> numbered example folder` in a build tree, or `pipelines -> ImageProcessing` in an installed package
+`pipelines -> NXImageProcessing -> numbered example folder` in a build tree, or `pipelines -> NXImageProcessing` in an installed package
 
 ## Coverage
 
 The tutorials are numbered `05` through `20` after the inherited `02` through `04` examples.
 
-`FilterCoverage.json` assigns each registered ImageProcessing filter to one enabled pipeline step. `ExamplePipelineCoverageTest.cpp` compares the manifest with the CMake filter list and the pipeline JSON files.
+`FilterCoverage.json` assigns each registered NXImageProcessing filter to one enabled pipeline step. `ExamplePipelineCoverageTest.cpp` compares the manifest with the CMake filter list and the pipeline JSON files.
 
 The same test requires a complete three-file source folder for every tutorial and rejects persistent `.py` sidecars. It compares YAML step order and UUIDs with the pipeline, checks all required narrative sections and workflow-first citations, and validates the suite-level Python-generation reference. Separate tests run the GUI pipelines and registered Python examples and verify citation metadata through DOI or authoritative paper URLs. The `test/GenerateAndRunExamplePipelines.py` helper generates and executes temporary Python for the 16 tutorials; it is not currently registered with CTest.
 

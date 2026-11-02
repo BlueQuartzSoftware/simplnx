@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -54,7 +54,7 @@ enum class Encoding
  *        CreateImageGeometryAction / CreateArrayAction, MetaImageDataReader, and
  *        (in the filter) the 4x4 transform assembly.
  */
-struct IMAGEPROCESSING_EXPORT MetaImageMetadata
+struct NXIMAGEPROCESSING_EXPORT MetaImageMetadata
 {
   std::string filePath; ///< Path the header was read from (diagnostics).
   usize nDims{0};       ///< NDims header value (2 or 3).
@@ -92,7 +92,7 @@ struct IMAGEPROCESSING_EXPORT MetaImageMetadata
  *        canonical sizes (note MET_LONG / MET_ULONG are 4 bytes).
  * @return {DataType, elementSizeBytes} or std::nullopt for unsupported types.
  */
-std::optional<std::pair<DataType, usize>> IMAGEPROCESSING_EXPORT MetTypeToSimplnx(const std::string& metType);
+std::optional<std::pair<DataType, usize>> NXIMAGEPROCESSING_EXPORT MetTypeToSimplnx(const std::string& metType);
 
 /**
  * @brief Parses the ASCII header of a MetaImage file into MetaImageMetadata.
@@ -108,7 +108,7 @@ std::optional<std::pair<DataType, usize>> IMAGEPROCESSING_EXPORT MetTypeToSimpln
  * silently ignored, since this reader does not honor the pre-data seek MetaIO performs.
  * Errors use the -358xx block.
  */
-Result<MetaImageMetadata> IMAGEPROCESSING_EXPORT ReadMetaImageHeader(const std::filesystem::path& filePath);
+Result<MetaImageMetadata> NXIMAGEPROCESSING_EXPORT ReadMetaImageHeader(const std::filesystem::path& filePath);
 
 /**
  * @class MetaImageDataReader
@@ -121,7 +121,7 @@ Result<MetaImageMetadata> IMAGEPROCESSING_EXPORT ReadMetaImageHeader(const std::
  * (only error codes + names differ). TODO(refactor): extract a shared
  * ZlibInflateStreamReader once a third format consumer appears.
  */
-class IMAGEPROCESSING_EXPORT MetaImageDataReader
+class NXIMAGEPROCESSING_EXPORT MetaImageDataReader
 {
 public:
   static Result<std::unique_ptr<MetaImageDataReader>> Create(const MetaImageMetadata& md);

@@ -142,7 +142,7 @@ std::vector<float32> RunPlaneCascade(const std::vector<T>& field, const SizeVec3
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-0 preserves a constant image", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 preserves a constant image", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const usize d = 16;
   const std::vector<float32> field(d * d * d, 5.0f);
@@ -153,7 +153,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-0 preserves a constan
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-1 and order-2 of a constant image are ~0", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-1 and order-2 of a constant image are ~0", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const usize d = 16;
   const std::vector<float32> field(d * d * d, 7.0f);
@@ -166,7 +166,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-1 and order-2 of a co
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-0 impulse response is symmetric and sums to ~1", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 impulse response is symmetric and sums to ~1", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   // A 1D-along-x impulse embedded in a 3D volume (single non-zero voxel at the x-center of one row).
   const usize dx = 32, dy = 4, dz = 4;
@@ -185,7 +185,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: order-0 impulse response is
   REQUIRE(out[FlatIndex(cx + 2, cy, cz, dx, dy)] == Approx(out[FlatIndex(cx - 2, cy, cz, dx, dy)]).margin(1e-4)); // symmetric
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: smoothing along X leaves a pure-Y ramp unchanged", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: smoothing along X leaves a pure-Y ramp unchanged", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const usize dx = 12, dy = 12, dz = 4;
   std::vector<float32> field(dx * dy * dz, 0.0f);
@@ -206,7 +206,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: smoothing along X leaves a 
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z streaming runs", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z streaming runs", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const usize dx = 8, dy = 8, dz = 64; // dz large enough to exercise the z-slab path
   std::vector<float32> field(dx * dy * dz);
@@ -219,7 +219,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z stre
   REQUIRE(a == b); // byte-identical across runs
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: batched Z streaming matches direct memory", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: batched Z streaming matches direct memory", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   constexpr usize kDimX = 7;
   constexpr usize kDimY = 11;
@@ -238,7 +238,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: batched Z streaming matches
   REQUIRE(streamed == direct);
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: Z planner scales the supplied budget and keeps a one-row minimum", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: Z planner scales the supplied budget and keeps a one-row minimum", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const SizeVec3 benchmarkDims{512, 512, 128};
   REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float32>(benchmarkDims, RecursiveGaussianPassOptions::k_FallbackStagingBytes) == 128);
@@ -247,7 +247,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: Z planner scales the suppli
   REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float64>(SizeVec3{7, 11, 13}, 1000) == 1); // One row pair requires 7 * 13 * (8 + 4) = 1092 bytes.
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: true 2D planner bounds row blocks and overwide column tiles", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: true 2D planner bounds row blocks and overwide column tiles", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   constexpr usize kResidentLimit = 64ULL * 1024ULL * 1024ULL;
   const auto benchmarkPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(5824, 5824, kResidentLimit);
@@ -273,7 +273,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: true 2D planner bounds row 
   REQUIRE(overflowPlan.overflow);
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pass matches the resident recurrence", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pass matches the resident recurrence", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   constexpr usize kDimX = 7;
   constexpr usize kDimY = 29;
@@ -307,7 +307,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pass
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and YX cascades are byte-exact", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and YX cascades are byte-exact", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   constexpr usize kDimX = 100;
   constexpr usize kDimY = 8;
@@ -367,7 +367,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and YX 
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: working storage selection is endpoint aware", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: working storage selection is endpoint aware", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   // The three filter facades use PreflightImageFilter, whose output deliberately inherits the input data format; an
   // OOC-input/resident-output filter execution therefore cannot be constructed through their public parameters. Keep
@@ -391,7 +391,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: working storage selection i
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::OutOfCore, kOutputOocFormat) == kInputOocFormat);
 }
 
-TEST_CASE("ImageProcessing::GaussianTemporaryStore: performs typed bulk I/O and rejects backend failures", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::GaussianTemporaryStore: performs typed bulk I/O and rejects backend failures", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   std::atomic_bool shouldCancel{false};
   auto backend = std::make_unique<TestTemporaryRecordStore>(sizeof(float32), 12, 4);
@@ -420,7 +420,7 @@ TEST_CASE("ImageProcessing::GaussianTemporaryStore: performs typed bulk I/O and 
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade matches sequential float32 axis passes", "[ImageProcessing][RecursiveGaussianEngine]", int16, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade matches sequential float32 axis passes", "[NXImageProcessing][RecursiveGaussianEngine]", int16, float32, float64)
 {
   using T = TestType;
   const uint32 firstAxis = GENERATE(0u, 1u);
@@ -465,7 +465,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade m
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade honors cancellation and propagates sink errors", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade honors cancellation and propagates sink errors", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const SizeVec3 dims{7, 9, 3};
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
@@ -500,7 +500,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade honors can
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade materializes float32 between recurrences", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade materializes float32 between recurrences", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const SizeVec3 dims{7, 9, 1};
   std::vector<float64> field(dims[0] * dims[1]);
@@ -548,7 +548,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade materializ
   REQUIRE(differsFromDoubleIntermediate);
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade rejects short filtered axes", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade rejects short filtered axes", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const SizeVec3 dims = GENERATE(SizeVec3{3, 9, 1}, SizeVec3{7, 3, 2});
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
@@ -568,7 +568,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: XY plane cascade rejects sh
   REQUIRE(sinkCalls == 0);
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: postprocessing planner aligns irregular OOC volumes", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner aligns irregular OOC volumes", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   constexpr usize k_PlaneValues = 600 * 450;
   constexpr usize k_TotalValues = k_PlaneValues * 128;
@@ -612,7 +612,7 @@ TEST_CASE("ImageProcessing::RecursiveGaussianEngine: postprocessing planner alig
   }
 }
 
-TEST_CASE("ImageProcessing::RecursiveGaussianEngine: forced buffered postprocessing matches scalar formulas", "[ImageProcessing][RecursiveGaussianEngine]")
+TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: forced buffered postprocessing matches scalar formulas", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   const ShapeType tupleShape{3, 7, 9};
   constexpr usize k_TotalValues = 3 * 7 * 9;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * there is no coupling between z-slices. The input may be ANY integer scalar type. Matches the legacy ITK Binary
  * Thinning Image Filter exactly (byte-identical output values).
  */
-class IMAGEPROCESSING_EXPORT BinaryThinningImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT BinaryThinningImageFilter : public IFilter
 {
 public:
   BinaryThinningImageFilter() = default;

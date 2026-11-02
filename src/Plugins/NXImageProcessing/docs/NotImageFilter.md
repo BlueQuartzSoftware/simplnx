@@ -4,7 +4,7 @@ Computes the logical NOT of each pixel.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

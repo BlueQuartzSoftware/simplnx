@@ -4,7 +4,7 @@ Compute the signed (approximate) Euclidean distance to the object boundary using
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

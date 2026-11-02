@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * When Use Image Spacing is enabled the per-axis variance is divided by the axis spacing squared. Matches the legacy
  * ITK Discrete Gaussian Image Filter. Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT DiscreteGaussianImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT DiscreteGaussianImageFilter : public IFilter
 {
 public:
   DiscreteGaussianImageFilter() = default;

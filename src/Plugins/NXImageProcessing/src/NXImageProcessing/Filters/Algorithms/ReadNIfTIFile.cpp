@@ -1,6 +1,6 @@
 #include "ReadNIfTIFile.hpp"
 
-#include "ImageProcessing/utils/NiftiUtilities.hpp"
+#include "NXImageProcessing/utils/NiftiUtilities.hpp"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"

@@ -214,7 +214,7 @@ std::vector<uint32> RunLabel(const std::vector<int32>& mask, usize dx, usize dy,
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: resident provisional labels require a complete dataset-scaled reservation", "[ImageProcessing][ConnectedComponentEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: resident provisional labels require a complete dataset-scaled reservation", "[NXImageProcessing][ConnectedComponentEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -256,7 +256,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: resident provisional label
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: provisional selection requires a complete resident grant", "[ImageProcessing][ConnectedComponentEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional selection requires a complete resident grant", "[NXImageProcessing][ConnectedComponentEngine][WorkingMemory]")
 {
   using ImageProcessing::detail::TryCreateConnectedComponentResidentProvisionalSelection;
 
@@ -288,7 +288,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: provisional selection requ
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: full resident state uses a conservative dataset-scaled reservation", "[ImageProcessing][ConnectedComponentEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: full resident state uses a conservative dataset-scaled reservation", "[NXImageProcessing][ConnectedComponentEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -326,7 +326,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: full resident state uses a
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded, resident-provisional, and full-resident tiers preserve exact labels", "[ImageProcessing][ConnectedComponentEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded, resident-provisional, and full-resident tiers preserve exact labels", "[NXImageProcessing][ConnectedComponentEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -390,7 +390,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded, resident-provisio
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: two disjoint blobs get labels 1 and 2 (raster order)", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: two disjoint blobs get labels 1 and 2 (raster order)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   const usize dx = 6, dy = 1, dz = 1;
   // mask: 1 1 0 0 1 1  -> runs [0..1]=label1, [4..5]=label2
@@ -404,7 +404,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: two disjoint blobs get lab
   REQUIRE(out[5] == 2u);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: connectivity distinguishes a diagonal-touching pair", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: connectivity distinguishes a diagonal-touching pair", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // 2x2: fg at (0,0) and (1,1) touch only diagonally.
   const usize dx = 2, dy = 2, dz = 1;
@@ -419,7 +419,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: connectivity distinguishes
   REQUIRE(full[FlatIndex(1, 1, 0, dx, dy)] == 1u);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: a U-shape is one component (merge across rows)", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a U-shape is one component (merge across rows)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // 3x3: a U (bottom row full, two side columns) -> single connected component under face connectivity.
   const usize dx = 3, dy = 3, dz = 1;
@@ -431,7 +431,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: a U-shape is one component
   }
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: deterministic + tall-Z streaming + count matches", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: deterministic + tall-Z streaming + count matches", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   const usize dx = 8, dy = 8, dz = 40;
   std::vector<int32> mask(dx * dy * dz);
@@ -461,7 +461,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: deterministic + tall-Z str
   REQUIRE(countResult.value() == maxLabel);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: grouped three-dimensional replay preserves labels and transfer bounds", "[ImageProcessing][ConnectedComponentEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: grouped three-dimensional replay preserves labels and transfer bounds", "[NXImageProcessing][ConnectedComponentEngine][WorkingMemory]")
 {
   constexpr usize k_DimX = 6;
   constexpr usize k_DimY = 4;
@@ -513,7 +513,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: grouped three-dimensional 
   REQUIRE(outputStore.maximumWriteValues() == k_VolumeValues / expectedTransfers);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: a bar spanning z-planes is one component (cross-plane union)", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a bar spanning z-planes is one component (cross-plane union)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   const usize dx = 3, dy = 3, dz = 3;
   std::vector<int32> mask(dx * dy * dz, 0);
@@ -528,7 +528,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: a bar spanning z-planes is
   }
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: 3D corner-diagonal pair (full connectivity crosses planes)", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: 3D corner-diagonal pair (full connectivity crosses planes)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   const usize dx = 2, dy = 2, dz = 2;
   std::vector<int32> mask(8, 0);
@@ -542,7 +542,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: 3D corner-diagonal pair (f
   REQUIRE(full[FlatIndex(1, 1, 1, dx, dy)] == 1u);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: degenerate masks (all-bg, all-fg, single voxel)", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: degenerate masks (all-bg, all-fg, single voxel)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   SECTION("all background -> all zero")
   {
@@ -571,7 +571,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: degenerate masks (all-bg, 
   }
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: CountConnectedComponents honors minSize", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: CountConnectedComponents honors minSize", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // dx=20: one 10-voxel run [0..9], then five isolated single-voxel components at 11,13,15,17,19.
   const usize dx = 20, dy = 1, dz = 1;
@@ -603,7 +603,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: CountConnectedComponents h
   REQUIRE(largeOnlyResult.value() == 1u); // only the 10-voxel run meets minSize=2
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: rejects mismatched store sizes", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: rejects mismatched store sizes", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   DataStore<int32> inStore(ShapeType{2, 2, 2}, ShapeType{1}, 1);
   DataStore<uint32> outStore(ShapeType{2, 2, 2}, ShapeType{1}, 0u);
@@ -620,7 +620,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: rejects mismatched store s
   REQUIRE(countResult.errors()[0].code == -8372);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;
@@ -704,7 +704,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[
   REQUIRE(overflowResult.invalid());
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: provisional adapter supports abstract and fixed-record stores", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional adapter supports abstract and fixed-record stores", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   using ImageProcessing::detail::ConnectedComponentProvisionalStore;
   using ImageProcessing::detail::SweepTemporaryStore;
@@ -734,7 +734,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: provisional adapter suppor
   REQUIRE_FALSE(fixedAdapter.getChunkShape().has_value());
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: true-2-D row blocks align to OOC chunk bands", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: true-2-D row blocks align to OOC chunk bands", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   using ImageProcessing::detail::AlignConnectedComponent2DRows;
@@ -774,7 +774,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: true-2-D row blocks align 
   REQUIRE(CreateConnectedComponent2DFinalChunkValues(99, 0, finalTargetBytes, twoRowChunks, fourRowChunks).invalid());
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks preserve connectivity and transfer caps", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks preserve connectivity and transfer caps", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;
@@ -850,7 +850,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks pr
   REQUIRE(countInputStore.maximumReadValues() <= countPlanResult.value().coreRows * k_DimX);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles preserve run and neighbor continuity", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles preserve run and neighbor continuity", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
@@ -910,7 +910,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles pre
   REQUIRE(countInputStore.maximumReadValues() <= k_CoreColumns);
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: minimum tile payload preserves hand-defined labels and counts", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload preserves hand-defined labels and counts", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   constexpr usize dimX = 5;
@@ -961,7 +961,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: minimum tile payload prese
   }
 }
 
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellation and input errors stop before final output", "[ImageProcessing][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellation and input errors stop before final output", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;

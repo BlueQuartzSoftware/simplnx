@@ -34,7 +34,7 @@ std::string GrayscaleFillholeImageFilter::humanName() const
 }
 std::vector<std::string> GrayscaleFillholeImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "GrayscaleFillhole", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "GrayscaleFillhole", "MathematicalMorphology", "Morphology"};
 }
 Parameters GrayscaleFillholeImageFilter::parameters() const
 {

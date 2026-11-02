@@ -45,7 +45,7 @@ std::string TanImageFilter::humanName() const
 }
 std::vector<std::string> TanImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Tan", "Pointwise"};
+  return {className(), "NXImageProcessing", "Tan", "Pointwise"};
 }
 Parameters TanImageFilter::parameters() const
 {

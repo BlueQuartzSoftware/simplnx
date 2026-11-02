@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * is a FIXED float32 distance image regardless of the input element type. This matches the legacy ITK Signed Maurer
  * Distance Map Image Filter exactly and is out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT SignedMaurerDistanceMapImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT SignedMaurerDistanceMapImageFilter : public IFilter
 {
 public:
   SignedMaurerDistanceMapImageFilter() = default;

@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GradientAnisotropicDiffusionImageFilter.hpp"
+#include "NXImageProcessing/Filters/GradientAnisotropicDiffusionImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -69,7 +69,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 //     produces a SameAsInput output array; and a TimeStep exceeding the CFL stability bound is VALID but carries a
 //     warning (matching ITK's own non-fatal InitializeIteration check).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight guards", "[ImageProcessing][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight guards", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -157,14 +157,14 @@ TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight g
 //             stay at the shared filter defaults (3.0 / 1 / 5).
 //   longer:   TimeStep 0.01, NumberOfIterations 10.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][GradientAnisotropicDiffusionImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<GradientAnisotropicDiffusionImageFilter>(
       "RA-Float.nrrd", "BasicFilters_GradientAnisotropicDiffusionImageFilter_defaults.nrrd", /*tolerance=*/0.0,
       [](Arguments& args) { args.insertOrAssign(GradientAnisotropicDiffusionImageFilter::k_TimeStep_Key, std::make_any<float64>(0.01)); });
 }
 
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-image golden (longer)", "[ImageProcessing][ItkGolden][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-image golden (longer)", "[NXImageProcessing][ItkGolden][GradientAnisotropicDiffusionImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<GradientAnisotropicDiffusionImageFilter>("RA-Float.nrrd", "BasicFilters_GradientAnisotropicDiffusionImageFilter_longer.nrrd", /*tolerance=*/0.0,
                                                                                [](Arguments& args) {
@@ -178,7 +178,7 @@ TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-im
 //     reduction sets m_K = 0, and GradientAnisoFn's `if(m_K != 0.0)` conductance branch is skipped (Cx == Cxd == 0);
 //     the per-axis delta is therefore 0 at every voxel and accum never changes -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: constant image is identity", "[ImageProcessing][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: constant image is identity", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -199,7 +199,7 @@ TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: constant im
 //     asserted. A 6x6x6 image at unit spacing has stable bound 1/2^(3+1) = 0.0625; TimeStep 0.5 is well above it, so
 //     preflight stays VALID but carries the shared unstable-time-step warning, whose message names ImageDimension=3.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[ImageProcessing][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -228,7 +228,7 @@ TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: over-large 
 //     guards the cadence test with `fn.interval != 0 && (iter % fn.interval) != 0`, so interval 0 is treated as "update
 //     every iteration" rather than performing `iter % 0`. RunGradientAniso REQUIREs both preflight and execute VALID.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[ImageProcessing][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -247,7 +247,7 @@ TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: zero conduc
 // (5) NumberOfIterations == 0 is a no-op: the driver loop never runs, so the output = cast<T>(accum = cast<Real>(input))
 //     is a lossless float32 round-trip -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GradientAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[ImageProcessing][GradientAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  *        executeImpl populates this from its Arguments. The DataPaths must match
  *        what the filter's preflight created.
  */
-struct IMAGEPROCESSING_EXPORT ReadNrrdFileInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadNrrdFileInputValues
 {
   std::filesystem::path InputFilePath;
   DataPath ImageGeometryPath;
@@ -34,7 +34,7 @@ struct IMAGEPROCESSING_EXPORT ReadNrrdFileInputValues
  *        at a time into a destination scratch buffer (byteswap if needed), then
  *        bulk-copy the cropped subrange via CopyFromArray::CopyData (OOC-friendly).
  */
-class IMAGEPROCESSING_EXPORT ReadNrrdFile
+class NXIMAGEPROCESSING_EXPORT ReadNrrdFile
 {
 public:
   ReadNrrdFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadNrrdFileInputValues* inputValues);

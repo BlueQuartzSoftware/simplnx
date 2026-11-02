@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
@@ -18,7 +18,7 @@ namespace rt = recon_test;
 //     foreground object larger than it (a 5x5 square). A plain binary opening would round the square's corners;
 //     reconstruction regrows the whole connected component.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -66,7 +66,8 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-compu
 //      hand-derived expectations (isolated dot removed, square fully restored) are asserted directly -- an
 //      independent oracle, not the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)",
+          "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -126,7 +127,7 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-compu
 //      is large enough that interior voxels far from the hole survive the Annulus erode as seeds, so the block's
 //      connected component is regrown -- proving the reconstruction still runs, not that it produced an empty image.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus clamp-to-mask (enclosed hole stays background)", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus clamp-to-mask (enclosed hole stays background)", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -185,7 +186,7 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus cl
 //      processed; this test pins that observable contract at the filter level (mirrors RelabelComponent's float-input
 //      reject, which uses the same IntegerOnly policy).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects float32 input", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects float32 input", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -204,7 +205,7 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight 
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJson", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   const nlohmann::json json = {{"KernelType", 2},
                                {"KernelRadius", {{"x", 2}, {"y", 3}, {"z", 4}}},
@@ -234,7 +235,7 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJ
 // value that will be truncated. Error/warning codes kept in sync with
 // BinaryOpeningByReconstructionImageFilter.cpp.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight fg/bg range guard", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight fg/bg range guard", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -317,8 +318,8 @@ TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight 
 // rejects the input with the binary-input error. Re-enable an ITK-golden reproduction only if this filter's
 // binarize-at-foreground contract is ever changed to match ITK's silent fold-to-background behavior.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real-image golden (BinaryOpeningByReconstruction) -- documented contract divergence",
-          "[ImageProcessing][ItkGolden][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real-image golden (BinaryOpeningByReconstruction) -- documented contract divergence",
+          "[NXImageProcessing][ItkGolden][BinaryOpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

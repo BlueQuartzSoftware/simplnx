@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ApproximateSignedDistanceMapImageFilter.hpp"
+#include "NXImageProcessing/Filters/ApproximateSignedDistanceMapImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -41,7 +41,7 @@ void RunAsd(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float
 // -----------------------------------------------------------------------------
 // (1) Sign orientation on a filled square: the interior is negative and the exterior is positive.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: sign orientation", "[ImageProcessing][ApproximateSignedDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: sign orientation", "[NXImageProcessing][ApproximateSignedDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -71,7 +71,7 @@ TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: sign orient
 // (2) Preflight: a float32 input is rejected (IntegerOnly); a multi-component input is rejected; integer input creates
 //     a float32 output.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight guards", "[ImageProcessing][ApproximateSignedDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight guards", "[NXImageProcessing][ApproximateSignedDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -130,7 +130,7 @@ TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight g
 // -----------------------------------------------------------------------------
 // (3) FromSIMPLJson: every mapped parameter (both doubles + both DataPaths) at non-default values.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: FromSIMPLJson", "[ImageProcessing][ApproximateSignedDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: FromSIMPLJson", "[NXImageProcessing][ApproximateSignedDistanceMapImageFilter]")
 {
   const nlohmann::json json = {
       {"InsideValue", 3.0},
@@ -154,7 +154,7 @@ TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: FromSIMPLJs
 //   modified_parms: 2th_cthead1.png, InsideValue 100, OutsideValue 0.
 // The filter writes a float32 output. The test compares the output with the ITK baseline at a tolerance of 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][ApproximateSignedDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][ApproximateSignedDistanceMapImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -162,7 +162,7 @@ TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: ITK real-im
                                                                                &scope);
 }
 
-TEST_CASE("ImageProcessing::ApproximateSignedDistanceMapImageFilter: ITK real-image golden (modified_parms)", "[ImageProcessing][ItkGolden][ApproximateSignedDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: ITK real-image golden (modified_parms)", "[NXImageProcessing][ItkGolden][ApproximateSignedDistanceMapImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

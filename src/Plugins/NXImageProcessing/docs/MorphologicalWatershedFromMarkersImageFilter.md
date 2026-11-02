@@ -4,7 +4,7 @@ Applies a marker-controlled (seeded) morphological watershed segmentation to a g
 
 ## Group (Subgroup)
 
-ImageProcessing (Watersheds / Segmentation)
+NXImageProcessing (Watersheds / Segmentation)
 
 ## Description
 

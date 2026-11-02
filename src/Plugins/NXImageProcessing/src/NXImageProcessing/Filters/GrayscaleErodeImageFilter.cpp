@@ -36,7 +36,7 @@ std::string GrayscaleErodeImageFilter::humanName() const
 }
 std::vector<std::string> GrayscaleErodeImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "GrayscaleErode", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "GrayscaleErode", "Morphology", "MathematicalMorphology"};
 }
 Parameters GrayscaleErodeImageFilter::parameters() const
 {

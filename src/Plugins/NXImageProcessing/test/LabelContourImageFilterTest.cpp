@@ -1,6 +1,6 @@
 #include "ContourFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/LabelContourImageFilter.hpp"
+#include "NXImageProcessing/Filters/LabelContourImageFilter.hpp"
 
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -14,7 +14,7 @@ using namespace nx::core;
 //     non-finite or out-of-range value would be an undefined conversion, so the filter must reject it at
 //     preflight. In-range integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LabelContourImageFilter: Preflight rejects non-finite / out-of-range background for integer input", "[ImageProcessing][LabelContourImageFilter]")
+TEST_CASE("NXImageProcessing::LabelContourImageFilter: Preflight rejects non-finite / out-of-range background for integer input", "[NXImageProcessing][LabelContourImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -53,7 +53,7 @@ TEST_CASE("ImageProcessing::LabelContourImageFilter: Preflight rejects non-finit
 // operation (uint8 in -> uint8 out), so the hash is bit-exact. The ITK case sets no parameters, so FullyConnected
 // off / background 0 are the (matching) filter defaults.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LabelContourImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][LabelContourImageFilter]")
+TEST_CASE("NXImageProcessing::LabelContourImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][LabelContourImageFilter]")
 {
   contour_test::RunContourMd5ItkGolden<LabelContourImageFilter>("2th_cthead1.png", "d742c05a8d8aa9b41f58b8d2aad6b5d0",
                                                                 contour_test::LabelContourParamSetter<LabelContourImageFilter>(/*fullyConnected=*/false, /*background=*/0.0));

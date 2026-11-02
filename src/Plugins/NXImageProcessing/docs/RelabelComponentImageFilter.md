@@ -4,7 +4,7 @@ Relabel the components in an already-labeled image such that consecutive labels 
 
 ## Group (Subgroup)
 
-ImageProcessing (Segmentation)
+NXImageProcessing (Segmentation)
 
 ## Description
 

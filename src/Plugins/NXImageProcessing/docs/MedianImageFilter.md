@@ -4,7 +4,7 @@ Computes a pixel-wise median over a rectangular neighborhood.
 
 ## Group (Subgroup)
 
-ImageProcessing (Neighborhood)
+NXImageProcessing (Neighborhood)
 
 ## Description
 

@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-TEST_CASE("ImageProcessing::ItkGoldenTestUtils self-test", "[ImageProcessing][ItkGolden]")
+TEST_CASE("NXImageProcessing::ItkGoldenTestUtils self-test", "[NXImageProcessing][ItkGolden]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

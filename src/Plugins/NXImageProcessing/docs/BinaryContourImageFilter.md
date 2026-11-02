@@ -4,7 +4,7 @@ Labels the voxels on the border (contour) of the objects in a binary image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Contour)
+NXImageProcessing (Contour)
 
 ## Description
 

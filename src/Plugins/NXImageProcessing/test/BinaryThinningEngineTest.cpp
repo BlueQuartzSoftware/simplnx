@@ -180,7 +180,7 @@ std::vector<T> RunThinning(const std::vector<T>& mask, usize dx, usize dy, usize
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: output is binary and a skeleton is idempotent", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: output is binary and a skeleton is idempotent", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // A solid 5x5 block thins to a thin skeleton; thinning the result again is a no-op.
   const usize dx = 7, dy = 7, dz = 1;
@@ -210,7 +210,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: output is binary and a skeleto
   REQUIRE(count(sk) < count(mask));
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: uint8 solid block is binary and idempotent", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: uint8 solid block is binary and idempotent", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // Guard the T{} / static_cast<T> conversions on an unsigned type: the solid-block skeleton is binary (0/1) and idempotent.
   const usize dx = 7, dy = 7, dz = 1;
@@ -230,7 +230,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: uint8 solid block is binary an
   REQUIRE(RunThinning<uint8>(sk, dx, dy, dz) == sk); // idempotent on an already-thinned image
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: a horizontal bar 1px tall is preserved (already thin)", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: a horizontal bar 1px tall is preserved (already thin)", "[NXImageProcessing][BinaryThinningEngine]")
 {
   const usize dx = 7, dy = 3, dz = 1;
   std::vector<int32> mask(dx * dy, 0);
@@ -242,7 +242,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: a horizontal bar 1px tall is p
   REQUIRE(sk == mask); // a 1px-thick bar is its own skeleton
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: degenerate inputs (empty, single pixel)", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: degenerate inputs (empty, single pixel)", "[NXImageProcessing][BinaryThinningEngine]")
 {
   REQUIRE(RunThinning<int32>(std::vector<int32>(9, 0), 3, 3, 1) == std::vector<int32>(9, 0)); // empty stays empty
   std::vector<int32> single(9, 0);
@@ -250,7 +250,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: degenerate inputs (empty, sing
   REQUIRE(RunThinning<int32>(single, 3, 3, 1) == single); // isolated pixel is preserved (endpoint)
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D thins each z-slice independently", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D thins each z-slice independently", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // Two identical solid blocks on two z-slices -> the two output slices are identical (no z-coupling).
   const usize dx = 7, dy = 7, dz = 2;
@@ -273,7 +273,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D thins each z-slice independ
   }
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: checked 3D slice-batch memory plan", "[ImageProcessing][BinaryThinningEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: checked 3D slice-batch memory plan", "[NXImageProcessing][BinaryThinningEngine][WorkingMemory]")
 {
   using ImageProcessing::detail::CreateBinaryThinningSliceBatchPlan;
 
@@ -299,7 +299,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: checked 3D slice-batch memory 
   REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3{std::numeric_limits<usize>::max(), 2, 3}, std::numeric_limits<usize>::max(), /*maximumWorkers=*/8).invalid());
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D slice batches match one-slice results and transfer each value once", "[ImageProcessing][BinaryThinningEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice batches match one-slice results and transfer each value once", "[NXImageProcessing][BinaryThinningEngine][WorkingMemory]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningSliceBatches;
   using ImageProcessing::detail::CreateBinaryThinningSliceBatchPlan;
@@ -370,7 +370,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D slice batches match one-sli
   REQUIRE(outputStore.writeCount() == writesBeforeInvalidPlan);
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D slice-batch cancellation and I-O failures stop before the next output batch", "[ImageProcessing][BinaryThinningEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice-batch cancellation and I-O failures stop before the next output batch", "[NXImageProcessing][BinaryThinningEngine][WorkingMemory]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningSliceBatches;
   using ImageProcessing::detail::CreateBinaryThinningSliceBatchPlan;
@@ -436,7 +436,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: 3D slice-batch cancellation an
   }
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: checked true-2-D memory plans", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: checked true-2-D memory plans", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::CreateBinaryThinningExternal2DPlan;
   using ImageProcessing::detail::CreateBinaryThinningFixed2DPlan;
@@ -483,7 +483,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: checked true-2-D memory plans"
   REQUIRE(CreateBinaryThinningExternal2DPlan(std::numeric_limits<usize>::max(), /*dimY=*/2, std::numeric_limits<usize>::max()).invalid());
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: work-store adapter supports abstract and fixed-record stores", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: work-store adapter supports abstract and fixed-record stores", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::BinaryThinningWorkStore;
   using ImageProcessing::detail::SweepTemporaryStore;
@@ -515,7 +515,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: work-store adapter supports ab
   REQUIRE_FALSE(fixedAdapter.getChunkShape().has_value());
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: fixed-capacity true-2-D path matches resident and bounds transfers", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: fixed-capacity true-2-D path matches resident and bounds transfers", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningFixed2D;
   using ImageProcessing::detail::CreateBinaryThinningFixed2DPlan;
@@ -595,7 +595,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: fixed-capacity true-2-D path m
   }
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: external true-2-D row blocks match resident and bound scratch transfers", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks match resident and bound scratch transfers", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningExternal2D;
   using ImageProcessing::detail::ApplyBinaryThinningExternalSubstepBlocks;
@@ -699,7 +699,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: external true-2-D row blocks m
   }
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: external true-2-D X tiles match resident and bound scratch transfers", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D X tiles match resident and bound scratch transfers", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningExternal2D;
   using ImageProcessing::detail::ApplyBinaryThinningExternalSubstepTiles;
@@ -774,7 +774,7 @@ TEST_CASE("ImageProcessing::BinaryThinningEngine: external true-2-D X tiles matc
   }
 }
 
-TEST_CASE("ImageProcessing::BinaryThinningEngine: external true-2-D cancellation and I-O failures propagate", "[ImageProcessing][BinaryThinningEngine]")
+TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D cancellation and I-O failures propagate", "[NXImageProcessing][BinaryThinningEngine]")
 {
   using ImageProcessing::detail::ApplyBinaryThinningExternal2D;
   using ImageProcessing::detail::ApplyBinaryThinningExternalSubstepBlocks;

@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/LogImageFilter.hpp"
+#include "NXImageProcessing/Filters/LogImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): the op is static_cast<U>(std::log(static_cast<double>(x)))
 // -- ITK's equally-unguarded Log functor. log(x<0) is NaN and log(0) is -inf (IEEE pole). This test pins both. (The
 // golden test only tolerates the -inf tail, it does not assert it explicitly.)
-TEST_CASE("ImageProcessing::LogImageFilter: log of negative is NaN and log(0) is -inf (domain edge)", "[ImageProcessing][LogImageFilter]")
+TEST_CASE("NXImageProcessing::LogImageFilter: log of negative is NaN and log(0) is -inf (domain edge)", "[NXImageProcessing][LogImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -29,7 +29,7 @@ TEST_CASE("ImageProcessing::LogImageFilter: log of negative is NaN and log(0) is
 // log(0) at the ramp's zero produces -inf; ip_golden::CompareImages mirrors ITK's own max-abs-diff comparator, which
 // tolerates the -inf tail. See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LogImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][LogImageFilter]")
+TEST_CASE("NXImageProcessing::LogImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][LogImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

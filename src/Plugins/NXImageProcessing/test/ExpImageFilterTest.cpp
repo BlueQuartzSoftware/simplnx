@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ExpImageFilter.hpp"
+#include "NXImageProcessing/Filters/ExpImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): the op is static_cast<U>(std::exp(static_cast<double>(x))).
 // exp overflows double above ~709.78, so exp(1000) is +inf and casting +inf to float32 stays +inf. ITK's Exp
 // functor is the same expression, so this pins the observed +inf overflow.
-TEST_CASE("ImageProcessing::ExpImageFilter: exp of a large input overflows to +inf (domain edge)", "[ImageProcessing][ExpImageFilter]")
+TEST_CASE("NXImageProcessing::ExpImageFilter: exp of a large input overflows to +inf (domain edge)", "[NXImageProcessing][ExpImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -27,7 +27,7 @@ TEST_CASE("ImageProcessing::ExpImageFilter: exp of a large input overflows to +i
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01.
 // See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ExpImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][ExpImageFilter]")
+TEST_CASE("NXImageProcessing::ExpImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][ExpImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

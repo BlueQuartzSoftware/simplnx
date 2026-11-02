@@ -41,7 +41,7 @@ std::string SumProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SumProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Sum", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Sum", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

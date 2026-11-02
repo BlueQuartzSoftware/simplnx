@@ -45,7 +45,7 @@ std::string ExpImageFilter::humanName() const
 }
 std::vector<std::string> ExpImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Exp", "Pointwise"};
+  return {className(), "NXImageProcessing", "Exp", "Pointwise"};
 }
 Parameters ExpImageFilter::parameters() const
 {

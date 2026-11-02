@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  *        half). The filter's executeImpl populates this from its Arguments; the
  *        transform feature is handled by the filter, not this algorithm.
  */
-struct IMAGEPROCESSING_EXPORT ReadMhaFileInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadMhaFileInputValues
 {
   std::filesystem::path InputFilePath;
   DataPath ImageGeometryPath;
@@ -35,7 +35,7 @@ struct IMAGEPROCESSING_EXPORT ReadMhaFileInputValues
  *        needed), then bulk-copy the cropped subrange via CopyFromArray::CopyData
  *        (OOC-friendly). OutputT == the file's native type.
  */
-class IMAGEPROCESSING_EXPORT ReadMhaFile
+class NXIMAGEPROCESSING_EXPORT ReadMhaFile
 {
 public:
   ReadMhaFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadMhaFileInputValues* inputValues);

@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SinImageFilter.hpp"
+#include "NXImageProcessing/Filters/SinImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01.
 // See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SinImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][SinImageFilter]")
+TEST_CASE("NXImageProcessing::SinImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SinImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

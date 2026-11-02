@@ -1,13 +1,13 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BoundedReciprocalImageFilter.hpp"
+#include "NXImageProcessing/Filters/BoundedReciprocalImageFilter.hpp"
 
 using namespace nx::core;
 
 // NOTE: this filter has no parity test. The test validates the filter directly against computed-expected
 // values: output = 1 / (1 + x), forced to float64.
-TEST_CASE("ImageProcessing::BoundedReciprocalImageFilter: Correctness", "[ImageProcessing][BoundedReciprocalImageFilter]")
+TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXImageProcessing][BoundedReciprocalImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -46,7 +46,7 @@ TEST_CASE("ImageProcessing::BoundedReciprocalImageFilter: Correctness", "[ImageP
 //       the SAME reader) at the ITK test's tolerance 0.01 via ip_golden::CompareImages.
 // The ITK `vector` case (VM1111Shrink-RGB.png) is SKIPPED as an RGB/vector input (plan Sec.5).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BoundedReciprocalImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][BoundedReciprocalImageFilter]")
+TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][BoundedReciprocalImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -48,7 +48,7 @@ std::string SquareImageFilter::humanName() const
 }
 std::vector<std::string> SquareImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Square", "Pointwise"};
+  return {className(), "NXImageProcessing", "Square", "Pointwise"};
 }
 Parameters SquareImageFilter::parameters() const
 {

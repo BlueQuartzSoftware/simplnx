@@ -59,7 +59,7 @@ std::string ThresholdImageFilter::humanName() const
 
 std::vector<std::string> ThresholdImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Threshold", "Thresholding"};
+  return {className(), "NXImageProcessing", "Threshold", "Thresholding"};
 }
 
 Parameters ThresholdImageFilter::parameters() const

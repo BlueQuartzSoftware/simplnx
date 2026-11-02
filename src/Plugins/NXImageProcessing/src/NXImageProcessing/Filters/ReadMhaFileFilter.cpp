@@ -1,7 +1,7 @@
 #include "ReadMhaFileFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
-#include "ImageProcessing/utils/MetaImageUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
+#include "NXImageProcessing/utils/MetaImageUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"

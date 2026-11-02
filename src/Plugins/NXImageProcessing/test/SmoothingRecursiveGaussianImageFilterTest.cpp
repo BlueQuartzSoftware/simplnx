@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
+#include "NXImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -97,8 +97,8 @@ std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
 // (1) Smoothing preserves a constant image (all signed types). A normalized (DC-gain-1) Gaussian of a constant is the
 //     constant, incl. at the edge-extended boundary. Margin 1.0 tolerates the final float32->int static_cast truncation.
 // -----------------------------------------------------------------------------
-TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: constant image preserved", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64, float32,
-                   float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: constant image preserved", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64,
+                   float32, float64)
 {
   using T = TestType;
   UnitTest::LoadPlugins();
@@ -119,7 +119,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: cons
 // -----------------------------------------------------------------------------
 // (2) Smoothing preserves central symmetry (float64 radial blob) and reduces the peak (variance reduction).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric blob stays symmetric", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric blob stays symmetric", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -148,7 +148,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric blo
 // -----------------------------------------------------------------------------
 // (4) Preflight rejects unsigned input (SignedScalar policy) and too-small dims.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rejections", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rejections", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -277,7 +277,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rej
 // (5) FromSIMPLJson: the per-axis Sigma vector (legacy FloatVec3 object shape), the NormalizeAcrossScale bool, and the
 //     geometry/array/name DataPaths. Sigma uses DoubleVec3FilterParameterConverter -> std::vector<float64>.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJson", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJson", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   const nlohmann::json json = {
       {"Sigma", {{"x", 2.0}, {"y", 3.0}, {"z", 4.0}}},
@@ -301,7 +301,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJson
 //     -- a symmetric-sigma test cannot catch a sigma/axis swap. Smoothing has no live-ITK oracle, so this is an
 //     analytic directional check (the Gz(0) factor cancels, so the X-vs-Y comparison reduces to exp(2/sy^2 - 2/sx^2)).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic sigma spreads along the larger-sigma axis", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic sigma spreads along the larger-sigma axis", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -324,7 +324,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic s
 // (7) Anisotropic spacing: a larger spacing on an axis shrinks that axis's voxel-domain sigma (sigmad = sigma/spacing),
 //     so the impulse spreads LESS along the larger-spacing axis. Guards the per-axis spacing[axis] indexing.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic spacing scales the per-axis blur", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic spacing scales the per-axis blur", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -347,7 +347,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic s
 // (8) 2D (Z==1) smoothing exercises the effDim==2 cascade path in SmoothingRecursiveGaussianExecuteFn: a constant is
 //     preserved and a symmetric blob stays symmetric.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothing preserves a constant and stays symmetric", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothing preserves a constant and stays symmetric", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -389,7 +389,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothing 
 // (9) NormalizeAcrossScale is a no-op for order-0 smoothing (ITK applies it only to derivative orders 1/2). Pin the
 //     documented invariant: normalize on/off produce byte-identical output.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAcrossScale is a no-op for smoothing", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAcrossScale is a no-op for smoothing", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -409,7 +409,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAcro
 }
 
 // -----------------------------------------------------------------------------
-TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: fused plane path matches direct path", "[ImageProcessing][SmoothingRecursiveGaussianImageFilter]", int16, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fused plane path matches direct path", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]", int16, float64)
 {
   using T = TestType;
   UnitTest::LoadPlugins();
@@ -456,7 +456,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: fuse
 // The durable golden is the committed baseline image on disk. The (rgb_image) RGB case (VM1111Shrink-RGB.png) is
 // SKIPPED (RGB, out of scope).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

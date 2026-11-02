@@ -45,7 +45,7 @@ std::string AtanImageFilter::humanName() const
 }
 std::vector<std::string> AtanImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Atan", "Pointwise"};
+  return {className(), "NXImageProcessing", "Atan", "Pointwise"};
 }
 Parameters AtanImageFilter::parameters() const
 {

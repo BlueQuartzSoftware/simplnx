@@ -47,7 +47,7 @@ std::string HConvexImageFilter::humanName() const
 }
 std::vector<std::string> HConvexImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "HConvex", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "HConvex", "MathematicalMorphology", "Morphology"};
 }
 Parameters HConvexImageFilter::parameters() const
 {

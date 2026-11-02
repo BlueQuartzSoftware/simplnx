@@ -175,7 +175,7 @@ std::vector<uint32> RunExternalFlood(const std::vector<TInput>& gray, const std:
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: 1D double-well, one marker per well, watershed line at the ridge", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: 1D double-well, one marker per well, watershed line at the ridge", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   // gray: 0 1 2 3 2 1 0  (a ridge at x=3). markers: label 1 at x=0, label 2 at x=6.
   const std::vector<int32> gray = {0, 1, 2, 3, 2, 1, 0};
@@ -199,7 +199,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: 1D double-well, one mark
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: single marker floods the whole basin", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: single marker floods the whole basin", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   const usize dx = 5, dy = 5, dz = 1;
   std::vector<int32> gray(dx * dy);
@@ -219,7 +219,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: single marker floods the
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: determinism", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: determinism", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   const usize dx = 8, dy = 8, dz = 4;
   std::vector<int32> gray(dx * dy * dz);
@@ -235,7 +235,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: determinism", "[ImagePro
   REQUIRE(a == b);
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: fullyConnected offset set floods a single bowl", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: fullyConnected offset set floods a single bowl", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   // A single marker always fills the whole (connected) basin regardless of connectivity: there is only ever one real
   // label among a voxel's neighbors, so no collision/watershed line ever forms. This exercises the fullyConnected=true
@@ -261,7 +261,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: fullyConnected offset se
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: a marker valued at the border sentinel is a normal marker", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: a marker valued at the border sentinel is a normal marker", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   // A real in-bounds marker whose label == borderSentinel (uint32 max) must be treated as an ordinary label, not as an
   // out-of-image boundary. Place it at a border-touching corner so its OOB neighbors also read as the sentinel: with a
@@ -285,7 +285,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: a marker valued at the b
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::WatershedExternalMemory: checked plan respects different granted targets", "[ImageProcessing][WatershedFromMarkersEngine]", uint8, int8, uint16, int16, uint32,
+TEMPLATE_TEST_CASE("NXImageProcessing::WatershedExternalMemory: checked plan respects different granted targets", "[NXImageProcessing][WatershedFromMarkersEngine]", uint8, int8, uint16, int16, uint32,
                    int32, uint64, int64, float32, float64)
 {
   using T = TestType;
@@ -312,7 +312,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::WatershedExternalMemory: checked plan respe
   SIMPLNX_RESULT_REQUIRE_INVALID(createWatershedExternalMemoryPlanResult);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::WatershedExternalMemory: larger working-memory targets retain more fixed-size pages", "[ImageProcessing][WatershedFromMarkersEngine]", uint8, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::WatershedExternalMemory: larger working-memory targets retain more fixed-size pages", "[NXImageProcessing][WatershedFromMarkersEngine]", uint8, float32)
 {
   using T = TestType;
   constexpr usize k_ValueCount = 33'554'432;
@@ -354,7 +354,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::WatershedExternalMemory: larger working-mem
   SIMPLNX_RESULT_REQUIRE_INVALID(createWatershedExternalMemoryPlanResult);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: packed combined voxel record preserves every field", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed combined voxel record preserves every field", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   using Uint8Record = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
   using Uint16Record = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
@@ -379,7 +379,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: packed combined voxel recor
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: packed resident-status voxel record preserves output and gray value", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed resident-status voxel record preserves output and gray value", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   using Uint8Record = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
   using Uint16Record = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
@@ -404,7 +404,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: packed resident-status voxe
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: packed resident-status tiled pages retain complete 32 by 32 tiles", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed resident-status tiled pages retain complete 32 by 32 tiles", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_ValueCount = 268'435'456;
   constexpr usize k_TargetBytes = 512ULL * 1024ULL * 1024ULL;
@@ -420,7 +420,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: packed resident-status tile
   REQUIRE(plan.voxelRecordsPerPage * plan.voxelRecordBytes == 61'440);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: 16 MiB route retains packed resident status and one full initialization page", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: 16 MiB route retains packed resident status and one full initialization page", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_ValueCount = 33'554'432;
   constexpr usize k_TargetBytes = 16ULL * 1024ULL * 1024ULL;
@@ -436,7 +436,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: 16 MiB route retains packed
   REQUIRE(plan.residentBytes <= k_TargetBytes);
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed bucket state matches resident ordering", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state matches resident ordering", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   struct Geometry
   {
@@ -470,7 +470,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed bucket state matc
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed bucket state uses six-byte raw transfers", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state uses six-byte raw transfers", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_DimX = 64;
   constexpr usize k_DimY = 64;
@@ -487,7 +487,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed bucket state uses
   REQUIRE(stats->readByteCounts == std::vector<uint64>{6 * k_ValueCount, 6 * k_ValueCount});
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed resident-status bucket state uses five-byte raw transfers", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed resident-status bucket state uses five-byte raw transfers", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_DimX = 1024;
   constexpr usize k_DimY = 1024;
@@ -516,7 +516,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: packed resident-status b
   REQUIRE(stats->readByteCounts == std::vector<uint64>(2 * expectedPageCount, expectedPageBytes));
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: useful endpoint retains complete primary state before extra queue pages", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: useful endpoint retains complete primary state before extra queue pages", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_ValueCount = 33'554'432;
   auto usefulBytesResult = ImageProcessing::detail::CalculateWatershedUsefulWorkingMemoryBytes<uint8>(k_ValueCount);
@@ -534,7 +534,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: useful endpoint retains com
   REQUIRE(plan.residentBytes <= usefulBytesResult.value());
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: resident status selection follows data size and grant", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: resident status selection follows data size and grant", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize k_TargetBytes = 512ULL * 1024ULL * 1024ULL;
   constexpr usize k_FittingValueCount = 33'554'432;
@@ -585,7 +585,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: resident status selection f
   REQUIRE(noLineResult.value().usePackedCombinedState);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: tiled voxel layout is a checked 64-bit bijection", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: tiled voxel layout is a checked 64-bit bijection", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   const SizeVec3 k_Dims = {65, 34, 9};
   constexpr usize k_RecordsPerPage = 8192;
@@ -623,7 +623,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: tiled voxel layout is a che
   SIMPLNX_RESULT_REQUIRE_INVALID(createWatershedTiledRecordLayoutResult);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: reserved plan honors the shared quarter-budget ceiling", "[ImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: reserved plan honors the shared quarter-budget ceiling", "[NXImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
 {
   constexpr usize k_ValueCount = 33'554'432;
   constexpr uint64 k_OneGiB = 1024ULL * 1024ULL * 1024ULL;
@@ -653,7 +653,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: reserved plan honors the sh
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: production request scales across live cache budgets", "[ImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: production request scales across live cache budgets", "[NXImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
 {
   constexpr usize k_ValueCount = 33'554'432;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
@@ -681,8 +681,8 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: production request scales a
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: resident bucket working state is dataset-scaled and requires a complete reservation",
-          "[ImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: resident bucket working state is dataset-scaled and requires a complete reservation",
+          "[NXImageProcessing][WatershedFromMarkersEngine][WorkingMemory]")
 {
   constexpr usize k_ValueCount = 4'194'304;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
@@ -726,7 +726,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: resident bucket working 
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: external min-heap preserves level and FIFO order", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap preserves level and FIFO order", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   using Heap = ImageProcessing::detail::WatershedExternalMinHeap<int32>;
   TemporaryRecordStoreConfig config;
@@ -772,7 +772,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: external min-heap preserves
   SIMPLNX_RESULT_REQUIRE_INVALID(pushResult7);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: external min-heap rejects capacity and provider metadata", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap rejects capacity and provider metadata", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   using Heap = ImageProcessing::detail::WatershedExternalMinHeap<float32>;
   std::atomic_bool shouldCancel{false};
@@ -800,7 +800,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: external min-heap rejects c
   SIMPLNX_RESULT_REQUIRE_INVALID(createResult);
 }
 
-TEST_CASE("ImageProcessing::WatershedExternalMemory: fixed-level external buckets preserve numeric and FIFO order", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedExternalMemory: fixed-level external buckets preserve numeric and FIFO order", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   using Block = ImageProcessing::detail::WatershedQueueBlock;
   using Queue = ImageProcessing::detail::WatershedExternalBucketQueue<int16>;
@@ -862,7 +862,7 @@ TEST_CASE("ImageProcessing::WatershedExternalMemory: fixed-level external bucket
   SIMPLNX_RESULT_REQUIRE_VALID(flushResult);
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: injected external flood matches resident ordering", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: injected external flood matches resident ordering", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   struct Geometry
   {
@@ -900,7 +900,7 @@ TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: injected external flood 
   }
 }
 
-TEST_CASE("ImageProcessing::WatershedFromMarkersEngine: external initialization failure preserves output", "[ImageProcessing][WatershedFromMarkersEngine]")
+TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: external initialization failure preserves output", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 4;

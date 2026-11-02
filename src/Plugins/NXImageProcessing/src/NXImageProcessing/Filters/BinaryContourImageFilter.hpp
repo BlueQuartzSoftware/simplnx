@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * morphology, this filter needs no binary-input safeguard and is faithful on labeled input). The connectivity
  * (Fully Connected off = face; on = face+edge+vertex) matches the legacy filter.
  */
-class IMAGEPROCESSING_EXPORT BinaryContourImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT BinaryContourImageFilter : public IFilter
 {
 public:
   BinaryContourImageFilter() = default;

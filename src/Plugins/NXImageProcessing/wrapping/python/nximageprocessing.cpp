@@ -1,18 +1,18 @@
 #include <NxPybind/NxPybind.hpp>
 
-#include "ImageProcessing/ImageProcessingFilterBinding.hpp"
-#include "ImageProcessing/ImageProcessingPlugin.hpp"
+#include "NXImageProcessing/NXImageProcessingFilterBinding.hpp"
+#include "NXImageProcessing/NXImageProcessingPlugin.hpp"
 
 using namespace nx::core;
 using namespace nx::core::NxPybind;
 namespace py = pybind11;
 
-PYBIND11_MODULE(imageprocessing, mod)
+PYBIND11_MODULE(nximageprocessing, mod)
 {
   py::module_::import("simplnx");
 
   auto& internals = Internals::Instance();
-  internals.addPlugin<ImageProcessingPlugin>();
+  internals.addPlugin<NXImageProcessingPlugin>();
 
-  ImageProcessing::BindFilters(mod, internals);
+  NXImageProcessing::BindFilters(mod, internals);
 }

@@ -11,8 +11,8 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "ImageProcessing/Filters/ReadBinaryCTNorthstarFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/Filters/ReadBinaryCTNorthstarFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include <algorithm>
 #include <array>
@@ -135,7 +135,7 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution")
 {
   UnitTest::LoadPlugins();
 
@@ -167,7 +167,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid relative header path")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid relative header path")
 {
   UnitTest::LoadPlugins();
 
@@ -206,7 +206,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid relative header p
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
 {
   UnitTest::LoadPlugins();
 
@@ -254,7 +254,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
 {
   UnitTest::LoadPlugins();
 
@@ -279,7 +279,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter executio
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
 {
   UnitTest::LoadPlugins();
 
@@ -304,7 +304,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter executio
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
 {
   UnitTest::LoadPlugins();
 
@@ -410,7 +410,7 @@ TEST_CASE("ImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter executio
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadBinaryCTNorthstarFilter: SIMPL Backwards Compatibility", "[ImageProcessing][ReadBinaryCTNorthstarFilter][BackwardsCompatibility]")
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: SIMPL Backwards Compatibility", "[NXImageProcessing][ReadBinaryCTNorthstarFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();

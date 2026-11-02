@@ -4,7 +4,7 @@ Normalizes an image by setting its mean to zero and variance to one.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

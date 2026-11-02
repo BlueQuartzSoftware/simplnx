@@ -21,7 +21,7 @@ using namespace nx::core;
 
 namespace
 {
-// Error code for this filter. The -85xx range is shared by the ImageProcessing filters; the -8540 block is
+// Error code for this filter. The -85xx range is shared by the NXImageProcessing filters; the -8540 block is
 // AdaptiveHistogramEqualization and the -8500..-8513 blocks are BinaryContour/LabelContour, so this filter uses
 // the -8552 (non-finite) and -8555 (negative) slots for its Height guards (HMaxima owns -8551/-8554).
 constexpr int32 k_NonFiniteHeight = -8552;
@@ -48,7 +48,7 @@ std::string HMinimaImageFilter::humanName() const
 }
 std::vector<std::string> HMinimaImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "HMinima", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "HMinima", "MathematicalMorphology", "Morphology"};
 }
 Parameters HMinimaImageFilter::parameters() const
 {

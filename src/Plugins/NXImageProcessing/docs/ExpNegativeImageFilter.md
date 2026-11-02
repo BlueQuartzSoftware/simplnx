@@ -4,7 +4,7 @@ Computes the negative exponential of each pixel.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

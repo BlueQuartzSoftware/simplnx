@@ -43,7 +43,7 @@ std::string MaximumProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MaximumProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Maximum", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Maximum", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

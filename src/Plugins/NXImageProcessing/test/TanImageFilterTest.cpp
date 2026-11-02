@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/TanImageFilter.hpp"
+#include "NXImageProcessing/Filters/TanImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // nearest float32 to it is NOT exactly the pole, so std::tan(static_cast<double>(x)) is a very large FINITE value
 // (never inf) -- and ITK's Tan functor is the same expression, so this pins that observed large-but-finite output
 // (asserted both by magnitude and by exact equality to the recomputed op).
-TEST_CASE("ImageProcessing::TanImageFilter: tan near pi/2 is large-magnitude finite (domain edge)", "[ImageProcessing][TanImageFilter]")
+TEST_CASE("NXImageProcessing::TanImageFilter: tan near pi/2 is large-magnitude finite (domain edge)", "[NXImageProcessing][TanImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -34,7 +34,7 @@ TEST_CASE("ImageProcessing::TanImageFilter: tan near pi/2 is large-magnitude fin
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01.
 // See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::TanImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][TanImageFilter]")
+TEST_CASE("NXImageProcessing::TanImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][TanImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -15,7 +15,7 @@ namespace nx::core
  * The input may be any SIGNED scalar type (int8/16/32/64 or float32/64); the output has the SAME type as the input.
  * Matches the legacy ITK Smoothing Recursive Gaussian Image Filter exactly for integer/float64 inputs.
  */
-class IMAGEPROCESSING_EXPORT SmoothingRecursiveGaussianImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT SmoothingRecursiveGaussianImageFilter : public IFilter
 {
 public:
   SmoothingRecursiveGaussianImageFilter() = default;

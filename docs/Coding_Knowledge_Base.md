@@ -1012,7 +1012,7 @@ every saved value without an error.
 
 **What to look for:** a change that removes or moves a filter or plugin without moving its conversion map and fixtures.
 
-**Pattern to use:** `src/Plugins/ImageProcessing/test/SimplConversionCoverageTest.cpp`, which reads the live map,
+**Pattern to use:** `src/Plugins/NXImageProcessing/test/SimplConversionCoverageTest.cpp`, which reads the live map,
 requires a fixture for each entry, checks the target UUID and rejects a conversion that produces only defaults.
 
 ---
@@ -1061,7 +1061,7 @@ or equal spacings in a test of an axis-dependent formula.
 `SIMPLNX_RESULT_REQUIRE_INVALID`, instead of `REQUIRE(result.valid())`. The macro prints each error code and message
 when the check fails.
 
-**Example of the broken rule:** `test/DataArrayTest.cpp`, `test/GeometryTest.cpp` and the ImageProcessing
+**Example of the broken rule:** `test/DataArrayTest.cpp`, `test/GeometryTest.cpp` and the NXImageProcessing
 `ContourEngineTest.cpp` use `REQUIRE(result.valid())`.
 
 **Why:** a bare `REQUIRE` reports only `false`; the failure log does not say which error the code returned.
@@ -1090,7 +1090,7 @@ of its own.
 ### Name a filter test after its plugin
 
 **Rule:** a filter test name starts with the plugin name, and its first tag is the plugin:
-`TEST_CASE("ImageProcessing::AbsImageFilter: ...", "[ImageProcessing][AbsImageFilter]")`. When a filter moves to another
+`TEST_CASE("NXImageProcessing::AbsImageFilter: ...", "[NXImageProcessing][AbsImageFilter]")`. When a filter moves to another
 plugin, change both.
 
 **Example of the broken rule:** `ComputeShapesFilterTest.cpp` in OrientationAnalysis still has the first tag
@@ -1155,7 +1155,7 @@ CHECK((fs::last_write_time(files.input) == modifiedBefore));
 **Rule:** do not use `;` in the name of a Catch2 test case that `catch_discover_tests()` registers with CTest. Use a
 comma or a dash. This applies to simplnx, its plugins, SimplnxOoc and DREAM3D-NX.
 
-**Example of the broken rule:** seven ImageProcessing test cases, in `BinaryMorphologicalClosingImageFilterTest` (two),
+**Example of the broken rule:** seven NXImageProcessing test cases, in `BinaryMorphologicalClosingImageFilterTest` (two),
 `ContourEngineTest`, `GrayscaleMorphologicalOpeningImageFilterTest`, `GrayscaleMorphologicalClosingImageFilterTest`,
 `WhiteTopHatImageFilterTest` and `BlackTopHatImageFilterTest`, never ran under CTest, while CTest reported their partial
 entries as passed (issue #1898; PR #1889 renamed them).
@@ -1172,8 +1172,8 @@ becomes two CTest entries; Catch2 finds no case for either part, prints `No test
 **Pattern to use:**
 
 ```cpp
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)",
-          "[ImageProcessing][BlackTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)",
+          "[NXImageProcessing][BlackTopHatImageFilter]")
 ```
 
 ---

@@ -1,4 +1,4 @@
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -85,7 +85,7 @@ void ValidatePythonGenerationSpec(const fs::path& exampleDir)
 
   const nlohmann::json specification = ReadJsonFile(specPath);
   REQUIRE(specification.at("schema_version").get<int32>() == 1);
-  REQUIRE(specification.at("id").get<std::string>() == "imageprocessing-python-generation-v1");
+  REQUIRE(specification.at("id").get<std::string>() == "nximageprocessing-python-generation-v1");
   REQUIRE_FALSE(specification.at("converter_api").get<std::string>().empty());
   RequireNonEmptyArray(specification, "required_modules");
   REQUIRE_FALSE(specification.at("working_directory").get<std::string>().empty());
@@ -153,7 +153,7 @@ void ValidateCompanionFiles(const fs::path& exampleDir, const std::string& pipel
   const nlohmann::json& pythonGeneration = metadata.at("python_generation");
   REQUIRE(pythonGeneration.at("specification_file").get<std::string>() == "PythonGeneration.yaml");
   REQUIRE(pythonGeneration.at("resolve_from").get<std::string>() == "pipeline_suite_root");
-  REQUIRE(pythonGeneration.at("specification_id").get<std::string>() == "imageprocessing-python-generation-v1");
+  REQUIRE(pythonGeneration.at("specification_id").get<std::string>() == "nximageprocessing-python-generation-v1");
 
   const nlohmann::json& mcp = metadata.at("mcp");
   RequireNonEmptyArray(mcp, "user_intents");
@@ -234,7 +234,7 @@ void ValidateCompanionFiles(const fs::path& exampleDir, const std::string& pipel
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::Every registered filter has an enabled real-world example", "[ImageProcessing][ExamplePipelines][Coverage]")
+TEST_CASE("NXImageProcessing::Every registered filter has an enabled real-world example", "[NXImageProcessing][ExamplePipelines][Coverage]")
 {
   UnitTest::LoadPlugins();
 

@@ -32,7 +32,7 @@ std::string BinaryThinningImageFilter::humanName() const
 }
 std::vector<std::string> BinaryThinningImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryThinning", "Binary", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BinaryThinning", "Binary", "Morphology", "MathematicalMorphology"};
 }
 
 Parameters BinaryThinningImageFilter::parameters() const

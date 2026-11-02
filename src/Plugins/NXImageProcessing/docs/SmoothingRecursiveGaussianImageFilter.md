@@ -4,7 +4,7 @@ Smooth (blur) an image using a separable recursive-Gaussian (Deriche) convolutio
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

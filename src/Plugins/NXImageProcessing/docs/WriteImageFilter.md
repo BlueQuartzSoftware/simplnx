@@ -2,7 +2,7 @@
 
 ## Group (Subgroup)
 
-ImageProcessing (IO)
+NXImageProcessing (IO)
 
 ## Description
 
@@ -30,7 +30,7 @@ For example, writing a float32 array directly to a `.png` file fails preflight, 
 
 MHA output supports the component counts accepted by the ITK writer: 1, 2, 3, 4, 10, 11, and 36. MHA files also store the origin and spacing for the selected output plane. Other formats use only the component counts supported by their backend.
 
-If an existing pipeline contains the ITK Write Image filter UUID, the ImageProcessing plugin maps that UUID to this **Filter** when ITKImageProcessing is not available. When ITKImageProcessing is available, the original ITK **Filter** remains registered.
+If an existing pipeline contains the ITK Write Image filter UUID, the NXImageProcessing plugin maps that UUID to this **Filter** when ITKImageProcessing is not available. When ITKImageProcessing is available, the original ITK **Filter** remains registered.
 
 If the input array represents a 3D volume, the filter will output a series of slices along one of the orthogonal axes. The options are to produce XY slices along the Z axis, XZ slices along the Y axis, or YZ slices along the X axis. The output files will be numbered sequentially starting at the *Index Offset* and ending at *Index Offset + (dim - 1)* for the chosen axis. For example, if the Z axis has 117 dimensions and *Index Offset* is 0, 117 XY image files will be produced and numbered 000 through 116. If the volume produces only a single slice, no index is appended and the file is written with exactly the user-specified name.
 

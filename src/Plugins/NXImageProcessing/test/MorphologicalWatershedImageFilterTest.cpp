@@ -2,7 +2,7 @@
 #include "ReconstructionFilterTestUtils.hpp"
 #include "WatershedPreflightTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MorphologicalWatershedImageFilter.hpp"
+#include "NXImageProcessing/Filters/MorphologicalWatershedImageFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
@@ -57,7 +57,7 @@ void RunWatershed(IFilter& filter, DataStructure& ds, const DataPath& inputPath,
 // (2) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
 //     type, incl. float) produces a FIXED uint32 output array (AlwaysUInt32).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight guards", "[ImageProcessing][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -101,7 +101,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight guards"
 //     tuple count is accepted on the test machine. No specific available-RAM number is asserted -- only that an absurd
 //     size is rejected and a plausibly-small size is accepted.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight RAM-fit guard", "[ImageProcessing][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight RAM-fit guard", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
   // ~1e11 voxels * >=11 bytes/voxel ~= 1.1 TB working set: larger than any machine's RAM, so it must be rejected with
   // this filter's memory code (-79042). The guard is a pure numeric estimate -- nothing is allocated. The ERROR takes
@@ -128,7 +128,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight RAM-fit
 // (4) FromSIMPLJson: the legacy SIMPL parameter set (Level + the two bools + geom/array/name) round-trips onto the
 //     new filter's Arguments.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: FromSIMPLJson", "[ImageProcessing][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: FromSIMPLJson", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
   const nlohmann::json json = {{"Level", 4.5},
                                {"MarkWatershedLine", false},
@@ -154,12 +154,12 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: FromSIMPLJson", "
 //   defaults: filter defaults (Level 0.0, MarkWatershedLine true, FullyConnected false -- identical vs legacy ITK).
 //   level_1:  Level = 1.0, MarkWatershedLine = false.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][MorphologicalWatershedImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<MorphologicalWatershedImageFilter>("cthead1-grad-mag.nrrd", "406079d7904d4e9ab0b5f29f7a3a1ea8");
 }
 
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: ITK real-image golden (level_1)", "[ImageProcessing][ItkGolden][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: ITK real-image golden (level_1)", "[NXImageProcessing][ItkGolden][MorphologicalWatershedImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<MorphologicalWatershedImageFilter>("cthead1-grad-mag.nrrd", "a204ce7cf8ec4e7bc6538f0515a8910e", [](Arguments& args) {
     args.insertOrAssign(MorphologicalWatershedImageFilter::k_Level_Key, std::make_any<float64>(1.0));
@@ -167,7 +167,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: ITK real-image go
   });
 }
 
-TEST_CASE("ImageProcessing::MorphologicalWatershedImageFilter: preflight rejects missing temporary provider", "[ImageProcessing][MorphologicalWatershedImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejects missing temporary provider", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();

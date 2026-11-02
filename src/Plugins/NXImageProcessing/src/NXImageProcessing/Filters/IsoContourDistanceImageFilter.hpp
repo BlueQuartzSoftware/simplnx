@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -20,7 +20,7 @@ namespace nx::core
  * The input may be ANY single-component (scalar) numeric type, integer OR floating point; the output is a FIXED
  * float32 image regardless of the input element type. Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT IsoContourDistanceImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT IsoContourDistanceImageFilter : public IFilter
 {
 public:
   IsoContourDistanceImageFilter() = default;

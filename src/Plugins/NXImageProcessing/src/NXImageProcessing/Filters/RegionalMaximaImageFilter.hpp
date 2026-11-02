@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * input must be single-component (scalar). This matches the legacy ITK Regional Maxima Image Filter exactly and is
  * out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT RegionalMaximaImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT RegionalMaximaImageFilter : public IFilter
 {
 public:
   RegionalMaximaImageFilter() = default;

@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MedianImageFilter.hpp"
+#include "NXImageProcessing/Filters/MedianImageFilter.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/BoxNeighborhoodEngine.hpp"
@@ -143,7 +143,7 @@ std::vector<int32> MakeMedianTestInput()
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::BoxNeighborhoodEngine: validates stores and cancellation", "[ImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
+TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: validates stores and cancellation", "[NXImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
 {
   const auto median = [](nonstd::span<int32> values) {
     auto middle = values.begin() + values.size() / 2;
@@ -189,7 +189,7 @@ TEST_CASE("ImageProcessing::BoxNeighborhoodEngine: validates stores and cancella
   }
 }
 
-TEST_CASE("ImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles preserve median transfers", "[ImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
+TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles preserve median transfers", "[NXImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
 {
   const usize workerCount = ImageProcessing::detail::BoxNeighborhood2DWorkerCount();
   const usize workerScratchBytes = k_MedianTestNeighborhoodValues * sizeof(int32) * workerCount;
@@ -257,7 +257,7 @@ TEST_CASE("ImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles p
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowDimPlanResult);
 }
 
-TEST_CASE("ImageProcessing::BoxNeighborhoodEngine: bounded 2D cancellation after input preserves output", "[ImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
+TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D cancellation after input preserves output", "[NXImageProcessing][MedianImageFilter][BoxNeighborhoodEngine]")
 {
   constexpr int32 k_Poison = 73;
   const std::vector<int32> input = MakeMedianTestInput();
@@ -340,7 +340,7 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
 // ITK-sourced real-image md5 golden -- "defaults" case: RA-Short.nrrd, radius default {1,1,1}. Duplicates
 // ITKMedianImageTest.cpp(defaults): the output md5 must equal the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MedianImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][MedianImageFilter]")
+TEST_CASE("NXImageProcessing::MedianImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][MedianImageFilter]")
 {
   RunMedianItkGolden(/*radius=*/std::nullopt, "cbc59611297961dea9f872282534f3df");
 }
@@ -349,7 +349,7 @@ TEST_CASE("ImageProcessing::MedianImageFilter: ITK real-image golden (defaults)"
 // ITK-sourced real-image md5 golden -- "by23" case: RA-Short.nrrd, radius {2,3,0}. Duplicates
 // ITKMedianImageTest.cpp(by23).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MedianImageFilter: ITK real-image golden (by23)", "[ImageProcessing][ItkGolden][MedianImageFilter]")
+TEST_CASE("NXImageProcessing::MedianImageFilter: ITK real-image golden (by23)", "[NXImageProcessing][ItkGolden][MedianImageFilter]")
 {
   RunMedianItkGolden(/*radius=*/std::vector<uint32>{2, 3, 0}, "4afeba184100773dc279a776b1ae493b");
 }

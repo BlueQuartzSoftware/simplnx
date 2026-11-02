@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/CurvatureFlowImageFilter.hpp"
+#include "NXImageProcessing/Filters/CurvatureFlowImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -63,7 +63,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a
 //     SameAsInput output array (unlike GradientMagnitude's fixed float32, CurvatureFlow preserves the input type).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: preflight guards", "[ImageProcessing][CurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -107,12 +107,12 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: preflight guards", "[Image
 //   defaults: the filter defaults (TimeStep 0.05, NumberOfIterations 5). They agree with the ITK defaults.
 //   longer:   TimeStep 0.1, NumberOfIterations 10.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][CurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][CurvatureFlowImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<CurvatureFlowImageFilter>("RA-Float.nrrd", "BasicFilters_CurvatureFlowImageFilter_defaults.nrrd", /*tolerance=*/0.0001);
 }
 
-TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (longer)", "[ImageProcessing][ItkGolden][CurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (longer)", "[NXImageProcessing][ItkGolden][CurvatureFlowImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<CurvatureFlowImageFilter>("RA-Float.nrrd", "BasicFilters_CurvatureFlowImageFilter_longer.nrrd", /*tolerance=*/0.0001, [](Arguments& args) {
     args.insertOrAssign(CurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(0.1));
@@ -124,7 +124,7 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (lon
 // (2) NumberOfIterations == 0 is a no-op: the driver's `for(iter=0; iter<numberOfIterations; ...)` loop never runs, and
 //     the final output = cast<T>(accum = cast<Real>(input)) is a lossless float32 round-trip -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-op", "[ImageProcessing][CurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-op", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -37,7 +37,7 @@ std::string WhiteTopHatImageFilter::humanName() const
 }
 std::vector<std::string> WhiteTopHatImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "WhiteTopHat", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "WhiteTopHat", "Morphology", "MathematicalMorphology"};
 }
 Parameters WhiteTopHatImageFilter::parameters() const
 {

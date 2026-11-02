@@ -4,7 +4,7 @@ Compute a narrow-band signed distance to a level-set iso-contour of the input im
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

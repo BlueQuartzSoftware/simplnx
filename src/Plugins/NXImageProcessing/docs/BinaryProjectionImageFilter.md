@@ -4,7 +4,7 @@ Projects a scalar image along one axis, marking each output voxel foreground if 
 
 ## Group (Subgroup)
 
-ImageProcessing (Projection)
+NXImageProcessing (Projection)
 
 ## Description
 

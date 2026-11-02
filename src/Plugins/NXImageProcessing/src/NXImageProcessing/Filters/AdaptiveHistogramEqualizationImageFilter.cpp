@@ -46,7 +46,7 @@ std::string AdaptiveHistogramEqualizationImageFilter::humanName() const
 }
 std::vector<std::string> AdaptiveHistogramEqualizationImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "AdaptiveHistogramEqualization", "ImageStatistics", "HistogramEqualization"};
+  return {className(), "NXImageProcessing", "AdaptiveHistogramEqualization", "ImageStatistics", "HistogramEqualization"};
 }
 Parameters AdaptiveHistogramEqualizationImageFilter::parameters() const
 {

@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/DoubleThresholdImageFilter.hpp"
+#include "NXImageProcessing/Filters/DoubleThresholdImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -118,7 +118,7 @@ std::vector<T> MakeDoubleThresholdField(usize dimX, usize dimY, usize dimZ)
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of any scalar
 //     type, incl. unsigned and float -- AllNumeric) produces a FIXED uint8 output array (AlwaysUInt8).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DoubleThresholdImageFilter: preflight guards", "[ImageProcessing][DoubleThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: preflight guards", "[NXImageProcessing][DoubleThresholdImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -166,12 +166,12 @@ TEST_CASE("ImageProcessing::DoubleThresholdImageFilter: preflight guards", "[Ima
 //   DoubleThreshold1: RA-Short.nrrd, filter defaults (T1..T4 = 0/1/254/255, Inside 1, Outside 0, FullyConnected false).
 //   DoubleThreshold2: RA-Slice-Short.png, thresholds 0/0/3000/2700 (passed verbatim -- non-monotone by design).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DoubleThresholdImageFilter: ITK real-image golden (DoubleThreshold1)", "[ImageProcessing][ItkGolden][DoubleThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: ITK real-image golden (DoubleThreshold1)", "[NXImageProcessing][ItkGolden][DoubleThresholdImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<DoubleThresholdImageFilter>("RA-Short.nrrd", "dbd0ea7d6f16bb93e9c688cb0f1bfd85");
 }
 
-TEST_CASE("ImageProcessing::DoubleThresholdImageFilter: ITK real-image golden (DoubleThreshold2)", "[ImageProcessing][ItkGolden][DoubleThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: ITK real-image golden (DoubleThreshold2)", "[NXImageProcessing][ItkGolden][DoubleThresholdImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<DoubleThresholdImageFilter>("RA-Slice-Short.png", "2c8fc2345ccfa980ef42aef5910efaa3", [](Arguments& args) {
     args.insertOrAssign(DoubleThresholdImageFilter::k_Threshold1_Key, std::make_any<float64>(0.0));

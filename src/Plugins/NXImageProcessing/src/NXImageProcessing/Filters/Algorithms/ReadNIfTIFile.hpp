@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -28,7 +28,7 @@ namespace nx::core
  * emitted — the algorithm relies on those DataPaths to locate the
  * pre-created `ImageGeom` and its `DataArray<T>`.
  */
-struct IMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
 {
   /** @brief Path to the input `.nii` or `.nii.gz` file. */
   std::filesystem::path InputFilePath;
@@ -97,7 +97,7 @@ struct IMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
  * return ReadNIfTIFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
  * @endcode
  */
-class IMAGEPROCESSING_EXPORT ReadNIfTIFile
+class NXIMAGEPROCESSING_EXPORT ReadNIfTIFile
 {
 public:
   /**

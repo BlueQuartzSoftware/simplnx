@@ -4,7 +4,7 @@ Denoise an image using the modified-curvature-diffusion-equation (MCDE) anisotro
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

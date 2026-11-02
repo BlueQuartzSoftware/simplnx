@@ -74,7 +74,7 @@ ImageProcessing::detail::PointwiseBatchPlan RequirePlan(usize totalValues, usize
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ApplyPointwise plans rectangular OOC batches", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[NXImageProcessing][ApplyPointwise]")
 {
   constexpr usize k_DefaultScratchBytes = ImageProcessing::detail::k_PointwiseTargetScratchBytes;
 
@@ -204,7 +204,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise plans rectangular OOC batches", "[Ima
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise rejects malformed OOC batch layouts", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise rejects malformed OOC batch layouts", "[NXImageProcessing][ApplyPointwise]")
 {
   auto requireError = [](usize totalValues, const ShapeType& tupleShape, usize numComponents, int32 expectedCode) {
     const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
@@ -243,7 +243,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise rejects malformed OOC batch layouts",
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise doubles every value", "[ImageProcessing]")
+TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProcessing]")
 {
   UnitTest::LoadPlugins();
   // Keep the basic transform check pinned in memory; the dedicated non-power-of-two test below covers real OOC stores.
@@ -280,7 +280,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise doubles every value", "[ImageProcessi
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise validates stores and cancellation", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise validates stores and cancellation", "[NXImageProcessing][ApplyPointwise]")
 {
   const auto doubler = [](int32 value) -> int32 { return value * 2; };
 
@@ -309,7 +309,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise validates stores and cancellation", "
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise forced buffered execution is exact and cancel-safe", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise forced buffered execution is exact and cancel-safe", "[NXImageProcessing][ApplyPointwise]")
 {
   const auto doubler = [](int32 value) -> int32 { return value * 2; };
   constexpr usize k_ValueCount = 23;
@@ -357,7 +357,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise forced buffered execution is exact an
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise same-type buffered transfer reuses one target-sized buffer", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise same-type buffered transfer reuses one target-sized buffer", "[NXImageProcessing][ApplyPointwise]")
 {
   constexpr usize k_ValueCount = 10;
   constexpr usize k_TargetScratchBytes = k_ValueCount * sizeof(int32);
@@ -384,7 +384,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise same-type buffered transfer reuses on
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise different-type buffered transfer retains two-buffer batches", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise different-type buffered transfer retains two-buffer batches", "[NXImageProcessing][ApplyPointwise]")
 {
   constexpr usize k_ValueCount = 10;
   constexpr usize k_TargetValues = 3;
@@ -409,7 +409,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise different-type buffered transfer reta
   }
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise same-type buffered execution supports store aliasing", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise same-type buffered execution supports store aliasing", "[NXImageProcessing][ApplyPointwise]")
 {
   CountingDataStore<int32> store({4}, {1}, 0);
   for(usize index = 0; index < store.getSize(); ++index)
@@ -430,7 +430,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise same-type buffered execution supports
   REQUIRE(store.getValue(3) == 8);
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise buffered target smaller than one value uses one-value batches", "[ImageProcessing][ApplyPointwise]")
+TEST_CASE("NXImageProcessing::ApplyPointwise buffered target smaller than one value uses one-value batches", "[NXImageProcessing][ApplyPointwise]")
 {
   CountingDataStore<int32> inputStore({3}, {1}, 2);
   CountingDataStore<int32> outputStore({3}, {1}, -1);
@@ -447,7 +447,7 @@ TEST_CASE("ImageProcessing::ApplyPointwise buffered target smaller than one valu
   REQUIRE(outputStore.getValue(2) == 3);
 }
 
-TEST_CASE("ImageProcessing::ApplyPointwise preserves bytes on non-power-of-two OOC stores", "[ImageProcessing][ApplyPointwise][OOC]")
+TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two OOC stores", "[NXImageProcessing][ApplyPointwise][OOC]")
 {
   UnitTest::LoadPlugins();
   const auto application = Application::Instance();

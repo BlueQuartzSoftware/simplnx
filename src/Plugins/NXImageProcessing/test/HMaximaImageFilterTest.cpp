@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/HMaximaImageFilter.hpp"
+#include "NXImageProcessing/Filters/HMaximaImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -24,7 +24,7 @@ constexpr int32 k_NegativeHeight = -8554;
 //     whose contrast (>= Height) survives is lowered by exactly Height; the bump whose contrast (< Height) is
 //     flattened down to the surrounding background; the background is left unchanged.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: hand-computed maxima suppression", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppression", "[NXImageProcessing][HMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -63,7 +63,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: hand-computed maxima suppression
 //      routes through DispatchAlgorithm, so the scope proves both implementations produce the correct suppression;
 //      the hand-computed expected values are the non-circular oracle (not the filter's own in-core run).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: hand-computed maxima suppression (both algorithm paths)", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: hand-computed maxima suppression (both algorithm paths)", "[NXImageProcessing][HMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -111,7 +111,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: hand-computed maxima suppression
 //      marker equals the input, so the reconstruction-by-dilation converges to the input and the output equals the
 //      input exactly. Preflight accepts Height 0 (only a negative Height is rejected); assert output == input.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: Height 0 is the identity", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: Height 0 is the identity", "[NXImageProcessing][HMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -141,7 +141,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: Height 0 is the identity", "[Ima
 //      positive markers whose reconstruction stays near the input, so the uniform -128 output uniquely proves the
 //      cast clamps rather than wraps. The test asserts the uniform output on the filter directly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: int8 full-underflow clamps to type minimum", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: int8 full-underflow clamps to type minimum", "[NXImageProcessing][HMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -169,7 +169,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: int8 full-underflow clamps to ty
 // (5) Preflight: a non-finite Height (NaN or Inf) is rejected with the filter-local error code, because the
 //     saturating (input - Height) marker offset is undefined for a non-finite value.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: Preflight non-finite Height guard", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -216,7 +216,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: Preflight non-finite Height guar
   }
 }
 
-TEST_CASE("ImageProcessing::HMaximaImageFilter: FromSIMPLJson", "[ImageProcessing][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: FromSIMPLJson", "[NXImageProcessing][HMaximaImageFilter]")
 {
   const nlohmann::json json = {
       {"Height", 3.5}, {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}}, {"NewCellArrayName", "HMax"}};
@@ -234,7 +234,7 @@ TEST_CASE("ImageProcessing::HMaximaImageFilter: FromSIMPLJson", "[ImageProcessin
 // ITK-sourced real-image md5 golden -- duplicates ITKHMaximaImageTest.cpp(HMaxima): RA-Short.nrrd (int16),
 // Height 2000. (B) live-ITK bit-exact + (A) md5-validity-first vs the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMaximaImageFilter: ITK real-image golden (HMaxima)", "[ImageProcessing][ItkGolden][HMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: ITK real-image golden (HMaxima)", "[NXImageProcessing][ItkGolden][HMaximaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<HMaximaImageFilter>("RA-Short.nrrd", "b30d403fb1c5948abfb17fa9c346cecd",
                                                         [](Arguments& args) { args.insertOrAssign(HMaximaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });

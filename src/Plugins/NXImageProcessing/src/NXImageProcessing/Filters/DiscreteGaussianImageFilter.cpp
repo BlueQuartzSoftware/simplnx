@@ -35,7 +35,7 @@ std::string DiscreteGaussianImageFilter::humanName() const
 }
 std::vector<std::string> DiscreteGaussianImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "Gaussian", "Blur"};
+  return {className(), "NXImageProcessing", "Smoothing", "Gaussian", "Blur"};
 }
 
 Parameters DiscreteGaussianImageFilter::parameters() const

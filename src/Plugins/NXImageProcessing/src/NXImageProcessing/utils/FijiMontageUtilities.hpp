@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
@@ -21,7 +21,7 @@
 namespace nx::core::fiji
 {
 /** @brief One montage tile: source file, world origin, and the (prefix-decorated) geometry name. */
-struct IMAGEPROCESSING_EXPORT FijiTile
+struct NXIMAGEPROCESSING_EXPORT FijiTile
 {
   std::filesystem::path filePath;     ///< Absolute path to the tile image (resolved against the config dir).
   FloatVec3 origin{0.0f, 0.0f, 0.0f}; ///< Parsed tile origin (Z=0 for 2D configs).
@@ -34,15 +34,15 @@ struct IMAGEPROCESSING_EXPORT FijiTile
  *        with no hard failure; a header-less file or a file yielding zero tiles is an error.
  * @return the parsed tiles (imageName not yet assigned) or a -359xx error.
  */
-Result<std::vector<FijiTile>> IMAGEPROCESSING_EXPORT ParseTileConfiguration(const std::filesystem::path& configPath);
+Result<std::vector<FijiTile>> NXIMAGEPROCESSING_EXPORT ParseTileConfiguration(const std::filesystem::path& configPath);
 
 /** @brief Sets each tile's imageName to `<prefix><file-stem>`. */
-void IMAGEPROCESSING_EXPORT AssignTileNames(std::vector<FijiTile>& tiles, const std::string& prefix);
+void NXIMAGEPROCESSING_EXPORT AssignTileNames(std::vector<FijiTile>& tiles, const std::string& prefix);
 
 /**
  * @brief Rebases every tile origin so the montage's minimum corner lands on @p userOrigin.
  *        newOrigin = origin - (minCorner - userOrigin). Matches the legacy change-origin path.
  */
-void IMAGEPROCESSING_EXPORT RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3& userOrigin);
+void NXIMAGEPROCESSING_EXPORT RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3& userOrigin);
 
 } // namespace nx::core::fiji

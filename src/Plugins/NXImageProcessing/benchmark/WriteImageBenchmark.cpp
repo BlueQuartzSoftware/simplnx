@@ -1,5 +1,5 @@
 #include "BenchmarkPreferenceSnapshot.hpp"
-#include "ImageProcessing/Filters/WriteImageFilter.hpp"
+#include "NXImageProcessing/Filters/WriteImageFilter.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"

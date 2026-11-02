@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
+#include "NXImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
 
 #include <memory>
 
@@ -13,7 +13,7 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Computed-expected (Annulus + Box zero-radius)", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
@@ -50,7 +50,7 @@ TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Computed-expected 
 //      INPUT through. The named scenario matrix requires both paths to fill the output with zero; the engine-level
 //      bounded-transfer test separately constrains the true-2D Scanline writes.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zero output (Annulus r{0,0,0})", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zero output (Annulus r{0,0,0})", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -100,7 +100,7 @@ TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zero 
 //     and every difference -- exactly.) Real-disk out-of-core coverage is retired to the generic SimplnxOoc store
 //     tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Ramp computed-expected (both algorithm paths)", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -188,7 +188,7 @@ TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Ramp computed-expe
 // STAPLE1.png (uint8), Ball radius {1,1,1}. The test compares our output md5 with the committed hash. MorphologicalGradient
 // (dilate - erode) has no Safe Border parameter.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: ITK real-image golden (MorphologicalGradient)", "[ImageProcessing][ItkGolden][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: ITK real-image golden (MorphologicalGradient)", "[NXImageProcessing][ItkGolden][MorphologicalGradientImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<MorphologicalGradientImageFilter>("STAPLE1.png", "57167a1d86b60fbf9e040d9441676876", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                           morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>());
@@ -198,7 +198,7 @@ TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: ITK real-image gol
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8380) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<MorphologicalGradientImageFilter, float32>(-8380, morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>());
 }

@@ -1,7 +1,7 @@
 #include "ProjectionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/StandardDeviationProjectionImageFilter.hpp"
+#include "NXImageProcessing/Filters/StandardDeviationProjectionImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ProjectionReducers.hpp"
@@ -45,7 +45,7 @@ float64 StdDevExpectedForSlot(uint32 projDim, usize /*slot*/, usize dim)
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: large-offset sample deviation", "[ImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]", float64,
+TEMPLATE_TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offset sample deviation", "[NXImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]", float64,
                    float32, int32)
 {
   UnitTest::LoadPlugins();
@@ -96,7 +96,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: lar
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: large-offset staged and bounded deviation", "[ImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offset staged and bounded deviation", "[NXImageProcessing][StandardDeviationProjectionImageFilter][StdDevStability]")
 {
   UnitTest::LoadPlugins();
   namespace projection_detail = nx::core::ImageProcessing::detail;
@@ -143,7 +143,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: large-offset
 //     (AllNumeric + AlwaysFloat64) + engine + StdDevReduce, including its SAMPLE (divide-by-(N-1)) variance
 //     convention lifted from itkStandardDeviationProjectionImageFilter.h.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   constexpr usize D = 12;
   projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0); },
@@ -157,7 +157,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Computed-exp
 //      sample-standard-deviation oracle applies; the reducer accumulates in Float64. Small dim keeps the ramp
 //      within int16 range.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (int16 input)", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (int16 input)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   constexpr usize D = 8;
   projection_test::RunProjectionComputedExpectedGrid<StandardDeviationProjectionImageFilter>([](DataStructure& ds) { return ip_test::BuildRampImage<int16>(ds, D, 0.0, 1.0); },
@@ -171,7 +171,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Computed-exp
 //     - zero variance, when every value in a column is the same.
 //     Both must produce a finite, exact 0 standard deviation.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: single-sample column (N<=1 guard) -> 0", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: single-sample column (N<=1 guard) -> 0", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -219,7 +219,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: single-sampl
   }
 }
 
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: constant column -> 0", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: constant column (variance clamp) -> 0", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -259,7 +259,7 @@ TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: constant col
 // ITKStandardDeviationProjectionImageFilter is commented out of the ITKImageProcessing FilterList
 // (createFilter -> null / -9002), so no live-ITK (B) parity is available -- recorded (not an error).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: ITK real-image golden (z_projection)", "[ImageProcessing][ItkGolden][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: ITK real-image golden (z_projection)", "[NXImageProcessing][ItkGolden][StandardDeviationProjectionImageFilter]")
 {
   projection_test::RunProjectionBaselineItkGolden<StandardDeviationProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_StandardDeviationProjectionImageFilter_z_projection.nrrd", /*projDim=*/2,
                                                                                           /*tolerance=*/0.0001);

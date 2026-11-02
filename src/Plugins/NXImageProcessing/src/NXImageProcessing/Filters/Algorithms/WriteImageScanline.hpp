@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/Filters/Algorithms/WriteImage.hpp"
+#include "NXImageProcessing/Filters/Algorithms/WriteImage.hpp"
 
 namespace nx::core
 {
@@ -8,7 +8,7 @@ namespace nx::core
  * @class WriteImageScanline
  * @brief Writes image slices from bounded, caller-owned source groups.
  */
-class IMAGEPROCESSING_EXPORT WriteImageScanline
+class NXIMAGEPROCESSING_EXPORT WriteImageScanline
 {
 public:
   /**

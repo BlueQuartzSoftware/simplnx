@@ -45,7 +45,7 @@ std::string LogImageFilter::humanName() const
 }
 std::vector<std::string> LogImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Log", "Pointwise"};
+  return {className(), "NXImageProcessing", "Log", "Pointwise"};
 }
 Parameters LogImageFilter::parameters() const
 {

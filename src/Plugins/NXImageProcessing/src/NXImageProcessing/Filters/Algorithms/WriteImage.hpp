@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * @struct WriteImageInputValues
  * @brief Stores the values that control image slice output.
  */
-struct IMAGEPROCESSING_EXPORT WriteImageInputValues
+struct NXIMAGEPROCESSING_EXPORT WriteImageInputValues
 {
   std::filesystem::path outputFilePath;
   usize planeIndex = 0;
@@ -40,7 +40,7 @@ struct IMAGEPROCESSING_EXPORT WriteImageInputValues
  * @class WriteImage
  * @brief Selects the direct or bounded writer from the source-array storage.
  */
-class IMAGEPROCESSING_EXPORT WriteImage
+class NXIMAGEPROCESSING_EXPORT WriteImage
 {
 public:
   /**

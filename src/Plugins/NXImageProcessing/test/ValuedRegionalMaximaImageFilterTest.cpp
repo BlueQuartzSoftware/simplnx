@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ValuedRegionalMaximaImageFilter.hpp"
+#include "NXImageProcessing/Filters/ValuedRegionalMaximaImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -17,7 +17,7 @@ namespace rt = recon_test;
 //     the surrounding lower field is not a maximum (it has a higher neighbor via the connected flat zone) and is
 //     set to the type minimum.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed central peak kept", "[ImageProcessing][ValuedRegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed central peak kept", "[NXImageProcessing][ValuedRegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -54,7 +54,7 @@ TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed centr
 //      scope proves both implementations keep the peak plateau and mark the field as the type minimum. The
 //      hand-computed expected values are the non-circular oracle (not the filter's own in-core run).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed central peak kept (both algorithm paths)", "[ImageProcessing][ValuedRegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed central peak kept (both algorithm paths)", "[NXImageProcessing][ValuedRegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -99,7 +99,7 @@ TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: hand-computed centr
 // (3) A FLAT image has no strictly-more-extreme neighbor anywhere, so the valued regional maxima result is the
 //     input unchanged.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: flat image unchanged", "[ImageProcessing][ValuedRegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: flat image unchanged", "[NXImageProcessing][ValuedRegionalMaximaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -120,7 +120,7 @@ TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: flat image unchange
   }
 }
 
-TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: FromSIMPLJson", "[ImageProcessing][ValuedRegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: FromSIMPLJson", "[NXImageProcessing][ValuedRegionalMaximaImageFilter]")
 {
   const nlohmann::json json = {{"FullyConnected", true},
                                {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}},
@@ -140,7 +140,7 @@ TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: FromSIMPLJson", "[I
 // (uint8), ITK-default params. Valued regional maxima is a value-preserving output (SameAsInput type uint8). (B)
 // live-ITK bit-exact + (A) md5-validity-first.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ValuedRegionalMaximaImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][ValuedRegionalMaximaImageFilter]")
+TEST_CASE("NXImageProcessing::ValuedRegionalMaximaImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][ValuedRegionalMaximaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ValuedRegionalMaximaImageFilter>("cthead1.png", "c94b3702844c508818e4718a75102472");
 }

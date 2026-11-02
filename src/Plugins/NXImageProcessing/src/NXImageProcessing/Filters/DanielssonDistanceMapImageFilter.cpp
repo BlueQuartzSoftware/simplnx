@@ -34,7 +34,7 @@ std::string DanielssonDistanceMapImageFilter::humanName() const
 }
 std::vector<std::string> DanielssonDistanceMapImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "DanielssonDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "DanielssonDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
 }
 Parameters DanielssonDistanceMapImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 
@@ -17,7 +17,7 @@ namespace nx::core
  * The filter imports the complete volume or a subvolume into an Image Geometry. Subvolume end coordinates are inclusive.
  * Preflight reads the .nsihdr file to find the .nsidat files. The data files must be in the header directory.
  */
-class IMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarFilter : public IFilter
 {
 public:
   ReadBinaryCTNorthstarFilter();

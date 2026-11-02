@@ -1,6 +1,6 @@
 #include "ReadZeissTxmFileFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadZeissTxmFile.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadZeissTxmFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"

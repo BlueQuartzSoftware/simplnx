@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/Filters/Algorithms/WriteImage.hpp"
+#include "NXImageProcessing/Filters/Algorithms/WriteImage.hpp"
 
 namespace nx::core
 {
@@ -8,7 +8,7 @@ namespace nx::core
  * @class WriteImageDirect
  * @brief Writes image slices with the original direct extraction algorithm for in-memory source arrays.
  */
-class IMAGEPROCESSING_EXPORT WriteImageDirect
+class NXIMAGEPROCESSING_EXPORT WriteImageDirect
 {
 public:
   /**

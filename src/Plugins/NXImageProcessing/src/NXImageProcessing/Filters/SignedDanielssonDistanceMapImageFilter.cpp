@@ -33,7 +33,7 @@ std::string SignedDanielssonDistanceMapImageFilter::humanName() const
 }
 std::vector<std::string> SignedDanielssonDistanceMapImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "SignedDanielssonDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "SignedDanielssonDistanceMap", "DistanceMap", "MathematicalMorphology", "Morphology"};
 }
 Parameters SignedDanielssonDistanceMapImageFilter::parameters() const
 {

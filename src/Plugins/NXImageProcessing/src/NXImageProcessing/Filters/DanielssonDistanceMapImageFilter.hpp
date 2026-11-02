@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -20,7 +20,7 @@ namespace nx::core
  * image; the output is a FIXED float32 distance image regardless of the input element type. This matches the legacy
  * ITK Danielsson Distance Map Image Filter exactly and is out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT DanielssonDistanceMapImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT DanielssonDistanceMapImageFilter : public IFilter
 {
 public:
   DanielssonDistanceMapImageFilter() = default;

@@ -30,7 +30,7 @@ std::string ConnectedComponentImageFilter::humanName() const
 }
 std::vector<std::string> ConnectedComponentImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Segmentation", "Labeling"};
+  return {className(), "NXImageProcessing", "Segmentation", "Labeling"};
 }
 
 Parameters ConnectedComponentImageFilter::parameters() const

@@ -118,7 +118,7 @@ OffsetSet RefAnnulus(int32 rx, int32 ry, int32 rz)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::StructuringElement enum values are parity-critical", "[ImageProcessing][StructuringElement]")
+TEST_CASE("NXImageProcessing::StructuringElement enum values are parity-critical", "[NXImageProcessing][StructuringElement]")
 {
   // Must match legacy ChoicesParameter {"Annulus","Ball","Box","Cross"} index,
   // cast directly to itk::simple::KernelEnum {sitkAnnulus=0,sitkBall=1,sitkBox=2,sitkCross=3}.
@@ -128,7 +128,7 @@ TEST_CASE("ImageProcessing::StructuringElement enum values are parity-critical",
   STATIC_REQUIRE(static_cast<uint64>(KernelType::Cross) == 3);
 }
 
-TEST_CASE("ImageProcessing::StructuringElement Box rasterization", "[ImageProcessing][StructuringElement]")
+TEST_CASE("NXImageProcessing::StructuringElement Box rasterization", "[NXImageProcessing][StructuringElement]")
 {
   SECTION("radius {1,1,1}")
   {
@@ -154,7 +154,7 @@ TEST_CASE("ImageProcessing::StructuringElement Box rasterization", "[ImageProces
   }
 }
 
-TEST_CASE("ImageProcessing::StructuringElement Cross rasterization", "[ImageProcessing][StructuringElement]")
+TEST_CASE("NXImageProcessing::StructuringElement Cross rasterization", "[NXImageProcessing][StructuringElement]")
 {
   SECTION("radius {1,1,1}")
   {
@@ -182,7 +182,7 @@ TEST_CASE("ImageProcessing::StructuringElement Cross rasterization", "[ImageProc
   }
 }
 
-TEST_CASE("ImageProcessing::StructuringElement Ball rasterization", "[ImageProcessing][StructuringElement]")
+TEST_CASE("NXImageProcessing::StructuringElement Ball rasterization", "[NXImageProcessing][StructuringElement]")
 {
   SECTION("radius {1,1,1}")
   {
@@ -211,7 +211,7 @@ TEST_CASE("ImageProcessing::StructuringElement Ball rasterization", "[ImageProce
   }
 }
 
-TEST_CASE("ImageProcessing::StructuringElement Annulus rasterization", "[ImageProcessing][StructuringElement]")
+TEST_CASE("NXImageProcessing::StructuringElement Annulus rasterization", "[NXImageProcessing][StructuringElement]")
 {
   SECTION("radius {1,1,1}")
   {

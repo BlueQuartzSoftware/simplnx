@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * (Annulus/Ball/Box/Cross) and per-axis radius match the legacy ITK Binary Morphological Opening Image Filter;
  * unlike the legacy SimpleITK wrapper, the Annulus kernel produces a proper (non-empty) thickness-1 shell.
  */
-class IMAGEPROCESSING_EXPORT BinaryMorphologicalOpeningImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT BinaryMorphologicalOpeningImageFilter : public IFilter
 {
 public:
   BinaryMorphologicalOpeningImageFilter() = default;

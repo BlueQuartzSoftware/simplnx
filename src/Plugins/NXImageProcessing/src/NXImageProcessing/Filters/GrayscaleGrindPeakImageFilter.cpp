@@ -34,7 +34,7 @@ std::string GrayscaleGrindPeakImageFilter::humanName() const
 }
 std::vector<std::string> GrayscaleGrindPeakImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "GrayscaleGrindPeak", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "GrayscaleGrindPeak", "MathematicalMorphology", "Morphology"};
 }
 Parameters GrayscaleGrindPeakImageFilter::parameters() const
 {

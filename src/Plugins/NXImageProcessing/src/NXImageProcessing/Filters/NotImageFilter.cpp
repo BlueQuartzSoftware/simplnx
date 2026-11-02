@@ -43,7 +43,7 @@ std::string NotImageFilter::humanName() const
 }
 std::vector<std::string> NotImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Not", "Pointwise"};
+  return {className(), "NXImageProcessing", "Not", "Pointwise"};
 }
 Parameters NotImageFilter::parameters() const
 {

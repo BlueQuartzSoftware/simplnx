@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BlackTopHatImageFilter.hpp"
+#include "NXImageProcessing/Filters/BlackTopHatImageFilter.hpp"
 
 #include <memory>
 
@@ -15,7 +15,7 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)", "[ImageProcessing][BlackTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)", "[NXImageProcessing][BlackTopHatImageFilter]")
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
@@ -64,7 +64,7 @@ TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorde
 //     - (flat index). (D^3 - 1 < 2^24, so float32 represents every index -- and every difference -- exactly.)
 //     Real-disk out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Ramp computed-expected (both algorithm paths)", "[ImageProcessing][BlackTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][BlackTopHatImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -154,7 +154,7 @@ TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Ramp computed-expected (both
 // path diverged on the 2D Ball SE, so this filter produced 429243242c23867fefa7eab7438747f8 instead of the committed
 // 445a5da6221f6d976d169b70c5538614; clamping the pad to 0 on the size-1 axis reproduces ITK exactly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: ITK real-image golden (Ball r{1,1,1})", "[ImageProcessing][ItkGolden][BlackTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: ITK real-image golden (Ball r{1,1,1})", "[NXImageProcessing][ItkGolden][BlackTopHatImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<BlackTopHatImageFilter>("STAPLE1.png", "445a5da6221f6d976d169b70c5538614", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                 morph_test::CompositeKernelParamSetter<BlackTopHatImageFilter>(/*safeBorder=*/true));
@@ -164,7 +164,7 @@ TEST_CASE("ImageProcessing::BlackTopHatImageFilter: ITK real-image golden (Ball 
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8420) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][BlackTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BlackTopHatImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<BlackTopHatImageFilter, float32>(-8420, morph_test::CompositeKernelParamSetter<BlackTopHatImageFilter>(/*safeBorder=*/true));
 }

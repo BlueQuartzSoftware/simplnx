@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -49,7 +49,7 @@ enum class Encoding
  * @brief Canonicalized view of a NRRD header, ready to drive
  *        CreateImageGeometryAction / CreateArrayAction and NrrdDataReader.
  */
-struct IMAGEPROCESSING_EXPORT NrrdMetadata
+struct NXIMAGEPROCESSING_EXPORT NrrdMetadata
 {
   std::string filePath; ///< Path the header was read from (diagnostics).
   int version{0};       ///< NRRD version digit (4 for NRRD0004).
@@ -85,7 +85,7 @@ struct IMAGEPROCESSING_EXPORT NrrdMetadata
  *        and the per-component byte size. Handles the NRRD synonym set.
  * @return {DataType, elementSizeBytes} or std::nullopt for block/unknown.
  */
-std::optional<std::pair<DataType, usize>> IMAGEPROCESSING_EXPORT NrrdTypeToSimplnx(const std::string& nrrdType);
+std::optional<std::pair<DataType, usize>> NXIMAGEPROCESSING_EXPORT NrrdTypeToSimplnx(const std::string& nrrdType);
 
 /**
  * @brief Parses the ASCII header of a NRRD file into NrrdMetadata.
@@ -97,7 +97,7 @@ std::optional<std::pair<DataType, usize>> IMAGEPROCESSING_EXPORT NrrdTypeToSimpl
  * directions set `affineHasRotation` (rotation dropped by the caller with a
  * warning); spacing = per-column L2 norm. Errors use the -357xx block.
  */
-Result<NrrdMetadata> IMAGEPROCESSING_EXPORT ReadNrrdHeader(const std::filesystem::path& filePath);
+Result<NrrdMetadata> NXIMAGEPROCESSING_EXPORT ReadNrrdHeader(const std::filesystem::path& filePath);
 
 /**
  * @class NrrdDataReader
@@ -106,7 +106,7 @@ Result<NrrdMetadata> IMAGEPROCESSING_EXPORT ReadNrrdHeader(const std::filesystem
  *        zlib inflate (windowBits 15+32 => auto gzip/zlib detection) fed from a
  *        4 MiB compressed-input buffer. Portable (no file-descriptor tricks).
  */
-class IMAGEPROCESSING_EXPORT NrrdDataReader
+class NXIMAGEPROCESSING_EXPORT NrrdDataReader
 {
 public:
   static Result<std::unique_ptr<NrrdDataReader>> Create(const NrrdMetadata& md);

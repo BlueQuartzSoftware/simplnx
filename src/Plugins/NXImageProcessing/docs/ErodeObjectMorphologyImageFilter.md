@@ -4,7 +4,7 @@ Object erosion of a single labeled object in an image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

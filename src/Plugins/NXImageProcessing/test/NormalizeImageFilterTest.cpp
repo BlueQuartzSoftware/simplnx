@@ -1,4 +1,4 @@
-#include "ImageProcessing/Filters/NormalizeImageFilter.hpp"
+#include "NXImageProcessing/Filters/NormalizeImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // tolerance 0.0001 via ip_golden::CompareImages. The ITK `vector` case (VM1111Shrink-RGB.png) is SKIPPED as an
 // RGB/vector input (plan Sec.5; it is also disabled in the ITK source).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::NormalizeImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][NormalizeImageFilter]")
+TEST_CASE("NXImageProcessing::NormalizeImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][NormalizeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 
-struct IMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileInputValues
 {
   DataPath ImageGeometryPath;
   std::string CellAttributeMatrixName;
@@ -21,7 +21,7 @@ struct IMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileInputValues
   fs::path VGDataFile;
 };
 
-class IMAGEPROCESSING_EXPORT ReadVolumeGraphicsFile
+class NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFile
 {
 public:
   ReadVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadVolumeGraphicsFileInputValues* inputValues);

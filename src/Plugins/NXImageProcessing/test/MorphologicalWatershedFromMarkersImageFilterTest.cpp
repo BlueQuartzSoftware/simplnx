@@ -2,7 +2,7 @@
 #include "ReconstructionFilterTestUtils.hpp"
 #include "WatershedPreflightTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
+#include "NXImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -149,7 +149,7 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 //     rejected; a marker whose tuple count mismatches the grayscale is rejected; a valid pair creates an output of
 //     the MARKER's element type (NOT the grayscale's).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight guards", "[ImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -254,7 +254,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: prefli
 //     small tuple count is accepted on the test machine. No specific available-RAM number is asserted -- only that an
 //     absurd size is rejected and a plausibly-small size is accepted.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight RAM-fit guard", "[ImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight RAM-fit guard", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
   // ~1e11 voxels * >=11 bytes/voxel ~= 1.1 TB working set: larger than any machine's RAM, so it must be rejected with
   // the FromMarkers filter's memory code (-79041). The guard is a pure numeric estimate -- nothing is allocated. The
@@ -283,7 +283,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: prefli
 //     and not treated as its own label). Gated EXACTLY against direct ITK, plus a direct assertion that the punched
 //     center took the enclosing label.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker value 0 is unmarked (flooded)", "[ImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker value 0 is unmarked (flooded)", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -329,7 +329,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
 // project removed ITK. The hash keeps that evidence without a call to ITK.
 // Output element type == the marker's type (uint8). Pinned ForceInCore.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -385,7 +385,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK re
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight rejects missing temporary provider", "[ImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight rejects missing temporary provider", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
