@@ -15,17 +15,17 @@
 | Aspect                 | Current state            |
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — output 1-component angle (was 3-component axis·angle); Laue classes 2→11; NaN explicit on invalid (was implicit 0); modernized EbsdLib API; raw TBB → `ParallelDataAlgorithm` (parallelization disabled per thread-safety policy). EbsdLib `CubicOps` precision fix surfaced during this cycle (non-observable on V&V fixtures). 6 deltas total — see Algorithm Relationship.       |
-| Oracle (confirmed)     | **Class 1 (Analytical) primary** — 37 hand-built fixtures exercise all 11 EbsdLib Laue classes. A second analytical fixture uses real HDF5-OOC inputs and output and checks 15° and 30° at a 65,536-face block boundary and partial tail. |
-| Code paths enumerated  | 8 of 10 exercised. Cancel injection and a corrupt Laue-class guard are not directly tested. |
-| Tests today            | 3 registered test cases plus 1 hidden OOC contract test — analytical output, phase bounds, SIMPL conversion, and a real-HDF5 65,536-block tail witness. |
+| Oracle (confirmed) | **Class 1 (Analytical) primary** — the hand-built fixtures cover all 11 EbsdLib Laue classes. Companion disk-backed verification checks analytical 15° and 30° rotations across validation/computation boundaries and with limited working memory. |
+| Code paths enumerated | The mappings below cover resident execution, phase validation, HDF5 boundaries, and admitted lookup routes. The resident per-face cancellation check and corrupt Laue-class guard remain untested. |
+| Tests today | Public tests cover analytical output, phase bounds, resident mismatched phases, working-headroom routing, and SIMPL conversion. Companion verification covers disk-backed execution across block boundaries and with limited working memory. |
 | Exemplar archive       | **None — data inlined in test source** (`test/ComputeFeatureFaceMisorientationTest.cpp` namespace `curated`). 102 vertices, 34+3 triangles, 41+4 features, 12+1 ensembles all encoded as `std::unique_ptr<…[]>` literals. No tar.gz archive, no download_test_data() entry needed.   |
 | Legacy comparison      | **Not run.** Output structure differs by design (3-component axis·angle vs 1-component angle), so direct array comparison with DREAM3D 6.5.171's `GenerateFaceMisorientationColoring` output is not meaningful. The deviations are documented per-design rather than verified per-feature against the legacy output.   |
 | Bug flags              | One root-caused precision issue **in EbsdLib** (not in this filter): `CubicOps::calculateMisorientationInternal` lost precision via `(qco.z()+qco.w())/sqrt(2)` followed by `acos(w)` near 1. Patched in EbsdLib to use `2·atan2(|v|, w)` with `|v|` from explicit reduced-quaternion components. Eliminated a ~0.02° residual on cubic boundaries that lie on a 4-fold sym op.         |
-| V&V phase | The original COMPLETE status and sign-off are retained. OOC recertification adds the HDF5 boundary oracle and paired CTest checks; it does not perform a new legacy binary comparison. |
+| V&V phase | The original COMPLETE status and sign-off are retained. The dated OOC recertification results below are historical. This source-based mapping update adds no new execution result, sign-off, or legacy binary comparison. |
 
 ## Summary
 
-`ComputeFeatureFaceMisorientationFilter` computes the symmetry-reduced misorientation angle between the two grains on each surface-mesh face. A Class 1 analytical dataset covers all 11 EbsdLib Laue classes, and a real-HDF5 tail fixture checks exact 15° and 30° outputs. The tests pass, and the documented DREAM3D 6.5.171 deviations remain reconciled.
+`ComputeFeatureFaceMisorientationFilter` computes the symmetry-reduced misorientation angle between the two grains on each surface-mesh face. A Class 1 analytical dataset covers all 11 EbsdLib Laue classes. Companion disk-backed verification checks analytical 15° and 30° outputs at both block boundaries and with limited working memory. The documented DREAM3D 6.5.171 deviations remain reconciled.
 
 ## Algorithm Relationship
 
@@ -39,7 +39,7 @@
 2. **Laue class support: 2 classes → 11 classes** (Deviation D1). Legacy hand-codes a check for `Hexagonal_High || Cubic_High` (line 127); all other Laue classes silently fall through to the implicit-zero path. SIMPLNX checks `laueIndex < m_LaueOrientationOps.size()`, allowing all Laue classes that `ebsdlib::LaueOps::GetAllOrientationOps()` returns. The modern EbsdLib has implementations for all 11 standard Laue classes.
 3. **Invalid-face handling: implicit 0 → explicit NaN** (Deviation D3). Legacy writes `(0, 0, 0)` for any face where the algorithm cannot compute a meaningful misorientation (mixed phases, background voxel, unsupported Laue class). SIMPLNX writes `(NaN)`. Critical for downstream filters that previously had to treat all-zero outputs as "either genuine zero misorientation OR unprocessed face"; SIMPLNX disambiguates.
 4. **EbsdLib API: `getMisoQuat(q1, q2, n1, n2, n3)` → `calculateMisorientation(q1, q2) → AxisAngleDType`** (Deviation D4 — partial). Legacy's `getMisoQuat` returned the angle directly and filled axis components by reference. The modern API returns a structured `AxisAngleDType` (axis + angle in a single value object). The legacy API is no longer present in the current EbsdLib.
-5. **Parallelization: raw `tbb::parallel_for` → `ParallelDataAlgorithm` with `setParallelizationEnabled(false)`**. Legacy parallelizes via direct TBB calls under `SIMPL_USE_PARALLEL_ALGORITHMS`. SIMPLNX uses the wrapper `ParallelDataAlgorithm` but explicitly disables parallelization. **Per CLAUDE.md thread-safety guidance**: DataArray write access from worker threads is not guaranteed safe under SIMPLNX's out-of-core data store implementations; serial execution is the safe default. No algorithmic effect on completed runs.
+5. **Parallelization: raw `tbb::parallel_for` → serial execution**. Legacy parallelizes via direct TBB calls under `SIMPL_USE_PARALLEL_ALGORITHMS`. The resident SIMPLNX path uses `ParallelDataAlgorithm` with `setParallelizationEnabled(false)` because DataArray/DataStore access is not thread-safe, including distinct-index writes. The OOC path uses serial bulk reads and writes around admitted face and lookup buffers. Both paths retain the same per-face angle calculation.
 6. **EbsdLib precision fix** (Deviation D4 — full root-cause). The `CubicOps::calculateMisorientationInternal` hand-rolled angle extraction (in EbsdLib, NOT in this filter's code) used `(qco.z()+qco.w())/sqrt(2)` followed by `acos(w)`. When the misorientation lies on a cubic symmetry op (e.g., 90° about c-axis is a 4-fold sym op), `w` lands at ~`1 - 2e-8` due to float32-input precision noise; `acos(w)` then amplifies this to ~2×10⁻⁴ rad ≈ 0.023° residual. Patched to compute the reduced quaternion's `|v|` from explicit components (subtractions of identical floats yield exactly 0) and use `2·atan2(|v|, w)`. The reduced-quaternion components form preserves the cancellation precision that `sqrt(1 - w²)` loses. Eliminates the ~0.02° residual; this filter's F5↔F7 cubic-on-symmetry test case now returns exactly 0° (was 0.0212°).
 
 *Material PRs since baseline (2026-05-19, Nathan's V&V doc commit):*
@@ -90,9 +90,11 @@ And three boundary faces are constructed: A↔B, A↔C, A↔D. The symmetry-redu
 
 ### Encoded
 
-- **Class 1 (Analytical)**: `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data"` — 30 + 4 + 3 = 37 fixture assertions, 54 total assertions (including geometry setup REQUIRE-VALID checks).
-- **Class 1 (Analytical), real-HDF5 boundary**: `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: genuine HDF5 65536-block tail oracle"` — exact 15° at tuple 65,535 and 30° at the one-face partial tail, tuple 65,536. All inputs and the output use `HDF5-OOC`. The test passes with 25 assertions.
+- **Class 1 (Analytical), public**: `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data"` — checks the closed-form values for all 11 Laue classes and the nonparticipating-face NaN cases above.
+- **Class 1 (Analytical), companion disk-backed verification**: [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4) checks analytical 15° and 30° results across the public validation and computation boundaries. It checks the complete output, NaN for nonparticipating faces, and unchanged inputs.
 - *(kept)* `test/ComputeFeatureFaceMisorientationTest.cpp::"OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Backwards Compatibility"` — SIMPL 6.4 + 6.5 conversion paths via `DYNAMIC_SECTION`.
+
+Companion verification also checks numerical results with limited working memory, refusal when memory is unavailable, read-failure diagnostics, warnings, and cancellation. These are behavior-based coverage descriptions, not new execution results. The public validation pass still copies the complete Feature Phases array. This coverage does not establish a bound for whole-filter memory or process RSS.
 
 ### Second-engineer review
 
@@ -108,32 +110,44 @@ This branch includes the EbsdLib correction in this table. The correction will b
 
 ## Code path coverage
 
-*8 of 10 paths exercised. Cancel injection and the corrupt Laue-class guard are not directly tested. Bulk-I/O error-return sites are outside the requested scope.*
+The table maps current source routes to public tests and companion behavior checks. Companion verification covers cancellation during OOC execution; the resident per-face cancellation check remains untested. The corrupt Laue-class guard and other bulk-I/O failure sites do not gain coverage from those companion checks.
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp` (205 lines).
+Sources: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFeatureFaceMisorientation.cpp`, its shared `OrientationTupleLookup.hpp`, and `ComputeFeatureFaceMisorientationFilter.cpp`. Validation reads face labels in blocks of 65,536. OOC computation uses at most 262,144 faces per block and reduces the block when the admitted lookup plan requires it. The resident path uses direct array access. Short test names below use the `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: ` prefix.
 
 | # | Phase           | Path             | Test case            |
 |---|-----------------|-------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| 1 | Validation      | Scan face labels in 65,536-tuple blocks, including a partial tail | `genuine HDF5 65536-block tail oracle` — exact outputs at tuples 65,535 and 65,536 |
+| 1 | Validation/computation boundaries | Analytical angles remain correct across the 65,536-face validation and 262,144-face computation boundaries | Companion disk-backed verification in [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4) — complete output and unchanged inputs |
 | 2 | Validation      | A participating shared phase is outside the Crystal Structures range → error `-98412` | `Phase Index Bounds` — "Participating Phase returns an error" |
-| 3 | Validation      | Mismatched phases do not participate in the bounds check | `Phase Index Bounds` — "Mismatched Phase is ignored" |
-| 4 | Cancel check    | `m_ShouldCancel` checked at top of per-triangle loop → early return| *Not directly tested. Cancel-signal injection requires test infrastructure not present.* |
+| 3 | Validation | Mismatched phases do not participate in the bounds check | Public `Mismatched Phase resident scenarios`; companion verification with limited working memory |
+| 4 | Cancel check | Resident per-triangle cancellation check returns before further computation | *Not directly tested. Companion cancellation checks cover the OOC route instead.* |
 | 5 | Per-face        | `frontFeature == 0` → NaN | `Curated Data` — face 30 `(0, 1)` |
 | 6 | Per-face        | `backFeature == 0` → NaN | `Curated Data` — face 31 `(1, 0)` |
 | 7 | Per-face        | Positive features have different phases → NaN | `Curated Data` — faces 32 and 33 |
 | 8 | Per-face        | Shared phase has an unsupported Laue index → NaN | *Not directly tested. This is a low-value corrupt-metadata guard.* |
-| 9 | Per-face        | Shared phase has a supported Laue index → calculate and write degrees | `Curated Data` — 33 normal cases; `genuine HDF5 65536-block tail oracle` — 15° and 30° |
+| 9 | Per-face | Shared phase has a supported Laue index → calculate and write degrees | Public `Curated Data`; companion boundary and low-memory verification with analytical 15° and 30° values |
 | 10 | Per-face math  | Cubic symmetry reduction uses the precision-corrected angle extraction | `Curated Data` — F5↔F6, F5↔F7, and F5↔F8 |
+| 11 | OOC lookup admission | Lookup routes preserve known angles with limited working memory | Companion low-memory verification in [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4) |
+| 12 | OOC lookup admission | Zero or insufficient headroom returns `-98425`; resident computation does not need that grant | Public `working headroom applies only to OOC computation`; companion verification of insufficient-memory errors |
+| 13 | OOC lookup outcomes | Preserve lookup errors/path context and successful warnings; cancellation leaves output defaults and the filter returns `-1` without execution warnings | Companion read-failure, warning, and cancellation checks |
 
 ## Test inventory
+
+Public cases are in `test/ComputeFeatureFaceMisorientationTest.cpp`. With OOC enabled, the public `test/CMakeLists.txt` registers `OrientationAnalysisOocStoreContracts`, which selects `[.OocStoreContract]`. Companion coverage is tracked in [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4). Resident scenarios alone do not prove disk-backed execution.
 
 | Test case        | Status      | Notes           |
 |--------------------------------------------------------------------------------------|-------------|----------------------------------------------|
 | `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data`          | new-for-V&V | Class 1 hand-built dataset; 30 normal + 4 edge + 3 Trigonal_High asserts. Replaces the legacy `Valid filter execution` test (which used the `6_6_Small_IN100_GBCD.tar.gz` exemplar) — the legacy test was a regression-against-exemplar test, not a closed-form correctness test, and was incompatible with the rewritten 1-component output. |
-| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase Index Bounds` | kept | HDF5-backed bounds fixture. Checks error `-98412` and the mismatched-phase NaN case. |
-| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: genuine HDF5 65536-block tail oracle` | new-for-V&V | Hidden OOC contract test. Checks exact 15° and 30° values across a 65,536-face block and one-face tail. Passes with 25 assertions. |
+| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase Index Bounds` | current public | Checks participating-phase error `-98412`. The fixture requires HDF5-OOC stores when that backend is available. The mismatched-phase success case is separate. |
+| Companion disk-backed boundary verification | companion | Checks analytical angles across both public block boundaries, NaN for nonparticipating faces, and unchanged inputs. See [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4). |
+| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Mismatched Phase resident scenarios` | current public | Runs the selected resident-store algorithm scenarios and checks NaN for nonparticipating mismatched phases. |
+| `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: working headroom applies only to OOC computation` | current public | Exhausts shared working headroom. Checks `-98425` for the OOC algorithm on resident stores and zero degrees for the resident algorithm. |
+| Companion low-memory verification | companion | Checks known angles, insufficient-memory errors, diagnostics, warnings, and cancellation with disk-backed storage. See [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4). |
 | `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Backwards Compatibility` | kept        | Unchanged. `DYNAMIC_SECTION` over SIMPL 6.4 and 6.5 conversion fixtures (`test/simpl_conversion/6_*/ComputeFeatureFaceMisorientationFilter.json`); validates UUID, argument keys, and parameter conversion only.             |
 | *(retired)* `OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Invalid filter execution` | retired     | Removed during Nathan's rewrite. The Class 1 dataset's faces 30–33 cover the same paths via the NaN-on-invalid-face semantics; the explicit-preflight-failure tests are no longer reachable for the new code structure.     |
+
+### Historical execution evidence
+
+The following dated result refers to the former public `genuine HDF5 65536-block tail oracle`. That case was replaced by the companion verification above. The result is retained as historical evidence, not as a current test count or a new run.
 
 OOC recertification, 2026-09-18: serial CTest passed 3/3 in `NX-Com-Qt69-Vtk96-Rel` and 3/3 in `NX-Com-Qt69-Vtk96-OoC-Rel`. The new hidden boundary case passed 25 assertions in the OOC binary and is included in the OOC-only `OrientationAnalysisOocStoreContracts` CTest entry. The original report status and sign-off above are historical and unchanged.
 
