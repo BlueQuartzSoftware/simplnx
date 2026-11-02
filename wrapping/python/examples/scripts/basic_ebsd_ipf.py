@@ -129,6 +129,7 @@ nxtest.check_filter_result(nxor.ComputeIPFColorsFilter, result)
 # Write the IPF colors to a PNG file
 #------------------------------------------------------------------------------
 result = nximgproc.WriteImageFilter.execute(data_structure=data_structure, 
+                                      nonfinite_input_handling_index=0,
                                       file_name=nxtest.get_test_temp_directory() / "Small_IN100_IPF_Z.png", 
                                       image_array_path=nx.DataPath(["Small IN100", "Scan Data", "IPFColors"]),
                                       input_image_geometry_path=nx.DataPath(["Small IN100"]),

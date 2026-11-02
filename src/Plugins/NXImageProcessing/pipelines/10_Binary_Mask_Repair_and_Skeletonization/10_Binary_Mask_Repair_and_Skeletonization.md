@@ -268,6 +268,7 @@ Key parameters:
 - `input_image_data_path`: `"Binary Mask/Cell Data/Mask"`
 - `input_image_geometry_path`: `"Binary Mask"`
 - `output_array_name`: `"Object Labels"`
+- `provisional_label_limit_handling_index`: `0`
 
 Resolved inputs:
 
