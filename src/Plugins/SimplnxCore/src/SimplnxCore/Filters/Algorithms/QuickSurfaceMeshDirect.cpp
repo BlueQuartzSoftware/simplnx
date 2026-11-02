@@ -470,7 +470,7 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
             ::FlipProblemVoxelCase3(featureIds, v2, v1, v8);
             count++;
           }
-          if(f1 == f3 && f1 == f4 && f1 == f5 && f1 == f7 && f2 == f8 && f1 != f2 && f1 != f7)
+          if(f1 == f3 && f1 == f4 && f1 == f5 && f1 == f6 && f1 == f8 && f1 != f2 && f1 != f7)
           {
             ::FlipProblemVoxelCase3(featureIds, v1, v2, v7);
             count++;

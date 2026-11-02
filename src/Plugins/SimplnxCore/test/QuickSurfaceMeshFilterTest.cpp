@@ -19,6 +19,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
+#include <algorithm>
 #include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -113,10 +114,10 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Load the Small IN100 input.
-  auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -221,10 +222,10 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Load the Small IN100 input.
-  auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -318,10 +319,10 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Load the Small IN100 input.
-  auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -391,8 +392,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63440);
-  REQUIRE(vertices->getNumberOfTuples() == 28910);
+  REQUIRE(triangle->getNumberOfTuples() == 63410);
+  REQUIRE(vertices->getNumberOfTuples() == 28902);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
@@ -415,10 +416,10 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Load the Small IN100 input.
-  auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
@@ -488,8 +489,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
-  REQUIRE(triangle->getNumberOfTuples() == 63440);
-  REQUIRE(vertices->getNumberOfTuples() == 28910);
+  REQUIRE(triangle->getNumberOfTuples() == 63410);
+  REQUIRE(vertices->getNumberOfTuples() == 28902);
 
   // Compare the shared vertex and triangle lists.
   CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
@@ -649,4 +650,53 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: SIMPL Backwards Compatibility", 
       CHECK(args.value<std::string>(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem voxel correction handles every body diagonal", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize diagonal = GENERATE(0, 1, 2, 3);
+  CAPTURE(scenario, diagonal);
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 2, 2});
+  geometry->setSpacing({2, 3, 5});
+  geometry->setOrigin({10, 20, 30});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {2, 2, 2}, geometry->getId());
+  REQUIRE(cells != nullptr);
+  geometry->setCellData(cells->getId());
+  const DataPath idsPath({"Image", "Cells", "Ids"});
+  auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, {2, 2, 2}, {1}), cells->getId());
+  REQUIRE(ids != nullptr);
+  // Opposite corners in X-fastest order are (0,7), (1,6), (2,5), and (3,4).
+  std::array<int32, 8> input = {1, 1, 1, 1, 1, 1, 1, 1};
+  input[diagonal] = 2;
+  input[7 - diagonal] = 3;
+  auto writeResult = ids->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  QuickSurfaceMeshFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(idsPath));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({"Mesh"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(BoundingBoxSkinMode::k_Off));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  std::array<int32, 8> actual{};
+  auto readResult = ids->getDataStoreRef().copyIntoBuffer(0, actual);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  auto firstAllowed = input;
+  auto secondAllowed = input;
+  firstAllowed[diagonal] = 1;
+  secondAllowed[7 - diagonal] = 1;
+  CHECK((actual == firstAllowed || actual == secondAllowed));
+  CHECK(std::count(actual.cbegin(), actual.cend(), 1) == 7);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(DataPath({"Mesh"})));
+  // One minority voxel leaves 24 outer faces plus 3 internal faces, each split into two triangles.
+  CHECK(dataStructure.getDataRefAs<TriangleGeom>(DataPath({"Mesh"})).getNumberOfFaces() == 54);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
