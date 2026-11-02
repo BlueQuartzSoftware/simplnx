@@ -38,6 +38,7 @@ instead.
 23. [Test geometry formulas with unequal spacing along each axis][kb-23]
 24. [Test a transfer failure after an earlier batch succeeded][kb-24]
 25. [Give Catch2 a bool when you compare file times][kb-25]
+26. [Never put a semicolon in a Catch2 test case name][kb-26]
 
 [kb-1]: #1-record-an-object-in-the-writer-id-map-only-when-the-written-datastructure-owns-it
 [kb-2]: #2-check-the-hdf5-file-close-before-you-report-a-successful-save
@@ -60,6 +61,7 @@ instead.
 [kb-23]: #23-test-geometry-formulas-with-unequal-spacing-along-each-axis
 [kb-24]: #24-test-a-transfer-failure-after-an-earlier-batch-succeeded
 [kb-25]: #25-give-catch2-a-bool-when-you-compare-file-times
+[kb-26]: #26-never-put-a-semicolon-in-a-catch2-test-case-name
 
 ---
 
@@ -692,6 +694,43 @@ the macOS CI jobs. PR #1764 fixed both.
 - A `CHECK` or `REQUIRE` whose operand is `fs::last_write_time(...)`, a `file_time_type`, or a `clock::now() - ...`
   duration.
 - The compile error `'to_chars' is unavailable: introduced in macOS 13.3` in `__format/formatter_floating_point.h`.
+
+---
+
+## 26. Never put a semicolon in a Catch2 test case name
+
+**Rule:** do not use `;` in the name of a Catch2 test case that `catch_discover_tests()` registers with CTest. Use a
+comma or a dash instead. This applies to every repository whose tests use that discovery: simplnx, its plugins,
+SimplnxOoc and DREAM3D-NX.
+
+**Pattern to use:**
+
+```cpp
+TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)",
+          "[ImageProcessing][BlackTopHatImageFilter]")
+```
+
+**Pattern to avoid:**
+
+```cpp
+TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)",
+          "[ImageProcessing][BlackTopHatImageFilter]")
+```
+
+**Why:** test discovery reads the names that the test executable lists and stores them in a CMake list, and `;`
+separates the items of a CMake list. A name with one semicolon becomes two CTest entries, each holding part of the name.
+CTest runs each part as a test filter, Catch2 finds no case that matches, prints `No test cases matched`, and exits with
+0, so CTest reports both entries as passed. The real test case never runs.
+
+**How it showed up:** seven ImageProcessing test cases, in the morphology, top-hat and contour-engine tests, never ran
+under CTest, while CTest reported their partial entries as passed. Issue #1898; PR #1889 renamed them.
+
+**How to recognize it next time:**
+
+- A `;` between the quotes of the first argument of `TEST_CASE`, `SCENARIO` or `TEMPLATE_TEST_CASE`, or of the second
+  argument of `TEST_CASE_METHOD`.
+- A CTest entry whose name ends or starts in the middle of a phrase, such as one ending in `(safeBorder=false`, and
+  whose output says `No test cases matched`.
 
 ---
 
