@@ -1,18 +1,23 @@
 #include "SimplnxCore/Filters/LaplacianSmoothingFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/LaplacianSmoothing.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <array>
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -168,4 +173,96 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: SIMPL Backwards Compatibility"
       CHECK(args.value<DataPath>(LaplacianSmoothingFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge topology and attributes", "[SimplnxCore][LaplacianSmoothingFilter]")
+{
+  const bool existingEdges = GENERATE(false, true);
+  const bool cancelled = GENERATE(false, true);
+  CAPTURE(existingEdges, cancelled);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Mesh"});
+  auto* geometry = TriangleGeom::Create(dataStructure, "Mesh");
+  REQUIRE(geometry != nullptr);
+  const DataPath verticesPath = geometryPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+  auto* vertices = Float32Array::Create(dataStructure, verticesPath.getTargetName(), DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {3}, {3}), geometry->getId());
+  const DataPath facesPath = geometryPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+  auto* faces = UInt64Array::Create(dataStructure, facesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, facesPath, {1}, {3}), geometry->getId());
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  // The triangle has vertices (0,0,0), (2,0,0), (0,3,0) and edges 01,12,20.
+  const std::array<float32, 9> coordinates = {0, 0, 0, 2, 0, 0, 0, 3, 0};
+  const std::array<uint64, 3> face = {0, 1, 2};
+  const std::array<uint64, 6> edgeValues = {0, 1, 1, 2, 2, 0};
+  auto vertexResult = vertices->getDataStoreRef().copyFromBuffer(0, coordinates);
+  SIMPLNX_RESULT_REQUIRE_VALID(vertexResult);
+  auto faceResult = faces->getDataStoreRef().copyFromBuffer(0, face);
+  SIMPLNX_RESULT_REQUIRE_VALID(faceResult);
+  geometry->setVertices(*vertices);
+  geometry->setFaceList(*faces);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geometry->getId());
+  REQUIRE(vertexData != nullptr);
+  geometry->setVertexDataId(vertexData->getId());
+  const DataPath nodePath({"Mesh", "Vertex Data", "Node Types"});
+  auto* nodes = Int8Array::Create(dataStructure, "Node Types", DataStoreUtilities::CreateDataStore<int8>(dataStructure, nodePath, {3}, {1}), vertexData->getId());
+  REQUIRE(nodes != nullptr);
+  nodes->fill(NodeType::Default);
+  auto* edgeData = AttributeMatrix::Create(dataStructure, "CustomEdges", {3}, geometry->getId());
+  REQUIRE(edgeData != nullptr);
+  geometry->setEdgeDataId(edgeData->getId());
+  const DataPath markerPath({"Mesh", "CustomEdges", "Marker"});
+  auto* marker = Int32Array::Create(dataStructure, "Marker", DataStoreUtilities::CreateDataStore<int32>(dataStructure, markerPath, {3}, {1}), edgeData->getId());
+  REQUIRE(marker != nullptr);
+  const std::array<int32, 3> markers = {11, 22, 33};
+  auto markerResult = marker->getDataStoreRef().copyFromBuffer(0, markers);
+  SIMPLNX_RESULT_REQUIRE_VALID(markerResult);
+  const auto edgeDataId = edgeData->getId();
+  const auto markerId = marker->getId();
+  const DataPath edgesPath = geometryPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName);
+  std::optional<DataObject::IdType> edgeId;
+  if(existingEdges)
+  {
+    auto* edges = UInt64Array::Create(dataStructure, edgesPath.getTargetName(), DataStoreUtilities::CreateDataStore<uint64>(dataStructure, edgesPath, {3}, {2}), geometry->getId());
+    REQUIRE(edges != nullptr);
+    auto edgeResult = edges->getDataStoreRef().copyFromBuffer(0, edgeValues);
+    SIMPLNX_RESULT_REQUIRE_VALID(edgeResult);
+    geometry->setEdgeList(*edges);
+    edgeId = edges->getId();
+  }
+  LaplacianSmoothingInputValues inputValues{};
+  inputValues.pTriangleGeometryDataPath = geometryPath;
+  inputValues.pSurfaceMeshNodeTypeArrayPath = nodePath;
+  inputValues.pIterationSteps = cancelled ? 1 : 0;
+  const std::atomic_bool shouldCancel = cancelled;
+  IFilter::MessageHandler messageHandler;
+  auto result = LaplacianSmoothing(dataStructure, &inputValues, shouldCancel, messageHandler)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(geometry->getEdgeListId() == edgeId);
+  CHECK(geometry->getEdgeAttributeMatrixId() == edgeDataId);
+  CHECK(geometry->getEdgeAttributeMatrix() == edgeData);
+  CHECK(dataStructure.getId(DataPath({"Mesh", "CustomEdges"})) == edgeDataId);
+  CHECK(dataStructure.getId(markerPath) == markerId);
+  std::array<int32, 3> actualMarkers{};
+  auto markerRead = marker->getDataStoreRef().copyIntoBuffer(0, actualMarkers);
+  SIMPLNX_RESULT_REQUIRE_VALID(markerRead);
+  CHECK(actualMarkers == markers);
+  std::array<float32, 9> actualVertices{};
+  auto vertexRead = vertices->getDataStoreRef().copyIntoBuffer(0, actualVertices);
+  SIMPLNX_RESULT_REQUIRE_VALID(vertexRead);
+  CHECK(actualVertices == coordinates);
+  if(existingEdges)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(edgesPath));
+    CHECK(dataStructure.getId(edgesPath) == edgeId);
+    std::array<uint64, 6> actualEdges{};
+    auto edgeRead = dataStructure.getDataRefAs<UInt64Array>(edgesPath).getDataStoreRef().copyIntoBuffer(0, actualEdges);
+    SIMPLNX_RESULT_REQUIRE_VALID(edgeRead);
+    CHECK(actualEdges == edgeValues);
+  }
+  else
+  {
+    CHECK(dataStructure.getData(edgesPath) == nullptr);
+    CHECK(geometry->getEdges() == nullptr);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

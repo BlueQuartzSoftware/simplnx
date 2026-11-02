@@ -6,6 +6,8 @@ Surface Meshing (Smoothing)
 
 ## Description
 
+The filter keeps existing edges and edge data.
+
 This **Filter** applies **Laplacian smoothing** to any node-based geometry except for a **Vertex Geometry**. Laplacian smoothing repeatedly moves each node toward the average position of its connected neighbors, which reduces high-frequency surface noise and tends to flatten the surface. A. Belyaev [1] gives a concise explanation:
 
 ---------------------------
