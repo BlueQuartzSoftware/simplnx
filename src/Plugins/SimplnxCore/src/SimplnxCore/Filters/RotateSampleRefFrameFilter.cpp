@@ -11,6 +11,7 @@
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -153,9 +154,19 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+      "Recreates the selected Feature Attribute Matrix in the rotated geometry with no arrays. Rotation keeps Feature membership and sizes, but positions and directions in the sample frame "
+      "(Centroids, bounding boxes, AxisEulerAngles) describe the old frame. Clearing forces recomputation of any Feature data needed later in the pipeline.",
+      true));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Cell Feature Data"})));
+
   params.insertSeparator(Parameters::Separator{"Output Geometry and Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "The location of the rotated geometry", DataPath{}));
 
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrix_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometryPath_Key, false);
 
   return params;
@@ -164,7 +175,7 @@ Parameters RotateSampleRefFrameFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType RotateSampleRefFrameFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -181,6 +192,8 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto keepInputGeometryOrigin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
+  const bool clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  const auto cellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -297,6 +310,47 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
                                                                          dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeom->getUnits())});
   }
 
+  // The cleared Feature AM keeps its source shape because rotation preserves Feature membership and sizes.
+  if(clearFeatureAttributeMatrix)
+  {
+    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
+    if(srcCellFeatureData == nullptr || !selectedImageGeom.contains(srcCellFeatureData))
+    {
+      return MakePreflightErrorResult(
+          -67441, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
+    if(selectedImageGeom.getCellData() == srcCellFeatureData)
+    {
+      return MakePreflightErrorResult(
+          -67442,
+          fmt::format("The Feature Attribute Matrix '{}' is the Cell Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn off 'Clear Feature Attribute Matrix'.",
+                      cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+    }
+
+    // Ignore every path to the Feature AM, including selections through another parent.
+    const auto featureAmPaths = srcCellFeatureData->getDataPaths();
+    ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+    const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *srcCellFeatureData)
+    {
+      clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
+    }
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the rotated geometry with no arrays.", cellFeatureAttributeMatrixPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the rotated geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the original geometry and are not valid for the rotated geometry."});
+  }
+
   // copy over the rest of the data
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
@@ -340,6 +394,8 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
 
   inputValues.SourceGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.DestGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.CellFeatureAttributeMatrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
 
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.KeepInputGeometryOrigin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
@@ -377,6 +433,8 @@ constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath"
 Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = RotateSampleRefFrameFilter().getDefaultArguments();
+  // The legacy filter had no Feature parameters and copied every non-Cell Attribute Matrix unchanged.
+  args.insertOrAssign(k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
 
   std::vector<Result<>> results;
 

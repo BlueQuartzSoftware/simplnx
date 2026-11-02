@@ -30,6 +30,7 @@ nx_filter = nx.RotateSampleRefFrameFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
+    clear_feature_attribute_matrix=False,
     remove_original_geometry=True,
     rotate_slice_by_slice=False,
     rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],

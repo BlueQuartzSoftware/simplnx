@@ -32,6 +32,7 @@ constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image
 constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 constexpr nx::core::StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+constexpr nx::core::StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
 
 /**
  * @enum RotationRepresentation
@@ -441,6 +442,8 @@ Result<> ReadH5Ebsd::operator()()
       }
       Arguments args;
 
+      // The imported geometry has no Feature Attribute Matrix; keep the old copy behavior.
+      args.insertOrAssign(::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
       args.insertOrAssign(::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
       args.insertOrAssign(::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
       // Preflight already assigned the transformed origin via UpdateImageGeomAction.

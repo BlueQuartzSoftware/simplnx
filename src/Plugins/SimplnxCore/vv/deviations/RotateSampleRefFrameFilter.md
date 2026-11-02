@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`RotateSampleRefFrameFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. On the **supported domain** (a 90/180/270-degree rotation about the X, Y, or Z axis) SIMPLNX and 6.5.171 are **bit-identical** — same output dimensions and same voxel values on all four A/B fixtures (see `../comparisons/RotateSampleRefFrameFilter/results.md`). The single deviation below is about rotations *outside* that domain.
+Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. On the **supported domain** (a 90/180/270-degree rotation about the X, Y, or Z axis) SIMPLNX and 6.5.171 are **bit-identical** — same output dimensions and same voxel values on all four A/B fixtures (see `../comparisons/RotateSampleRefFrameFilter/results.md`). D1 covers rotations outside that domain. D2 covers Feature Attribute Matrix clearing; the cell-data comparison is unchanged.
 
 ---
 
@@ -25,3 +25,24 @@ Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-
 **Blast radius — internal callers.** `ReadH5Ebsd` (`ReadH5Ebsd.cpp`) forwards the sample-reference-frame transform stored in the `.h5ebsd` file directly into this filter with slice-by-slice enabled, and propagates preflight errors. If a file's *recommended* sample transform is not a lossless, Z-preserving rotation (for example a stored 90° about X, which trips `-6851`, or any non-group angle, which trips `-6850`), the entire H5EBSD import now fails preflight with an error naming a filter the user never placed. The prior behavior was a silently corrupted (slice-pinned) import, so failing loudly is arguably correct, but the message can be confusing in that context. The practical workaround is to uncheck *Use Recommended Transformations* in `ReadH5Ebsd` (or apply the transform separately). This is called out here so the failure mode is documented rather than surprising.
 
 **Recommendation:** Trust SIMPLNX. For an arbitrary rotation with interpolation, use the `Apply Transformation To Geometry` filter, which is designed for lossy resampling rotations (nearest-neighbor or trilinear). The legacy result for a lossy rotation was a silent lossy resample, not a faithful reference-frame rotation. For H5EBSD imports whose recommended transform is lossy, uncheck *Use Recommended Transformations* in `ReadH5Ebsd`.
+
+
+---
+
+## RotateSampleRefFrameFilter-D2
+
+*Added 2026-10-29 for Clear Feature Attribute Matrix.*
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `RotateSampleRefFrameFilter-D2` |
+| **Filter UUID** | `d2451dc1-a5a1-4ac2-a64d-7991669dcffc` |
+| **Status** | active |
+
+**Symptom:** Native DREAM3D-NX pipelines clear the selected Feature Attribute Matrix by default. The output keeps the source tuple shape with no arrays. DREAM3D 6.5.171 copied this matrix unchanged. The rotation does not change the cell Feature Ids, Feature membership, or the real Feature sizes. Clearing removes every stored Feature array, including size arrays such as NumElements.
+
+**Root cause:** Algorithmic choice (Mike Jackson, 2026-10-29). A lossless rotation preserves Feature membership and sizes. Positions and directions in the sample frame, such as Centroids, bounding boxes, and AxisEulerAngles, still describe the old frame. Clearing forces recomputation. No Renumber option is needed because no Feature loses cells or disappears.
+
+**Affected users:** Older native pipelines load with Clear on and need a valid Feature Attribute Matrix selection. A later filter that selects a cleared array fails preflight until it is recomputed. Shipped pipelines explicitly set Clear off to preserve their existing behavior. Converted DREAM.3D 6.x pipelines start with Clear off and still match legacy for Feature data.
+
+**Recommendation:** Trust SIMPLNX. Select the Feature Attribute Matrix and recompute needed Feature data after rotation. If the geometry has no Feature data, or to preserve legacy behavior, turn Clear off. Copied position and direction values still describe the old sample frame.

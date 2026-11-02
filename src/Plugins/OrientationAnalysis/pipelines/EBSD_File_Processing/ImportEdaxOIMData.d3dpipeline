@@ -86,6 +86,14 @@
     },
     {
       "args": {
+        "cell_feature_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "clear_feature_attribute_matrix": {
+          "value": false,
+          "version": 1
+        },
         "input_image_geometry_path": {
           "value": "ImageGeom",
           "version": 1
@@ -98,7 +106,7 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "remove_original_geometry": {
           "value": true,
           "version": 1
