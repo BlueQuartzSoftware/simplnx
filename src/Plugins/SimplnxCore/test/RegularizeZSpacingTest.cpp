@@ -171,7 +171,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Supported Extensions", "[Simpl
   DataStructure dataStructure = createTestDataStructure();
   const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_supported" + extension, {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
 
-  RegularizeZSpacingFilter filter;
+  const RegularizeZSpacingFilter filter;
   Arguments args;
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
@@ -189,10 +189,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Supported Extensions", "[Simpl
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Unsupported Extension", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
   UnitTest::LoadPlugins();
-  DataStructure dataStructure = createTestDataStructure();
+  const DataStructure dataStructure = createTestDataStructure();
   const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_unsupported.zpos", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
 
-  RegularizeZSpacingFilter filter;
+  const RegularizeZSpacingFilter filter;
   Arguments args;
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));

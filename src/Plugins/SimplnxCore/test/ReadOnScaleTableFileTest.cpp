@@ -485,7 +485,7 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: Unsupported Extension", "[Si
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "UnsupportedExtension.table";
   WriteFixture(inputFile, options);
 
-  DataStructure dataStructure;
+  const DataStructure dataStructure;
   const ReadOnScaleTableFileFilter filter;
   auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
