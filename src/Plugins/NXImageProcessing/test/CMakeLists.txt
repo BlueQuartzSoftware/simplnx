@@ -128,6 +128,12 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
                                 FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
+if(DREAM3DNX_USE_OOC)
+  add_test(NAME ImageProcessingOocStoreContracts
+    COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
+  set_tests_properties(ImageProcessingOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
+endif()
+
 target_include_directories(${PLUGIN_NAME}UnitTest
     PUBLIC
     ${simplnx_SOURCE_DIR}/test
