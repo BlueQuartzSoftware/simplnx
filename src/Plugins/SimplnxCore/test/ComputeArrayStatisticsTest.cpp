@@ -2579,3 +2579,205 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: SIMPL Backwards Compatibil
     }
   }
 }
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Boolean group statistics use the selected population", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool useMask = GENERATE(false, true);
+  const bool findMean = GENERATE(false, true);
+  CAPTURE(scenario, useMask, findMean);
+  DataStructure dataStructure;
+  const usize count = useMask ? 5 : 3;
+  auto* values = BoolArray::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<bool>(dataStructure, DataPath({"Values"}), {count}, {1}));
+  auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Ids"}), {count}, {1}));
+  auto* mask = BoolArray::Create(dataStructure, "Mask", DataStoreUtilities::CreateDataStore<bool>(dataStructure, DataPath({"Mask"}), {count}, {1}));
+  REQUIRE(values != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(mask != nullptr);
+  const std::array<bool, 5> input = {true, true, false, true, false};
+  for(usize i = 0; i < count; ++i)
+  {
+    (*values)[i] = input[i];
+    (*ids)[i] = 1;
+    (*mask)[i] = i < 3;
+  }
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Ids"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(findMean));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(findMean));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  if(findMean)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})));
+    dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})).fill(12345.0F);
+    auto inputValues = CreateMinimalStatisticsInputValues(DataPath({"Values"}), DataPath({"Statistics"}));
+    inputValues.ComputeByIndex = true;
+    inputValues.FeatureIdsArrayPath = DataPath({"Ids"});
+    inputValues.UseMask = useMask;
+    inputValues.MaskArrayPath = DataPath({"Mask"});
+    inputValues.FindMean = true;
+    inputValues.FindStdDeviation = true;
+    inputValues.StandardizeData = true;
+    const std::atomic_bool shouldCancel = false;
+    auto seededResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    SIMPLNX_RESULT_REQUIRE_VALID(seededResult);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"})));
+  // Two trues among three selected tuples give p=2/3 and sqrt(p*(1-p))=sqrt(2)/3.
+  CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[1] == Approx(0.4714045208F));
+  if(findMean)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"})));
+    CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[1] == Approx(0.6666666667F));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})));
+    const auto& standardized = dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"}));
+    // (1-p)/sqrt(p*(1-p))=1/sqrt(2), and -p/sqrt(p*(1-p))=-sqrt(2).
+    CHECK(standardized[0] == Approx(0.7071067812F));
+    CHECK(standardized[1] == Approx(0.7071067812F));
+    CHECK(standardized[2] == Approx(-1.4142135624F));
+    for(usize i = 3; i < count; ++i)
+    {
+      CHECK(standardized[i] == 12345.0F);
+    }
+  }
+  for(usize i = 0; i < count; ++i)
+  {
+    CHECK((*values)[i] == input[i]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Constant Boolean groups retain unguarded standardization", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool useMask = GENERATE(false, true);
+  CAPTURE(scenario, useMask);
+  DataStructure dataStructure;
+  auto* values = BoolArray::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<bool>(dataStructure, DataPath({"Values"}), {6}, {1}));
+  auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Ids"}), {6}, {1}));
+  auto* mask = BoolArray::Create(dataStructure, "Mask", DataStoreUtilities::CreateDataStore<bool>(dataStructure, DataPath({"Mask"}), {6}, {1}));
+  REQUIRE(values != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(mask != nullptr);
+  const std::array<bool, 6> input = {true, false, false, true, true, false};
+  const std::array<int32, 6> featureIds = {1, 2, 2, 3, 3, 2};
+  auto valueResult = values->getDataStoreRef().copyFromBuffer(0, input);
+  SIMPLNX_RESULT_REQUIRE_VALID(valueResult);
+  auto idResult = ids->getDataStoreRef().copyFromBuffer(0, featureIds);
+  SIMPLNX_RESULT_REQUIRE_VALID(idResult);
+  mask->fill(true);
+  (*mask)[5] = false;
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Ids"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})));
+    dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})).fill(12345.0F);
+    auto inputValues = CreateMinimalStatisticsInputValues(DataPath({"Values"}), DataPath({"Statistics"}));
+    inputValues.ComputeByIndex = true;
+    inputValues.FeatureIdsArrayPath = DataPath({"Ids"});
+    inputValues.UseMask = useMask;
+    inputValues.MaskArrayPath = DataPath({"Mask"});
+    inputValues.FindMean = true;
+    inputValues.FindStdDeviation = true;
+    inputValues.StandardizeData = true;
+    const std::atomic_bool shouldCancel = false;
+    auto seededResult = scope.execute([&] { return ComputeArrayStatistics(dataStructure, {}, shouldCancel, &inputValues)(); });
+    SIMPLNX_RESULT_REQUIRE_VALID(seededResult);
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"})));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"})));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"})));
+  const auto& mean = dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}));
+  const auto& deviation = dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}));
+  const auto& standardized = dataStructure.getDataRefAs<Float32Array>(DataPath({"Standardized"}));
+  // Constant groups have p=1 or p=0, zero deviation, and standardized values 0/0=NaN.
+  CHECK(mean[1] == 1.0F);
+  CHECK(mean[2] == 0.0F);
+  CHECK(mean[3] == 1.0F);
+  for(usize group = 1; group <= 3; ++group)
+  {
+    CHECK(deviation[group] == 0.0F);
+  }
+  for(usize i = 0; i < 6; ++i)
+  {
+    CHECK((*values)[i] == input[i]);
+    if(useMask && i == 5)
+    {
+      CHECK(standardized[i] == 12345.0F);
+    }
+    else
+    {
+      CHECK(std::isnan(standardized[i]));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Boolean counts remain exact beyond float32 integers", "[SimplnxCore][ComputeArrayStatisticsFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool grouped = GENERATE(false, true);
+  CAPTURE(scenario, grouped);
+  // 2^24+2 trues give the exactly representable sum 16777218, above float32's consecutive-integer range.
+  constexpr usize k_TrueCount = 16777218;
+  const usize count = k_TrueCount + (grouped ? 0 : 1);
+  DataStructure dataStructure;
+  auto* values = BoolArray::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<bool>(dataStructure, DataPath({"Values"}), {count}, {1}));
+  REQUIRE(values != nullptr);
+  values->fill(true);
+  ComputeArrayStatisticsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"Values"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Statistics"})));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(grouped));
+  if(grouped)
+  {
+    auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Ids"}), {count}, {1}));
+    REQUIRE(ids != nullptr);
+    ids->fill(1);
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Ids"})));
+  }
+  else
+  {
+    (*values)[count - 1] = false;
+  }
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"})));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"})));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"})));
+  const usize group = grouped ? 1 : 0;
+  CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Summation"}))[group] == 16777218.0F);
+  // The ungrouped fraction 16777218/16777219 rounds to the float32 immediately below 1.
+  CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "Mean"}))[group] == (grouped ? 1.0F : 0.9999999403953552F));
+  if(grouped)
+  {
+    CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Statistics", "StandardDeviation"}))[group] == 0.0F);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
