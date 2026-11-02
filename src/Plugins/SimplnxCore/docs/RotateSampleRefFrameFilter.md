@@ -8,7 +8,7 @@ Sampling (Rotating/Transforming)
 
 This **Filter** rotates the *spatial reference frame* of an **Image Geometry** about a principal axis by a multiple of 90 degrees. It modifies the (X, Y, Z) position of every **Cell** so the data is correctly represented in the newly defined reference frame. For example, a 90 degree rotation about the (001) axis moves a **Cell** at (10, 0, 0) to (0, -10, 0), because the new reference frame has x' = y and y' = -x.
 
-Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
+When copied, child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
 
 ### Supported Rotations (Important)
 
@@ -53,6 +53,31 @@ When importing EBSD data from EDAX, the user typically rotates the sample refere
 ### Required Input Sources
 
 - **Selected Image Geometry** -- an **Image Geometry** and all of its **Cell** arrays; produced by any image or EBSD reader, for example [Read H5EBSD File](../OrientationAnalysis/ReadH5EbsdFilter.md), [Import EDAX OIM Data (.h5)](../OrientationAnalysis/ReadH5OimDataFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md).
+
+## Feature Attribute Matrix
+
+A **Feature** is a group of cells with the same Feature Id. A **Feature Attribute Matrix** stores one row for each Feature Id. Rotation preserves Feature membership and sizes. Positions and directions stored in the sample frame still describe the old frame. Examples include Centroids, bounding boxes, and AxisEulerAngles.
+
+*Clear Feature Attribute Matrix* is on by default. It recreates the selected matrix with its source tuple shape and no arrays. Numeric arrays, string arrays, and **NeighborLists** are cleared. Recompute any Feature arrays needed by later filters. A later filter that selects a cleared array fails preflight until that array is created again. Pipelines converted from DREAM.3D 6.x start with Clear off, because the old filter copied Feature data unchanged.
+
+If the geometry has no Feature Attribute Matrix, turn Clear off. This is the usual case when you rotate EBSD data right after you import it, as in the Example above. With Clear on, a missing selected matrix fails parameter validation before the filter can run.
+
+There is no Renumber option or Feature Ids selection because preflight permits only lossless grid rotations (signed axis permutations), so no Feature loses cells or disappears and renumbering would change nothing.
+
+*Feature Attribute Matrix* is shown and required only when Clear is on. When Clear is off, the selection is ignored and all non-Cell Attribute Matrices are copied unchanged. Position and direction values then still describe the original sample frame. Other Attribute Matrices, including the **Ensemble Attribute Matrix**, are copied unchanged in both modes.
+
+With *Perform In-Place Rotation* on, the rotated geometry replaces the source. Turn it off and select a new *Created Image Geometry* path to keep the source Feature data for comparison.
+
+### Preflight Information and Errors
+
+**Cleared Feature Data** lists the full paths of all children of the selected Feature Attribute Matrix. Use this list to decide what to recompute.
+
+When Clear is off, **Feature Data Not Cleared** explains that copied Feature values describe the original geometry. These values are information, not warnings.
+
+When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. A selection through another parent is accepted if it refers to that same matrix. It must not be the geometry's Cell Attribute Matrix.
+
+- **-67441**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select a matrix directly under that geometry. If the geometry has no Feature Attribute Matrix, turn Clear off.
+- **-67442**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds Feature data, or turn Clear off.
 
 % Auto generated parameter table will be inserted here
 

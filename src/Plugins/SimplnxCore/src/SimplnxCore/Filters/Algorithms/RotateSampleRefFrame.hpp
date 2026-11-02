@@ -5,6 +5,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -14,7 +16,7 @@ namespace nx::core
 
 /**
  * @struct RotateSampleRefFrameInputValues
- * @brief Stores rotation, slice, origin, and geometry selections.
+ * @brief Stores rotation, slice, origin, geometry, and Feature Attribute Matrix selections.
  */
 struct SIMPLNXCORE_EXPORT RotateSampleRefFrameInputValues
 {
@@ -25,6 +27,8 @@ struct SIMPLNXCORE_EXPORT RotateSampleRefFrameInputValues
   VectorFloat32Parameter::ValueType RotationAxisAngle;
   DynamicTableParameter::ValueType RotationMatrixTable;
   bool KeepInputGeometryOrigin;
+  BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
+  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrix;
 };
 
 /**
