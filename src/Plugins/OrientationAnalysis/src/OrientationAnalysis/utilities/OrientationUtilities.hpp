@@ -1,10 +1,15 @@
 #pragma once
 
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
+
+#include "simplnx/Common/Types.hpp"
+
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 #include <Eigen/Dense>
 
+#include <array>
 #include <string>
 
 namespace nx::core
@@ -20,6 +25,14 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
 
 using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix3dR = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
+
+/**
+ * @brief Converts ordered principal-axis rows to Euler angles in radians.
+ * @param frame Specifies an orthonormal frame in row-major order.
+ * @return Euler angles of a proper rotation with the same ordered axis lines.
+ * @details If the determinant is negative, the conversion negates the third row.
+ */
+ORIENTATIONANALYSIS_EXPORT std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dR frame);
 
 using Matrix1dR = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
 using Matrix1fR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;

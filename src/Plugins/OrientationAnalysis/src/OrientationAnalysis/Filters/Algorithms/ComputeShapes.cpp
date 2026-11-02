@@ -1,13 +1,11 @@
 #include "ComputeShapes.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-
-#include <EbsdLib/Orientation/Euler.hpp>
-#include <EbsdLib/Orientation/OrientationFwd.hpp>
-#include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -21,6 +19,19 @@
 
 namespace
 {
+std::array<nx::core::usize, 2> ActivePlanarAxes(const nx::core::ImageGeom& geometry)
+{
+  if(geometry.getNumZCells() == 1)
+  {
+    return {0, 1};
+  }
+  if(geometry.getNumYCells() == 1)
+  {
+    return {0, 2};
+  }
+  return {1, 2};
+}
+
 /**
  * @brief Sorts three values by index.
  * @tparam T Specifies the comparable value type.
@@ -426,32 +437,13 @@ Result<> ComputeShapes::findMoments2D()
   float xx = 0.0f, yy = 0.0f, xy = 0.0f;
   size_t numfeatures = centroids.getNumberOfTuples();
 
-  size_t xPoints = 0, yPoints = 0;
-  FloatVec3 spacing = imageGeom.getSpacing();
-
-  if(imageGeom.getNumXCells() == 1)
-  {
-    xPoints = imageGeom.getNumYCells();
-    yPoints = imageGeom.getNumZCells();
-    spacing = imageGeom.getSpacing();
-  }
-  if(imageGeom.getNumYCells() == 1)
-  {
-    xPoints = imageGeom.getNumXCells();
-    yPoints = imageGeom.getNumZCells();
-    spacing = imageGeom.getSpacing();
-  }
-  if(imageGeom.getNumZCells() == 1)
-  {
-    xPoints = imageGeom.getNumXCells();
-    yPoints = imageGeom.getNumYCells();
-    spacing = imageGeom.getSpacing();
-  }
-
-  float modXRes = spacing[0] * m_ScaleFactor;
-  float modYRes = spacing[1] * m_ScaleFactor;
-
-  FloatVec3 origin = imageGeom.getOrigin();
+  const auto axes = ActivePlanarAxes(imageGeom);
+  const auto dims = imageGeom.getDimensions();
+  const usize xPoints = dims[axes[0]];
+  const usize yPoints = dims[axes[1]];
+  const auto spacing = imageGeom.getSpacing();
+  const float32 modXRes = spacing[axes[0]] * m_ScaleFactor;
+  const float32 modYRes = spacing[axes[1]] * m_ScaleFactor;
 
   for(size_t featureId = 0; featureId < 6 * numfeatures; featureId++)
   {
@@ -492,20 +484,24 @@ Result<> ComputeShapes::findMoments2D()
     for(size_t xPoint = 0; xPoint < xPoints; xPoint++)
     {
       int32_t gnum = featureIdsRow[xPoint];
-      float x = static_cast<float>(xPoint * modXRes) + (origin[0] * static_cast<float>(m_ScaleFactor));
-      float y = static_cast<float>(yPoint * modYRes) + (origin[1] * static_cast<float>(m_ScaleFactor));
+      std::array<usize, 3> point = {0, 0, 0};
+      point[axes[0]] = xPoint;
+      point[axes[1]] = yPoint;
+      const auto center = imageGeom.getCoordsf(point[0], point[1], point[2]);
+      const float32 x = center[axes[0]] * static_cast<float32>(m_ScaleFactor);
+      const float32 y = center[axes[1]] * static_cast<float32>(m_ScaleFactor);
       float x1 = x + (modXRes / 4.0f);
       float x2 = x - (modXRes / 4.0f);
       float y1 = y + (modYRes / 4.0f);
       float y2 = y - (modYRes / 4.0f);
-      float xdist1 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist1 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist2 = (x1 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist2 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist3 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist3 = (y1 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
-      float xdist4 = (x2 - (localCentroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
-      float ydist4 = (y2 - (localCentroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
+      float xdist1 = (x1 - (localCentroids[gnum * 3 + axes[0]] * static_cast<float>(m_ScaleFactor)));
+      float ydist1 = (y1 - (localCentroids[gnum * 3 + axes[1]] * static_cast<float>(m_ScaleFactor)));
+      float xdist2 = (x1 - (localCentroids[gnum * 3 + axes[0]] * static_cast<float>(m_ScaleFactor)));
+      float ydist2 = (y2 - (localCentroids[gnum * 3 + axes[1]] * static_cast<float>(m_ScaleFactor)));
+      float xdist3 = (x2 - (localCentroids[gnum * 3 + axes[0]] * static_cast<float>(m_ScaleFactor)));
+      float ydist3 = (y1 - (localCentroids[gnum * 3 + axes[1]] * static_cast<float>(m_ScaleFactor)));
+      float xdist4 = (x2 - (localCentroids[gnum * 3 + axes[0]] * static_cast<float>(m_ScaleFactor)));
+      float ydist4 = (y2 - (localCentroids[gnum * 3 + axes[1]] * static_cast<float>(m_ScaleFactor)));
       xx = ((ydist1) * (ydist1)) + ((ydist2) * (ydist2)) + ((ydist3) * (ydist3)) + ((ydist4) * (ydist4));
       yy = ((xdist1) * (xdist1)) + ((xdist2) * (xdist2)) + ((xdist3) * (xdist3)) + ((xdist4) * (xdist4));
       xy = ((xdist1) * (ydist1)) + ((xdist2) * (ydist2)) + ((xdist3) * (ydist3)) + ((xdist4) * (ydist4));
@@ -524,7 +520,7 @@ Result<> ComputeShapes::findMoments2D()
   }
 
   double konst1 = static_cast<double>((modXRes / 2.0f) * (modYRes / 2.0f));
-  double konst2 = static_cast<double>(spacing[0] * spacing[1]);
+  double konst2 = static_cast<double>(spacing[axes[0]] * spacing[axes[1]]);
   m_MessageHandler.sendInfoMessage("Computing Planar Feature Moments");
   m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Planar Feature Moments");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
@@ -616,20 +612,8 @@ void ComputeShapes::findAxes2D()
   size_t numfeatures = centroids.getNumberOfTuples();
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  FloatVec3 spacing;
-
-  if(imageGeom.getNumXCells() == 1)
-  {
-    spacing = imageGeom.getSpacing();
-  }
-  if(imageGeom.getNumYCells() == 1)
-  {
-    spacing = imageGeom.getSpacing();
-  }
-  if(imageGeom.getNumZCells() == 1)
-  {
-    spacing = imageGeom.getSpacing();
-  }
+  const auto axes = ActivePlanarAxes(imageGeom);
+  const auto spacing = imageGeom.getSpacing();
 
   double preterm = 4.0 / std::numbers::pi;
   preterm = std::pow(preterm, 0.25);
@@ -655,13 +639,13 @@ void ComputeShapes::findAxes2D()
       float tempScale2 = 1.0f;
       if(Ixx >= Iyy)
       {
-        tempScale1 = spacing[0];
-        tempScale2 = spacing[1];
+        tempScale1 = spacing[axes[0]];
+        tempScale2 = spacing[axes[1]];
       }
       if(Ixx < Iyy)
       {
-        tempScale1 = spacing[1];
-        tempScale2 = spacing[0];
+        tempScale1 = spacing[axes[1]];
+        tempScale2 = spacing[axes[0]];
       }
       axisLengths[3 * i] = volumes[i] / tempScale1;
       axisLengths[3 * i + 1] = volumes[i] / tempScale2;
@@ -701,24 +685,11 @@ void ComputeShapes::findAxisEulers()
       return;
     }
 
-    // Principal vectors define the feature reference frame.
-    /* clang-format off */
-    size_t idx = featureId*9;
-    ebsdlib::OrientationMatrixDType g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],
-                     m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7],
-                     m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8]};
-    /* clang-format on */
-
-    // check for right-handedness
-    ebsdlib::ResultType result = g.isValid();
-    if(result.result == 0)
-    {
-      g[6] *= -1.0f;
-      g[7] *= -1.0f;
-      g[8] *= -1.0f;
-    }
-
-    ebsdlib::EulerDType eu = g.toEuler();
+    // Each row contains one principal axis, ordered by increasing inertia.
+    const usize idx = featureId * 9;
+    OrientationUtilities::Matrix3dR frame;
+    frame << m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6], m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7], m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8];
+    const auto eu = OrientationUtilities::PrincipalAxisFrameToEuler(frame);
 
     axisEulerAngles[3 * featureId] = eu[0];
     axisEulerAngles[3 * featureId + 1] = eu[1];
@@ -752,7 +723,7 @@ void ComputeShapes::findAxisEulers2D()
     {
       if(Ixx > Iyy)
       {
-        axisEulerAngles[3 * featureId] = nx::core::numbers::pi / 180.0F;
+        axisEulerAngles[3 * featureId] = nx::core::numbers::pi / 2.0F;
         axisEulerAngles[3 * featureId + 1] = 0.0f;
         axisEulerAngles[3 * featureId + 2] = 0.0f;
         continue;
