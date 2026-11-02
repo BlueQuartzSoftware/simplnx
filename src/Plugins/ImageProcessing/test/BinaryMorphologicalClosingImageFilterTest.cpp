@@ -35,7 +35,7 @@ morph_test::KernelParamSetter ClosingKernelParamSetter(float64 foreground, bool 
 //     filter rasterizes the real thickness-1 shell) and the (Box, 3D r{2,1,0}) cell, which has a zero-radius
 //     axis on a 3D image.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   using morph_test::BinaryCompositeKind;
   using morph_test::KernelType;
@@ -101,7 +101,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non-b
 //     computed over the actual input. Real-disk out-of-core coverage is retired to the generic SimplnxOoc store
 //     tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; both algorithm paths)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false, both algorithm paths)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.

@@ -15,7 +15,7 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[ImageProcessing][BlackTopHatImageFilter]")
+TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)", "[ImageProcessing][BlackTopHatImageFilter]")
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
