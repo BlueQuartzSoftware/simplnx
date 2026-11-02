@@ -216,6 +216,7 @@ Key parameters:
 - `input_image_data_path`: `"AM XCT/Cell Data/Closed Pore Mask"`
 - `input_image_geometry_path`: `"AM XCT"`
 - `output_array_name`: `"Pore Labels"`
+- `provisional_label_limit_handling_index`: `0`
 
 Resolved inputs:
 
@@ -316,6 +317,7 @@ Key parameters:
 - `invalid_color_value`: `[0,0,0]`
 - `leading_digit_character`: `"0"`
 - `mask_array_path`: `""`
+- `nonfinite_input_handling_index`: `0`
 - `plane_index`: `0`
 - `selected_preset`: `"Black-Body Radiation"`
 - `total_index_digits`: `3`

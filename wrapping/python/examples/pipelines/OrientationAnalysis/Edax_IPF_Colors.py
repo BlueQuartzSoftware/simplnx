@@ -94,6 +94,7 @@ output_file_path = nxtest.get_data_directory() / "Output/Edax_IPF_Colors/Small_I
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     file_name=output_file_path,
     image_array_path=nx.DataPath("DataContainer/Cell Data/IPFColors"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
