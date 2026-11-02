@@ -344,6 +344,8 @@ Result<> WriteOnScaleTableFile::operator()()
 
     RotateSampleRefFrameFilter rotateFilter;
     Arguments rotateArgs = rotateFilter.getDefaultArguments();
+    // The scratch geometry has no Feature Attribute Matrix; keep the old copy behavior.
+    rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
     rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                               std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
     rotateArgs.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key,
