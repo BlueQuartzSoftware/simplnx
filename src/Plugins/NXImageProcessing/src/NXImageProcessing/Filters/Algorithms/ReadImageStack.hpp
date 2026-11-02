@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -26,7 +26,7 @@ namespace nx::core
  *
  * Preflight and execution use this shared subset so their per-slice configuration stays equal.
  */
-struct IMAGEPROCESSING_EXPORT ReadImageSubFilterConfig
+struct NXIMAGEPROCESSING_EXPORT ReadImageSubFilterConfig
 {
   std::filesystem::path filePath;
   DataPath imageGeometryPath;
@@ -50,7 +50,7 @@ struct IMAGEPROCESSING_EXPORT ReadImageSubFilterConfig
  * Preprocessed spatial overrides go to the delegated reader. Deferred overrides
  * stay at stack level so they apply after crop and resampling.
  */
-IMAGEPROCESSING_EXPORT Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config);
+NXIMAGEPROCESSING_EXPORT Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config);
 
 /**
  * @struct ReadImageStackInputValues
@@ -58,7 +58,7 @@ IMAGEPROCESSING_EXPORT Arguments BuildReadImageFilterArgs(const ReadImageSubFilt
  *
  * resampleImagesChoice maps 0 to none, 1 to scaling, and 2 to exact dimensions.
  */
-struct IMAGEPROCESSING_EXPORT ReadImageStackInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadImageStackInputValues
 {
   std::vector<std::string> fileList;
   DataPath imageGeometryPath;
@@ -89,7 +89,7 @@ struct IMAGEPROCESSING_EXPORT ReadImageStackInputValues
  *
  * Flip operations use one or two row buffers. No complete duplicate stack is created.
  */
-class IMAGEPROCESSING_EXPORT ReadImageStack
+class NXIMAGEPROCESSING_EXPORT ReadImageStack
 {
 public:
   /**

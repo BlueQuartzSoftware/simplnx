@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * already be labeled. The input may be ANY integer scalar type; the output has the SAME type as the input. Matches
  * the legacy ITK Relabel Component Image Filter exactly (byte-identical label values).
  */
-class IMAGEPROCESSING_EXPORT RelabelComponentImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT RelabelComponentImageFilter : public IFilter
 {
 public:
   RelabelComponentImageFilter() = default;

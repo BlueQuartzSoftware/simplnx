@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/CurvatureAnisotropicDiffusionImageFilter.hpp"
+#include "NXImageProcessing/Filters/CurvatureAnisotropicDiffusionImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -68,7 +68,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 //     produces a SameAsInput output array; and a TimeStep exceeding the CFL stability bound is VALID but carries a
 //     warning (matching ITK's own non-fatal InitializeIteration check).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: preflight guards", "[ImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: preflight guards", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -207,7 +207,7 @@ void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOf
 // (5) ITK-sourced real-image golden -- "defaults" case: RA-Float.nrrd, TimeStep 0.01, all else default. Duplicates
 //     ITKCurvatureAnisotropicDiffusionImageTest.cpp(defaults) on OUR ITK-free filter: (A) baseline @0.1.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][CurvatureAnisotropicDiffusionImageFilter]")
 {
   RunCurvatureAnisoItkGolden(/*timeStep=*/0.01, /*numberOfIterations=*/std::nullopt, "BasicFilters_CurvatureAnisotropicDiffusionImageFilter_defaults.nrrd");
 }
@@ -216,7 +216,7 @@ TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-i
 // (6) ITK-sourced real-image golden -- "longer" case: RA-Float.nrrd, TimeStep 0.01, NumberOfIterations 10. Duplicates
 //     ITKCurvatureAnisotropicDiffusionImageTest.cpp(longer).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-image golden (longer)", "[ImageProcessing][ItkGolden][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-image golden (longer)", "[NXImageProcessing][ItkGolden][CurvatureAnisotropicDiffusionImageFilter]")
 {
   RunCurvatureAnisoItkGolden(/*timeStep=*/0.01, /*numberOfIterations=*/10u, "BasicFilters_CurvatureAnisotropicDiffusionImageFilter_longer.nrrd");
 }
@@ -227,7 +227,7 @@ TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real-i
 //     speed is 0 at every voxel, propagationGradient is 0, the returned update is 0, and accum never changes ->
 //     output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant image is identity", "[ImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant image is identity", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -248,7 +248,7 @@ TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant i
 //     asserted. A 6x6x6 image at unit spacing has stable bound 1/2^(3+1) = 0.0625; TimeStep 0.5 is well above it, so
 //     preflight stays VALID but carries the shared unstable-time-step warning, whose message names ImageDimension=3.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[ImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -277,7 +277,7 @@ TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-large
 //     guards the cadence test with `fn.interval != 0 && (iter % fn.interval) != 0`, so interval 0 is treated as "update
 //     every iteration" rather than performing `iter % 0`. RunCurvatureAniso REQUIREs both preflight and execute VALID.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[ImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -296,7 +296,7 @@ TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero condu
 // (10) NumberOfIterations == 0 is a no-op: the driver loop never runs, so the output = cast<T>(accum = cast<Real>(input))
 //      is a lossless float32 round-trip -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[ImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
+TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

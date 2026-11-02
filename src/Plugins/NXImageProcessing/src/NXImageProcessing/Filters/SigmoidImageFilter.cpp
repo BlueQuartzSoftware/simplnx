@@ -56,7 +56,7 @@ std::string SigmoidImageFilter::humanName() const
 }
 std::vector<std::string> SigmoidImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Sigmoid", "Pointwise"};
+  return {className(), "NXImageProcessing", "Sigmoid", "Pointwise"};
 }
 Parameters SigmoidImageFilter::parameters() const
 {

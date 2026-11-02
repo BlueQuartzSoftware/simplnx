@@ -299,7 +299,7 @@ void RequireBoundedContour(const std::vector<int32>& input, const std::vector<in
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ContourEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][ContourEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ContourEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][ContourEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -344,7 +344,7 @@ TEST_CASE("ImageProcessing::ContourEngine: resident state requires a complete da
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: real-OOC selector uses resident state only after a complete grant", "[ImageProcessing][ContourEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ContourEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][ContourEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -397,7 +397,7 @@ TEST_CASE("ImageProcessing::ContourEngine: real-OOC selector uses resident state
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: rolling 3D body omits unavailable boundary planes", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D body omits unavailable boundary planes", "[NXImageProcessing][ContourEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 4;
@@ -437,7 +437,7 @@ TEST_CASE("ImageProcessing::ContourEngine: rolling 3D body omits unavailable bou
   REQUIRE(std::equal(lastOutput.cbegin(), lastOutput.cend(), expected.cbegin() + 2 * sliceValues));
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: rolling 3D path reads each plane once for Binary and Label predicates", "[ImageProcessing][ContourEngine]", int8, uint8, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D path reads each plane once for Binary and Label predicates", "[NXImageProcessing][ContourEngine]", int8, uint8, int32)
 {
   using T = TestType;
   const CacheBudgetScope budgetScope(64);
@@ -481,7 +481,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: rolling 3D path reads each p
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: rolling 3D cancellation after the first plane preserves output", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D cancellation after the first plane preserves output", "[NXImageProcessing][ContourEngine]")
 {
   const CacheBudgetScope budgetScope(64);
   constexpr usize dimX = 5;
@@ -508,7 +508,7 @@ TEST_CASE("ImageProcessing::ContourEngine: rolling 3D cancellation after the fir
   REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [](int32 value) { return value == poison; }));
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: rolling 3D propagates an input read failure", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D propagates an input read failure", "[NXImageProcessing][ContourEngine]")
 {
   const CacheBudgetScope budgetScope(64);
   constexpr usize dimX = 5;
@@ -526,7 +526,7 @@ TEST_CASE("ImageProcessing::ContourEngine: rolling 3D propagates an input read f
   REQUIRE(outputStore.writtenValues() == 0);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: BinaryContour matches independent gather oracle (3D + 2D)", "[ImageProcessing][ContourEngine]", int32, uint8, int16)
+TEMPLATE_TEST_CASE("NXImageProcessing::ContourEngine: BinaryContour matches independent gather oracle (3D + 2D)", "[NXImageProcessing][ContourEngine]", int32, uint8, int16)
 {
   using T = TestType;
   SECTION("3D non-cubic 5x4x3")
@@ -543,7 +543,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: BinaryContour matches indepe
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: hand-computed border rule (out-of-bounds neighbors ignored)", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: hand-computed border rule (out-of-bounds neighbors ignored)", "[NXImageProcessing][ContourEngine]")
 {
   // A 4x3x1 image whose foreground (1) fills the x in {0,1} slab; x in {2,3} is background (0). fg=1, bg=0.
   //   x: 0 1 2 3
@@ -578,7 +578,7 @@ TEST_CASE("ImageProcessing::ContourEngine: hand-computed border rule (out-of-bou
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: full-image foreground yields no contour", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: full-image foreground yields no contour", "[NXImageProcessing][ContourEngine]")
 {
   // A region filling the ENTIRE image has no in-bounds neighbor that differs anywhere, so it produces NO
   // contour (every foreground voxel becomes background). This is the ITK "no boundary condition" behavior.
@@ -597,7 +597,7 @@ TEST_CASE("ImageProcessing::ContourEngine: full-image foreground yields no conto
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: LabelContour matches independent gather oracle (3D + 2D)", "[ImageProcessing][ContourEngine]", int32, uint8, int16)
+TEMPLATE_TEST_CASE("NXImageProcessing::ContourEngine: LabelContour matches independent gather oracle (3D + 2D)", "[NXImageProcessing][ContourEngine]", int32, uint8, int16)
 {
   using T = TestType;
   SECTION("3D non-cubic 5x4x3")
@@ -614,7 +614,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ContourEngine: LabelContour matches indepen
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: over-capacity neighbor offsets are rejected (no buffer overflow)", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: over-capacity neighbor offsets are rejected (no buffer overflow)", "[NXImageProcessing][ContourEngine]")
 {
   // ApplyContour gathers in-bounds neighbors into a fixed k_MaxRadius1Neighbors-slot stack buffer. A caller that
   // passes more than a radius-1 box's worth of offsets would overflow it in a release build; the engine must
@@ -631,7 +631,7 @@ TEST_CASE("ImageProcessing::ContourEngine: over-capacity neighbor offsets are re
   REQUIRE(result.invalid());
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: single voxel (empty neighbor span) is handled", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: single voxel (empty neighbor span) is handled", "[NXImageProcessing][ContourEngine]")
 {
   // A 1x1x1 image has NO in-bounds neighbors for its lone voxel, so the predicate is invoked with an empty
   // neighbor span. A foreground voxel then has no differing neighbor -> not a contour -> background; a
@@ -645,7 +645,7 @@ TEST_CASE("ImageProcessing::ContourEngine: single voxel (empty neighbor span) is
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: LabelContour hand-computed (background never a contour; labels differ)", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: LabelContour hand-computed (background never a contour; labels differ)", "[NXImageProcessing][ContourEngine]")
 {
   // A 4x1x1 line: label 5, label 5, background 0, label 8. background = 0. Face connectivity.
   //   x=0 (5): in-bounds neighbor x=1 (5) same; x=-1 OOB ignored -> no differing neighbor -> background.
@@ -665,7 +665,7 @@ TEST_CASE("ImageProcessing::ContourEngine: LabelContour hand-computed (backgroun
   REQUIRE(out[3] == 8); // label 8 borders background -> contour, keeps its label
 }
 
-TEST_CASE("ImageProcessing::RadiusOneStencil2D: planner bounds full-width and overwide typed buffers", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::RadiusOneStencil2D: planner bounds full-width and overwide typed buffers", "[NXImageProcessing][ContourEngine]")
 {
   using ImageProcessing::detail::CreateRadiusOneStencil2DPlan;
 
@@ -733,7 +733,7 @@ TEST_CASE("ImageProcessing::RadiusOneStencil2D: planner bounds full-width and ov
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: bounded 2D blocks and tiles preserve both contour predicates", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::ContourEngine: bounded 2D blocks and tiles preserve both contour predicates", "[NXImageProcessing][ContourEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -770,7 +770,7 @@ TEST_CASE("ImageProcessing::ContourEngine: bounded 2D blocks and tiles preserve 
   }
 }
 
-TEST_CASE("ImageProcessing::RadiusOneStencil2D: fixed output preserves block offsets and writes once", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::RadiusOneStencil2D: fixed output preserves block offsets and writes once", "[NXImageProcessing][ContourEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -838,7 +838,7 @@ TEST_CASE("ImageProcessing::RadiusOneStencil2D: fixed output preserves block off
   }
 }
 
-TEST_CASE("ImageProcessing::RadiusOneStencil2D: cancellation before the fixed output write preserves output", "[ImageProcessing][ContourEngine]")
+TEST_CASE("NXImageProcessing::RadiusOneStencil2D: cancellation before the fixed output write preserves output", "[NXImageProcessing][ContourEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;

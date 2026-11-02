@@ -35,7 +35,7 @@ std::string MaskImageFilter::humanName() const
 }
 std::vector<std::string> MaskImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Mask", "Pointwise"};
+  return {className(), "NXImageProcessing", "Mask", "Pointwise"};
 }
 Parameters MaskImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  *        apply it to the geometry via ApplyTransformationToGeometry. Param keys
  *        match ITKMhaFileReaderFilter so a UUID redirect is parameter-lossless.
  */
-class IMAGEPROCESSING_EXPORT ReadMhaFileFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadMhaFileFilter : public IFilter
 {
 public:
   ReadMhaFileFilter() = default;

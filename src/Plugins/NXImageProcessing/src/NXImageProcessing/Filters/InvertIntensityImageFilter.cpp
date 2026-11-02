@@ -95,7 +95,7 @@ std::string InvertIntensityImageFilter::humanName() const
 }
 std::vector<std::string> InvertIntensityImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "InvertIntensity", "Pointwise"};
+  return {className(), "NXImageProcessing", "InvertIntensity", "Pointwise"};
 }
 Parameters InvertIntensityImageFilter::parameters() const
 {

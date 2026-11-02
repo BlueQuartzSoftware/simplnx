@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  * FIXED uint32 label image regardless of the input element type. Matches the legacy ITK Connected Component Image
  * Filter exactly (byte-identical label values). Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT ConnectedComponentImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ConnectedComponentImageFilter : public IFilter
 {
 public:
   ConnectedComponentImageFilter() = default;

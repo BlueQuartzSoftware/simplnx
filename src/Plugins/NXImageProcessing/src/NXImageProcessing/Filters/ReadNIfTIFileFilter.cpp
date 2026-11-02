@@ -1,7 +1,7 @@
 #include "ReadNIfTIFileFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadNIfTIFile.hpp"
-#include "ImageProcessing/utils/NiftiUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadNIfTIFile.hpp"
+#include "NXImageProcessing/utils/NiftiUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"

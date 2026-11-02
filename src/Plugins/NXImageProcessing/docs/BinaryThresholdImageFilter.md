@@ -4,7 +4,7 @@ Binarize an input image by thresholding.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

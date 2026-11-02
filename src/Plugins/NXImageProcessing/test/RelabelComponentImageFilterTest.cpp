@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/RelabelComponentImageFilter.hpp"
+#include "NXImageProcessing/Filters/RelabelComponentImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -195,7 +195,7 @@ std::vector<T> MakeLabeledField(usize dimX, usize dimY, usize dimZ)
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
 //     rejected (IntegerOnly); a valid integer scalar input produces a SameAsInput output array.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: preflight guards", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -256,7 +256,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: preflight guards", "[Im
 //     > 255). 130 distinct single-voxel labels (> 127) => assigning the 128th survivor overflows. Preflight passes;
 //     the error only surfaces at execute (the survivor count is data-dependent, discovered mid-stream).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: too-many-objects overflow (int8)", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects overflow (int8)", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -295,7 +295,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: too-many-objects overfl
 //     Exercise both the narrow dense-label path and the wider sparse-label path directly so this contract is not
 //     hidden by the filter's output-creation action.
 // -----------------------------------------------------------------------------
-TEMPLATE_TEST_CASE("ImageProcessing::RelabelComponentImageFilter: pre-cancel preserves output", "[ImageProcessing][RelabelComponentImageFilter]", uint8, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: pre-cancel preserves output", "[NXImageProcessing][RelabelComponentImageFilter]", uint8, int32)
 {
   using T = TestType;
   UnitTest::LoadPlugins();
@@ -321,7 +321,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::RelabelComponentImageFilter: pre-cancel pre
   }
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: bounded OOC staging reads each input value twice", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: bounded OOC staging reads each input value twice", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   constexpr usize k_DimX = 12;
   constexpr usize k_DimY = 12;
@@ -380,7 +380,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: bounded OOC staging rea
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: OOC staging aligns complete output slabs", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: OOC staging aligns complete output slabs", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   const ShapeType tupleShape{4, 12, 12};
   const auto slabPlan = ImageProcessing::detail::CreateRelabelChunkSlabPlan(tupleShape, ShapeType{1, 12, 12}, /*numValues=*/576, sizeof(int32));
@@ -393,7 +393,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: OOC staging aligns comp
   REQUIRE_FALSE(ImageProcessing::detail::CreateRelabelChunkSlabPlan(tupleShape, ShapeType{5, 12, 12}, /*numValues=*/576, sizeof(int32)).has_value());
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: resident spans avoid staging transfers", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: resident spans avoid staging transfers", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   constexpr usize k_DimX = 12;
   constexpr usize k_DimY = 12;
@@ -445,7 +445,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: resident spans avoid st
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: an undersized OOC working-memory grant reports the actual values", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: an undersized OOC working-memory grant reports the actual values", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   constexpr usize k_DimX = 12;
   constexpr usize k_DimY = 12;
@@ -481,7 +481,7 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: an undersized OOC worki
 // -----------------------------------------------------------------------------
 // (4) FromSIMPLJson: MinimumObjectSize (uint64), SortByObjectSize (bool), and the geometry/array/name DataPaths.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: FromSIMPLJson", "[ImageProcessing][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: FromSIMPLJson", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
   const nlohmann::json json = {
       {"MinimumObjectSize", 5},
@@ -506,18 +506,18 @@ TEST_CASE("ImageProcessing::RelabelComponentImageFilter: FromSIMPLJson", "[Image
 //   no_sorting: simple-label-d.png, SortByObjectSize = false.
 //   no_sorting2: simple-label-d.png, SortByObjectSize = false AND MinimumObjectSize = 140.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][RelabelComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RelabelComponentImageFilter>("2th_cthead1.png", "58af064e929f08f9d5bacc8be44ed92e");
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: ITK real-image golden (no_sorting)", "[ImageProcessing][ItkGolden][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: ITK real-image golden (no_sorting)", "[NXImageProcessing][ItkGolden][RelabelComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RelabelComponentImageFilter>("simple-label-d.png", "0231da8387aa665ddff9c2645e71f213",
                                                                  [](Arguments& args) { args.insertOrAssign(RelabelComponentImageFilter::k_SortByObjectSize_Key, std::make_any<bool>(false)); });
 }
 
-TEST_CASE("ImageProcessing::RelabelComponentImageFilter: ITK real-image golden (no_sorting2)", "[ImageProcessing][ItkGolden][RelabelComponentImageFilter]")
+TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: ITK real-image golden (no_sorting2)", "[NXImageProcessing][ItkGolden][RelabelComponentImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RelabelComponentImageFilter>("simple-label-d.png", "4c81464832a0270041334abd744b94b0", [](Arguments& args) {
     args.insertOrAssign(RelabelComponentImageFilter::k_SortByObjectSize_Key, std::make_any<bool>(false));

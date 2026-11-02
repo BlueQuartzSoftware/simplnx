@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
 
 #include <memory>
 
@@ -12,7 +12,7 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annulus + Box zero-radius)", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   using morph_test::KernelType;
   auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
@@ -45,7 +45,7 @@ TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Computed-expected (Annulu
 // (1b) Degenerate empty structuring element (Annulus r{0,0,0}) must pass the input through unchanged. First
 //      user-reachable exercise of the engine's offsets.empty() passthrough branch.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   morph_test::RunMorphologyEmptySEPassthrough<GrayscaleErodeImageFilter, float32>(
       [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); }, 12, 12, 12,
@@ -61,7 +61,7 @@ TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Empty-SE passthrough (Ann
 //     at the -radius corner. (D^3 - 1 < 2^24, so float32 represents every index exactly.) Real-disk out-of-core
 //     coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected (both algorithm paths)", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -145,7 +145,7 @@ TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Ramp computed-expected (b
 // ITK-sourced real-image md5 golden -- duplicates ITKGrayscaleErodeImageTest.cpp(GrayscaleErode): STAPLE1.png
 // (uint8), Ball radius {1,1,1}. The test compares our output md5 with the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: ITK real-image golden (GrayscaleErode)", "[ImageProcessing][ItkGolden][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: ITK real-image golden (GrayscaleErode)", "[NXImageProcessing][ItkGolden][GrayscaleErodeImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleErodeImageFilter>("STAPLE1.png", "cb0f49738a99f3467b575bc95a0ace44", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                    morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
@@ -155,7 +155,7 @@ TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: ITK real-image golden (Gr
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8360) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleErodeImageFilter, float32>(-8360, morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
 }

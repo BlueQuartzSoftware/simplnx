@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
-#include "ImageProcessing/utils/nifti1.h"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
+#include "NXImageProcessing/utils/nifti1.h"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -88,7 +88,7 @@ inline constexpr std::array<char, 4> k_PairFileMagic = {'n', 'i', '1', '\0'};
  * components). simplnx arrays separate type from cardinality, so the
  * RGB/RGBA codes expand to `{ uint8, 3 }` / `{ uint8, 4 }` here.
  */
-struct IMAGEPROCESSING_EXPORT NiftiTypeInfo
+struct NXIMAGEPROCESSING_EXPORT NiftiTypeInfo
 {
   /** @brief simplnx element type (`uint8`, `float32`, ...). */
   DataType dataType{DataType::uint8};
@@ -116,7 +116,7 @@ struct IMAGEPROCESSING_EXPORT NiftiTypeInfo
  * @param niftiDatatype The raw `datatype` field value from the header.
  * @return Canonicalized type info, or `std::nullopt` if unsupported.
  */
-std::optional<NiftiTypeInfo> IMAGEPROCESSING_EXPORT NiftiDatatypeToSimplnx(int16 niftiDatatype);
+std::optional<NiftiTypeInfo> NXIMAGEPROCESSING_EXPORT NiftiDatatypeToSimplnx(int16 niftiDatatype);
 
 /**
  * @struct NiftiMetadata
@@ -158,7 +158,7 @@ std::optional<NiftiTypeInfo> IMAGEPROCESSING_EXPORT NiftiDatatypeToSimplnx(int16
  *    absolute or relative path the header was read from, preserved
  *    so downstream error messages can reference it.
  */
-struct IMAGEPROCESSING_EXPORT NiftiMetadata
+struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
 {
   /** @name Raw header (diagnostics only) */
   /** @{ */
@@ -269,6 +269,6 @@ struct IMAGEPROCESSING_EXPORT NiftiMetadata
  *         `Result<NiftiMetadata>` carrying one of the codes above on
  *         failure.
  */
-Result<NiftiMetadata> IMAGEPROCESSING_EXPORT ReadNiftiHeader(const std::filesystem::path& filePath, bool useAffineIfPresent);
+Result<NiftiMetadata> NXIMAGEPROCESSING_EXPORT ReadNiftiHeader(const std::filesystem::path& filePath, bool useAffineIfPresent);
 
 } // namespace nx::core::nifti

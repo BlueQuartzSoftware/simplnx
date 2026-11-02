@@ -4,7 +4,7 @@ Compute the gradient magnitude of an image using order-1 central-difference deri
 
 ## Group (Subgroup)
 
-ImageProcessing (EdgeDetection)
+NXImageProcessing (EdgeDetection)
 
 ## Description
 

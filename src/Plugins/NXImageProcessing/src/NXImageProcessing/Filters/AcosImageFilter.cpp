@@ -45,7 +45,7 @@ std::string AcosImageFilter::humanName() const
 }
 std::vector<std::string> AcosImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Acos", "Pointwise"};
+  return {className(), "NXImageProcessing", "Acos", "Pointwise"};
 }
 Parameters AcosImageFilter::parameters() const
 {

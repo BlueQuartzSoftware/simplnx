@@ -19,7 +19,7 @@ using namespace nx::core;
 
 namespace
 {
-// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/ImageProcessing tree for
+// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree for
 // -84xx/-85xx codes: the -84xx blocks up to -8493 and the -8500 block (Binary Contour, -8500..-8503) are taken,
 // so this filter uses the still-unused -8510 block.
 constexpr int32 k_NonScalarInput = -8510;
@@ -48,7 +48,7 @@ std::string LabelContourImageFilter::humanName() const
 }
 std::vector<std::string> LabelContourImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "LabelContour", "Label", "Contour", "ImageLabel"};
+  return {className(), "NXImageProcessing", "LabelContour", "Label", "Contour", "ImageLabel"};
 }
 Parameters LabelContourImageFilter::parameters() const
 {

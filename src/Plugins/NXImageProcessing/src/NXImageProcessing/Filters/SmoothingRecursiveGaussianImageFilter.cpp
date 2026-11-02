@@ -34,7 +34,7 @@ std::string SmoothingRecursiveGaussianImageFilter::humanName() const
 }
 std::vector<std::string> SmoothingRecursiveGaussianImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "Gaussian", "Blur"};
+  return {className(), "NXImageProcessing", "Smoothing", "Gaussian", "Blur"};
 }
 
 Parameters SmoothingRecursiveGaussianImageFilter::parameters() const

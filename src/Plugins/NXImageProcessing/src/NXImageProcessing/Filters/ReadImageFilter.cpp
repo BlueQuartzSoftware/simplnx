@@ -1,7 +1,7 @@
 #include "ReadImageFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadImage.hpp"
-#include "ImageProcessing/utils/NrrdUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadImage.hpp"
+#include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"

@@ -45,7 +45,7 @@ std::string SqrtImageFilter::humanName() const
 }
 std::vector<std::string> SqrtImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Sqrt", "Pointwise"};
+  return {className(), "NXImageProcessing", "Sqrt", "Pointwise"};
 }
 Parameters SqrtImageFilter::parameters() const
 {

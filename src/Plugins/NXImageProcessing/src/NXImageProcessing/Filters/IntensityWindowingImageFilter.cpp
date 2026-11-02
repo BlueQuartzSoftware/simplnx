@@ -63,7 +63,7 @@ std::string IntensityWindowingImageFilter::humanName() const
 }
 std::vector<std::string> IntensityWindowingImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "IntensityWindowing", "Pointwise"};
+  return {className(), "NXImageProcessing", "IntensityWindowing", "Pointwise"};
 }
 Parameters IntensityWindowingImageFilter::parameters() const
 {

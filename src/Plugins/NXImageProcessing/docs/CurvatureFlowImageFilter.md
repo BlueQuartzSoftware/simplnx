@@ -4,7 +4,7 @@ Denoise an image using curvature-driven flow, a PDE-based finite-difference filt
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

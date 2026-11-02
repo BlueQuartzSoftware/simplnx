@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/DiscreteGaussianImageFilter.hpp"
+#include "NXImageProcessing/Filters/DiscreteGaussianImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -67,7 +67,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // (3) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a
 //     SameAsInput output array (same element type as the input).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[ImageProcessing][DiscreteGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[NXImageProcessing][DiscreteGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -110,7 +110,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[Im
 // (5) FromSIMPLJson: the per-axis Variance vector (legacy FloatVec3 object shape), the MaximumKernelWidth uint32, the
 //     per-axis MaximumError vector, the UseImageSpacing bool, and the geometry/array/name DataPaths.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: FromSIMPLJson", "[ImageProcessing][DiscreteGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: FromSIMPLJson", "[NXImageProcessing][DiscreteGaussianImageFilter]")
 {
   const nlohmann::json json = {
       {"Variance", {{"x", 2.0}, {"y", 3.0}, {"z", 4.0}}},
@@ -186,7 +186,7 @@ void RunDiscreteGaussianBaselineGolden(const std::string& inputFile, const std::
 //
 // (float) RA-Float.nrrd -> float32 output; (A) baseline @0.0001.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
 {
   RunDiscreteGaussianBaselineGolden("RA-Float.nrrd", "BasicFilters_DiscreteGaussianImageFilter_float.nrrd", /*tolerance=*/0.0001);
 }
@@ -195,7 +195,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (
 // (short) RA-Slice-Short.nrrd -> int16 output; (A) baseline @1.0 (the ITK test's own documented tolerant tolerance for
 // this integer case).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
 {
   RunDiscreteGaussianBaselineGolden("RA-Slice-Short.nrrd", "BasicFilters_DiscreteGaussianImageFilter_short.nrrd", /*tolerance=*/1.0);
 }
@@ -204,7 +204,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (
 // (bigG) WhiteDots.png -> uint8 output; (A) md5-validity-first golden (plan Sec.4). Non-default params:
 // Variance {100,100,100}, MaximumKernelWidth 64.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (bigG)", "[ImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (bigG)", "[NXImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<DiscreteGaussianImageFilter>("WhiteDots.png", "f2f002ec76313284a4cff24c3e5eb577", [](Arguments& args) {
     args.insertOrAssign(DiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{100.0, 100.0, 100.0}));

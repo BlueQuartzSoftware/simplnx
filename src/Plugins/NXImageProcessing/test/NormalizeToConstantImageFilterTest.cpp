@@ -1,9 +1,9 @@
-#include "ImageProcessing/Filters/NormalizeToConstantImageFilter.hpp"
+#include "NXImageProcessing/Filters/NormalizeToConstantImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 using namespace nx::core;
 
-TEST_CASE("ImageProcessing::NormalizeToConstantImageFilter: Correctness", "[ImageProcessing][NormalizeToConstantImageFilter]")
+TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Correctness", "[NXImageProcessing][NormalizeToConstantImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -34,7 +34,7 @@ TEST_CASE("ImageProcessing::NormalizeToConstantImageFilter: Correctness", "[Imag
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "[ImageProcessing][NormalizeToConstantImageFilter]")
+TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "[NXImageProcessing][NormalizeToConstantImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -59,7 +59,7 @@ TEST_CASE("ImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "[I
 // The ITK `vector` case (VM1111Shrink-RGB.png) is SKIPPED as an RGB/vector input (plan Sec.5). Pinned ForceInCore for
 // the reader (kept for consistency with the other golden cases; only OUR reader + filter run here).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::NormalizeToConstantImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][NormalizeToConstantImageFilter]")
+TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][NormalizeToConstantImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

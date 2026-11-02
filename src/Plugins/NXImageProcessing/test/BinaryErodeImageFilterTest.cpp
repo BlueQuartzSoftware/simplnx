@@ -1,6 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryErodeImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryErodeImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -21,7 +21,7 @@ using namespace nx::core;
 //     k_NonBinaryInput safeguard code. MorphologyEngineTest covers Annulus and zero-radius kernel correctness
 //     across all four kernels.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Rejects non-binary input at execute", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -48,7 +48,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Rejects non-binary input at 
   REQUIRE(executeResult.result.errors()[0].code == ImageProcessing::k_NonBinaryInput);
 }
 
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Reports the first non-binary value and index", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Reports the first non-binary value and index", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -98,7 +98,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Reports the first non-binary
 //      unchanged (the passthrough copies the input verbatim), exercising the binary engine's offsets.empty()
 //      branch at the filter level.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   const auto buildBinary = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(ds, dx, dy, dz, uint8{41}, uint8{0}); };
   morph_test::RunMorphologyEmptySEPassthrough<BinaryErodeImageFilter, uint8>(buildBinary, 12, 12, 12, morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(41.0, 0.0, true));
@@ -111,7 +111,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Empty-SE passthrough (Annulu
 //     test compares the output with the independent fgCount oracle computed over the actual input. Real-disk
 //     out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Computed-expected (both algorithm paths)", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -198,7 +198,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Computed-expected (both algo
 //     type; a non-finite or out-of-range value would be an undefined conversion, so the filter must reject it
 //     at preflight. In-range integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -242,7 +242,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Preflight rejects non-finite
 //     so it satisfies the binary-input contract with fg=255/bg=0. Ball radius {1,1,1}, BoundaryToForeground=true
 //     (the erosion default). The test compares our output md5 with the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: ITK real-image golden (WhiteDots)", "[ImageProcessing][ItkGolden][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: ITK real-image golden (WhiteDots)", "[NXImageProcessing][ItkGolden][BinaryErodeImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<BinaryErodeImageFilter>("WhiteDots.png", "55f752c7208878f90ffb30a8df8f6382", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                 morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(255.0, 0.0, /*boundaryToForeground=*/true));
@@ -252,7 +252,7 @@ TEST_CASE("ImageProcessing::BinaryErodeImageFilter: ITK real-image golden (White
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8440) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][BinaryErodeImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<BinaryErodeImageFilter, uint8>(-8440, morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }

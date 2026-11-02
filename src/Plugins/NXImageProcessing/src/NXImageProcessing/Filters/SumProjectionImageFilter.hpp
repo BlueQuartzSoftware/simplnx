@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -14,7 +14,7 @@ namespace nx::core
  *        voxels along the projected axis. The input may be any scalar numeric type; the output is always
  *        Float64 (double), matching the legacy filter.
  */
-class IMAGEPROCESSING_EXPORT SumProjectionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT SumProjectionImageFilter : public IFilter
 {
 public:
   SumProjectionImageFilter() = default;

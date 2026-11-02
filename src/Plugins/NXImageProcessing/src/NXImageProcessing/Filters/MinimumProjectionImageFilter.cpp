@@ -43,7 +43,7 @@ std::string MinimumProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MinimumProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Minimum", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Minimum", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

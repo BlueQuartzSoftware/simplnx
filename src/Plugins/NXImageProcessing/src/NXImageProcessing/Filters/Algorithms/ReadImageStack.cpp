@@ -1,7 +1,7 @@
 #include "ReadImageStack.hpp"
 #include "ReadImageStackCropping.hpp"
 
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
+#include "NXImageProcessing/Filters/ReadImageFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"

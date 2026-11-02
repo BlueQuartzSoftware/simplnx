@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ZeroCrossingImageFilter.hpp"
+#include "NXImageProcessing/Filters/ZeroCrossingImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -79,7 +79,7 @@ std::vector<T> MakeZeroCrossingField(usize dimX, usize dimY, usize dimZ)
 // (1) Preflight guards: an unsigned input is rejected (SignedScalar); a multi-component input is rejected
 //     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ZeroCrossingImageFilter: preflight guards", "[ImageProcessing][ZeroCrossingImageFilter]")
+TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXImageProcessing][ZeroCrossingImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -138,12 +138,12 @@ TEST_CASE("ImageProcessing::ZeroCrossingImageFilter: preflight guards", "[ImageP
 //   defaults: the filter defaults (ForegroundValue 1, BackgroundValue 0). They agree with the ITK defaults.
 //   inverted: ForegroundValue = 0, BackgroundValue = 2.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ZeroCrossingImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][ZeroCrossingImageFilter]")
+TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][ZeroCrossingImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ZeroCrossingImageFilter>("2th_cthead1_distance.nrrd", "1b5cea61ceb46ebf606eb9e63de1e75f");
 }
 
-TEST_CASE("ImageProcessing::ZeroCrossingImageFilter: ITK real-image golden (inverted)", "[ImageProcessing][ItkGolden][ZeroCrossingImageFilter]")
+TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: ITK real-image golden (inverted)", "[NXImageProcessing][ItkGolden][ZeroCrossingImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ZeroCrossingImageFilter>("2th_cthead1_distance.nrrd", "17cf4374c03d958e13506db9799c4789", [](Arguments& args) {
     args.insertOrAssign(ZeroCrossingImageFilter::k_ForegroundValue_Key, std::make_any<uint8>(0));

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -22,7 +22,7 @@ namespace nx::core
  * passed through unchanged (ITK divides 0/0 -> NaN there). The filter is now out-of-core capable (the legacy
  * filter rejected chunked arrays).
  */
-class IMAGEPROCESSING_EXPORT AdaptiveHistogramEqualizationImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT AdaptiveHistogramEqualizationImageFilter : public IFilter
 {
 public:
   AdaptiveHistogramEqualizationImageFilter() = default;

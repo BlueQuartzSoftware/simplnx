@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply paper-input target metadata to ImageProcessing YAML and Markdown sidecars."""
+"""Apply paper-input target metadata to NXImageProcessing YAML and Markdown sidecars."""
 
 from __future__ import annotations
 

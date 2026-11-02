@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryThinningImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryThinningImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -58,7 +58,7 @@ void RunThinning(IFilter& filter, DataStructure& ds, const DataPath& inputPath, 
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
 //     rejected (IntegerOnly); a valid integer scalar input produces a SameAsInput output array.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryThinningImageFilter: preflight guards", "[ImageProcessing][BinaryThinningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NXImageProcessing][BinaryThinningImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -110,7 +110,7 @@ TEST_CASE("ImageProcessing::BinaryThinningImageFilter: preflight guards", "[Imag
 // (2) FromSIMPLJson: the geometry/array/name DataPaths (thinning has no algorithm params). The geometry and the
 //     input array BOTH read the same SIMPL key "SelectedCellArrayPath"; the output name reads "NewCellArrayName".
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryThinningImageFilter: FromSIMPLJson", "[ImageProcessing][BinaryThinningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: FromSIMPLJson", "[NXImageProcessing][BinaryThinningImageFilter]")
 {
   const nlohmann::json json = {
       {"SelectedCellArrayPath", {{"Data Container Name", "ImageDC"}, {"Attribute Matrix Name", "CellAM"}, {"Data Array Name", "InArray"}}},
@@ -129,7 +129,7 @@ TEST_CASE("ImageProcessing::BinaryThinningImageFilter: FromSIMPLJson", "[ImagePr
 // uint8, SameAsInput). The filter has no algorithm parameters. The durable golden is an md5 pin. The helper pins
 // ForceInCore. The ITK test's second case is "SIMPL Backwards Compatibility". The FromSIMPLJson test covers that case.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryThinningImageFilter: ITK real-image golden (BinaryThinning)", "[ImageProcessing][ItkGolden][BinaryThinningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: ITK real-image golden (BinaryThinning)", "[NXImageProcessing][ItkGolden][BinaryThinningImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<BinaryThinningImageFilter>("BlackDots.png", "153ad0b2f3658dee3b14ad93d0cfe550");
 }

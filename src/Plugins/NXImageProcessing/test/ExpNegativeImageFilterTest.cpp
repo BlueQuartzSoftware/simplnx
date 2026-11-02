@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ExpNegativeImageFilter.hpp"
+#include "NXImageProcessing/Filters/ExpNegativeImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): the op is static_cast<U>(std::exp(-static_cast<double>(x))).
 // For a large NEGATIVE input, -x is large positive, so exp(-x) overflows double (>~709.78) to +inf, and casting
 // +inf to float32 stays +inf. ITK's ExpNegative functor is the same expression, so this pins the +inf overflow.
-TEST_CASE("ImageProcessing::ExpNegativeImageFilter: exp(-x) of a large negative input overflows to +inf (domain edge)", "[ImageProcessing][ExpNegativeImageFilter]")
+TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: exp(-x) of a large negative input overflows to +inf (domain edge)", "[NXImageProcessing][ExpNegativeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -27,7 +27,7 @@ TEST_CASE("ImageProcessing::ExpNegativeImageFilter: exp(-x) of a large negative 
 // Ramp-Zero-One-Float.nrrd (float32) through OUR reader, run OUR filter (defaults), then compare with the
 // committed baseline @0.01. See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ExpNegativeImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][ExpNegativeImageFilter]")
+TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][ExpNegativeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

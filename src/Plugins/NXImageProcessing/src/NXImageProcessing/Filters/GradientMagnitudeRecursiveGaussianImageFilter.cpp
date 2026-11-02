@@ -34,7 +34,7 @@ std::string GradientMagnitudeRecursiveGaussianImageFilter::humanName() const
 }
 std::vector<std::string> GradientMagnitudeRecursiveGaussianImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Gradient", "Gaussian", "EdgeDetection"};
+  return {className(), "NXImageProcessing", "Gradient", "Gaussian", "EdgeDetection"};
 }
 
 Parameters GradientMagnitudeRecursiveGaussianImageFilter::parameters() const

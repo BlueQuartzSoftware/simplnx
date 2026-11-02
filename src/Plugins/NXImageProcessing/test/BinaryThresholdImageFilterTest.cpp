@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryThresholdImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryThresholdImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -45,12 +45,12 @@ void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParam
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::BinaryThresholdImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][BinaryThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][BinaryThresholdImageFilter]")
 {
   RunBinaryThresholdItkGolden([](Arguments&) {}, "dbd0ea7d6f16bb93e9c688cb0f1bfd85");
 }
 
-TEST_CASE("ImageProcessing::BinaryThresholdImageFilter: ITK real-image golden (NarrowThreshold)", "[ImageProcessing][ItkGolden][BinaryThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: ITK real-image golden (NarrowThreshold)", "[NXImageProcessing][ItkGolden][BinaryThresholdImageFilter]")
 {
   RunBinaryThresholdItkGolden(
       [](Arguments& args) {
@@ -65,7 +65,7 @@ TEST_CASE("ImageProcessing::BinaryThresholdImageFilter: ITK real-image golden (N
 // Matches ITK's BinaryThresholdImageFilter, which throws when LowerThreshold > UpperThreshold, and the filter's
 // own parameter documentation, which promises the same. The bad ordering must be rejected at preflight; equal and
 // ascending thresholds must preflight cleanly.
-TEST_CASE("ImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lower > Upper", "[ImageProcessing][BinaryThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lower > Upper", "[NXImageProcessing][BinaryThresholdImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * floating point); the output has the SAME type as the input (integer output truncates on every iteration's
  * ApplyUpdate, matching ITK). Matches the legacy ITK Curvature Flow Image Filter. Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT CurvatureFlowImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT CurvatureFlowImageFilter : public IFilter
 {
 public:
   CurvatureFlowImageFilter() = default;

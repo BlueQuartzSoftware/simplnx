@@ -4,7 +4,7 @@ Computes the sigmoid function pixel-wise.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

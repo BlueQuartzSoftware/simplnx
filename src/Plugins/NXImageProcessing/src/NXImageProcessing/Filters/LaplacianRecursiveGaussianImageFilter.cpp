@@ -34,7 +34,7 @@ std::string LaplacianRecursiveGaussianImageFilter::humanName() const
 }
 std::vector<std::string> LaplacianRecursiveGaussianImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Laplacian", "Gaussian", "EdgeDetection"};
+  return {className(), "NXImageProcessing", "Laplacian", "Gaussian", "EdgeDetection"};
 }
 
 Parameters LaplacianRecursiveGaussianImageFilter::parameters() const

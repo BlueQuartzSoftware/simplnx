@@ -37,7 +37,7 @@ std::string BlackTopHatImageFilter::humanName() const
 }
 std::vector<std::string> BlackTopHatImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BlackTopHat", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BlackTopHat", "Morphology", "MathematicalMorphology"};
 }
 Parameters BlackTopHatImageFilter::parameters() const
 {

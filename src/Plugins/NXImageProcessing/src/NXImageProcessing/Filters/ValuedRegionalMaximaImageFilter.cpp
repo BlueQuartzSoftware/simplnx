@@ -34,7 +34,7 @@ std::string ValuedRegionalMaximaImageFilter::humanName() const
 }
 std::vector<std::string> ValuedRegionalMaximaImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ValuedRegionalMaxima", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "ValuedRegionalMaxima", "MathematicalMorphology", "Morphology"};
 }
 Parameters ValuedRegionalMaximaImageFilter::parameters() const
 {

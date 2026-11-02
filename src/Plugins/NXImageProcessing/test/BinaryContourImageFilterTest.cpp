@@ -1,6 +1,6 @@
 #include "ContourFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryContourImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryContourImageFilter.hpp"
 
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -14,7 +14,7 @@ using namespace nx::core;
 //     type; a non-finite or out-of-range value would be an undefined conversion, so the filter must reject it
 //     at preflight. In-range integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryContourImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[ImageProcessing][BinaryContourImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryContourImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryContourImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -55,12 +55,12 @@ TEST_CASE("ImageProcessing::BinaryContourImageFilter: Preflight rejects non-fini
 //   - "default": WhiteDots.png, foreground 255 (FullyConnected off, background 0 -- filter defaults).
 //   - "custom": 2th_cthead1.png, foreground 100, FullyConnected on.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryContourImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][BinaryContourImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryContourImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][BinaryContourImageFilter]")
 {
   contour_test::RunContourMd5ItkGolden<BinaryContourImageFilter>("WhiteDots.png", "3921141f21fcb41e6d4af197e48ffbb5",
                                                                  contour_test::BinaryContourParamSetter<BinaryContourImageFilter>(/*fullyConnected=*/false, /*foreground=*/255.0, /*background=*/0.0));
 }
-TEST_CASE("ImageProcessing::BinaryContourImageFilter: ITK real-image golden (custom)", "[ImageProcessing][ItkGolden][BinaryContourImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryContourImageFilter: ITK real-image golden (custom)", "[NXImageProcessing][ItkGolden][BinaryContourImageFilter]")
 {
   contour_test::RunContourMd5ItkGolden<BinaryContourImageFilter>("2th_cthead1.png", "09212e4d204a0ed90a445dc832047b22",
                                                                  contour_test::BinaryContourParamSetter<BinaryContourImageFilter>(/*fullyConnected=*/true, /*foreground=*/100.0, /*background=*/0.0));

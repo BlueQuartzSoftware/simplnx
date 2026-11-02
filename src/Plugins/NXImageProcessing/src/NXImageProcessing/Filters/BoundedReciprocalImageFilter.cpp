@@ -42,7 +42,7 @@ std::string BoundedReciprocalImageFilter::humanName() const
 }
 std::vector<std::string> BoundedReciprocalImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BoundedReciprocal", "Pointwise"};
+  return {className(), "NXImageProcessing", "BoundedReciprocal", "Pointwise"};
 }
 Parameters BoundedReciprocalImageFilter::parameters() const
 {

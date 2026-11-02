@@ -4,7 +4,7 @@ Grayscale erosion of an image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

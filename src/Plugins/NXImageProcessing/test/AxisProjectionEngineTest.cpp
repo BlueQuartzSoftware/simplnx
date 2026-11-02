@@ -568,7 +568,7 @@ Result<> RunExternalMedianWithServices(usize projDim, const projection_detail::A
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: Max/Mean/Median on non-cubic image, all axes", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: Max/Mean/Median on non-cubic image, all axes", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const usize projDim = GENERATE(usize{0}, usize{1}, usize{2});
 
@@ -632,7 +632,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: Max/Mean/Median on non-cubic i
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: projection preflight defers full-overwrite output initialization", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers full-overwrite output initialization", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const auto buildInput = [](DataStructure& dataStructure) {
     auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
@@ -688,7 +688,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: projection preflight defers fu
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: InCore direct path avoids bulk input staging", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: InCore direct path avoids bulk input staging", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const usize projDim = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(projDim);
@@ -730,7 +730,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: InCore direct path avoids bulk
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: pre-cancelled projection leaves output unchanged", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: pre-cancelled projection leaves output unchanged", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const usize projDim = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(projDim);
@@ -769,7 +769,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: pre-cancelled projection leave
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: rejects out-of-range projDim", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: rejects out-of-range projDim", "[NXImageProcessing][AxisProjectionEngine]")
 {
   std::vector<int32> ramp(k_Volume);
   for(usize i = 0; i < k_Volume; ++i)
@@ -787,7 +787,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: rejects out-of-range projDim",
   REQUIRE(result.invalid());
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: median pencil rejects a non-3D input tuple shape", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: median pencil rejects a non-3D input tuple shape", "[NXImageProcessing][AxisProjectionEngine]")
 {
   // The median (pencil) path reads a 3-axis extent via readExtent, which returns EMPTY when the store's tuple
   // shape is not 3-dimensional. Rather than silently emit a zero image and report success, the engine must fail
@@ -801,7 +801,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: median pencil rejects a non-3D
   REQUIRE(result.invalid());
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: checked true-2-D plans", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: checked true-2-D plans", "[NXImageProcessing][AxisProjectionEngine]")
 {
   constexpr usize k_MiB = 1024 * 1024;
   constexpr usize k_SmallTarget = 96 * 1024;
@@ -886,7 +886,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: checked true-2-D plans", "[Ima
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: associative bounded true-2-D axes", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded true-2-D axes", "[NXImageProcessing][AxisProjectionEngine]")
 {
   SECTION("X complete-row batches")
   {
@@ -969,7 +969,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: associative bounded true-2-D a
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: associative bounded cancellation and I/O failures", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded cancellation and I/O failures", "[NXImageProcessing][AxisProjectionEngine]")
 {
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 7;
@@ -1050,7 +1050,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: associative bounded cancellati
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: fitting Median bounded true-2-D axes", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: fitting Median bounded true-2-D axes", "[NXImageProcessing][AxisProjectionEngine]")
 {
   SECTION("even X pencils in multiple row batches")
   {
@@ -1087,7 +1087,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: fitting Median bounded true-2-
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median long X and Y pencils", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median long X and Y pencils", "[NXImageProcessing][AxisProjectionEngine]")
 {
   constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 60;
 
@@ -1128,7 +1128,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median long X and Y p
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median provider failures", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider failures", "[NXImageProcessing][AxisProjectionEngine]")
 {
   auto control = std::make_shared<FakeExternalSortControl>();
   std::shared_ptr<ProjectionTransferStore<int32>> transposeStore;
@@ -1215,7 +1215,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median provider failu
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: external record comparator is deterministic", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: external record comparator is deterministic", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const auto compare = [](float32 left, float32 right) {
     std::array<std::byte, sizeof(float32)> leftBytes{};
@@ -1234,7 +1234,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: external record comparator is 
   REQUIRE(compare(nan, nan) == 0);
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median cancellation preserves output", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median cancellation preserves output", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const SizeVec3 k_Dims{17, 3, 1};
   constexpr usize k_OutputValues = 3;
@@ -1263,7 +1263,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: external Median cancellation p
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: endpoint-aware true-2-D selection", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware true-2-D selection", "[NXImageProcessing][AxisProjectionEngine]")
 {
   const bool inputOutOfCore = GENERATE(false, true);
   const bool outputOutOfCore = GENERATE(false, true);
@@ -1302,7 +1302,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: endpoint-aware true-2-D select
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: endpoint-aware fitting Median selection", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware fitting Median selection", "[NXImageProcessing][AxisProjectionEngine]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -1336,7 +1336,7 @@ TEST_CASE("ImageProcessing::AxisProjectionEngine: endpoint-aware fitting Median 
   }
 }
 
-TEST_CASE("ImageProcessing::AxisProjectionEngine: OOC-backed Z-greater-than-one stays resident", "[ImageProcessing][AxisProjectionEngine]")
+TEST_CASE("NXImageProcessing::AxisProjectionEngine: OOC-backed Z-greater-than-one stays resident", "[NXImageProcessing][AxisProjectionEngine]")
 {
   constexpr usize k_DimX = 4;
   constexpr usize k_DimY = 5;

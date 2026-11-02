@@ -51,7 +51,7 @@ std::string BinaryMorphologicalOpeningImageFilter::humanName() const
 }
 std::vector<std::string> BinaryMorphologicalOpeningImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryMorphologicalOpening", "Binary", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BinaryMorphologicalOpening", "Binary", "Morphology", "MathematicalMorphology"};
 }
 Parameters BinaryMorphologicalOpeningImageFilter::parameters() const
 {

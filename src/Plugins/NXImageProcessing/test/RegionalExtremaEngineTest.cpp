@@ -197,7 +197,7 @@ std::vector<T> MakePlateauPattern(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: total working-memory grants scale checked halo-slab plans without changing output", "[ImageProcessing][RegionalExtremaEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: total working-memory grants scale checked halo-slab plans without changing output", "[NXImageProcessing][RegionalExtremaEngine][WorkingMemory]")
 {
   constexpr usize dimX = 4;
   constexpr usize dimY = 3;
@@ -279,7 +279,7 @@ TEST_CASE("ImageProcessing::RegionalExtremaEngine: total working-memory grants s
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: multi-slab short tail preserves the exact fixpoint", "[RegionalExtremaEngine]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: multi-slab short tail preserves the exact fixpoint", "[RegionalExtremaEngine]")
 {
   // A two-plane core over seven planes forces 2 + 2 + 2 + 1 in both directions. Only the first corridor voxel has
   // a strictly-more-extreme neighbor, so the marker must cross every slab boundary to reach the short tail.
@@ -314,7 +314,7 @@ TEST_CASE("ImageProcessing::RegionalExtremaEngine: multi-slab short tail preserv
   }
 }
 
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: full-connectivity diagonal crosses slab halos and the short tail", "[RegionalExtremaEngine]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: full-connectivity diagonal crosses slab halos and the short tail", "[RegionalExtremaEngine]")
 {
   // Alternating XY positions make consecutive corridor voxels touch only through a vertex across Z. Two core planes
   // over seven planes force 2 + 2 + 2 + 1, so full-connectivity propagation crosses every slab halo and reaches the
@@ -358,7 +358,7 @@ TEST_CASE("ImageProcessing::RegionalExtremaEngine: full-connectivity diagonal cr
   }
 }
 
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: bounded 2D row blocks and overwide tiles preserve the exact fixpoint", "[RegionalExtremaEngine]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: bounded 2D row blocks and overwide tiles preserve the exact fixpoint", "[RegionalExtremaEngine]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 9;
@@ -381,7 +381,7 @@ TEST_CASE("ImageProcessing::RegionalExtremaEngine: bounded 2D row blocks and ove
   }
 }
 
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: sweep validates dimensions and store sizes", "[RegionalExtremaEngine]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: sweep validates dimensions and store sizes", "[RegionalExtremaEngine]")
 {
   DataStore<int8> inputStore(ShapeType{1}, ShapeType{1}, int8{7});
   DataStore<int8> outputStore(ShapeType{1}, ShapeType{1}, int8{42});
@@ -432,7 +432,7 @@ TEST_CASE("ImageProcessing::RegionalExtremaEngine: sweep validates dimensions an
 // Cross-validation: the in-core Flood, the out-of-core Sweep, and the independent Jacobi oracle must AGREE
 // byte-for-byte for both ops and both connectivities, across element types and a battery of shapes/patterns.
 // -----------------------------------------------------------------------------
-TEMPLATE_TEST_CASE("ImageProcessing::RegionalExtremaEngine: Flood == Sweep == oracle", "[RegionalExtremaEngine]", uint8, int16, int32, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::RegionalExtremaEngine: Flood == Sweep == oracle", "[RegionalExtremaEngine]", uint8, int16, int32, float32)
 {
   using T = TestType;
 
@@ -533,7 +533,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::RegionalExtremaEngine: Flood == Sweep == or
 // Hand-computed: a single central peak plateau on a lower field is kept at its value; everything else (lower) is a
 // non-maximum -> marker value. Dual for a central pit under Minima.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalExtremaEngine: hand-computed central extremum", "[RegionalExtremaEngine]")
+TEST_CASE("NXImageProcessing::RegionalExtremaEngine: hand-computed central extremum", "[RegionalExtremaEngine]")
 {
   constexpr usize DX = 5, DY = 5, DZ = 1;
   const int32 field = 10;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -21,7 +21,7 @@ namespace nx::core
  * Reconstruction Image Filter exactly for integer and float types, and is out-of-core capable: the erosion and
  * both reconstruction passes stream through bounded-memory scratch stores.
  */
-class IMAGEPROCESSING_EXPORT OpeningByReconstructionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT OpeningByReconstructionImageFilter : public IFilter
 {
 public:
   OpeningByReconstructionImageFilter() = default;

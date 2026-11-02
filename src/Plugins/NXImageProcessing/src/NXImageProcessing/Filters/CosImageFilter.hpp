@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-class IMAGEPROCESSING_EXPORT CosImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT CosImageFilter : public IFilter
 {
 public:
   CosImageFilter() = default;

@@ -4,7 +4,7 @@ Denoise an image using min/max curvature flow, a PDE-based finite-difference fil
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

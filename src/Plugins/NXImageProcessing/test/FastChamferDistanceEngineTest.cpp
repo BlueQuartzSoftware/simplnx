@@ -370,7 +370,7 @@ private:
 
 // A single 0-seed in a large (frozen) positive field: the two-pass chamfer computes the EXACT optimized-chamfer
 // distance to the seed. Immediate neighbors are the raw weights; multi-step voxels are the cheapest weighted path.
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (3D)", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (3D)", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize D = 9;
   constexpr float32 kMax = 100.0f;
@@ -390,7 +390,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: single seed == chamfer me
   REQUIRE(out[FlatIndex(2, 4, 4, D, D)] == Approx(2.0f * kW0).epsilon(1e-5)); // two -x axis steps
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (2D)", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: single seed == chamfer metric (2D)", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize D = 9;
   constexpr float32 kMax = 100.0f;
@@ -408,7 +408,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: single seed == chamfer me
 
 // A signed step with a zero band at x==C: after the chamfer, the value steps by w0 per voxel away from the band, with
 // the correct sign (positive on the +x side, negative on the -x side).
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: signed plane band", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: signed plane band", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize DX = 9, DY = 5, DZ = 1, C = 4;
   constexpr float32 kMax = 100.0f;
@@ -434,7 +434,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: signed plane band", "[Ima
 
 // Small maxDist freezes the far field: a voxel adjacent to the band gets w0 (< maxDist), but a voxel whose chamfer
 // distance exceeds maxDist retains a magnitude >= maxDist (the propagation front stops there).
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: maxDist freeze", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: maxDist freeze", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize DX = 12, DY = 3, DZ = 1;
   constexpr float32 kMax = 2.0f;
@@ -451,7 +451,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: maxDist freeze", "[ImageP
   }
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: deterministic", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: deterministic", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize D = 10;
   std::vector<float32> field(D * D * D, 51.0f);
@@ -466,7 +466,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: deterministic", "[ImagePr
   }
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: fused output negation is exact", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: fused output negation is exact", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   for(const SizeVec3 dims : {SizeVec3{7, 6, 5}, SizeVec3{9, 8, 1}})
   {
@@ -486,7 +486,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: fused output negation is 
 
 // Tall volume forcing many streaming-window refills: a single-seed z-column still equals the exact axis chamfer
 // metric (n * w0), validating the forward/backward streaming bookkeeping.
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: tall-volume streaming", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: tall-volume streaming", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize DX = 7, DY = 6, DZ = 40;
   constexpr float32 kMax = 200.0f;
@@ -501,7 +501,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: tall-volume streaming", "
   }
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -543,7 +543,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: resident state requires a
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: 2D planner bounds row blocks and overwide tiles", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner bounds row blocks and overwide tiles", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   const auto benchmark = ImageProcessing::detail::BuildChamfer2DBufferPlan(5888, 5888);
   REQUIRE(benchmark.valid);
@@ -589,7 +589,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: 2D planner bounds row blo
   REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   const auto overflow = ImageProcessing::detail::BuildChamfer2DBufferPlan(std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max());
   const auto zeroX = ImageProcessing::detail::BuildChamfer2DBufferPlan(0, 1);
@@ -602,7 +602,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: 2D planner rejects invali
   REQUIRE(zeroY.overflow);
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: row-group wavefront is bit-identical to the serial recurrence", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: row-group wavefront is bit-identical to the serial recurrence", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   STATIC_REQUIRE(ImageProcessing::detail::k_ChamferRowGroupRows == 8);
   const std::array<SizeVec3, 12> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 5}, SizeVec3{5, 1, 1},    SizeVec3{1, 7, 1},  SizeVec3{2, 2, 2},  SizeVec3{3, 3, 3},
@@ -637,7 +637,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: row-group wavefront is bi
   }
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: in-core resident path performs no bulk transfers", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: in-core resident path performs no bulk transfers", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize dimX = 17;
   constexpr usize dimY = 13;
@@ -660,7 +660,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: in-core resident path per
   RequireBitIdentical(ReadStoreValues(store), expected);
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: pre-cancelled run leaves the store untouched", "[ImageProcessing][FastChamferDistanceEngine]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: pre-cancelled run leaves the store untouched", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 8;
@@ -680,7 +680,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: pre-cancelled run leaves 
   REQUIRE(store.writtenValues() == 0);
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: bounded 3-D route matches the serial recurrence across plane blocks", "[ImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route matches the serial recurrence across plane blocks", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
   TemporaryRecordStoreConfig config;
   config.recordSize = 4;
@@ -723,7 +723,7 @@ TEST_CASE("ImageProcessing::FastChamferDistanceEngine: bounded 3-D route matches
   }
 }
 
-TEST_CASE("ImageProcessing::FastChamferDistanceEngine: complete-grant route copies the volume once and matches", "[ImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: complete-grant route copies the volume once and matches", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 6;

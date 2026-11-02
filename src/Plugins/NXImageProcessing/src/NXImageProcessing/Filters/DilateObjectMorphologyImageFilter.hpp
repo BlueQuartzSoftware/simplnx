@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -23,7 +23,7 @@ namespace nx::core
  * kernel, copy-then-paint execution is deterministic rather than subject to the legacy multithreaded race,
  * and the filter is out-of-core capable (the legacy filter rejected chunked arrays).
  */
-class IMAGEPROCESSING_EXPORT DilateObjectMorphologyImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT DilateObjectMorphologyImageFilter : public IFilter
 {
 public:
   DilateObjectMorphologyImageFilter() = default;

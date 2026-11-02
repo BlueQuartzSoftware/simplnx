@@ -4,7 +4,7 @@ Produce a binary image marking the regional maxima of a grayscale image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

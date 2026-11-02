@@ -103,7 +103,7 @@ std::string BinaryProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> BinaryProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Binary", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Binary", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

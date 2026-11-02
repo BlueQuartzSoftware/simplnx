@@ -144,7 +144,7 @@ std::vector<T> SubtractOracle(const std::vector<T>& aValues, const std::vector<T
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::StoreElementwise: SubtractStores matches the serial difference on resident stores", "[ImageProcessing][StoreElementwise]", uint8, int16, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::StoreElementwise: SubtractStores matches the serial difference on resident stores", "[NXImageProcessing][StoreElementwise]", uint8, int16, float32)
 {
   using T = TestType;
   std::atomic_bool shouldCancel{false};
@@ -189,7 +189,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::StoreElementwise: SubtractStores matches th
   }
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: SubtractStores chunked path crosses chunk boundaries", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: SubtractStores chunked path crosses chunk boundaries", "[NXImageProcessing][StoreElementwise]")
 {
   constexpr usize k_ChunkValues = 8;
   std::atomic_bool shouldCancel{false};
@@ -312,7 +312,7 @@ TEST_CASE("ImageProcessing::StoreElementwise: SubtractStores chunked path crosse
   }
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: resident SubtractStores performs no bulk transfers", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: resident SubtractStores performs no bulk transfers", "[NXImageProcessing][StoreElementwise]")
 {
   constexpr usize k_Size = 4097;
   std::vector<float32> aValues;
@@ -337,7 +337,7 @@ TEST_CASE("ImageProcessing::StoreElementwise: resident SubtractStores performs n
   REQUIRE(outStore.writtenValues() == 0);
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: resident InvertBinaryStore performs no bulk transfers", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: resident InvertBinaryStore performs no bulk transfers", "[NXImageProcessing][StoreElementwise]")
 {
   constexpr usize k_Size = 4097;
   std::vector<int32> inputValues(k_Size);
@@ -359,7 +359,7 @@ TEST_CASE("ImageProcessing::StoreElementwise: resident InvertBinaryStore perform
   REQUIRE(outStore.writtenValues() == 0);
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: InvertBinaryStore chunked path uses the requested chunk geometry", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: InvertBinaryStore chunked path uses the requested chunk geometry", "[NXImageProcessing][StoreElementwise]")
 {
   std::atomic_bool shouldCancel{false};
 
@@ -403,7 +403,7 @@ TEST_CASE("ImageProcessing::StoreElementwise: InvertBinaryStore chunked path use
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::StoreElementwise: InvertBinaryStore maps nonzero to zero and zero to one", "[ImageProcessing][StoreElementwise]", uint8, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::StoreElementwise: InvertBinaryStore maps nonzero to zero and zero to one", "[NXImageProcessing][StoreElementwise]", uint8, int32)
 {
   using T = TestType;
   std::atomic_bool shouldCancel{false};
@@ -466,7 +466,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::StoreElementwise: InvertBinaryStore maps no
   }
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: pre-cancelled helpers read and write nothing", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: pre-cancelled helpers read and write nothing", "[NXImageProcessing][StoreElementwise]")
 {
   constexpr usize k_Size = 21;
   constexpr int32 k_Poison = 77;
@@ -536,7 +536,7 @@ TEST_CASE("ImageProcessing::StoreElementwise: pre-cancelled helpers read and wri
   }
 }
 
-TEST_CASE("ImageProcessing::StoreElementwise: resident and chunked paths agree", "[ImageProcessing][StoreElementwise]")
+TEST_CASE("NXImageProcessing::StoreElementwise: resident and chunked paths agree", "[NXImageProcessing][StoreElementwise]")
 {
   constexpr usize k_Size = 4097;
   std::mt19937 generator(0x5A17U);

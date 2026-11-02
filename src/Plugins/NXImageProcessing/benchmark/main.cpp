@@ -1,4 +1,4 @@
-// ImageProcessingBenchmark -- a standalone developer tool that times ImageProcessing filters on large,
+// NXImageProcessingBenchmark -- a standalone developer tool that times NXImageProcessing filters on large,
 // tile-replicated real inputs. A few tiny CTest smoke invocations exercise its custom input preparations; this file
 // provides the CLI, plugin loading, two-config timing sweep, CSV output, and merge mode.
 
@@ -10,7 +10,7 @@
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 
-#ifdef SIMPLNX_IMAGEPROCESSING_BENCH_HAS_OOC
+#ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
 // Only present in the OOC harness build (where the SimplnxOoc target exists). These wire up the disk-backed
 // "HDF5-OOC" backend so `--mode ooc` produces real out-of-core stores; the standalone build compiles none of it.
 #include "SimplnxOoc/OocDataIOManager.hpp"         // SimplnxOoc::registerIOManager / SimplnxOoc::shutdown
@@ -60,7 +60,7 @@ std::string FirstErrorMessage(const std::vector<Error>& errors)
 
 void PrintUsage()
 {
-  fmt::print("Usage: ImageProcessingBenchmark [options]\n"
+  fmt::print("Usage: NXImageProcessingBenchmark [options]\n"
              "  --mode {{incore|ooc}}     Storage mode for the tiled input (default: incore)\n"
              "  --target-voxels N        Lower bound on tiled voxel count (default: 256000000)\n"
              "  --z-slices N             Lower bound on tiled Z extent (default: 256)\n"
@@ -69,7 +69,7 @@ void PrintUsage()
              "  --warmup N               Un-timed iterations before timing (default: 1)\n"
              "  --repeats N              Timed executions per filter/config (default: 3)\n"
              "  --cache-memory-budget-bytes N  Cache budget for this process; working memory is limited to 25%\n"
-             "  --working-memory-bytes N Override ImageProcessing's preferred working-memory request\n"
+             "  --working-memory-bytes N Override NXImageProcessing's preferred working-memory request\n"
              "  --ooc-only               With --mode ooc, skip the InCore timing\n"
              "  --filters {{subset|all|<name>[,<name>...]}}  Which filters to run (default: subset)\n"
              "  --require-new-result     Exit nonzero if a selected new-filter configuration fails or is skipped\n"
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
   }
 
   // --- Load ALL plugins from the build's plugin directory (same dir as this exe). This resolves the
-  //     ImageProcessing filters through the FilterList. ---
+  //     NXImageProcessing filters through the FilterList. ---
   auto app = Application::GetOrCreateInstance();
   auto& cacheBudgetManager = CacheMemoryBudgetManager::instance();
   const uint64 requestedCacheBudgetBytes = opts.cacheMemoryBudgetBytes.value_or(app->getPreferences()->cacheMemoryBudgetBytes());
@@ -275,7 +275,7 @@ int main(int argc, char** argv)
     fmt::print("WARNING: one or more plugins failed to load from '{}': {}\n", std::string(SIMPLNX_BUILD_DIR), FirstErrorMessage(loadResult.errors()));
   }
 
-#ifdef SIMPLNX_IMAGEPROCESSING_BENCH_HAS_OOC
+#ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
   // Register the out-of-core backend + preference-driven resolver so `--mode ooc` produces disk-backed "HDF5-OOC"
   // stores. Mirrors SimplnxOoc's unit-test bootstrap: the ForceOutOfCore preference set below is INERT without BOTH
   // the registered manager AND the resolver that maps that preference to the "HDF5-OOC" format. Only compiled in the
@@ -380,7 +380,7 @@ int main(int argc, char** argv)
     }
     if(missingResult)
     {
-#ifdef SIMPLNX_IMAGEPROCESSING_BENCH_HAS_OOC
+#ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
       SimplnxOoc::shutdown();
 #endif
       return 1;
@@ -399,7 +399,7 @@ int main(int argc, char** argv)
     fmt::print("\nWrote CSV: {}\n", opts.outCsv);
   }
 
-#ifdef SIMPLNX_IMAGEPROCESSING_BENCH_HAS_OOC
+#ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
   SimplnxOoc::shutdown(); // flush dirty chunks + release OOC session files before exit
 #endif
 

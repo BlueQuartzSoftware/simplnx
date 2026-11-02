@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  * (scl_slope != 0 and (slope != 1 or inter != 0)) and the user elects to
  * apply it, the output array is promoted to float32.
  */
-class IMAGEPROCESSING_EXPORT ReadNIfTIFileFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadNIfTIFileFilter : public IFilter
 {
 public:
   ReadNIfTIFileFilter();

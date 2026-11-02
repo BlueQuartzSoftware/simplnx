@@ -97,7 +97,7 @@ std::string RescaleIntensityImageFilter::humanName() const
 }
 std::vector<std::string> RescaleIntensityImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "RescaleIntensity", "Pointwise"};
+  return {className(), "NXImageProcessing", "RescaleIntensity", "Pointwise"};
 }
 Parameters RescaleIntensityImageFilter::parameters() const
 {

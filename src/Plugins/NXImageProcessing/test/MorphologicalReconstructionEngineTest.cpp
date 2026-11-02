@@ -459,7 +459,7 @@ void CheckReconstruction(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::SweepTemporaryStore: performs typed bulk I/O and rejects backend failures", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::SweepTemporaryStore: performs typed bulk I/O and rejects backend failures", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   std::atomic_bool shouldCancel{false};
   auto backend = std::make_unique<TestSweepTemporaryRecordStore>(sizeof(float32), 12, 4);
@@ -488,7 +488,7 @@ TEST_CASE("ImageProcessing::SweepTemporaryStore: performs typed bulk I/O and rej
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
 }
 
-TEST_CASE("ImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep buffers", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep buffers", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   using ImageProcessing::detail::CreateSweep2DPlan;
 
@@ -533,8 +533,8 @@ TEST_CASE("ImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep bu
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: total working-memory grants scale checked sweep plans without changing output",
-          "[ImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: total working-memory grants scale checked sweep plans without changing output",
+          "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 6;
@@ -674,7 +674,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: total working-mem
   REQUIRE(height2DPreference.denominator == 1);
 }
 
-TEST_CASE("ImageProcessing::BoundedMemorySweepStore: provides bulk-only fixed-capacity storage", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::BoundedMemorySweepStore: provides bulk-only fixed-capacity storage", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   auto storeResult = ImageProcessing::detail::BoundedMemorySweepStore<int16>::Create(/*logicalValues=*/6, /*capacityValues=*/12);
   REQUIRE(storeResult.valid());
@@ -691,7 +691,7 @@ TEST_CASE("ImageProcessing::BoundedMemorySweepStore: provides bulk-only fixed-ca
   REQUIRE(ImageProcessing::detail::BoundedMemorySweepStore<int16>::Create(/*logicalValues=*/13, /*capacityValues=*/12).invalid());
 }
 
-TEST_CASE("ImageProcessing::BoundedReconstructionQueue: rejects overflow and reuses released entries", "[ImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::BoundedReconstructionQueue: rejects overflow and reuses released entries", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
   ImageProcessing::detail::BoundedReconstructionQueue<uint64> queue(3);
   REQUIRE(queue.capacity() == 3);
@@ -712,7 +712,7 @@ TEST_CASE("ImageProcessing::BoundedReconstructionQueue: rejects overflow and reu
   REQUIRE(queue.empty());
 }
 
-TEST_CASE("ImageProcessing::ReconstructVincent: a bounded frontier uses the resident sweep fallback", "[ImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::ReconstructVincent: a bounded frontier uses the resident sweep fallback", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 6;
@@ -730,7 +730,7 @@ TEST_CASE("ImageProcessing::ReconstructVincent: a bounded frontier uses the resi
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: full-grant 3D sweeps keep adaptive state resident", "[ImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: full-grant 3D sweeps keep adaptive state resident", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
   constexpr usize dimX = 4;
   constexpr usize dimY = 5;
@@ -775,7 +775,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: full-grant 3D swe
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: adaptive persistent prefix preserves exact streamed results", "[ImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persistent prefix preserves exact streamed results", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
   constexpr usize dimX = 4;
   constexpr usize dimY = 5;
@@ -826,7 +826,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: adaptive persiste
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: one sweep pair preserves intermediate scan order", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: one sweep pair preserves intermediate scan order", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   auto checkLayout = [](usize dimZ, usize slabPlanes) {
     constexpr usize dimX = 7;
@@ -862,7 +862,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: one sweep pair pr
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: bounded 2D row blocks and overwide tiles preserve exact scan semantics", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: bounded 2D row blocks and overwide tiles preserve exact scan semantics", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 9;
@@ -890,7 +890,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: bounded 2D row bl
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: validates dimensions and store sizes", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: validates dimensions and store sizes", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   DataStore<int8> markerStore(ShapeType{1}, ShapeType{1}, int8{7});
   DataStore<int8> maskStore(ShapeType{1}, ShapeType{1}, int8{8});
@@ -924,7 +924,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: validates dimensi
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: multi-slab short tail preserves exact scan semantics", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: multi-slab short tail preserves exact scan semantics", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   // Two planes per slab over seven planes forces 2 + 2 + 2 + 1 in both directions. The seeded markers require
   // propagation across every slab boundary, exercising both the carried boundary plane and the short tail.
@@ -949,7 +949,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: multi-slab short 
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: Vincent == Sweep == oracle (3D + 2D + small)", "[ImageProcessing][MorphologicalReconstructionEngine]", uint8, int16, int32,
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: Vincent == Sweep == oracle (3D + 2D + small)", "[NXImageProcessing][MorphologicalReconstructionEngine]", uint8, int16, int32,
                    float32)
 {
   using T = TestType;
@@ -967,7 +967,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: Vincent 
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: hand-computed dark-hole fill (erosion)", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: hand-computed dark-hole fill (erosion)", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   // 5x5x1 bright field (value 100) with a single dark hole (value 0) at the center, NOT touching the border.
   // Fillhole-style marker: max (100) in the interior, input on the border. Reconstruct-by-erosion fills the hole
@@ -988,7 +988,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: hand-computed dar
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: hand-computed shallow vs deep maximum (dilation)", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: hand-computed shallow vs deep maximum (dilation)", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   // 1D line (7x1x1), background 10, with a shallow bump (+3 -> 13) and a deep bump (+30 -> 40). HMaxima marker =
   // input - h with h = 5: bumps below h vanish (flattened to background), bumps >= h survive reduced by h.
@@ -1011,7 +1011,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: hand-computed sha
   REQUIRE(out[0] == 10);
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: configured mask-derived height markers match provided markers", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask-derived height markers match provided markers", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 6;
@@ -1046,7 +1046,7 @@ TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: configured mask-d
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalReconstructionEngine: configured mask-derived border markers match provided markers", "[ImageProcessing][MorphologicalReconstructionEngine]")
+TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask-derived border markers match provided markers", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   constexpr usize dimX = 4;
   constexpr usize dimY = 5;

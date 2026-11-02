@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/InvertIntensityImageFilter.hpp"
+#include "NXImageProcessing/Filters/InvertIntensityImageFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 
@@ -13,7 +13,7 @@ using namespace nx::core;
 // Regression for the narrow-integer output cast (same class as the RescaleIntensity int8 case): Maximum - value
 // can exceed the int8 range, which was undefined pre-fix. With Maximum=150 on an int8 ramp 0..63, the result
 // 150-value straddles 127: bright voxels saturate to the int8 max (127) and the rest stay valid int8.
-TEST_CASE("ImageProcessing::InvertIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[ImageProcessing][InvertIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -46,7 +46,7 @@ TEST_CASE("ImageProcessing::InvertIntensityImageFilter: int8 output saturates (n
   REQUIRE(allInRange);
 }
 
-TEST_CASE("ImageProcessing::InvertIntensityImageFilter: fractional maximum preserves Float64 semantics", "[ImageProcessing][InvertIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: fractional maximum preserves Float64 semantics", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -68,7 +68,7 @@ TEST_CASE("ImageProcessing::InvertIntensityImageFilter: fractional maximum prese
   REQUIRE(output.getValue(2) == -1); // -1.5 truncates toward zero
 }
 
-TEST_CASE("ImageProcessing::InvertIntensityImageFilter: extreme integral maximum uses safe fallback", "[ImageProcessing][InvertIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: extreme integral maximum uses safe fallback", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -94,7 +94,7 @@ TEST_CASE("ImageProcessing::InvertIntensityImageFilter: extreme integral maximum
 // RA-Short.nrrd (int16) through OUR ITK-free reader, run OUR InvertIntensityImageFilter (SameAsInput int16, defaults --
 // Maximum unset), then compare the output md5 with ITK's committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::InvertIntensityImageFilter: ITK real-image golden (3d)", "[ImageProcessing][ItkGolden][InvertIntensityImageFilter]")
+TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden (3d)", "[NXImageProcessing][ItkGolden][InvertIntensityImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

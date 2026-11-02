@@ -30,7 +30,7 @@ std::string CurvatureFlowImageFilter::humanName() const
 }
 std::vector<std::string> CurvatureFlowImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "CurvatureFlow", "PDE"};
+  return {className(), "NXImageProcessing", "Smoothing", "CurvatureFlow", "PDE"};
 }
 
 Parameters CurvatureFlowImageFilter::parameters() const

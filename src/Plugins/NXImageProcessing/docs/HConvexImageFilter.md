@@ -4,7 +4,7 @@ Extract the h-convex regional maxima (the "domes") of a grayscale image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

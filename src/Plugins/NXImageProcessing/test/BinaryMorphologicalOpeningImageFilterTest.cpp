@@ -1,6 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -32,7 +32,7 @@ morph_test::KernelParamSetter OpeningKernelParamSetter(float64 foreground, float
 //     (opening == dilate(erode(in))). It validates Annulus (the filter rasterizes the real thickness-1 shell)
 //     and the (Box, 3D r{2,1,0}) cell, which has a zero-radius axis on a 3D image. fg=41/bg=0.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (Annulus + Box zero-radius)", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
   using morph_test::BinaryCompositeKind;
   using morph_test::KernelType;
@@ -64,7 +64,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expe
 //     foreground nor background: preflight passes (fg/bg are in range) but execute must fail with the
 //     k_NonBinaryInput safeguard code (the composite runs the safeguard exactly once on the original input).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non-binary input at execute", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -97,7 +97,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non-b
 //     test compares the output with the independent composite fg-count oracle computed over the actual input
 //     (Opening never pads). Real-disk out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (both algorithm paths)", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -181,7 +181,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expe
 //     type; a non-finite or out-of-range value would be an undefined conversion, so the filter must reject it
 //     at preflight. In-range integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -220,7 +220,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rej
 //     erode(boundaryToForeground=true) then dilate(boundaryToForeground=false); Ball radius {1,1,1}. The test
 //     compares our output md5 with the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-image golden (WhiteDots)", "[ImageProcessing][ItkGolden][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-image golden (WhiteDots)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalOpeningImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<OpeningFilter>("WhiteDots.png", "3dcb8bce1c174f358608927212aa4cf7", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                        OpeningKernelParamSetter(255.0, 0.0));
@@ -230,7 +230,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-imag
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8480) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<OpeningFilter, uint8>(-8480, OpeningKernelParamSetter(1.0, 0.0));
 }

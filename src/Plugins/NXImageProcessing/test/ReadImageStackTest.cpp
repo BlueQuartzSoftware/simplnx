@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
-#include "ImageProcessing/Filters/ReadImageStackFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/Filters/ReadImageFilter.hpp"
+#include "NXImageProcessing/Filters/ReadImageStackFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -28,7 +28,7 @@ namespace
 {
 // The read-image-stack test re-uses the ImageStack data from the ITKImageProcessing plugin source
 // tree. See the note in WriteImageTest.cpp for why we reach across plugin boundaries here.
-const std::string k_ImageStackDir = std::string(unit_test::k_SimplnxSourceDIr.view()) + "/src/Plugins/ImageProcessing/data/ImageStack";
+const std::string k_ImageStackDir = std::string(unit_test::k_SimplnxSourceDIr.view()) + "/src/Plugins/NXImageProcessing/data/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
 const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
 // The image_flip_test_images directory lives inside the import_image_stack_test_v3 archive
@@ -315,7 +315,7 @@ void VerifyOriginSpacing(const DataStructure& ds, const DataPath& geomPath, cons
 
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: NoInput", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoInput", "[NXImageProcessing][ReadImageStackFilter]")
 {
   ReadImageStackFilter filter;
   DataStructure dataStructure;
@@ -327,7 +327,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: NoInput", "[ImageProcessing][R
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: NoImageGeometry", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoImageGeometry", "[NXImageProcessing][ReadImageStackFilter]")
 {
   ReadImageStackFilter filter;
   DataStructure dataStructure;
@@ -345,7 +345,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: NoImageGeometry", "[ImageProce
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: NoFiles", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoFiles", "[NXImageProcessing][ReadImageStackFilter]")
 {
   ReadImageStackFilter filter;
   DataStructure dataStructure;
@@ -371,7 +371,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: NoFiles", "[ImageProcessing][R
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[NXImageProcessing][ReadImageStackFilter]")
 {
   ReadImageStackFilter filter;
   DataStructure dataStructure;
@@ -397,7 +397,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[ImageProc
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: CompareImage", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: CompareImage", "[NXImageProcessing][ReadImageStackFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -459,7 +459,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: CompareImage", "[ImageProcessi
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -483,7 +483,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y", 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -507,7 +507,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y", "
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -527,7 +527,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y", "
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -547,7 +547,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", "[
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[ImageProcessing][ReadImageStackFilter][Baseline]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NXImageProcessing][ReadImageStackFilter][Baseline]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -579,7 +579,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[Imag
 // CROPPING TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -606,7 +606,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[ImageProc
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -633,7 +633,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[ImageProc
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -660,7 +660,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[ImageProc
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -687,7 +687,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[ImageProcess
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -714,7 +714,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[ImageProces
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -741,7 +741,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[ImageProc
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -772,7 +772,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[ImageProce
 // RESAMPLING TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[ImageProcessing][ReadImageStackFilter][Resampling]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[NXImageProcessing][ReadImageStackFilter][Resampling]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -799,7 +799,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[Ima
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[ImageProcessing][ReadImageStackFilter][Resampling]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[NXImageProcessing][ReadImageStackFilter][Resampling]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -830,7 +830,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[I
 // GRAYSCALE TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[ImageProcessing][ReadImageStackFilter][Grayscale]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXImageProcessing][ReadImageStackFilter][Grayscale]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -864,7 +864,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[Image
 // FLIP TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::FlipY", "[ImageProcessing][ReadImageStackFilter][Flip]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing][ReadImageStackFilter][Flip]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -895,7 +895,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::FlipY", "[ImageProcessing][Rea
 // ORIGIN/SPACING TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -923,7 +923,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed", "
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -951,7 +951,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", 
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_WithZCrop", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_WithZCrop", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -979,7 +979,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_Wit
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_WithZCrop", "[ImageProcessing][ReadImageStackFilter][OriginSpacing]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_WithZCrop", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1011,7 +1011,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_Wi
 // INTERACTION TESTS
 // =============================================================================
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1038,7 +1038,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", "[
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1065,7 +1065,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[Imag
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1092,7 +1092,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1122,7 +1122,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1152,7 +1152,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1182,7 +1182,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "[ImageProcessing][ReadImageStackFilter][Interaction]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -1259,7 +1259,7 @@ void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, c
 // is: Z == number of FILES, each slice is the FIRST page of the corresponding file, and pages past the
 // first are dropped with a diagnostic warning. This guards against the naive "read every page" behavior
 // that would make Z == the sum of all pages and waste IO/memory on large multi-page stacks.
-TEST_CASE("ImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile", "[NXImageProcessing][ReadImageStackFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1370,7 +1370,7 @@ Arguments CreateZCropStackArgs(const std::string& name)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1398,7 +1398,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart",
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1431,7 +1431,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound", "
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   const bool useOverrides = GENERATE(false, true);
@@ -1457,7 +1457,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[ImageP
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_ScalarInput_Rejected", "[ImageProcessing][ReadImageStackFilter][Grayscale]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_ScalarInput_Rejected", "[NXImageProcessing][ReadImageStackFilter][Grayscale]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1470,7 +1470,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Grayscale_ScalarInput_Rejected
   REQUIRE(preflightResult.outputActions.errors().front().code == -23507);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1504,7 +1504,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound", "
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1543,7 +1543,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[Im
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NaN", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NaN", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -1566,7 +1566,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NaN", "[ImageP
   REQUIRE(std::any_of(errors.begin(), errors.end(), [](const Error& error) { return error.code == -23526; }));
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWarning", "[ImageProcessing][ReadImageStackFilter][Cropping]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWarning", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
   UnitTest::LoadPlugins();
   const ChoicesParameter::ValueType resampleMode = GENERATE(0ULL, 2ULL);

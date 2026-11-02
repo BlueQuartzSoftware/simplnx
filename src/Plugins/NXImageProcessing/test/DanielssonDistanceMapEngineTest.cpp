@@ -163,7 +163,7 @@ std::vector<float32> ExactEdtOracle(const std::vector<int32>& in, usize dx, usiz
   return out;
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: hybrid vector-plane router bypasses scratch for resident prefix", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: hybrid vector-plane router bypasses scratch for resident prefix", "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_PlaneValues = 6;
   constexpr usize k_VectorValues = k_PlaneValues * 3;
@@ -200,7 +200,8 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: hybrid vector-plane rou
   REQUIRE(prefix[k_VectorValues] == 23);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: compact vector scratch preserves components and uses the signed-16 boundary", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: compact vector scratch preserves components and uses the signed-16 boundary",
+          "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_PlaneValues = 2;
   constexpr usize k_VectorValues = k_PlaneValues * 3;
@@ -294,7 +295,7 @@ std::vector<int32> MakePattern(usize dx, usize dy, usize dz)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: tracked update keeps the vector norm exact", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: tracked update keeps the vector norm exact", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr std::array<int32, 5> k_HereComponents{-3, -1, 0, 2, 5};
   constexpr std::array<int32, 4> k_ThereComponents{-4, 0, 1, 3};
@@ -353,7 +354,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: tracked update keeps th
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: in-core engine matches through a transfer-counting input", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: in-core engine matches through a transfer-counting input", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr usize k_DimX = 37;
   constexpr usize k_DimY = 29;
@@ -394,7 +395,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: in-core engine matches 
 // A full seed plane on one axis makes the transform purely 1D along that axis -- Danielsson's 4SED is EXACT there, so
 // this pins down each axis's forward/backward propagation and the spacing weighting against the exact EDT. Exercises
 // all three axes and both sqrt/squared and spacing branches.
-TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: axis seed planes == exact EDT", "[ImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: axis seed planes == exact EDT", "[NXImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
 {
   using T = TestType;
   const bool squared = GENERATE(false, true);
@@ -444,7 +445,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: axis seed plan
 
 // A filled half-space of features {x >= k}: the zero region x<k has its nearest feature on the x=k plane, so the
 // distance is exactly (k-x) along x -- 4SED-exact and hand-obvious.
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: half-space == exact EDT", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: half-space == exact EDT", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr usize DX = 8, DY = 4, DZ = 3, K = 5;
   std::vector<int32> pattern(DX * DY * DZ, 0);
@@ -476,7 +477,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: half-space == exact EDT
 // 4SED invariants that hold for ANY pattern (Danielsson's vectors always point to a real feature, so the distance is
 // never below the exact EDT, and feature voxels are always 0). Runs on a realistic blob+speck image, 3D and 2D. The
 // exact-to-ITK correctness bar (where 4SED over-estimates the exact EDT) lives in the filter test's live-ITK grid.
-TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 4SED lower-bound + feature-zero invariants", "[ImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: 4SED lower-bound + feature-zero invariants", "[NXImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
 {
   using T = TestType;
   auto check = [&](usize dx, usize dy, usize dz) {
@@ -509,7 +510,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 4SED lower-bou
 // D3 gate: the out-of-core z-streamed slab must produce BYTE-IDENTICAL output to the in-core driver, since both run
 // the identical reflective odometer via DanielssonPlanePass. Covered across types, sqrt/squared, spacing, and 3D/2D on
 // a realistic blob+speck image.
-TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: OOC slab == in-core (D3 gate)", "[ImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: OOC slab == in-core (D3 gate)", "[NXImageProcessing][DanielssonDistanceMapEngine]", uint8, int16, int32)
 {
   using T = TestType;
   const bool squared = GENERATE(false, true);
@@ -543,7 +544,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: OOC slab == in
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: rolling z-neighbor edge cases preserve parity", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: rolling z-neighbor edge cases preserve parity", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   auto check = [](usize dx, usize dy, usize dz) {
     std::vector<int32> pattern(dx * dy * dz, 0);
@@ -574,7 +575,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: rolling z-neighbor edge
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: pre-cancel preserves poison output", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: pre-cancel preserves poison output", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr usize kDimX = 5;
   constexpr usize kDimY = 4;
@@ -595,7 +596,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: pre-cancel preserves po
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: in-core pre-cancel preserves poison output", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: in-core pre-cancel preserves poison output", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 4;
@@ -616,7 +617,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: in-core pre-cancel pres
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: mixed storage selects an OOC working format", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: mixed storage selects an OOC working format", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   constexpr const char* kInputOocFormat = "HDF5-OOC-Input";
   constexpr const char* kOutputOocFormat = "HDF5-OOC-Output";
@@ -650,7 +651,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: mixed storage selects a
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -696,8 +697,8 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident state requires
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: the slab path reads each input plane once and the resident path reads the span",
-          "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: the slab path reads each input plane once and the resident path reads the span",
+          "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -751,7 +752,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: the slab path reads eac
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: scalar axis visits match the reflective visit list", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: scalar axis visits match the reflective visit list", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   for(const int64 length : {int64{1}, int64{2}, int64{5}})
   {
@@ -771,7 +772,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: scalar axis visits matc
   REQUIRE_FALSE(ImageProcessing::detail::DanielssonVisitArraysFit(1, 1, 1000000000));
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 2D planner bounds blocks and overwide rows", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: 2D planner bounds blocks and overwide rows", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   const auto benchmark = ImageProcessing::detail::BuildDanielsson2DBufferPlan(5888, 5888, sizeof(uint8));
   REQUIRE(benchmark.valid);
@@ -807,7 +808,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 2D planner bounds block
   REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_Danielsson2DResidentLimit);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 2D planner rejects invalid and overflow dimensions", "[ImageProcessing][DanielssonDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: 2D planner rejects invalid and overflow dimensions", "[NXImageProcessing][DanielssonDistanceMapEngine]")
 {
   const auto overflow = ImageProcessing::detail::BuildDanielsson2DBufferPlan(std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max(), sizeof(uint64));
   const auto offsetOverflow = ImageProcessing::detail::BuildDanielsson2DBufferPlan(ImageProcessing::detail::k_DanielssonMaxDimension + 1, 1, sizeof(uint8));
@@ -823,8 +824,8 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: 2D planner rejects inva
   REQUIRE(zeroY.overflow);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident vector-prefix plan reserves only fixed live planes plus complete prefix planes",
-          "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: resident vector-prefix plan reserves only fixed live planes plus complete prefix planes",
+          "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_DimX = 1024;
   constexpr usize k_DimY = 1024;
@@ -870,7 +871,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident vector-prefix 
   // cover only planes 0..Z-3; it has zero vector-scratch reads and writes.
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident vector prefixes preserve 3D reflective output order", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: resident vector prefixes preserve 3D reflective output order", "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -908,7 +909,8 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: resident vector prefixe
   }
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: compact scratch preserves 3D generated-schedule parity at the int16 boundary", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: compact scratch preserves 3D generated-schedule parity at the int16 boundary",
+          "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_DimX = 16383;
   constexpr usize k_DimY = 1;
@@ -944,7 +946,7 @@ TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: compact scratch preserv
   REQUIRE(slabValues == inCoreValues);
 }
 
-TEST_CASE("ImageProcessing::DanielssonDistanceMapEngine: fused 3D schedule transfers each scratch suffix plane once", "[ImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::DanielssonDistanceMapEngine: fused 3D schedule transfers each scratch suffix plane once", "[NXImageProcessing][DanielssonDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize k_DimX = 3;
   constexpr usize k_DimY = 2;

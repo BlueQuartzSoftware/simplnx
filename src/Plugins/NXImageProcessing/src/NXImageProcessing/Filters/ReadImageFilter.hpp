@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ReadImageFilter
  * @brief Reads raster or volume image data into an Image Geometry.
  */
-class IMAGEPROCESSING_EXPORT ReadImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadImageFilter : public IFilter
 {
 public:
   ReadImageFilter() = default;

@@ -1,6 +1,6 @@
 #include "ReadBinaryCTNorthstarFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"

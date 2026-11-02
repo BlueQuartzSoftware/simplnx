@@ -1,7 +1,7 @@
 #include "ProjectionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MaximumProjectionImageFilter.hpp"
+#include "NXImageProcessing/Filters/MaximumProjectionImageFilter.hpp"
 
 #include <memory>
 
@@ -11,7 +11,7 @@ using namespace nx::core;
 // (1b) In-place mode replaces the whole original geometry, so any OTHER arrays in its cell data are
 //      discarded. Preflight must SUCCEED but emit a warning naming them (never silently drop them).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: In-place discards sibling arrays with a warning", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards sibling arrays with a warning", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -54,7 +54,7 @@ TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: In-place discards sibl
 // (Shared-façade preflight guards, PreflightAxisProjection) Two data/param-independent guards: an out-of-range Projection Dimension (> 2) -> -8340, and a multi-component (non-scalar) input ->
 // -8341. Exercised on Maximum (the guards live in the shared façade, so one filter covers them for all).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Preflight guards (projDim>2 -8340, non-scalar -8341)", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (projDim>2 -8340, non-scalar -8341)", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -108,19 +108,19 @@ TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Preflight guards (proj
 // OUR ITK-free filter: the output md5 must equal ITK's committed hash. Maximum is a type-preserving reducer
 // (float32 in -> float32 out; int16 in -> int16 out), so the hash is bit-exact.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (default in-place)", "[ImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (default in-place)", "[NXImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("RA-Float.nrrd", /*projDim=*/0, /*removeOriginalGeometry=*/true, "fb78c55635b17fc9ff38ef0ef14f0948");
 }
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (new geometry)", "[ImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (new geometry)", "[NXImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("RA-Float.nrrd", /*projDim=*/0, /*removeOriginalGeometry=*/false, "fb78c55635b17fc9ff38ef0ef14f0948");
 }
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (dimensional)", "[ImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (dimensional)", "[NXImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("RA-Float.nrrd", /*projDim=*/2, /*removeOriginalGeometry=*/true, "f3f0d97c83c6b0d92df10c28e2481520");
 }
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][MaximumProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("Ramp-Up-Short.nrrd", /*projDim=*/1, /*removeOriginalGeometry=*/true, "5390344262c91e83bc9208b0991a2fc9");
 }

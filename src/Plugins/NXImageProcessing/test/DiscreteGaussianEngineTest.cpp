@@ -47,7 +47,7 @@ std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, 
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: kernel coefficients are normalized + symmetric", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: kernel coefficients are normalized + symmetric", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   const std::vector<float64> k = nx::core::ImageProcessing::detail::GaussianKernelCoefficients(4.0, 0.01, 32);
   double sum = std::accumulate(k.begin(), k.end(), 0.0);
@@ -59,7 +59,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: kernel coefficients are norm
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: storage plan selects automatic fusion and OOC scratch format", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: storage plan selects automatic fusion and OOC scratch format", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   constexpr const char* kInputResidentFormat = "DataStore-Input";
   constexpr const char* kOutputResidentFormat = "DataStore-Output";
@@ -100,7 +100,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: storage plan selects automat
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: true 2D planner bounds full-width blocks and overwide tiles", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: true 2D planner bounds full-width blocks and overwide tiles", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   constexpr usize kResidentLimit = 64ULL * 1024ULL * 1024ULL;
   const auto benchmarkPlan = ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(5824, 5824, 4, 4, sizeof(float32), kResidentLimit);
@@ -130,7 +130,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: true 2D planner bounds full-
   REQUIRE(overflowPlan.overflow);
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: bounded true 2D blocks and tiles match the resident cascade", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: bounded true 2D blocks and tiles match the resident cascade", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   SECTION("forced multi-block")
   {
@@ -167,7 +167,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: bounded true 2D blocks and t
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: constant image preserved", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: constant image preserved", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   const usize d = 12;
   const std::vector<float64> field(d * d * d, 20.0);
@@ -178,7 +178,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: constant image preserved", "
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: impulse response sums to ~1 and is symmetric along X", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: impulse response sums to ~1 and is symmetric along X", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   const usize dx = 21, dy = 5, dz = 5;
   std::vector<float64> field(dx * dy * dz, 0.0);
@@ -196,7 +196,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: impulse response sums to ~1 
   REQUIRE(out[FlatIndex(cx + 2, cy, cz, dx, dy)] == Approx(out[FlatIndex(cx - 2, cy, cz, dx, dy)]).margin(1e-9));
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: deterministic + tall-Z streaming", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: deterministic + tall-Z streaming", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   const usize dx = 8, dy = 8, dz = 64;
   std::vector<int16> field(dx * dy * dz);
@@ -209,7 +209,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: deterministic + tall-Z strea
   REQUIRE(a == b);
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: batched Z streaming matches a single batch", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: batched Z streaming matches a single batch", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   constexpr usize kDimX = 7;
   constexpr usize kDimY = 11;
@@ -227,7 +227,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: batched Z streaming matches 
   REQUIRE(batched == singleBatch);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::DiscreteGaussianEngine: forced fused plane pass exactly matches direct axis passes", "[ImageProcessing][DiscreteGaussianEngine]", int16, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: forced fused plane pass exactly matches direct axis passes", "[NXImageProcessing][DiscreteGaussianEngine]", int16, float32)
 {
   constexpr usize kDimX = 7;
   constexpr usize kDimY = 11;
@@ -261,7 +261,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::DiscreteGaussianEngine: forced fused plane 
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: fused plane pass preserves the integer intermediate cast", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: fused plane pass preserves the integer intermediate cast", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   constexpr usize kDimX = 9;
   constexpr usize kDimY = 7;
@@ -288,7 +288,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: fused plane pass preserves t
   REQUIRE(differsFromFloatingIntermediate);
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fused output unchanged", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fused output unchanged", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   constexpr usize kDimX = 7;
   constexpr usize kDimY = 5;
@@ -310,7 +310,7 @@ TEST_CASE("ImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fuse
   }
 }
 
-TEST_CASE("ImageProcessing::DiscreteGaussianEngine: ZeroFluxNeumann boundary keeps a ramp monotonic + linear interior", "[ImageProcessing][DiscreteGaussianEngine]")
+TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: ZeroFluxNeumann boundary keeps a ramp monotonic + linear interior", "[NXImageProcessing][DiscreteGaussianEngine]")
 {
   const usize dx = 41, dy = 3, dz = 3;
   std::vector<float64> field(dx * dy * dz);

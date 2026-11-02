@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -22,7 +22,7 @@ namespace nx::core
  * input element type. This matches the legacy ITK Approximate Signed Distance Map Image Filter exactly and is
  * out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT ApproximateSignedDistanceMapImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ApproximateSignedDistanceMapImageFilter : public IFilter
 {
 public:
   ApproximateSignedDistanceMapImageFilter() = default;

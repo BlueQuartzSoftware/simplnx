@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generator": "src/Plugins/ImageProcessing/test/DataGeneration/GenerateImageProcessingExampleData.py",
+  "generator": "src/Plugins/NXImageProcessing/test/DataGeneration/GenerateImageProcessingExampleData.py",
   "seed": 20260901,
   "pipelines": {
     "05_AM_XCT_Porosity_Segmentation": {

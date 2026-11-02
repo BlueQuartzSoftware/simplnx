@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  * regardless of the input element type. Matches the legacy ITK Threshold Maximum Connected Components Image
  * Filter exactly (byte-identical binary output). Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT ThresholdMaximumConnectedComponentsImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ThresholdMaximumConnectedComponentsImageFilter : public IFilter
 {
 public:
   ThresholdMaximumConnectedComponentsImageFilter() = default;

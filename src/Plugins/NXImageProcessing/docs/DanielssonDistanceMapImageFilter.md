@@ -4,7 +4,7 @@ Compute the (approximate) Euclidean distance from every background voxel to the 
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

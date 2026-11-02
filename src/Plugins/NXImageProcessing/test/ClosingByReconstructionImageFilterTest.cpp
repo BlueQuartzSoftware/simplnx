@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/ClosingByReconstructionImageFilter.hpp"
+#include "NXImageProcessing/Filters/ClosingByReconstructionImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
@@ -25,7 +25,7 @@ rt::ReconParamSetter BallSetter(bool preserveIntensities)
 //     removes a DARK structure smaller than the structuring element (an isolated 1-voxel dark dot on a bright
 //     field) but restores a dark structure larger than it (a 5x5 dark square) to its original value/contours.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[ImageProcessing][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -72,7 +72,7 @@ TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: hand-computed re
 //      The hand-derived expectations (isolated dark dot filled, dark square restored) are asserted directly -- an
 //      independent oracle, not the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[ImageProcessing][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -118,7 +118,7 @@ TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: hand-computed re
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: FromSIMPLJson", "[ImageProcessing][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   const nlohmann::json json = {{"KernelType", 2},
                                {"KernelRadius", {{"x", 2}, {"y", 3}, {"z", 4}}},
@@ -144,7 +144,7 @@ TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: FromSIMPLJson", 
 // STAPLE1.png (uint8), Ball radius {1,1,1}. (B) live-ITK bit-exact + (A) md5-validity-first. The committed hash
 // 095f00a6... is the identity-output hash (this closing-by-reconstruction leaves STAPLE1 unchanged).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: ITK real-image golden (ClosingByReconstruction)", "[ImageProcessing][ItkGolden][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: ITK real-image golden (ClosingByReconstruction)", "[NXImageProcessing][ItkGolden][ClosingByReconstructionImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<ClosingByReconstructionImageFilter>("STAPLE1.png", "095f00a68a84df4396914fa758f34dcc", [](Arguments& args) {
     args.insertOrAssign(ClosingByReconstructionImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball)));

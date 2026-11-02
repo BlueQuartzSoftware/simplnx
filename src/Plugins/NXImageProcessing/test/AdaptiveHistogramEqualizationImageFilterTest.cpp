@@ -1,7 +1,7 @@
 #include "AdaptiveHistogramEqualizationFilterTestUtils.hpp"
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/AdaptiveHistogramEqualizationImageFilter.hpp"
+#include "NXImageProcessing/Filters/AdaptiveHistogramEqualizationImageFilter.hpp"
 
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -27,7 +27,7 @@ constexpr int32 k_NonScalarInput = -8540;
 //     (no DispatchAlgorithm, so it records no algorithm-path execution), which means it CANNOT use
 //     UnitTest::AlgorithmTestScope: the scope's executeFilter witness requires a recorded path and would fail
 //     with an observed count of 0. The case is therefore a plain ForceInCore in-memory correctness check.
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independent oracle (in-memory)", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -61,7 +61,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independen
 
 // (3) Preflight: multi-component input is rejected (scalar-only); a valid scalar input preflights cleanly and
 //     an unsupported (non-numeric) type is rejected by the shared type-membership guard.
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: Preflight scalar/type guard", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Preflight scalar/type guard", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -104,7 +104,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: Preflight 
 }
 
 // (4) FromSIMPLJson maps the legacy SIMPL keys (Radius/Alpha/Beta + array paths) to the new parameter keys.
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: FromSIMPLJson", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: FromSIMPLJson", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
   const nlohmann::json json = {{"Radius", {{"x", 4}, {"y", 3}, {"z", 2}}},
                                {"Alpha", 0.7},
@@ -243,7 +243,7 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
 // The tolerant band is |delta| <= 1 per voxel on <= 0.5% of voxels. The committed (histo) baseline is valid
 // (measured maxAbsDiff 1), so this case asserts the durable baseline.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: ITK real-image golden (histo)", "[ImageProcessing][ItkGolden][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: ITK real-image golden (histo)", "[NXImageProcessing][ItkGolden][AdaptiveHistogramEqualizationImageFilter]")
 {
   RunAheItkGolden("BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest2.png", /*alpha=*/1.0f, /*beta=*/0.25f, /*radius=*/{10, 10, 10}, /*aMaxDiffFraction=*/0.005);
 }

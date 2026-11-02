@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -15,7 +15,7 @@ namespace nx::core
  *
  * Both files must be in the same directory. The .vgi file defines the dimensions, spacing, units, and .vol file name.
  */
-class IMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileFilter : public IFilter
 {
 public:
   ReadVolumeGraphicsFileFilter();

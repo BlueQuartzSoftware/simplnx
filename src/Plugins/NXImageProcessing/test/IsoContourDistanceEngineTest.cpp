@@ -451,7 +451,7 @@ std::vector<float32> RunEngine(const std::vector<T>& field, usize dx, usize dy, 
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: direct route matches the serial gather", "[ImageProcessing][IsoContourDistanceEngine]", uint8, int16, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route matches the serial gather", "[NXImageProcessing][IsoContourDistanceEngine]", uint8, int16, float32, float64)
 {
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
@@ -488,7 +488,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: direct route matc
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route matches the serial gather at every slab depth", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]", uint8, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matches the serial gather at every slab depth", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]", uint8,
+                   float32)
 {
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
@@ -549,7 +550,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route matche
 // A pure-axis unit-slope ramp has one level-set crossing between the two planes that bracket the level set.
 // The sub-pixel formula gives the exact signed physical distance for those two planes.
 // Every other voxel stays at the signed far value. This test checks each axis, sign, and spacing weight.
-TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: axis ramp == analytic signed distance", "[ImageProcessing][IsoContourDistanceEngine]", uint8, int16, int32, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == analytic signed distance", "[NXImageProcessing][IsoContourDistanceEngine]", uint8, int16, int32, float32, float64)
 {
   using T = TestType;
   const int axis = GENERATE(0, 1, 2);
@@ -604,7 +605,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::IsoContourDistanceEngine: axis ramp == anal
 
 // A field entirely above or below the level set has no crossing.
 // Each voxel receives the applicable signed far value. A voxel on the level set receives zero.
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: init and far regions", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr usize DX = 5, DY = 4, DZ = 3;
   const float64 levelSet = GENERATE(0.0, 3.0, -1.0);
@@ -641,7 +642,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: init and far regions", "[I
 }
 
 // Radial field: interior of the contour is negative, exterior positive, and all outputs are finite.
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: radial sign + finiteness", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: radial sign + finiteness", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr usize D = 15;
   const float64 c = 7.0;
@@ -668,7 +669,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: radial sign + finiteness",
 }
 
 // Determinism: the same input yields byte-identical output on repeated runs.
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: deterministic", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: deterministic", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr usize D = 12;
   std::vector<int16> field(D * D * D);
@@ -687,7 +688,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: deterministic", "[ImagePro
 
 // A small grant makes the ring wrap across many slabs.
 // The output must reproduce the analytic Z-ramp result.
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-ramp", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-ramp", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr usize DX = 9, DY = 8, DZ = 40;
   constexpr float32 kFar = 50.0f;
@@ -728,7 +729,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-ra
   }
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: validates stores and cancellation", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and cancellation", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
@@ -767,7 +768,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: validates stores and cance
   }
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab plan derives the plane count from the grant", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the plane count from the grant", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 k_LargeDims{512, 512, 128};
@@ -829,7 +830,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab plan derives the plan
   REQUIRE(zeroDimension.value() == 0);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab reservation follows the grant", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows the grant", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   const SizeVec3 k_Dims{512, 512, 128};
@@ -864,7 +865,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab reservation follows t
   REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route transfers follow the plan", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route transfers follow the plan", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   const SizeVec3 k_Dims{5, 6, 7};
   const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
@@ -887,7 +888,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route transfers follo
   REQUIRE(complete.writeCount == 1);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route reads each input plane once", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route reads each input plane once", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   const SizeVec3 k_Dims{5, 6, 7};
   const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
@@ -897,7 +898,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab route reads each inpu
   REQUIRE(result.writtenValues == 7 * 30);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: direct route performs no bulk transfers", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no bulk transfers", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   const SizeVec3 k_Dims{17, 13, 11};
   const FloatVec3 k_Spacing{1.0f, 1.0f, 1.0f};
@@ -925,7 +926,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: direct route performs no b
   RequireBitIdentical(actual, expected);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: an OOC store overrides the forced in-core path", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides the forced in-core path", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
   const SizeVec3 k_Dims{5, 6, 7};
@@ -954,7 +955,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: an OOC store overrides the
   REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves the output untouched", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves the output untouched", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   const SizeVec3 k_Dims{9, 8, 7};
   constexpr float32 k_Poison = -999.0f;
@@ -1004,7 +1005,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves t
   }
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab cancellation and transfer failures release the reservation", "[ImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and transfer failures release the reservation", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
   const SizeVec3 k_Dims{5, 6, 7};
@@ -1049,7 +1050,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: slab cancellation and tran
   }
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: 2D planner bounds row blocks and overwide tiles", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner bounds row blocks and overwide tiles", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   const auto benchmark = ImageProcessing::detail::BuildIsoContour2DBufferPlan(5888, 5888, sizeof(uint8));
   REQUIRE(benchmark.valid);
@@ -1085,7 +1086,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceEngine: 2D planner bounds row bloc
   REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 }
 
-TEST_CASE("ImageProcessing::IsoContourDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[ImageProcessing][IsoContourDistanceEngine]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   const auto overflow = ImageProcessing::detail::BuildIsoContour2DBufferPlan(std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max(), sizeof(uint64));
   const auto zeroX = ImageProcessing::detail::BuildIsoContour2DBufferPlan(0, 1, sizeof(uint8));

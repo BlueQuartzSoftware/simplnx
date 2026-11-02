@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/SignedDanielssonDistanceMapImageFilter.hpp"
+#include "NXImageProcessing/Filters/SignedDanielssonDistanceMapImageFilter.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -41,7 +41,7 @@ void RunSignedDanielsson(IFilter& filter, DataStructure& ds, const DataPath& inp
 // (1) Sign orientation: a filled cube object in a background field. With InsideIsPositive Off, a voxel well outside
 //     the object is positive and a voxel deep inside is negative; On flips both. Guards against a flipped subtract.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation", "[ImageProcessing][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -90,7 +90,7 @@ TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orienta
 //      InsideIsPositive Off, a voxel well outside the object must be positive and a voxel deep inside negative -- a
 //      hand-derived sign oracle independent of the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation (both algorithm paths)", "[ImageProcessing][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation (both algorithm paths)", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -141,7 +141,7 @@ TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orienta
 // -----------------------------------------------------------------------------
 // (2) Preflight: a non-integer (float32) input is rejected by the IntegerOnly policy.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[ImageProcessing][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -163,7 +163,7 @@ TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight re
   REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
 }
 
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[ImageProcessing][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   UnitTest::LoadPlugins();
   DataStructure ds;
@@ -203,7 +203,7 @@ TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight re
 }
 
 // FromSIMPLJson maps every legacy SIMPL key (InsideIsPositive/SquaredDistance/UseImageSpacing + both DataPaths).
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJson", "[ImageProcessing][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJson", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
   const nlohmann::json json = {
       {"InsideIsPositive", true},
@@ -228,7 +228,7 @@ TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJso
 // 2th_cthead1.png (uint8), ITK-default params, fixed float32 output. The test compares the output with the durable
 // ITK baseline at a tolerance of 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::SignedDanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][SignedDanielssonDistanceMapImageFilter]")
+TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SignedDanielssonDistanceMapImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

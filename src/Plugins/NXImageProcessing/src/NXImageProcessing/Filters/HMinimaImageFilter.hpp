@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -23,7 +23,7 @@ namespace nx::core
  * filter rejected chunked arrays): reconstruction only copies or clamps existing values, so the result is
  * bit-for-bit identical for integer AND float types and matches the legacy ITK output exactly.
  */
-class IMAGEPROCESSING_EXPORT HMinimaImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT HMinimaImageFilter : public IFilter
 {
 public:
   HMinimaImageFilter() = default;

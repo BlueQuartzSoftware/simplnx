@@ -177,7 +177,7 @@ void RequireCompactCountingParity(const std::vector<T>& values, usize numBins, s
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::HistogramEngine: counts + Otsu bimodal", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: counts + Otsu bimodal", "[NXImageProcessing][HistogramEngine]")
 {
   // (a) ComputeHistogram: values 0..9, 10 bins, min=0, max=9 -> one count per bin; value==max lands in last bin.
   DataStore<float32> store({10}, {1}, 0.0f);
@@ -208,7 +208,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: counts + Otsu bimodal", "[ImageProc
   REQUIRE(th[0] <= 8.0);
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: Otsu trimodal, two thresholds", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: Otsu trimodal, two thresholds", "[NXImageProcessing][HistogramEngine]")
 {
   // Clean trimodal histogram (20 bins): three separated, equal-mass modes with empty valleys between them.
   //   mode A: bins 1-2, mode B: bins 9-10, mode C: bins 17-18
@@ -229,7 +229,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: Otsu trimodal, two thresholds", "[I
   REQUIRE(th[0] < th[1]);
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: Otsu guards + options", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: Otsu guards + options", "[NXImageProcessing][HistogramEngine]")
 {
   Histogram bim;
   bim.min = 0.0;
@@ -267,7 +267,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: Otsu guards + options", "[ImageProc
   }
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: reservation-owned scan policy honors default and explicit capacities", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: reservation-owned scan policy honors default and explicit capacities", "[NXImageProcessing][HistogramEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   auto& manager = CacheMemoryBudgetManager::instance();
@@ -295,7 +295,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: reservation-owned scan policy honor
   REQUIRE(store.maximumReadValues() == 5);
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: ComputeHistogram degenerate range", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: ComputeHistogram degenerate range", "[NXImageProcessing][HistogramEngine]")
 {
   // Constant-valued store: min == max, so the range is degenerate and all mass goes to bin 0.
   DataStore<float32> store({8}, {1}, 5.0f);
@@ -310,7 +310,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: ComputeHistogram degenerate range",
   }
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: fused integral histogram matches the existing two-pass result for every integral type", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: fused integral histogram matches the existing two-pass result for every integral type", "[NXImageProcessing][HistogramEngine]")
 {
   RequireCompactTypeParity<int8>("int8");
   RequireCompactTypeParity<uint8>("uint8");
@@ -322,7 +322,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: fused integral histogram matches th
   RequireCompactTypeParity<uint64>("uint64");
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: fused integral compact and fallback boundaries preserve exact histograms", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: fused integral compact and fallback boundaries preserve exact histograms", "[NXImageProcessing][HistogramEngine]")
 {
   SECTION("signed int64 cross-zero span of exactly 65535 stays compact")
   {
@@ -370,7 +370,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: fused integral compact and fallback
   }
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: fused integral histogram uses one compact pass and two fallback passes", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: fused integral histogram uses one compact pass and two fallback passes", "[NXImageProcessing][HistogramEngine]")
 {
   std::atomic_bool cancel{false};
   SECTION("compact")
@@ -425,7 +425,7 @@ TEST_CASE("ImageProcessing::HistogramEngine: fused integral histogram uses one c
   }
 }
 
-TEST_CASE("ImageProcessing::HistogramEngine: fused integral histogram propagates bulk-read errors", "[ImageProcessing][HistogramEngine]")
+TEST_CASE("NXImageProcessing::HistogramEngine: fused integral histogram propagates bulk-read errors", "[NXImageProcessing][HistogramEngine]")
 {
   constexpr int32 k_ErrorCode = -987654;
   FailingReadDataStore<int16> store(k_ErrorCode);

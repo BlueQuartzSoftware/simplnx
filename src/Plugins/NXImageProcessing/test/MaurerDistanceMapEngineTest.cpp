@@ -967,7 +967,7 @@ std::vector<int32> MakeInteriorPattern(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: in-core == brute-force EDT oracle (no spacing)", "[ImageProcessing][MaurerDistanceMapEngine]", uint8, int16, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: in-core == brute-force EDT oracle (no spacing)", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16, int32)
 {
   using T = TestType;
   const bool insideIsPositive = GENERATE(false, true);
@@ -1004,7 +1004,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: in-core == brute-f
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D interior scan matches the border scan and the oracle", "[ImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
+TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D interior scan matches the border scan and the oracle", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
 {
   using T = TestType;
   const std::vector<SizeVec3> dimensions = {{5, 6, 7}, {3, 3, 3}, {4, 5, 3}, {1, 6, 7}, {2, 6, 7}, {7, 2, 7}};
@@ -1023,7 +1023,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D interior scan m
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: every interior neighbour offset marks the centre as a boundary", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: every interior neighbour offset marks the centre as a boundary", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr int64 dim5 = 5;
   constexpr int64 center5 = 2;
@@ -1066,7 +1066,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: every interior neighbour of
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: encoded initialisation writes every work value", "[ImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
+TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded initialisation writes every work value", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
 {
   using T = TestType;
   constexpr uint32 kPoisonBits = 0x7FC00001u;
@@ -1102,7 +1102,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: encoded initialisa
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: single-seed hand values", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: single-seed hand values", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   // A single object pixel at the center of a 5x5x1 background field. That pixel is a boundary feature (touches bg on
   // all sides), so distances are the squared distance to (2,2). Inside is only the center; everything else outside.
@@ -1119,7 +1119,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: single-seed hand values", "
 
 // The spacing case requires bit-identical slab and in-core results. It covers the Z-pass float conversion order.
 // The unit-spacing oracle does not apply. This test covers types, distance forms, and image dimensions.
-TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: slab == in-core with image spacing (D3)", "[ImageProcessing][MaurerDistanceMapEngine]", uint8, int16, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab == in-core with image spacing (D3)", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16, int32)
 {
   using T = TestType;
   const bool insideIsPositive = GENERATE(false, true);
@@ -1149,7 +1149,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: slab == in-core wi
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: featureless volume normalises to the in-core result on both routes", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: featureless volume normalises to the in-core result on both routes", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1182,7 +1182,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: featureless volume normalis
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner bounds direct transpose batches", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner bounds direct transpose batches", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   const auto benchmark = ImageProcessing::detail::BuildMaurer2DBufferPlan(5888, 5888, sizeof(uint8));
   REQUIRE(benchmark.valid);
@@ -1207,7 +1207,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner bounds direct tr
   REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill lines", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill lines", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   const auto xPlan = ImageProcessing::detail::BuildMaurer2DBufferPlan(100000000, 1, sizeof(uint8));
   const auto yPlan = ImageProcessing::detail::BuildMaurer2DBufferPlan(1, 100000000, sizeof(uint8));
@@ -1233,7 +1233,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill li
   REQUIRE(forcedY.residentBytes <= kSmallTestLimit);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner rejects overflow", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner rejects overflow", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   const auto overflow = ImageProcessing::detail::BuildMaurer2DBufferPlan(std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max(), sizeof(uint8));
   const auto zeroX = ImageProcessing::detail::BuildMaurer2DBufferPlan(0, 1, sizeof(uint8));
@@ -1246,7 +1246,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 2D planner rejects overflow
   REQUIRE(zeroY.overflow);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: working format follows OOC endpoint precedence", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: working format follows OOC endpoint precedence", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   using StoreType = IDataStore::StoreType;
   REQUIRE(ImageProcessing::detail::SelectDistanceWorkingDataFormat(StoreType::InMemory, "input", StoreType::InMemory, "output") == "input");
@@ -1258,7 +1258,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: working format follows OOC 
   REQUIRE_FALSE(abstractResidentStore.getChunkShape().has_value());
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D slab plan charges two staging buffers", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D slab plan charges two staging buffers", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   const SizeVec3 dims{5, 6, 7};
   for(const usize rows : {usize{1}, usize{3}, usize{6}})
@@ -1285,7 +1285,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D slab plan charges two st
   REQUIRE(largePlanResult.value().residentBytes <= largeGrant);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -1358,7 +1358,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: resident state requires a c
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D chunk hint follows the bounded Y plan", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D chunk hint follows the bounded Y plan", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   const SizeVec3 dims{512, 512, 128};
   constexpr usize k_GrantBytes = 16ULL * 1024ULL * 1024ULL;
@@ -1371,14 +1371,14 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D chunk hint follows the b
   REQUIRE(hintResult.value()[0] * hintResult.value()[1] * hintResult.value()[2] * sizeof(float32) > 0);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D batch alignment preserves a short fallback", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D batch alignment preserves a short fallback", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   REQUIRE(ImageProcessing::detail::AlignMaurer3DYBatchRows(120, 7) == 119);
   REQUIRE(ImageProcessing::detail::AlignMaurer3DYBatchRows(6, 7) == 6);
   REQUIRE(ImageProcessing::detail::AlignMaurer3DYBatchRows(57, 57) == 57);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D scratch inherits a valid output chunk hint", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D scratch inherits a valid output chunk hint", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   const ShapeType outputChunkShape{1, 7, 32};
   const ShapeType scratchTupleShape{8, 17, 32};
@@ -1388,7 +1388,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: 3D scratch inherits a valid
   REQUIRE_FALSE(ImageProcessing::detail::SelectMaurer3DScratchChunkHint(ShapeType{1, 18, 32}, scratchTupleShape).has_value());
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each input plane once", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each input plane once", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1456,7 +1456,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each input
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: slab cancellation after the third plane read leaves the output untouched", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab cancellation after the third plane read leaves the output untouched", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1486,7 +1486,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: slab cancellation after the
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: non-DataStore in-memory input copies once and matches the borrowed-span route", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: non-DataStore in-memory input copies once and matches the borrowed-span route", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1513,7 +1513,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: non-DataStore in-memory inp
   RequireBitIdentical(actual, expected);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-input route performs no transfers", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-input route performs no transfers", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1543,7 +1543,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-input 
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-span route performs no transfers", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-span route performs no transfers", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1573,7 +1573,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-span
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: bounded 3D Z pass transfers each Y batch as one extent", "[ImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D Z pass transfers each Y batch as one extent", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1610,7 +1610,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: bounded 3D Z pass transfers
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass transfer exact ranges", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass transfer exact ranges", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1663,7 +1663,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass transf
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: single store call in flight", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: single store call in flight", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1690,7 +1690,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: single store call in flight
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during a prefetched plane read", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a prefetched plane read", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1716,7 +1716,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during a prefe
   REQUIRE(std::all_of(output.cbegin(), output.cend(), [](float32 value) { return value == kPoison; }));
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during the first output extent write", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during the first output extent write", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1740,7 +1740,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during the fir
   REQUIRE(std::none_of(workReads.cbegin(), workReads.cend(), [](const TransferEvent& event) { return event.start % 30 == 20; }));
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during a scratch-band read stops after the previous extent", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a scratch-band read stops after the previous extent", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 9;
@@ -1768,7 +1768,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: cancellation during a scrat
   REQUIRE(events.back().start == 30);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: input read error stops the run before any output", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: input read error stops the run before any output", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1796,7 +1796,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: input read error stops the 
   REQUIRE(events.back().start == 120);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: scratch-plane write error stops the XY stream", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: scratch-plane write error stops the XY stream", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1822,7 +1822,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: scratch-plane write error s
   REQUIRE(GetTransferEvents(log, TransferEvent::Kind::OutputExtent).empty());
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: work read error stops the Z pass", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: work read error stops the Z pass", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1851,7 +1851,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: work read error stops the Z
   REQUIRE(events.back().start == 45);
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: store exceptions become error results", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become error results", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -1949,7 +1949,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: store exceptions become err
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: seam matches the oracle at every batch size", "[ImageProcessing][MaurerDistanceMapEngine]", int8, uint8, int16, uint16, int32, uint32,
+TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the oracle at every batch size", "[NXImageProcessing][MaurerDistanceMapEngine]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
   using T = TestType;
@@ -2030,7 +2030,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: seam matches the o
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: encoded-sign line matches explicit inside mask", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded-sign line matches explicit inside mask", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr float32 kMax = std::numeric_limits<float32>::max();
   const std::vector<std::vector<float32>> sources = {{kMax, 0.0f, kMax, kMax, 0.0f, kMax, 0.0f, kMax, kMax, 0.0f, kMax},
@@ -2064,7 +2064,7 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: encoded-sign line matches e
   }
 }
 
-TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: external envelope matches resident kernel across blocks", "[ImageProcessing][MaurerDistanceMapEngine]")
+TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: external envelope matches resident kernel across blocks", "[NXImageProcessing][MaurerDistanceMapEngine]")
 {
   constexpr float32 kMax = std::numeric_limits<float32>::max();
   const std::vector<std::vector<float32>> sources = {{kMax, 0.0f, kMax, kMax, 0.0f, kMax, 0.0f, kMax, kMax, 0.0f, kMax},

@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/OpeningByReconstructionImageFilter.hpp"
+#include "NXImageProcessing/Filters/OpeningByReconstructionImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
@@ -26,7 +26,7 @@ rt::ReconParamSetter BallSetter(bool preserveIntensities)
 //     5x5 square) to its original value. A plain opening would round the square's corners; reconstruction
 //     regrows it exactly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[ImageProcessing][OpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][OpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -73,7 +73,7 @@ TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: hand-computed re
 //      hand-derived expectations (isolated dot removed, square restored exactly) are asserted directly -- an
 //      independent oracle, not the new filter's own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[ImageProcessing][OpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[NXImageProcessing][OpeningByReconstructionImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -119,7 +119,7 @@ TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: hand-computed re
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: FromSIMPLJson", "[ImageProcessing][OpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][OpeningByReconstructionImageFilter]")
 {
   const nlohmann::json json = {{"KernelType", 2},
                                {"KernelRadius", {{"x", 2}, {"y", 3}, {"z", 4}}},
@@ -146,7 +146,7 @@ TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: FromSIMPLJson", 
 // bit-exact + (A) md5-validity-first. The committed hash 095f00a6... is the identity-output hash (this
 // opening-by-reconstruction leaves STAPLE1 unchanged), so it reproduces exactly if the reader is byte-correct.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: ITK real-image golden (OpeningByReconstruction)", "[ImageProcessing][ItkGolden][OpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: ITK real-image golden (OpeningByReconstruction)", "[NXImageProcessing][ItkGolden][OpeningByReconstructionImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<OpeningByReconstructionImageFilter>("STAPLE1.png", "095f00a68a84df4396914fa758f34dcc", [](Arguments& args) {
     args.insertOrAssign(OpeningByReconstructionImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball)));

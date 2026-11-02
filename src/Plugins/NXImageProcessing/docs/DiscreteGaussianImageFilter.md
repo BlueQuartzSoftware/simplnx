@@ -4,7 +4,7 @@ Blur an image with a separable discrete-Gaussian (FIR) convolution.
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

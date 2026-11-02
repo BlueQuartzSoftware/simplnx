@@ -1,6 +1,6 @@
 #include "ReadVolumeGraphicsFileFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadVolumeGraphicsFile.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadVolumeGraphicsFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"

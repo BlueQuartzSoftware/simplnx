@@ -14,7 +14,7 @@ to the filter page, directly above the parameter-table marker:
 
 ## Images for a filter that no plugin implements
 
-No DREAM3D-NX plugin contains these filters. Neither the ImageProcessing plugin nor the
+No DREAM3D-NX plugin contains these filters. Neither the NXImageProcessing plugin nor the
 removed ITKImageProcessing plugin implemented them. Each image describes the ITK original.
 
 | Image | ITK filter |

@@ -51,7 +51,7 @@ std::string BinaryErodeImageFilter::humanName() const
 }
 std::vector<std::string> BinaryErodeImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryErode", "Binary", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "BinaryErode", "Binary", "Morphology", "MathematicalMorphology"};
 }
 Parameters BinaryErodeImageFilter::parameters() const
 {

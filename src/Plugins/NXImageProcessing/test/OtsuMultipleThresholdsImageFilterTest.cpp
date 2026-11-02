@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/OtsuMultipleThresholdsImageFilter.hpp"
+#include "NXImageProcessing/Filters/OtsuMultipleThresholdsImageFilter.hpp"
 
 #include <array>
 
@@ -88,7 +88,7 @@ void RunCompactInt16Otsu(DataStructure& ds, const DataPath& inputPath)
 //     (which would otherwise make the backend return an empty threshold set and silently collapse the
 //     image into a single class). preflight() must return an INVALID result with error code -8311.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid threshold count (-8311)", "[ImageProcessing][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid threshold count (-8311)", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -131,7 +131,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid threshold
 //     ThresholdLabeler puts a value == threshold in the LOWER class, so every voxel must be labeled labelOffset
 //     (0). The pre-fix std::upper_bound put them one class too high (all labeled 1).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constant image -> lower class at the tie", "[ImageProcessing][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant image -> lower class at the tie", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -180,7 +180,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constant image ->
 //     LabelOffset 0 and LabelOffset 10 must yield outputs that differ by a constant 10 at every voxel (labels
 //     0,1,2,3 -> 10,11,12,13). A filter that IGNORED LabelOffset would produce identical outputs and fail here.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shifts labels", "[ImageProcessing][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shifts labels", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -240,7 +240,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shift
   REQUIRE(anyNonZeroBase);
 }
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: real OOC int16 compact-range parity", "[.OOC][ImageProcessing][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: real OOC int16 compact-range parity", "[.OOC][NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr usize k_Dim = 19;
@@ -307,12 +307,12 @@ void RunOtsuItkGolden(const std::string& inputFile, const std::function<void(Arg
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
 {
   RunOtsuItkGolden("RA-Short.nrrd", [](Arguments&) {}, "a9c3b0c0971c5cbda12b29db916451c6");
 }
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (two_on_float)", "[ImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (two_on_float)", "[NXImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
 {
   RunOtsuItkGolden(
       "Ramp-Zero-One-Float.nrrd",
@@ -323,7 +323,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image go
       "1ab20d3cd9a354b45ac07ec59c0413b3");
 }
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (three_on)", "[ImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (three_on)", "[NXImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
 {
   RunOtsuItkGolden(
       "cthead1.png",
@@ -335,7 +335,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image go
       "b61c3f4e063fcdd24dba76227129ae34");
 }
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (valley_emphasis)", "[ImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image golden (valley_emphasis)", "[NXImageProcessing][ItkGolden][OtsuMultipleThresholdsImageFilter]")
 {
   RunOtsuItkGolden(
       "cthead1.png",

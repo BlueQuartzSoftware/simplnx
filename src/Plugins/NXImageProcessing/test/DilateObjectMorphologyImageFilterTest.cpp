@@ -1,6 +1,6 @@
 #include "ObjectMorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/DilateObjectMorphologyImageFilter.hpp"
+#include "NXImageProcessing/Filters/DilateObjectMorphologyImageFilter.hpp"
 
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -43,7 +43,7 @@ const std::vector<omt::ObjCase> k_ParityConfigs = {{"3D r{1,1,1}", {1, 1, 1}, 12
 //     deterministic and matches ITK's intended single-threaded semantics, so -- as with Erode (see context-notes
 //     7a-F) -- we validate against the computed-expected oracle rather than the unstable live-ITK golden.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected grid (Ball/Box/Cross)", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected grid (Ball/Box/Cross)", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   constexpr auto kDilate = ImageProcessing::ObjectMorphOp::Dilate;
   const std::vector<std::pair<const char*, KernelType>> kernels = {{"Ball", KernelType::Ball}, {"Box", KernelType::Box}, {"Cross", KernelType::Cross}};
@@ -87,7 +87,7 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected
 //     whereas the legacy SimpleITK Annulus kernel was empty (a wrapper bug). Validated against the
 //     independent scatter oracle over MakeStructuringElement(Annulus, radius).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Annulus computed-expected", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Annulus computed-expected", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<uint8>(ds, dx, dy, dz, uint8{1}, uint8{0}); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0);
@@ -112,7 +112,7 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Annulus computed-
 //     Object Value (3.0f) must behave identically to an integer image. Validated computed-expected (the
 //     legacy float path is not the parity target here).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: float32 exact-equality object value", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: float32 exact-equality object value", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return omt::BuildObjectImage<float32>(ds, dx, dy, dz, 3.0f, 0.0f); };
   const auto setParams = omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(3.0);
@@ -127,7 +127,7 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: float32 exact-equ
 //     output is compared to the independent scatter oracle computed over the actual block. Real-disk out-of-core
 //     coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected (both algorithm paths)", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -232,7 +232,7 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Computed-expected
 //     truncated (warning). For a float input only a non-finite value is rejected. In-range values preflight
 //     cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-guard on Object Value", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-guard on Object Value", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -363,14 +363,14 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-gu
 //     nondeterministic multithreaded data race, so a fresh legacy run is not a stable oracle; see test (1)) +
 //     (A) durable ITK-captured baseline compare @ 0.01.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][DilateObjectMorphologyImageFilter]")
 {
   object_morph_test::RunObjectMorphologyItkGoldenBaseline<DilateObjectMorphologyImageFilter, float32>("RA-Slice-Float.nrrd", "BasicFilters_DilateObjectMorphologyImageFilter_float.nrrd",
                                                                                                       ImageProcessing::ObjectMorphOp::Dilate, 1.0f, 0.0f,
                                                                                                       object_morph_test::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0), 0.01);
 }
 
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][DilateObjectMorphologyImageFilter]")
 {
   object_morph_test::RunObjectMorphologyItkGoldenBaseline<DilateObjectMorphologyImageFilter, int16>("RA-Slice-Short.nrrd", "BasicFilters_DilateObjectMorphologyImageFilter_short.nrrd",
                                                                                                     ImageProcessing::ObjectMorphOp::Dilate, int16{1}, int16{0},
@@ -381,7 +381,7 @@ TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image go
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8520) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   omt::RequirePreflightRejectsNonScalar<DilateObjectMorphologyImageFilter, uint8>(-8520, omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0));
 }

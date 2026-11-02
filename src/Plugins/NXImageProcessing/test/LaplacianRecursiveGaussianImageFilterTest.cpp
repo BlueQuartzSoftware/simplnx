@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/LaplacianRecursiveGaussianImageFilter.hpp"
+#include "NXImageProcessing/Filters/LaplacianRecursiveGaussianImageFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -63,8 +63,8 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: resident state requires a complete dataset-scaled reservation",
-          "[ImageProcessing][LaplacianRecursiveGaussianImageFilter][WorkingMemory]")
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident state requires a complete dataset-scaled reservation",
+          "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -114,7 +114,7 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: resident stat
 // (1) Preflight rejections: a too-small image (fewer than 4 pixels along a filtered axis) and a non-positive sigma.
 //     All scalar types are allowed, so there is no unsigned-rejection case.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight rejections", "[ImageProcessing][LaplacianRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight rejections", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -224,7 +224,7 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight rej
 }
 
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane path matches direct path", "[ImageProcessing][LaplacianRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane path matches direct path", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -264,7 +264,7 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane p
 
 // (2) FromSIMPLJson: the scalar Sigma double, the NormalizeAcrossScale bool, and the geometry/array/name DataPaths.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJson", "[ImageProcessing][LaplacianRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJson", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
 {
   const nlohmann::json json = {
       {"Sigma", 2.5},
@@ -289,7 +289,7 @@ TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJson
 // at a tolerance of 0.0001 via ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32). The helper pins
 // ForceInCore.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::LaplacianRecursiveGaussianImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][LaplacianRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][LaplacianRecursiveGaussianImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<LaplacianRecursiveGaussianImageFilter>("RA-Float.nrrd", "BasicFilters_LaplacianRecursiveGaussianImageFilter_default.nrrd", /*tolerance=*/0.0001);
 }

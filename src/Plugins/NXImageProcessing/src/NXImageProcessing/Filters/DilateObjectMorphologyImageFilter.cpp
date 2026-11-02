@@ -21,7 +21,7 @@ using namespace nx::core;
 
 namespace
 {
-// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/ImageProcessing tree
+// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree
 // (and all of src/) for -85xx codes: the -85xx blocks up to -8503 are already taken (Binary Contour -8500..
 // -8503), so this filter uses the still-unused -8520 block.
 constexpr int32 k_NonScalarInput = -8520;
@@ -50,7 +50,7 @@ std::string DilateObjectMorphologyImageFilter::humanName() const
 }
 std::vector<std::string> DilateObjectMorphologyImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "DilateObjectMorphology", "ObjectMorphology", "Morphology", "BinaryMathematicalMorphology"};
+  return {className(), "NXImageProcessing", "DilateObjectMorphology", "ObjectMorphology", "Morphology", "BinaryMathematicalMorphology"};
 }
 Parameters DilateObjectMorphologyImageFilter::parameters() const
 {

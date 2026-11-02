@@ -30,7 +30,7 @@ std::string ThresholdMaximumConnectedComponentsImageFilter::humanName() const
 }
 std::vector<std::string> ThresholdMaximumConnectedComponentsImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Segmentation", "Threshold"};
+  return {className(), "NXImageProcessing", "Segmentation", "Threshold"};
 }
 
 Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const

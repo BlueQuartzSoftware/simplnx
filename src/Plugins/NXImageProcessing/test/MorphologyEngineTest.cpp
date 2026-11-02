@@ -1,15 +1,15 @@
 
-#include "ImageProcessing/Filters/BinaryDilateImageFilter.hpp"
-#include "ImageProcessing/Filters/BinaryErodeImageFilter.hpp"
-#include "ImageProcessing/Filters/BinaryMorphologicalClosingImageFilter.hpp"
-#include "ImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
-#include "ImageProcessing/Filters/BlackTopHatImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleDilateImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleMorphologicalClosingImageFilter.hpp"
-#include "ImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
-#include "ImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
-#include "ImageProcessing/Filters/WhiteTopHatImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryDilateImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryErodeImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryMorphologicalClosingImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
+#include "NXImageProcessing/Filters/BlackTopHatImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleDilateImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleMorphologicalClosingImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
+#include "NXImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
+#include "NXImageProcessing/Filters/WhiteTopHatImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
@@ -764,7 +764,7 @@ void CheckMorphology(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: Scanline dilate/erode matches SE min/max (3D + 2D)", "[ImageProcessing][MorphologyEngine]", int32, uint8, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: Scanline dilate/erode matches SE min/max (3D + 2D)", "[NXImageProcessing][MorphologyEngine]", int32, uint8, float32)
 {
   using T = TestType;
   SECTION("3D non-cubic 4x5x6")
@@ -777,7 +777,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: Scanline dilate/erode mat
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: rolling top-hat pipeline pre-cancel preserves poison output", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: rolling top-hat pipeline pre-cancel preserves poison output", "[NXImageProcessing][MorphologyEngine]")
 {
   const SizeVec3 dims{5, 4, 3};
   const usize count = dims[0] * dims[1] * dims[2];
@@ -797,7 +797,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: rolling top-hat pipeline pre-cance
   REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [poison](int32 value) { return value == poison; }));
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline planner has the exact Ball-r2 benchmark payload", "[ImageProcessing][MorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline planner has the exact Ball-r2 benchmark payload", "[NXImageProcessing][MorphologyEngine][WorkingMemory]")
 {
   const StructuringElement se = MakeStructuringElement(KernelType::Ball, {2, 2, 2});
   const auto requiredBytesResult = CalculateMorphologyCompositePipelineWorkingMemoryBytes<uint8>(SizeVec3{1200, 900, 256}, se, true);
@@ -805,7 +805,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline planner
   REQUIRE(requiredBytesResult.value() == 11'964'160);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline emits morphology and top hats with one read and write", "[ImageProcessing][MorphologyEngine]", int16, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline emits morphology and top hats with one read and write", "[NXImageProcessing][MorphologyEngine]", int16, float32)
 {
   using T = TestType;
   const SizeVec3 dims{5, 4, 5};
@@ -895,7 +895,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipelin
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: rolling top-hat pipeline handles a Z radius larger than the image", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: rolling top-hat pipeline handles a Z radius larger than the image", "[NXImageProcessing][MorphologyEngine]")
 {
   const SizeVec3 dims{5, 4, 2};
   const usize count = dims[0] * dims[1] * dims[2];
@@ -921,7 +921,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: rolling top-hat pipeline handles a
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline uses true 2D Z collapse", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: rolling composite pipeline uses true 2D Z collapse", "[NXImageProcessing][MorphologyEngine]")
 {
   const SizeVec3 dims{5, 4, 1};
   const usize count = dims[0] * dims[1];
@@ -993,7 +993,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: rolling composite pipeline uses tr
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: binary 2D boundary ignores absent Z neighbors", "[ImageProcessing][MorphologyEngine][Binary2DBoundaryRegression]", BinaryDilateImageFilter,
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: binary 2D boundary ignores absent Z neighbors", "[NXImageProcessing][MorphologyEngine][Binary2DBoundaryRegression]", BinaryDilateImageFilter,
                    BinaryErodeImageFilter)
 {
   UnitTest::LoadPlugins();
@@ -1051,7 +1051,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: binary 2D boundary ignore
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: empty XY binary kernel preserves input", "[ImageProcessing][MorphologyEngine][Binary2DEmptyKernelRegression]", BinaryDilateImageFilter,
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: empty XY binary kernel preserves input", "[NXImageProcessing][MorphologyEngine][Binary2DEmptyKernelRegression]", BinaryDilateImageFilter,
                    BinaryErodeImageFilter)
 {
   UnitTest::LoadPlugins();
@@ -1103,7 +1103,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: empty XY binary kernel pr
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: binary composite empty XY kernel preserves input", "[ImageProcessing][MorphologyEngine][Binary2DCompositeEmptyKernelRegression]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: binary composite empty XY kernel preserves input", "[NXImageProcessing][MorphologyEngine][Binary2DCompositeEmptyKernelRegression]")
 {
   UnitTest::LoadPlugins();
   std::atomic_bool shouldCancel{false};
@@ -1166,7 +1166,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: binary composite empty XY kernel p
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphScanline dilate/erode matches fg-count oracle (3D + 2D)", "[ImageProcessing][MorphologyEngine]", int32, uint8, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: BinaryMorphScanline dilate/erode matches fg-count oracle (3D + 2D)", "[NXImageProcessing][MorphologyEngine]", int32, uint8, float32)
 {
   using T = TestType;
   SECTION("3D non-cubic 4x5x6")
@@ -1179,7 +1179,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphScanline dilat
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: explicit hand-computed Box radius-1 values", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: explicit hand-computed Box radius-1 values", "[NXImageProcessing][MorphologyEngine]")
 {
   // Ramp value at (x,y,z) == flat index == z*20 + y*4 + x on the 4x5x6 image.
   const usize vol = k_X * k_Y * k_Z;
@@ -1207,7 +1207,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: explicit hand-computed Box radius-
   REQUIRE(ero[at(3, 4, 5)] == 94);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: gradient subtraction defines full-range integer wrap", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: gradient subtraction defines full-range integer wrap", "[NXImageProcessing][MorphologyEngine]")
 {
   REQUIRE(ImageProcessing::detail::MorphologyGradientDifference<int32>(std::numeric_limits<int32>::lowest(), std::numeric_limits<int32>::max()) == int32{1});
   REQUIRE(ImageProcessing::detail::MorphologyGradientDifference<int32>(std::numeric_limits<int32>::max(), std::numeric_limits<int32>::lowest()) == int32{-1});
@@ -1217,7 +1217,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: gradient subtraction defines full-
   REQUIRE(ImageProcessing::detail::MorphologyGradientDifference<uint32>(std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::lowest()) == std::numeric_limits<uint32>::max());
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: interior X range excludes incomplete neighborhoods", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: interior X range excludes incomplete neighborhoods", "[NXImageProcessing][MorphologyEngine]")
 {
   struct Case
   {
@@ -1237,7 +1237,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: interior X range excludes incomple
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: first non-binary value is deterministic across parallel ranges", "[ImageProcessing][MorphologyEngine]", uint8, int32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: first non-binary value is deterministic across parallel ranges", "[NXImageProcessing][MorphologyEngine]", uint8, int32)
 {
   using T = TestType;
   static constexpr usize k_Count = (usize{1} << 20) + 37;
@@ -1310,7 +1310,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: first non-binary value is
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: binary input scan reports global indexes across chunks", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: binary input scan reports global indexes across chunks", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_ChunkValues = 8;
   constexpr uint8 k_Foreground = 1;
@@ -1437,7 +1437,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: binary input scan reports global i
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: smaller invalid index wins regardless of publish order", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: smaller invalid index wins regardless of publish order", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_Size = 1'000'000;
   std::atomic<usize> largerFirst{k_Size};
@@ -1459,7 +1459,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: smaller invalid index wins regardl
   REQUIRE(largerValue.load(std::memory_order_relaxed) == usize{123});
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: composite plane subtraction supports independent row ranges", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: composite plane subtraction supports independent row ranges", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_OutputWidth = 4;
   constexpr usize k_OutputHeight = 3;
@@ -1498,7 +1498,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: composite plane subtraction suppor
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: Direct matches Scanline exactly", "[ImageProcessing][MorphologyEngine]", int32, int8, uint8, uint16, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: Direct matches Scanline exactly", "[NXImageProcessing][MorphologyEngine]", int32, int8, uint8, uint16, float32)
 {
   using T = TestType;
   // Larger, non-cubic-friendly cube with a varied pattern; radii include a symmetric {2,2,2}, an asymmetric
@@ -1518,7 +1518,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: Direct matches Scanline e
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: fused Gradient Direct == Scanline == dilate-minus-erode oracle", "[ImageProcessing][MorphologyEngine]", int32, int8, uint8, uint16, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: fused Gradient Direct == Scanline == dilate-minus-erode oracle", "[NXImageProcessing][MorphologyEngine]", int32, int8, uint8, uint16, float32)
 {
   using T = TestType;
   // Fused single-pass max - min (in-core Direct + OOC Scanline) vs the independent dilate-minus-erode oracle,
@@ -1539,7 +1539,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: fused Gradient Direct == 
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphDirect matches BinaryMorphScanline exactly", "[ImageProcessing][MorphologyEngine]", int32, int8, uint8)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: BinaryMorphDirect matches BinaryMorphScanline exactly", "[NXImageProcessing][MorphologyEngine]", int32, int8, uint8)
 {
   using T = TestType;
   // Adaptive binary Direct path vs the oracle-verified Scanline reference, over a label volume carrying
@@ -1559,7 +1559,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphDirect matches
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: Direct matches Scanline on float data with NaNs", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: Direct matches Scanline on float data with NaNs", "[NXImageProcessing][MorphologyEngine]")
 {
   // NaN would violate the std::map comparator's strict-weak-ordering on the Direct path; the engine skips
   // it, exactly as MorphScanline's v>acc / v<acc comparisons never let a NaN win. Both paths must still
@@ -1594,7 +1594,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: Direct matches Scanline on float d
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: ApplyMorphology entry point dispatches Direct/Scanline", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: ApplyMorphology entry point dispatches Direct/Scanline", "[NXImageProcessing][MorphologyEngine]")
 {
   // Exercises the public ApplyMorphology entry, which now routes through DispatchAlgorithm. Both the
   // in-core Direct path and the OOC Scanline path must agree with the independent oracle. The force
@@ -1642,7 +1642,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: ApplyMorphology entry point dispat
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: OOC scanline slab batches preserve a short tail exactly", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: OOC scanline slab batches preserve a short tail exactly", "[NXImageProcessing][MorphologyEngine]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceOutOfCore, 0);
@@ -1724,7 +1724,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: OOC scanline slab batches preserve
   REQUIRE(actual == expectedBinary);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphScanline reads each 256-plane input once", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: BinaryMorphScanline reads each 256-plane input once", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -1763,7 +1763,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: BinaryMorphScanline reads each 256
   REQUIRE(outputStore.writeBatchSizes() == std::vector<usize>{52 * k_SliceValues, 52 * k_SliceValues, 52 * k_SliceValues, 52 * k_SliceValues, 48 * k_SliceValues});
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: MorphGradientScanline reads each 256-plane input once", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: MorphGradientScanline reads each 256-plane input once", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -1800,7 +1800,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: MorphGradientScanline reads each 2
   REQUIRE(outputStore.writeBatchSizes() == std::vector<usize>{52 * k_SliceValues, 52 * k_SliceValues, 52 * k_SliceValues, 52 * k_SliceValues, 48 * k_SliceValues});
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: full-overwrite morphology filters defer output initialization", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: full-overwrite morphology filters defer output initialization", "[NXImageProcessing][MorphologyEngine]")
 {
   DataStructure dataStructure;
   const DataPath inputPath = BuildMorphologyFilterPreflightInput(dataStructure);
@@ -1817,7 +1817,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: full-overwrite morphology filters 
   RequireDeferredMorphologyOutputAction<MorphologicalGradientImageFilter>(dataStructure, inputPath);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: bounded 2D row blocks and overwide tiles match independent oracles", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: bounded 2D row blocks and overwide tiles match independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -1862,7 +1862,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: bounded 2D row blocks and overwide
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: bounded gradient 2D transfers never span the complete plane", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: bounded gradient 2D transfers never span the complete plane", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize dimX = 9;
   constexpr usize dimY = 7;
@@ -1935,7 +1935,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: bounded gradient 2D transfers neve
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: fixed-input 2D route requires one output row to fit its allowance", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: fixed-input 2D route requires one output row to fit its allowance", "[NXImageProcessing][MorphologyEngine]")
 {
   using ImageProcessing::detail::CanUseFixedMorphologyInput2D;
 
@@ -1968,7 +1968,7 @@ private:
   usize m_ReportedTupleCount = 0;
 };
 
-TEST_CASE("ImageProcessing::MorphologyEngine: slab planner validates dimensions and store sizes", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: slab planner validates dimensions and store sizes", "[NXImageProcessing][MorphologyEngine]")
 {
   auto requireErrorCode = [](const Result<>& result, int32 code) {
     REQUIRE(result.invalid());
@@ -2007,7 +2007,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: slab planner validates dimensions 
   requireErrorCode(outputMismatchResult, -8653);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: slab planner bounds normal batches and retains required large-radius halo", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: slab planner bounds normal batches and retains required large-radius halo", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -2065,7 +2065,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: slab planner bounds normal batches
   REQUIRE(actual == Oracle(input, k_DimX, k_DimY, k_LargeRadiusDimZ, se, MorphOp::Dilate));
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: resident 8-bit plan requires complete dataset-scaled input and output memory", "[ImageProcessing][MorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: resident 8-bit plan requires complete dataset-scaled input and output memory", "[NXImageProcessing][MorphologyEngine][WorkingMemory]")
 {
   constexpr usize dimX = 600;
   constexpr usize dimY = 450;
@@ -2106,7 +2106,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: resident 8-bit plan requires compl
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: resident flat fold is limited to moderate multi-plane neighborhoods", "[ImageProcessing][MorphologyEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: resident flat fold is limited to moderate multi-plane neighborhoods", "[NXImageProcessing][MorphologyEngine][WorkingMemory]")
 {
   const StructuringElement moderate = MakeStructuringElement(KernelType::Ball, {2, 2, 2});
   const StructuringElement large = MakeStructuringElement(KernelType::Ball, {3, 3, 3});
@@ -2116,7 +2116,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: resident flat fold is limited to m
   REQUIRE_FALSE(ImageProcessing::detail::ShouldUseMorphologyResidentFlatFold(SizeVec3{600, 450, 128}, large));
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: flat-fold blocks map staged slabs and cropped rings to independent oracles", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slabs and cropped rings to independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr uint8 foreground = 1;
   constexpr uint8 background = 0;
@@ -2209,7 +2209,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: flat-fold blocks map staged slabs 
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: packed binary blocks match complete-volume independent oracles", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary blocks match complete-volume independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
   const std::array<bool, 2> boundaryModes = {false, true};
   const auto checkBothOperations = [&](const SizeVec3& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3& outputDims, const SizeVec3& outputOrigin, const StructuringElement& se,
@@ -2272,7 +2272,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: packed binary blocks match complet
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: packed binary rings retain logical planes across wrap", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary rings retain logical planes across wrap", "[NXImageProcessing][MorphologyEngine]")
 {
   const SizeVec3 k_BoundDims{65, 2, 8};
   constexpr BinaryMorphWord k_TailMask = (BinaryMorphWord{1} << 1) - BinaryMorphWord{1};
@@ -2364,7 +2364,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: packed binary rings retain logical
   REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(onePlaneView, k_BoundDims, 0, 0, 3, false) == BinaryMorphWord{0x8000000000000000});
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: pre-cancel preserves poisoned scanline outputs", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: pre-cancel preserves poisoned scanline outputs", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
@@ -2398,7 +2398,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: pre-cancel preserves poisoned scan
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract matches manual oracle", "[ImageProcessing][MorphologyEngine]", uint8, int32, float32)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract matches manual oracle", "[NXImageProcessing][MorphologyEngine]", uint8, int32, float32)
 {
   using Order = ImageProcessing::detail::CropSubtractOrder;
 
@@ -2428,7 +2428,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologyEngine: fused SafeBorder crop-sub
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract honors pre-cancel", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract honors pre-cancel", "[NXImageProcessing][MorphologyEngine]")
 {
   constexpr usize k_DimX = 3;
   constexpr usize k_DimY = 2;
@@ -2454,7 +2454,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract hon
   REQUIRE(std::all_of(actual.cbegin(), actual.cend(), [](int32 value) { return value == k_Poison; }));
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract uses registered OOC stores", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract uses registered OOC stores", "[NXImageProcessing][MorphologyEngine]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceOutOfCore, 0);

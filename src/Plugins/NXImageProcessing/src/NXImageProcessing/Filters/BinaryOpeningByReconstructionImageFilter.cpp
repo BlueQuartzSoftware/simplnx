@@ -49,7 +49,7 @@ std::string BinaryOpeningByReconstructionImageFilter::humanName() const
 }
 std::vector<std::string> BinaryOpeningByReconstructionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "BinaryOpeningByReconstruction", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "BinaryOpeningByReconstruction", "MathematicalMorphology", "Morphology"};
 }
 Parameters BinaryOpeningByReconstructionImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/CosImageFilter.hpp"
+#include "NXImageProcessing/Filters/CosImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -46,12 +46,12 @@ void RunCosItkGolden(const std::string& inputFile, const std::string& baselineFi
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::CosImageFilter: ITK real-image golden (float)", "[ImageProcessing][ItkGolden][CosImageFilter]")
+TEST_CASE("NXImageProcessing::CosImageFilter: ITK real-image golden (float)", "[NXImageProcessing][ItkGolden][CosImageFilter]")
 {
   RunCosItkGolden("RA-Slice-Float.nrrd", "BasicFilters_CosImageFilter_float.nrrd");
 }
 
-TEST_CASE("ImageProcessing::CosImageFilter: ITK real-image golden (short)", "[ImageProcessing][ItkGolden][CosImageFilter]")
+TEST_CASE("NXImageProcessing::CosImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][CosImageFilter]")
 {
   RunCosItkGolden("RA-Slice-Short.nrrd", "BasicFilters_CosImageFilter_short.nrrd");
 }

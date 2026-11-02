@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/HMinimaImageFilter.hpp"
+#include "NXImageProcessing/Filters/HMinimaImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -24,7 +24,7 @@ constexpr int32 k_NegativeHeight = -8555;
 //     whose contrast (>= Height) survives is raised by exactly Height; the dent whose contrast (< Height) is
 //     filled up to the surrounding background; the background is left unchanged.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: hand-computed minima suppression", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression", "[NXImageProcessing][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -63,7 +63,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: hand-computed minima suppression
 //      routes through DispatchAlgorithm, so the scope proves both implementations produce the correct suppression;
 //      the hand-computed expected values are the non-circular oracle (not the filter's own in-core run).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: hand-computed minima suppression (both algorithm paths)", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression (both algorithm paths)", "[NXImageProcessing][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -113,7 +113,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: hand-computed minima suppression
 //      equals the input exactly. Preflight accepts Height 0 (only a negative Height is rejected); assert output ==
 //      input.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[NXImageProcessing][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -143,7 +143,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[Ima
 //      markers whose reconstruction stays near the input, so the uniform 255 output uniquely proves the cast
 //      clamps rather than wraps. The test asserts the uniform output on the filter directly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to type maximum", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to type maximum", "[NXImageProcessing][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -171,7 +171,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to ty
 // (5) Preflight: a non-finite Height (NaN or Inf) is rejected with the filter-local error code, because the
 //     saturating (input + Height) marker offset is undefined for a non-finite value.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: Preflight non-finite Height guard", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -219,7 +219,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: Preflight non-finite Height guar
   }
 }
 
-TEST_CASE("ImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[ImageProcessing][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[NXImageProcessing][HMinimaImageFilter]")
 {
   const nlohmann::json json = {{"Height", 3.5},
                                {"FullyConnected", true},
@@ -240,7 +240,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[ImageProcessin
 // ITK-sourced real-image md5 golden -- duplicates ITKHMinimaImageTest.cpp(HMinima): RA-Short.nrrd (int16),
 // Height 2000. (B) live-ITK bit-exact + (A) md5-validity-first vs the committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima)", "[ImageProcessing][ItkGolden][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima)", "[NXImageProcessing][ItkGolden][HMinimaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<HMinimaImageFilter>("RA-Short.nrrd", "7778067eeb752b6ac396dd9e362e8346",
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });

@@ -10,8 +10,8 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "ImageProcessing/Filters/ReadZeissTxmFileFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/Filters/ReadZeissTxmFileFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -33,7 +33,7 @@ const DataPath k_ExemplarSubVolumePath({"Exemplar Sub Volume"});
 
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadZeissTxmFileFilter:Read_Full_Volume", "[ImageProcessing][ReadZeissTxmFileFilter]")
+TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Full_Volume", "[NXImageProcessing][ReadZeissTxmFileFilter]")
 {
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
@@ -77,7 +77,7 @@ TEST_CASE("ImageProcessing::ReadZeissTxmFileFilter:Read_Full_Volume", "[ImagePro
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[ImageProcessing][ReadZeissTxmFileFilter]")
+TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[NXImageProcessing][ReadZeissTxmFileFilter]")
 {
   // ************************************************************************************************
   // This section creates all the possible cropping options and then uses GENERATE_COPY to execute the full test case for each cropping option
@@ -142,7 +142,7 @@ TEST_CASE("ImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[ImageProc
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadZeissTxmFileFilter: PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadZeissTxmFileFilter]")
+TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadZeissTxmFileFilter]")
 {
   UnitTest::LoadPlugins();
   const DataPath geomPath({"Physical Crop"});

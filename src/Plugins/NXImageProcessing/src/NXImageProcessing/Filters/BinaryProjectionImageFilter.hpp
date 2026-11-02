@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -14,7 +14,7 @@ namespace nx::core
  *        foreground value if ANY voxel along the projected axis equals the foreground value, otherwise
  *        the background value.
  */
-class IMAGEPROCESSING_EXPORT BinaryProjectionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT BinaryProjectionImageFilter : public IFilter
 {
 public:
   BinaryProjectionImageFilter() = default;

@@ -157,7 +157,7 @@ void RequireMinMaxBitsEqual(const ImageProcessing::ArrayMinMax<float32>& actual,
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC default scan reservation scales with input bytes", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC default scan reservation scales with input bytes", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   constexpr usize k_ValueCount = 384ULL * k_MiB / sizeof(int16);
@@ -176,7 +176,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC default scan reservation sc
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC scan rejects a grant smaller than one input value", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC scan rejects a grant smaller than one input value", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   OocStatisticsStore<float32> store(1);
   const StatisticsCacheBudgetScope budgetScope(4);
@@ -189,7 +189,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC scan rejects a grant smalle
   REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC normalize blocks match in-memory statistics exactly with serial bounded reads", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC normalize blocks match in-memory statistics exactly with serial bounded reads", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_NormalizeStatisticsBlockValues;
   constexpr usize k_ValueCount = 3 * k_BlockValues + 17;
@@ -225,7 +225,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC normalize blocks match in-m
   REQUIRE(oocStore.maxConcurrentReads() == 1);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC normalize handles a total shorter than one statistics block", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC normalize handles a total shorter than one statistics block", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_ValueCount = ImageProcessing::detail::k_NormalizeStatisticsBlockValues / 2 + 3;
   constexpr uint64 k_GrantedBytes = static_cast<uint64>(k_ValueCount) * sizeof(float32);
@@ -250,7 +250,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC normalize handles a total s
   REQUIRE(oocStore.maxConcurrentReads() == 1);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: an under-block OOC grant preserves fixed-block arithmetic with bounded reads", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: an under-block OOC grant preserves fixed-block arithmetic with bounded reads", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_NormalizeStatisticsBlockValues;
   constexpr usize k_ValueCount = k_BlockValues + 19;
@@ -278,7 +278,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: an under-block OOC grant preser
   REQUIRE(oocStore.maxConcurrentReads() == 1);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: cancellation after the final OOC read skips its block merge", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: cancellation after the final OOC read skips its block merge", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_NormalizeStatisticsBlockValues;
   constexpr usize k_ValueCount = 2 * k_BlockValues + 17;
@@ -301,7 +301,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: cancellation after the final OO
   REQUIRE(oocStore.maxConcurrentReads() == 1);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::StreamingStatistics: ComputeArraySum matches serial statistics sum", "[ImageProcessing][StreamingStatistics]", int16, uint16, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::StreamingStatistics: ComputeArraySum matches serial statistics sum", "[NXImageProcessing][StreamingStatistics]", int16, uint16, float32, float64)
 {
   using T = TestType;
   std::vector<T> values = {static_cast<T>(1), static_cast<T>(3), static_cast<T>(5), static_cast<T>(7), static_cast<T>(11), static_cast<T>(13), static_cast<T>(17)};
@@ -316,7 +316,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::StreamingStatistics: ComputeArraySum matche
   REQUIRE(sum.value() == statistics.value().sum);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: ComputeArraySum OOC blocks are serial with a short final batch", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: ComputeArraySum OOC blocks are serial with a short final batch", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_NormalizeStatisticsBlockValues;
   constexpr usize k_ValueCount = 2 * k_BlockValues + 17;
@@ -340,7 +340,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: ComputeArraySum OOC blocks are 
   REQUIRE(oocStore.maxConcurrentReads() == 1);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: exact integral sum plan is bounded and overflow-safe", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: exact integral sum plan is bounded and overflow-safe", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArraySumBlockValues;
   constexpr usize k_ValueBytes = sizeof(int16);
@@ -367,7 +367,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: exact integral sum plan is boun
   REQUIRE_FALSE(ImageProcessing::detail::CanUseExactIntegralArraySum<float32>(1));
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: exact integral OOC sum uses parallel bounded blocks", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: exact integral OOC sum uses parallel bounded blocks", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArraySumBlockValues;
   constexpr usize k_ValueCount = 2 * k_BlockValues + 17;
@@ -399,7 +399,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: exact integral OOC sum uses par
   REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::StreamingStatistics: unsafe integral and floating sums keep serial Kahan", "[ImageProcessing][StreamingStatistics]", uint64, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::StreamingStatistics: unsafe integral and floating sums keep serial Kahan", "[NXImageProcessing][StreamingStatistics]", uint64, float64)
 {
   using T = TestType;
   constexpr usize k_ValueCount = 17;
@@ -418,7 +418,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::StreamingStatistics: unsafe integral and fl
   REQUIRE_FALSE(execution.usedExactIntegralParallel);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: cancelled integral sum does not merge a partial batch", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: cancelled integral sum does not merge a partial batch", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArraySumBlockValues;
   constexpr usize k_ValueCount = k_BlockValues + 4;
@@ -446,7 +446,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: cancelled integral sum does not
 // form can cancel a few ULPs NEGATIVE on a constant / near-uniform image, which would make std::sqrt return NaN
 // and poison sigma (and NormalizeImageFilter, which divides by it). Variance is non-negative by definition, so
 // sigma must be finite and 0 for a constant image, never NaN.
-TEST_CASE("ImageProcessing::StreamingStatistics: constant image yields finite zero variance/sigma", "[ImageProcessing][StreamingStatistics]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: constant image yields finite zero variance/sigma", "[NXImageProcessing][StreamingStatistics]")
 {
   std::atomic_bool shouldCancel{false};
 
@@ -488,7 +488,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: constant image yields finite ze
   }
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: min-max-only reduction", "[ImageProcessing][StreamingStatistics]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: min-max-only reduction", "[NXImageProcessing][StreamingStatistics]")
 {
   std::atomic_bool shouldCancel{false};
 
@@ -533,7 +533,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: min-max-only reduction", "[Imag
   }
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max preserves serial special values", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max preserves serial special values", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArrayMinMaxBlockValues;
   constexpr usize k_ValueCount = 2 * k_BlockValues + 17;
@@ -602,7 +602,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max preserv
   }
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max cancels before the first merge", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max cancels before the first merge", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArrayMinMaxBlockValues;
   constexpr usize k_ValueCount = 2 * k_BlockValues + 17;
@@ -628,7 +628,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max cancels
   REQUIRE(execution.usedFixedBlockParallel);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max does not return a completed batch after cancellation", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max does not return a completed batch after cancellation", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArrayMinMaxBlockValues;
   constexpr usize k_ValueCount = 3 * k_BlockValues + 17;
@@ -652,7 +652,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max does no
   REQUIRE(oocStore.readBatchValues().size() == 2);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max handles an empty store", "[ImageProcessing][StreamingStatistics][WorkingMemory]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max handles an empty store", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   OocStatisticsStore<float32> oocStore(0);
   std::atomic_bool shouldCancel{false};
@@ -664,7 +664,7 @@ TEST_CASE("ImageProcessing::StreamingStatistics: OOC fixed-block min-max handles
   REQUIRE_FALSE(execution.usedFixedBlockParallel);
 }
 
-TEST_CASE("ImageProcessing::StreamingStatistics: parallel normalize statistics match streaming", "[ImageProcessing][StreamingStatistics]")
+TEST_CASE("NXImageProcessing::StreamingStatistics: parallel normalize statistics match streaming", "[NXImageProcessing][StreamingStatistics]")
 {
   constexpr usize k_ValueCount = 600013;
   DataStore<int16> store(ShapeType{k_ValueCount}, ShapeType{1}, 0);

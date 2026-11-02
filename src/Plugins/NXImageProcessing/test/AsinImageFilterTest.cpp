@@ -1,13 +1,13 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/AsinImageFilter.hpp"
+#include "NXImageProcessing/Filters/AsinImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior): asin is undefined for |x|>1. The op is
 // static_cast<U>(std::asin(static_cast<double>(x))) -- ITK's equally-unguarded Asin functor -- so asin(2) is NaN.
-TEST_CASE("ImageProcessing::AsinImageFilter: asin of |x|>1 is NaN (domain edge)", "[ImageProcessing][AsinImageFilter]")
+TEST_CASE("NXImageProcessing::AsinImageFilter: asin of |x|>1 is NaN (domain edge)", "[NXImageProcessing][AsinImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -25,7 +25,7 @@ TEST_CASE("ImageProcessing::AsinImageFilter: asin of |x|>1 is NaN (domain edge)"
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01 via
 // ip_golden::CompareImages. See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::AsinImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][AsinImageFilter]")
+TEST_CASE("NXImageProcessing::AsinImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][AsinImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

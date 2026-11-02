@@ -453,7 +453,7 @@
   "python_generation": {
     "specification_file": "PythonGeneration.yaml",
     "resolve_from": "pipeline_suite_root",
-    "specification_id": "imageprocessing-python-generation-v1"
+    "specification_id": "nximageprocessing-python-generation-v1"
   },
   "input_data_strategy": {
     "strategy": "original-paper-linked",

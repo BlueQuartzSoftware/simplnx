@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleMorphologicalClosingImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleMorphologicalClosingImageFilter.hpp"
 
 #include <memory>
 
@@ -15,7 +15,8 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)",
+          "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
@@ -64,7 +65,7 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed-e
 //     ... ), i.e. the identity in the interior and a clamped shift near the boundary. (D^3 - 1 < 2^24, so float32
 //     is exact.) Real-disk out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp computed-expected (both algorithm paths)", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -155,7 +156,7 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp compu
 // the SE Z-radius made the closing return the unchanged-input identity 095f00a68a84df4396914fa758f34dcc instead of
 // the committed 103130cc4caf40d9fb252fbabc531e15; clamping the pad to 0 on the size-1 axis reproduces ITK exactly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: ITK real-image golden (Ball r{1,1,1})", "[ImageProcessing][ItkGolden][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: ITK real-image golden (Ball r{1,1,1})", "[NXImageProcessing][ItkGolden][GrayscaleMorphologicalClosingImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleMorphologicalClosingImageFilter>("STAPLE1.png", "103130cc4caf40d9fb252fbabc531e15", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                                   morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/true));
@@ -165,7 +166,7 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: ITK real-i
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8400) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleMorphologicalClosingImageFilter, float32>(
       -8400, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/true));

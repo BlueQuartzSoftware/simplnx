@@ -4,7 +4,7 @@ Compute the Laplacian of an image using separable recursive-Gaussian (Deriche) s
 
 ## Group (Subgroup)
 
-ImageProcessing (EdgeDetection)
+NXImageProcessing (EdgeDetection)
 
 ## Description
 

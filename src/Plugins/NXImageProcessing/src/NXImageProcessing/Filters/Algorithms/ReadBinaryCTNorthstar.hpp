@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -17,7 +17,7 @@ namespace nx::core
  * @struct ReadBinaryCTNorthstarInputValues
  * @brief Stores header-derived file layout, crop bounds, units, and output paths.
  */
-struct IMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarInputValues
+struct NXIMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarInputValues
 {
   FileSystemPathParameter::ValueType InputHeaderFile;
   DataPath ImageGeometryPath;
@@ -38,7 +38,7 @@ struct IMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarInputValues
  * The reader initializes the complete destination with a sentinel. It then seeks
  * to selected source rows and writes each imported row through checked bulk I/O.
  */
-class IMAGEPROCESSING_EXPORT ReadBinaryCTNorthstar
+class NXIMAGEPROCESSING_EXPORT ReadBinaryCTNorthstar
 {
 public:
   /**

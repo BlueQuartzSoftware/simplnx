@@ -1,6 +1,6 @@
 #include "ReadMhaFile.hpp"
 
-#include "ImageProcessing/utils/MetaImageUtilities.hpp"
+#include "NXImageProcessing/utils/MetaImageUtilities.hpp"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"

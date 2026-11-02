@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
-#include "ImageProcessing/utils/NrrdUtilities.hpp"
+#include "NXImageProcessing/Filters/ReadImageFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -122,7 +122,7 @@ private:
 };
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientation", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientation", "[NXImageProcessing][ReadImageFilter]")
 {
   TemporaryTiledFilterFixture fixture;
   UnitTest::LoadPlugins();
@@ -161,7 +161,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientation"
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Read_Basic", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Read_Basic", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -204,7 +204,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Read_Basic", "[ImageProcessing][Rea
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Override_Origin", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -250,7 +250,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Override_Origin", "[ImageProcessing
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Centering_Origin", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Centering_Origin", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -294,7 +294,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Centering_Origin", "[ImageProcessin
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Override_Spacing", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -340,7 +340,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Override_Spacing", "[ImageProcessin
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -398,7 +398,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[Imag
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -456,7 +456,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[Ima
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: DataType_Conversion", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -503,7 +503,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: DataType_Conversion", "[ImageProces
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -559,7 +559,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[Image
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Interaction_All", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_All", "[NXImageProcessing][ReadImageFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
@@ -678,7 +678,7 @@ void WriteNrrdRaw(const fs::path& path, const std::vector<std::string>& headerLi
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -736,7 +736,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[ImageProc
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -856,7 +856,7 @@ void RequireNrrdArrayEquals(const DataStructure& ds, const DataPath& arrPath, co
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + gzip)", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + gzip)", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -904,7 +904,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + gz
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round trip", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round trip", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const std::array<usize, 3> dims = {3, 3, 2};
@@ -938,7 +938,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round trip
   RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const usize X = 4, Y = 3; // 2D image, 3 components
@@ -972,7 +972,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", 
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD permuted directions emits warning -35750", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits warning -35750", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const fs::path p = ReadImageOutputDir() / "rt_permuted.nrrd";
@@ -996,7 +996,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD permuted directions emits warn
   REQUIRE(found);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const usize X = 6, Y = 5, Z = 4;
@@ -1050,7 +1050,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[ImageP
 // 1-voxel disagreement would silently under-fill the array or trip CopyData -2034.
 // Non-unit spacing + non-zero origin exercise that mapping; the chosen bounds land
 // mid-voxel so both the float64 (preflight) and float32 (execute) floors agree.
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr usize X = 6, Y = 5, Z = 4;
@@ -1113,7 +1113,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[Ima
 // box green-preflights (CropImageGeometryFilter clamps the bounds into the volume with a
 // warning) but the old execute path hard-errored (ImageGeom::getIndex returns nullopt for
 // an OOB coordinate). Execute now clamps identically, so preflight and execute agree.
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps out-of-range bounds", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr usize X = 6, Y = 5, Z = 4;
@@ -1154,7 +1154,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps 
   RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD rejects missing file and bad encoding", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD rejects missing file and bad encoding", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   SECTION("missing file")
@@ -1179,9 +1179,9 @@ TEST_CASE("ImageProcessing::ReadImageFilter: NRRD rejects missing file and bad e
 // Live-ITK read-parity gate. Reads each real ITK regression .nrrd with BOTH
 // ReadImageFilter (NRRD backend) AND the runtime-loaded ITKImageReaderFilter
 // (fetched from the FilterList by UUID so no ITK header/link is pulled into
-// ImageProcessing) and asserts identical geometry (dims/origin/spacing/type) +
+// NXImageProcessing) and asserts identical geometry (dims/origin/spacing/type) +
 // byte-identical pixel array. Self-skips with a WARN when the ITK plugin is not
-// loaded so ITK-free ImageProcessing builds still compile and pass.
+// loaded so ITK-free NXImageProcessing builds still compile and pass.
 // -----------------------------------------------------------------------------
 namespace
 {
@@ -1189,7 +1189,7 @@ namespace
 // plugin source tree.
 fs::path ItkJsonFiltersDir()
 {
-  return fs::path(std::string(nx::core::unit_test::k_SimplnxSourceDIr.view())) / "src" / "Plugins" / "ImageProcessing" / "data" / "ItkGolden";
+  return fs::path(std::string(nx::core::unit_test::k_SimplnxSourceDIr.view())) / "src" / "Plugins" / "NXImageProcessing" / "data" / "ItkGolden";
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
@@ -1266,7 +1266,7 @@ void RequireArraysIdentical(const IDataArray& ours, const IDataArray& itk)
 // the gzip stream larger than the buffer -- the exact condition that drives the
 // refill branch, which the smaller round-trip tests never reach.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refill", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refill", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1360,7 +1360,7 @@ void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t heig
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_Clamps", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_Clamps", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "physical_min_below_origin.tif";
@@ -1406,7 +1406,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "physical_nan_rejected.tif";
@@ -1445,7 +1445,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected", 
   REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == -50561; }));
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputOrigin", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputOrigin", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "center_geometry.tif";
@@ -1472,7 +1472,7 @@ TEST_CASE("ImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputO
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", "[ImageProcessing][ReadImageFilter]")
+TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadImage_physical_max_at_bound.tif";

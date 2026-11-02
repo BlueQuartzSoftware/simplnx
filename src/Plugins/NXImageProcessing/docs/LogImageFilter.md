@@ -4,7 +4,7 @@ Computes the natural logarithm of each pixel.
 
 ## Group (Subgroup)
 
-ImageProcessing (Pointwise)
+NXImageProcessing (Pointwise)
 
 ## Description
 

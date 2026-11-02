@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * Labels are preserved exactly on the contour, matching the legacy ITK Label Contour Image Filter. The
  * connectivity (Fully Connected off = face; on = face+edge+vertex) matches the legacy filter.
  */
-class IMAGEPROCESSING_EXPORT LabelContourImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT LabelContourImageFilter : public IFilter
 {
 public:
   LabelContourImageFilter() = default;

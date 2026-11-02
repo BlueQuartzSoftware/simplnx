@@ -1,7 +1,7 @@
 #include "ProjectionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MeanProjectionImageFilter.hpp"
+#include "NXImageProcessing/Filters/MeanProjectionImageFilter.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -19,7 +19,7 @@ using namespace nx::core;
 //     engine is single-implementation (no DispatchAlgorithm), so it cannot use AlgorithmTestScope; this is a
 //     plain ForceInCore in-memory correctness check.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MeanProjectionImageFilter: Independent oracle (in-memory)", "[ImageProcessing][MeanProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][MeanProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -117,7 +117,7 @@ TEST_CASE("ImageProcessing::MeanProjectionImageFilter: Independent oracle (in-me
 // The projection collapses Z, so the OUTPUT (in-place, in the collapsed "Image Geometry") owns the reduced
 // 64x64x1 array that matches the baseline's dims -- the geometry resolution for risk #2.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MeanProjectionImageFilter: ITK real-image golden (z_projection)", "[ImageProcessing][ItkGolden][MeanProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: ITK real-image golden (z_projection)", "[NXImageProcessing][ItkGolden][MeanProjectionImageFilter]")
 {
   projection_test::RunProjectionBaselineItkGolden<MeanProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_MeanProjectionImageFilter_z_projection.nrrd", /*projDim=*/2, /*tolerance=*/0.0001);
 }

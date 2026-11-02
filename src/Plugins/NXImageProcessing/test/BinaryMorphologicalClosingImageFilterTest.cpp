@@ -1,6 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/BinaryMorphologicalClosingImageFilter.hpp"
+#include "NXImageProcessing/Filters/BinaryMorphologicalClosingImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -35,7 +35,7 @@ morph_test::KernelParamSetter ClosingKernelParamSetter(float64 foreground, bool 
 //     filter rasterizes the real thickness-1 shell) and the (Box, 3D r{2,1,0}) cell, which has a zero-radius
 //     axis on a 3D image.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   using morph_test::BinaryCompositeKind;
   using morph_test::KernelType;
@@ -67,7 +67,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expe
 //     neither foreground nor background: preflight passes but execute must fail with the k_NonBinaryInput
 //     safeguard code (the composite runs the safeguard exactly once on the original input).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non-binary input at execute", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -101,7 +101,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non-b
 //     computed over the actual input. Real-disk out-of-core coverage is retired to the generic SimplnxOoc store
 //     tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; both algorithm paths)", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false; both algorithm paths)", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -185,7 +185,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expe
 //     out-of-range value would be an undefined conversion, so the filter must reject it at preflight. In-range
 //     integer values must still preflight cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-finite / out-of-range foreground", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-finite / out-of-range foreground", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -228,7 +228,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rej
 //     strictly-binary input and rejects STAPLE1 at execute (k_NonBinaryInput). That case therefore has no faithful
 //     analogue here and is deliberately omitted (see the "Rejects non-binary input at execute" test above).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-image golden (WhiteDots WithBorder)", "[ImageProcessing][ItkGolden][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-image golden (WhiteDots WithBorder)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalClosingImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<ClosingFilter>("WhiteDots.png", "506d365dd92db16c2ade264fca46890c", static_cast<uint64>(morph_test::KernelType::Ball), {5, 5, 5},
                                                        ClosingKernelParamSetter(255.0, /*safeBorder=*/false));
@@ -238,7 +238,7 @@ TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: ITK real-imag
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (k_NonScalarInput == -8490) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][BinaryMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<ClosingFilter, uint8>(-8490, ClosingKernelParamSetter(1.0, /*safeBorder=*/true));
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -21,7 +21,7 @@ namespace nx::core
  * must be a floating-point scalar type (float32 or float64); the output has the SAME type as the input. Matches the
  * legacy ITK Min Max Curvature Flow Image Filter. Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT MinMaxCurvatureFlowImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT MinMaxCurvatureFlowImageFilter : public IFilter
 {
 public:
   MinMaxCurvatureFlowImageFilter() = default;

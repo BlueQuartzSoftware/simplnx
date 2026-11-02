@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/AcosImageFilter.hpp"
+#include "NXImageProcessing/Filters/AcosImageFilter.hpp"
 
 using namespace nx::core;
 
 // PART A domain edge (documents ITK-faithful behavior; does NOT "fix" it): acos is undefined for |x|>1. The op is
 // static_cast<U>(std::acos(static_cast<double>(x))) -- exactly ITK's equally-unguarded Acos functor -- so acos(2)
 // is IEEE NaN. This pins that observed output.
-TEST_CASE("ImageProcessing::AcosImageFilter: acos of |x|>1 is NaN (domain edge)", "[ImageProcessing][AcosImageFilter]")
+TEST_CASE("NXImageProcessing::AcosImageFilter: acos of |x|>1 is NaN (domain edge)", "[NXImageProcessing][AcosImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -28,7 +28,7 @@ TEST_CASE("ImageProcessing::AcosImageFilter: acos of |x|>1 is NaN (domain edge)"
 // the ITK test's tolerance 0.01 via ip_golden::CompareImages. CompareImages dispatches on the runtime type and --
 // unlike CompareDataArrays -- tolerates the non-finite tails these functors can emit.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::AcosImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][AcosImageFilter]")
+TEST_CASE("NXImageProcessing::AcosImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][AcosImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

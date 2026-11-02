@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ReadImageStackFilter
  * @brief Reads an ordered image sequence into a three-dimensional Image Geometry.
  */
-class IMAGEPROCESSING_EXPORT ReadImageStackFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadImageStackFilter : public IFilter
 {
 public:
   ReadImageStackFilter() = default;

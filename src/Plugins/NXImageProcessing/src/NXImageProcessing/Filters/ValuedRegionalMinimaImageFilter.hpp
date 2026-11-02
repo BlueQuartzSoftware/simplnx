@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * Filter exactly for integer and float types, and is out-of-core capable (in-core flood vs streamed sweep, both
  * producing bit-identical output).
  */
-class IMAGEPROCESSING_EXPORT ValuedRegionalMinimaImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ValuedRegionalMinimaImageFilter : public IFilter
 {
 public:
   ValuedRegionalMinimaImageFilter() = default;

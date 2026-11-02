@@ -1,7 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MinMaxCurvatureFlowImageFilter.hpp"
+#include "NXImageProcessing/Filters/MinMaxCurvatureFlowImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -65,7 +65,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 //     CurvatureFlow's AllNumeric); a multi-component input is rejected (requireScalar); a valid float input
 //     produces a SameAsInput output array.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards", "[ImageProcessing][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -131,12 +131,12 @@ TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards", "
 //             defaults.
 //   longer:   TimeStep 0.1, NumberOfIterations 10 (StencilRadius stays at default 2).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][MinMaxCurvatureFlowImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<MinMaxCurvatureFlowImageFilter>("RA-Float.nrrd", "BasicFilters_MinMaxCurvatureFlowImageFilter_defaults.nrrd", /*tolerance=*/0.01);
 }
 
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image golden (longer)", "[ImageProcessing][ItkGolden][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image golden (longer)", "[NXImageProcessing][ItkGolden][MinMaxCurvatureFlowImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<MinMaxCurvatureFlowImageFilter>("RA-Float.nrrd", "BasicFilters_MinMaxCurvatureFlowImageFilter_longer.nrrd", /*tolerance=*/0.01, [](Arguments& args) {
     args.insertOrAssign(MinMaxCurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(0.1));
@@ -150,7 +150,7 @@ TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image golde
 //     produce BYTE-IDENTICAL output to a run at radius 1 (both clamp to 1). The test uses a non-constant ramp, so the
 //     radius changes the result, and it compares the two runs directly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 clamps to 1", "[ImageProcessing][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 clamps to 1", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -177,7 +177,7 @@ TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 clam
 //     return), so MinMaxCurvatureFlowFn's `if(update == 0.0) return 0.0` short-circuits before any threshold/stencil
 //     work, and accum never changes -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is identity", "[ImageProcessing][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is identity", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -196,7 +196,7 @@ TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is id
 // (4) NumberOfIterations == 0 is a no-op: the driver's `for(iter=0; iter<numberOfIterations; ...)` loop never runs, and
 //     the final output = cast<T>(accum = cast<Real>(input)) is a lossless float32 round-trip -> output == input EXACTLY.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::MinMaxCurvatureFlowImageFilter: zero iterations is a no-op", "[ImageProcessing][MinMaxCurvatureFlowImageFilter]")
+TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: zero iterations is a no-op", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

@@ -41,7 +41,7 @@ std::string StandardDeviationProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> StandardDeviationProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "StandardDeviation", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "StandardDeviation", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

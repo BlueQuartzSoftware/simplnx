@@ -37,7 +37,7 @@ std::string GrayscaleMorphologicalClosingImageFilter::humanName() const
 }
 std::vector<std::string> GrayscaleMorphologicalClosingImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "GrayscaleMorphologicalClosing", "Morphology", "MathematicalMorphology"};
+  return {className(), "NXImageProcessing", "GrayscaleMorphologicalClosing", "Morphology", "MathematicalMorphology"};
 }
 Parameters GrayscaleMorphologicalClosingImageFilter::parameters() const
 {

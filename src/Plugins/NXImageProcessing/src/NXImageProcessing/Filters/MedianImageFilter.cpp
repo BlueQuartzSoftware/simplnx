@@ -57,7 +57,7 @@ std::string MedianImageFilter::humanName() const
 }
 std::vector<std::string> MedianImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Median", "Neighborhood"};
+  return {className(), "NXImageProcessing", "Median", "Neighborhood"};
 }
 Parameters MedianImageFilter::parameters() const
 {

@@ -67,7 +67,7 @@ std::string NormalizeToConstantImageFilter::humanName() const
 }
 std::vector<std::string> NormalizeToConstantImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "NormalizeToConstant", "Pointwise"};
+  return {className(), "NXImageProcessing", "NormalizeToConstant", "Pointwise"};
 }
 Parameters NormalizeToConstantImageFilter::parameters() const
 {

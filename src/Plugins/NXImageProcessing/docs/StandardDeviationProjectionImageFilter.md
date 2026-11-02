@@ -4,7 +4,7 @@ Projects a scalar image along one axis, setting each output voxel to the standar
 
 ## Group (Subgroup)
 
-ImageProcessing (Projection)
+NXImageProcessing (Projection)
 
 ## Description
 

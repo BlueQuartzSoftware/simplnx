@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/Algorithms/ReadNrrdFile.hpp"
-#include "ImageProcessing/utils/NrrdUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadNrrdFile.hpp"
+#include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -97,7 +97,7 @@ void WriteNhdrHeaderOnly(const fs::path& hdrPath, const std::vector<std::string>
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::NrrdUtilities: type string -> DataType map", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: type string -> DataType map", "[NXImageProcessing][NrrdUtilities]")
 {
   using nrrd::NrrdTypeToSimplnx;
   REQUIRE(NrrdTypeToSimplnx("unsigned char").value().first == DataType::uint8);
@@ -117,7 +117,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: type string -> DataType map", "[Image
   REQUIRE_FALSE(NrrdTypeToSimplnx("nonsense").has_value());
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: parse scalar 3D header", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageProcessing][NrrdUtilities]")
 {
   const fs::path p = NrrdOutputDir() / "hdr_scalar3d.nrrd";
   WriteNrrdRaw(p,
@@ -145,7 +145,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: parse scalar 3D header", "[ImageProce
   REQUIRE(md.dataStartOffset > 0);
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImageProcessing][NrrdUtilities]")
 {
   const fs::path p = NrrdOutputDir() / "hdr_scalar2d.nrrd";
   WriteNrrdRaw(p,
@@ -160,7 +160,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[ImageProces
   REQUIRE(md.dataType == DataType::uint8);
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: parse RGB/vector component axis", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "[NXImageProcessing][NrrdUtilities]")
 {
   const fs::path p = NrrdOutputDir() / "hdr_rgb.nrrd";
   WriteNrrdRaw(p,
@@ -177,7 +177,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: parse RGB/vector component axis", "[I
   REQUIRE_FALSE(md.affineHasRotation);
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: permuted directions flag rotation", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation", "[NXImageProcessing][NrrdUtilities]")
 {
   const fs::path p = NrrdOutputDir() / "hdr_permuted.nrrd";
   WriteNrrdRaw(p,
@@ -192,7 +192,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: permuted directions flag rotation", "
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: rejects bad headers", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: rejects bad headers", "[NXImageProcessing][NrrdUtilities]")
 {
   SECTION("unsupported encoding")
   {
@@ -238,7 +238,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: rejects bad headers", "[ImageProcessi
   }
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: rejects unsupported skip fields and malformed sizes", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: rejects unsupported skip fields and malformed sizes", "[NXImageProcessing][NrrdUtilities]")
 {
   // teem/ITK honor 'byte skip' / 'line skip'; this reader cannot, so a nonzero value is
   // rejected rather than silently dropped (which would read the wrong voxels).
@@ -276,7 +276,7 @@ TEST_CASE("ImageProcessing::NrrdUtilities: rejects unsupported skip fields and m
   }
 }
 
-TEST_CASE("ImageProcessing::NrrdUtilities: named 'space' -> LPS origin sign-flip", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdUtilities: named 'space' -> LPS origin sign-flip", "[NXImageProcessing][NrrdUtilities]")
 {
   // itkNrrdImageIO.cxx converts a named space to LPS on read by sign-flipping the origin:
   // RAS negates X and Y, LAS negates X, LPS is unchanged. Verify our parser matches.
@@ -350,7 +350,7 @@ std::vector<uint8_t> GzipCompress(const std::vector<uint8_t>& data)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::NrrdDataReader: raw + gzip readBytes", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::NrrdDataReader: raw + gzip readBytes", "[NXImageProcessing][NrrdUtilities]")
 {
   std::vector<int16_t> values(4 * 3 * 2);
   for(size_t i = 0; i < values.size(); i++)
@@ -439,7 +439,7 @@ Result<> RunReadNrrdFile(DataStructure& ds, const fs::path& inputFile, const Cro
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]", "[NXImageProcessing][NrrdUtilities]")
 {
   constexpr usize X = 4;
   constexpr usize Y = 3;
@@ -463,7 +463,7 @@ TEST_CASE("ImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]", 
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[NXImageProcessing][NrrdUtilities]")
 {
   constexpr usize X = 4;
   constexpr usize Y = 3;
@@ -497,7 +497,7 @@ TEST_CASE("ImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[Ima
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNrrdFile: RGB component axis interleaves components", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::ReadNrrdFile: RGB component axis interleaves components", "[NXImageProcessing][NrrdUtilities]")
 {
   constexpr usize comp = 3;
   constexpr usize X = 4;
@@ -523,7 +523,7 @@ TEST_CASE("ImageProcessing::ReadNrrdFile: RGB component axis interleaves compone
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the requested region", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the requested region", "[NXImageProcessing][NrrdUtilities]")
 {
   constexpr usize X = 4;
   constexpr usize Y = 3;
@@ -557,7 +557,7 @@ TEST_CASE("ImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the re
   }
 }
 
-TEST_CASE("ImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file", "[ImageProcessing][NrrdUtilities]")
+TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file", "[NXImageProcessing][NrrdUtilities]")
 {
   constexpr usize X = 4;
   constexpr usize Y = 3;

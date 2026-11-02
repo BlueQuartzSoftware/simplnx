@@ -31,7 +31,7 @@ std::string CurvatureAnisotropicDiffusionImageFilter::humanName() const
 }
 std::vector<std::string> CurvatureAnisotropicDiffusionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Smoothing", "AnisotropicDiffusion", "PDE"};
+  return {className(), "NXImageProcessing", "Smoothing", "AnisotropicDiffusion", "PDE"};
 }
 
 Parameters CurvatureAnisotropicDiffusionImageFilter::parameters() const

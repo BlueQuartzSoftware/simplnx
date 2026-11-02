@@ -94,7 +94,7 @@ std::vector<T> RunCurvatureFlow(const std::vector<T>& field, usize dx, usize dy,
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -139,7 +139,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: resident state requires a co
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: real-OOC selector uses resident state only after a complete grant", "[ImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][FiniteDifferenceEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -190,7 +190,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: real-OOC selector uses resid
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: final 3D iteration writes output without a scratch round trip", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: final 3D iteration writes output without a scratch round trip", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -227,7 +227,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: final 3D iteration writes ou
   REQUIRE(secondStore.writeCount() == 0);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: first anisotropic conductance reduction reuses the input initialization stream", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: first anisotropic conductance reduction reuses the input initialization stream", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -257,7 +257,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: first anisotropic conductanc
   REQUIRE(outputStore.writeCount() == dimZ);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: later anisotropic conductance refresh retains its frozen-state reduction pass", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: later anisotropic conductance refresh retains its frozen-state reduction pass", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -287,7 +287,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: later anisotropic conductanc
   REQUIRE(outputStore.writeCount() == dimZ);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: interior range excludes exactly the clamped stencil edge", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: interior range excludes exactly the clamped stencil edge", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   REQUIRE(ImageProcessing::detail::CreateFiniteDifferenceInteriorRange(5, 1).begin == 1);
   REQUIRE(ImageProcessing::detail::CreateFiniteDifferenceInteriorRange(5, 1).end == 4);
@@ -299,7 +299,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: interior range excludes exac
   REQUIRE(ImageProcessing::detail::CreateFiniteDifferenceInteriorRange(5, -1).end == 0);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: direct interior neighbors remain bit-exact with clamped edges", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: direct interior neighbors remain bit-exact with clamped edges", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -341,7 +341,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: direct interior neighbors re
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: radius-two direct interior neighbors remain bit-exact with clamped edges", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: radius-two direct interior neighbors remain bit-exact with clamped edges", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr usize dimX = 7;
   constexpr usize dimY = 8;
@@ -383,7 +383,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: radius-two direct interior n
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: MinMax stencil offsets are precomputed in ITK iteration order", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: MinMax stencil offsets are precomputed in ITK iteration order", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   for(const int64 radius : {int64{1}, int64{2}, int64{3}})
   {
@@ -419,7 +419,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: MinMax stencil offsets are p
   REQUIRE(boundedFunction.stencilOffsets(3).empty());
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: interior selector respects radius and effective dimensions", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: interior selector respects radius and effective dimensions", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const SizeVec3 dims{8, 9, 10};
   REQUIRE(ImageProcessing::detail::FiniteDifferenceNeighborhoodIsInterior(2, 2, 2, dims, 2, 3));
@@ -430,7 +430,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: interior selector respects r
   REQUIRE_FALSE(ImageProcessing::detail::FiniteDifferenceNeighborhoodIsInterior(2, 2, 0, dims, -1, 2));
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: anisotropic updates reuse the 19-value radius-one neighborhood", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: anisotropic updates reuse the 19-value radius-one neighborhood", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const std::array<double, 3> scales = {1.0, 0.75, 1.25};
 
@@ -461,7 +461,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: anisotropic updates reuse th
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: zero iterations is the identity", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: zero iterations is the identity", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const usize d = 8;
   std::vector<float32> field(d * d * d);
@@ -473,7 +473,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: zero iterations is the ident
   REQUIRE(out == field); // out = cast<T>(in), no updates
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: constant image is preserved by curvature flow", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: constant image is preserved by curvature flow", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const usize d = 10;
   const std::vector<float32> field(d * d * d, 42.0f);
@@ -484,7 +484,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: constant image is preserved 
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: deterministic + tall-Z range sanity", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: deterministic + tall-Z range sanity", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const usize dx = 8, dy = 8, dz = 40;
   std::vector<float32> field(dx * dy * dz);
@@ -504,7 +504,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: deterministic + tall-Z range
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: planar level sets do not move (ramp update is zero)", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: planar level sets do not move (ramp update is zero)", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const usize dx = 10, dy = 10, dz = 10;
   auto at = [&](usize x, usize y, usize z) { return (z * dy + y) * dx + x; };
@@ -537,7 +537,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: planar level sets do not mov
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: validates stores and cancellation", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: validates stores and cancellation", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const nx::core::ImageProcessing::detail::CurvatureFlowFn fn{};
   std::atomic_bool shouldCancel{false};
@@ -570,7 +570,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: validates stores and cancell
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: mixed storage selects an OOC working format", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: mixed storage selects an OOC working format", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   constexpr const char* kInputOocFormat = "HDF5-OOC-Input";
   constexpr const char* kOutputOocFormat = "HDF5-OOC-Output";
@@ -605,7 +605,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: mixed storage selects an OOC
   }
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: 2D planner bounds row blocks and overwide tiles", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: 2D planner bounds row blocks and overwide tiles", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const auto benchmark = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(5888, 5888, 1, sizeof(float64));
   REQUIRE(benchmark.valid);
@@ -655,7 +655,7 @@ TEST_CASE("ImageProcessing::FiniteDifferenceEngine: 2D planner bounds row blocks
   REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_FiniteDifference2DResidentLimit);
 }
 
-TEST_CASE("ImageProcessing::FiniteDifferenceEngine: 2D planner rejects invalid and overflow inputs", "[ImageProcessing][FiniteDifferenceEngine]")
+TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: 2D planner rejects invalid and overflow inputs", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
   const auto overflow = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max(), 1, sizeof(float64));
   const auto radiusOverflow = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(1, 1, std::numeric_limits<usize>::max(), sizeof(float64));

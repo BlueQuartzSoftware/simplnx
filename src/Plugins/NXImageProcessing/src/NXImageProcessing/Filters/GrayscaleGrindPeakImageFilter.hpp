@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -24,7 +24,7 @@ namespace nx::core
  * chunked arrays): reconstruction only copies or clamps existing input values, so the result is bit-for-bit
  * identical for integer AND float types.
  */
-class IMAGEPROCESSING_EXPORT GrayscaleGrindPeakImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT GrayscaleGrindPeakImageFilter : public IFilter
 {
 public:
   GrayscaleGrindPeakImageFilter() = default;

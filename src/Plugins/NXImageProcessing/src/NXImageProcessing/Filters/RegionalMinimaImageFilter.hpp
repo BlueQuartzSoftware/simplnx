@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * input must be single-component (scalar). This matches the legacy ITK Regional Minima Image Filter exactly and is
  * out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT RegionalMinimaImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT RegionalMinimaImageFilter : public IFilter
 {
 public:
   RegionalMinimaImageFilter() = default;

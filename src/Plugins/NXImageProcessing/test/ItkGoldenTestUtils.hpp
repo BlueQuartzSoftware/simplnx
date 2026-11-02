@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -18,8 +18,8 @@
 #include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "ImageProcessing/Filters/ReadImageFilter.hpp"
-#include "ImageProcessing/Filters/ReadMhaFileFilter.hpp"
+#include "NXImageProcessing/Filters/ReadImageFilter.hpp"
+#include "NXImageProcessing/Filters/ReadMhaFileFilter.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>

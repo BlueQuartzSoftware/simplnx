@@ -41,7 +41,7 @@ std::string MeanProjectionImageFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MeanProjectionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Mean", "Projection", "ImageStatistics"};
+  return {className(), "NXImageProcessing", "Mean", "Projection", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

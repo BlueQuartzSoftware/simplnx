@@ -4,7 +4,7 @@ Suppress local minima whose depth (contrast) is below a user-supplied value.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

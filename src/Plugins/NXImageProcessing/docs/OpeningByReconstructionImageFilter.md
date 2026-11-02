@@ -4,7 +4,7 @@ Grayscale opening by reconstruction: remove bright structures smaller than the s
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

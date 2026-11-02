@@ -4,7 +4,7 @@ Denoise an image using the classic Perona-Malik gradient anisotropic diffusion e
 
 ## Group (Subgroup)
 
-ImageProcessing (Smoothing)
+NXImageProcessing (Smoothing)
 
 ## Description
 

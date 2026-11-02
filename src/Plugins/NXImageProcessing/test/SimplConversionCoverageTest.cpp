@@ -10,8 +10,8 @@
 #include "simplnx/Plugin/PluginLoader.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "ImageProcessing/ImageProcessingPlugin.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/NXImageProcessingPlugin.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -30,12 +30,12 @@ using namespace nx::core;
 
 /**
  * @file SimplConversionCoverageTest.cpp
- * @brief Proves that every legacy mapping the ImageProcessing plugin publishes still works.
+ * @brief Proves that every legacy mapping the NXImageProcessing plugin publishes still works.
  *
  * The plugin publishes two maps. The SIMPL map converts a DREAM3D 6.x filter into a current filter.
  * The replacement map redirects a retired simplnx filter Uuid to the current filter Uuid.
  *
- * The ImageProcessing plugin took both maps over from the retired ITKImageProcessing plugin. The
+ * The NXImageProcessing plugin took both maps over from the retired ITKImageProcessing plugin. The
  * deletion of that plugin dropped 59 SIMPL conversions, and no test reported the loss. The tests
  * below read the live maps instead of a copied table. An entry that disappears therefore fails a
  * test, and an entry that stops working fails a test.
@@ -83,17 +83,17 @@ const DataPath k_FixtureArrayPath({"DataContainer", "CellData", "TestArray"});
 constexpr StringLiteral k_FixtureOutputName = "TestName";
 
 /**
- * @brief Builds a FilterList that holds the ImageProcessing plugin only.
+ * @brief Builds a FilterList that holds the NXImageProcessing plugin only.
  *
  * The retired plugin is absent from this list. A redirect therefore runs through the replacement
  * map instead of resolving the old Uuid directly.
  *
  * @return The filter list.
  */
-std::shared_ptr<FilterList> MakeImageProcessingOnlyFilterList()
+std::shared_ptr<FilterList> MakeNXImageProcessingOnlyFilterList()
 {
   auto filterList = std::make_shared<FilterList>();
-  const Result<> addResult = filterList->addPlugin(std::make_shared<InMemoryPluginLoader>(std::make_shared<ImageProcessingPlugin>()));
+  const Result<> addResult = filterList->addPlugin(std::make_shared<InMemoryPluginLoader>(std::make_shared<NXImageProcessingPlugin>()));
   REQUIRE(addResult.valid());
   return filterList;
 }
@@ -132,18 +132,18 @@ std::string ClassNameFor(const FilterList& filterList, const Uuid& uuid)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::every filter replacement map entry redirects a retired Uuid", "[ImageProcessing][BackwardsCompatibility][PipelineUuidRedirect]")
+TEST_CASE("NXImageProcessing::every filter replacement map entry redirects a retired Uuid", "[NXImageProcessing][BackwardsCompatibility][PipelineUuidRedirect]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
 
-  const ImageProcessingPlugin plugin;
+  const NXImageProcessingPlugin plugin;
   const AbstractPlugin::FilterReplacementMapType replacements = plugin.getFilterReplacementMap();
 
   // A dropped entry shrinks the map. The size check reports that loss before the loop hides it.
   REQUIRE(replacements.size() == k_ExpectedReplacementMapSize);
 
-  auto filterList = MakeImageProcessingOnlyFilterList();
+  auto filterList = MakeNXImageProcessingOnlyFilterList();
 
   // Two retired Uuids must never map to one filter, and a target must never be absent.
   std::set<Uuid> seenTargets;
@@ -176,13 +176,13 @@ TEST_CASE("ImageProcessing::every filter replacement map entry redirects a retir
   REQUIRE(seenTargets.size() == replacements.size());
 }
 
-TEST_CASE("ImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixture", "[ImageProcessing][BackwardsCompatibility]")
+TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixture", "[NXImageProcessing][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
 
-  const ImageProcessingPlugin plugin;
+  const NXImageProcessingPlugin plugin;
   const AbstractPlugin::SIMPLMapType simplMap = plugin.getSimplToSimplnxMap();
 
   // A dropped entry shrinks the map. This is the exact loss that went unreported before.

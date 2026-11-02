@@ -4,7 +4,7 @@ Label the objects in a binary image.
 
 ## Group (Subgroup)
 
-ImageProcessing (Segmentation)
+NXImageProcessing (Segmentation)
 
 ## Description
 

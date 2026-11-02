@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/IsoContourDistanceImageFilter.hpp"
+#include "NXImageProcessing/Filters/IsoContourDistanceImageFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -42,7 +42,7 @@ void RunIso(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float
 // (1) Hand-computed 1D crossing: a 5x1x1 ramp {0,1,2,3,4}, levelSet 1.5 -> the crossing is between x=1 and x=2, whose
 //     unit-slope signed distances are -0.5 and +0.5; everything else +-farValue.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D crossing", "[ImageProcessing][IsoContourDistanceImageFilter]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D crossing", "[NXImageProcessing][IsoContourDistanceImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -68,7 +68,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D cros
 // (2) Preflight: multi-component input rejected; float32 AND float64 scalar input ACCEPTED (this filter is NOT
 //     integer-only), with the output created float32.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: preflight accepts float, rejects non-scalar", "[ImageProcessing][IsoContourDistanceImageFilter]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: preflight accepts float, rejects non-scalar", "[NXImageProcessing][IsoContourDistanceImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -128,7 +128,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: preflight accepts flo
 // -----------------------------------------------------------------------------
 // (3) FromSIMPLJson: every mapped parameter (both doubles + both DataPaths) at non-default values.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: FromSIMPLJson", "[ImageProcessing][IsoContourDistanceImageFilter]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: FromSIMPLJson", "[NXImageProcessing][IsoContourDistanceImageFilter]")
 {
   const nlohmann::json json = {
       {"LevelSetValue", 3.5},
@@ -151,7 +151,7 @@ TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: FromSIMPLJson", "[Ima
 // (uint8), LevelSetValue 50.0 (FarValue default), fixed float32 output. The test compares the output with the durable
 // ITK baseline at a tolerance of 0.0001.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::IsoContourDistanceImageFilter: ITK real-image golden (default)", "[ImageProcessing][ItkGolden][IsoContourDistanceImageFilter]")
+TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][IsoContourDistanceImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

@@ -10,7 +10,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
-#include "ImageProcessing/Filters/ThresholdImageFilter.hpp"
+#include "NXImageProcessing/Filters/ThresholdImageFilter.hpp"
 
 #include "ItkGoldenTestUtils.hpp"
 
@@ -71,7 +71,7 @@ DataPath BuildRampImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ThresholdImageFilter: Small Correctness", "[ImageProcessing][ThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImageProcessing][ThresholdImageFilter]")
 {
   UnitTest::LoadPlugins();
   // The out-of-core store path is retired to the generic SimplnxOoc store tests; this keeps the unique
@@ -156,12 +156,12 @@ void RunThresholdItkGolden(const std::string& inputFile, const std::function<voi
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ThresholdImageFilter: ITK real-image golden (Default)", "[ImageProcessing][ItkGolden][ThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdImageFilter: ITK real-image golden (Default)", "[NXImageProcessing][ItkGolden][ThresholdImageFilter]")
 {
   RunThresholdItkGolden("RA-Short.nrrd", [](Arguments&) {}, "59071590099d21dd439896592338bf95");
 }
 
-TEST_CASE("ImageProcessing::ThresholdImageFilter: ITK real-image golden (Threshold1)", "[ImageProcessing][ItkGolden][ThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdImageFilter: ITK real-image golden (Threshold1)", "[NXImageProcessing][ItkGolden][ThresholdImageFilter]")
 {
   RunThresholdItkGolden(
       "RA-Slice-Short.png",
@@ -172,7 +172,7 @@ TEST_CASE("ImageProcessing::ThresholdImageFilter: ITK real-image golden (Thresho
       "f70a31938657e0163b82521af4f8e3b0");
 }
 
-TEST_CASE("ImageProcessing::ThresholdImageFilter: ITK real-image golden (Threshold2)", "[ImageProcessing][ItkGolden][ThresholdImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdImageFilter: ITK real-image golden (Threshold2)", "[NXImageProcessing][ItkGolden][ThresholdImageFilter]")
 {
   RunThresholdItkGolden(
       "RA-Slice-Short.png",

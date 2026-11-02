@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "ImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
-#include "ImageProcessing/ImageProcessing_test_dirs.hpp"
+#include "NXImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
+#include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -39,7 +39,7 @@ void writeVolTestFile()
   REQUIRE_NOTHROW(fs::copy(k_VgiSrcFile, k_VgiDestFile, copyOptions)); // copy vgi file
 }
 
-TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ReadVolumeGraphicsFileFilter]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ReadVolumeGraphicsFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -84,7 +84,7 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter executio
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Compatibility", "[ImageProcessing][ReadVolumeGraphicsFileFilter][BackwardsCompatibility]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Compatibility", "[NXImageProcessing][ReadVolumeGraphicsFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();

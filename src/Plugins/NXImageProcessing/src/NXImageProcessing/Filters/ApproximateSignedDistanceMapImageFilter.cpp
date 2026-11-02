@@ -33,7 +33,7 @@ std::string ApproximateSignedDistanceMapImageFilter::humanName() const
 }
 std::vector<std::string> ApproximateSignedDistanceMapImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ApproximateSignedDistanceMap", "DistanceMap", "Morphology"};
+  return {className(), "NXImageProcessing", "ApproximateSignedDistanceMap", "DistanceMap", "Morphology"};
 }
 Parameters ApproximateSignedDistanceMapImageFilter::parameters() const
 {

@@ -1,6 +1,6 @@
 #include "ItkGoldenTestUtils.hpp"
 
-#include "ImageProcessing/Filters/AtanImageFilter.hpp"
+#include "NXImageProcessing/Filters/AtanImageFilter.hpp"
 
 using namespace nx::core;
 
@@ -9,7 +9,7 @@ using namespace nx::core;
 // (float32) through OUR reader, run OUR filter (defaults), then compare with the committed baseline @0.01.
 // See AcosImageFilterTest.cpp for the full rationale.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::AtanImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][AtanImageFilter]")
+TEST_CASE("NXImageProcessing::AtanImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][AtanImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

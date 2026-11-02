@@ -4,7 +4,7 @@ Suppress local maxima whose height (contrast) is below a user-supplied value.
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

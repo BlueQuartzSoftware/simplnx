@@ -4,7 +4,7 @@ Keep the regional maxima of a grayscale image at their value; set everything els
 
 ## Group (Subgroup)
 
-ImageProcessing (Morphology)
+NXImageProcessing (Morphology)
 
 ## Description
 

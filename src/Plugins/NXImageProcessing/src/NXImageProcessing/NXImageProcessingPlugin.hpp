@@ -1,20 +1,20 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 
-class IMAGEPROCESSING_EXPORT ImageProcessingPlugin : public nx::core::AbstractPlugin
+class NXIMAGEPROCESSING_EXPORT NXImageProcessingPlugin : public nx::core::AbstractPlugin
 {
 public:
-  ImageProcessingPlugin();
-  ~ImageProcessingPlugin() override;
+  NXImageProcessingPlugin();
+  ~NXImageProcessingPlugin() override;
 
-  ImageProcessingPlugin(const ImageProcessingPlugin&) = delete;
-  ImageProcessingPlugin(ImageProcessingPlugin&&) = delete;
+  NXImageProcessingPlugin(const NXImageProcessingPlugin&) = delete;
+  NXImageProcessingPlugin(NXImageProcessingPlugin&&) = delete;
 
-  ImageProcessingPlugin& operator=(const ImageProcessingPlugin&) = delete;
-  ImageProcessingPlugin& operator=(ImageProcessingPlugin&&) = delete;
+  NXImageProcessingPlugin& operator=(const NXImageProcessingPlugin&) = delete;
+  NXImageProcessingPlugin& operator=(NXImageProcessingPlugin&&) = delete;
 
   SIMPLMapType getSimplToSimplnxMap() const override;
   FilterReplacementMapType getFilterReplacementMap() const override;

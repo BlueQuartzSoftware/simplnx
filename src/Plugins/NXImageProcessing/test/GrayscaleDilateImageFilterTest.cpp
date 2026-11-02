@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleDilateImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleDilateImageFilter.hpp"
 
 #include <memory>
 
@@ -12,7 +12,7 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Computed-expected (Annulus + Box zero-radius)", "[ImageProcessing][GrayscaleDilateImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   using morph_test::KernelType;
   auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
@@ -45,7 +45,7 @@ TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Computed-expected (Annul
 // (1b) Degenerate empty structuring element (Annulus r{0,0,0}) must pass the input through unchanged. First
 //      user-reachable exercise of the engine's offsets.empty() passthrough branch.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[ImageProcessing][GrayscaleDilateImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   morph_test::RunMorphologyEmptySEPassthrough<GrayscaleDilateImageFilter, float32>(
       [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); }, 12, 12, 12,
@@ -61,7 +61,7 @@ TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Empty-SE passthrough (An
 //     at the +radius corner. (D^3 - 1 < 2^24, so float32 represents every index exactly.) Real-disk out-of-core
 //     coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected (both algorithm paths)", "[ImageProcessing][GrayscaleDilateImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -146,7 +146,7 @@ TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected (
 // (uint8), Ball radius {1,1,1}. The test compares our output md5 with the committed hash. STAPLE1 is a 195-value
 // grayscale image (verified), which grayscale morphology processes directly (no binary-input constraint).
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: ITK real-image golden (GrayscaleDilate)", "[ImageProcessing][ItkGolden][GrayscaleDilateImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: ITK real-image golden (GrayscaleDilate)", "[NXImageProcessing][ItkGolden][GrayscaleDilateImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleDilateImageFilter>("STAPLE1.png", "cb692559f1eb21e4c932f6bbb3850ad3", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                     morph_test::DefaultKernelParamSetter<GrayscaleDilateImageFilter>());
@@ -156,7 +156,7 @@ TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: ITK real-image golden (G
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8370) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][GrayscaleDilateImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleDilateImageFilter, float32>(-8370, morph_test::DefaultKernelParamSetter<GrayscaleDilateImageFilter>());
 }

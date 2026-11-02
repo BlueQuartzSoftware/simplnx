@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleFillholeImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleFillholeImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -17,7 +17,7 @@ namespace rt = recon_test;
 //     bright level, while a dark region that touches the image border (including its non-border voxel, which is
 //     connected to the border through the dark region) is left unchanged.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior fill vs border region", "[ImageProcessing][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior fill vs border region", "[NXImageProcessing][GrayscaleFillholeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -62,7 +62,7 @@ TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior
 //      border-connected dark region unchanged) are asserted directly -- an independent oracle, not the new filter's
 //      own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior fill vs border region (both algorithm paths)", "[ImageProcessing][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior fill vs border region (both algorithm paths)", "[NXImageProcessing][GrayscaleFillholeImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -110,7 +110,7 @@ TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: hand-computed interior
 // (4) Preflight: a multi-component (non-scalar) input is rejected (the reconstruction operator is defined on
 //     scalar images), and a valid scalar input preflights cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: Preflight scalar guard", "[ImageProcessing][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: Preflight scalar guard", "[NXImageProcessing][GrayscaleFillholeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -152,7 +152,7 @@ TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: Preflight scalar guard
 // -----------------------------------------------------------------------------
 // (5) FromSIMPLJson maps the legacy SIMPL keys (FullyConnected + array paths) to the new parameter keys.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: FromSIMPLJson", "[ImageProcessing][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: FromSIMPLJson", "[NXImageProcessing][GrayscaleFillholeImageFilter]")
 {
   const nlohmann::json json = {{"FullyConnected", true},
                                {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}},
@@ -171,12 +171,12 @@ TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: FromSIMPLJson", "[Imag
 // bit-exact + (A) md5-validity-first vs the committed hash. GrayscaleFillhole1 = RA-Short.nrrd (int16),
 // GrayscaleFillhole2 = RA-Slice-Short.png (int16). See ReconstructionFilterTestUtils.hpp for the shared body.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: ITK real-image golden (GrayscaleFillhole1)", "[ImageProcessing][ItkGolden][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: ITK real-image golden (GrayscaleFillhole1)", "[NXImageProcessing][ItkGolden][GrayscaleFillholeImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<GrayscaleFillholeImageFilter>("RA-Short.nrrd", "e2c49e979bd4c64f0efff67b196b1950");
 }
 
-TEST_CASE("ImageProcessing::GrayscaleFillholeImageFilter: ITK real-image golden (GrayscaleFillhole2)", "[ImageProcessing][ItkGolden][GrayscaleFillholeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: ITK real-image golden (GrayscaleFillhole2)", "[NXImageProcessing][ItkGolden][GrayscaleFillholeImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<GrayscaleFillholeImageFilter>("RA-Slice-Short.png", "e3cd61348a7824d191e83632bf92baae");
 }

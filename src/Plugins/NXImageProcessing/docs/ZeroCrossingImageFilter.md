@@ -4,7 +4,7 @@ Find the pixels closest to the zero crossings (sign changes) in a signed image.
 
 ## Group (Subgroup)
 
-ImageProcessing (ImageFeature)
+NXImageProcessing (ImageFeature)
 
 ## Description
 

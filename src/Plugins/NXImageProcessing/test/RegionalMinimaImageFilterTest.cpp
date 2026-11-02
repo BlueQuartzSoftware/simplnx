@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
+#include "NXImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -33,7 +33,7 @@ rt::ReconParamSetter MinimaSetter(float64 fg, float64 bg, bool flatIsMinima)
 //     foreground when FlatIsMinima is On and all background when Off. The test checks both FlatIsMinima values
 //     directly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: flat-image special case", "[ImageProcessing][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: flat-image special case", "[NXImageProcessing][RegionalMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -61,7 +61,7 @@ TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: flat-image special case",
 // (3) Hand-computed: on a small image with a central pit plateau, the pit becomes foreground and the surrounding
 //     higher field becomes background.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked", "[ImageProcessing][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked", "[NXImageProcessing][RegionalMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -92,7 +92,7 @@ TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked"
 //      skips the flat short-circuit and reaches the valued-extrema flood/sweep), so the scope proves both
 //      implementations mark the pit. The hand-computed expected labels are the non-circular oracle.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked (both algorithm paths)", "[ImageProcessing][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked (both algorithm paths)", "[NXImageProcessing][RegionalMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -133,7 +133,7 @@ TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: hand-computed pit marked 
 // (4) Preflight fg/bg range guard: for an integer input, an out-of-range Foreground Value is rejected; a valid one
 //     preflights cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: preflight fg/bg range guard", "[ImageProcessing][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: preflight fg/bg range guard", "[NXImageProcessing][RegionalMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -169,7 +169,7 @@ TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: preflight fg/bg range gua
   }
 }
 
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: FromSIMPLJson", "[ImageProcessing][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: FromSIMPLJson", "[NXImageProcessing][RegionalMinimaImageFilter]")
 {
   const nlohmann::json json = {{"ForegroundValue", 5.0},
                                {"BackgroundValue", 2.0},
@@ -194,7 +194,7 @@ TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: FromSIMPLJson", "[ImagePr
 // ITK-sourced real-image md5 golden -- duplicates ITKRegionalMinimaImageTest.cpp(defaults): cthead1.png (uint8),
 // ITK-default params. Output is a fixed uint32 label image. (B) live-ITK bit-exact + (A) md5-validity-first.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::RegionalMinimaImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][RegionalMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::RegionalMinimaImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][RegionalMinimaImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<RegionalMinimaImageFilter>("cthead1.png", "3be99cf6b3116f16f6663cd2c4edb5b4");
 }

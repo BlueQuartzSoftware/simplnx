@@ -4,7 +4,7 @@ Computes a one-pixel-wide skeleton (edges) of a binary image.
 
 ## Group (Subgroup)
 
-ImageProcessing (BinaryMathematicalMorphology)
+NXImageProcessing (BinaryMathematicalMorphology)
 
 ## Description
 

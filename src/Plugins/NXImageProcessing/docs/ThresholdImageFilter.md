@@ -4,7 +4,7 @@ Set image values to a user-specified "outside" value if they fall outside a thre
 
 ## Group (Subgroup)
 
-ImageProcessing (Thresholding)
+NXImageProcessing (Thresholding)
 
 ## Description
 

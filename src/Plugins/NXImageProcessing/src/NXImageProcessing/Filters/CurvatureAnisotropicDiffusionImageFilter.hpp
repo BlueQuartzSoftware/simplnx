@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -27,7 +27,7 @@ namespace nx::core
  * (minSpacing / 2^(ImageDimension+1)) produces a preflight WARNING (never a hard rejection), matching ITK's own
  * non-fatal check. Matches the legacy ITK Curvature Anisotropic Diffusion Image Filter. Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT CurvatureAnisotropicDiffusionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT CurvatureAnisotropicDiffusionImageFilter : public IFilter
 {
 public:
   CurvatureAnisotropicDiffusionImageFilter() = default;

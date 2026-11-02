@@ -86,7 +86,7 @@ If the input data represents a **periodic** structure (i.e., features are allowe
 
 ### Required Input Sources
 
-- **Input Scalar Array** -- any single-component cell-level scalar array suitable for thresholding. Common sources include image readers such as [Read Image Stack](../ImageProcessing/ReadImageStackFilter.md), phase or quality arrays from EBSD readers such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), or any computed per-cell scalar from an earlier filter in the pipeline.
+- **Input Scalar Array** -- any single-component cell-level scalar array suitable for thresholding. Common sources include image readers such as [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), phase or quality arrays from EBSD readers such as [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), or any computed per-cell scalar from an earlier filter in the pipeline.
 - **Mask Array** (optional) -- a boolean array marking valid cells, typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
 **Scalar Array to Segment** must have one tuple per cell of the selected geometry. When **Use Mask Array** is enabled, **Cell Mask Array** must also have one tuple per cell. They can be in any Attribute Matrix.
@@ -95,7 +95,7 @@ If the input data represents a **periodic** structure (i.e., features are allowe
 
 ## Example Pipelines
 
-+ 02_Image_Segmentation (ImageProcessing)
++ 02_Image_Segmentation (NXImageProcessing)
 
 ## License & Copyright
 

@@ -34,7 +34,7 @@ std::string ValuedRegionalMinimaImageFilter::humanName() const
 }
 std::vector<std::string> ValuedRegionalMinimaImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ValuedRegionalMinima", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "ValuedRegionalMinima", "MathematicalMorphology", "Morphology"};
 }
 Parameters ValuedRegionalMinimaImageFilter::parameters() const
 {

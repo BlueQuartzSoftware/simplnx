@@ -177,7 +177,7 @@ std::vector<float32> RunGradMag(const std::vector<T>& field, usize dx, usize dy,
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: gradient of an X ramp is the slope", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: gradient of an X ramp is the slope", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const usize dx = 10, dy = 6, dz = 6;
   std::vector<float32> field(dx * dy * dz);
@@ -205,7 +205,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: gradient of an X ramp is th
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: gradient of a constant image is zero", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: gradient of a constant image is zero", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const usize d = 8;
   const std::vector<int16> field(d * d * d, int16{42});
@@ -216,7 +216,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: gradient of a constant imag
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: UseImageSpacing scales the gradient", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: UseImageSpacing scales the gradient", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const usize dx = 10, dy = 6, dz = 6;
   std::vector<float32> field(dx * dy * dz);
@@ -231,7 +231,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: UseImageSpacing scales the 
         REQUIRE(out[FlatIndex(x, y, z, dx, dy)] == Approx(0.5f).margin(1e-4)); // slope 1 / spacing 2 = 0.5
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: deterministic + tall-Z streaming", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: deterministic + tall-Z streaming", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const usize dx = 8, dy = 8, dz = 64;
   std::vector<float32> field(dx * dy * dz);
@@ -244,7 +244,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: deterministic + tall-Z stre
   REQUIRE(a == b);
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior slope and edge-clamped boundary", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior slope and edge-clamped boundary", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -267,7 +267,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior slop
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: nZ==2 Z ramp with edge-clamped rolling window", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: nZ==2 Z ramp with edge-clamped rolling window", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   const usize dx = 5, dy = 5, dz = 2;
   std::vector<float32> field(dx * dy * dz);
@@ -282,7 +282,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: nZ==2 Z ramp with edge-clam
     REQUIRE(v == Approx(1.5f).margin(1e-4));
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: validates stores and cancellation", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and cancellation", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   IFilter::MessageHandler messageHandler{};
   std::atomic_bool shouldCancel{false};
@@ -333,7 +333,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: validates stores and cancel
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: checked true-2-D plans stay bounded", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: checked true-2-D plans stay bounded", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   constexpr usize k_TargetBytes = 1024ULL * 1024ULL;
 
@@ -381,7 +381,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: checked true-2-D plans stay
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: resident state requires a complete dataset-scaled reservation", "[ImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
 {
   constexpr usize dimX = 512;
   constexpr usize dimY = 512;
@@ -425,7 +425,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: resident state requires a c
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: real-OOC selector uses resident state only after a complete grant", "[ImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses resident state only after a complete grant", "[NXImageProcessing][GradientMagnitudeEngine][WorkingMemory]")
 {
   constexpr usize dimX = 5;
   constexpr usize dimY = 6;
@@ -476,7 +476,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: real-OOC selector uses resi
   manager.setBudgetBytes(previousBudget);
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and tile routes match an independent oracle", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and tile routes match an independent oracle", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   constexpr usize k_TargetBytes = 70ULL * 1024ULL;
   std::atomic_bool shouldCancel{false};
@@ -571,7 +571,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and ti
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: bounded true-2-D cancellation and I/O failures preserve their contracts", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D cancellation and I/O failures preserve their contracts", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   constexpr usize k_DimX = 31;
   constexpr usize k_DimY = 257;
@@ -616,7 +616,7 @@ TEST_CASE("ImageProcessing::GradientMagnitudeEngine: bounded true-2-D cancellati
   }
 }
 
-TEST_CASE("ImageProcessing::GradientMagnitudeEngine: either OOC endpoint selects bounded true-2-D execution", "[ImageProcessing][GradientMagnitudeEngine]")
+TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: either OOC endpoint selects bounded true-2-D execution", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
   constexpr usize k_DimX = 31;
   constexpr usize k_DimY = 257;

@@ -1,6 +1,6 @@
 #include "ReconstructionFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleGrindPeakImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleGrindPeakImageFilter.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
@@ -17,7 +17,7 @@ namespace rt = recon_test;
 //     surrounding dark level, while a bright region that touches the image border (including its non-border voxel,
 //     which is connected to the border through the bright region) is left unchanged.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region", "[ImageProcessing][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -62,7 +62,7 @@ TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interio
 //      border-connected bright region unchanged) are asserted directly -- an independent oracle, not the new filter's
 //      own in-core run.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region (both algorithm paths)", "[ImageProcessing][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region (both algorithm paths)", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -110,7 +110,7 @@ TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interio
 // (4) Preflight: a multi-component (non-scalar) input is rejected (the reconstruction operator is defined on
 //     scalar images), and a valid scalar input preflights cleanly.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar guard", "[ImageProcessing][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar guard", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -152,7 +152,7 @@ TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar guar
 // -----------------------------------------------------------------------------
 // (5) FromSIMPLJson maps the legacy SIMPL keys (FullyConnected + array paths) to the new parameter keys.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: FromSIMPLJson", "[ImageProcessing][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: FromSIMPLJson", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
   const nlohmann::json json = {{"FullyConnected", true},
                                {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}},
@@ -170,12 +170,12 @@ TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: FromSIMPLJson", "[Ima
 // (B) live-ITK bit-exact + (A) md5-validity-first. GrayscaleGrindPeak1 = RA-Short.nrrd, GrayscaleGrindPeak2 =
 // RA-Slice-Short.png.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: ITK real-image golden (GrayscaleGrindPeak1)", "[ImageProcessing][ItkGolden][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: ITK real-image golden (GrayscaleGrindPeak1)", "[NXImageProcessing][ItkGolden][GrayscaleGrindPeakImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<GrayscaleGrindPeakImageFilter>("RA-Short.nrrd", "084cdd1d64664ebfab26c2e0ed382e14");
 }
 
-TEST_CASE("ImageProcessing::GrayscaleGrindPeakImageFilter: ITK real-image golden (GrayscaleGrindPeak2)", "[ImageProcessing][ItkGolden][GrayscaleGrindPeakImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: ITK real-image golden (GrayscaleGrindPeak2)", "[NXImageProcessing][ItkGolden][GrayscaleGrindPeakImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<GrayscaleGrindPeakImageFilter>("RA-Slice-Short.png", "b18d75cccb9361c65b40bb5c0d3c6e0d");
 }

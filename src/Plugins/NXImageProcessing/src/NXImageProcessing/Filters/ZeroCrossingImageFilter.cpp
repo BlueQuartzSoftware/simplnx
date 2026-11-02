@@ -30,7 +30,7 @@ std::string ZeroCrossingImageFilter::humanName() const
 }
 std::vector<std::string> ZeroCrossingImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ZeroCrossing", "ImageFeature", "EdgeDetection"};
+  return {className(), "NXImageProcessing", "ZeroCrossing", "ImageFeature", "EdgeDetection"};
 }
 
 Parameters ZeroCrossingImageFilter::parameters() const

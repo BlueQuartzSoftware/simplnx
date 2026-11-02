@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
@@ -12,7 +12,7 @@ namespace nx::core
  * @class ReadZeissTxmFileFilter
  * @brief Reads a .txm or .txrm file from a Zeiss X-ray computed tomography system.
  */
-class IMAGEPROCESSING_EXPORT ReadZeissTxmFileFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT ReadZeissTxmFileFilter : public IFilter
 {
 public:
   ReadZeissTxmFileFilter();

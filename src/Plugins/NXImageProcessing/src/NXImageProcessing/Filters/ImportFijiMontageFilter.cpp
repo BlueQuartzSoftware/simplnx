@@ -1,7 +1,7 @@
 #include "ImportFijiMontageFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/ReadImage.hpp"
-#include "ImageProcessing/utils/FijiMontageUtilities.hpp"
+#include "NXImageProcessing/Filters/Algorithms/ReadImage.hpp"
+#include "NXImageProcessing/utils/FijiMontageUtilities.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"

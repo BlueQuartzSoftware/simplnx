@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate deterministic paper-inspired inputs for ImageProcessing examples."""
+"""Generate deterministic paper-inspired inputs for NXImageProcessing examples."""
 
 from __future__ import annotations
 
@@ -476,9 +476,9 @@ def update_archive_readme(root: Path) -> None:
     if not readme.exists():
         return
     readme.write_text(
-        """# ImageProcessing Example Data
+        """# NXImageProcessing Example Data
 
-This directory contains the inputs for the DREAM3D-NX ImageProcessing real-world example pipelines.
+This directory contains the inputs for the DREAM3D-NX NXImageProcessing real-world example pipelines.
 
 The source priority is original paper data, compatible paper-linked data, then deterministic paper-inspired synthesis. `Provenance.json` records the source choice, license, generator, seed, paper visual target, metrics, checksums, and known differences for each asset.
 

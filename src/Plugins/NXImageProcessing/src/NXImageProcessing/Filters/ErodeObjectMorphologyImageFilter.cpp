@@ -21,7 +21,7 @@ using namespace nx::core;
 
 namespace
 {
-// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/ImageProcessing tree
+// Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree
 // (and all of src/) for -85xx codes: the -8520 block is used by Dilate Object Morphology, so this filter uses
 // the still-unused -8530 block.
 constexpr int32 k_NonScalarInput = -8530;
@@ -50,7 +50,7 @@ std::string ErodeObjectMorphologyImageFilter::humanName() const
 }
 std::vector<std::string> ErodeObjectMorphologyImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ErodeObjectMorphology", "ObjectMorphology", "Morphology", "BinaryMathematicalMorphology"};
+  return {className(), "NXImageProcessing", "ErodeObjectMorphology", "ObjectMorphology", "Morphology", "BinaryMathematicalMorphology"};
 }
 Parameters ErodeObjectMorphologyImageFilter::parameters() const
 {

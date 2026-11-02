@@ -36,7 +36,7 @@ std::string ClosingByReconstructionImageFilter::humanName() const
 }
 std::vector<std::string> ClosingByReconstructionImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "ClosingByReconstruction", "MathematicalMorphology", "Morphology"};
+  return {className(), "NXImageProcessing", "ClosingByReconstruction", "MathematicalMorphology", "Morphology"};
 }
 Parameters ClosingByReconstructionImageFilter::parameters() const
 {

@@ -1,14 +1,14 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/MedianImageFilter.hpp"
-#include "ImageProcessing/Filters/NotImageFilter.hpp"
+#include "NXImageProcessing/Filters/MedianImageFilter.hpp"
+#include "NXImageProcessing/Filters/NotImageFilter.hpp"
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 
 using namespace nx::core;
 
-TEST_CASE("ImageProcessing::NotImageFilter: full-overwrite preflight defers OOC zero fill", "[ImageProcessing][NotImageFilter]")
+TEST_CASE("NXImageProcessing::NotImageFilter: full-overwrite preflight defers OOC zero fill", "[NXImageProcessing][NotImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -48,7 +48,7 @@ TEST_CASE("ImageProcessing::NotImageFilter: full-overwrite preflight defers OOC 
 // (uint8) through OUR ITK-free reader, run OUR NotImageFilter (SameAsInput uint8, no params), then compare the
 // output md5 with ITK's committed hash.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::NotImageFilter: ITK real-image golden (defaults)", "[ImageProcessing][ItkGolden][NotImageFilter]")
+TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][NotImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

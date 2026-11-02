@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -18,7 +18,7 @@ namespace nx::core
  * image regardless of the input element type. Matches the legacy ITK Morphological Watershed Image Filter exactly
  * (byte-identical label values). Out-of-core capable.
  */
-class IMAGEPROCESSING_EXPORT MorphologicalWatershedImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT MorphologicalWatershedImageFilter : public IFilter
 {
 public:
   MorphologicalWatershedImageFilter() = default;

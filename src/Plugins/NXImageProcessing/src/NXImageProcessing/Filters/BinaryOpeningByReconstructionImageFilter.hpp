@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImageProcessing/ImageProcessing_export.hpp"
+#include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -23,7 +23,7 @@ namespace nx::core
  * Image Filter exactly, and is out-of-core capable (the erosion and reconstruction stream through bounded-memory
  * scratch stores).
  */
-class IMAGEPROCESSING_EXPORT BinaryOpeningByReconstructionImageFilter : public IFilter
+class NXIMAGEPROCESSING_EXPORT BinaryOpeningByReconstructionImageFilter : public IFilter
 {
 public:
   BinaryOpeningByReconstructionImageFilter() = default;

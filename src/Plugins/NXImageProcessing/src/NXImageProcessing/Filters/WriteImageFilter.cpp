@@ -1,6 +1,6 @@
 #include "WriteImageFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/WriteImage.hpp"
+#include "NXImageProcessing/Filters/Algorithms/WriteImage.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Common/DataTypeUtilities.hpp"

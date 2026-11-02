@@ -1,7 +1,7 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
-#include "ImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
+#include "NXImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
 
 #include <memory>
 
@@ -15,7 +15,8 @@ using namespace nx::core;
 //     - Annulus: the filter rasterizes the real thickness-1 shell.
 //     - Box r{2,1,0}: a zero-radius axis on a 3D image. The oracle documents the correct result.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)", "[ImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Computed-expected (safeBorder=false; Annulus + Box zero-radius)",
+          "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
 {
   using morph_test::CompositeKind;
   using morph_test::KernelType;
@@ -64,7 +65,7 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Computed-e
 //     i.e. the identity in the interior and a clamped shift near the boundary. (D^3 - 1 < 2^24, so float32 is
 //     exact.) Real-disk out-of-core coverage is retired to the generic SimplnxOoc store tests.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ramp opening computed-expected (both algorithm paths)", "[ImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ramp opening computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
 {
   UnitTest::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
@@ -158,19 +159,19 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ramp openi
 // produced abf21fbe... (wrong) and Cross r{20,5,2} produced the unchanged-input identity 095f00a6... (no change).
 // Clamping the pad to 0 on the size-1 axis (matching ITK's Z==1 => 2D collapse) makes all three reproduce ITK.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Box r{20,5,1})", "[ImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Box r{20,5,1})", "[NXImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleMorphologicalOpeningImageFilter>("STAPLE1.png", "0a5ac0dbca31e1b92eb6d48e990582a7", static_cast<uint64>(morph_test::KernelType::Box), {20, 5, 1},
                                                                                   morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
 }
 
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Ball r{1,1,1})", "[ImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Ball r{1,1,1})", "[NXImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleMorphologicalOpeningImageFilter>("STAPLE1.png", "867de5ed8cf49c4657e1545bd57f2c23", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
                                                                                   morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
 }
 
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Cross r{20,5,2})", "[ImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-image golden (Cross r{20,5,2})", "[NXImageProcessing][ItkGolden][GrayscaleMorphologicalOpeningImageFilter]")
 {
   morph_test::RunMorphologyMd5ItkGolden<GrayscaleMorphologicalOpeningImageFilter>("STAPLE1.png", "5651a92320cfd9f01be4463131a4e573", static_cast<uint64>(morph_test::KernelType::Cross), {20, 5, 2},
                                                                                   morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
@@ -180,7 +181,7 @@ TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real-i
 // Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
 // (error -8390) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
 // -----------------------------------------------------------------------------
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[ImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleMorphologicalOpeningImageFilter, float32>(
       -8390, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));

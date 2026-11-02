@@ -34,7 +34,7 @@ std::string RelabelComponentImageFilter::humanName() const
 }
 std::vector<std::string> RelabelComponentImageFilter::defaultTags() const
 {
-  return {className(), "ImageProcessing", "Segmentation", "Labeling"};
+  return {className(), "NXImageProcessing", "Segmentation", "Labeling"};
 }
 
 Parameters RelabelComponentImageFilter::parameters() const
