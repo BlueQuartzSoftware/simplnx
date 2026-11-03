@@ -31,6 +31,7 @@
 
 using namespace nx::core;
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: integer radians produce signed fractional float32 responses", "[NXImageProcessing][Issue1874][TanImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
@@ -102,7 +103,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: integer radians produce s
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: floating responses retain type signed zero and finite near-pole values", "[NXImageProcessing][Issue1874][TanImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -165,6 +168,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: floating responses retain
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("NXImageProcessing::TanImageFilter: integer vector tuples preserve shape and component order", "[NXImageProcessing][Issue1874][TanImageFilter]")
 {
@@ -175,15 +179,19 @@ TEST_CASE("NXImageProcessing::TanImageFilter: integer vector tuples preserve sha
   const ShapeType tupleShape = {1, 2, 2};
   const ShapeType componentShape = {2};
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 2, 1});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, imageGeomPtr->getId());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
   auto inputStorePtr = DataStoreUtilities::CreateDataStore<int16>(dataStructure, inputPath, tupleShape, componentShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputStorePtr != nullptr);
   auto* inputArrayPtr = DataArray<int16>::Create(dataStructure, "Input", inputStorePtr, cellDataPtr->getId());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr != nullptr);
   constexpr std::array<int16, 8> values = {0, 1, 3, -1, 1, 0, -1, 3};
   for(usize index = 0; index < values.size(); ++index)
@@ -197,27 +205,38 @@ TEST_CASE("NXImageProcessing::TanImageFilter: integer vector tuples preserve sha
   args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const TanImageFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::float32);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == componentShape);
 
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const DataPath outputPath = inputPath.replaceName("Output");
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getTupleShape() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getComponentShape() == componentShape);
   const Float32Array* responsesPtr = nullptr;
   REQUIRE_NOTHROW(responsesPtr = &dataStructure.getDataRefAs<Float32Array>(outputPath));
   constexpr std::array<float64, 8> expected = {0, 1.5574077246549022305, -0.1425465430742778053, -1.5574077246549022305, 1.5574077246549022305, 0, -1.5574077246549022305, -0.1425465430742778053};
   for(usize index = 0; index < expected.size(); ++index)
   {
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(responsesPtr->getDataStoreRef().getValue(index) == Approx(expected.at(index)).epsilon(0).margin(1.0e-7));
   }
 

@@ -26,6 +26,7 @@
 #include <system_error>
 
 // Small transport helpers only. Each owning test states its independent numerical expectations.
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 namespace c15_test
 {
 using namespace nx::core;
@@ -97,27 +98,34 @@ inline DataPath ConvertToFloat32(DataStructure& dataStructure, const DataPath& i
   return input.replaceName("Converted");
 }
 
-struct StoreExpectation
+class StoreExpectation
 {
-  IDataStore::StoreType type;
+public:
+  explicit StoreExpectation(IDataStore::StoreType type)
+  : m_Type(type)
+  {
+  }
 
   void requireExpectedStore(const IDataArray& array) const
   {
-    INFO("Array '" << array.getName() << "' expected store type " << static_cast<int>(type));
-    REQUIRE(array.getIDataStoreRef().getStoreType() == type);
+    INFO("Array '" << array.getName() << "' expected store type " << static_cast<int>(m_Type));
+    REQUIRE(array.getIDataStoreRef().getStoreType() == m_Type);
   }
+
+private:
+  IDataStore::StoreType m_Type;
 };
 
 template <class T, class Scope>
 std::vector<T> Read(DataStructure& dataStructure, const DataPath& path, const ShapeType& shape, const Scope& scope)
 {
-  const DataArray<T>* array = nullptr;
-  REQUIRE_NOTHROW(array = &dataStructure.getDataRefAs<DataArray<T>>(path));
-  REQUIRE(array->getDataType() == GetDataType<T>());
-  REQUIRE(array->getTupleShape() == shape);
-  REQUIRE(array->getComponentShape() == ShapeType{1});
-  scope.requireExpectedStore(*array);
-  const auto& store = array->getDataStoreRef();
+  const DataArray<T>* arrayPtr = nullptr;
+  REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(path));
+  REQUIRE(arrayPtr->getDataType() == GetDataType<T>());
+  REQUIRE(arrayPtr->getTupleShape() == shape);
+  REQUIRE(arrayPtr->getComponentShape() == ShapeType{1});
+  scope.requireExpectedStore(*arrayPtr);
+  const auto& store = arrayPtr->getDataStoreRef();
   if(store.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     REQUIRE(store.getDataFormat() == "HDF5-OOC");
@@ -126,7 +134,7 @@ std::vector<T> Read(DataStructure& dataStructure, const DataPath& path, const Sh
     REQUIRE(backing != metadata.end());
     REQUIRE(std::filesystem::is_regular_file(backing->second));
   }
-  std::vector<T> values(array->getSize());
+  std::vector<T> values(arrayPtr->getSize());
   const auto result = store.copyIntoBuffer(0, nonstd::span<T>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   return values;
@@ -185,21 +193,21 @@ inline DataPath Components(DataStructure& dataStructure, const DataPath& input, 
 
 inline void SetGeometry(DataStructure& dataStructure)
 {
-  ImageGeom* geometry = nullptr;
-  REQUIRE_NOTHROW(geometry = &dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
-  geometry->setSpacing({1, 2, 3});
-  geometry->setOrigin({4, 5, 6});
-  geometry->setUnits(IGeometry::LengthUnit::Millimeter);
+  ImageGeom* geometryPtr = nullptr;
+  REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+  geometryPtr->setSpacing({1, 2, 3});
+  geometryPtr->setOrigin({4, 5, 6});
+  geometryPtr->setUnits(IGeometry::LengthUnit::Millimeter);
 }
 
 inline void CheckGeometry(DataStructure& dataStructure, const SizeVec3& dimensions)
 {
-  const ImageGeom* geometry = nullptr;
-  REQUIRE_NOTHROW(geometry = &dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
-  REQUIRE(geometry->getDimensions() == dimensions);
-  REQUIRE(geometry->getSpacing() == FloatVec3{1, 2, 3});
-  REQUIRE(geometry->getOrigin() == FloatVec3{4, 5, 6});
-  REQUIRE(geometry->getUnits() == IGeometry::LengthUnit::Millimeter);
+  const ImageGeom* geometryPtr = nullptr;
+  REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+  REQUIRE(geometryPtr->getDimensions() == dimensions);
+  REQUIRE(geometryPtr->getSpacing() == FloatVec3{1, 2, 3});
+  REQUIRE(geometryPtr->getOrigin() == FloatVec3{4, 5, 6});
+  REQUIRE(geometryPtr->getUnits() == IGeometry::LengthUnit::Millimeter);
 }
 
 inline Arguments WriteArguments(const DataPath& input, const std::filesystem::path& output)
@@ -223,10 +231,10 @@ inline Arguments WriteArguments(const DataPath& input, const std::filesystem::pa
 template <class T>
 std::vector<T> Decode(const std::filesystem::path& path, usize width, usize height, usize components = 1)
 {
-  const auto io = CreateImageIO(path);
-  SIMPLNX_RESULT_REQUIRE_VALID(io);
-  REQUIRE(io.value() != nullptr);
-  const auto metadata = io.value()->readMetadata(path);
+  const auto imageIO = CreateImageIO(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+  REQUIRE(imageIO.value() != nullptr);
+  const auto metadata = imageIO.value()->readMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
   REQUIRE(metadata.value().dataType == GetDataType<T>());
   REQUIRE(metadata.value().width == width);
@@ -234,7 +242,7 @@ std::vector<T> Decode(const std::filesystem::path& path, usize width, usize heig
   REQUIRE(metadata.value().numComponents == components);
   REQUIRE(metadata.value().numPages == 1);
   std::vector<uint8> bytes(width * height * components * sizeof(T));
-  const auto read = io.value()->readPixelData(path, std::span<uint8>(bytes));
+  const auto read = imageIO.value()->readPixelData(path, std::span<uint8>(bytes));
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   std::vector<T> values(width * height * components);
   std::memcpy(values.data(), bytes.data(), bytes.size());
@@ -255,4 +263,5 @@ inline DataStructure ReadMha(const std::filesystem::path& path)
   UnitTest::CheckArraysInheritTupleDims(result);
   return result;
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 } // namespace c15_test

@@ -401,8 +401,15 @@ inline bool FloatAlmostEqual(float64 x1, float64 x2, int64 maxUlps = 1)
  */
 namespace detail
 {
-inline bool OtsuObjectiveIsUsable(float64 globalMean, const std::vector<float64>& classMean, const std::vector<float64>& classFrequency, float64 objective, bool allowZero = false)
+struct OtsuClassStatistics
 {
+  std::vector<float64> Mean;
+  std::vector<float64> Frequency;
+};
+
+inline bool OtsuObjectiveIsUsable(float64 globalMean, const OtsuClassStatistics& classes, float64 objective, bool allowZero = false)
+{
+  const auto& [classMean, classFrequency] = classes;
   if(!std::isfinite(globalMean) || !std::isfinite(objective) || objective < 0.0)
   {
     return false;
@@ -422,18 +429,18 @@ inline bool OtsuObjectiveIsUsable(float64 globalMean, const std::vector<float64>
 }
 
 template <bool Checked>
-Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint, const std::atomic_bool* shouldCancelPtr)
+Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& histogram, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint, const std::atomic_bool* shouldCancelPtr)
 {
-  const usize numBins = h.counts.size();
+  const usize numBins = histogram.counts.size();
   std::vector<float64> thresholds;
   if(numBins == 0 || numThresholds == 0)
   {
-    return {thresholds};
+    return {};
   }
   if(numThresholds >= numBins)
   {
     // Not enough bins to place this many thresholds; the init loop below would index past the end.
-    return {thresholds};
+    return {};
   }
   float64 totalCount = 0.0;
   for(usize bin = 0; bin < numBins; ++bin)
@@ -442,19 +449,19 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if((bin % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
       {
-        return {std::vector<float64>{}};
+        return {};
       }
     }
-    totalCount += static_cast<float64>(h.counts[bin]);
+    totalCount += static_cast<float64>(histogram.counts[bin]);
   }
   if(totalCount <= 0.0)
   {
-    return {thresholds};
+    return {};
   }
 
   // Per-bin measurement value == bin midpoint (ITK Histogram::GetMeasurementVector(bin)[0]).
-  auto measurement = [&](usize bin) -> float64 { return h.min + (static_cast<float64>(bin) + 0.5) * h.binWidth; };
-  auto frequency = [&](usize bin) -> float64 { return static_cast<float64>(h.counts[bin]); };
+  auto measurement = [&](usize bin) -> float64 { return histogram.min + ((static_cast<float64>(bin) + 0.5) * histogram.binWidth); };
+  auto frequency = [&](usize bin) -> float64 { return static_cast<float64>(histogram.counts[bin]); };
 
   const usize numberOfClasses = numThresholds + 1;
 
@@ -466,7 +473,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if((b % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
       {
-        return {std::vector<float64>{}};
+        return {};
       }
     }
     globalMean += measurement(b) * frequency(b);
@@ -482,7 +489,9 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
   std::vector<usize> maxVarThresholdIndexes = thresholdIndexes;
 
   // --- Frequency of the initial classes ---
-  std::vector<float64> classFrequency(numberOfClasses, 0.0);
+  OtsuClassStatistics classes;
+  auto& classFrequency = classes.Frequency;
+  classFrequency.resize(numberOfClasses);
   float64 freqSum = 0.0;
   for(usize j = 0; j < numberOfClasses - 1; ++j)
   {
@@ -499,14 +508,15 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if((b % 65536) == 0 && shouldCancelPtr != nullptr && shouldCancelPtr->load())
       {
-        return {std::vector<float64>{}};
+        return {};
       }
     }
     imgPDF[b] = frequency(b) / totalCount;
   }
 
   // --- Mean of the initial classes ---
-  std::vector<float64> classMean(numberOfClasses, 0.0);
+  auto& classMean = classes.Mean;
+  classMean.resize(numberOfClasses);
   float64 meanSum = 0.0;
   for(usize j = 0; j < numberOfClasses - 1; ++j)
   {
@@ -526,7 +536,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
   // Opt-in checks leave the established arithmetic and finite tie rule unchanged.
   if constexpr(Checked)
   {
-    if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween))
+    if(!OtsuObjectiveIsUsable(globalMean, classes, maxVarBetween))
     {
       return MakeErrorResult<std::vector<float64>>(-28650, "Otsu class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
     }
@@ -546,7 +556,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     maxVarBetween = maxVarBetween * valleyEmphasisFactor;
     if constexpr(Checked)
     {
-      if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween, valleyEmphasisFactor == 0.0))
+      if(!OtsuObjectiveIsUsable(globalMean, classes, maxVarBetween, valleyEmphasisFactor == 0.0))
       {
         return MakeErrorResult<std::vector<float64>>(-28651, "Otsu valley-weighted initial objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
       }
@@ -622,7 +632,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if(shouldCancelPtr != nullptr && shouldCancelPtr->load())
       {
-        return {std::vector<float64>{}};
+        return {};
       }
     }
     float64 varBetween = 0.0;
@@ -635,7 +645,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     varBetween /= totalCount;
     if constexpr(Checked)
     {
-      if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween))
+      if(!OtsuObjectiveIsUsable(globalMean, classes, varBetween))
       {
         return MakeErrorResult<std::vector<float64>>(-28652,
                                                      "Otsu candidate class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
@@ -653,7 +663,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
       varBetween = varBetween * valleyEmphasisFactor;
       if constexpr(Checked)
       {
-        if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween, valleyEmphasisFactor == 0.0))
+        if(!OtsuObjectiveIsUsable(globalMean, classes, varBetween, valleyEmphasisFactor == 0.0))
         {
           return MakeErrorResult<std::vector<float64>>(-28653, "Otsu valley-weighted candidate objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
         }
@@ -672,16 +682,18 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
   for(usize t = 0; t < numThresholds; ++t)
   {
     const float64 offset = returnBinMidpoint ? 0.5 : 1.0;
-    thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.binWidth;
+    thresholds[t] = histogram.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * histogram.binWidth;
   }
-  return {std::move(thresholds)};
+  Result<std::vector<float64>> result;
+  result.m_Expected = std::move(thresholds);
+  return result;
 }
 } // namespace detail
 
 /** @brief Retains the established unchecked solver contract for existing direct consumers. */
-inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint)
+inline std::vector<float64> OtsuMultipleThresholds(const Histogram& histogram, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint)
 {
-  auto result = detail::ComputeOtsuThresholds<false>(h, numThresholds, valleyEmphasis, returnBinMidpoint, nullptr);
+  auto result = detail::ComputeOtsuThresholds<false>(histogram, numThresholds, valleyEmphasis, returnBinMidpoint, nullptr);
   return std::move(result.value());
 }
 } // namespace nx::core::ImageProcessing

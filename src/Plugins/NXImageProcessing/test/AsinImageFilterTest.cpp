@@ -39,21 +39,29 @@ DataPath runMappedIntegerAsin(DataStructure& dataStructure, const DataPath& inpu
   args.insertOrAssign(AsinImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(AsinImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
   // Stop an unfixed implementation before an invalid integer value can reach a NaN-to-integer conversion.
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::float32);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == componentShape);
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return inputPath.replaceName("Output");
 }
 } // namespace
 
 // The principal angle at integer one is pi/2 radians for every integer width and signedness.
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer one produces float32 radians", "[ImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -71,18 +79,24 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer one produces float
   REQUIRE(anglesPtr->getDataStoreRef().getValue(0) == Approx(1.57079632679489661923).epsilon(0).margin(1.0e-7));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer endpoints and invalid values produce floating angles", "[ImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  std::vector<TestType> inputValues = {0, 1, 2, std::numeric_limits<TestType>::max()};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    inputValues.push_back(-1);
-    inputValues.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto inputValues = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{0, 1, 2, std::numeric_limits<TestType>::max(), -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{0, 1, 2, std::numeric_limits<TestType>::max()};
+    }
+  }();
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, inputValues);
   const DataPath outputPath = runMappedIntegerAsin(dataStructure, inputPath, {1, 1, inputValues.size()});
@@ -105,7 +119,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer endpoints and inva
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: floating input retains type and principal angles", "[ImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -137,7 +153,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: floating input retains typ
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: adjacent domain boundaries remain distinct", "[ImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -163,7 +181,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: adjacent domain boundaries
   REQUIRE(std::isnan(angleStore.getValue(3)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::AsinImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][AsinImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -199,6 +219,7 @@ TEST_CASE("ImageProcessing::AsinImageFilter: mapped multi-component output prese
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // PART A domain edge (documents ITK-faithful behavior): asin is undefined for |x|>1. The op is
 // static_cast<U>(std::asin(static_cast<double>(x))) -- ITK's equally-unguarded Asin functor -- so asin(2) is NaN.

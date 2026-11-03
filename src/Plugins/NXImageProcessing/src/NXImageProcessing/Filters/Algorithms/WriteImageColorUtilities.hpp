@@ -25,18 +25,30 @@
  */
 namespace nx::core::WriteImageColor
 {
+struct SliceExtents
+{
+  usize Width = 0;
+  usize Height = 0;
+  usize Count = 0;
+};
+
+struct ProgressCallbacks
+{
+  std::function<void(usize, usize)> Range;
+  std::function<void(usize, usize)> Rows;
+};
+
 /**
  * @brief Checks the products used by color slice, group and RGB indexes.
  * @tparam T Scalar input type.
- * @param width Output slice width.
- * @param height Output slice height.
- * @param slices Number of output slices.
+ * @param extents Output width, height, and slice count.
  * @param hasMask Whether the source group also holds a mask.
  * @return An error for empty dimensions or unrepresentable buffer sizes.
  */
 template <typename T>
-Result<> ValidateSize(usize width, usize height, usize slices, bool hasMask)
+Result<> ValidateSize(const SliceExtents& extents, bool hasMask)
 {
+  const auto& [width, height, slices] = extents;
   constexpr usize maximum = std::numeric_limits<usize>::max();
   const usize bytesPerValue = sizeof(T) + (hasMask ? std::max(sizeof(bool), sizeof(uint8)) : 0);
   if(width == 0 || height == 0 || slices == 0 || width > maximum / height)

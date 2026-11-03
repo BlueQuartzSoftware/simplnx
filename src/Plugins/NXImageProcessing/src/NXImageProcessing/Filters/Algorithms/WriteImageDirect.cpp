@@ -197,16 +197,16 @@ struct ColorizeVolumeFunctor
 {
   // The operation calculates the range in pages and then colorizes bounded slices.
   template <typename T>
-  Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, usize sliceCount, usize sliceW, usize sliceH, const std::vector<float32>& binPoints,
+  Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, const WriteImageColor::SliceExtents& sliceExtents, const std::vector<float32>& binPoints,
                       const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, uint64 nonfinitePolicy, const std::atomic_bool& shouldCancel,
-                      const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const std::function<void(usize, usize)>& reportRange = {},
-                      const std::function<void(usize, usize)>& reportRows = {})
+                      const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const WriteImageColor::ProgressCallbacks& progress)
   {
-    if(Result<> sizeResult = WriteImageColor::ValidateSize<T>(sliceW, sliceH, sliceCount, maskArray != nullptr); sizeResult.invalid())
+    const auto& [sliceW, sliceH, sliceCount] = sliceExtents;
+    if(Result<> sizeResult = WriteImageColor::ValidateSize<T>(sliceExtents, maskArray != nullptr); sizeResult.invalid())
     {
       return sizeResult;
     }
-    auto rangeResult = WriteImageColor::ScanRange<T>(dataArrayRef, maskArray, nonfinitePolicy, shouldCancel, reportRange);
+    auto rangeResult = WriteImageColor::ScanRange<T>(dataArrayRef, maskArray, nonfinitePolicy, shouldCancel, progress.Range);
     if(rangeResult.invalid())
     {
       return ConvertResult(std::move(rangeResult));
@@ -278,9 +278,9 @@ struct ColorizeVolumeFunctor
           sliceBuffer[dst + 1] = rgb[1];
           sliceBuffer[dst + 2] = rgb[2];
         }
-        if(reportRows)
+        if(progress.Rows)
         {
-          reportRows(row + 1, sliceH);
+          progress.Rows(row + 1, sliceH);
         }
       }
 
@@ -413,13 +413,15 @@ Result<> WriteImageDirect::operator()()
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(sliceCount, "Writing image slices");
   m_MessageHandler.sendInfoMessage("Preparing and writing image slices");
-  const std::function<void(usize, usize)> reportRange = [&](usize current, usize total) { progressThrottle.updatePercent("Computing color range", current, total); };
-  const std::function<void(usize, usize)> reportRows = [&](usize current, usize total) {
-    if(sliceCount == 1)
-    {
-      progressThrottle.updatePercent("Preparing image rows", current, total);
-    }
-  };
+  const WriteImageColor::ProgressCallbacks progress{.Range = [&](usize current, usize total) { progressThrottle.updatePercent("Computing color range", current, total); },
+                                                    .Rows =
+                                                        [&](usize current, usize total) {
+                                                          if(sliceCount == 1)
+                                                          {
+                                                            progressThrottle.updatePercent("Preparing image rows", current, total);
+                                                          }
+                                                        }};
+  const WriteImageColor::SliceExtents sliceExtents{.Width = sliceW, .Height = sliceH, .Count = sliceCount};
 
   // Encode and atomically commit one independently named slice file.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
@@ -520,9 +522,8 @@ Result<> WriteImageDirect::operator()()
       maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath);
     }
 
-    auto colorResult =
-        ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, binPoints, controlPoints, maskArrayPtr,
-                            m_InputValues.invalidColor, m_InputValues.NonfiniteInputHandling, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange, reportRows);
+    auto colorResult = ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceExtents, binPoints, controlPoints, maskArrayPtr,
+                                           m_InputValues.invalidColor, m_InputValues.NonfiniteInputHandling, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), progress);
     return MergeResults(ConvertResult(std::move(controlPointsResult)), std::move(colorResult));
   }
 
@@ -535,7 +536,7 @@ Result<> WriteImageDirect::operator()()
     {
       return {};
     }
-    auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp, reportRows);
+    auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp, progress.Rows);
     if(extractResult.invalid())
     {
       return extractResult;
