@@ -59,7 +59,7 @@ public:
 
   /**
    * @brief Copies one loaded scan into its volume destination range.
-   * @param index Zero-based scan index.
+   * @param index Zero-based destination Z slice, chosen by IEbsdOemReader::execute() from the stacking order.
    * @return Error when requested pattern data is absent.
    *
    * The current method does not inspect destination bulk-I/O Result values.

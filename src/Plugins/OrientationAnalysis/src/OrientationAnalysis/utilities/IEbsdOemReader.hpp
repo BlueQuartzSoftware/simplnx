@@ -73,7 +73,7 @@ public:
   IEbsdOemReader& operator=(IEbsdOemReader&&) noexcept = delete;
 
   /**
-   * @brief Loads and copies each selected scan in selection order.
+   * @brief Loads scans in selection order and copies them to the requested Z stacking order.
    * @return Reader, phase-metadata, or derived copy errors.
    *
    * The method sets the destination geometry unit to micrometers before import.
@@ -100,7 +100,8 @@ public:
         return readResults;
       }
 
-      Result<> copyDataResults = copyRawEbsdData(index);
+      const int sliceIndex = m_InputValues->SelectedScanNames.stackingOrder == RefFrameZDir::k_HightoLow ? static_cast<int>(scanNames.size()) - 1 - index : index;
+      Result<> copyDataResults = copyRawEbsdData(sliceIndex);
       if(copyDataResults.invalid())
       {
         return copyDataResults;
@@ -177,7 +178,7 @@ public:
 
   /**
    * @brief Copies the currently loaded scan into its destination volume range.
-   * @param index Zero-based scan index.
+   * @param index Zero-based destination Z slice. execute() computes it from the selection index and the stacking order.
    * @return Source conversion or destination transfer errors.
    */
   virtual Result<> copyRawEbsdData(int index) = 0;
