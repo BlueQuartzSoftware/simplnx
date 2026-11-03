@@ -75,17 +75,22 @@ constexpr float64 maximumIntegerLog10()
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: integer values produce float64 logarithms and domain results", "[NXImageProcessing][Issue1874][Log10ImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
-  std::vector<TestType> values = {1, 10, 100, 2, 0, std::numeric_limits<TestType>::max()};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    values.push_back(-1);
-    values.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto values = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{1, 10, 100, 2, 0, std::numeric_limits<TestType>::max(), -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{1, 10, 100, 2, 0, std::numeric_limits<TestType>::max()};
+    }
+  }();
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
@@ -129,7 +134,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: integer values produce 
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: floating input retains type and IEEE domain behavior", "[NXImageProcessing][Issue1874][Log10ImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -179,7 +186,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: floating input retains 
   REQUIRE(std::isnan(store.getValue(9)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: positive floating boundaries have finite ordered logarithms", "[NXImageProcessing][Issue1874][Log10ImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -219,7 +228,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: positive floating bound
   REQUIRE(store.getValue(5) > 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::Log10ImageFilter: promoted Float64 output preserves tuple and component shapes", "[NXImageProcessing][Issue1874][Log10ImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -273,6 +284,7 @@ TEST_CASE("NXImageProcessing::Log10ImageFilter: promoted Float64 output preserve
   REQUIRE(outputStore.getValue(3) == Approx(0.30102999566398119521).epsilon(0).margin(1.0e-15));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // Negative input produces NaN; zero produces negative infinity. Floating output represents both results.
 TEST_CASE("NXImageProcessing::Log10ImageFilter: log10 of negative is NaN and log10(0) is -inf (domain edge)", "[NXImageProcessing][Log10ImageFilter]")

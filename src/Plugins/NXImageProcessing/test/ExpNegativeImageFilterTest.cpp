@@ -1,9 +1,9 @@
 #include "C15CompatibilityTestUtils.hpp"
-#include "ImageProcessing/Filters/ExpImageFilter.hpp"
-#include "ImageProcessing/Filters/Log10ImageFilter.hpp"
-#include "ImageProcessing/Filters/LogImageFilter.hpp"
-#include "ImageProcessing/Filters/SqrtImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
+#include "NXImageProcessing/Filters/ExpImageFilter.hpp"
+#include "NXImageProcessing/Filters/Log10ImageFilter.hpp"
+#include "NXImageProcessing/Filters/LogImageFilter.hpp"
+#include "NXImageProcessing/Filters/SqrtImageFilter.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/ExpNegativeImageFilter.hpp"
@@ -36,6 +36,7 @@
 
 using namespace nx::core;
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: integer input produces float64 decay", "[NXImageProcessing][Issue1874][ExpNegativeImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
@@ -111,7 +112,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: integer input pro
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: floating IEEE values retain sign reversed range behavior", "[NXImageProcessing][Issue1874][ExpNegativeImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -201,7 +204,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: floating IEEE val
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: mapped multi component output preserves tuple shape", "[NXImageProcessing][Issue1874][ExpNegativeImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -251,7 +256,9 @@ TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: mapped multi component out
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: floating input retains type for safe finite values", "[NXImageProcessing][Issue1874][ExpNegativeImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -290,6 +297,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: floating input re
   REQUIRE(store.getValue(2) == Approx(0.36787944117144232160).epsilon(relativeTolerance));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // exp(-(-1000)) exceeds the float64 finite range and produces positive infinity.
 // The shared math conversion also handles finite results above the float32 range explicitly.
@@ -349,7 +357,8 @@ TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: ITK real-image golden (def
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain masks feed components", "[ImageProcessing][C15Compatibility][Issue1874][ExpNegativeImageFilter]")
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
+TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain masks feed components", "[NXImageProcessing][C15Compatibility][Issue1874][ExpNegativeImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -460,3 +469,4 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
   checkQuantitative();
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

@@ -2136,6 +2136,7 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
 // CheckedOutput opts into the selected Curvature Flow controls, exact no-ops, and terminal conversion only.
 // Other finite-difference filters retain the default behavior and their own precision models.
 template <class T, class F, bool CheckedOutput = false>
+// NOLINTNEXTLINE(misc-no-recursion) -- The staging call has two resident endpoints, so it cannot re-enter the out-of-core staging branch.
 Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, FloatVec3 spacing, F fn, float64 timeStep, uint32 numberOfIterations,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {

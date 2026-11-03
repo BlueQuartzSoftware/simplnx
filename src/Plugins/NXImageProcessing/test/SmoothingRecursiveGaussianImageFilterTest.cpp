@@ -63,8 +63,11 @@ void requireSmoothingInput(const DataStructure& dataStructure, const DataPath& i
 {
   const IDataArray* inputArrayPtr = nullptr;
   REQUIRE_NOTHROW(inputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(inputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr->getDataType() == DataType::float32);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr->getTupleShape() == ShapeType{dimZ, 4, 4});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr->getComponentShape() == ShapeType{1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -218,6 +221,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite act
   const SmoothFilter filter;
   const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
   // This deliberately stops at preflight. Invalid coefficients must never reach an unchecked output conversion.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -240,6 +244,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite act
   dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
   const SmoothFilter filter;
   const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0}));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -265,6 +270,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effec
   const SmoothFilter filter;
   const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
   // Positive finite operands can produce zero or infinity for sigma / abs(spacing). No cutoff on finite scales is imposed.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -283,10 +289,12 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: finite negati
   dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({-1.0F, -2.0F, unusedSpacing});
   const SmoothFilter filter;
   const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, unusedSigma}));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: each selected validation branch has a diagnostic", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -329,7 +337,9 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: each selected
   REQUIRE(preflight.outputActions.errors().front().code == expectedCodes.at(failure));
   REQUIRE(preflight.outputActions.errors().front().message.find("Image Geometry") != std::string::npos);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: constants retain type shape and selected endpoint behavior",
                    "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64, float32, float64)
 {
@@ -380,7 +390,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: cons
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 output retains float32 interpass precision", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -403,7 +415,9 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 outpu
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and buffered terminal conversion follow literal expectations",
           "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
@@ -423,7 +437,9 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and bu
   REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (fixture == 2 || fixture == 4 ? 1 : 0));
   REQUIRE(output.getValue(0) == expected.at(fixture));
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: floating terminal values retain nonfinite behavior", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]",
                    float32, float64)
 {
@@ -448,7 +464,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: floa
   REQUIRE(output.getValue(2) < TestType{0});
   REQUIRE(std::isnan(output.getValue(3)));
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: terminal nonfinite integer errors and binary64 boundaries",
                    "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int32, int64)
 {
@@ -479,7 +497,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: term
     REQUIRE(output.getValue(1) == std::numeric_limits<TestType>::lowest());
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping warning survives later transfer failure and cancellation",
           "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
@@ -507,7 +527,9 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping warn
     REQUIRE(shouldCancel.load());
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected plane sinks retain successful warnings before error or cancellation",
           "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
@@ -544,7 +566,9 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected plan
     REQUIRE(result.errors().front().code == -23694);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected tiled transfers keep prior row warnings on failure", "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -557,6 +581,7 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: selected tile
   REQUIRE(result.errors().front().code == (write ? -23691 : -23690));
   REQUIRE(countSmoothingWarning(result, write ? -23693 : -23692) == 1);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: checked axis materializations narrow finite overflow explicitly",
           "[ImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
@@ -572,10 +597,12 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: checked axis 
   options.stagingByteBudget = 256;
   const std::atomic_bool shouldCancel{false};
   const Result<> result = ImageProcessing::RecursiveGaussianAxisPass<float64>(source, output, SizeVec3{5, 5, 5}, axis, 1.0, 1.0, 0, false, shouldCancel, {}, options);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   for(usize index = 0; index < output.getSize(); ++index)
   {
     REQUIRE(std::isinf(output.getValue(index)));
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(output.getValue(index) > 0.0F);
   }
 }
@@ -738,6 +765,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSigma);
   }
   SECTION("degenerate spacing rejected")
@@ -756,6 +784,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
   }
 }
@@ -981,6 +1010,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::C15Compatibility resident SmoothingRecursiveGaussianImageFilter feeds quantitative gradient",
           "[ImageProcessing][C15Compatibility][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
@@ -989,7 +1019,7 @@ TEST_CASE("ImageProcessing::C15Compatibility resident SmoothingRecursiveGaussian
   UnitTest::AlgorithmTestScope scope(scenario);
   const bool step = GENERATE(false, true);
   CAPTURE(step, scenario);
-  std::vector<float32> original(16 * 4, 4);
+  std::vector<float32> original(usize{16} * 4, 4);
   if(step)
   {
     for(usize index = 0; index < original.size(); ++index)
@@ -997,28 +1027,29 @@ TEST_CASE("ImageProcessing::C15Compatibility resident SmoothingRecursiveGaussian
       original[index] = index % 16 < 8 ? 0 : 1;
     }
   }
-  DataStructure ds;
-  const auto input = recon_test::BuildImageFromPattern<float32>(ds, 16, 4, 1, original);
-  c15_test::SetGeometry(ds);
-  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  DataStructure dataStructure;
+  const auto input = recon_test::BuildImageFromPattern<float32>(dataStructure, 16, 4, 1, original);
+  c15_test::SetGeometry(dataStructure);
+  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
   const SmoothingRecursiveGaussianImageFilter filter;
   auto args = c15_test::ImageArguments(filter, input, "Smoothed");
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1, 1, 1}));
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-  c15_test::Execute(filter, ds, args, scope);
+  c15_test::Execute(filter, dataStructure, args, scope);
   const auto smoothed = input.replaceName("Smoothed");
-  const auto values = c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope);
+  const auto values = c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope);
   const GradientMagnitudeImageFilter gradient;
   args = c15_test::ImageArguments(gradient, smoothed, "Gradient");
   args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
-  c15_test::Execute(gradient, ds, args, scope);
-  const auto edges = c15_test::Read<float32>(ds, input.replaceName("Gradient"), {1, 4, 16}, scope);
-  for(usize y = 0; y < 4; ++y)
+  c15_test::Execute(gradient, dataStructure, args, scope);
+  const auto edges = c15_test::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  for(usize row = 0; row < 4; ++row)
   {
-    for(usize x = 0; x < 16; ++x)
+    const usize rowOffset = row * 16;
+    for(usize column = 0; column < 16; ++column)
     {
-      const usize index = y * 16 + x;
-      CAPTURE(x, y);
+      const usize index = rowOffset + column;
+      CAPTURE(column, row);
       REQUIRE(std::isfinite(values[index]));
       REQUIRE(std::isfinite(edges[index]));
       if(!step)
@@ -1029,18 +1060,20 @@ TEST_CASE("ImageProcessing::C15Compatibility resident SmoothingRecursiveGaussian
       else
       {
         // Reflection/complement and row invariance are independent of the recursive implementation.
-        REQUIRE(values[index] + values[y * 16 + 15 - x] == Approx(1).margin(1.0e-5));
-        REQUIRE(values[index] == Approx(values[x]).margin(1.0e-5));
-        REQUIRE(edges[index] == Approx(edges[y * 16 + 15 - x]).margin(1.0e-5));
-        REQUIRE(edges[index] == Approx(edges[x]).margin(1.0e-5));
-        REQUIRE(edges[index] <= edges[y * 16 + 7] + 1.0e-5F);
-        REQUIRE(edges[y * 16 + 7] > 0);
-        REQUIRE(edges[y * 16 + 7] == Approx(edges[y * 16 + 8]).margin(1.0e-5));
+        const usize reflectedIndex = rowOffset + 15 - column;
+        REQUIRE(values[index] + values[reflectedIndex] == Approx(1).margin(1.0e-5));
+        REQUIRE(values[index] == Approx(values[column]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[reflectedIndex]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[column]).margin(1.0e-5));
+        REQUIRE(edges[index] <= edges[rowOffset + 7] + 1.0e-5F);
+        REQUIRE(edges[rowOffset + 7] > 0);
+        REQUIRE(edges[rowOffset + 7] == Approx(edges[rowOffset + 8]).margin(1.0e-5));
       }
     }
   }
-  REQUIRE(c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope) == values);
-  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
-  c15_test::CheckGeometry(ds, {16, 4, 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  c15_test::CheckGeometry(dataStructure, {16, 4, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

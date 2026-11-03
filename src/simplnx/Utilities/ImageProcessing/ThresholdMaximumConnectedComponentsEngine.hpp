@@ -148,7 +148,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
     const usize total = input.getSize();
     if(total == 0)
     {
-      return {summary};
+      return {{summary}};
     }
     constexpr usize blockValues = 65536;
     constexpr usize residentBatchBytes = 32ULL * 1024ULL * 1024ULL;
@@ -188,7 +188,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
       }
     }
     std::vector<ThresholdMaxCCSummary<T>> blocks(blockCapacity);
-    // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full transfer overwrites this contiguous buffer, including for bool.
     auto valuesPtr = direct ? nullptr : std::make_unique_for_overwrite<T[]>(batchValues);
     for(usize start = 0; start < total;)
     {
@@ -236,7 +236,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
       }
       start += count;
     }
-    return {summary, std::move(status.warnings())};
+    return {{summary}, std::move(status.warnings())};
   } catch(const std::bad_alloc&)
   {
     return ConvertResultTo(
@@ -318,8 +318,18 @@ bool ThresholdMaxCCSpanExceedsTwo(T low, T high)
 }
 
 template <class T>
-Result<T> SearchThresholdMaxCC(const AbstractDataStore<T>& input, const SizeVec3& dims, T low, T high, T fixedCap, const ThresholdMaxCCOptions& options, const std::atomic_bool& shouldCancel)
+struct ThresholdMaxCCSearchInterval
 {
+  T Low;
+  T High;
+  T FixedCap;
+};
+
+template <class T>
+Result<T> SearchThresholdMaxCC(const AbstractDataStore<T>& input, const SizeVec3& dims, ThresholdMaxCCSearchInterval<T> interval, const ThresholdMaxCCOptions& options,
+                               const std::atomic_bool& shouldCancel)
+{
+  auto [low, high, fixedCap] = interval;
   T midpoint = std::midpoint(low, high);
   T left = std::midpoint(low, midpoint);
   T right = std::midpoint(high, midpoint);
@@ -394,7 +404,7 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
     auto reservation = ReserveWorkingMemory(preferredBytes, usefulBytes);
     const usize chunkValues = std::max<usize>(minimumValues, std::min(total, static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / valueBytes, std::numeric_limits<usize>::max()))));
     reservation.shrinkTo(static_cast<uint64>(std::min(chunkValues, total)) * valueBytes);
-    // T may be bool and must provide contiguous values for store transfers.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full transfer overwrites this contiguous buffer, including for bool.
     auto inputPtr = fillOutside ? nullptr : std::make_unique_for_overwrite<T[]>(std::min(chunkValues, total));
     auto outputPtr = std::make_unique<std::vector<uint8>>(std::min(chunkValues, total));
     for(usize start = 0; start < total;)
@@ -511,7 +521,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
       auto writeResult = detail::WriteThresholdMaxCC(input, output, true, T{}, T{}, options, shouldCancel);
       return MergeResults(std::move(status), std::move(writeResult));
     }
-    auto thresholdResult = detail::SearchThresholdMaxCC(input, dims, summary.Minimum, std::min(summary.Maximum, cap.Value), cap.Value, options, shouldCancel);
+    auto thresholdResult = detail::SearchThresholdMaxCC(input, dims, {.Low = summary.Minimum, .High = std::min(summary.Maximum, cap.Value), .FixedCap = cap.Value}, options, shouldCancel);
     if(thresholdResult.invalid())
     {
       return MergeResults(std::move(status), ConvertResult(std::move(thresholdResult)));

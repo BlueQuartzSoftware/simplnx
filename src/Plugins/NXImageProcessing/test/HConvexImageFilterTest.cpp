@@ -121,10 +121,13 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: integer fractional Heig
   // Integer images require a whole Height. Stop at preflight: the baseline must never execute this request.
   const auto preflightResult = filter.preflight(dataStructure, makeHConvexArguments(inputPath, height));
   REQUIRE(preflightResult.outputActions.invalid());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().front().code == -1874101);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero contrast with unchanged type", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64, float32, float64)
 {
@@ -166,7 +169,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero 
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: floating fractional Height retains fractional contrast", "[ImageProcessing][Issue1874][HConvexImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -201,7 +206,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: floating fractional Hei
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: native 64-bit unit contrast above double precision", "[ImageProcessing][Issue1874][HConvexImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -231,7 +238,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: native 64-bit unit cont
   REQUIRE(outputStore.getValue(0) == TestType{1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::HConvexImageFilter: exact signed 64-bit marker boundaries in both directions", "[ImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -261,7 +270,9 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact signed 64-bit marker bound
     REQUIRE(marker.getValue(index) == expected.at(index));
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: exact integer marker zero unit and huge Heights", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
@@ -296,7 +307,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: exact integer marker ze
     REQUIRE(values == expected);
   }
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker arithmetic requires explicit opt-in", "[ImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -315,7 +328,9 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker arithmetic requires
   SIMPLNX_RESULT_REQUIRE_VALID(markerResult);
   REQUIRE(marker.getValue(0) == expectedExistingValue);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker Height immediately below 2^64", "[ImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -334,7 +349,9 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker Height immediately 
   ImageProcessing::detail::ApplyReconstructionMarkerOptions<int64>(nonstd::span<int64>(raisedValues.data(), raisedValues.size()), 0, {1, 1, 1}, options);
   REQUIRE(raisedValues.at(0) == 9223372036854773760LL);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: signed contrast overflow and adjacent representable contrast", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, int16, int32, int64)
 {
   UnitTest::LoadPlugins();
@@ -381,7 +398,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: signed contrast overflo
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero contrast at native integer bounds", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
@@ -409,7 +428,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero 
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::HConvexImageFilter: whole Height contrast is stable under a signed baseline shift", "[ImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -433,7 +454,9 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: whole Height contrast is stable 
   REQUIRE(outputStore.getValue(2) == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::HConvexImageFilter: chunked contrast preserves transfer Results and cancellation", "[ImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -490,6 +513,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: chunked contrast preserves trans
     REQUIRE(output.getValue(0) == -1);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (2) Hand-computed behavior on a small 2D image: a flat background maps to 0; a bright bump whose contrast is
@@ -744,26 +768,28 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex
                                                         [](Arguments& args) { args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(10000.0)); });
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::C15Compatibility resident exact widening supports fractional HConvex height", "[ImageProcessing][C15Compatibility][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
+  DataStructure dataStructure;
   const std::vector<uint8> original{2, 2, 2, 2, 4, 2, 2, 2, 2};
-  const auto input = recon_test::BuildImageFromPattern<uint8>(ds, 3, 3, 1, original);
-  c15_test::SetGeometry(ds);
-  const auto converted = c15_test::ConvertToFloat32(ds, input);
+  const auto input = recon_test::BuildImageFromPattern<uint8>(dataStructure, 3, 3, 1, original);
+  c15_test::SetGeometry(dataStructure);
+  const auto converted = c15_test::ConvertToFloat32(dataStructure, input);
   const std::vector<float32> exactConverted{2, 2, 2, 2, 4, 2, 2, 2, 2};
-  REQUIRE(c15_test::Read<float32>(ds, converted, {1, 3, 3}, scope) == exactConverted);
+  REQUIRE(c15_test::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
   const HConvexImageFilter filter;
   auto args = c15_test::ImageArguments(filter, converted, "Contrast");
   args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(0.5));
   args.insertOrAssign(HConvexImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-  c15_test::Execute(filter, ds, args, scope);
-  REQUIRE(c15_test::Read<float32>(ds, input.replaceName("Contrast"), {1, 3, 3}, scope) == std::vector<float32>{0, 0, 0, 0, 0.5F, 0, 0, 0, 0});
-  REQUIRE(c15_test::Read<float32>(ds, converted, {1, 3, 3}, scope) == exactConverted);
-  REQUIRE(c15_test::Read<uint8>(ds, input, {1, 3, 3}, scope) == original);
-  c15_test::CheckGeometry(ds, {3, 3, 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  c15_test::Execute(filter, dataStructure, args, scope);
+  REQUIRE(c15_test::Read<float32>(dataStructure, input.replaceName("Contrast"), {1, 3, 3}, scope) == std::vector<float32>{0, 0, 0, 0, 0.5F, 0, 0, 0, 0});
+  REQUIRE(c15_test::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, input, {1, 3, 3}, scope) == original);
+  c15_test::CheckGeometry(dataStructure, {3, 3, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

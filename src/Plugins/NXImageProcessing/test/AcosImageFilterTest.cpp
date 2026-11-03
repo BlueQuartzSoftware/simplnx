@@ -43,13 +43,18 @@ DataPath runMappedIntegerAcos(DataStructure& dataStructure, const DataPath& inpu
   args.insertOrAssign(AcosImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(AcosImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
   // A mapping regression must fail before invalid integer values can reach a NaN-to-integer cast.
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::float32);
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return input.replaceName("Output");
 }
@@ -116,6 +121,7 @@ private:
 
 // An angle at zero is pi/2 radians, independently of the input's integer width or signedness.
 // Keeping the input at zero makes the unfixed integer-output implementation safe to execute.
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: integer zero produces float32 radians", "[ImageProcessing][Issue1874][AcosImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -152,7 +158,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: integer zero produces floa
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: floating input retains type and propagates domain NaN", "[ImageProcessing][Issue1874][AcosImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -181,18 +189,24 @@ TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: floating input retains typ
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: integer endpoints and invalid values produce floating angles", "[ImageProcessing][Issue1874][AcosImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  std::vector<TestType> values = {0, 1, 2, std::numeric_limits<TestType>::max()};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    values.push_back(-1);
-    values.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto values = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{0, 1, 2, std::numeric_limits<TestType>::max(), -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{0, 1, 2, std::numeric_limits<TestType>::max()};
+    }
+  }();
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
@@ -216,7 +230,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: integer endpoints and inva
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: adjacent domain boundaries remain distinct", "[ImageProcessing][Issue1874][AcosImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -243,7 +259,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::AcosImageFilter: adjacent domain boundaries
   REQUIRE(std::isnan(store.getValue(3)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::AcosImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][AcosImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -278,7 +296,9 @@ TEST_CASE("ImageProcessing::AcosImageFilter: mapped multi-component output prese
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::AcosImageFilter: mapped buffered engine preserves cancellation and I/O failures", "[ImageProcessing][Issue1874][AcosImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -320,6 +340,7 @@ TEST_CASE("ImageProcessing::AcosImageFilter: mapped buffered engine preserves ca
     REQUIRE(output.getValue(index) == -7.0f);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // PART A domain edge (documents ITK-faithful behavior; does NOT "fix" it): acos is undefined for |x|>1. The op is
 // static_cast<U>(std::acos(static_cast<double>(x))) -- exactly ITK's equally-unguarded Acos functor -- so acos(2)

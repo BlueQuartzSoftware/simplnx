@@ -11,6 +11,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -94,7 +95,7 @@ struct SquareOperation
     return [](T value) -> U {
       if constexpr(std::is_integral_v<T>)
       {
-        const U widenedValue = static_cast<U>(value);
+        const U widenedValue = static_cast<U>(+value);
         return static_cast<U>(widenedValue * widenedValue);
       }
       else

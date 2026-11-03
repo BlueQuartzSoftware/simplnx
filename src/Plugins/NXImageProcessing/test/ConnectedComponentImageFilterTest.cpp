@@ -93,6 +93,7 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: provisional label limit policy is explicit and defaults to Error", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -122,7 +123,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: provisional label lim
     REQUIRE(tooltip.find(riskTermPtr) != std::string::npos);
   }
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: both policies preserve literal connectivity labels and uint32 shape", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -173,7 +176,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: both policies preserv
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: many provisional runs can form one exact component", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -205,7 +210,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: many provisional runs
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: execution cancellation keeps the filter cancellation result", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -234,6 +241,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: execution cancellatio
   REQUIRE(result.result.warnings().empty());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is

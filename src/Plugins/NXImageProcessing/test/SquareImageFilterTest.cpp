@@ -4,6 +4,7 @@
 #include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/SquareImageFilter.hpp"
+#include "NXImageProcessing/Filters/WriteImageFilter.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
@@ -13,11 +14,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -41,22 +45,32 @@ DataPath runSquareWithType(DataStructure& dataStructure, const DataPath& inputPa
   args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const SquareImageFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
   // A hard preflight guard stops the old same-width output before any narrowing overflow or typed lookup.
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == expectedType);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == componentShape);
 
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const DataPath outputPath = inputPath.replaceName("Output");
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getDataType() == expectedType);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getTupleShape() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getComponentShape() == componentShape);
   return outputPath;
 }
@@ -64,6 +78,7 @@ DataPath runSquareWithType(DataStructure& dataStructure, const DataPath& inputPa
 template <typename InputType, typename OutputType>
 void requireSquareValues(const std::vector<InputType>& values, const std::vector<OutputType>& expected)
 {
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(values.size() == expected.size());
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<InputType>(dataStructure, values);
@@ -73,6 +88,7 @@ void requireSquareValues(const std::vector<InputType>& values, const std::vector
   const auto& store = outputArrayPtr->getDataStoreRef();
   for(usize index = 0; index < expected.size(); ++index)
   {
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(store.getValue(index) == expected.at(index));
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -89,11 +105,17 @@ void requireSquareOverflow(InputType value, int32 expectedCode)
   args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const SquareImageFilter filter;
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(executeResult.result.errors().size() == 1);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(executeResult.result.errors().front().code == expectedCode);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(executeResult.result.errors().front().message.find(inputPath.toString()) != std::string::npos);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(executeResult.result.errors().front().message.find(std::to_string(value)) != std::string::npos);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(executeResult.result.errors().front().message.find("float64") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -182,6 +204,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: empty 64-bit inputs re
   requireSquareValues<TestType, TestType>({}, {});
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation preserves the filter cancellation result", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -200,7 +223,9 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation preserves the filt
   REQUIRE(executeResult.result.errors().front().code == -1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SquareImageFilter: widened multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -229,7 +254,9 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: widened multi-component output 
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating inputs retain type and safe IEEE values", "[NXImageProcessing][Issue1874][SquareImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -252,7 +279,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating inputs retain
   REQUIRE(std::isnan(store.getValue(6)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating overflow is positive infinity and underflow is positive zero", "[NXImageProcessing][Issue1874][SquareImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -272,6 +301,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating overflow is p
   REQUIRE_FALSE(std::signbit(store.getValue(3)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image md5 golden (plan Sec.3/Sec.4/Sec.6). Mirrors ITKSquareImageTest.cpp(defaults): read
@@ -309,7 +339,8 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::C15Compatibility resident widened Square persists and feeds integer components", "[ImageProcessing][C15Compatibility][Issue1874][SquareImageFilter]")
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::C15Compatibility resident widened Square persists and feeds integer components", "[NXImageProcessing][C15Compatibility][Issue1874][SquareImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -336,11 +367,11 @@ TEST_CASE("ImageProcessing::C15Compatibility resident widened Square persists an
   c15_test::Execute(writer, reloaded, c15_test::WriteArguments(square, output.path() / "square.mha"), scope);
   auto raw = c15_test::ReadMha(output.path() / "square.mha");
   REQUIRE(c15_test::Read<int64>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 4}, scope) == expected);
-  const ImageGeom* rawGeometry = nullptr;
-  REQUIRE_NOTHROW(rawGeometry = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
-  REQUIRE(rawGeometry->getDimensions() == SizeVec3{4, 1, 1});
-  REQUIRE(rawGeometry->getSpacing() == FloatVec3{1, 2, 1});
-  REQUIRE(rawGeometry->getOrigin() == FloatVec3{4, 5, 0});
+  const ImageGeom* rawGeometryPtr = nullptr;
+  REQUIRE_NOTHROW(rawGeometryPtr = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+  REQUIRE(rawGeometryPtr->getDimensions() == SizeVec3{4, 1, 1});
+  REQUIRE(rawGeometryPtr->getSpacing() == FloatVec3{1, 2, 1});
+  REQUIRE(rawGeometryPtr->getOrigin() == FloatVec3{4, 5, 0});
   const auto labels = c15_test::Components(reloaded, square, "Components");
   REQUIRE(c15_test::Read<uint32>(reloaded, labels, {1, 1, 4}, scope) == std::vector<uint32>{0, 1, 0, 2});
   REQUIRE(c15_test::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
@@ -349,3 +380,4 @@ TEST_CASE("ImageProcessing::C15Compatibility resident widened Square persists an
   UnitTest::CheckArraysInheritTupleDims(source);
   UnitTest::CheckArraysInheritTupleDims(reloaded);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

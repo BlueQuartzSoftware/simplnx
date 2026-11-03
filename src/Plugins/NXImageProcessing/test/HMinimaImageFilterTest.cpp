@@ -2,6 +2,7 @@
 #include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
 #include "ImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/HMinimaImageFilter.hpp"
 
@@ -16,12 +17,14 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <cmath>
@@ -52,6 +55,7 @@ Arguments makeHMinimaArguments(const DataPath& inputPath, float64 height, bool f
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: integer fractional Height fails preflight", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
@@ -73,7 +77,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: integer fractional Heig
   REQUIRE(preflightResult.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
   REQUIRE(preflightResult.outputActions.errors().front().message.find(height == 0.5 ? "0.5" : "2.5") != std::string::npos);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves values and type", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64, float32, float64)
 {
@@ -119,7 +125,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves v
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: floating fractional Height retains fractional minima", "[ImageProcessing][Issue1874][HMinimaImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -157,7 +165,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: floating fractional Hei
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: native 64-bit marker preserves units above double precision", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -190,7 +200,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: native 64-bit marker pr
   REQUIRE(outputStore.getValue(0) == inputValue + TestType{1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves native integer bounds", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
@@ -226,7 +238,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves n
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height raises or saturates native integer markers", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
@@ -262,7 +276,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height raises or 
   REQUIRE(outputStore.getValue(0) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: large whole Height retains exact native 64-bit markers", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -299,7 +315,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: large whole Height reta
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height is stable under a signed baseline shift", "[ImageProcessing][Issue1874][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -334,6 +352,7 @@ TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height is stable under a s
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (2) Hand-computed behavior on a small 2D image: a flat background with two isolated dark dents. The dent
@@ -569,53 +588,55 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::C15Compatibility resident fractional minima produce watershed markers", "[ImageProcessing][C15Compatibility][Issue1874][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  const auto input = ip_test::BuildScalarValuesImage<uint8>(ds, {0, 1, 2, 3, 2, 1, 0});
-  c15_test::SetGeometry(ds);
+  DataStructure dataStructure;
+  const auto input = ip_test::BuildScalarValuesImage<uint8>(dataStructure, {0, 1, 2, 3, 2, 1, 0});
+  c15_test::SetGeometry(dataStructure);
   const ShapeType shape{1, 1, 7};
-  REQUIRE(c15_test::Read<uint8>(ds, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
-  const auto converted = c15_test::ConvertToFloat32(ds, input);
-  REQUIRE(c15_test::Read<float32>(ds, converted, shape, scope) == std::vector<float32>{0, 1, 2, 3, 2, 1, 0});
+  REQUIRE(c15_test::Read<uint8>(dataStructure, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  const auto converted = c15_test::ConvertToFloat32(dataStructure, input);
+  REQUIRE(c15_test::Read<float32>(dataStructure, converted, shape, scope) == std::vector<float32>{0, 1, 2, 3, 2, 1, 0});
   const HMinimaImageFilter minimaFilter;
   auto args = c15_test::ImageArguments(minimaFilter, converted, "RaisedMinima");
   args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(0.5));
   args.insertOrAssign(HMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-  c15_test::Execute(minimaFilter, ds, args, scope);
+  c15_test::Execute(minimaFilter, dataStructure, args, scope);
   const auto raised = input.replaceName("RaisedMinima");
   const std::vector<float32> expectedRaised{0.5F, 1, 2, 3, 2, 1, 0.5F};
-  REQUIRE(c15_test::Read<float32>(ds, raised, shape, scope) == expectedRaised);
+  REQUIRE(c15_test::Read<float32>(dataStructure, raised, shape, scope) == expectedRaised);
   const RegionalMinimaImageFilter regional;
   args = c15_test::ImageArguments(regional, raised, "RegionalMinima");
   args.insertOrAssign(RegionalMinimaImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1));
   args.insertOrAssign(RegionalMinimaImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0));
   args.insertOrAssign(RegionalMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
   args.insertOrAssign(RegionalMinimaImageFilter::k_FlatIsMinima_Key, std::make_any<bool>(true));
-  c15_test::Execute(regional, ds, args, scope);
+  c15_test::Execute(regional, dataStructure, args, scope);
   const auto regionalPath = input.replaceName("RegionalMinima");
-  REQUIRE(c15_test::Read<uint32>(ds, regionalPath, shape, scope) == std::vector<uint32>{1, 0, 0, 0, 0, 0, 1});
-  const auto markers = c15_test::Components(ds, regionalPath, "Markers");
+  REQUIRE(c15_test::Read<uint32>(dataStructure, regionalPath, shape, scope) == std::vector<uint32>{1, 0, 0, 0, 0, 0, 1});
+  const auto markers = c15_test::Components(dataStructure, regionalPath, "Markers");
   const std::vector<uint32> expectedMarkers{1, 0, 0, 0, 0, 0, 2};
-  REQUIRE(c15_test::Read<uint32>(ds, markers, shape, scope) == expectedMarkers);
+  REQUIRE(c15_test::Read<uint32>(dataStructure, markers, shape, scope) == expectedMarkers);
   const MorphologicalWatershedFromMarkersImageFilter watershed;
   args = c15_test::ImageArguments(watershed, raised, "Basins");
   args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markers));
   args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
   args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
   args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  c15_test::ExecuteChecked(watershed, ds, args);
-  const auto labels = c15_test::Read<uint32>(ds, input.replaceName("Basins"), shape, scope);
+  c15_test::ExecuteChecked(watershed, dataStructure, args);
+  const auto labels = c15_test::Read<uint32>(dataStructure, input.replaceName("Basins"), shape, scope);
   // The unique central ridge separates three cells in each basin. Zero marks the watershed line.
   REQUIRE(labels == std::vector<uint32>{1, 1, 1, 0, 2, 2, 2});
   REQUIRE(std::count(labels.begin(), labels.end(), uint32{1}) == 3);
   REQUIRE(std::count(labels.begin(), labels.end(), uint32{2}) == 3);
-  REQUIRE(c15_test::Read<float32>(ds, raised, shape, scope) == expectedRaised);
-  REQUIRE(c15_test::Read<uint32>(ds, markers, shape, scope) == expectedMarkers);
-  REQUIRE(c15_test::Read<uint8>(ds, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
-  c15_test::CheckGeometry(ds, {7, 1, 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(c15_test::Read<float32>(dataStructure, raised, shape, scope) == expectedRaised);
+  REQUIRE(c15_test::Read<uint32>(dataStructure, markers, shape, scope) == expectedMarkers);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  c15_test::CheckGeometry(dataStructure, {7, 1, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

@@ -34,6 +34,7 @@ public:
   static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
   static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
   static constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
   static constexpr StringLiteral k_ProvisionalLabelLimitHandling_Key = "provisional_label_limit_handling_index";
 
   std::string name() const override;

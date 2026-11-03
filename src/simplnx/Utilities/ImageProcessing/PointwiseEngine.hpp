@@ -189,6 +189,7 @@ struct PointwiseMapBody
 {
   const T* inputBuffer;
   U* outputBuffer;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members) -- Synchronous workers borrow one callable without copying its state.
   const MapOpT& mapOp;
   const std::atomic_bool& shouldCancel;
 

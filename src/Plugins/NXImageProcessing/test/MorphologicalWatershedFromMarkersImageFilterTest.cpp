@@ -69,11 +69,13 @@ Arguments createMarkerLineArguments(DataStructure& dataStructure, const std::vec
   const auto inputPath = cellPath.createChildPath("Input");
   const auto markerPath = cellPath.createChildPath("Marker");
   auto* geometryPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(geometryPtr != nullptr);
   geometryPtr->setDimensions({markers.size(), 1, 1});
   geometryPtr->setSpacing({1.0F, 1.0F, 1.0F});
   geometryPtr->setOrigin({0.0F, 0.0F, 0.0F});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, geometryPtr->getId());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(cellDataPtr != nullptr);
   geometryPtr->setCellData(*cellDataPtr);
 
@@ -85,22 +87,32 @@ Arguments createMarkerLineArguments(DataStructure& dataStructure, const std::vec
   {
     markerStorePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, markerPath, tupleShape, componentShape);
   }
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputStorePtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(markerStorePtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputStorePtr->getStoreType() == IDataStore::StoreType::InMemory);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(markerStorePtr->getStoreType() == IDataStore::StoreType::InMemory);
   auto* inputArrayPtr = Float32Array::Create(dataStructure, inputPath.getTargetName(), inputStorePtr, cellDataPtr->getId());
   auto* markerArrayPtr = DataArray<T>::Create(dataStructure, markerPath.getTargetName(), markerStorePtr, cellDataPtr->getId());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(markerArrayPtr != nullptr);
   for(usize index = 0; index < markers.size(); ++index)
   {
     inputStorePtr->setValue(index, 0.0F);
     markerStorePtr->setValue(index, markers.at(index));
   }
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr->getTupleShape() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(markerArrayPtr->getTupleShape() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(inputArrayPtr->getComponentShape() == componentShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(markerArrayPtr->getComponentShape() == componentShape);
 
   Arguments args;
@@ -121,12 +133,18 @@ Arguments createSinglePixelMarkerArguments(DataStructure& dataStructure, uint64 
 void requireSinglePixelMarkerPreflight(const WSFilter& filter, const DataStructure& dataStructure, const Arguments& args)
 {
   const auto result = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(result.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::uint64);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == ShapeType{1, 1, 1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == ShapeType{1});
 }
 
@@ -135,9 +153,13 @@ void requireSinglePixelMarkerOutput(const DataStructure& dataStructure)
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getDataType() == DataType::uint64);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getTupleShape() == ShapeType{1, 1, 1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getComponentShape() == ShapeType{1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -150,12 +172,18 @@ void requireMarkerLine(const std::vector<T>& markers, const std::vector<T>& expe
   args.insertOrAssign(WSFilter::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(handling));
   const WSFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == GetDataType<T>());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == ShapeType{1, 1, markers.size()});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == ShapeType{1});
   bool enteredFlood = false;
   const IFilter::MessageHandler handler{[&enteredFlood](const IFilter::Message& message) { enteredFlood |= message.message == "Computing Watershed From Markers"; }};
@@ -163,33 +191,47 @@ void requireMarkerLine(const std::vector<T>& markers, const std::vector<T>& expe
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
   if(handling == 0 && changedCount != 0)
   {
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.errors().size() == 1);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.errors().front().code == -79073);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.errors().front().message.find("Image Geometry/CellData/Marker") != std::string::npos);
     REQUIRE_FALSE(enteredFlood);
     return;
   }
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(enteredFlood);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.result.warnings().size() == (changedCount == 0 ? 0 : 1));
   if(changedCount != 0)
   {
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.warnings().front().code == 79074);
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.warnings().front().message.find(std::to_string(changedCount) + " changed marker occurrence(s)") != std::string::npos);
   }
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   const IDataArray* outputBasePtr = nullptr;
   REQUIRE_NOTHROW(outputBasePtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputBasePtr->getDataType() == GetDataType<T>());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputBasePtr->getTupleShape() == ShapeType{1, 1, markers.size()});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputBasePtr->getComponentShape() == ShapeType{1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputBasePtr->getStoreType() == IDataStore::StoreType::InMemory);
   const DataArray<T>* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(expected.size() == markers.size());
   for(usize index = 0; index < expected.size(); ++index)
   {
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(outputArrayPtr->getDataStoreRef().getValue(index) == expected.at(index));
   }
 }
@@ -401,6 +443,7 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker conversion policy defaults to Error", "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -426,7 +469,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
     REQUIRE(tooltip.find(termPtr) != std::string::npos);
   }
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: default Error rejects a changed uint64 marker before flooding",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -457,6 +502,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: defaul
   REQUIRE(result.result.errors().front().message.find("4294967297") != std::string::npos);
   REQUIRE_FALSE(enteredFlood);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32_MAX marker remains valid with uint64 output",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
@@ -472,11 +518,13 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32
   const WSFilter filter;
   requireSinglePixelMarkerPreflight(filter, dataStructure, args);
   const auto result = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   requireSinglePixelMarkerOutput(dataStructure);
   const UInt64Array* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"Image Geometry", "CellData", "Output"})));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getDataStoreRef().getValue(0) == uint64{4294967295ULL});
 }
 
@@ -541,6 +589,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias 
   requireMarkerLine<uint64>({4294967297ULL, 0, 4294967297ULL}, {1, 1, 1}, handling, markWatershedLine, fullyConnected, 2);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker copy checks chunk boundaries before writing",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -555,7 +604,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
   DataStructure dataStructure;
   createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, markerStorePtr);
   MarkerTransferStore<uint32> destination(valueCount);
-  std::atomic_bool shouldCancel = false;
+  const std::atomic_bool shouldCancel = false;
   const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel, handling);
   const std::string* messagePtr = nullptr;
   if(handling == ImageProcessing::MarkerIdConversionHandling::Error)
@@ -577,11 +626,13 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
   REQUIRE(messagePtr->find("flat index " + std::to_string(changedIndex)) != std::string::npos);
   REQUIRE(messagePtr->find("native ID 4294967297 restores as 1") != std::string::npos);
   REQUIRE(messagePtr->find("1 changed marker occurrence(s)") != std::string::npos);
-  REQUIRE(markerStorePtr->readCount() == (handling == ImageProcessing::MarkerIdConversionHandling::Error ? changedIndex / 65536 + 1 : 2));
+  REQUIRE(markerStorePtr->readCount() == (handling == ImageProcessing::MarkerIdConversionHandling::Error ? (changedIndex / 65536) + 1 : 2));
   REQUIRE(markerStorePtr->largestRead() <= 65536);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invalid policy is rejected before execution", "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -597,7 +648,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invali
   REQUIRE(dataStructure.getData(DataPath({"Image Geometry", "CellData", "Output"})) == nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: diagnostic context keeps exact 64-bit extrema",
                    "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
 {
@@ -630,7 +683,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilte
   REQUIRE(messagePtr->find("First change at flat index 1") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy cancellation retains observed warning only",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -657,7 +712,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy c
   REQUIRE(destination.writeCount() == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy warning survives transfer failure or allocation failure",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -687,7 +744,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy w
     markerStorePtr->failRead(2, true);
     expectedCode = -79045;
   }
-  std::atomic_bool shouldCancel = false;
+  const std::atomic_bool shouldCancel = false;
   const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel,
                                                                          ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -700,7 +757,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy w
   REQUIRE(destination.writeCount() == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conversion warning survives later facade outcomes",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -760,7 +819,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conver
   REQUIRE(result.warnings().front().code == 79074);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: successful transfer warnings survive later marker-copy failure",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -789,7 +850,9 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: succes
   REQUIRE(destination.writeCount() == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restoration retains transfer warnings through a short final chunk",
           "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
@@ -835,6 +898,7 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restor
   REQUIRE(outputStorePtr->writeCount() == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (4) Preflight guards: a multi-component grayscale is rejected (requireScalar); a non-integer (float32) marker is
