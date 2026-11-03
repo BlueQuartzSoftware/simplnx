@@ -88,9 +88,11 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
   constexpr usize targetPageBytes = 1024 * 1024;
   const usize maskBytes = maskArray == nullptr ? 0 : (maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8));
   const usize pageCount = std::min(count, std::max<usize>(1, targetPageBytes / (sizeof(T) + maskBytes)));
+  // Scalar input can use bool. The store needs a contiguous bool buffer, which std::vector<bool> cannot provide.
   auto values = std::make_unique<T[]>(pageCount);
+  // The Boolean mask store also needs a contiguous bool buffer.
   std::unique_ptr<bool[]> boolMask;
-  std::unique_ptr<uint8[]> byteMask;
+  std::unique_ptr<std::vector<uint8>> byteMask;
   if(maskArray != nullptr)
   {
     if(maskArray->getDataType() == DataType::boolean)
@@ -99,7 +101,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
     }
     else
     {
-      byteMask = std::make_unique<uint8[]>(pageCount);
+      byteMask = std::make_unique<std::vector<uint8>>(pageCount);
     }
   }
   Range<T> range;
@@ -125,7 +127,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
     }
     else if(byteMask != nullptr)
     {
-      status = MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>().copyIntoBuffer(offset, nonstd::span<uint8>(byteMask.get(), size)));
+      status = MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>().copyIntoBuffer(offset, nonstd::span<uint8>(byteMask->data(), size)));
     }
     if(status.invalid())
     {
@@ -138,7 +140,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
       {
         if(!std::isfinite(value))
         {
-          const bool selected = boolMask != nullptr ? boolMask[index] : (byteMask == nullptr || byteMask[index] != 0);
+          const bool selected = boolMask != nullptr ? boolMask[index] : (byteMask == nullptr || (*byteMask)[index] != 0);
           if(selected)
           {
             if(policy == 0)
