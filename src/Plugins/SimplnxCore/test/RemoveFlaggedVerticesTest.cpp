@@ -549,6 +549,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON Feature AM errors"
   SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
   REQUIRE(notChild.outputActions.errors().size() == 1);
   CHECK(notChild.outputActions.errors().front().code == -67421);
+  CHECK(notChild.outputActions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
 
   args.insertOrAssign(RemoveFlaggedVerticesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Vertex", "Vertex Data"})));
   auto isVertexAm = filter.preflight(ds, args);

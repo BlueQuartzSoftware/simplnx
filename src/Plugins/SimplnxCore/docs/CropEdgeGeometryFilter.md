@@ -62,7 +62,7 @@ The preflight value **Cleared Feature Data** lists the full paths of the arrays 
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Edge Geometry*. It must not be the geometry's Edge or Vertex Attribute Matrix.
 
-- **-67411**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select a matrix directly under that geometry.
+- **-67411**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-67412**: The selected matrix is the geometry's Edge or Vertex Attribute Matrix. Select the matrix that holds feature data, or turn Clear off.
 - **-67413**: With Renumber on, Edge Feature Ids must be in the selected geometry's Edge Attribute Matrix. Select the array from that matrix.
 - **-67414**: With Renumber on, Edge Feature Ids must have one tuple per edge. Select an array with the same tuple count as the edge count.

@@ -34,7 +34,7 @@ Preflight lists removed arrays under **Cleared Feature Data**. With clearing off
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of the input Vertex Geometry. It must not be the geometry's Vertex Attribute Matrix. Preflight can report these errors:
 
-- **-67421**: The Feature Attribute Matrix is not a direct child of the selected Vertex Geometry. Select a matrix directly under that geometry.
+- **-67421**: The Feature Attribute Matrix is not a direct child of the selected Vertex Geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-67422**: The selected matrix is the geometry's Vertex Attribute Matrix. Select the matrix that holds Feature data, or turn Clear off.
 - **-67423**: Renumber is on, and *Vertex Feature Ids* is not in the geometry's Vertex Attribute Matrix. Select the array from that matrix.
 - **-67424**: Renumber is on, and *Vertex Feature Ids* does not have one tuple per vertex. Select an array with one tuple per vertex.
