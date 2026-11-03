@@ -1,5 +1,6 @@
 #include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -13,6 +14,7 @@
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -23,6 +25,8 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <sstream>
 
@@ -43,6 +47,23 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   const bool pTranslateGeometryToGlobalOrigin = inputValues.TranslateGeometryToGlobalOrigin;
   const bool saveTransform = inputValues.SaveTransformMatrix;
   const DataPath& transformMatrixDataPath = inputValues.TransformMatrixPath;
+
+  if(pTransformationMatrixTypeValue == detail::k_PrecomputedTransformationMatrixIdx)
+  {
+    const auto* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
+    if(nullptr == precomputedMatrixPtr)
+    {
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
+    }
+    const auto totalElements = precomputedMatrixPtr->getNumberOfTuples() * precomputedMatrixPtr->getNumberOfComponents();
+    if(totalElements != 16)
+    {
+      return {.outputActions = MakeErrorResult<OutputActions>(
+                  -82019, fmt::format("Precomputed transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
+                                      pComputedTransformationMatrixPath.toString(), totalElements, precomputedMatrixPtr->getNumberOfTuples(), precomputedMatrixPtr->getNumberOfComponents()))};
+    }
+  }
 
   Result<OutputActions> resultOutputActions;
 
@@ -74,19 +95,6 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
     case detail::k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
     {
-      const auto* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
-      if(nullptr == precomputedMatrixPtr)
-      {
-        return {
-            MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
-      }
-      auto totalElements = precomputedMatrixPtr->getNumberOfTuples() * precomputedMatrixPtr->getNumberOfComponents();
-      if(totalElements != 16)
-      {
-        return {MakeErrorResult<OutputActions>(
-            -82019, fmt::format("Precomputed transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
-                                pComputedTransformationMatrixPath.toString(), totalElements, precomputedMatrixPtr->getNumberOfTuples(), precomputedMatrixPtr->getNumberOfComponents()))};
-      }
       transformationMatrixDesc = k_UnknownPrecomputedMatrixDescription;
       break;
     }
