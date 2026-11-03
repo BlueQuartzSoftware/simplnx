@@ -11,6 +11,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <cmath>
 #include <filesystem>
 
@@ -184,4 +185,53 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsListFilter: Nonzero top row", "[SimplnxCore][AlignSectionsListFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto inputType = GENERATE(0ULL, 1ULL);
+  const int64 sign = GENERATE(-1, 1);
+  CAPTURE(scenario, inputType, sign);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({3, 3, 4});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  auto* mask = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
+  REQUIRE(mask != nullptr);
+  auto* shifts = Int64Array::Create(dataStructure, "Shifts", std::make_shared<DataStore<int64>>(ShapeType{4}, ShapeType{2}, 0));
+  REQUIRE(shifts != nullptr);
+  // Descending cumulative offsets are sign * {1,0,-1,0} on both axes.
+  // Relative offsets are their differences, with row 0 as the initial offset.
+  // Each source mark is at (1 + offset, 1 + offset), so all outputs must be (1,1).
+  const std::array<int64, 4> cumulative = {1, 0, -1, 0};
+  const std::array<int64, 4> relative = {1, -1, -1, 1};
+  for(usize row = 0; row < 4; row++)
+  {
+    const usize coordinate = static_cast<usize>(1 + (sign * cumulative[row]));
+    (*mask)[((3 - row) * 9) + (coordinate * 3) + coordinate] = 1;
+    (*shifts)[row * 2] = sign * (inputType == 0 ? relative[row] : cumulative[row]);
+    (*shifts)[(row * 2) + 1] = (*shifts)[row * 2];
+  }
+  AlignSectionsListFilter filter;
+  Arguments args;
+  args.insertOrAssign(AlignSectionsListFilter::k_InputArrayType_Key, std::make_any<ChoicesParameter::ValueType>(inputType));
+  args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(AlignSectionsListFilter::k_ShiftsArrayPath_Key, std::make_any<DataPath>(DataPath({"Shifts"})));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(usize z = 0; z < 4; z++)
+  {
+    for(usize xy = 0; xy < 9; xy++)
+    {
+      CAPTURE(z, xy);
+      CHECK((*mask)[(z * 9) + xy] == (xy == 4 ? 1 : 0));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

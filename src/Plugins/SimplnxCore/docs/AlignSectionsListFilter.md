@@ -20,8 +20,10 @@ All shift values are in **cell (voxel) units**, not physical units. A shift of 3
 
 The input shifts can be provided in either format:
 
-- **Relative [0]**: Each shift describes the offset of section N relative to section N-1. The filter internally converts these to cumulative shifts before applying them.
+- **Relative [0]**: Each shift describes the offset of section N relative to section N-1. Row 0 supplies the initial offset of the highest-Z section. The filter adds each later relative shift to the previous cumulative shift.
 - **Cumulative [1]**: Each shift describes the absolute offset of section N from a fixed reference point.
+
+A nonzero row 0 now shifts the highest-Z section. Earlier versions ignored this row.
 
 ### Preparing Shift Data from a File
 
@@ -29,7 +31,7 @@ If your shifts are stored in an external file, you need to import them into a Da
 
 **Requirements:**
 - The number of shift entries must equal the number of slices (Z dimension of the geometry)
-- Slices must be ordered from bottom to top
+- Slices must be ordered from highest Z to lowest Z. Row 0 applies to the highest-Z section, including a nonzero shift
 
 **Recommended file format** (space-delimited, two values per line):
 
