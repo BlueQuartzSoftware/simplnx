@@ -147,7 +147,7 @@ Errors -67453 and -67454 are checked only when Clear and Renumber are both on.
 
 | Code | Cause | Correction |
 |---|---|---|
-| -67451 | The Feature Attribute Matrix is not a direct child of the selected geometry. | Select a Feature Attribute Matrix in that geometry. |
+| -67451 | The Feature Attribute Matrix is not a direct child of the selected geometry. | Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'. |
 | -67452 | The selected Feature Attribute Matrix holds Cell, Vertex, Edge, Face, or Polyhedron data. | Select the matrix that holds Feature data, or turn Clear off. |
 | -67453 | Feature Ids are outside the required Attribute Matrix. | For images, select Feature Ids in the selected Cell Attribute Matrix. For nodes, select an array in a Vertex, Edge, Face, or Polyhedron Attribute Matrix of the geometry. |
 | -67454 | The Feature Ids tuple count differs from the element count. | Select an array with one tuple per element. |

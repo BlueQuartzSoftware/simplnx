@@ -338,8 +338,9 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     }
     if(cellFeatureAttributeMatrixPath.getParent() != srcImagePath)
     {
-      return IFilter::MakePreflightErrorResult(
-          -55503, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+      return IFilter::MakePreflightErrorResult(-55503, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a "
+                                                                   "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                                   cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
     if(selectedCellData == srcCellFeatureData)
     {

@@ -299,8 +299,9 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(srcCellFeatureData == nullptr || cellFeatureAmPath.getParent() != srcImagePath)
     {
-      return {MakeErrorResult<OutputActions>(
-                  -50563, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAmPath.toString(), srcImagePath.toString())),
+      return {MakeErrorResult<OutputActions>(-50563, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a "
+                                                                 "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                                 cellFeatureAmPath.toString(), srcImagePath.toString())),
               preflightUpdatedValues};
     }
     if(srcImageGeomPtr->getCellData() == srcCellFeatureData)

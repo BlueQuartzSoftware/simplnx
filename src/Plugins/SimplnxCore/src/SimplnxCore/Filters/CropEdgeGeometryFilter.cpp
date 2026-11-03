@@ -279,8 +279,9 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     const auto* srcFeatureData = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
     if(srcFeatureData == nullptr || !srcEdgeGeom.contains(srcFeatureData))
     {
-      return {MakeErrorResult<OutputActions>(
-                  -67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'.", featureAmPath.toString(), srcEdgeGeomPath.toString())),
+      return {MakeErrorResult<OutputActions>(-67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
+                                                                 "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                                 featureAmPath.toString(), srcEdgeGeomPath.toString())),
               preflightUpdatedValues};
     }
     if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureData || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureData)

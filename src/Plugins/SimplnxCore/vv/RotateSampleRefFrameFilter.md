@@ -77,7 +77,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | 12 | OOC boundary | 1MiB-page permutation oracle | `real HDF5 1MiB-page permutation oracle` — independent expected outputs on actual HDF5 stores |
 | 13 | Feature AM | Clear OFF copies non-Cell matrices unchanged and reports "Feature Data Not Cleared"; selection is ignored | `Clear OFF copies Feature AM unchanged` |
 | 14 | Feature AM | Clear ON recreates source shape with zero children and reports all cleared paths; Ensemble unchanged | `Clear ON preflight`, `Clear ON execute` |
-| 15 | Feature AM | Matrix outside or nested below geometry is not a direct child → `-67441` | `Clear ON requires a direct child Feature AM` (both sections assert code) |
+| 15 | Feature AM | Matrix outside or nested below geometry is not a direct child → `-67441` | `Clear ON requires a direct child Feature AM` (both sections assert code and corrective hint) |
 | 16 | Feature AM | Selected matrix is the Cell AM → `-67442` | `Clear ON rejects the Cell AM` (code asserted) |
 | 17 | Feature AM | Selection through a second parent is accepted; all paths excluded from generic copy, also a link inside another child group | `Clear ON accepts shared parent paths`, `Feature AM nested alias regression` |
 | 18 | Feature AM | Clear ON with deferred in-place rename/delete keeps empty matrix at source path | `Clear ON in place` |
@@ -104,7 +104,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | `SimplnxCore::RotateSampleRefFrame: Clear ON preflight` | new | Version 2 and default true; information lists numeric, string, and neighbor-list children, excludes Ensemble and renumber text; actions preserve shape {2,2}, four tuples, zero children. |
 | `SimplnxCore::RotateSampleRefFrame: Clear OFF copies Feature AM unchanged` | new | Missing disabled selection is ignored; information value is present without warnings; every Feature child and Ensemble value is copied exactly; rotated Ids {3,3,1,1}. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON execute` | new | Empty Feature matrix with source shape and count; source children retained; rotated Ids {3,3,1,1}; Ensemble {999,1}. |
-| `SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child Feature AM` | new | Outside and nested matrices each return exactly -67441. |
+| `SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child Feature AM` | new | Outside and nested matrices each return exactly -67441 and the corrective hint to select a direct child matrix or turn off Clear. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON rejects the Cell AM` | new | The geometry Cell AM returns exactly -67442. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent paths` | new | Select via Aliases/Cell Feature Data; empty output matrix, no duplicate copy; both source paths retain their children; cell and Ensemble oracle unchanged. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON in place` | new | Empty matrix at Input; dims {2,2,1}; exact Ids and Ensemble values; no Output, .Input, or .rotated_image_geometry remains. |

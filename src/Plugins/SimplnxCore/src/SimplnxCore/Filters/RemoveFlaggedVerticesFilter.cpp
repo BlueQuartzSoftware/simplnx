@@ -170,8 +170,9 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     const auto* sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
     if(sourceFeatureAm == nullptr || !inputVertexGeom.contains(sourceFeatureAm))
     {
-      return MakePreflightErrorResult(
-          -67421, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Vertex Geometry '{}'.", featureAmPath.toString(), vertexGeomPath.toString()));
+      return MakePreflightErrorResult(-67421, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Vertex Geometry '{}'. Select an Attribute Matrix that is a direct "
+                                                          "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                          featureAmPath.toString(), vertexGeomPath.toString()));
     }
     if(inputVertexGeom.getVertexAttributeMatrix() == sourceFeatureAm)
     {

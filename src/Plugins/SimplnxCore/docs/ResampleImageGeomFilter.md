@@ -77,7 +77,7 @@ The preflight value **Cleared Feature Data** lists the full paths of all childre
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. It must not be that geometry's Cell Attribute Matrix.
 
-- **-55503**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select a Feature Attribute Matrix directly under that geometry.
+- **-55503**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-55504**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds feature data, or turn Clear off for data without features.
 - **-55505**: Cell Feature Ids must be in the selected Image Geometry's Cell Attribute Matrix when Clear and Renumber are both on.
 

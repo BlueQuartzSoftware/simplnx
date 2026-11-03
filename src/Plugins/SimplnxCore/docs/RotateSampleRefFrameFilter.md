@@ -76,7 +76,7 @@ When Clear is off, **Feature Data Not Cleared** explains that copied Feature val
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. A selection through another parent is accepted if it refers to that same matrix. It must not be the geometry's Cell Attribute Matrix.
 
-- **-67441**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select a matrix directly under that geometry. If the geometry has no Feature Attribute Matrix, turn Clear off.
+- **-67441**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-67442**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds Feature data, or turn Clear off.
 
 % Auto generated parameter table will be inserted here
