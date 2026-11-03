@@ -4,14 +4,14 @@
 
 This **Filter** accepts one or more numeric **DataArray** inputs and generates corresponding histogram **DataArray** outputs within a target **DataGroup**. For each selected array, it divides the data range—using either automatically derived or user-defined minimum/maximum values—into equal-width bins and counts the number of elements per bin.
 
-Optionally, a mask **DataArray** can be provided to include only specific elements in the histogram computation.
+Each histogram combines all components of the selected input array. An optional scalar Boolean or UInt8 mask selects entire tuples. A nonzero mask value includes every component of the corresponding tuple; zero excludes every component. The mask must have the same number of tuples as each selected input array. The mask also applies to the automatic range and modal values.
 
 The created histogram arrays are written into the target **DataGroup**. For each input array the following arrays are produced:
 
 - **Counts DataArray**: A tuple for each bin representing the number of elements in that bin.
 - **Bin Ranges DataArray**: A two-component tuple per bin defining the inclusive lower bound and exclusive upper bound. The bin bounds carry the same units as the input array (for example, if the input array is in micrometers, the bin bounds are in micrometers).
-- **Most Populated Bin DataArray**: Reports the index of the bin that has the most values.
-- **Modal Bin Ranges NeighborList** (optional): Specifies the inclusive lower and exclusive upper bound bin indices containing the input data's *mode(s)*. The *mode* is the value (or values) that occurs most frequently in the data. Because there can be multiple modes, this list may include more than two entries.
+- **Most Populated Bin DataArray**: Reports the index and count of the first bin that has the most values.
+- **Modal Bin Ranges NeighborList** (optional): Stores two range values for each mode. A mode is a value that occurs most often in the selected data. Multiple modes produce multiple pairs. The filter uses a legacy range calculation for these pairs, so they can differ from the stored bin ranges.
 
 ### Bin Count
 
