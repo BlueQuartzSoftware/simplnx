@@ -39,6 +39,7 @@ instead.
 24. [Test a transfer failure after an earlier batch succeeded][kb-24]
 25. [Give Catch2 a bool when you compare file times][kb-25]
 26. [Never put a semicolon in a Catch2 test case name][kb-26]
+27. [Build code that uses the test harness only when the tests are built][kb-27]
 
 [kb-1]: #1-record-an-object-in-the-writer-id-map-only-when-the-written-datastructure-owns-it
 [kb-2]: #2-check-the-hdf5-file-close-before-you-report-a-successful-save
@@ -62,6 +63,7 @@ instead.
 [kb-24]: #24-test-a-transfer-failure-after-an-earlier-batch-succeeded
 [kb-25]: #25-give-catch2-a-bool-when-you-compare-file-times
 [kb-26]: #26-never-put-a-semicolon-in-a-catch2-test-case-name
+[kb-27]: #27-build-code-that-uses-the-test-harness-only-when-the-tests-are-built
 
 ---
 
@@ -731,6 +733,57 @@ under CTest, while CTest reported their partial entries as passed. Issue #1898; 
   argument of `TEST_CASE_METHOD`.
 - A CTest entry whose name ends or starts in the middle of a phrase, such as one ending in `(safeBorder=false`, and
   whose output says `No test cases matched`.
+
+---
+
+## 27. Build code that uses the test harness only when the tests are built
+
+**Rule:** add a target that uses test infrastructure inside the `if(SIMPLNX_BUILD_TESTS)` block of its `CMakeLists.txt`.
+Test infrastructure is a generated `<Plugin>_test_dirs.hpp`, `simplnx/UnitTest/UnitTestCommon.hpp`, Catch2 or a test
+helper header. Typical targets are a benchmark, a verifier or a developer tool. Do not give such a target its own option
+that can be ON while `SIMPLNX_BUILD_TESTS` is OFF.
+
+**Pattern to use:**
+
+```cmake
+if(SIMPLNX_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+
+  # Uses the golden-test harness and the generated test-dirs header, so it is added after the test subdir.
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
+endif()
+```
+
+**Pattern to avoid:**
+
+```cmake
+if(SIMPLNX_BUILD_TESTS)
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+endif()
+
+option(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool" ON)
+if(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK)
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
+endif()
+```
+
+**Why:** the plugin's test setup generates `<Plugin>_test_dirs.hpp` and finds Catch2, and it runs only when
+`SIMPLNX_BUILD_TESTS` is ON. A separate option that defaults to ON keeps the target in a build with the tests OFF, and
+the target then fails to compile because its test headers do not exist. CI builds with the tests ON, so it does not
+catch the failure.
+
+**How it showed up:** a DREAM3D-NX build with `DREAM3D_BUILD_TESTS=OFF` (which also turns `SIMPLNX_BUILD_TESTS` off)
+failed in `ImageProcessingBenchmark`. `ItkGoldenTestUtils.hpp` could not include
+`ImageProcessing/ImageProcessing_test_dirs.hpp`. PR #1859 removed the benchmark option and builds the benchmark inside
+the `SIMPLNX_BUILD_TESTS` block.
+
+**How to recognize it next time:**
+
+- An `add_subdirectory()` or `add_executable()` outside the `SIMPLNX_BUILD_TESTS` block whose sources include
+  `*_test_dirs.hpp`, `UnitTestCommon.hpp`, `catch2/catch.hpp` or a header from a `test/` folder.
+- An `option(... ON)` that gates a tool built from test sources.
+- `fatal error: '<Plugin>/<Plugin>_test_dirs.hpp' file not found` in a build configured with the tests OFF.
 
 ---
 
