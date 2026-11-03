@@ -942,8 +942,8 @@ Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const
   static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
   const usize size = input.getSize();
   chunkValues = std::max<usize>(1, chunkValues);
-  auto inputBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
-  auto reconstructionBuffer = std::make_unique_for_overwrite<T[]>(std::min(chunkValues, size));
+  auto inputBuffer = std::make_unique<std::vector<T>>(std::min(chunkValues, size));
+  auto reconstructionBuffer = std::make_unique<std::vector<T>>(std::min(chunkValues, size));
   Result<> accumulatedResult;
   for(usize start = 0; start < size; start += chunkValues)
   {
@@ -952,22 +952,22 @@ Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const
       return accumulatedResult;
     }
     const usize count = std::min(chunkValues, size - start);
-    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count)));
+    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer.get(), count)));
+    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer.get(), reconstructionBuffer.get(), inputBuffer.get(), count, start, inputPath));
+    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer->data(), reconstructionBuffer->data(), inputBuffer->data(), count, start, inputPath));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer.get(), count)));
+    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;

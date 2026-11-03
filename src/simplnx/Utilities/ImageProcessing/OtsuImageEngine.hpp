@@ -243,7 +243,9 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
   auto plan = ReserveOtsuBuffers(total, sizeof(T) + (maskPtr == nullptr ? 0 : sizeof(MaskT)), options.TargetBytes,
                                  input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore),
                                  parallelRange ? sizeof(OtsuFloatingRangeSummary<T>) : 0);
+  // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
   auto valuesPtr = std::make_unique_for_overwrite<T[]>(plan.Values);
+  // MaskT may be bool and must provide contiguous values for store transfers.
   auto maskValuesPtr = maskPtr == nullptr ? nullptr : std::make_unique_for_overwrite<MaskT[]>(plan.Values);
   for(usize start = 0; start < total;)
   {
@@ -391,7 +393,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   T minValue{};
   T maxValue{};
   constexpr usize ringSize = 65536;
-  std::unique_ptr<detail::OtsuFrequencyEntry<T>[]> frequenciesPtr;
+  std::unique_ptr<std::vector<detail::OtsuFrequencyEntry<T>>> frequenciesPtr;
   CacheMemoryBudgetManager::WorkingMemoryReservation ringReservation;
   using CompactRangeType = std::conditional_t<std::is_integral_v<T>, bool, const bool>;
   CompactRangeType compactRange = false;
@@ -406,7 +408,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
     compactRange = !external || ringReservation.sizeBytes() >= ringBytes;
     if(compactRange)
     {
-      frequenciesPtr = std::make_unique<detail::OtsuFrequencyEntry<T>[]>(ringSize);
+      frequenciesPtr = std::make_unique<std::vector<detail::OtsuFrequencyEntry<T>>>(ringSize);
     }
     else
     {
@@ -479,7 +481,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
                 compactRange = (detail::IntegralMonotonicKey(maxValue) - detail::IntegralMonotonicKey(minValue)) <= static_cast<KeyType>(ringSize - 1);
                 if(compactRange)
                 {
-                  auto& entry = frequenciesPtr[static_cast<usize>(key & static_cast<KeyType>(ringSize - 1))];
+                  auto& entry = (*frequenciesPtr)[static_cast<usize>(key & static_cast<KeyType>(ringSize - 1))];
                   if(entry.Count != 0 && entry.Value != value)
                   {
                     compactRange = false;
@@ -535,7 +537,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
       {
         return ConvertResultTo(std::move(rangeResult), std::move(result));
       }
-      const auto& entry = frequenciesPtr[i];
+      const auto& entry = (*frequenciesPtr)[i];
       if(entry.Count != 0)
       {
         Result<> addResult = detail::AccumulateCheckedOtsuValue(histogram, entry.Value, minValue, maxValue, entry.Count);
@@ -706,9 +708,11 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
     auto plan = detail::ReserveOtsuBuffers(input.getSize(), sizeof(T) + sizeof(MaskT) + sizeof(uint8), options.TargetBytes,
                                            input.getStoreType() == IDataStore::StoreType::OutOfCore || maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore ||
                                                output.getStoreType() == IDataStore::StoreType::OutOfCore);
+    // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
     auto valuesPtr = std::make_unique_for_overwrite<T[]>(plan.Values);
+    // MaskT may be bool and must provide contiguous values for store transfers.
     auto maskValuesPtr = std::make_unique_for_overwrite<MaskT[]>(plan.Values);
-    auto labelsPtr = std::make_unique_for_overwrite<uint8[]>(plan.Values);
+    auto labelsPtr = std::make_unique<std::vector<uint8>>(plan.Values);
     messageHandler.sendInfoMessage("Applying masked Otsu labels in bounded batches");
     ThrottledMessageHandler progress(messageHandler);
     progress.reset(1 + ((input.getSize() - 1) / plan.Values), "Applying masked Otsu labels");
@@ -748,14 +752,14 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
           {
             return;
           }
-          labelsPtr[i] = maskValuesPtr[i] ? ClassifyOtsuValue(valuesPtr[i], thresholds, options) : options.MaskedLabel;
+          (*labelsPtr)[i] = maskValuesPtr[i] ? ClassifyOtsuValue(valuesPtr[i], thresholds, options) : options.MaskedLabel;
         }
       });
       if(shouldCancel)
       {
         return result;
       }
-      Result<> writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(labelsPtr.get(), count));
+      Result<> writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(labelsPtr->data(), count));
       result = MergeResults(std::move(result), std::move(writeResult));
       if(result.invalid())
       {
