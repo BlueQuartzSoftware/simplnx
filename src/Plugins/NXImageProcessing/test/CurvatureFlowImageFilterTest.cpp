@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "ImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
@@ -930,4 +932,63 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident CurvatureFlowImageFilter feeds quantitative gradient", "[ImageProcessing][C15Compatibility][Issue1874][CurvatureFlowImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool step = GENERATE(false, true);
+  CAPTURE(step, scenario);
+  std::vector<float32> original(16 * 4, 4);
+  if(step)
+  {
+    for(usize index = 0; index < original.size(); ++index)
+    {
+      original[index] = index % 16 < 8 ? 0 : 1;
+    }
+  }
+  DataStructure ds;
+  const auto input = recon_test::BuildImageFromPattern<float32>(ds, 16, 4, 1, original);
+  c15_test::SetGeometry(ds);
+  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  const CurvatureFlowImageFilter filter;
+  auto args = c15_test::ImageArguments(filter, input, "Smoothed");
+  args.insertOrAssign(CurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<uint32>(1));
+  args.insertOrAssign(CurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(0.125));
+  c15_test::ExecuteChecked(filter, ds, args);
+  const auto smoothed = input.replaceName("Smoothed");
+  const auto values = c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope);
+  const GradientMagnitudeImageFilter gradient;
+  args = c15_test::ImageArguments(gradient, smoothed, "Gradient");
+  args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
+  c15_test::Execute(gradient, ds, args, scope);
+  const auto edges = c15_test::Read<float32>(ds, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  for(usize y = 0; y < 4; ++y)
+  {
+    for(usize x = 0; x < 16; ++x)
+    {
+      const usize index = y * 16 + x;
+      CAPTURE(x, y);
+      REQUIRE(std::isfinite(values[index]));
+      REQUIRE(std::isfinite(edges[index]));
+      if(!step)
+      {
+        REQUIRE(values[index] == Approx(4).margin(1.0e-6));
+        REQUIRE(std::abs(edges[index]) <= 1.0e-6);
+      }
+      else
+      {
+        // A planar step has zero transverse curvature. Its X central differences are 0.5 at columns 7 and 8.
+        REQUIRE(values[index] == Approx(original[index]).margin(1.0e-6));
+        const float32 expectedGradient = (x == 7 || x == 8) ? 0.5F : 0.0F;
+        REQUIRE(edges[index] == Approx(expectedGradient).margin(1.0e-6));
+      }
+    }
+  }
+  REQUIRE(c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  c15_test::CheckGeometry(ds, {16, 4, 1});
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
