@@ -206,6 +206,52 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: analytical Bool
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Colon delimiter writes colon separated rows", "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure = CreateAnalyticalDataStructure();
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_AnalyticalEulersPath));
+
+  const fs::path outputFile = fs::path(fmt::format("{}/StatsGenODF_Colon.txt", unit_test::k_BinaryTestOutputDir));
+  WriteStatsGenOdfAngleFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputFile));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Weight_Key, std::make_any<float32>(2.5F));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Sigma_Key, std::make_any<int32>(3));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_ColonDelimiter));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AnalyticalEulersPath));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_AnalyticalPhasesPath));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_AnalyticalBoolMaskPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // The mask keeps (0, pi/2, pi) in phase 1 and (pi/2, 0, pi/2) in phase 2.
+  // Multiplying by 180/pi gives (0, 90, 180) and (90, 0, 90) degrees.
+  // Append the supplied weight 2.5 and sigma 3, separating all five values with ':'.
+  const std::array<std::string, 2> expectedRows = {"0.00000000:90.00000000:180.00000000:2.50000000:3", "90.00000000:0.00000000:90.00000000:2.50000000:3"};
+  for(usize phaseIndex = 0; phaseIndex < expectedRows.size(); phaseIndex++)
+  {
+    CAPTURE(phaseIndex);
+    const auto lines = ReadLines(outputFile.parent_path() / fmt::format("StatsGenODF_Colon_Phase_{}.txt", phaseIndex + 1));
+    REQUIRE(lines.size() == 8);
+    CHECK(lines[3] == "# Angle Data is Colon delimited.");
+    CHECK(lines[4] == "# Euler angles are expressed in degrees");
+    CHECK(lines[6] == "Angle Count:1");
+    CHECK(lines[7] == expectedRows[phaseIndex]);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter Execution", "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter]")
 {
   UnitTest::LoadPlugins();
