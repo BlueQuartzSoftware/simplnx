@@ -981,8 +981,8 @@ template <class K>
  * @return Error if the destination range or component count is not valid.
  * @pre The source tuple range is valid.
  *
- * Out-of-core arrays use a fixed 65,536-element buffer. Resident arrays keep
- * the single std::copy fast path.
+ * Buffered copies use a fixed 65,536-element buffer. Overlapping ranges in
+ * the same store are copied backward when the destination follows the source.
  */
 template <class K>
 [[nodiscard]] Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize srcTupleOffset, usize totalSrcTuples)
@@ -1010,10 +1010,12 @@ template <class K>
   }
 
   const usize numElements = totalSrcTuples * sourceNumComponents;
+  bool copyBackward = &inputArray == &destArray && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
   if constexpr(requires { inputArray.getDataStoreRef(); })
   {
     const auto& srcStore = inputArray.getDataStoreRef();
     auto& dstStore = destArray.getDataStoreRef();
+    copyBackward = &srcStore == &dstStore && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
     if(srcStore.getStoreType() == IDataStore::StoreType::OutOfCore || dstStore.getStoreType() == IDataStore::StoreType::OutOfCore)
     {
       using ValueType = typename std::remove_reference_t<decltype(srcStore)>::value_type;
@@ -1022,9 +1024,10 @@ template <class K>
       auto buffer = std::make_unique<ValueType[]>(std::min(numElements, k_ChunkSize));
       usize srcStart = srcTupleOffset * sourceNumComponents;
       usize dstStart = destTupleOffset * numComponents;
-      for(usize offset = 0; offset < numElements; offset += k_ChunkSize)
+      for(usize remaining = numElements; remaining > 0;)
       {
-        usize count = std::min(k_ChunkSize, numElements - offset);
+        const usize count = std::min(k_ChunkSize, remaining);
+        const usize offset = copyBackward ? remaining - count : numElements - remaining;
         auto readResult = srcStore.copyIntoBuffer(srcStart + offset, nonstd::span<ValueType>(buffer.get(), count));
         if(readResult.invalid())
         {
@@ -1035,6 +1038,7 @@ template <class K>
         {
           return writeResult;
         }
+        remaining -= count;
       }
     }
     else
@@ -1042,7 +1046,14 @@ template <class K>
       auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
       auto srcEnd = srcBegin + numElements;
       auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
-      std::copy(srcBegin, srcEnd, dstBegin);
+      if(copyBackward)
+      {
+        std::copy_backward(srcBegin, srcEnd, dstBegin + numElements);
+      }
+      else if(&srcStore != &dstStore || destTupleOffset != srcTupleOffset)
+      {
+        std::copy(srcBegin, srcEnd, dstBegin);
+      }
     }
   }
   else
@@ -1050,7 +1061,14 @@ template <class K>
     auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
     auto srcEnd = srcBegin + numElements;
     auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
-    std::copy(srcBegin, srcEnd, dstBegin);
+    if(copyBackward)
+    {
+      std::copy_backward(srcBegin, srcEnd, dstBegin + numElements);
+    }
+    else if(&inputArray != &destArray || destTupleOffset != srcTupleOffset)
+    {
+      std::copy(srcBegin, srcEnd, dstBegin);
+    }
   }
 
   return {};
