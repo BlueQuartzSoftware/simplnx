@@ -242,7 +242,8 @@ float32 Normalize(T value, T minimum, T maximum)
     const float64 low = static_cast<float64>(minimum);
     const float64 high = static_cast<float64>(maximum);
     const float64 current = static_cast<float64>(value);
-    if(low < 0 && high > 0 && high > std::numeric_limits<float64>::max() + low)
+    // The bound can round up, so scale at equality to avoid an overflowing width.
+    if(low < 0 && high > 0 && high >= std::numeric_limits<float64>::max() + low)
     {
       fraction = (current * 0.5 - low * 0.5) / (high * 0.5 - low * 0.5);
     }
