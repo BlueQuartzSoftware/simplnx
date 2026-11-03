@@ -114,6 +114,52 @@ void RequirePreflightWithoutCellAttributeMatrix(UnitTest::AlgorithmTestScope* al
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+struct SwapExemplarSides
+{
+  template <typename T>
+  void operator()(IDataArray& array, usize face) const
+  {
+    auto& typed = dynamic_cast<DataArray<T>&>(array);
+    const usize components = typed.getNumberOfComponents() / 2;
+    for(usize component = 0; component < components; component++)
+    {
+      const usize first = face * components * 2 + component;
+      const usize second = first + components;
+      const T value = typed[first];
+      typed[first] = typed[second];
+      typed[second] = value;
+    }
+  }
+};
+
+void CorrectLegacyExemplarTransferOrder(DataStructure& dataStructure, const DataPath& facePath)
+{
+  // The legacy exemplar transferred FeatureIds record the source side of every transferred tuple.
+  // Use those IDs, independently of the computed mesh, to align all exemplar tuples with Face Labels.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FeatureIds)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels)));
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FeatureIds));
+  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels));
+  auto& faces = dataStructure.getDataRefAs<AttributeMatrix>(facePath);
+  for(usize face = 0; face < labels.getNumberOfTuples(); face++)
+  {
+    if(labels[2 * face] >= 0 && labels[2 * face + 1] >= 0 && ids[2 * face] != labels[2 * face])
+    {
+      REQUIRE(ids[2 * face] == labels[2 * face + 1]);
+      REQUIRE(ids[2 * face + 1] == labels[2 * face]);
+      for(const auto& [id, object] : faces)
+      {
+        if(object->getName() != k_Face_Labels)
+        {
+          auto* array = dynamic_cast<IDataArray*>(object.get());
+          REQUIRE(array != nullptr);
+          ExecuteDataFunction(SwapExemplarSides{}, array->getDataType(), *array, face);
+        }
+      }
+    }
+  }
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Image Geometry without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
@@ -127,6 +173,96 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Image Geometry without a Cell At
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Rectilinear Grid without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   RequirePreflightWithoutCellAttributeMatrix<RectGridGeom>();
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Transferred sides match face labels", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const usize axis = GENERATE(0, 1, 2);
+  const bool ascending = GENERATE(false, true);
+  CAPTURE(scenario, axis, ascending);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  SizeVec3 dims = {1, 1, 1};
+  dims[axis] = 2;
+  image->setDimensions(dims);
+  image->setOrigin({0, 0, 0});
+  image->setSpacing({1, 1, 1});
+  const ShapeType shape = {dims[2], dims[1], dims[0]};
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(cells->getId());
+  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ids", shape, {1}, cells->getId());
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Cell Values", shape, {2}, cells->getId());
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {3}, image->getId());
+  REQUIRE(features != nullptr);
+  auto* featureValues = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {3}, {2}, features->getId());
+  REQUIRE(ids != nullptr);
+  REQUIRE(values != nullptr);
+  REQUIRE(featureValues != nullptr);
+  // Independent oracle: feature f owns cell tuple (10*f, 10*f+1) and feature tuple (100*f, 100*f+1).
+  // Two adjacent unit cubes have exactly two internal triangles, each with labels (1, 2).
+  for(usize cell = 0; cell < 2; cell++)
+  {
+    const int32 id = ascending ? static_cast<int32>(cell + 1) : static_cast<int32>(2 - cell);
+    (*ids)[cell] = id;
+    for(usize component = 0; component < 2; component++)
+    {
+      (*values)[2 * cell + component] = 10 * id + static_cast<int32>(component);
+    }
+  }
+  for(usize f = 0; f < 3; f++)
+  {
+    (*featureValues)[2 * f] = static_cast<int32>(100 * f);
+    (*featureValues)[2 * f + 1] = static_cast<int32>(100 * f + 1);
+  }
+  QuickSurfaceMeshFilter filter;
+  Arguments args;
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cells", "Ids"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({"Image", "Cells", "Cell Values"})}));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedFeatureDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath({"Image", "Features", "Feature Values"})}));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({"Mesh"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>("Faces"));
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath facePath({"Mesh", "Faces"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("FaceLabels")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("Cell Values")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("Feature Values")));
+  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("FaceLabels"));
+  const auto& transferredCells = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("Cell Values"));
+  const auto& transferredFeatures = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("Feature Values"));
+  usize internalFaces = 0;
+  for(usize face = 0; face < labels.getNumberOfTuples(); face++)
+  {
+    if(labels[2 * face] >= 0 && labels[2 * face + 1] >= 0)
+    {
+      internalFaces++;
+      CHECK(labels[2 * face] == 1);
+      CHECK(labels[2 * face + 1] == 2);
+    }
+    for(usize side = 0; side < 2; side++)
+    {
+      const int32 label = labels[2 * face + side];
+      for(usize component = 0; component < 2; component++)
+      {
+        const usize index = 4 * face + 2 * side + component;
+        CHECK(transferredCells[index] == (label == -1 ? 0 : 10 * label + static_cast<int32>(component)));
+        CHECK(transferredFeatures[index] == (label == -1 ? 0 : 100 * label + static_cast<int32>(component)));
+      }
+    }
+  }
+  CHECK(internalFaces == 2);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning warnings", "[SimplnxCore][QuickSurfaceMeshFilter]")
@@ -303,6 +439,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CorrectLegacyExemplarTransferOrder(dataStructure, exemplarFaceAttrMatPath);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
 
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
@@ -400,6 +537,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CorrectLegacyExemplarTransferOrder(dataStructure, exemplarFaceAttrMatPath);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
 
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
@@ -497,6 +635,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CorrectLegacyExemplarTransferOrder(dataStructure, exemplarFaceAttrMatPath);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
 
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
@@ -594,6 +733,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CorrectLegacyExemplarTransferOrder(dataStructure, exemplarFaceAttrMatPath);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
 
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);

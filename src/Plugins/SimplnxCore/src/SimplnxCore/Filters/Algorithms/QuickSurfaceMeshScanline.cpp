@@ -1453,7 +1453,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid2);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh1Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh1, point, curFeature, neigh1Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh1, curFeature, neigh1Feature});
           }
           else
           {
@@ -1472,7 +1472,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid4);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh1Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh1, point, curFeature, neigh1Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh1, curFeature, neigh1Feature});
           }
           else
           {
@@ -1560,7 +1560,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid3);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh2Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh2, point, curFeature, neigh2Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh2, curFeature, neigh2Feature});
           }
           else
           {
@@ -1579,7 +1579,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid3);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh2Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh2, point, curFeature, neigh2Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh2, curFeature, neigh2Feature});
           }
           else
           {
@@ -1667,7 +1667,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid2);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh3Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh3, point, curFeature, neigh3Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh3, curFeature, neigh3Feature});
           }
           else
           {
@@ -1686,7 +1686,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
             triBuffer.push_back(nid4);
             faceLabelBuf.push_back(curFeature);
             faceLabelBuf.push_back(neigh3Feature);
-            ttArgsBuf.push_back({triangleIndex, neigh3, point, curFeature, neigh3Feature});
+            ttArgsBuf.push_back({triangleIndex, point, neigh3, curFeature, neigh3Feature});
           }
           else
           {
