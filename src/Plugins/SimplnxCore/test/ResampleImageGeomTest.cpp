@@ -7,6 +7,7 @@
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -1153,4 +1154,80 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
     REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regression", "[SimplnxCore][ResampleImageGeomFilter][NestedFeatureAlias]")
+{
+  UnitTest::LoadPlugins();
+  const bool clear = GENERATE(true, false);
+  const bool renumber = GENERATE(false, true);
+  auto ds = CreateFeatureResampleFixture();
+  const DataPath sourcePath({"Image"});
+  const DataPath outputPath({"Resampled"});
+  const auto featurePath = sourcePath.createChildPath("Cell Feature Data");
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  const auto featureId = features->getId();
+  const auto shape = features->getShape();
+  const auto countsPath = featurePath.createChildPath("NumElements");
+  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  std::vector<int32> originalCounts(counts.getSize());
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    originalCounts[i] = counts[i];
+  }
+  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
+  REQUIRE(nested != nullptr);
+  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
+  REQUIRE(keep != nullptr);
+  (*keep)[0] = 123;
+  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  auto* outside = DataGroup::Create(ds, "Outside");
+  REQUIRE(outside != nullptr);
+  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
+  const auto parents = ds.getData(featurePath)->getParentIds();
+  auto args = MakeFeatureResampleArgs(clear, renumber);
+  ResampleImageGeomFilter filter;
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool foundNestedCopy = false;
+  const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
+  for(const auto& action : preflight.outputActions.value().actions)
+  {
+    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
+    {
+      foundNestedCopy = true;
+      bool declaresFeature = false;
+      for(const auto& created : copy->getAllCreatedPaths())
+      {
+        if(created.rebase(nestedOutputPath, DataPath{}).has_value())
+        {
+          declaresFeature = true;
+        }
+      }
+      CHECK(declaresFeature == !clear);
+    }
+  }
+  REQUIRE(foundNestedCopy);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Cell Feature Data"));
+  REQUIRE(outputFeatures != nullptr);
+  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
+  CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
+  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getData(featurePath)->getId() == featureId);
+  CHECK(ds.getData(featurePath)->getParentIds() == parents);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getSize() == 3);
+  CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    if(!clear)
+    {
+      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+    }
+  }
 }
