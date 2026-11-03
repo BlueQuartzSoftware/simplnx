@@ -261,6 +261,25 @@ Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStruc
   return {};
 }
 
+Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
+                                                  std::string_view parameterName)
+{
+  const auto* gridGeomPtr = dataStructure.getDataAs<IGridGeometry>(geometryPath);
+  if(gridGeomPtr == nullptr || gridGeomPtr->getCellData() == nullptr)
+  {
+    return MakeErrorResult(
+        errorCode, fmt::format("The Attribute Matrix '{}' selected for **{}** requires a Cell Attribute Matrix in the selected grid geometry '{}'. Select a geometry with a Cell Attribute Matrix.",
+                               featureAttributeMatrixPath.toString(), parameterName, geometryPath.toString()));
+  }
+  const auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrixPtr == nullptr || featureAttributeMatrixPtr->getId() == gridGeomPtr->getCellData()->getId() || !gridGeomPtr->contains(featureAttributeMatrixPtr))
+  {
+    return MakeErrorResult(errorCode, fmt::format("The Attribute Matrix '{}' selected for **{}** must be a direct child of the selected geometry '{}' and must not be its Cell Attribute Matrix '{}'.",
+                                                  featureAttributeMatrixPath.toString(), parameterName, geometryPath.toString(), gridGeomPtr->getCellDataPath().toString()));
+  }
+  return {};
+}
+
 bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
 {
   std::set<nx::core::DataType> types;

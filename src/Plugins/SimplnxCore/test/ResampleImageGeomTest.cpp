@@ -335,13 +335,18 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON Feature AM errors", "[
   SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
   REQUIRE(notChild.outputActions.errors().size() == 1);
   CHECK(notChild.outputActions.errors().front().code == -55503);
-  CHECK(notChild.outputActions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
+  CHECK(notChild.outputActions.errors().front().message ==
+        "The Attribute Matrix 'Elsewhere' selected for **Feature Attribute Matrix** must be a direct child of the selected geometry 'Image' and must not be its Cell Attribute Matrix 'Image/Cell "
+        "Data'. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.");
 
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data"})));
   auto isCellAm = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.outputActions);
   REQUIRE(isCellAm.outputActions.errors().size() == 1);
-  CHECK(isCellAm.outputActions.errors().front().code == -55504);
+  CHECK(isCellAm.outputActions.errors().front().code == -55503);
+  CHECK(isCellAm.outputActions.errors().front().message ==
+        "The Attribute Matrix 'Image/Cell Data' selected for **Feature Attribute Matrix** must be a direct child of the selected geometry 'Image' and must not be its Cell Attribute Matrix "
+        "'Image/Cell Data'. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.");
 
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Missing"})));
   auto missing = filter.preflight(ds, args);
@@ -1231,4 +1236,33 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
       CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM selected through second parent", "[SimplnxCore][ResampleImageGeomFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = CreateFeatureResampleFixture();
+  const bool renumber = GENERATE(false, true);
+  auto* parent = DataGroup::Create(ds, "Alias");
+  REQUIRE(parent != nullptr);
+  const auto& source = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"}));
+  REQUIRE(ds.setAdditionalParent(source.getId(), parent->getId()));
+  auto args = MakeFeatureResampleArgs(true, renumber);
+  args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Alias", "Cell Feature Data"})));
+  ResampleImageGeomFilter filter;
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto& output = ds.getDataRefAs<AttributeMatrix>(DataPath({"Resampled", "Cell Feature Data"}));
+  CHECK(output.getSize() == 0);
+  CHECK(output.getShape() == ShapeType{renumber ? usize{3} : usize{5}});
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids.getNumberOfTuples() == 8);
+  for(usize i = 0; i < 8; ++i)
+  {
+    CHECK(ids[i] == (renumber ? (i % 2 == 0 ? 1 : 2) : (i % 2 == 0 ? 1 : 3)));
+  }
+  CHECK(source.getSize() == 3);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
