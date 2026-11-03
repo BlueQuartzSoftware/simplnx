@@ -136,6 +136,9 @@ ApplyTransformationToGeometryInputValues MakeTransformationInputValues(const Dat
   inputValues.InterpolationSelection = interpolationType;
   inputValues.TranslateGeometryToGlobalOrigin = centerOfRotation == std::array<float32, 3>{0.0f, 0.0f, 0.0f};
   inputValues.RemoveOriginalGeometry = true;
+  // MHA input has no Feature Attribute Matrix.
+  inputValues.ClearFeatureAttributeMatrix = false;
+  inputValues.RenumberFeatures = false;
   return inputValues;
 }
 
