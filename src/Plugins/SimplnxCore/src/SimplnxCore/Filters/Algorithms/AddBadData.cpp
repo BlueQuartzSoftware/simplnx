@@ -132,7 +132,7 @@ public:
   {
     auto& distancesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
     auto& distancesStore = distancesArray.getDataStoreRef();
-    const usize totalPoints = distancesStore.getSize();
+    const usize totalPoints = distancesStore.getNumberOfTuples();
     if(totalPoints == 0)
     {
       return {};
@@ -229,7 +229,7 @@ public:
       }
     }
 
-    const usize totalPoints = distancesStore.getSize();
+    const usize totalPoints = distancesStore.getNumberOfTuples();
     if(totalPoints == 0)
     {
       return {};
