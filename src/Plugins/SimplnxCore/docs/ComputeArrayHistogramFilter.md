@@ -11,7 +11,7 @@ The created histogram arrays are written into the target **DataGroup**. For each
 - **Counts DataArray**: A tuple for each bin representing the number of elements in that bin.
 - **Bin Ranges DataArray**: A two-component tuple per bin defining the inclusive lower bound and exclusive upper bound. The bin bounds carry the same units as the input array (for example, if the input array is in micrometers, the bin bounds are in micrometers).
 - **Most Populated Bin DataArray**: Reports the index and count of the first bin that has the most values.
-- **Modal Bin Ranges NeighborList** (optional): Stores two range values for each mode. A mode is a value that occurs most often in the selected data. Multiple modes produce multiple pairs. The filter uses a legacy range calculation for these pairs, so they can differ from the stored bin ranges.
+- **Modal Bin Ranges NeighborList** (optional): The *mode* is the value, or values, that occurs most frequently. Each modal entry is the stored lower/upper pair of the bin that counted a mode. A mode that falls outside the bins adds no pair. One pair is kept per mode, including duplicate pairs. For integer data, the stored bounds are rounded like Bin Ranges. For example, mode 3 can map to `{1,3}` when the bin width is 2.5. When the counting bin width has magnitude below `1E-10`, each mode instead gives the histogram's overall lower/upper bound.
 
 ### Bin Count
 

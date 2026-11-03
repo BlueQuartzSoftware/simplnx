@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/IO/Generic/IExternalSort.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -353,11 +354,11 @@ public:
                 if(modalPair.second == maxCount)
                 {
                   const Type mode = modalPair.first;
-                  const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
-                  if((modalBin >= 0) && (modalBin < m_NumBins))
+                  const auto modalRange = StatisticsCalculations::findModalBinRange(mode, histMin, increment, m_NumBins, nonstd::span<const Type>(ranges.data(), ranges.size()));
+                  if(modalRange.has_value())
                   {
-                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin]);
-                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin + 1]);
+                    m_ModalBinRangesList->addEntry(j, modalRange->first);
+                    m_ModalBinRangesList->addEntry(j, modalRange->second);
                   }
                 }
               }
@@ -571,60 +572,6 @@ template <typename T>
 bool isInHistogramRange(const T& value, const T& minimum, const T& maximum)
 {
   return !(value < minimum) && value < maximum;
-}
-
-/**
- * @brief Calculates a bin index without overflowing signed integral subtraction.
- * @tparam T Numeric value type.
- * @param value Value to bin.
- * @param minimum Histogram minimum.
- * @param increment Bin width.
- * @return Calculated bin index.
- *
- * The floating-point path handles signed differences that T cannot represent.
- */
-template <typename T>
-int32 calculateSafeBin(const T& value, const T& minimum, float32 increment)
-{
-  if constexpr(std::is_signed_v<T> && std::is_integral_v<T>)
-  {
-    if(value > 0 && minimum < 0 && value > std::numeric_limits<T>::max() + minimum)
-    {
-      return static_cast<int32>(std::floor((static_cast<float32>(value) - static_cast<float32>(minimum)) / increment));
-    }
-  }
-  return static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, minimum, increment));
-}
-
-/**
- * @brief Appends the bin-range pair associated with one modal value.
- * @tparam T Modal value type.
- * @param modalBinRanges Receives modal bin-range pairs.
- * @param feature Feature identifier.
- * @param value Modal value.
- * @param ranges Flat bin-range values.
- * @param bins Number of bins per feature.
- * @param minimum Inclusive histogram lower bound.
- * @param maximum Exclusive histogram upper bound.
- * @param increment Bin width.
- *
- * Values outside the histogram range are omitted. Each bin has a lower and upper bound
- * in the feature's flat range buffer.
- */
-template <typename T>
-void appendModalRange(NeighborList<T>& modalBinRanges, usize feature, const T& value, const T* ranges, usize bins, const T& minimum, const T& maximum, float32 increment)
-{
-  if(!isInHistogramRange(value, minimum, maximum))
-  {
-    return;
-  }
-  const int32 bin = calculateSafeBin(value, minimum, increment);
-  if(bin >= 0 && static_cast<usize>(bin) < bins)
-  {
-    const usize rangeOffset = feature * bins * 2 + 2 * static_cast<usize>(bin);
-    modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset]);
-    modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset + 1]);
-  }
 }
 
 /**
@@ -1078,7 +1025,7 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
         ++overflow;
         continue;
       }
-      const auto bin = calculateSafeBin(value, histogramMinimums[feature], increment);
+      const auto bin = StatisticsCalculations::CalculateBin<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(value, histogramMinimums[feature], increment);
       if(bin >= 0 && bin < numBins)
       {
         uint64& binCount = counts[feature * bins + static_cast<usize>(bin)];
@@ -1181,7 +1128,16 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
           if(featureId >= 0 && feature < numFeatures && std::fabs(increments[feature]) >= 1.0E-10F && count == maxCounts[feature])
           {
             const T maximum = inputValues.UserDefinedRange ? static_cast<T>(inputValues.MaxRange) : static_cast<T>(maximums[feature] + static_cast<T>(1));
-            appendModalRange(typedModalBinRanges, feature, value, ranges.get(), bins, histogramMinimums[feature], maximum, increments[feature]);
+            if(isInHistogramRange(value, histogramMinimums[feature], maximum))
+            {
+              const auto modalRange = StatisticsCalculations::findModalBinRange<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(
+                  value, histogramMinimums[feature], increments[feature], numBins, nonstd::span<const T>(ranges.get() + feature * bins * usize{2}, bins * usize{2}));
+              if(modalRange.has_value())
+              {
+                typedModalBinRanges.addEntry(static_cast<int32>(feature), modalRange->first);
+                typedModalBinRanges.addEntry(static_cast<int32>(feature), modalRange->second);
+              }
+            }
           }
         });
         if(scanResult.invalid() || shouldCancel)
@@ -1208,7 +1164,16 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
             if(count == maxCount)
             {
               const T maximum = inputValues.UserDefinedRange ? static_cast<T>(inputValues.MaxRange) : static_cast<T>(maximums[feature] + static_cast<T>(1));
-              appendModalRange(typedModalBinRanges, feature, value, ranges.get(), bins, histogramMinimums[feature], maximum, increments[feature]);
+              if(isInHistogramRange(value, histogramMinimums[feature], maximum))
+              {
+                const auto modalRange = StatisticsCalculations::findModalBinRange<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(
+                    value, histogramMinimums[feature], increments[feature], numBins, nonstd::span<const T>(ranges.get() + feature * bins * usize{2}, bins * usize{2}));
+                if(modalRange.has_value())
+                {
+                  typedModalBinRanges.addEntry(static_cast<int32>(feature), modalRange->first);
+                  typedModalBinRanges.addEntry(static_cast<int32>(feature), modalRange->second);
+                }
+              }
             }
           });
           if(scanResult.invalid() || shouldCancel)

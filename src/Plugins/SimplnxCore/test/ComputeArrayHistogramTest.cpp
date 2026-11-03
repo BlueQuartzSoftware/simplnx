@@ -85,6 +85,53 @@ Arguments CreateBinCountHistogramFixture(DataStructure& dataStructure, int32 num
   args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinRangeName_Key, std::make_any<std::string>("Ranges"));
   return args;
 }
+
+template <typename T>
+void CheckCustomModalHistogram(UnitTest::AlgorithmTestScope& scope, const std::vector<T>& values, float64 maximum, const std::array<uint64, 2>& expectedCounts, const std::array<T, 4>& expectedRanges,
+                               const std::vector<T>& expectedModalRanges)
+{
+  DataStructure dataStructure;
+  const DataPath inputPath({"Input"});
+  auto storePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, {values.size()}, {1});
+  auto* inputPtr = DataArray<T>::Create(dataStructure, "Input", storePtr);
+  REQUIRE(inputPtr != nullptr);
+  auto writeResult = storePtr->copyFromBuffer(0, nonstd::span<const T>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  ComputeArrayHistogramFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MinRange_Key, std::make_any<float64>(0));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MaxRange_Key, std::make_any<float64>(maximum));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({inputPath}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>("Counts"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinRangeName_Key, std::make_any<std::string>("Ranges"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoModalBinRangesName_Key, std::make_any<std::string>("Modal"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath({"Histograms", "\"Input\" Histogram"});
+  const UInt64Array* countsPtr = nullptr;
+  const DataArray<T>* rangesPtr = nullptr;
+  const NeighborList<T>* modalPtr = nullptr;
+  REQUIRE_NOTHROW(countsPtr = &dataStructure.getDataRefAs<UInt64Array>(outputPath.createChildPath("Counts")));
+  REQUIRE_NOTHROW(rangesPtr = &dataStructure.getDataRefAs<DataArray<T>>(outputPath.createChildPath("Ranges")));
+  REQUIRE_NOTHROW(modalPtr = &dataStructure.getDataRefAs<NeighborList<T>>(outputPath.createChildPath("Modal")));
+  std::array<uint64, 2> actualCounts = {};
+  std::array<T, 4> actualRanges = {};
+  auto countsResult = countsPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint64>(actualCounts.data(), actualCounts.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(countsResult);
+  auto rangesResult = rangesPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(actualRanges.data(), actualRanges.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(rangesResult);
+  CHECK(actualCounts == expectedCounts);
+  CHECK(actualRanges == expectedRanges);
+  CHECK(modalPtr->getList(0) == expectedModalRanges);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCore][ComputeArrayHistogram]")
@@ -236,7 +283,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
 
     REQUIRE(modalBinRangesVals.size() == 2);
     REQUIRE(modalBinRangesVals[0] == 1);
-    REQUIRE(modalBinRangesVals[1] == 6);
+    // Masked range [1,46), width (46-1)/5 = 9; mode 1 is in bin 0.
+    REQUIRE(modalBinRangesVals[1] == 10);
 
     REQUIRE(histArray->size() == 5);
     REQUIRE((*histArray)[0] == 4);
@@ -312,7 +360,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Masked Bulk Reads Cross Chunk Bou
   compareHistograms(counts->getDataStoreRef(), std::array<uint64, 2>{k_NumTuples - 2, 1});
   const NeighborList<int32>* modalRanges = nullptr;
   REQUIRE_NOTHROW(modalRanges = &dataStructure.getDataRefAs<NeighborList<int32>>(outputPath.createChildPath("Modal Ranges")));
-  const std::vector<int32> expectedModalRanges = {0, 3};
+  // Range [0,9), width 4.5; mode 0 selects stored bin 0, rounded to {0,4}.
+  const std::vector<int32> expectedModalRanges = {0, 4};
   REQUIRE(modalRanges->getList(0) == expectedModalRanges);
 }
 
@@ -346,7 +395,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Distinct Modal Values", "[Sim
   const DataPath modalPath = histogramGroupPath.createChildPath("\"Input\" Histogram").createChildPath("Modal Ranges");
   const NeighborList<int32>* modalRanges = nullptr;
   REQUIRE_NOTHROW(modalRanges = &dataStructure.getDataRefAs<NeighborList<int32>>(modalPath));
-  const std::vector<int32> expectedModalRanges = {1, 2, 3, 4, 0, 0};
+  // Range [1,6), width 2.5: modes 1,3 select bin 0; mode 5 selects bin 1.
+  const std::vector<int32> expectedModalRanges = {1, 3, 1, 3, 3, 6};
   REQUIRE(modalRanges->getList(0) == expectedModalRanges);
 }
 
@@ -633,7 +683,9 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: tuple masks full outputs", "[Simp
     c02CheckExact(rangesPtr->getDataStoreRef(), std::array<int32, 8>{0, 1, 1, 3, 3, 5, 5, 7});
   }
   c02CheckExact(mostPtr->getDataStoreRef(), std::array<uint64, 2>{2, 2});
-  const std::vector<int32> expectedModes = {4, 5, 6, 7};
+  // Masked values {0,2,4,4,6,6} have modes 4 and 6. Each mode reports the stored pair of its counting bin:
+  // custom range bins 2 and 3 are {4,6} and {6,8}; automatic width 7/4 puts them in bins 2 and 3, {3,5} and {5,7}.
+  const std::vector<int32> expectedModes = customRange ? std::vector<int32>{4, 6, 6, 8} : std::vector<int32>{3, 5, 5, 7};
   REQUIRE(modesPtr->getList(0) == expectedModes);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -905,4 +957,40 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: preflight preserves mask tuple mi
   REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -57207);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: Fractional modal bounds", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Width 1/2: bins {0,1,1}; the unique mode 0.75 selects stored {0.5,1}.
+  CheckCustomModalHistogram<float32>(scope, {0.25F, 0.75F, 0.75F}, 1.0, {1, 2}, {0, 0.5F, 0.5F, 1}, {0.5F, 1});
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: Rounded integer modal bounds", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Counting width 0.5 is nondegenerate. Bin 0's integer stored bounds are {0,0}.
+  CheckCustomModalHistogram<int32>(scope, {0}, 1.0, {1, 0}, {0, 0, 0, 1}, {0, 0});
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::ComputeArrayHistogram: Preserve tiny counting width modal bounds", "[SimplnxCore][ComputeArrayHistogram]", float32, float64)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Width 2^-35 < 1E-10, but counting still gives bins {0,1,1}. Preserve the overall modal bounds.
+  CheckCustomModalHistogram<TestType>(scope, {0, 0x1p-35, 0x1p-35}, 0x1p-34, {1, 2}, {0, 0x1p-35, 0x1p-35, 0x1p-34}, {0, 0x1p-34});
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: Preserve tiny width tied mode multiplicity", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Width 2^-35 < 1E-10; bins {0,1} tie. Each raw mode retains one overall-bound pair.
+  CheckCustomModalHistogram<float32>(scope, {0, 0x1p-35F}, 0x1p-34, {1, 1}, {0, 0x1p-35F, 0x1p-35F, 0x1p-34F}, {0, 0x1p-34F, 0, 0x1p-34F});
 }

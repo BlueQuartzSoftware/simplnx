@@ -5,7 +5,6 @@
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
@@ -44,6 +43,7 @@ constexpr usize BinRangeIndex(usize bin)
  * @param increment Specifies the uniform bin width in input units.
  * @pre outputContainer contains at least 2 * numBins elements.
  * @pre The caller checks that the bounds fit Type.
+ * @note Integer bounds can be truncated. CalculateBin determines bin membership.
  */
 template <typename Type, class Container>
 void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const float32 increment)
@@ -88,14 +88,7 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
 template <typename Type>
 auto CalculateBin(Type value, Type min, float32 increment)
 {
-  if constexpr(std::is_same_v<Type, bool>)
-  {
-    return static_cast<uint8>(std::floor(static_cast<float32>(static_cast<uint8>(value) - static_cast<uint8>(min)) / increment));
-  }
-  else
-  {
-    return static_cast<Type>(std::floor(static_cast<float32>(value - min) / increment));
-  }
+  return StatisticsCalculations::CalculateBin(value, min, increment);
 }
 
 /**
@@ -449,98 +442,6 @@ FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& 
 
   return {std::make_tuple(length, min, max, summation, modalMaps)};
 }
-
-/**
- * @class GenerateHistogramImpl
- * @brief This class is a pseudo-wrapper for the serial::GenerateHistogram, the reason for this class' existence is to hold/define ownership of objects in each thread
- * @tparam Type this the end type of the function in that the container and data values are of this type
- * @tparam SizeType this is the scalar type of the bin counts container
- */
-template <typename Type>
-class CalculateModalBinRangesImpl
-{
-public:
-  /**
-   * @function constructor
-   * @brief This constructor constructs the object then calculates and stores the range implicitly
-   * @param inputStore this is the AbstractDataStore holding the data that will be binned
-   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
-   * @param modalBinRanges this is the AbstractDataStore that the ranges will be loaded into.
-   * @param shouldCancel this is an atomic value that will determine whether execution ends early
-   */
-  CalculateModalBinRangesImpl(const AbstractDataStore<Type>& inputStore, const AbstractDataStore<Type>& binRangesStore, NeighborList<Type>& modalBinRanges,
-                              const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::atomic_bool& shouldCancel)
-  : m_InputStore(inputStore)
-  , m_ShouldCancel(shouldCancel)
-  , m_BinRangesStore(binRangesStore)
-  , m_ModalBinRanges(modalBinRanges)
-  , m_Mask(mask)
-  {
-  }
-
-  ~CalculateModalBinRangesImpl() = default;
-
-  /**
-   * @function operator()
-   * @brief This function serves as the execute method
-   */
-  void operator()() const
-  {
-    std::vector<Type> modes;
-    if(m_Mask)
-    {
-      // This section extracts out the data into a separate storage class. Note that
-      // this could get real ugly for an out-of-core DataArray
-      const usize numTuples = m_InputStore.getNumberOfTuples();
-      std::vector<Type> data;
-      data.reserve(numTuples);
-      for(usize i = 0; i < numTuples; i++)
-      {
-        if(m_Mask->isTrue(i))
-        {
-          data.push_back(m_InputStore[i]);
-        }
-      }
-      data.shrink_to_fit();
-
-      modes = StatisticsCalculations::findModes(data);
-    }
-    else
-    {
-      modes = StatisticsCalculations::findModes(m_InputStore);
-    }
-
-    for(const Type& mode : modes)
-    {
-      std::pair<Type, Type> modalRange = StatisticsCalculations::findModalBinRange(m_InputStore, m_BinRangesStore, mode);
-      m_ModalBinRanges.addEntry(0, modalRange.first);
-      m_ModalBinRanges.addEntry(0, modalRange.second);
-    }
-  }
-
-private:
-  const std::atomic_bool& m_ShouldCancel;
-  const AbstractDataStore<Type>& m_InputStore;
-  const AbstractDataStore<Type>& m_BinRangesStore;
-  NeighborList<Type>& m_ModalBinRanges;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
-};
-
-/**
- * @class CalculateModalBinRangesImplFunctor
- * @brief This is a compatibility functor that leverages existing typecasting functions to create the appropriately typed CalculateModalBinRangesImpl() cleanly.
- * Designed for compatibility with the existing parallel execution classes.
- */
-struct CalculateModalBinRangesImplFunctor
-{
-  template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* inputArray, const IDataArray* binRangesArray, INeighborList* modalBinRangesNL, ArgsT&&... args)
-  {
-    NeighborList<T>& modalBinRanges = *(dynamic_cast<NeighborList<T>*>(modalBinRangesNL));
-    return CalculateModalBinRangesImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), modalBinRanges,
-                                       std::forward<ArgsT>(args)...);
-  }
-};
 
 /**
  * @class InstantiateHistogramImplFunctor

@@ -148,47 +148,6 @@ bool Equivalent(const T& lhs, const T& rhs)
 }
 
 /**
- * @brief Maps one modal value to a legacy uniform range calculation.
- * @tparam T Histogram value type.
- * @param binRanges Stored histogram range values.
- * @param mode Modal value.
- * @return Calculated lower and upper values, or two default values when outside the range.
- *
- * This calculation treats binRanges as one edge sequence. Histogram output
- * stores lower/upper pairs, so the result can differ from an actual stored bin.
- */
-template <typename T>
-std::pair<T, T> FindModalBinRange(nonstd::span<const T> binRanges, const T& mode)
-{
-  const usize numBins = binRanges.size() - 1;
-  const T min = binRanges[0];
-  const T max = binRanges[numBins];
-  const T increment = (max - min) / static_cast<T>(numBins);
-  if constexpr(std::is_floating_point_v<T>)
-  {
-    if(std::abs(increment) < 1E-10)
-    {
-      return {min, max};
-    }
-  }
-  else if(increment == static_cast<T>(0))
-  {
-    return {min, max};
-  }
-
-  const auto bin = static_cast<int64>((mode - min) / increment);
-  if((bin >= 0) && (bin < numBins))
-  {
-    return {static_cast<T>(min + (bin * increment)), static_cast<T>(min + ((bin + 1) * increment))};
-  }
-  if(mode == max)
-  {
-    return {static_cast<T>(min + ((bin - 1) * increment)), static_cast<T>(min + (bin * increment))};
-  }
-  return {};
-}
-
-/**
  * @class BufferedValueReader
  * @brief Visits selected input values through bounded source and mask pages.
  * @tparam T Input value type.
@@ -316,13 +275,16 @@ class CalculateModalRangesDirect
 {
 public:
   CalculateModalRangesDirect(const AbstractDataStore<T>& inputStore, const IDataArray* maskArray, usize numValues, const AbstractDataStore<T>& binRangesStore, NeighborList<T>& modalBinRanges,
-                             const std::atomic_bool& shouldCancel)
+                             const std::atomic_bool& shouldCancel, T histMin, float32 increment, int32 numBins)
   : m_InputStore(inputStore)
   , m_MaskArray(maskArray)
   , m_NumValues(numValues)
   , m_BinRangesStore(binRangesStore)
   , m_ModalBinRanges(modalBinRanges)
   , m_ShouldCancel(shouldCancel)
+  , m_HistMin(histMin)
+  , m_Increment(increment)
+  , m_NumBins(numBins)
   {
   }
 
@@ -348,6 +310,16 @@ public:
       modes = StatisticsCalculations::findModes(m_InputStore);
     }
 
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    std::vector<T> binRanges(usize{2} * static_cast<usize>(m_NumBins));
+    Result<> binRangeResult = m_BinRangesStore.copyIntoBuffer(0, nonstd::span<T>(binRanges.data(), binRanges.size()));
+    if(binRangeResult.invalid())
+    {
+      return binRangeResult;
+    }
     for(const T& mode : modes)
     {
       if(m_ShouldCancel)
@@ -355,9 +327,17 @@ public:
         return {};
       }
 
-      const auto modalRange = StatisticsCalculations::findModalBinRange(m_InputStore, m_BinRangesStore, mode);
-      m_ModalBinRanges.addEntry(0, modalRange.first);
-      m_ModalBinRanges.addEntry(0, modalRange.second);
+      if(std::fabs(m_Increment) < 1E-10)
+      {
+        m_ModalBinRanges.addEntry(0, binRanges.front());
+        m_ModalBinRanges.addEntry(0, binRanges.back());
+      }
+      else if(const auto modalRange = StatisticsCalculations::findModalBinRange(mode, m_HistMin, m_Increment, m_NumBins, nonstd::span<const T>(binRanges.data(), binRanges.size()));
+              modalRange.has_value())
+      {
+        m_ModalBinRanges.addEntry(0, modalRange->first);
+        m_ModalBinRanges.addEntry(0, modalRange->second);
+      }
     }
     return {};
   }
@@ -369,6 +349,9 @@ private:
   const AbstractDataStore<T>& m_BinRangesStore;
   NeighborList<T>& m_ModalBinRanges;
   const std::atomic_bool& m_ShouldCancel;
+  T m_HistMin;
+  float32 m_Increment;
+  int32 m_NumBins;
 };
 
 /**
@@ -378,8 +361,11 @@ private:
  * @param maskArray Optional Bool or UInt8 tuple mask.
  * @param numValues Number of values to inspect.
  * @param binRangesStore Supplies stored histogram range pairs.
- * @param modalBinRanges Receives two values for each exact mode.
+ * @param modalBinRanges Receives stored pairs for modes with valid bins, or overall bounds per mode for degenerate widths.
  * @param shouldCancel Signals cancellation between pages and merge passes.
+ * @param histMin Histogram minimum used for counting.
+ * @param increment Counting bin width.
+ * @param numBins Counting bin count.
  * @return Bulk-I/O, temporary-directory, temporary-file, or merge errors.
  *
  * Two alternating binary files can coexist during merge. Each file scales with
@@ -387,7 +373,7 @@ private:
  */
 template <typename T>
 Result<> CalculateModalRangesScanlineImpl(const AbstractDataStore<T>& inputStore, const IDataArray* maskArray, usize numValues, const AbstractDataStore<T>& binRangesStore,
-                                          NeighborList<T>& modalBinRanges, const std::atomic_bool& shouldCancel)
+                                          NeighborList<T>& modalBinRanges, const std::atomic_bool& shouldCancel, T histMin, float32 increment, int32 numBins)
 {
   std::error_code errorCode;
   const std::filesystem::path tempRoot = std::filesystem::temp_directory_path(errorCode);
@@ -589,19 +575,26 @@ Result<> CalculateModalRangesScanlineImpl(const AbstractDataStore<T>& inputStore
   }
 
   const usize numBinRangeValues = binRangesStore.getSize();
-  auto binRanges = std::make_unique<T[]>(numBinRangeValues);
-  Result<> binRangeResult = binRangesStore.copyIntoBuffer(0, nonstd::span<T>(binRanges.get(), numBinRangeValues));
+  std::vector<T> binRanges(numBinRangeValues);
+  Result<> binRangeResult = binRangesStore.copyIntoBuffer(0, nonstd::span<T>(binRanges.data(), numBinRangeValues));
   if(binRangeResult.invalid())
   {
     return binRangeResult;
   }
-  const nonstd::span<const T> binRangeSpan(binRanges.get(), numBinRangeValues);
+  const nonstd::span<const T> binRangeSpan(binRanges.data(), numBinRangeValues);
   Result<> outputResult = scanGroups([&](T mode, uint64 count) {
     if(count == maxCount)
     {
-      const auto modalRange = FindModalBinRange(binRangeSpan, mode);
-      modalBinRanges.addEntry(0, modalRange.first);
-      modalBinRanges.addEntry(0, modalRange.second);
+      if(std::fabs(increment) < 1E-10)
+      {
+        modalBinRanges.addEntry(0, binRanges.front());
+        modalBinRanges.addEntry(0, binRanges.back());
+      }
+      else if(const auto modalRange = StatisticsCalculations::findModalBinRange(mode, histMin, increment, numBins, binRangeSpan); modalRange.has_value())
+      {
+        modalBinRanges.addEntry(0, modalRange->first);
+        modalBinRanges.addEntry(0, modalRange->second);
+      }
     }
   });
   return outputResult;
@@ -617,19 +610,22 @@ class CalculateModalRangesScanline
 {
 public:
   CalculateModalRangesScanline(const AbstractDataStore<T>& inputStore, const IDataArray* maskArray, usize numValues, const AbstractDataStore<T>& binRangesStore, NeighborList<T>& modalBinRanges,
-                               const std::atomic_bool& shouldCancel)
+                               const std::atomic_bool& shouldCancel, T histMin, float32 increment, int32 numBins)
   : m_InputStore(inputStore)
   , m_MaskArray(maskArray)
   , m_NumValues(numValues)
   , m_BinRangesStore(binRangesStore)
   , m_ModalBinRanges(modalBinRanges)
   , m_ShouldCancel(shouldCancel)
+  , m_HistMin(histMin)
+  , m_Increment(increment)
+  , m_NumBins(numBins)
   {
   }
 
   Result<> operator()() const
   {
-    return CalculateModalRangesScanlineImpl(m_InputStore, m_MaskArray, m_NumValues, m_BinRangesStore, m_ModalBinRanges, m_ShouldCancel);
+    return CalculateModalRangesScanlineImpl(m_InputStore, m_MaskArray, m_NumValues, m_BinRangesStore, m_ModalBinRanges, m_ShouldCancel, m_HistMin, m_Increment, m_NumBins);
   }
 
 private:
@@ -639,6 +635,9 @@ private:
   const AbstractDataStore<T>& m_BinRangesStore;
   NeighborList<T>& m_ModalBinRanges;
   const std::atomic_bool& m_ShouldCancel;
+  T m_HistMin;
+  float32 m_Increment;
+  int32 m_NumBins;
 };
 
 /**
@@ -733,7 +732,7 @@ struct ComputeHistogramFunctor
       {
         auto& typedModalRanges = dynamic_cast<NeighborList<T>&>(*modalBinRanges);
         Result<> modalResult = DispatchAlgorithm<CalculateModalRangesDirect<T>, CalculateModalRangesScanline<T>>({&inputArray, maskArray}, inputStore, maskArray, numValues, binRangesStore,
-                                                                                                                 typedModalRanges, shouldCancel);
+                                                                                                                 typedModalRanges, shouldCancel, range.first, increment, numBins);
         if(modalResult.invalid())
         {
           return modalResult;

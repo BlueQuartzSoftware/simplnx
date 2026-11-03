@@ -1,13 +1,57 @@
 #pragma once
 
+#include "simplnx/Common/Types.hpp"
+
+#include <nonstd/span.hpp>
+
 #include <algorithm>
+#include <cassert>
 #include <cmath>
+#include <limits>
+#include <map>
 #include <numeric>
+#include <optional>
+#include <set>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace StatisticsCalculations
 {
+enum class HistogramBinPolicy
+{
+  Raw,
+  LegacyInt32
+};
+
+/**
+ * @brief Classifies a value with the selected legacy arithmetic and conversion sequence.
+ * @tparam Policy Raw returns uint8 for bool and T otherwise. LegacyInt32 returns int32.
+ */
+template <HistogramBinPolicy Policy = HistogramBinPolicy::Raw, typename T>
+auto CalculateBin(T value, T minimum, nx::core::float32 increment)
+{
+  if constexpr(Policy == HistogramBinPolicy::LegacyInt32)
+  {
+    if constexpr(std::is_signed_v<T> && std::is_integral_v<T>)
+    {
+      if(value > 0 && minimum < 0 && value > std::numeric_limits<T>::max() + minimum)
+      {
+        return static_cast<nx::core::int32>(std::floor((static_cast<nx::core::float32>(value) - static_cast<nx::core::float32>(minimum)) / increment));
+      }
+    }
+    return static_cast<nx::core::int32>(CalculateBin<HistogramBinPolicy::Raw>(value, minimum, increment));
+  }
+  else if constexpr(std::is_same_v<T, bool>)
+  {
+    return static_cast<nx::core::uint8>(std::floor(static_cast<nx::core::float32>(static_cast<nx::core::uint8>(value) - static_cast<nx::core::uint8>(minimum)) / increment));
+  }
+  else
+  {
+    return static_cast<T>(std::floor(static_cast<nx::core::float32>(value - minimum) / increment));
+  }
+}
+
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
 T findMin(const C<T, Ts...>& source)
@@ -246,47 +290,36 @@ std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histm
   return {histmin, histmax};
 }
 
-// -----------------------------------------------------------------------------
-template <template <typename, typename...> class Container, typename T, typename... Ts>
-std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const Container<T, Ts...>& binRanges, const T& mode)
+/**
+ * @brief Returns the stored lower/upper pair selected by a mode's legacy bin classifier.
+ * @tparam Policy Classification arithmetic and conversion policy.
+ * @tparam T Input and stored range value type.
+ * @param mode Value whose bin range is requested.
+ * @param histMin Histogram minimum used during counting.
+ * @param increment Counting bin width.
+ * @param numBins Counting bin count.
+ * @param binRanges Stored lower/upper pairs for one histogram.
+ * @pre binRanges.size() >= usize{2} * static_cast<usize>(numBins).
+ * @return The stored pair, or nullopt for a degenerate width or an out-of-bin mode.
+ *
+ * The lookup allocates no memory and performs no I/O. Callers retain their own eligibility
+ * checks and degenerate-width output policy. Duplicate modes can select the same pair.
+ */
+template <HistogramBinPolicy Policy = HistogramBinPolicy::Raw, typename T>
+std::optional<std::pair<T, T>> findModalBinRange(T mode, T histMin, nx::core::float32 increment, nx::core::int32 numBins, nonstd::span<const T> binRanges)
 {
-  if(source.empty())
+  using nx::core::usize;
+  assert(binRanges.size() >= usize{2} * static_cast<usize>(numBins));
+  if(std::fabs(increment) < 1E-10)
   {
-    return {static_cast<T>(0.0), static_cast<T>(0.0)};
+    return std::nullopt;
   }
-
-  size_t numBins = binRanges.size() - 1;
-
-  T min = binRanges[0];
-  T max = binRanges[numBins];
-
-  const T increment = (max - min) / static_cast<T>(numBins);
-  if constexpr(std::is_floating_point_v<T>)
+  const auto bin = CalculateBin<Policy>(mode, histMin, increment);
+  if((bin >= 0) && (bin < numBins))
   {
-    if(std::abs(increment) < 1E-10)
-    {
-      return {min, max};
-    }
+    const usize offset = usize{2} * static_cast<usize>(bin);
+    return std::pair<T, T>{binRanges[offset], binRanges[offset + usize{1}]};
   }
-  else
-  {
-    if(increment == static_cast<T>(0))
-    {
-      return {min, max};
-    }
-  }
-
-  const auto bin = static_cast<int64_t>((mode - min) / increment); // find bin for this input array value
-
-  if((bin >= 0) && (bin < numBins)) // make certain bin is in range
-  {
-    return {static_cast<T>(min + (bin * increment)), static_cast<T>(min + ((bin + 1) * increment))};
-  }
-  else if(mode == max)
-  {
-    return {static_cast<T>(min + ((bin - 1) * increment)), static_cast<T>(min + (bin * increment))};
-  }
-
-  return {};
+  return std::nullopt;
 }
 } // namespace StatisticsCalculations
