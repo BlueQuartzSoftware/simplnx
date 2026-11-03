@@ -1378,7 +1378,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-template <class StoreT, class ValueT>
+template <bool CheckedOutput = false, class StoreT, class ValueT>
 Result<> ReadFiniteDifference2DRegion(const StoreT& store, usize nx, usize xBegin, usize xEnd, usize yBegin, usize yEnd, nonstd::span<ValueT> buffer)
 {
   const usize width = xEnd - xBegin;
@@ -1388,17 +1388,22 @@ Result<> ReadFiniteDifference2DRegion(const StoreT& store, usize nx, usize xBegi
   {
     return store.copyIntoBuffer(yBegin * nx, buffer.subspan(0, valueCount));
   }
+  Result<> accumulated;
   for(usize row = 0; row < rows; ++row)
   {
-    if(Result<> result = store.copyIntoBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width)); result.invalid())
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyIntoBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width))); result.invalid())
     {
+      if constexpr(CheckedOutput)
+      {
+        return MergeResults(std::move(accumulated), std::move(result));
+      }
       return result;
     }
   }
-  return {};
+  return accumulated;
 }
 
-template <class StoreT, class ValueT>
+template <bool CheckedOutput = false, class StoreT, class ValueT>
 Result<> WriteFiniteDifference2DRegion(StoreT& store, usize nx, usize xBegin, usize xEnd, usize yBegin, usize yEnd, nonstd::span<const ValueT> buffer)
 {
   const usize width = xEnd - xBegin;
@@ -1408,14 +1413,19 @@ Result<> WriteFiniteDifference2DRegion(StoreT& store, usize nx, usize xBegin, us
   {
     return store.copyFromBuffer(yBegin * nx, buffer.subspan(0, valueCount));
   }
+  Result<> accumulated;
   for(usize row = 0; row < rows; ++row)
   {
-    if(Result<> result = store.copyFromBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width)); result.invalid())
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyFromBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width))); result.invalid())
     {
+      if constexpr(CheckedOutput)
+      {
+        return MergeResults(std::move(accumulated), std::move(result));
+      }
       return result;
     }
   }
-  return {};
+  return accumulated;
 }
 
 template <class F, class Real, class StoreT>
@@ -1566,7 +1576,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
         if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-               ioResult, ReadFiniteDifference2DRegion(inStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<T>(inputBlock.data(), inputBlock.size())));
+               ioResult, ReadFiniteDifference2DRegion<CheckedOutput>(inStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<T>(inputBlock.data(), inputBlock.size())));
            result.invalid())
         {
           return finish(std::move(result));
@@ -1576,7 +1586,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           castBlock[index] = static_cast<Real>(inputBlock[index]);
         }
         if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-               ioResult, WriteFiniteDifference2DRegion(firstStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(castBlock.data(), valueCount)));
+               ioResult, WriteFiniteDifference2DRegion<CheckedOutput>(firstStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(castBlock.data(), valueCount)));
            result.invalid())
         {
           return finish(std::move(result));
@@ -1626,7 +1636,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           const usize coreWidth = xEnd - xBegin;
           const usize coreRows = yEnd - yBegin;
           if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-                 ioResult, ReadFiniteDifference2DRegion(*currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())));
+                 ioResult, ReadFiniteDifference2DRegion<CheckedOutput>(*currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, nonstd::span<Real>(inputBlock.data(), inputBlock.size())));
              result.invalid())
           {
             return finish(std::move(result));
@@ -1662,7 +1672,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           }
           const usize valueCount = coreRows * coreWidth;
           if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-                 ioResult, WriteFiniteDifference2DRegion(*nextStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)));
+                 ioResult, WriteFiniteDifference2DRegion<CheckedOutput>(*nextStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const Real>(outputBlock.data(), valueCount)));
              result.invalid())
           {
             return finish(std::move(result));
@@ -1694,7 +1704,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
         if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-               ioResult, ReadFiniteDifference2DRegion(*currentStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())));
+               ioResult, ReadFiniteDifference2DRegion<CheckedOutput>(*currentStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())));
            result.invalid())
         {
           return finish(std::move(result));
@@ -1705,7 +1715,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
           return finish();
         }
         if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
-               ioResult, WriteFiniteDifference2DRegion(outStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const T>(outputValues.data(), valueCount)));
+               ioResult, WriteFiniteDifference2DRegion<CheckedOutput>(outStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const T>(outputValues.data(), valueCount)));
            result.invalid())
         {
           return finish(std::move(result));
