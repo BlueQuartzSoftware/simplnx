@@ -9,13 +9,53 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
+#include <vector>
 namespace fs = std::filesystem;
 
 namespace nx::core
 {
+/**
+ * @brief Splits the comma-separated filter names, trims white space from each name and checks
+ * that each name can be used as a Python module and class name.
+ * @param filterNames The comma-separated filter names. An empty value means no filters.
+ * @return The trimmed names, or error -105150 that names the first entry that is empty, is a
+ * reserved Python name (a keyword or __debug__) or is not a valid ASCII Python identifier.
+ */
+inline Result<std::vector<std::string>> ParsePythonFilterNames(const std::string& filterNames)
+{
+  static constexpr std::array<std::string_view, 36> k_ReservedNames = {"False",  "None",     "True", "and",    "as",      "assert", "async",  "await",  "break", "class",  "continue", "def",
+                                                                       "del",    "elif",     "else", "except", "finally", "for",    "from",   "global", "if",    "import", "in",       "is",
+                                                                       "lambda", "nonlocal", "not",  "or",     "pass",    "raise",  "return", "try",    "while", "with",   "yield",    "__debug__"};
+  const auto isIdentifierStart = [](char value) { return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z') || value == '_'; };
+  const auto isIdentifierChar = [&isIdentifierStart](char value) { return isIdentifierStart(value) || (value >= '0' && value <= '9'); };
+
+  if(StringUtilities::trimmed(filterNames).empty())
+  {
+    return {std::vector<std::string>{}};
+  }
+  constexpr std::array<char, 1> k_NameDelimiters = {','};
+  auto names = StringUtilities::split(filterNames, k_NameDelimiters, true);
+  for(auto& name : names)
+  {
+    const std::string original = name;
+    name = StringUtilities::trimmed(name);
+    if(name.empty() || !isIdentifierStart(name.front()) || !std::all_of(name.begin(), name.end(), isIdentifierChar) ||
+       std::find(k_ReservedNames.begin(), k_ReservedNames.end(), name) != k_ReservedNames.end())
+    {
+      return MakeErrorResult<std::vector<std::string>>(-105150, fmt::format("Filter Names entry '{}' is empty, is a reserved Python name or is not a valid Python identifier. Use a letter or '_' "
+                                                                            "first, followed by letters, digits or '_'.",
+                                                                            original));
+    }
+  }
+  return {std::move(names)};
+}
+
 inline std::string CamelCaseToSnakeCase(const std::string& input)
 {
   std::string result;
@@ -263,7 +303,12 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& outputPat
 inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPath, const std::string& filterNames)
 {
   Result<> result;
-  auto filterNamesSplit = StringUtilities::split(filterNames, ',');
+  auto namesResult = ParsePythonFilterNames(filterNames);
+  if(namesResult.invalid())
+  {
+    return ConvertResult(std::move(namesResult));
+  }
+  const auto& filterNamesSplit = namesResult.value();
   for(const auto& filterName : filterNamesSplit)
   {
     auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginPath, filterName, filterName, true);
@@ -283,10 +328,10 @@ inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPa
  * @param pluginUUID
  * @param pluginShortName
  * @param pluginDescription
- * @param pluginFilterList
+ * @param filterList
  * @return
  */
-inline std::string GeneratePythonPlugin(const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription, const std::string& pluginFilterList)
+inline std::string GeneratePythonPlugin(const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription, const std::vector<std::string>& filterList)
 {
   std::string content = PluginPythonFile();
 
@@ -295,7 +340,6 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
   content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
   content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
-  auto filterList = StringUtilities::split(pluginFilterList, ',');
   content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
 
   std::stringstream codeStream;
@@ -325,6 +369,12 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
 inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirectory, const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription,
                                        const std::string& pluginFilterList)
 {
+  auto namesResult = ParsePythonFilterNames(pluginFilterList);
+  if(namesResult.invalid())
+  {
+    return ConvertResult(std::move(namesResult));
+  }
+  const auto& filterList = namesResult.value();
   auto pluginRootPath = outputDirectory / pluginName;
   auto pluginSrcPath = pluginRootPath / "src" / pluginName;
   auto result = nx::core::CreateOutputDirectories(pluginRootPath);
@@ -360,7 +410,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", tempFile.tempFilePath().string()));
       }
 
-      fout << GeneratePythonPlugin(pluginName, pluginShortName, pluginDescription, pluginFilterList);
+      fout << GeneratePythonPlugin(pluginName, pluginShortName, pluginDescription, filterList);
     }
     Result<> commitResult = tempFile.commit();
     if(commitResult.invalid())
@@ -391,8 +441,6 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
       content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
       content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
-
-      auto filterList = StringUtilities::split(pluginFilterList, ',');
 
       std::string aList(fmt::format("'{}', ", pluginName));
       for(const auto& name : filterList)
@@ -505,8 +553,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
 
   // Now loop over each Filter and generate the skeleton files
-  auto filterNamesSplit = StringUtilities::split(pluginFilterList, ',');
-  for(const auto& filterName : filterNamesSplit)
+  for(const auto& filterName : filterList)
   {
     auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginSrcPath, filterName, filterName, false);
     if(filterWriteResult.invalid())
