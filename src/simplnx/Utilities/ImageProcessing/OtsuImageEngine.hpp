@@ -299,7 +299,7 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
   if(!std::isfinite(range) || range <= 0.0 || !std::isfinite(upper) || upper <= histogram.min || !std::isfinite(histogram.binWidth) || histogram.binWidth <= 0.0 ||
      !std::isfinite(1.0 / histogram.binWidth))
   {
-    return MakeErrorResult(-8326, "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
+    return MakeErrorResult(-28656, "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
   }
   float64 previousBoundary = histogram.min;
   float64 previousMeasurement = histogram.min;
@@ -313,7 +313,7 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
     const float64 measurement = histogram.min + ((static_cast<float64>(bin) + 0.5) * histogram.binWidth);
     if(!std::isfinite(boundary) || !std::isfinite(measurement) || boundary <= previousBoundary || (bin != 0 && measurement <= previousMeasurement))
     {
-      return MakeErrorResult(-8327, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
+      return MakeErrorResult(-28657, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
     }
     previousBoundary = boundary;
     previousMeasurement = measurement;
@@ -425,7 +425,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
           }
           if(!options.WarnOnNonfinite && (summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0))
           {
-            return MakeErrorResult(-8324, "Otsu found a selected NaN or infinity. Choose Warn and Continue to retain endpoint-bin participation, or explicitly exclude it with Use Mask Array.");
+            return MakeErrorResult(-28654, "Otsu found a selected NaN or infinity. Choose Warn and Continue to retain endpoint-bin participation, or explicitly exclude it with Use Mask Array.");
           }
           if(summary.FiniteCount != 0)
           {
@@ -517,7 +517,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   if(result.FiniteCount == 0)
   {
     return ConvertResultTo(
-        MergeResults(std::move(rangeResult), MakeErrorResult(-8325, "Otsu has no selected finite samples. Select at least one finite input value with the optional mask before thresholding.")),
+        MergeResults(std::move(rangeResult), MakeErrorResult(-28655, "Otsu has no selected finite samples. Select at least one finite input value with the optional mask before thresholding.")),
         std::move(result));
   }
   auto& histogram = result.HistogramData;
