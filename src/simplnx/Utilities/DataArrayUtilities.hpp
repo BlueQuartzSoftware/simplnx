@@ -154,6 +154,18 @@ SIMPLNX_EXPORT Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStruc
                                                                  std::string_view sourceParameterName, const DataPath& sourceArrayPath);
 
 /**
+ * @brief Validates a directly selected Feature Attribute Matrix under the selected grid geometry.
+ * @param dataStructure Resolves the selected objects.
+ * @param geometryPath Identifies the grid geometry.
+ * @param featureAttributeMatrixPath Identifies the selected Feature Attribute Matrix.
+ * @param errorCode Error code to return for an invalid location or missing Cell Attribute Matrix.
+ * @param parameterName Display name of the parameter that selects the Attribute Matrix.
+ * @return Success for a direct child Attribute Matrix other than Cell Data, or an error.
+ */
+SIMPLNX_EXPORT Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
+                                                                 std::string_view parameterName);
+
+/**
  * @brief Replaces tuples selected by a mask.
  * @tparam T Input array value type.
  * @tparam ConditionalType Mask array value type.

@@ -336,20 +336,12 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     {
       return IFilter::MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAttributeMatrixPath.toString()));
     }
-    if(cellFeatureAttributeMatrixPath.getParent() != srcImagePath)
+    auto featureAmResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, srcImagePath, cellFeatureAttributeMatrixPath, -55503, "Feature Attribute Matrix");
+    if(featureAmResult.invalid())
     {
-      return IFilter::MakePreflightErrorResult(-55503, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a "
-                                                                   "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
-                                                                   cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+      featureAmResult.errors().front().message += " Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.";
+      return {ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
     }
-    if(selectedCellData == srcCellFeatureData)
-    {
-      return IFilter::MakePreflightErrorResult(
-          -55504,
-          fmt::format("The Feature Attribute Matrix '{}' is the Cell Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn off 'Clear Feature Attribute Matrix'.",
-                      cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
-    }
-
     if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellData))
     {
       return IFilter::MakePreflightErrorResult(
