@@ -29,6 +29,7 @@
 
 using namespace nx::core;
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: integer input produces float64 growth and decay", "[ImageProcessing][Issue1874][ExpImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64)
 {
@@ -102,7 +103,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: integer input produces floa
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: floating IEEE values retain growth decay and range behavior", "[ImageProcessing][Issue1874][ExpImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -188,7 +191,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: floating IEEE values retain
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ExpImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][ExpImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -239,7 +244,9 @@ TEST_CASE("ImageProcessing::ExpImageFilter: mapped multi-component output preser
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::ExpImageFilter: floating result conversion handles finite narrowing boundaries", "[ImageProcessing][Issue1874][ExpImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -263,7 +270,9 @@ TEST_CASE("ImageProcessing::ExpImageFilter: floating result conversion handles f
   REQUIRE(ImageProcessing::ConvertMathResult<float64>(std::numeric_limits<float64>::denorm_min()) == std::numeric_limits<float64>::denorm_min());
   REQUIRE(std::signbit(ImageProcessing::ConvertMathResult<float64>(-0.0)));
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: floating input retains type for safe finite values", "[ImageProcessing][Issue1874][ExpImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -302,6 +311,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ExpImageFilter: floating input retains type
   REQUIRE(store.getValue(2) == Approx(2.71828182845904523536).epsilon(relativeTolerance));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // exp(1000) exceeds the float64 finite range and produces positive infinity.
 // ConvertMathResult retains infinity and explicitly handles finite results above the float32 range.

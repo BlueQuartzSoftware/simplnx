@@ -72,18 +72,27 @@ void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint
 
 namespace
 {
-Arguments thresholdArguments(const DataPath& inputPath, float64 cap = std::numeric_limits<float64>::infinity(), bool warn = false, uint8 inside = 1, uint8 outside = 0, uint32 minimumSize = 0)
+struct ThresholdTestOptions
+{
+  float64 UpperBoundary = std::numeric_limits<float64>::infinity();
+  bool WarnOnNonfinite = false;
+  uint8 InsideValue = 1;
+  uint8 OutsideValue = 0;
+  uint32 MinimumSize = 0;
+};
+
+Arguments thresholdArguments(const DataPath& inputPath, const ThresholdTestOptions& options = {})
 {
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   Arguments arguments = filter.getDefaultArguments();
   arguments.insertOrAssign(TMCCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
   arguments.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   arguments.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  arguments.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(cap));
-  arguments.insertOrAssign(TMCCFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(warn ? 1 : 0));
-  arguments.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(inside));
-  arguments.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(outside));
-  arguments.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(minimumSize));
+  arguments.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(options.UpperBoundary));
+  arguments.insertOrAssign(TMCCFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(options.WarnOnNonfinite ? 1 : 0));
+  arguments.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(options.InsideValue));
+  arguments.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(options.OutsideValue));
+  arguments.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(options.MinimumSize));
   return arguments;
 }
 
@@ -94,15 +103,21 @@ void requireThresholdMask(const DataStructure& dataStructure, const DataPath& in
   REQUIRE_NOTHROW(inputPtr = &dataStructure.getDataRefAs<IDataArray>(inputPath));
   const DataPath outputPath = inputPath.replaceName("Output");
   REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputPtr->getDataType() == DataType::uint8);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputPtr->getTupleShape() == inputPtr->getTupleShape());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputPtr->getComponentShape() == ShapeType{1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputPtr->getNumberOfTuples() == expected.size());
   const UInt8Array* maskPtr = nullptr;
   REQUIRE_NOTHROW(maskPtr = &dataStructure.getDataRefAs<UInt8Array>(outputPath));
   std::vector<uint8> actual(expected.size());
   const auto readResult = maskPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actual == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -213,6 +228,7 @@ private:
 };
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonfinite policy is explicit and defaults to Error",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][ThresholdSafeRed]")
 {
@@ -232,7 +248,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonf
   const Arguments defaultArguments = filter.getDefaultArguments();
   REQUIRE(defaultArguments.value<ChoicesParameter::ValueType>(policyKey) == 0);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: initial midpoint includes the finite image minimum",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][ThresholdSafeRed]")
 {
@@ -270,6 +288,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: init
   CHECK(maskPtr->getValue(1) == uint8{1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEMPLATE_TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: native integer endpoints retain exact width-two masks",
                    "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
@@ -283,6 +302,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFil
   const auto inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 2, 1, 1, {low, high});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   const auto result = filter.execute(dataStructure, thresholdArguments(inputPath));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   // Native midpoint is low+1 even at int64/uint64 endpoints beyond Float64's exact integer range.
@@ -298,12 +318,14 @@ TEMPLATE_TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFil
   const auto inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 2, 1, 1, {std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max()});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   const auto result = filter.execute(dataStructure, thresholdArguments(inputPath));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   // Two adjacent pixels always score one component. Left ties halve the odd span until width 1; midpoint is then the native minimum.
   requireThresholdMask(dataStructure, inputPath, {1, 1});
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while) The simplnx assertion macro triggers this check.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps clamp before 64-bit conversion and preserve lower truncation",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -315,7 +337,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps
     DataStructure dataStructure;
     const auto inputPath = rt::BuildImageFromPattern<int64>(dataStructure, 2, 1, 1, {std::numeric_limits<int64>::max() - 2, std::numeric_limits<int64>::max()});
     const ThresholdMaximumConnectedComponentsImageFilter filter;
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, cap));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = cap}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().empty());
     requireThresholdMask(dataStructure, inputPath, {0, 1});
@@ -326,7 +348,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps
     DataStructure dataStructure;
     const auto inputPath = rt::BuildImageFromPattern<uint64>(dataStructure, 2, 1, 1, {std::numeric_limits<uint64>::max() - 2, std::numeric_limits<uint64>::max()});
     const ThresholdMaximumConnectedComponentsImageFilter filter;
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, cap));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = cap}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().empty());
     requireThresholdMask(dataStructure, inputPath, {0, 1});
@@ -336,7 +358,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps
     DataStructure dataStructure;
     const auto inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 2, 1, 1, {0, 2});
     const ThresholdMaximumConnectedComponentsImageFilter filter;
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, -0.5));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = -0.5}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().empty());
     requireThresholdMask(dataStructure, inputPath, {1, 0});
@@ -346,13 +368,15 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps
     DataStructure dataStructure;
     const auto inputPath = rt::BuildImageFromPattern<int8>(dataStructure, 2, 1, 1, {-128, -126});
     const ThresholdMaximumConnectedComponentsImageFilter filter;
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, -128.75));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = -128.75}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().empty());
     requireThresholdMask(dataStructure, inputPath, {1, 0});
   }
 }
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: low and empty bands return warned Outside values",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -363,13 +387,15 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: low 
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<uint64>(dataStructure, 2, 1, 1, {100, 102});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, cap, false, 1, outside));
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = cap, .OutsideValue = outside}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == 1);
   REQUIRE(result.result.warnings().front().code == -28615);
   requireThresholdMask(dataStructure, inputPath, {outside, outside});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: NaN Upper Boundary is a hard parameter error in both image modes",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -379,14 +405,16 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: NaN 
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<uint64>(dataStructure, 2, 1, 1, {100, 102});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.preflight(dataStructure, thresholdArguments(inputPath, std::numeric_limits<float64>::quiet_NaN(), warn));
+  const auto result = filter.preflight(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = std::numeric_limits<float64>::quiet_NaN(), .WarnOnNonfinite = warn}));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -28610);
   REQUIRE(result.outputActions.errors().front().message.find("Upper Boundary") != std::string::npos);
   REQUIRE(dataStructure.getDataAs<IDataArray>(inputPath.replaceName("Output")) == nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: one image policy covers every nonfinite class and order",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -403,7 +431,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: one 
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, std::numeric_limits<float64>::infinity(), warn, 1, outside));
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.WarnOnNonfinite = warn, .OutsideValue = outside}));
   if(!warn)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -419,7 +447,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: one 
     requireThresholdMask(dataStructure, inputPath, expected);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all nonfinite Warn skips search and calculates no threshold",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -433,14 +463,17 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all 
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, 3, 1, 1, values);
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536, true, inside, outside, 10));
+  const auto result =
+      filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .WarnOnNonfinite = true, .InsideValue = inside, .OutsideValue = outside, .MinimumSize = 10}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == 1);
   REQUIRE(result.result.warnings().front().code == -28614);
   REQUIRE(result.result.warnings().front().message.find("no threshold was calculated") != std::string::npos);
   requireThresholdMask(dataStructure, inputPath, {outside, outside, outside});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: floating rounding distinguishes convergence from a repeated wide state",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -460,7 +493,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: floa
   // A lower rounded midpoint moves high down to low (width 0); only the upper-rounded state repeats at width 4.
   requireThresholdMask(dataStructure, inputPath, roundUp ? std::vector<uint8>{0, 1} : std::vector<uint8>{1, 1});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: opposite finite floating extrema keep finite search candidates",
                    "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]", float32, float64)
 {
@@ -476,7 +511,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFil
   // Every score ties. Near -MAX, adjacent native endpoints are farther than 2 apart; ties-to-even retains the upper candidate.
   requireThresholdMask(dataStructure, inputPath, {0, 1});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while) The simplnx assertion macro triggers this check.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonzero scoring minimum sizes and the fixed scale stop are preserved",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -494,28 +531,28 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonz
   SECTION("minimum size affects scoring but does not remove the final singleton")
   {
     const auto inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 8, 1, 1, {0, 4, 6, 4, 6, 4, 0, 8});
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536, false, 1, 0, 2));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .MinimumSize = 2}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     requireThresholdMask(dataStructure, inputPath, {0, 1, 1, 1, 1, 1, 0, 1});
   }
   SECTION("size exactly one qualifies for a minimum of one")
   {
     const auto inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 8, 1, 1, {0, 4, 6, 4, 6, 4, 0, 8});
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536, false, 1, 0, 1));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .MinimumSize = 1}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     requireThresholdMask(dataStructure, inputPath, {0, 0, 1, 0, 1, 0, 0, 1});
   }
   SECTION("zero Inside and nonzero Outside score the complement")
   {
     const auto inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 8, 1, 1, {0, 4, 0, 4, 0, 4, 0, 8});
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536, false, 0, 1));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .InsideValue = 0, .OutsideValue = 1}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     requireThresholdMask(dataStructure, inputPath, {1, 0, 1, 0, 1, 0, 1, 0});
   }
   SECTION("both nonzero score the whole image and ties select left")
   {
     const auto inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 8, 1, 1, {0, 4, 6, 4, 6, 4, 0, 8});
-    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536, false, 1, 7));
+    const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .OutsideValue = 7}));
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     requireThresholdMask(dataStructure, inputPath, {7, 1, 1, 1, 1, 1, 7, 1});
   }
@@ -542,7 +579,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonz
     requireThresholdMask(dataStructure, inputPath, scaled ? std::vector<uint8>{0, 1, 0, 1, 0, 1, 0, 1} : std::vector<uint8>{0, 0, 0, 0, 0, 0, 0, 1});
   }
 }
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: old JSON receives Error and version two preserves explicit Warn",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -563,7 +602,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: old 
   SIMPLNX_RESULT_REQUIRE_VALID(roundTrip);
   REQUIRE(roundTrip.value().value<ChoicesParameter::ValueType>(TMCCFilter::k_NonfiniteInputHandling_Key) == 1);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine rejects image nonfinites before empty-cap output and distinguishes empty input",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -587,7 +628,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engi
   REQUIRE(emptyInput.reads() == 0);
   REQUIRE(emptyOutput.writes() == 0);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no-finite fallback avoids count and reread passes and retains warnings on write failure",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -619,7 +662,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no-f
     REQUIRE(output.getValue(2) == 7);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: count failures remain strict under image Warn",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -646,7 +691,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: coun
   REQUIRE(result.warnings().front().code == -28614);
   REQUIRE(output.writes() == 0);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: summary and final transfers preserve failures and collected diagnostics",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -707,7 +754,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: summ
   }
   REQUIRE(output.getValue(0) == 99);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: outer exceptions preserve collected warnings before output",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -737,7 +786,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: oute
   REQUIRE(output.getValue(0) == 99);
   REQUIRE(result.errors().front().code == (allocationFailure ? -28636 : -28637));
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine cancellation keeps warning Results without inventing a local cancellation error",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -759,7 +810,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engi
     REQUIRE(result.warnings().front().code == -28614);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: direct engine validates hard parameters and output shape before transfer",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -775,7 +828,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: dire
   REQUIRE(input.reads() == 0);
   REQUIRE(output.writes() == 0);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: resident and owned multi-block summaries use finite native extrema",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -811,7 +866,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: resi
     REQUIRE(result.value().PositiveInfinityCount == 1);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: native span and cap math retain exact bounds and ordinary floating rounding",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -827,6 +884,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nati
   REQUIRE(ImageProcessing::detail::ConvertThresholdMaxCCCap<int64>(std::nextafter(0x1p63, 0.0)).Value == std::numeric_limits<int64>::max() - 1023);
   REQUIRE(ImageProcessing::detail::ConvertThresholdMaxCCCap<uint64>(std::nextafter(0x1p64, 0.0)).Value == std::numeric_limits<uint64>::max() - 2047);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
@@ -870,6 +928,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pref
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
     const IDataArray* outputPtr = nullptr;
     REQUIRE_NOTHROW(outputPtr = &ds.getDataRefAs<IDataArray>(outputPath));
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(outputPtr->getDataType() == DataType::uint8);
     UnitTest::CheckArraysInheritTupleDims(ds);
   }
@@ -898,6 +957,7 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK 
   });
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corrected-midpoint real-image regression (float)",
           "[ImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][MidpointMigration]")
 {
@@ -962,9 +1022,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corr
   REQUIRE(correctedHash.hexdigest() == "63d4c611a5633ba010f1857401b13150");
 
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto preflight = filter.preflight(dataStructure, thresholdArguments(inputPath, 65536.0));
+  const auto preflight = filter.preflight(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536.0}));
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, 65536.0));
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536.0}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   requireThresholdMask(dataStructure, inputPath, correctedMask);
@@ -972,7 +1032,9 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corr
   // Independent flood-fill evidence gives 3715 legacy versus 3712 corrected components. The retained search
   // can select fewer components after the arithmetic fix; this regression is not an ITK-parity or optimum claim.
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects intended foreground", "[ImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1039,3 +1101,4 @@ TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

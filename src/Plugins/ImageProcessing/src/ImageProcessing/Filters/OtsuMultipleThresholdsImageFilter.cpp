@@ -33,33 +33,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-struct OtsuExecute
-{
-  DataStructure& Data;
-  const DataPath& InputPath;
-  const DataPath& OutputPath;
-  const IDataArray* MaskPtr;
-  const ImageProcessing::OtsuImageOptions& Options;
-  const std::atomic_bool& ShouldCancel;
-  const IFilter::MessageHandler& MessageHandler;
-
-  template <class T>
-  Result<> operator()() const
-  {
-    const auto& input = Data.getDataRefAs<DataArray<T>>(InputPath).getDataStoreRef();
-    auto& output = Data.getDataRefAs<DataArray<uint8>>(OutputPath).getDataStoreRef();
-    if(MaskPtr != nullptr && MaskPtr->getDataType() == DataType::boolean)
-    {
-      return ImageProcessing::ApplyOtsuImage(input, output, &MaskPtr->getIDataStoreRefAs<AbstractDataStore<bool>>(), Options, ShouldCancel, MessageHandler);
-    }
-    const auto* maskStorePtr = MaskPtr == nullptr ? nullptr : &MaskPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
-    return ImageProcessing::ApplyOtsuImage(input, output, maskStorePtr, Options, ShouldCancel, MessageHandler);
-  }
-};
-} // namespace
-
 namespace nx::core
 {
 std::string OtsuMultipleThresholdsImageFilter::name() const
@@ -196,9 +169,17 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
                                                   .ValleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key),
                                                   .ReturnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key)};
   const IDataArray* maskPtr = filterArgs.value<bool>(k_UseMaskArray_Key) ? &dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_MaskArrayPath_Key)) : nullptr;
-  const OtsuExecute execute{
-      .Data = dataStructure, .InputPath = selectedInputArray, .OutputPath = outputArrayPath, .MaskPtr = maskPtr, .Options = options, .ShouldCancel = shouldCancel, .MessageHandler = messageHandler};
-  return ImageProcessing::AllNumeric::dispatch(dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType(), execute);
+  // Dispatch is synchronous, so the filter arguments and local paths remain live.
+  return ImageProcessing::AllNumeric::dispatch(dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType(), [&]<class T>() -> Result<> {
+    const auto& input = dataStructure.getDataRefAs<DataArray<T>>(selectedInputArray).getDataStoreRef();
+    auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
+    if(maskPtr != nullptr && maskPtr->getDataType() == DataType::boolean)
+    {
+      return ImageProcessing::ApplyOtsuImage(input, output, &maskPtr->getIDataStoreRefAs<AbstractDataStore<bool>>(), options, shouldCancel, messageHandler);
+    }
+    const auto* maskStorePtr = maskPtr == nullptr ? nullptr : &maskPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+    return ImageProcessing::ApplyOtsuImage(input, output, maskStorePtr, options, shouldCancel, messageHandler);
+  });
 }
 
 namespace

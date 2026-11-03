@@ -486,7 +486,9 @@ public:
         m_MessageHandler.sendWarningMessage(m_Warnings.warnings().front().message);
       }
     }
-    return {static_cast<uint32>(candidate)};
+    Result<uint32> result;
+    result.m_Expected = static_cast<uint32>(candidate);
+    return result;
   }
 
   // Called once by the outer execution wrapper, including after cancellation, retry, or an independent error.
@@ -515,22 +517,26 @@ struct CcUnionFind
   CcUnionFind& operator=(const CcUnionFind&) = delete;
   CcUnionFind& operator=(CcUnionFind&&) = delete;
 
-  std::vector<uint32> parent{0u}; // zero is background; explicit legacy wrap can link foreground to it
-  Result<uint32> makeLabel()      // check the actual next table index before conversion, append, or assignment
+  const std::vector<uint32>& parentTable() const noexcept
   {
-    auto labelResult = m_LabelState.labelFor(parent.size());
+    return m_Parent;
+  }
+
+  Result<uint32> makeLabel() // check the actual next table index before conversion, append, or assignment
+  {
+    auto labelResult = m_LabelState.labelFor(m_Parent.size());
     if(labelResult.invalid())
     {
       return labelResult;
     }
-    parent.push_back(labelResult.value());
+    m_Parent.push_back(labelResult.value());
     return labelResult;
   }
   uint32 find(uint32 l) const noexcept // LookupSet: follow parents to the root
   {
-    while(l != parent[l])
+    while(l != m_Parent[l])
     {
-      l = parent[l];
+      l = m_Parent[l];
     }
     return l;
   }
@@ -540,31 +546,31 @@ struct CcUnionFind
     const uint32 e2 = find(b);
     if(e1 < e2)
     {
-      parent[e2] = e1;
+      m_Parent[e2] = e1;
     }
     else if(e2 < e1)
     {
-      parent[e1] = e2;
+      m_Parent[e1] = e2;
     }
   }
-  // CreateConsecutive follows ITK's ascending root traversal: roots (parent[i]==i) get consecutive labels 1,2,...; bg=0.
+  // CreateConsecutive follows ITK's ascending root traversal: roots (m_Parent[i]==i) get consecutive labels 1,2,...; bg=0.
   // Returns {consecutive[], numberOfObjects}.
   std::pair<std::vector<uint32>, uint32> createConsecutive(const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress) const
   {
-    const usize n = parent.size();
-    std::vector<uint32> consecutive(n, 0u);
+    const usize labelCount = m_Parent.size();
+    std::vector<uint32> consecutive(labelCount, 0u);
     uint32 consecutiveLabel = 0;
     uint32 count = 0;
-    for(usize blockBegin = 1; blockBegin < n; blockBegin += k_ConnectedComponentResolutionBlockSize)
+    for(usize blockBegin = 1; blockBegin < labelCount; blockBegin += k_ConnectedComponentResolutionBlockSize)
     {
       if(shouldCancel)
       {
         return {std::move(consecutive), count};
       }
-      const usize blockEnd = std::min(n, blockBegin + k_ConnectedComponentResolutionBlockSize);
+      const usize blockEnd = std::min(labelCount, blockBegin + k_ConnectedComponentResolutionBlockSize);
       for(usize i = blockBegin; i < blockEnd; ++i)
       {
-        if(parent[i] == i)
+        if(m_Parent[i] == i)
         {
           ++consecutiveLabel; // skips 0 (background)
           consecutive[i] = consecutiveLabel;
@@ -580,6 +586,7 @@ struct CcUnionFind
   }
 
 private:
+  std::vector<uint32> m_Parent{0u}; // zero is background; explicit legacy wrap can link foreground to it
   ConnectedComponentLabelState& m_LabelState;
 };
 
@@ -610,12 +617,12 @@ inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pr
 
 // Encode one gathered x-row and assign each run a fresh provisional label.
 template <class T, class Pred>
-inline Result<> EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcUnionFind& uf, CcLine& line)
+inline Result<> EncodeLineInto(nonstd::span<const T> row, int64 width, const Pred& pred, CcUnionFind& unionFind, CcLine& line)
 {
-  EncodeLineGeometryInto(row, nX, pred, line);
+  EncodeLineGeometryInto(row, width, pred, line);
   for(CcRun& run : line)
   {
-    auto labelResult = uf.makeLabel();
+    auto labelResult = unionFind.makeLabel();
     if(labelResult.invalid())
     {
       return ConvertResult(std::move(labelResult));
@@ -1471,10 +1478,10 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
     provisional = std::make_unique<detail::ConnectedComponentProvisionalStore>(*provisionalDataStore);
   }
 
-  detail::CcUnionFind uf(labelState);
+  detail::CcUnionFind unionFind(labelState);
   beginProgressPhase("Labeling Connected Components", nZ == 1 ? vol : static_cast<usize>(nZ));
-  Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, target2DBytes, reportPercent) :
-                                   detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, uf, nullptr, reportCount);
+  Result<> pass1Result = nZ == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, unionFind, nullptr, target2DBytes, reportPercent) :
+                                   detail::Pass1ThreeDimensional<T, Pred>(inStore, provisional.get(), dims, pred, fullyConnected, shouldCancel, unionFind, nullptr, reportCount);
   if(pass1Result.invalid())
   {
     return pass1Result;
@@ -1485,25 +1492,25 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
   }
 
   // ---- Resolve: CreateConsecutive, then a direct per-provisional-label lookup so pass 2 is O(1) per voxel. ----
-  const usize provisionalLabelCount = uf.parent.size() - 1;
+  const usize provisionalLabelCount = unionFind.parentTable().size() - 1;
   beginProgressPhase("Resolving Connected Component Equivalences", 2 * provisionalLabelCount);
-  const std::pair<std::vector<uint32>, uint32> resolved = uf.createConsecutive(shouldCancel, reportPercent);
+  const std::pair<std::vector<uint32>, uint32> resolved = unionFind.createConsecutive(shouldCancel, reportPercent);
   if(shouldCancel)
   {
     return {};
   }
   const std::vector<uint32>& consecutive = resolved.first;
-  std::vector<uint32> finalLabel(uf.parent.size(), 0u);
-  for(usize blockBegin = 1; blockBegin < uf.parent.size(); blockBegin += k_ConnectedComponentResolutionBlockSize)
+  std::vector<uint32> finalLabel(unionFind.parentTable().size(), 0u);
+  for(usize blockBegin = 1; blockBegin < unionFind.parentTable().size(); blockBegin += k_ConnectedComponentResolutionBlockSize)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize blockEnd = std::min(uf.parent.size(), blockBegin + k_ConnectedComponentResolutionBlockSize);
+    const usize blockEnd = std::min(unionFind.parentTable().size(), blockBegin + k_ConnectedComponentResolutionBlockSize);
     for(usize i = blockBegin; i < blockEnd; ++i)
     {
-      finalLabel[i] = consecutive[uf.find(static_cast<uint32>(i))];
+      finalLabel[i] = consecutive[unionFind.find(static_cast<uint32>(i))];
     }
     reportPercent(provisionalLabelCount + blockEnd - 1);
   }
@@ -1644,41 +1651,43 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
     }
     if(volumeValues == 0)
     {
-      return Result<uint32>{0u};
+      return {};
     }
     const IFilter::MessageHandler messageHandler;
     detail::ConnectedComponentLabelState labelState(ConnectedComponentLabelLimitHandling::Error, messageHandler);
-    detail::CcUnionFind uf(labelState);
+    detail::CcUnionFind unionFind(labelState);
     std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
     Result<> pass1Result = dims[2] == 1 ?
-                               detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
-                               detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallback{});
+                               detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, unionFind, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
+                               detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, unionFind, &sizeByLabel, detail::ProgressCallback{});
     if(pass1Result.invalid())
     {
       return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});
     }
     if(shouldCancel)
     {
-      return Result<uint32>{0u};
+      return {};
     }
 
     // Resolve per-root sizes now that the union-find is final (roots can still change during Pass1, so this can only be
     // done AFTER Pass1 completes -- summing by raw provisional label first, as Pass1 does, is what makes that safe).
-    std::vector<uint64> rootSize(uf.parent.size(), 0u);
+    std::vector<uint64> rootSize(unionFind.parentTable().size(), 0u);
     for(usize label = 1; label < sizeByLabel.size(); ++label)
     {
-      rootSize[uf.find(static_cast<uint32>(label))] += sizeByLabel[label];
+      rootSize[unionFind.find(static_cast<uint32>(label))] += sizeByLabel[label];
     }
 
     uint32 numComponents = 0;
-    for(usize i = 1; i < uf.parent.size(); ++i)
+    for(usize i = 1; i < unionFind.parentTable().size(); ++i)
     {
-      if(uf.parent[i] == i && rootSize[i] >= minSize) // i is a root (one entry per component)
+      if(unionFind.parentTable()[i] == i && rootSize[i] >= minSize) // i is a root (one entry per component)
       {
         ++numComponents;
       }
     }
-    return Result<uint32>{numComponents};
+    Result<uint32> result;
+    result.m_Expected = numComponents;
+    return result;
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult<uint32>(-8774, "Connected-component counting could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory.");

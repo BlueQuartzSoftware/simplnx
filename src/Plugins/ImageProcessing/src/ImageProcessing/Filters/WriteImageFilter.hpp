@@ -32,6 +32,7 @@ public:
   static constexpr StringLiteral k_TotalIndexDigits_Key = "total_index_digits";
   static constexpr StringLiteral k_LeadingDigitCharacter_Key = "leading_digit_character";
   static constexpr StringLiteral k_CreateColorTable_Key = "create_color_table";
+  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
   static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
   static constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
   static constexpr StringLiteral k_UseMask_Key = "use_mask";

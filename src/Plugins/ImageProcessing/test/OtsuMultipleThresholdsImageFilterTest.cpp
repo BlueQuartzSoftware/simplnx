@@ -33,12 +33,14 @@
 
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <any>
 #include <array>
 #include <atomic>
+#include <cmath>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -123,6 +125,7 @@ void RunCompactInt16Otsu(DataStructure& ds, const DataPath& inputPath)
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy is explicit and defaults to Error", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
@@ -140,7 +143,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy 
   const Arguments defaultArguments = filter.getDefaultArguments();
   REQUIRE(defaultArguments.value<ChoicesParameter::ValueType>(policyKey) == 0);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask selection is optional and linked", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
@@ -164,7 +169,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask sel
 
   REQUIRE(parameters.containsGroup(useMaskKey));
   const std::vector<std::string> linkedKeys = parameters.getKeysInGroup(useMaskKey);
-  REQUIRE(std::find(linkedKeys.begin(), linkedKeys.end(), maskPathKey) != linkedKeys.end());
+  REQUIRE(std::ranges::find(linkedKeys, maskPathKey) != linkedKeys.end());
   // A Masked Label control may also belong to this group. Its presence must not break this test.
   Arguments arguments = filter.getDefaultArguments();
   REQUIRE_FALSE(arguments.value<bool>(useMaskKey));
@@ -172,7 +177,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask sel
   arguments.insertOrAssign(useMaskKey, std::make_any<bool>(true));
   REQUIRE(parameters.isParameterActive(maskPathKey, arguments));
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: masked label has a separate uint8 control", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
@@ -188,7 +195,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: masked label has 
   const Arguments defaultArguments = filter.getDefaultArguments();
   REQUIRE(defaultArguments.value<uint8>(maskedLabelKey) == uint8{255});
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: preflight checks the complete configured uint8 class interval",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
@@ -287,6 +296,7 @@ void requireOtsuLabels(const DataStructure& dataStructure, const DataPath& input
   REQUIRE(actual == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 template <class T>
 class OtsuTransferStore : public DataStore<T>
@@ -382,6 +392,7 @@ private:
 };
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains literal endpoint frequencies and labels", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -389,8 +400,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains lite
   const usize rotation = GENERATE(usize{0}, usize{1}, usize{4});
   std::vector<float64> values{0, 0, 4, 4, std::numeric_limits<float64>::quiet_NaN(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::infinity()};
   std::vector<uint8> expected{7, 7, 8, 8, 7, 7, 8};
-  std::rotate(values.begin(), values.begin() + static_cast<std::vector<float64>::difference_type>(rotation), values.end());
-  std::rotate(expected.begin(), expected.begin() + static_cast<std::vector<uint8>::difference_type>(rotation), expected.end());
+  std::ranges::rotate(values, values.begin() + static_cast<std::vector<float64>::difference_type>(rotation));
+  std::ranges::rotate(expected, expected.begin() + static_cast<std::vector<uint8>::difference_type>(rotation));
   DataStructure dataStructure;
   const DataPath inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
   const Float64Array* inputPtr = nullptr;
@@ -416,6 +427,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains lite
   REQUIRE(result.result.warnings().front().message.find("unreliable") != std::string::npos);
   requireOtsuLabels(dataStructure, inputPath, expected);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects each selected nonfinite kind", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
@@ -426,11 +438,14 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects eac
   const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, 3, 1, 1, {0, value, 4});
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, otsuArguments(inputPath));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.result.errors().front().code == -28654);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask precedes Error and accepts flat tuple count across parents",
                    "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]", bool, uint8)
 {
@@ -463,6 +478,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask pre
   REQUIRE(result.result.warnings().empty());
   requireOtsuLabels(dataStructure, inputPath, {7, 7, 8, 8, maskedLabel, maskedLabel, maskedLabel});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite data is required in both modes", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
@@ -478,7 +494,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite d
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.result.errors().front().code == -28655);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -523,11 +541,14 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask c
   }
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.outputActions.errors().front().code == expectedCode);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: full native integer spans retain a valid two-bin split", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",
                    int64, uint64)
 {
@@ -551,7 +572,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: full nat
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   requireOtsuLabels(dataStructure, inputPath, {0, 1});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants and detectable numeric collapse are distinct", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -619,19 +642,21 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants an
     REQUIRE(result.value() == std::vector<float64>{2});
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer ring preserves full payload batches at its grant boundary",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuRingGrant]")
 {
   // The counting store exercises charged scan buffers and records caller transfers. It has no disk backing.
-  constexpr usize k_ValueCount = 16;
-  constexpr uint64 k_PayloadBytes = k_ValueCount * sizeof(uint16);
-  constexpr uint64 k_RingBytes = 65536ULL * sizeof(ImageProcessing::detail::OtsuFrequencyEntry<uint16>);
-  const uint64 grant = GENERATE_COPY(k_RingBytes - 1, k_RingBytes, k_RingBytes + k_PayloadBytes);
+  constexpr usize valueCount = 16;
+  constexpr uint64 payloadBytes = valueCount * sizeof(uint16);
+  constexpr uint64 ringBytes = 65536ULL * sizeof(ImageProcessing::detail::OtsuFrequencyEntry<uint16>);
+  const uint64 grant = GENERATE_COPY(ringBytes - 1, ringBytes, ringBytes + payloadBytes);
   CAPTURE(grant);
 
-  OtsuTransferStore<uint16> input(k_ValueCount, IDataStore::StoreType::OutOfCore);
-  for(usize i = 1; i < k_ValueCount; i += 2)
+  OtsuTransferStore<uint16> input(valueCount, IDataStore::StoreType::OutOfCore);
+  for(usize i = 1; i < valueCount; i += 2)
   {
     input.setValue(i, uint16{4});
   }
@@ -655,12 +680,14 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer 
     REQUIRE(result.value().HistogramData.counts == std::vector<usize>{8, 8});
     REQUIRE(budget.reservedWorkingMemoryBytes() == reservedWithPressure);
     // The grant must fit both resources for a single pass. The fallback reads one full buffer per pass.
-    CHECK(input.maximumRead() == k_ValueCount);
-    CHECK(input.reads() == (grant == k_RingBytes + k_PayloadBytes ? 1 : 2));
+    CHECK(input.maximumRead() == valueCount);
+    CHECK(input.reads() == (grant == ringBytes + payloadBytes ? 1 : 2));
   }
   REQUIRE(budget.reservedWorkingMemoryBytes() == reservedBefore);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: bounded transfers preserve failures and cancellation", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -748,6 +775,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: bounded transfers
     }
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (3) Validation: a data-independent guard must reject a threshold count that is 0 or >= the bin count
@@ -1013,6 +1041,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image go
       "fb65e730472c8001185f355fb626ca3f");
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipeline imports receive intentional defaults", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1040,7 +1069,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipeli
   REQUIRE_FALSE(legacyResult.value().value<bool>("use_mask_array"));
   REQUIRE(legacyResult.value().value<uint8>("masked_label") == 255);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection validates scalar bool or uint8 and ignores disabled paths",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
@@ -1079,7 +1110,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection va
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep explicit Warn endpoints and empty selected data errors",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
@@ -1110,7 +1143,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep ex
   SIMPLNX_RESULT_REQUIRE_INVALID(emptyResult);
   REQUIRE(emptyResult.errors().front().code == -28655);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper configuration errors are actionable", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1179,6 +1214,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper co
     REQUIRE(result.errors().front().code == -28657);
   }
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal class labels coexist with masked label zero", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
@@ -1194,11 +1230,13 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal cla
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(0));
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   requireOtsuLabels(dataStructure, inputPath, {254, 255, 0});
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds keep ordinary Warn endpoint classes", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1224,7 +1262,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds ke
   REQUIRE(result.result.warnings().size() == 1);
   requireOtsuLabels(dataStructure, inputPath, {7, 8, 9, 7, 7, 9});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: first centroid may equal minimum with usable two-bin separation",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuCentroidSafeRed]")
 {
@@ -1270,14 +1310,16 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: first centroid ma
   REQUIRE(outputPtr->getComponentShape() == ShapeType{1});
   requireOtsuLabels(dataStructure, inputPath, {0, 1});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: floating summaries preserve literal counts across resident and buffered batches",
           "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const bool buffered = GENERATE(false, true);
   const bool excludeNonfinite = GENERATE(false, true);
-  const usize targetBytes = GENERATE(usize{4096}, usize{64 * 1024 * 1024});
+  const usize targetBytes = GENERATE(usize{4096}, usize{64} * 1024 * 1024);
   constexpr usize valueCount = 524296; // 65,537 periods; spans multiple 262,144-value reduction blocks plus a short tail.
   std::unique_ptr<AbstractDataStore<float64>> inputPtr;
   if(buffered)
@@ -1325,7 +1367,9 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: floating summarie
   }
   // These are output/transfer-bound assertions. No thread-count or throughput claim follows from them.
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds selected components", "[ImageProcessing][C15Compatibility][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1336,11 +1380,11 @@ TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds
   const auto inf = std::numeric_limits<float64>::infinity();
   const std::vector<float64> original = includeNonfinite ? std::vector<float64>{0, 0, 4, 4, nan, -inf, inf} : std::vector<float64>{0, 0, 4, 4};
   const ShapeType shape{1, 1, original.size()};
-  DataStructure ds;
-  const auto input = ip_test::BuildScalarValuesImage<float64>(ds, original);
-  const auto validity = c15_test::Select(ds, input, 0, 4, "Validity");
+  DataStructure dataStructure;
+  const auto input = ip_test::BuildScalarValuesImage<float64>(dataStructure, original);
+  const auto validity = c15_test::Select(dataStructure, input, 0, 4, "Validity");
   const std::vector<uint8> expectedValidity = includeNonfinite ? std::vector<uint8>{1, 1, 1, 1, 0, 0, 0} : std::vector<uint8>{1, 1, 1, 1};
-  REQUIRE(c15_test::Read<uint8>(ds, validity, shape, expectedStore) == expectedValidity);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, validity, shape, expectedStore) == expectedValidity);
   const OtsuMultipleThresholdsImageFilter filter;
   auto args = c15_test::ImageArguments(filter, input, "Classes");
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(2));
@@ -1352,21 +1396,21 @@ TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<bool>(false));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<bool>(false));
-  c15_test::ExecuteChecked(filter, ds, args);
+  c15_test::ExecuteChecked(filter, dataStructure, args);
   const auto classes = input.replaceName("Classes");
   const std::vector<uint8> expectedClasses = includeNonfinite ? std::vector<uint8>{7, 7, 8, 8, 255, 255, 255} : std::vector<uint8>{7, 7, 8, 8};
-  REQUIRE(c15_test::Read<uint8>(ds, classes, shape, expectedStore) == expectedClasses);
-  const auto selected = c15_test::Select(ds, classes, 8, 8, "DesiredClass");
+  REQUIRE(c15_test::Read<uint8>(dataStructure, classes, shape, expectedStore) == expectedClasses);
+  const auto selected = c15_test::Select(dataStructure, classes, 8, 8, "DesiredClass");
   const std::vector<uint8> expectedSelected = includeNonfinite ? std::vector<uint8>{0, 0, 1, 1, 0, 0, 0} : std::vector<uint8>{0, 0, 1, 1};
-  REQUIRE(c15_test::Read<uint8>(ds, selected, shape, expectedStore) == expectedSelected);
-  const auto labels = c15_test::Components(ds, selected, "Components");
+  REQUIRE(c15_test::Read<uint8>(dataStructure, selected, shape, expectedStore) == expectedSelected);
+  const auto labels = c15_test::Components(dataStructure, selected, "Components");
   const std::vector<uint32> expectedLabels = includeNonfinite ? std::vector<uint32>{0, 0, 1, 1, 0, 0, 0} : std::vector<uint32>{0, 0, 1, 1};
-  const auto actualLabels = c15_test::Read<uint32>(ds, labels, shape, expectedStore);
+  const auto actualLabels = c15_test::Read<uint32>(dataStructure, labels, shape, expectedStore);
   REQUIRE(actualLabels == expectedLabels);
   REQUIRE(std::count(actualLabels.begin(), actualLabels.end(), uint32{1}) == 2);
-  REQUIRE(c15_test::Read<uint8>(ds, classes, shape, expectedStore) == expectedClasses);
-  REQUIRE(c15_test::Read<uint8>(ds, validity, shape, expectedStore) == expectedValidity);
-  const auto values = c15_test::Read<float64>(ds, input, shape, expectedStore);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, classes, shape, expectedStore) == expectedClasses);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, validity, shape, expectedStore) == expectedValidity);
+  const auto values = c15_test::Read<float64>(dataStructure, input, shape, expectedStore);
   REQUIRE(std::vector<float64>(values.begin(), values.begin() + 4) == std::vector<float64>{0, 0, 4, 4});
   if(includeNonfinite)
   {
@@ -1374,5 +1418,6 @@ TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds
     REQUIRE(values[5] == -inf);
     REQUIRE(values[6] == inf);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

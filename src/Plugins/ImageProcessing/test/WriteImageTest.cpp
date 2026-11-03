@@ -361,6 +361,7 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
 
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::WriteImageFilter: nonfinite policy is explicit and defaults to Error", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageSafeRed]")
 {
   UnitTest::LoadPlugins();
@@ -378,7 +379,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: nonfinite policy is explicit and d
   const Arguments arguments = filter.getDefaultArguments();
   REQUIRE(arguments.value<ChoicesParameter::ValueType>(policyKey) == 0);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: nonfinite policy is active only for color-table output", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageSafeRed]")
 {
   UnitTest::LoadPlugins();
@@ -499,6 +502,7 @@ std::vector<char> readWriteImageSentinel(const fs::path& path)
   REQUIRE(input.is_open());
   return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 template <typename T>
 class WriteImageReadProbeStore : public ExtentCountingDataStore<T>
@@ -595,6 +599,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: wide and tiny interiors decode wit
   requireWriteImageGray(scope, std::array<float64, 3>{-0x1.8p+971, high * 0.5, high}, expected);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::WriteImageFilter: subnormal double interior has a distinct runtime witness", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -609,6 +614,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: subnormal double interior has a di
   REQUIRE(values.at(1) < values.at(2));
   requireWriteImageGray(scope, values, std::array<uint8, 3>{0, 127, 255});
 }
+// NOLINTEND(bugprone-chained-comparison)
 
 TEST_CASE("ImageProcessing::WriteImageFilter: mask first nonfinite and finite masked range decode literally", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
@@ -631,13 +637,16 @@ TEST_CASE("ImageProcessing::WriteImageFilter: mask first nonfinite and finite ma
   const ScopedTempDir output(k_BinaryTestOutputDir);
   const WriteImageFilter filter;
   const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "mask.png", policy, "Grayscale", true));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   const std::vector<uint8> expected{10, 20, 30, 85, 85, 85, 170, 170, 170, 255, 255, 255, 10, 20, 30, 10, 20, 30, 10, 20, 30};
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(readWriteImageNumericPng(output.path() / "mask.png", 7, 1) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: integer color reads masks only for slices", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -679,7 +688,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: integer color reads masks only for
   REQUIRE(result.result.warnings().empty());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: Warn returns one count and the first actual control color", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -707,7 +718,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: Warn returns one count and the fir
   REQUIRE(readWriteImageNumericPng(output.path() / "warn.png", 5, 1) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: late strict nonfinite preserves every existing slice byte", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -741,7 +754,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: late strict nonfinite preserves ev
   REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: no finite color range errors in either mode", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -761,6 +776,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: no finite color range errors in ei
   REQUIRE(fs::is_empty(output.path()));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::WriteImageFilter: finite constants and all finite masked values stay valid", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
@@ -774,9 +790,11 @@ TEST_CASE("ImageProcessing::WriteImageFilter: finite constants and all finite ma
   const ScopedTempDir output(k_BinaryTestOutputDir);
   const WriteImageFilter filter;
   const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "constant.png", 0, "X Ray", true));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   const std::vector<uint8> expected = allMasked ? std::vector<uint8>{10, 20, 30, 10, 20, 30, 10, 20, 30} : std::vector<uint8>{255, 255, 255, 10, 20, 30, 255, 255, 255};
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(readWriteImageNumericPng(output.path() / "constant.png", 3, 1) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -794,6 +812,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: policy output retains literal layo
   arguments.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(plane));
   const WriteImageFilter filter;
   const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const std::array<std::array<uint8, 8>, 3> expected{{{0, 85, 170, 255, 0, 85, 170, 255}, {0, 85, 0, 85, 170, 255, 170, 255}, {0, 170, 0, 170, 85, 255, 85, 255}}};
   for(usize slice = 0; slice < 2; ++slice)
@@ -803,6 +822,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: policy output retains literal layo
     {
       for(usize channel = 0; channel < 3; ++channel)
       {
+        // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
         REQUIRE(bytes.at((pixel * 3) + channel) == expected.at(plane).at((slice * 4) + pixel));
       }
     }
@@ -810,6 +830,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: policy output retains literal layo
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::WriteImageFilter: raw floating pixels ignore color policy and mask", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -871,6 +892,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::WriteImageFilter: raw floating pixels ignor
   REQUIRE(std::signbit(actual.at(4)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::WriteImageFilter: cancellation during color scan opens no slice", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
@@ -890,19 +912,22 @@ TEST_CASE("ImageProcessing::WriteImageFilter: cancellation during color scan ope
   const WriteImageFilter filter;
   const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "cancel.png"), nullptr, handler, cancel);
   REQUIRE(cancel.load());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.result.errors().front().code == -1);
   REQUIRE(fs::is_empty(output.path()));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: color size and palette guards use actionable results", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
-  const auto empty = WriteImageColor::ValidateSize<float64>(0, 1, 1, false);
+  const auto empty = WriteImageColor::ValidateSize<float64>({.Width = 0, .Height = 1, .Count = 1}, false);
   SIMPLNX_RESULT_REQUIRE_INVALID(empty);
   REQUIRE(empty.errors().front().code == -27030);
-  const auto large = WriteImageColor::ValidateSize<float64>(std::numeric_limits<usize>::max(), 1, 1, true);
+  const auto large = WriteImageColor::ValidateSize<float64>({.Width = std::numeric_limits<usize>::max(), .Height = 1, .Count = 1}, true);
   SIMPLNX_RESULT_REQUIRE_INVALID(large);
   REQUIRE(large.errors().front().code == -27032);
   const auto invalidPalette = WriteImageColor::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {1, 0});
@@ -911,7 +936,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: color size and palette guards use 
   const auto validPalette = WriteImageColor::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {0, 1});
   SIMPLNX_RESULT_REQUIRE_VALID(validPalette);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: page and slice IO failures preserve diagnostics and warnings", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -952,7 +979,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: page and slice IO failures preserv
   REQUIRE(fs::is_empty(output.path()));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: late nonfinite scan uses bounded scalar and mask pages", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -999,7 +1028,9 @@ TEST_CASE("ImageProcessing::WriteImageFilter: late nonfinite scan uses bounded s
   REQUIRE(fs::is_empty(output.path()));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::WriteImageFilter: later commit failure keeps earlier slice and policy warning", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
@@ -1032,6 +1063,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: later commit failure keeps earlier
   REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("ImageProcessing::WriteImageFilter: Write Stack", "[ImageProcessing][WriteImageFilter]")
 {
@@ -2844,6 +2876,7 @@ TEST_CASE("ImageProcessing::WriteImageFilter: rejects a source-group grant small
   }
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::C15Compatibility resident principal angles and tangent persist and export ordered fractions", "[ImageProcessing][C15Compatibility][Issue1874][WriteImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -2953,3 +2986,4 @@ TEST_CASE("ImageProcessing::C15Compatibility resident principal angles and tange
   UnitTest::CheckArraysInheritTupleDims(source);
   UnitTest::CheckArraysInheritTupleDims(reloaded);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

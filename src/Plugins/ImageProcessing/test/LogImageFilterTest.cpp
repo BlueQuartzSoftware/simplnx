@@ -24,6 +24,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -40,20 +41,28 @@ DataPath runMappedIntegerLog(DataStructure& dataStructure, const DataPath& input
   args.insertOrAssign(LogImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(LogImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
   // Stop before zero or negative integer input can produce an unsafe nonfinite-to-integer cast.
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::float64);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == componentShape);
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return input.replaceName("Output");
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: integer values produce float64 natural logarithms", "[ImageProcessing][Issue1874][LogImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
@@ -61,12 +70,16 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: integer values produce floa
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   constexpr int32 highestPower = std::numeric_limits<TestType>::digits - 1;
   constexpr TestType highestPowerOfTwo = static_cast<TestType>(TestType{1} << highestPower);
-  std::vector<TestType> values = {1, 2, 0, std::numeric_limits<TestType>::max(), highestPowerOfTwo};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    values.push_back(-1);
-    values.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto values = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{1, 2, 0, std::numeric_limits<TestType>::max(), highestPowerOfTwo, -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{1, 2, 0, std::numeric_limits<TestType>::max(), highestPowerOfTwo};
+    }
+  }();
   const ShapeType tupleShape = {1, 1, values.size()};
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
@@ -84,7 +97,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: integer values produce floa
   REQUIRE(std::isinf(store.getValue(2)));
   REQUIRE(std::signbit(store.getValue(2)));
   // 2^(digits-1) <= maximum < 2^digits. Rounding can make the upper logarithm equal for 64-bit types.
-  constexpr float64 logTwo = 0.69314718055994530942;
+  constexpr float64 logTwo = std::numbers::ln2;
   constexpr float64 lowerBound = highestPower * logTwo;
   constexpr float64 upperBound = std::numeric_limits<TestType>::digits * logTwo;
   REQUIRE(std::isfinite(store.getValue(3)));
@@ -98,7 +111,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: integer values produce floa
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: floating input retains type and IEEE domain results", "[ImageProcessing][Issue1874][LogImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -149,7 +164,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: floating input retains type
   REQUIRE(std::isnan(store.getValue(9)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: positive floating boundaries retain finite logarithms", "[ImageProcessing][Issue1874][LogImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -167,7 +184,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: positive floating boundarie
   REQUIRE_NOTHROW(logarithmsPtr = &dataStructure.getDataRefAs<DataArray<TestType>>(output));
   const auto& store = logarithmsPtr->getDataStoreRef();
   // IEEE binary types have minimum normal 2^(min_exponent-1) and minimum subnormal 2^(min_exponent-digits).
-  constexpr float64 logTwo = 0.69314718055994530942;
+  constexpr float64 logTwo = std::numbers::ln2;
   constexpr float64 normalLogarithm = (std::numeric_limits<TestType>::min_exponent - 1) * logTwo;
   constexpr float64 subnormalLogarithm = (std::numeric_limits<TestType>::min_exponent - std::numeric_limits<TestType>::digits) * logTwo;
   constexpr float64 logarithmTolerance = std::is_same_v<TestType, float32> ? 1.0e-5 : 1.0e-12;
@@ -179,7 +196,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::LogImageFilter: positive floating boundarie
   REQUIRE(store.getValue(3) > TestType{0});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::LogImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][LogImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -216,6 +235,7 @@ TEST_CASE("ImageProcessing::LogImageFilter: mapped multi-component output preser
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // Floating domain behavior: log(x<0) is NaN and log(0) is -infinity.
 TEST_CASE("ImageProcessing::LogImageFilter: log of negative is NaN and log(0) is -inf (domain edge)", "[ImageProcessing][LogImageFilter]")

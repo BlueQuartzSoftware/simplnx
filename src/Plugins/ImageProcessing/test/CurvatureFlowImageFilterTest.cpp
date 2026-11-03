@@ -24,6 +24,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
@@ -346,42 +347,59 @@ private:
   std::atomic_bool* m_CancelOnWritePtr = nullptr;
 };
 
-Arguments makeCurvatureFlowArgs(const DataPath& inputPath, float64 timeStep, uint32 iterations)
+struct CurvatureFlowTestOptions
+{
+  float64 TimeStep;
+  uint32 Iterations;
+};
+
+Arguments makeCurvatureFlowArgs(const DataPath& inputPath, const CurvatureFlowTestOptions& options)
 {
   Arguments args;
   args.insertOrAssign(CurvatureFlowImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
   args.insertOrAssign(CurvatureFlowImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(CurvatureFlowImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(CurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(timeStep));
-  args.insertOrAssign(CurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<uint32>(iterations));
+  args.insertOrAssign(CurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(options.TimeStep));
+  args.insertOrAssign(CurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<uint32>(options.Iterations));
   return args;
 }
 
 template <class T>
-void requireCurvatureFlowConstant(DataStructure& dataStructure, const DataPath& inputPath, T expected, float64 timeStep, uint32 iterations)
+void requireCurvatureFlowConstant(DataStructure& dataStructure, const DataPath& inputPath, T expected, const CurvatureFlowTestOptions& options)
 {
   const CurvatureFlowImageFilter filter;
-  const Arguments args = makeCurvatureFlowArgs(inputPath, timeStep, iterations);
+  const Arguments args = makeCurvatureFlowArgs(inputPath, options);
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == GetDataType<T>());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == ShapeType{1, 1, 1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == ShapeType{1});
 
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(executeResult.result.warnings().empty());
   const DataPath outputPath = inputPath.replaceName("Output");
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getDataType() == GetDataType<T>());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getTupleShape() == ShapeType{1, 1, 1});
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(outputArrayPtr->getComponentShape() == ShapeType{1});
   const DataArray<T>* valuesPtr = nullptr;
   REQUIRE_NOTHROW(valuesPtr = &dataStructure.getDataRefAs<DataArray<T>>(outputPath));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(valuesPtr->getDataStoreRef().getValue(0) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -396,9 +414,11 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: invalid time step is rejec
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 1, 1, 1, {7});
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, timeStep, iterations));
+  const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = timeStep, .Iterations = iterations}));
   // Preflight only: never evolve or cast an invalid-control baseline.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_CurvatureFlowInvalidTimeStep);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -424,9 +444,11 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: invalid active spacing is 
       spacing.at(axis) = invalidSpacing;
       geometryPtr->setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
       const CurvatureFlowImageFilter filter;
-      const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, 0.0, iterations));
+      const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = iterations}));
       // All executions are deferred: nonfinite spacing can poison even a constant baseline.
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
       SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+      // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
       REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_CurvatureFlowInvalidSpacing);
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
@@ -444,7 +466,8 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: finite negative spacing an
   REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
   geometryPtr->setSpacing({-1.0F, -2.0F, unusedSpacing});
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, 0.0, 0));
+  const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = 0}));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -457,7 +480,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: constant finite i
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {TestType{7}});
   // A constant has zero first derivatives, so the independent expected update is exactly zero.
-  requireCurvatureFlowConstant(dataStructure, inputPath, TestType{7}, 0.05, 2);
+  requireCurvatureFlowConstant(dataStructure, inputPath, TestType{7}, {.TimeStep = 0.05, .Iterations = 2});
 }
 
 TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: zero operation copies int64 values exactly", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]", int64, uint64)
@@ -470,9 +493,10 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: zero operation co
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {inputValue});
   // The baseline rounds this finite constant to 2^53. Both values are well inside either native integer range.
   // Its constant-image derivative guard returns zero, so zero timestep cannot create a nonfinite update.
-  requireCurvatureFlowConstant(dataStructure, inputPath, inputValue, zeroIterations ? 0.05 : 0.0, zeroIterations ? 0u : 1u);
+  requireCurvatureFlowConstant(dataStructure, inputPath, inputValue, {.TimeStep = zeroIterations ? 0.05 : 0.0, .Iterations = zeroIterations ? 0u : 1u});
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: terminal integer conversion has exact bounds", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
@@ -513,6 +537,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: terminal integer 
     REQUIRE(output == TestType{7});
   }
 }
+// NOLINTEND(bugprone-chained-comparison)
 
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: floating narrowing retains IEEE values", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
@@ -526,9 +551,11 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: floating narrowing retains
   REQUIRE(std::signbit(negative));
   REQUIRE(std::isnan(NarrowFloatingImageValue<float32>(std::numeric_limits<float64>::quiet_NaN())));
   REQUIRE(std::signbit(NarrowFloatingImageValue<float32>(-0.0)));
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(NarrowFloatingImageValue<float64>(std::numeric_limits<float32>::max()) == static_cast<float64>(std::numeric_limits<float32>::max()));
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: independent one-step stencil truncates then clips once", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -544,7 +571,7 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: independent one-step stenc
     geometryPtr->setSpacing({-1.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN()});
   }
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, clip ? 10.0 : 0.05, 1));
+  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = clip ? 10.0 : 0.05, .Iterations = 1}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == (clip ? 1 : 0));
   if(clip)
@@ -564,6 +591,7 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: independent one-step stenc
   REQUIRE(outputPtr->getDataStoreRef().getValue(4) == (clip ? uint8{0} : uint8{93}));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: native no-op preserves integer endpoints", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]", int64, uint64)
 {
@@ -573,9 +601,10 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: native no-op pres
   const bool zeroIterations = GENERATE(false, true);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {value});
-  requireCurvatureFlowConstant(dataStructure, inputPath, value, zeroIterations ? 0.05 : 0.0, zeroIterations ? 0u : 1u);
+  requireCurvatureFlowConstant(dataStructure, inputPath, value, {.TimeStep = zeroIterations ? 0.05 : 0.0, .Iterations = zeroIterations ? 0u : 1u});
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: nonfinite terminal integer result errors", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -583,13 +612,15 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: nonfinite terminal integer
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 3, 3, 1, {0, 0, 0, 0, 100, 100, 0, 100, 100});
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, std::numeric_limits<float64>::max(), 1));
+  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = std::numeric_limits<float64>::max(), .Iterations = 1}));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == ImageProcessing::k_CurvatureFlowNonFiniteIntegerOutput);
   REQUIRE(result.result.errors().front().message.find("index 4") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong terminal routes honor the stencil", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -635,7 +666,9 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong ter
   REQUIRE(output.getTupleShape() == shape);
   REQUIRE(output.getComponentShape() == ShapeType{1});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: native no-op propagates transfer failures and cancellation", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -663,12 +696,14 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: native no-op propagates tr
   REQUIRE(output.getValue(0) == 7);
   REQUIRE(output.getTupleShape() == shape);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: resident wrapper merges clipping warning with copy failure", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const ImageProcessing::ScopedWorkingMemoryTuningOverride tuning(1024 * 1024);
+  const ImageProcessing::ScopedWorkingMemoryTuningOverride tuning(uint64{1024} * 1024);
   const ShapeType shape{2, 3, 3};
   DataStore<uint8> input(shape, ShapeType{1}, uint8{0});
   const std::vector<uint8> field{0, 0, 0, 0, 100, 100, 0, 100, 100, 0, 0, 0, 0, 100, 100, 0, 100, 100};
@@ -685,7 +720,9 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: resident wrapper merges cl
   REQUIRE(result.warnings().front().code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput);
   REQUIRE(output.writeCount() == 1);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: floating output retains nonfinite and overflow behavior", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -695,7 +732,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: floating output r
   const std::vector<TestType> field = nanInput ? std::vector<TestType>(9, std::numeric_limits<TestType>::quiet_NaN()) : std::vector<TestType>{0, 0, 0, 0, 100, 100, 0, 100, 100};
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 3, 3, 1, field);
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, nanInput ? 0.05 : 1.0e40, 1));
+  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = nanInput ? 0.05 : 1.0e40, .Iterations = 1}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().empty());
   const DataPath outputPath = inputPath.replaceName("Output");
@@ -722,7 +759,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: floating output r
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: exact no-op uses bounded native transfers", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -747,7 +786,9 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: exact no-op uses bounded n
   REQUIRE(output.getValue(count - 1) == (uint64{1} << 53) + 1);
   REQUIRE(output.getTupleShape() == shape);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exits retain clipping and transfer warnings", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -806,7 +847,9 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exits
   REQUIRE(result.warnings().size() == input.readCount() + output.writeCount() + 1);
   REQUIRE(output.getTupleShape() == shape);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D terminal exits retain warnings", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -858,10 +901,12 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D termi
   REQUIRE(result.warnings().size() == second.readCount() + output.writeCount() + 1);
   REQUIRE(output.getTupleShape() == shape);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain warnings", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  enum class Exit
+  enum class Exit : uint8
   {
     Success,
     HaloReadFailure,
@@ -875,9 +920,9 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain w
   const bool cancel = exit == Exit::CancelAfterWrite;
 
   // Use resident forwarding stores to inject diagnostics into the real X-tile transfers.
-  constexpr usize nx = 5;
-  constexpr usize ny = 3;
-  const ShapeType shape{1, ny, nx};
+  constexpr usize width = 5;
+  constexpr usize height = 3;
+  const ShapeType shape{1, height, width};
   DataStore<uint8> input(shape, ShapeType{1}, uint8{0});
   const std::vector<uint8> field{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 0, 100, 100, 100, 100};
   const auto copyResult = input.copyFromBuffer(0, field);
@@ -904,12 +949,12 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain w
   }
 
   constexpr usize limit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + (14 * sizeof(float64));
-  const auto plan = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(nx, ny, 1, sizeof(float64), limit);
+  const auto plan = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(width, height, 1, sizeof(float64), limit);
   REQUIRE(plan.valid);
   REQUIRE(plan.coreCols == 2);
   REQUIRE(plan.coreRows == 1);
   const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(
-      input, output, first, second, nx, ny, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {}, limit);
+      input, output, first, second, width, height, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {}, limit);
   if(failRead || failWrite)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -958,6 +1003,7 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain w
                                          [](const Warning& warning) { return warning.code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput; })) == expectedClipping);
   CHECK(result.warnings().size() == expectedReads + expectedWrites + expectedClipping);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a
@@ -1039,6 +1085,7 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-op
   rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("ImageProcessing::C15Compatibility resident CurvatureFlowImageFilter feeds quantitative gradient", "[ImageProcessing][C15Compatibility][Issue1874][CurvatureFlowImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -1046,7 +1093,7 @@ TEST_CASE("ImageProcessing::C15Compatibility resident CurvatureFlowImageFilter f
   UnitTest::AlgorithmTestScope scope(scenario);
   const bool step = GENERATE(false, true);
   CAPTURE(step, scenario);
-  std::vector<float32> original(16 * 4, 4);
+  std::vector<float32> original(usize{16} * 4, 4);
   if(step)
   {
     for(usize index = 0; index < original.size(); ++index)
@@ -1054,28 +1101,28 @@ TEST_CASE("ImageProcessing::C15Compatibility resident CurvatureFlowImageFilter f
       original[index] = index % 16 < 8 ? 0 : 1;
     }
   }
-  DataStructure ds;
-  const auto input = recon_test::BuildImageFromPattern<float32>(ds, 16, 4, 1, original);
-  c15_test::SetGeometry(ds);
-  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  DataStructure dataStructure;
+  const auto input = recon_test::BuildImageFromPattern<float32>(dataStructure, 16, 4, 1, original);
+  c15_test::SetGeometry(dataStructure);
+  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
   const CurvatureFlowImageFilter filter;
   auto args = c15_test::ImageArguments(filter, input, "Smoothed");
   args.insertOrAssign(CurvatureFlowImageFilter::k_NumberOfIterations_Key, std::make_any<uint32>(1));
   args.insertOrAssign(CurvatureFlowImageFilter::k_TimeStep_Key, std::make_any<float64>(0.125));
-  c15_test::ExecuteChecked(filter, ds, args);
+  c15_test::ExecuteChecked(filter, dataStructure, args);
   const auto smoothed = input.replaceName("Smoothed");
-  const auto values = c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope);
+  const auto values = c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope);
   const GradientMagnitudeImageFilter gradient;
   args = c15_test::ImageArguments(gradient, smoothed, "Gradient");
   args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
-  c15_test::Execute(gradient, ds, args, scope);
-  const auto edges = c15_test::Read<float32>(ds, input.replaceName("Gradient"), {1, 4, 16}, scope);
-  for(usize y = 0; y < 4; ++y)
+  c15_test::Execute(gradient, dataStructure, args, scope);
+  const auto edges = c15_test::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  for(usize row = 0; row < 4; ++row)
   {
-    for(usize x = 0; x < 16; ++x)
+    for(usize column = 0; column < 16; ++column)
     {
-      const usize index = y * 16 + x;
-      CAPTURE(x, y);
+      const usize index = (row * 16) + column;
+      CAPTURE(column, row);
       REQUIRE(std::isfinite(values[index]));
       REQUIRE(std::isfinite(edges[index]));
       if(!step)
@@ -1087,13 +1134,14 @@ TEST_CASE("ImageProcessing::C15Compatibility resident CurvatureFlowImageFilter f
       {
         // A planar step has zero transverse curvature. Its X central differences are 0.5 at columns 7 and 8.
         REQUIRE(values[index] == Approx(original[index]).margin(1.0e-6));
-        const float32 expectedGradient = (x == 7 || x == 8) ? 0.5F : 0.0F;
+        const float32 expectedGradient = (column == 7 || column == 8) ? 0.5F : 0.0F;
         REQUIRE(edges[index] == Approx(expectedGradient).margin(1.0e-6));
       }
     }
   }
-  REQUIRE(c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope) == values);
-  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
-  c15_test::CheckGeometry(ds, {16, 4, 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  c15_test::CheckGeometry(dataStructure, {16, 4, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)

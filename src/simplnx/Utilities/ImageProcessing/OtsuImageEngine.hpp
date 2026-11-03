@@ -184,11 +184,20 @@ struct OtsuBufferPlan
   usize Values = 1;
 };
 
-inline OtsuBufferPlan ReserveOtsuBuffers(usize total, usize bytesPerValue, usize targetBytes, bool usesExternalStore, usize summaryBytesPerBlock = 0)
+struct OtsuBufferRequirements
 {
+  usize TotalValues = 0;
+  usize BytesPerValue = 1;
+  bool UsesExternalStore = false;
+  usize SummaryBytesPerBlock = 0;
+};
+
+inline OtsuBufferPlan ReserveOtsuBuffers(const OtsuImageOptions& options, const OtsuBufferRequirements& requirements)
+{
+  const auto& [total, bytesPerValue, usesExternalStore, summaryBytesPerBlock] = requirements;
   OtsuBufferPlan plan;
   const usize usefulBytes = total > std::numeric_limits<usize>::max() / bytesPerValue ? std::numeric_limits<usize>::max() : total * bytesPerValue;
-  usize bytes = std::min({targetBytes, k_OtsuMaximumBatchBytes, usefulBytes});
+  usize bytes = std::min({options.TargetBytes, k_OtsuMaximumBatchBytes, usefulBytes});
   if(usesExternalStore)
   {
     plan.Reservation = ReserveWorkingMemory(bytes, usefulBytes);
@@ -240,9 +249,9 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
     return status;
   }
 
-  // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full transfer overwrites this contiguous buffer, including for bool.
   auto valuesPtr = std::make_unique_for_overwrite<T[]>(batchValues);
-  // MaskT may be bool and must provide contiguous values for store transfers.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full mask transfer overwrites the contiguous bool or uint8 buffer.
   auto maskValuesPtr = maskPtr == nullptr ? nullptr : std::make_unique_for_overwrite<MaskT[]>(batchValues);
   for(usize start = 0; start < total;)
   {
@@ -329,6 +338,14 @@ struct OtsuFrequencyEntry
 };
 
 template <class T>
+struct OtsuFrequencyRing
+{
+  CacheMemoryBudgetManager::WorkingMemoryReservation Reservation;
+  std::unique_ptr<std::vector<OtsuFrequencyEntry<T>>> Frequencies;
+  bool Compact = false;
+};
+
+template <class T>
 Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T maxValue, usize frequency = 1)
 {
   usize bin = 0;
@@ -381,35 +398,35 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   {
     return MakeErrorResult<OtsuHistogramResult>(-8329, "Otsu input and optional mask must be scalar and contain the same number of tuples. Select a scalar mask with one value per input tuple.");
   }
-  OtsuHistogramResult result;
   if(shouldCancel)
   {
-    return {std::move(result)};
+    return {};
   }
+  OtsuHistogramResult result;
   result.HistogramData.counts.assign(options.NumberOfBins, 0);
   T minValue{};
   T maxValue{};
   const bool external = input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore);
   const usize total = input.getSize();
   const usize bytesPerValue = sizeof(T) + (maskPtr == nullptr ? 0 : sizeof(MaskT));
-  auto plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external, std::is_floating_point_v<T> ? sizeof(detail::OtsuFloatingRangeSummary<T>) : 0);
+  auto plan = detail::ReserveOtsuBuffers(
+      options,
+      {.TotalValues = total, .BytesPerValue = bytesPerValue, .UsesExternalStore = external, .SummaryBytesPerBlock = std::is_floating_point_v<T> ? sizeof(detail::OtsuFloatingRangeSummary<T>) : 0});
   constexpr usize ringSize = 65536;
-  CacheMemoryBudgetManager::WorkingMemoryReservation ringReservation;
-  std::unique_ptr<std::vector<detail::OtsuFrequencyEntry<T>>> frequenciesPtr;
-  using CompactRangeType = std::conditional_t<std::is_integral_v<T>, bool, const bool>;
-  CompactRangeType compactRange = false;
+  using FrequencyRingType = std::conditional_t<std::is_integral_v<T>, detail::OtsuFrequencyRing<T>, const detail::OtsuFrequencyRing<T>>;
+  FrequencyRingType ring{};
   if constexpr(std::is_integral_v<T>)
   {
     const usize ringBytes = ringSize * sizeof(detail::OtsuFrequencyEntry<T>);
     // Admit the optional ring in full only after the required payload, without evicting cache entries.
     if(external && ResolvePreferredWorkingMemoryBytes(ringBytes) >= ringBytes)
     {
-      ringReservation = CacheMemoryBudgetManager::instance().tryReserveWorkingMemoryWithoutEviction(ringBytes);
+      ring.Reservation = CacheMemoryBudgetManager::instance().tryReserveWorkingMemoryWithoutEviction(ringBytes);
     }
-    compactRange = !external || ringReservation.sizeBytes() == ringBytes;
-    if(compactRange)
+    ring.Compact = !external || ring.Reservation.sizeBytes() == ringBytes;
+    if(ring.Compact)
     {
-      frequenciesPtr = std::make_unique<std::vector<detail::OtsuFrequencyEntry<T>>>(ringSize);
+      ring.Frequencies = std::make_unique<std::vector<detail::OtsuFrequencyEntry<T>>>(ringSize);
     }
   }
   Result<> rangeResult = detail::VisitOtsuValues(
@@ -471,17 +488,17 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
             ++result.FiniteCount;
             if constexpr(std::is_integral_v<T>)
             {
-              if(compactRange)
+              if(ring.Compact)
               {
                 using KeyType = detail::UnsignedIntegralType<T>;
                 const KeyType key = detail::IntegralMonotonicKey(value);
-                compactRange = (detail::IntegralMonotonicKey(maxValue) - detail::IntegralMonotonicKey(minValue)) <= static_cast<KeyType>(ringSize - 1);
-                if(compactRange)
+                ring.Compact = (detail::IntegralMonotonicKey(maxValue) - detail::IntegralMonotonicKey(minValue)) <= static_cast<KeyType>(ringSize - 1);
+                if(ring.Compact)
                 {
-                  auto& entry = (*frequenciesPtr)[static_cast<usize>(key & static_cast<KeyType>(ringSize - 1))];
+                  auto& entry = (*ring.Frequencies)[static_cast<usize>(key & static_cast<KeyType>(ringSize - 1))];
                   if(entry.Count != 0 && entry.Value != value)
                   {
-                    compactRange = false;
+                    ring.Compact = false;
                   }
                   else
                   {
@@ -489,10 +506,10 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
                     ++entry.Count;
                   }
                 }
-                if(!compactRange)
+                if(!ring.Compact)
                 {
-                  frequenciesPtr.reset();
-                  ringReservation = {};
+                  ring.Frequencies.reset();
+                  ring.Reservation = {};
                 }
               }
             }
@@ -501,7 +518,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
         }
       },
       std::is_floating_point_v<T>);
-  if(std::is_floating_point_v<T> || compactRange || minValue == maxValue)
+  if(std::is_floating_point_v<T> || ring.Compact || minValue == maxValue)
   {
     plan.Reservation = {};
   }
@@ -535,7 +552,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   {
     histogram.counts.front() = result.FiniteCount;
   }
-  else if(compactRange)
+  else if(ring.Compact)
   {
     for(usize i = 0; i < ringSize; ++i)
     {
@@ -543,7 +560,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
       {
         return ConvertResultTo(std::move(rangeResult), std::move(result));
       }
-      const auto& entry = (*frequenciesPtr)[i];
+      const auto& entry = (*ring.Frequencies)[i];
       if(entry.Count != 0)
       {
         Result<> addResult = detail::AccumulateCheckedOtsuValue(histogram, entry.Value, minValue, maxValue, entry.Count);
@@ -559,7 +576,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
     if constexpr(std::is_floating_point_v<T>)
     {
       // The floating-point histogram pass needs no range summaries.
-      plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external);
+      plan = detail::ReserveOtsuBuffers(options, {.TotalValues = total, .BytesPerValue = bytesPerValue, .UsesExternalStore = external});
     }
     Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, plan.Values, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
       for(usize i = 0; i < values.size(); ++i)
@@ -605,7 +622,7 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
 {
   if(shouldCancel)
   {
-    return {std::vector<float64>{}};
+    return {};
   }
   if(options.NumberOfThresholds == 0 || options.NumberOfThresholds >= histogram.counts.size())
   {
@@ -622,7 +639,9 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
   }
   if(histogram.binWidth == 0.0 && histogram.min == histogram.max)
   {
-    return {std::vector<float64>(options.NumberOfThresholds, histogram.min)};
+    Result<std::vector<float64>> result;
+    result.m_Expected = std::vector<float64>(options.NumberOfThresholds, histogram.min);
+    return result;
   }
   return detail::ComputeOtsuThresholds<true>(histogram, options.NumberOfThresholds, options.ValleyEmphasis, options.ReturnBinMidpoint, &shouldCancel);
 }
@@ -714,12 +733,12 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   }
   else
   {
-    auto plan = detail::ReserveOtsuBuffers(input.getSize(), sizeof(T) + sizeof(MaskT) + sizeof(uint8), options.TargetBytes,
-                                           input.getStoreType() == IDataStore::StoreType::OutOfCore || maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore ||
-                                               output.getStoreType() == IDataStore::StoreType::OutOfCore);
-    // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
+    const bool external =
+        input.getStoreType() == IDataStore::StoreType::OutOfCore || maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore || output.getStoreType() == IDataStore::StoreType::OutOfCore;
+    auto plan = detail::ReserveOtsuBuffers(options, {.TotalValues = input.getSize(), .BytesPerValue = sizeof(T) + sizeof(MaskT) + sizeof(uint8), .UsesExternalStore = external});
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full transfer overwrites this contiguous buffer, including for bool.
     auto valuesPtr = std::make_unique_for_overwrite<T[]>(plan.Values);
-    // MaskT may be bool and must provide contiguous values for store transfers.
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full mask transfer overwrites the contiguous bool or uint8 buffer.
     auto maskValuesPtr = std::make_unique_for_overwrite<MaskT[]>(plan.Values);
     auto labelsPtr = std::make_unique<std::vector<uint8>>(plan.Values);
     messageHandler.sendInfoMessage("Applying masked Otsu labels in bounded batches");

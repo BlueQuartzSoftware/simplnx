@@ -1128,6 +1128,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellat
   }
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: native provisional capacity decisions require no large forest",
           "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
@@ -1179,7 +1180,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: native provisional capacit
   REQUIRE(legacyFinished.warnings().size() == 1);
   REQUIRE(legacyFinished.warnings().front().code == 8772);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reuse consequence model", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
@@ -1187,7 +1190,12 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reus
   const IFilter::MessageHandler handler;
   ImageProcessing::detail::ConnectedComponentLabelState state(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
   ImageProcessing::detail::CcUnionFind forest(state);
-  forest.parent = {0, 1, 2, 3};
+  for(uint32 expectedLabel = 1; expectedLabel <= 3; ++expectedLabel)
+  {
+    const auto labelResult = forest.makeLabel();
+    SIMPLNX_RESULT_REQUIRE_VALID(labelResult);
+    REQUIRE(labelResult.value() == expectedLabel);
+  }
   forest.link(2, 3);
   const ImageProcessing::detail::CcLine current{{.start = 0, .length = 1, .label = 0}};
   const ImageProcessing::detail::CcLine previous{{.start = 0, .length = 1, .label = 2}};
@@ -1195,13 +1203,15 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reus
   REQUIRE(forest.find(2) == 0);
   REQUIRE(forest.find(3) == 0); // an already-linked component is also absorbed into background
   forest.link(1, 2);            // reused ID 1 now joins the zero root as well
-  REQUIRE(forest.parent == std::vector<uint32>{0, 0, 0, 2});
+  REQUIRE(forest.parentTable() == std::vector<uint32>{0, 0, 0, 2});
   const std::atomic_bool shouldCancel{false};
   const auto resolved = forest.createConsecutive(shouldCancel, {});
   REQUIRE(resolved.second == 0);
   REQUIRE(resolved.first == std::vector<uint32>{0, 0, 0, 0});
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor consequence model preserves a foreground root",
           "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
@@ -1229,7 +1239,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor conseq
       ImageProcessing::detail::Pass1TwoDimensionalTiles(inputStore, provisional, SizeVec3{3, 2, 1}, predicate, fullyConnected, shouldCancel, forest, nullptr, planResult.value(), {});
   SIMPLNX_RESULT_REQUIRE_VALID(passResult);
   REQUIRE(provisionalStore.zeroRowReads() == 3);
-  REQUIRE(forest.parent == std::vector<uint32>{0, 1, 2});
+  REQUIRE(forest.parentTable() == std::vector<uint32>{0, 1, 2});
   REQUIRE(forest.find(2) == 2);
   const auto resolved = forest.createConsecutive(shouldCancel, {});
   REQUIRE(resolved.second == 2);
@@ -1239,11 +1249,16 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor conseq
 
   // The real scanline union on the corresponding literal IDs absorbs the current run into zero instead.
   ImageProcessing::detail::CcUnionFind scanlineForest(state);
-  scanlineForest.parent = {0, 1, 2};
+  for(uint32 expectedLabel = 1; expectedLabel <= 2; ++expectedLabel)
+  {
+    const auto labelResult = scanlineForest.makeLabel();
+    SIMPLNX_RESULT_REQUIRE_VALID(labelResult);
+    REQUIRE(labelResult.value() == expectedLabel);
+  }
   const ImageProcessing::detail::CcLine current{{.start = 1, .length = 1, .label = 2}};
   const ImageProcessing::detail::CcLine previous{{.start = 1, .length = 1, .label = 0}};
   ImageProcessing::detail::CompareLines(current, previous, fullyConnected ? 1 : 0, scanlineForest);
-  REQUIRE(scanlineForest.parent == std::vector<uint32>{0, 1, 0});
+  REQUIRE(scanlineForest.parentTable() == std::vector<uint32>{0, 1, 0});
   REQUIRE(scanlineForest.find(2) == 0);
   const auto scanlineResolved = scanlineForest.createConsecutive(shouldCancel, {});
   REQUIRE(scanlineResolved.second == 1);
@@ -1251,7 +1266,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor conseq
   REQUIRE(scanlineFinalLabels == std::array<uint32, 6>{0, 1, 0, 0, 0, 0});
   // This exercises the production route's zero-neighbor rule using a controlled scratch-row model, not real overflow.
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: capacity warning context retains independent delivered diagnostics",
           "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
@@ -1274,7 +1291,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: capacity warning context r
   REQUIRE(result.warnings().at(0).code == 8793);
   REQUIRE(result.warnings().at(1).code == 8772);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: seeded warning context survives resident retry copy error and cancellation",
           "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
@@ -1332,7 +1351,9 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: seeded warning context sur
   }
   REQUIRE(inputStore.attempts() == (fault == ConnectedComponentReadFaultType::BadAllocOnce ? dims[2] + 1 : 1));
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: allocation addressability and I/O failures remain errors under both policies",
           "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
@@ -1369,3 +1390,4 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: allocation addressability 
   SIMPLNX_RESULT_REQUIRE_INVALID(countResult);
   REQUIRE(countResult.errors().front().code == countCode);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

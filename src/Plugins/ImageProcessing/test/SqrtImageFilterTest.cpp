@@ -40,31 +40,43 @@ DataPath runMappedIntegerSqrt(DataStructure& dataStructure, const DataPath& inpu
   args.insertOrAssign(SqrtImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(SqrtImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
   const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr != nullptr);
   // Stop before negative integer input can produce an unsafe NaN-to-integer cast.
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->type() == DataType::float64);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->dims() == tupleShape);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(actionPtr->componentDims() == componentShape);
   const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return input.replaceName("Output");
 }
 } // namespace
 
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: integer values produce float64 square roots", "[ImageProcessing][Issue1874][SqrtImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  std::vector<TestType> values = {0, 2, 4, std::numeric_limits<TestType>::max()};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    values.push_back(-1);
-    values.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto values = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{0, 2, 4, std::numeric_limits<TestType>::max(), -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{0, 2, 4, std::numeric_limits<TestType>::max()};
+    }
+  }();
   const ShapeType tupleShape = {1, 1, values.size()};
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
@@ -124,7 +136,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: integer values produce flo
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: floating input retains type and IEEE domain results", "[ImageProcessing][Issue1874][SqrtImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -178,7 +192,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: floating input retains typ
   REQUIRE(std::isnan(store.getValue(11)));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: floating boundary roots match independent binary values", "[ImageProcessing][Issue1874][SqrtImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
@@ -232,7 +248,9 @@ TEMPLATE_TEST_CASE("ImageProcessing::SqrtImageFilter: floating boundary roots ma
   REQUIRE(store.getValue(8) == maximumRoot);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("ImageProcessing::SqrtImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][SqrtImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -268,6 +286,7 @@ TEST_CASE("ImageProcessing::SqrtImageFilter: mapped multi-component output prese
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // Negative floating input produces a representable NaN.
 TEST_CASE("ImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain edge)", "[ImageProcessing][SqrtImageFilter]")

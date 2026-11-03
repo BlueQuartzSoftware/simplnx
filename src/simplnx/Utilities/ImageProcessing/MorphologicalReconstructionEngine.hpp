@@ -75,7 +75,7 @@ T SubtractExactIntegerReconstructionHeight(T value, uint64 heightUnits)
       const uint64 distanceToMinimum = static_cast<uint64>(value - std::numeric_limits<T>::lowest());
       return heightUnits >= distanceToMinimum ? std::numeric_limits<T>::lowest() : static_cast<T>(value - static_cast<T>(heightUnits));
     }
-    const uint64 positiveValue = static_cast<uint64>(value);
+    const uint64 positiveValue = static_cast<uint64>(+value);
     if(heightUnits <= positiveValue)
     {
       return static_cast<T>(positiveValue - heightUnits);
