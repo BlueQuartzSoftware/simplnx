@@ -13,7 +13,7 @@ Outputs include:
   - *Example*: For 4 bins spanning [0,8), a feature's tuple is [0,2), [2,4), [4,6), [6,8) represented as `[0,2,2,4,4,6,6,8]`.
 - **Most Populated Bin DataArray**: One tuple per feature with one component indicating the bin index containing the most values.
   - *Example*: If feature 3's third bin contains the most values, then tuple 3 has the value `2`.
-- **Modal Bin Ranges INeighborList** (optional): One NeighborList that contains one list per feature specifying inclusive lower bound and exclusive upper bound containing the feature's mode(s). Because there can be multiple modes, each list may include more than 2 entries.
+- **Modal Bin Ranges INeighborList** (optional): Each feature has one list. Each modal entry is the stored lower/upper pair of the bin that counted a mode. A mode that falls outside the bins adds no pair. One pair is kept per mode, including duplicate pairs. For integer data, the stored bounds are rounded like Bin Ranges. For example, mode 3 can map to `{1,3}` when the bin width is 2.5. When the counting bin width has magnitude below `1E-10`, each populated feature instead gives one `{0, number of features}` pair. Boolean input gives no modal ranges.
   - *Example*: list 5 contains `[0.5, 10.2, 41.3, 54.1]` if feature 5 has two mode values and they fall between 0.5 and 10.2 and between 41.3 and 54.1.
 
 ### Required Input Sources
