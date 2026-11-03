@@ -339,9 +339,9 @@ public:
           {
             if(std::fabs(increment) < 1E-10)
             {
-              // The modal contract uses [0, featureCount), independent of worker range.
-              m_ModalBinRangesList->addEntry(j, static_cast<Type>(0));
-              m_ModalBinRangesList->addEntry(j, static_cast<Type>(m_HistogramStore.getNumberOfTuples()));
+              // Use this feature's histogram bounds for the degenerate modal range.
+              m_ModalBinRangesList->addEntry(j, ranges.front());
+              m_ModalBinRangesList->addEntry(j, ranges.back());
             }
             else if(!modalMaps[localFeatureIndex].empty())
             {
@@ -1157,9 +1157,10 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
       {
         if(lengths[feature] > 0 && std::fabs(increments[feature]) < 1.0E-10F)
         {
-          // Degenerate modal ranges use [0, numFeatures) for every populated feature.
-          typedModalBinRanges.addEntry(static_cast<int32>(feature), static_cast<T>(0));
-          typedModalBinRanges.addEntry(static_cast<int32>(feature), static_cast<T>(numFeatures));
+          // Use this feature's histogram bounds for the degenerate modal range.
+          const usize rangeOffset = feature * bins * 2;
+          typedModalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset]);
+          typedModalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset + bins * 2 - 1]);
         }
       }
       if(externalSort != nullptr)

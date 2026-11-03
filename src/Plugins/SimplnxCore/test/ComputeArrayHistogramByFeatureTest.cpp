@@ -792,7 +792,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: mid-scan cancellation pr
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range modal oracle", "[SimplnxCore][ComputeArrayHistogram]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize k_FeatureCount = 1024;
+  constexpr usize k_FeatureCount = 3;
   const std::vector<int32> values(k_FeatureCount, 7);
   std::vector<int32> featureIds(k_FeatureCount);
   std::iota(featureIds.begin(), featureIds.end(), 0);
@@ -805,10 +805,12 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
     std::vector<int32> ranges;
     std::vector<std::vector<int32>> modalLists;
     const auto modalRange = executeInt32ModalCase(scope, values, featureIds, 2, 7.0, 7.0, true, DataPath({"Degenerate"}), &counts, &ranges, &modalLists);
-    // Every populated feature must use the complete range [0, numFeatures).
-    REQUIRE(modalRange == std::vector<int32>{0, 1024});
-    REQUIRE(modalLists[512] == modalRange);
-    REQUIRE(modalLists[1023] == modalRange);
+    // The user supplied the single degenerate bin [7, 7] for every feature.
+    CHECK(modalRange == std::vector<int32>{7, 7});
+    for(const auto& modalList : modalLists)
+    {
+      CHECK(modalList == std::vector<int32>{7, 7});
+    }
     REQUIRE(counts.size() == k_FeatureCount * 2);
     REQUIRE(counts[0] == 1);
     REQUIRE(counts[1] == 0);
@@ -816,4 +818,54 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
     REQUIRE(ranges.size() == k_FeatureCount * 4);
     REQUIRE(std::all_of(ranges.begin(), ranges.end(), [](int32 value) { return value == 7; }));
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate data range modal oracle", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* group = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(group != nullptr);
+  auto* values = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Values", {4}, {1}, group->getId());
+  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {4}, {1}, group->getId());
+  REQUIRE(values != nullptr);
+  REQUIRE(ids != nullptr);
+  // At 2^25 and 2^26, float32 addition of 1 rounds back to the same value.
+  // Each feature therefore has a literal, data-derived degenerate range.
+  const std::array<float32, 2> expected = {33554432.0F, 67108864.0F};
+  for(usize index = 0; index < 4; ++index)
+  {
+    values->setValue(index, expected[index / 2]);
+    ids->setValue(index, static_cast<int32>(index / 2));
+  }
+  ComputeArrayHistogramByFeatureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input", "Values"})}));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath output({"Histograms", "\"Values\" Histogram"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges")));
+  const auto& modal = dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges"));
+  const auto& ranges = dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges"));
+  REQUIRE(modal.getNumberOfTuples() == 2);
+  for(usize feature = 0; feature < 2; ++feature)
+  {
+    CHECK(modal.getList(feature) == std::vector<float32>{expected[feature], expected[feature]});
+    for(usize component = 0; component < 4; ++component)
+    {
+      CHECK(ranges[feature * 4 + component] == expected[feature]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
