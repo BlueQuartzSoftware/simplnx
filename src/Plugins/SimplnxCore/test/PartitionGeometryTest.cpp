@@ -382,6 +382,74 @@ Arguments createVertexTupleValidationArguments(ChoicesParameter::ValueType mode)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count", "[Plugins][PartitionGeometryFilter][L22]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto mode = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2}, ChoicesParameter::ValueType{3});
+  const int32 start = GENERATE(-1, 0, 1, 5);
+  CAPTURE(scenario, mode, start);
+
+  DataStructure dataStructure;
+  const DataPath geomPath({"Image"});
+  const auto cellPath = geomPath.createChildPath("Cells");
+  const auto featurePath = geomPath.createChildPath("Partitions");
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  image->setDimensions({2, 2, 1});
+  image->setOrigin({0.0F, 0.0F, 0.0F});
+  image->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {1, 2, 2}, image->getId());
+  image->setCellData(*cells);
+
+  auto args = createBasicPartitionGeometryArguments(geomPath, cellPath, "Ids", {2, 2, 1}, std::nullopt);
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitioningMode_Key, mode);
+  args.insertOrAssign(PartitionGeometryFilter::k_StartingFeatureID_Key, start);
+  args.insertOrAssign(PartitionGeometryFilter::k_FeatureAttrMatrixName_Key, std::string("Partitions"));
+  args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, std::vector<float32>{1.0F, 1.0F, 1.0F});
+  args.insertOrAssign(PartitionGeometryFilter::k_MinGridCoord_Key, std::vector<float32>{0.0F, 0.0F, 0.0F});
+  args.insertOrAssign(PartitionGeometryFilter::k_MaxGridCoord_Key, std::vector<float32>{2.0F, 2.0F, 1.0F});
+  if(mode == 3)
+  {
+    auto* grid = ImageGeom::Create(dataStructure, "ExistingGrid");
+    grid->setDimensions({2, 2, 1});
+    grid->setOrigin({0.0F, 0.0F, 0.0F});
+    grid->setSpacing({1.0F, 1.0F, 1.0F});
+    args.insertOrAssign(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key, DataPath({"ExistingGrid"}));
+    // Existing mode must use the existing grid dimensions, not these inactive counts.
+    args.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{7, 8, 9});
+  }
+
+  // Four partitions have IDs start through start + 3; the feature shape is {start + 4}.
+  const ShapeType expectedShape = {static_cast<usize>(start + 4)};
+  auto preflight = PartitionGeometryFilter().preflight(dataStructure, args);
+  if(start < 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors()[0].code == -3046);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  DataStructure preflightData(dataStructure);
+  const auto applyResult = preflight.outputActions.value().applyRegular(preflightData, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  CHECK(preflightData.getDataRefAs<AttributeMatrix>(featurePath).getShape() == expectedShape);
+
+  const auto execute = scope.executeFilter(PartitionGeometryFilter(), dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  const auto& features = dataStructure.getDataRefAs<AttributeMatrix>(featurePath);
+  CHECK(features.getShape() == expectedShape);
+  const auto& ids = dataStructure.getDataRefAs<Int32Array>(cellPath.createChildPath("Ids"));
+  REQUIRE(ids.getNumberOfTuples() == 4);
+  for(usize index = 0; index < 4; index++)
+  {
+    CHECK(ids[index] == start + static_cast<int32>(index));
+    CHECK(ids[index] >= 0);
+    CHECK(static_cast<usize>(ids[index]) < features.getNumberOfTuples());
+  }
+}
+
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic RectGrid bounds", "[Plugins][PartitionGeometryFilter]")
 {
   UnitTest::LoadPlugins();
