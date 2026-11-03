@@ -1017,6 +1017,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child F
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == -67441);
+  CHECK(result.outputActions.errors()[0].message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

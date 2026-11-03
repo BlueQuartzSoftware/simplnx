@@ -59,7 +59,7 @@ When Clear is off, **Feature Data Not Cleared** explains that copied feature val
 
 When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Image Geometry*. It must not be that geometry's Cell Attribute Matrix. These checks apply even when Renumber is off. The Cell Feature Ids location and tuple-count checks apply only when Clear and Renumber are both on.
 
-- **-67431**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select a matrix directly under that geometry.
+- **-67431**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-67432**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds feature data, or turn Clear off.
 - **-67433**: With Clear and Renumber on, Cell Feature Ids must belong to the geometry's Cell Attribute Matrix. Select the array from that matrix.
 - **-67434**: With Clear and Renumber on, Cell Feature Ids must have one tuple per cell. Select an array with the same tuple count as the geometry's cell count.

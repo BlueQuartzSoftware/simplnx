@@ -141,8 +141,9 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
     if(sourceFeatureAm == nullptr || !geometry.contains(sourceFeatureAm))
     {
-      return IFilter::MakePreflightErrorResult(-67451, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected {} '{}'.", featureAmPath.toString(),
-                                                                   imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
+      return IFilter::MakePreflightErrorResult(-67451, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected {} '{}'. Select an Attribute Matrix that is a direct "
+                                                                   "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                                   featureAmPath.toString(), imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
     }
 
     // Each registered element AM has its own element count, including lower-dimensional node data.

@@ -1437,6 +1437,10 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM errors",
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == expectedCode);
+  if(expectedCode == -67451)
+  {
+    CHECK(result.outputActions.errors()[0].message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
+  }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

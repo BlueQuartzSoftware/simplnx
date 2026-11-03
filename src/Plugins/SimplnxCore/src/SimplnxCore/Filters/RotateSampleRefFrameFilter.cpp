@@ -315,8 +315,9 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
     if(srcCellFeatureData == nullptr || !selectedImageGeom.contains(srcCellFeatureData))
     {
-      return MakePreflightErrorResult(
-          -67441, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'.", cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
+      return MakePreflightErrorResult(-67441, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Image Geometry '{}'. Select an Attribute Matrix that is a direct "
+                                                          "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                          cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
     if(selectedImageGeom.getCellData() == srcCellFeatureData)
     {
