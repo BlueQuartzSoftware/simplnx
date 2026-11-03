@@ -140,6 +140,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_StepByStepGeomPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -173,6 +175,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeomPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -239,6 +243,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeomPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -271,6 +277,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom2Path));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -303,6 +311,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom3Path));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -335,6 +345,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom4Path));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -376,6 +388,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_StepByStepGeomPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
@@ -408,6 +422,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
   {
     ApplyTransformationToGeometryFilter filter;
     Arguments args;
+    // The test geometry has no Feature Attribute Matrix, so there is nothing to clear.
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeomPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));

@@ -40,6 +40,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Rotate]/Cell Data"),
     interpolation_type_index=1,
@@ -73,6 +75,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Scale]/Cell Data"),
     interpolation_type_index=1,
@@ -105,6 +109,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Translate]/Cell Data"),
     interpolation_type_index=1,
@@ -137,6 +143,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Rotation-Interpolation]/Cell Data"),
     interpolation_type_index=0,
@@ -170,6 +178,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Transform [Scale-Interpolation]/Cell Data"),
     interpolation_type_index=0,
