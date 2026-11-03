@@ -80,6 +80,8 @@ nxtest.check_filter_result(nx_filter, result)
 nx_filter = nx.ApplyTransformationToGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
+    clear_feature_attribute_matrix=False,
+    renumber_features=False,
     data_structure=data_structure,
     cell_attribute_matrix_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data"),
     interpolation_type_index=1,
