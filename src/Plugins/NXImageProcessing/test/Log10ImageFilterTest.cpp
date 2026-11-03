@@ -220,7 +220,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: positive floating bound
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::Log10ImageFilter: integer output preserves tuple and component shapes", "[NXImageProcessing][Issue1874][Log10ImageFilter]")
+TEST_CASE("NXImageProcessing::Log10ImageFilter: promoted Float64 output preserves tuple and component shapes", "[NXImageProcessing][Issue1874][Log10ImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
