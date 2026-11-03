@@ -168,20 +168,26 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
     return stlFileCheck;
   }
 
-  stlFileCheck.header = header;
-  stlFileCheck.numTriangles = triCount;
-  stlFileCheck.fileSize = fileSize;
-
   // The size this file would be if none of its triangles carry any attribute payload. The
   // arithmetic is done in uintmax_t because triCount * k_StlTriangleBytes overflows int32
   // for meshes beyond roughly 42.9 million triangles.
   const uintmax_t sizeWithoutPayload = StlConstants::k_StlFixedHeaderBytes + (static_cast<uintmax_t>(triCount) * StlConstants::k_StlTriangleBytes);
+  if(fileSize < sizeWithoutPayload)
+  {
+    stlFileCheck.error = StlConstants::k_StlFileLengthError;
+    stlFileCheck.errorMessage =
+        fmt::format("STL file '{}' declares {} triangles and requires at least {} bytes, but the file is only {} bytes long.", path.string(), triCount, sizeWithoutPayload, fileSize);
+    return stlFileCheck;
+  }
+
+  stlFileCheck.header = header;
+  stlFileCheck.numTriangles = triCount;
+  stlFileCheck.fileSize = fileSize;
 
   // Only a file with bytes left over beyond the fixed size records has anywhere to put
   // attribute payload. If the size matches exactly, then every attribute byte count in the file
   // is something other than a length and must be ignored, no matter what any individual
-  // triangle happens to contain. A file that is *smaller* than this is truncated; report no
-  // payload so the reader does not seek, and let the read loop report the truncation precisely.
+  // triangle happens to contain. Smaller files were rejected above before any mesh allocation.
   // Vendors known to misuse the field are excluded even when there are spare bytes, since those
   // bytes may just be trailing junk.
   stlFileCheck.attributePayloadPresent = (fileSize > sizeWithoutPayload) && !IsMagicsFile(header) && !IsVxElementsFile(header);

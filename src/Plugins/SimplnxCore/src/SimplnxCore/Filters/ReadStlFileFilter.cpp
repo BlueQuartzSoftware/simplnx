@@ -137,6 +137,14 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
     return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file '{}'. Returned error code {}.", pStlFilePathValue.string(), numTriangles));
   }
 
+  // Reject impossible triangle counts before creating actions that allocate the output arrays.
+  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(pStlFilePathValue);
+  if(stlFileCheck.error != 0)
+  {
+    return MakePreflightErrorResult(stlFileCheck.error, stlFileCheck.errorMessage);
+  }
+  numTriangles = stlFileCheck.numTriangles;
+
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
   if(numTriangles == 0)
   {
