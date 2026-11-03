@@ -1688,6 +1688,79 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests", "[ReadDREAM3DFilter]")
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths", "[SimplnxCore][ReadDREAM3DFilter]")
+{
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
+  DataStructure writtenData;
+  auto* group = DataGroup::Create(writtenData, "Group");
+  REQUIRE(group != nullptr);
+  auto store = std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 42);
+  REQUIRE(Int32Array::Create(writtenData, "Values", store, group->getId()) != nullptr);
+  const fs::path filePath = GetTestFilePath("read_dream3d_missing_include_paths.dream3d");
+  fs::remove(filePath);
+  auto writeResult = DREAM3D::WriteFile(filePath, writtenData, Pipeline{}, false);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  const DataPath validPath({"Group", "Values"});
+  std::vector<DataPath> selectedPaths;
+  std::vector<DataPath> missingPaths;
+  SECTION("Missing leaf with existing ancestor")
+  {
+    missingPaths = {DataPath({"Group", "Missing"})};
+    selectedPaths = missingPaths;
+  }
+  SECTION("Mixed valid and missing paths")
+  {
+    missingPaths = {DataPath({"Group", "Missing"}), DataPath({"Absent"})};
+    selectedPaths = {validPath, missingPaths[0], missingPaths[1]};
+  }
+  SECTION("Existing path")
+  {
+    selectedPaths = {validPath};
+  }
+
+  // Oracle: the file contains exactly Group and Group/Values (one scalar, 42).
+  // Group/Missing and Absent do not exist: each must produce a warning naming that path.
+  // Selecting Group/Values alone must produce no warning and must import the scalar unchanged.
+  DataStructure dataStructure;
+  ReadDREAM3DFilter filter;
+  Arguments args;
+  Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, selectedPaths);
+  args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  CHECK(preflightResult.outputActions.warnings().size() == missingPaths.size());
+  for(const auto& missingPath : missingPaths)
+  {
+    bool foundWarning = false;
+    for(const auto& warning : preflightResult.outputActions.warnings())
+    {
+      foundWarning = foundWarning || warning.message.find(missingPath.toString()) != std::string::npos;
+    }
+    CHECK(foundWarning);
+  }
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE(dataStructure.containsData(DataPath({"Group"})));
+  for(const auto& missingPath : missingPaths)
+  {
+    REQUIRE_FALSE(dataStructure.containsData(missingPath));
+  }
+  if(selectedPaths.front() == validPath)
+  {
+    const auto* values = dataStructure.getDataAs<Int32Array>(validPath);
+    REQUIRE(values != nullptr);
+    REQUIRE((*values)[0] == 42);
+  }
+  else
+  {
+    REQUIRE(dataStructure.getAllDataPaths().size() == 1);
+  }
+  fs::remove(filePath);
+}
+
 TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

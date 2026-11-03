@@ -100,6 +100,13 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
 
   if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
+    for(const auto& dataPath : importData.DataPaths)
+    {
+      if(!importedDataStructure.containsData(dataPath))
+      {
+        result.warnings().push_back(Warning{-12, fmt::format("The Include List path '{}' does not exist in the input file '{}'.", dataPath.toString(), importData.FilePath.string())});
+      }
+    }
     auto allDataPaths = importedDataStructure.getAllDataPaths();
     std::vector<DataPath> selectedDataPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
     selectedDataPaths = DREAM3D::ExpandSelectedPathsToAncestors(selectedDataPaths);
