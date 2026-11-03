@@ -156,3 +156,9 @@ foreach(example_name IN LISTS ${PLUGIN_NAME}_EXAMPLE_PIPELINE_NAMES)
 endforeach()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
+if(DREAM3DNX_ENABLE_OOC)
+  add_test(NAME ImageProcessingOocStoreContracts
+    COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
+  set_tests_properties(ImageProcessingOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
+endif()
