@@ -499,11 +499,11 @@ std::vector<char> readWriteImageSentinel(const fs::path& path)
 }
 
 template <typename T>
-class WriteImageReadProbeStore : public DataStore<T>
+class WriteImageReadProbeStore : public ExtentCountingDataStore<T>
 {
 public:
   WriteImageReadProbeStore(const ShapeType& shape, bool failFlat, bool failExtent)
-  : DataStore<T>(shape, ShapeType{1}, T{})
+  : ExtentCountingDataStore<T>(shape, ShapeType{1}, T{})
   , m_FailFlat(failFlat)
   , m_FailExtent(failExtent)
   {
@@ -534,7 +534,7 @@ public:
     {
       return MakeErrorResult<std::vector<T>>(-27902, "Controlled Write Image slice read failure.");
     }
-    return DataStore<T>::readExtent(extent);
+    return ExtentCountingDataStore<T>::readExtent(extent);
   }
   Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<T> values) const override
   {
@@ -542,7 +542,7 @@ public:
     {
       return MakeErrorResult(-27902, "Controlled Write Image slice read failure.");
     }
-    return DataStore<T>::readExtentIntoBuffer(extent, values);
+    return ExtentCountingDataStore<T>::readExtentIntoBuffer(extent, values);
   }
   usize flatReadCount() const
   {
@@ -628,6 +628,48 @@ TEST_CASE("ImageProcessing::WriteImageFilter: mask first nonfinite and finite ma
   REQUIRE(result.result.warnings().empty());
   const std::vector<uint8> expected{10, 20, 30, 85, 85, 85, 170, 170, 170, 255, 255, 255, 10, 20, 30, 10, 20, 30, 10, 20, 30};
   REQUIRE(readWriteImageNumericPng(output.path() / "mask.png", 7, 1) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::WriteImageFilter: integer color reads masks only for slices", "[ImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const ShapeType shape{2, 1, 2};
+  DataStructure dataStructure;
+  const DataPath cellsPath = createWriteImageNumericInput(dataStructure, std::array<uint8, 4>{0, 3, 6, 9}, shape).getParent();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(cellsPath));
+  const auto& cells = dataStructure.getDataRefAs<AttributeMatrix>(cellsPath);
+  auto maskStore = std::make_shared<WriteImageReadProbeStore<uint8>>(shape, false, false);
+  maskStore->setValue(0, 1);
+  maskStore->setValue(1, 1);
+  maskStore->setValue(2, 1);
+  REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cells.getId()) != nullptr);
+
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, writeImageNumericArguments(output.path() / "integer.png", 0, "Grayscale", true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  // The masked 9 still sets the maximum, so 3 and 6 map to one and two thirds of the grayscale range.
+  const std::vector<uint8> firstSlice{0, 0, 0, 85, 85, 85};
+  const std::vector<uint8> secondSlice{170, 170, 170, 10, 20, 30};
+  REQUIRE(readWriteImageNumericPng(output.path() / "integer_000.png", 2, 1) == firstSlice);
+  REQUIRE(readWriteImageNumericPng(output.path() / "integer_001.png", 2, 1) == secondSlice);
+  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  {
+    REQUIRE(maskStore->returnedExtentReadCount() == 2);
+    REQUIRE(maskStore->callerProvidedExtentReadCount() == 0);
+  }
+  else
+  {
+    REQUIRE(maskStore->returnedExtentReadCount() == 0);
+    REQUIRE(maskStore->callerProvidedExtentReadCount() == 2);
+    REQUIRE(maskStore->maxCallerProvidedExtentValues() == 2);
+  }
+  REQUIRE(maskStore->flatReadCount() == 0);
+  REQUIRE(result.result.warnings().empty());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
