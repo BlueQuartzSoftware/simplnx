@@ -220,7 +220,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::Log10ImageFilter: positive floating boundar
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::Log10ImageFilter: integer output preserves tuple and component shapes", "[ImageProcessing][Issue1874][Log10ImageFilter]")
+TEST_CASE("ImageProcessing::Log10ImageFilter: promoted Float64 output preserves tuple and component shapes", "[ImageProcessing][Issue1874][Log10ImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
