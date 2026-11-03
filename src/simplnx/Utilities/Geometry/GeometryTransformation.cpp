@@ -1,7 +1,6 @@
 #include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -12,7 +11,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectExcludingAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -80,53 +79,6 @@ public:
 
 private:
   DataPath m_Path;
-};
-
-// Recursive group copies need a view without any link to the selected Feature AM.
-class CopyGeometryChildAction : public CopyDataObjectAction
-{
-public:
-  CopyGeometryChildAction(const DataPath& source, const DataPath& destination, const std::vector<DataPath>& createdPaths, DataPath featureAmPath)
-  : CopyDataObjectAction(source, destination, createdPaths)
-  , m_FeatureAmPath(std::move(featureAmPath))
-  {
-  }
-  ~CopyGeometryChildAction() noexcept override = default;
-  CopyGeometryChildAction(const CopyGeometryChildAction&) = delete;
-  CopyGeometryChildAction(CopyGeometryChildAction&&) noexcept = delete;
-  CopyGeometryChildAction& operator=(const CopyGeometryChildAction&) = delete;
-  CopyGeometryChildAction& operator=(CopyGeometryChildAction&&) noexcept = delete;
-
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
-  {
-    const auto featureAm = dataStructure.getSharedDataAs<AttributeMatrix>(m_FeatureAmPath);
-    std::vector<std::pair<BaseGroup*, DataMap>> parentMaps;
-    for(const auto parentId : featureAm->getParentIds())
-    {
-      auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
-      parentMaps.emplace_back(parent, parent->getDataMap());
-    }
-    // Keep the original parent IDs. Restore the maps even if deepCopy throws.
-    // Only the copy reads this temporary view; new objects belong to the separate destination geometry.
-    const auto restore = MakeScopeGuard([&parentMaps]() noexcept {
-      for(auto& [parent, dataMap] : parentMaps)
-      {
-        parent->getDataMap() = std::move(dataMap);
-      }
-    });
-    for(auto& [parent, dataMap] : parentMaps)
-    {
-      parent->getDataMap().remove(featureAm->getId());
-    }
-    return CopyDataObjectAction::apply(dataStructure, mode);
-  }
-  UniquePointer clone() const override
-  {
-    return std::make_unique<CopyGeometryChildAction>(path(), newPath(), getAllCreatedPaths(), m_FeatureAmPath);
-  }
-
-private:
-  DataPath m_FeatureAmPath;
 };
 
 bool ResamplesImageGeometry(const ApplyTransformationToGeometryInputValues& inputValues)
@@ -566,7 +518,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
             if(clearFeatureAttributeMatrix)
             {
               resultOutputActions.value().appendAction(
-                  std::make_unique<CopyGeometryChildAction>(childPath, copiedChildPath, allCreatedPaths, srcImagePath.createChildPath(sourceFeatureAm->getName())));
+                  std::make_unique<CopyDataObjectExcludingAction>(childPath, copiedChildPath, allCreatedPaths, srcImagePath.createChildPath(sourceFeatureAm->getName())));
             }
             else
             {

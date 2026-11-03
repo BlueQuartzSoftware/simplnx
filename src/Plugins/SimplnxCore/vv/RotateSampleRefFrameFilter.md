@@ -12,6 +12,8 @@
 
 *Updated 2026-10-29 for Clear Feature Attribute Matrix on `topic/correct_feature_am_updates`. Historical sign-off and OOC evidence below apply to the earlier rotation implementation; the new Feature AM contract is validated separately in this note.*
 
+*Updated 2026-11-03: added one test for a Feature AM that is also linked inside another child group of the geometry (`Feature AM nested alias regression`).*
+
 ## At a glance
 
 | Aspect                 | Current state            |
@@ -19,7 +21,7 @@
 | Algorithm Relationship | **Rewrite** — generalized Eigen 4×4-affine reimplementation (via shared `ImageRotationUtilities`) of the legacy hand-rolled `RotateSampleRefFrame`; different UUID (SIMPL→NX mapped), different NN rule (cell-center `computeCellIndex` vs truncation), new-geometry vs in-place, plus new `KeepInputGeometryOrigin` + Rotation-Matrix representation. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** — exact voxel permutations: an explicit 180@Z slice reversal, **hand-derived 90-degree permutations about X/Y/Z that pin the rotation chirality** (a +90 and a -90 give different arrays, so an inverse-transform regression is caught), non-zero-origin placement, and anisotropic-spacing permutation. **Class 4 (Invariant)** — value-multiset conservation, zero background, full-circle composition = identity, and acceptance of the full octahedral group (120@(111)). Encoded in `test/RotateSampleRefFrameTest.cpp`; the new Feature AM tests add hand-computed structural and cell-value expectations. |
 | Code paths enumerated  | 19 (preflight, geometry setup, rotation, and Feature AM handling). 17 of 19 exercised.          |
-| Tests today | 21 TEST_CASEs: 14 modified and 7 new. 20/20 registered cases pass in the rebuilt in-core configuration (2026-10-29); one hidden HDF5 boundary case was not rerun. |
+| Tests today | 22 TEST_CASEs: 14 modified and 8 new. 21/21 registered cases pass in the rebuilt in-core configuration (2026-11-03); one hidden HDF5 boundary case was not rerun. |
 | Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                               |
 | Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. D1 covers unsupported arbitrary rotations; D2 covers the native Clear default. Converted 6.x pipelines keep Clear off.    |
 | Bug flags              | None. D1 is an intentional rotation guard; D2 is the intentional Feature AM default.                                    |
@@ -77,7 +79,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | 14 | Feature AM | Clear ON recreates source shape with zero children and reports all cleared paths; Ensemble unchanged | `Clear ON preflight`, `Clear ON execute` |
 | 15 | Feature AM | Matrix outside or nested below geometry is not a direct child → `-67441` | `Clear ON requires a direct child Feature AM` (both sections assert code) |
 | 16 | Feature AM | Selected matrix is the Cell AM → `-67442` | `Clear ON rejects the Cell AM` (code asserted) |
-| 17 | Feature AM | Selection through a second parent is accepted; all paths excluded from generic copy | `Clear ON accepts shared parent paths` |
+| 17 | Feature AM | Selection through a second parent is accepted; all paths excluded from generic copy, also a link inside another child group | `Clear ON accepts shared parent paths`, `Feature AM nested alias regression` |
 | 18 | Feature AM | Clear ON with deferred in-place rename/delete keeps empty matrix at source path | `Clear ON in place` |
 | 19 | Conversion | SIMPL 6.x conversion sets Clear off and preflights without a Feature AM | `SIMPL Backwards Compatibility` (6.4 and 6.5) |
 
@@ -106,8 +108,9 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | `SimplnxCore::RotateSampleRefFrame: Clear ON rejects the Cell AM` | new | The geometry Cell AM returns exactly -67442. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent paths` | new | Select via Aliases/Cell Feature Data; empty output matrix, no duplicate copy; both source paths retain their children; cell and Ensemble oracle unchanged. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON in place` | new | Empty matrix at Input; dims {2,2,1}; exact Ids and Ensemble values; no Output, .Input, or .rotated_image_geometry remains. |
+| `SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regression` | new | The Feature AM is also linked in `Input/Misc`, and `Misc` is also linked in `Outside`. Clear and the selected path (direct or nested) are each on and off. With Clear on, the output matrix has no children and `Misc` has no copy of the matrix; with Clear off, it has 3 children and the nested copy keeps the original counts. `Misc/Keep` is 123 in every case. The source matrix keeps its ID, parents, shape, 3 children, counts and the `Outside` link. |
 
-There are 21 TEST_CASEs, including 20 registered cases and one hidden HDF5 case. The former duplicate per-slice inventory row is removed; the child-name regression is now listed. Status is relative to this change: 14 modified, 7 new, 0 unchanged.
+There are 22 TEST_CASEs, including 21 registered cases and one hidden HDF5 case. The former duplicate per-slice inventory row is removed; the child-name regression is now listed. Status is relative to this change: 14 modified, 8 new, 0 unchanged.
 
 Current validation (2026-10-29): rebuilt `NX-Com-Qt69-Vtk96-Rel`, `SIMPLNX_TEST_ALGORITHM_PATH=0`. Serial CTest passed 27/27 entries in the requested Rotate/FilterValidation/serialization selection, including all 20 registered Rotate cases. The requested pipeline/Python selection passed 43/43 (9 pipelines, 10 Python examples, 24 related unit cases). Internal-caller regressions passed 33/33 (29 WriteOnScale, 4 ReadH5Ebsd). The Clear branch mutation failed the six intended Clear-on tests; after byte-for-byte restoration and rebuild all seven new cases passed. No new real-OOC or legacy-binary comparison is claimed. The run logs and the full file and test list were kept with the local review notes. They are not part of the repository.
 
