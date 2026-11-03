@@ -738,10 +738,11 @@ under CTest, while CTest reported their partial entries as passed. Issue #1898; 
 
 ## 27. Build code that uses the test harness only when the tests are built
 
-**Rule:** add a target that uses test infrastructure inside the `if(SIMPLNX_BUILD_TESTS)` block of its `CMakeLists.txt`.
-Test infrastructure is a generated `<Plugin>_test_dirs.hpp`, `simplnx/UnitTest/UnitTestCommon.hpp`, Catch2 or a test
-helper header. Typical targets are a benchmark, a verifier or a developer tool. Do not give such a target its own option
-that can be ON while `SIMPLNX_BUILD_TESTS` is OFF.
+**Rule:** build a target that uses test infrastructure only when `SIMPLNX_BUILD_TESTS` is ON. Test infrastructure is a
+generated `<Plugin>_test_dirs.hpp`, `simplnx/UnitTest/UnitTestCommon.hpp`, Catch2 or a test helper header. Typical
+targets are a benchmark, a verifier or a developer tool. Add such a target inside the `if(SIMPLNX_BUILD_TESTS)` block of
+its `CMakeLists.txt`. If it needs its own switch, make it a `cmake_dependent_option()` that depends on
+`SIMPLNX_BUILD_TESTS`. Never gate it with a plain `option()`, which can be ON while `SIMPLNX_BUILD_TESTS` is OFF.
 
 **Pattern to use:**
 
@@ -749,8 +750,13 @@ that can be ON while `SIMPLNX_BUILD_TESTS` is OFF.
 if(SIMPLNX_BUILD_TESTS)
   enable_testing()
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+endif()
 
-  # Uses the golden-test harness and the generated test-dirs header, so it is added after the test subdir.
+# Uses the golden-test harness, Catch2 and the generated test-dirs header, so it is forced OFF when the tests are not
+# built. It is added after the test subdir.
+include(CMakeDependentOption)
+cmake_dependent_option(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK "Build the ImageProcessing benchmark tool (requires SIMPLNX_BUILD_TESTS)" ON "SIMPLNX_BUILD_TESTS" OFF)
+if(SIMPLNX_BUILD_IMAGEPROCESSING_BENCHMARK)
   add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/benchmark)
 endif()
 ```
@@ -769,20 +775,21 @@ endif()
 ```
 
 **Why:** the plugin's test setup generates `<Plugin>_test_dirs.hpp` and finds Catch2, and it runs only when
-`SIMPLNX_BUILD_TESTS` is ON. A separate option that defaults to ON keeps the target in a build with the tests OFF, and
-the target then fails to compile because its test headers do not exist. CI builds with the tests ON, so it does not
-catch the failure.
+`SIMPLNX_BUILD_TESTS` is ON. A plain option that defaults to ON keeps the target in a build with the tests OFF, and the
+target then fails to compile because its test headers do not exist. CI builds with the tests ON, so it does not catch
+the failure.
 
 **How it showed up:** a DREAM3D-NX build with `DREAM3D_BUILD_TESTS=OFF` (which also turns `SIMPLNX_BUILD_TESTS` off)
 failed in `ImageProcessingBenchmark`. `ItkGoldenTestUtils.hpp` could not include
-`ImageProcessing/ImageProcessing_test_dirs.hpp`. PR #1859 removed the benchmark option and builds the benchmark inside
-the `SIMPLNX_BUILD_TESTS` block.
+`ImageProcessing/ImageProcessing_test_dirs.hpp`. PR #1901 made the benchmark option a `cmake_dependent_option()` on
+`SIMPLNX_BUILD_TESTS`.
 
 **How to recognize it next time:**
 
-- An `add_subdirectory()` or `add_executable()` outside the `SIMPLNX_BUILD_TESTS` block whose sources include
-  `*_test_dirs.hpp`, `UnitTestCommon.hpp`, `catch2/catch.hpp` or a header from a `test/` folder.
-- An `option(... ON)` that gates a tool built from test sources.
+- An `add_subdirectory()` or `add_executable()` that is neither inside the `SIMPLNX_BUILD_TESTS` block nor behind an
+  option that depends on `SIMPLNX_BUILD_TESTS`, and whose sources include `*_test_dirs.hpp`, `UnitTestCommon.hpp`,
+  `catch2/catch.hpp` or a header from a `test/` folder.
+- A plain `option(... ON)` that gates a tool built from test sources.
 - `fatal error: '<Plugin>/<Plugin>_test_dirs.hpp' file not found` in a build configured with the tests OFF.
 
 ---
