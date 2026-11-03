@@ -1336,10 +1336,10 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       }
       if(haloRows > 0)
       {
-        accumulated = detail::MergeRecursiveGaussianResults(pass.CheckedSmoothing, std::move(accumulated),
-                                                            detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yEnd, haloRows, xBegin, columnCount,
-                                                                                                       nonstd::span<SrcT>(source.data() + (rowCount * columnCount), haloRows * columnCount),
-                                                                                                       pass.CheckedSmoothing));
+        accumulated = detail::MergeRecursiveGaussianResults(
+            pass.CheckedSmoothing, std::move(accumulated),
+            detail::ReadRecursiveGaussian2DBlock<SrcT>(sourceStore, dims[0], yEnd, haloRows, xBegin, columnCount,
+                                                       nonstd::span<SrcT>(source.data(), source.size()).subspan(rowCount * columnCount, haloRows * columnCount), pass.CheckedSmoothing));
         if(accumulated.invalid())
         {
           return accumulated;
@@ -2040,7 +2040,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
       }
       const usize blockOffset = (z * dims[1] + yBegin) * dims[0];
       accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated),
-                                                          src.copyIntoBuffer(blockOffset, nonstd::span<SrcT>(srcSlab.data() + (z * valuesPerPlaneBlock), valuesPerPlaneBlock)));
+                                                          src.copyIntoBuffer(blockOffset, nonstd::span<SrcT>(srcSlab.data(), srcSlab.size()).subspan(z * valuesPerPlaneBlock, valuesPerPlaneBlock)));
       if(accumulated.invalid())
       {
         return accumulated;

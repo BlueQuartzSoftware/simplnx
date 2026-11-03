@@ -35,6 +35,7 @@ public:
   static constexpr StringLiteral k_UpperBoundary_Key = "upper_boundary";
   static constexpr StringLiteral k_InsideValue_Key = "inside_value";
   static constexpr StringLiteral k_OutsideValue_Key = "outside_value";
+  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
   static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
 
   std::string name() const override;

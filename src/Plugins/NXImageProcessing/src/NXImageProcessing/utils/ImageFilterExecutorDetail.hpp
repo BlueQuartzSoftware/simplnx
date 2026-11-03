@@ -890,29 +890,35 @@ inline usize SelectRelabelStagingValues(usize numValues, uint64 grantedBytes, us
 /**
  * @brief Subtracts HConvex reconstruction values in one owned resident range without signed overflow.
  * @tparam T Signed integer scalar type.
- * @param inputValuesPtr Original image values.
- * @param reconstructionValuesPtr Reconstruction values, each no greater than the corresponding input.
- * @param outputValuesPtr Contrast output; may alias the reconstruction buffer.
- * @param count Number of values in the range.
+ * @param inputValues Original image values.
+ * @param reconstructionValues Reconstruction values, each no greater than the corresponding input.
+ * @param outputValues Contrast output; may alias either input span.
  * @param start Global tuple offset for diagnostics.
  * @param inputPath Original array path for diagnostics.
  * @return The first contrast overflow, or a valid result.
  */
 template <class T>
-Result<> SubtractHConvexContrastRange(const T* inputValuesPtr, const T* reconstructionValuesPtr, T* outputValuesPtr, usize count, usize start, const DataPath& inputPath)
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters) -- The two read-only spans have the same type but distinct subtraction roles.
+Result<> SubtractHConvexContrastRange(nonstd::span<const T> inputValues, nonstd::span<const T> reconstructionValues, nonstd::span<T> outputValues, usize start, const DataPath& inputPath)
 {
   static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize count = inputValues.size();
   std::atomic<usize> firstInvalid{count};
-  ApplyElementwiseResidentRange(inputValuesPtr, reconstructionValuesPtr, outputValuesPtr, count, [&firstInvalid](const T* inputPtr, const T* reconstructionPtr, T* outputPtr, usize index) {
-    const T inputValue = inputPtr[index];
-    const T reconstructionValue = reconstructionPtr[index];
-    // max + a negative value is representable. Check before subtracting, including for int64 minima.
-    if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+  ParallelDataAlgorithm parallelAlgorithm;
+  parallelAlgorithm.setRange(0, count);
+  parallelAlgorithm.execute([=, &firstInvalid](const Range& range) {
+    for(usize index = range.min(); index < range.max(); ++index)
     {
-      PublishSmallerIndex(firstInvalid, index);
-      return;
+      const T inputValue = inputValues[index];
+      const T reconstructionValue = reconstructionValues[index];
+      // max + a negative value is representable. Check before subtracting, including for int64 minima.
+      if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+      {
+        PublishSmallerIndex(firstInvalid, index);
+        continue;
+      }
+      outputValues[index] = static_cast<T>(inputValue - reconstructionValue);
     }
-    outputPtr[index] = static_cast<T>(inputValue - reconstructionValue);
   });
   const usize invalid = firstInvalid.load(std::memory_order_relaxed);
   if(invalid != count)
@@ -936,6 +942,7 @@ Result<> SubtractHConvexContrastRange(const T* inputValuesPtr, const T* reconstr
  * @return The first transfer or contrast error, with warnings from completed transfers.
  */
 template <class T>
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters) -- The input and reconstruction are distinct stores of the same element type.
 Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
                                         const std::atomic_bool& shouldCancel, usize chunkValues = k_ElementwiseChunkValues<T>)
 {
@@ -962,7 +969,9 @@ Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange(inputBuffer->data(), reconstructionBuffer->data(), inputBuffer->data(), count, start, inputPath));
+    accumulatedResult =
+        MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange<T>(nonstd::span<const T>(inputBuffer->data(), count), nonstd::span<const T>(reconstructionBuffer->data(), count),
+                                                                                   nonstd::span<T>(inputBuffer->data(), count), start, inputPath));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
@@ -1011,7 +1020,7 @@ Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const Abstra
       const auto inputValues = residentInputPtr->createSpan();
       const auto reconstructionValues = residentReconstructionPtr->createSpan();
       auto outputValues = residentOutputPtr->createSpan();
-      return SubtractHConvexContrastRange(inputValues.data(), reconstructionValues.data(), outputValues.data(), inputValues.size(), 0, inputPath);
+      return SubtractHConvexContrastRange<T>(inputValues, reconstructionValues, outputValues, 0, inputPath);
     }
 
     return SubtractHConvexContrastChunked<T>(input, reconstruction, output, inputPath, shouldCancel);
@@ -1030,7 +1039,7 @@ public:
   MarkerIdConversionState& operator=(const MarkerIdConversionState&) = delete;
   MarkerIdConversionState& operator=(MarkerIdConversionState&&) = delete;
 
-  bool observe(T nativeValue, uint32 encodedValue, usize index) noexcept
+  bool observe(usize index, T nativeValue, uint32 encodedValue) noexcept
   {
     const T restoredValue = static_cast<T>(encodedValue);
     if(restoredValue == nativeValue)
@@ -1099,8 +1108,8 @@ struct WidenIntegerArrayToUInt32Fn
     try
     {
       constexpr usize chunkValues = 65536;
-      const auto inBufferPtr = std::make_unique<S[]>(std::min(chunkValues, total));
-      const auto outBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
+      std::vector<S> inputValues(std::min(chunkValues, total));
+      std::vector<uint32> encodedValues(std::min(chunkValues, total));
       for(usize start = 0; start < total;)
       {
         if(shouldCancel)
@@ -1108,7 +1117,7 @@ struct WidenIntegerArrayToUInt32Fn
           return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
         }
         const usize count = std::min(chunkValues, total - start);
-        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inBufferPtr.get(), count));
+        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inputValues.data(), count));
         accumulated = MergeResults(std::move(accumulated), std::move(readResult));
         if(accumulated.invalid())
         {
@@ -1116,16 +1125,17 @@ struct WidenIntegerArrayToUInt32Fn
         }
         for(usize index = 0; index < count; ++index)
         {
-          const S nativeValue = inBufferPtr[index];
-          const uint32 encodedValue = static_cast<uint32>(nativeValue);
-          if(conversionState.observe(nativeValue, encodedValue, start + index) && ConversionHandling == MarkerIdConversionHandling::Error)
+          const S nativeValue = inputValues[index];
+          // Promote narrow signed IDs without changing the legacy conversion modulo 2^32.
+          const uint32 encodedValue = static_cast<uint32>(+nativeValue);
+          if(conversionState.observe(start + index, nativeValue, encodedValue) && ConversionHandling == MarkerIdConversionHandling::Error)
           {
             // Stop before writing this chunk or entering either flood route.
             return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
           }
-          outBufferPtr[index] = encodedValue;
+          encodedValues[index] = encodedValue;
         }
-        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(outBufferPtr.get(), count));
+        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(encodedValues.data(), count));
         accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
         if(accumulated.invalid())
         {
@@ -1154,7 +1164,8 @@ inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, co
                                           MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{dataStructure, srcPath, dst, shouldCancel, conversionHandling});
+  return IntegerOnly::dispatch(srcArray.getDataType(),
+                               WidenIntegerArrayToUInt32Fn{.dataStructure = dataStructure, .srcPath = srcPath, .dst = dst, .shouldCancel = shouldCancel, .ConversionHandling = conversionHandling});
 }
 
 /**
@@ -1180,8 +1191,8 @@ struct NarrowUInt32StoreToIntegerArrayFn
     try
     {
       constexpr usize chunkValues = 65536;
-      const auto inBufferPtr = std::make_unique<uint32[]>(std::min(chunkValues, total));
-      const auto outBufferPtr = std::make_unique<D[]>(std::min(chunkValues, total));
+      std::vector<uint32> encodedValues(std::min(chunkValues, total));
+      std::vector<D> outputValues(std::min(chunkValues, total));
       for(usize start = 0; start < total;)
       {
         if(shouldCancel)
@@ -1189,7 +1200,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
           return accumulated;
         }
         const usize count = std::min(chunkValues, total - start);
-        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(inBufferPtr.get(), count));
+        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(encodedValues.data(), count));
         accumulated = MergeResults(std::move(accumulated), std::move(readResult));
         if(accumulated.invalid())
         {
@@ -1197,9 +1208,9 @@ struct NarrowUInt32StoreToIntegerArrayFn
         }
         for(usize index = 0; index < count; ++index)
         {
-          outBufferPtr[index] = static_cast<D>(inBufferPtr[index]);
+          outputValues[index] = static_cast<D>(encodedValues[index]);
         }
-        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outBufferPtr.get(), count));
+        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outputValues.data(), count));
         accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
         if(accumulated.invalid())
         {
