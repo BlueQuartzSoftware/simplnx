@@ -814,6 +814,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON Feature AM errors", "[S
   SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
   REQUIRE(notChild.outputActions.errors().size() == 1);
   CHECK(notChild.outputActions.errors().front().code == -67411);
+  CHECK(notChild.outputActions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
 
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Edge", "Edge Data"})));
   auto isEdgeAm = filter.preflight(ds, args);
