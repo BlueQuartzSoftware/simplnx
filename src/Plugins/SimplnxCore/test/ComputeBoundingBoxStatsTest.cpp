@@ -1186,3 +1186,95 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }
+
+TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median ranks", "[SimplnxCore][ComputeBoundingBoxStatsFilter][L10]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize caseIndex = GENERATE(0, 1, 2, 3, 4, 5, 6);
+  CAPTURE(caseIndex);
+  const std::vector<std::vector<int32>> smallInputs = {{1, 1, 2, 2}, {1, 2, 3, 4}, {1, 1, 1, 2}, {1, 2, 2, 2}, {5}, {1, 2, 3}};
+  const std::array<float32, 7> expected = {1.5f, 2.5f, 1.0f, 2.0f, 5.0f, 2.0f, 32.5f};
+  std::vector<int32> values;
+  if(caseIndex < smallInputs.size())
+  {
+    values = smallInputs[caseIndex];
+  }
+  else
+  {
+    // Values 32 and 33 (the two middle ranks) are in different 32-entry Direct frequency batches.
+    values.resize(64);
+    for(usize i = 0; i < values.size(); i++)
+    {
+      values[i] = static_cast<int32>(i + 1);
+    }
+  }
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
+  geom->setDimensions({values.size(), 1, 1});
+  geom->setOrigin({0, 0, 0});
+  geom->setSpacing({1, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geom->getId());
+  geom->setCellData(*cells);
+  auto* input = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cells->getId());
+  for(usize i = 0; i < values.size(); i++)
+  {
+    (*input)[i] = values[i];
+  }
+  auto* features = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2}, geom->getId());
+  auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, features->getId());
+  const std::array<float32, 12> boxValues = {0, 0, 0, static_cast<float32>(values.size()), 1, 1, 0, 0, 0, 1, 1, 1};
+  for(usize i = 0; i < boxValues.size(); i++)
+  {
+    (*bounds)[i] = boxValues[i];
+  }
+  Arguments args;
+  k_FillAllExceptModeArgs(args);
+  ComputeBoundingBoxStatsFilter filter;
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+  // Independent oracle: middle ranks of the listed inputs; (m + (m+1))/2 for 1..2m.
+  CHECK(medians[0] == expected[caseIndex]);
+  CHECK(medians[1] == static_cast<float32>(values[0]));
+}
+
+TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median of one large repeated value", "[SimplnxCore][ComputeBoundingBoxStatsFilter][L10]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // Both middle ranks hold 2e38. Adding the value to itself in float32 would overflow to infinity.
+  const std::vector<float32> values = {1.0f, 2.0e38f, 2.0e38f, 3.0e38f};
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
+  geom->setDimensions({values.size(), 1, 1});
+  geom->setOrigin({0, 0, 0});
+  geom->setSpacing({1, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geom->getId());
+  geom->setCellData(*cells);
+  auto* input = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cells->getId());
+  for(usize i = 0; i < values.size(); i++)
+  {
+    (*input)[i] = values[i];
+  }
+  auto* features = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2}, geom->getId());
+  auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, features->getId());
+  // Box 0: all four values. Box 1: the two values 2e38 only.
+  const std::array<float32, 12> boxValues = {0, 0, 0, 4, 1, 1, 1, 0, 0, 3, 1, 1};
+  for(usize i = 0; i < boxValues.size(); i++)
+  {
+    (*bounds)[i] = boxValues[i];
+  }
+  Arguments args;
+  k_FillAllExceptModeArgs(args);
+  ComputeBoundingBoxStatsFilter filter;
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+  CHECK(medians[0] == 2.0e38f);
+  CHECK(medians[1] == 2.0e38f);
+}
