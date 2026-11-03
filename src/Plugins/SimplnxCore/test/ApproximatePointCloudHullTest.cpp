@@ -15,6 +15,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <filesystem>
 #include <string>
 
@@ -175,5 +176,119 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: SIMPL Backwards Compati
       CHECK(args.value<DataPath>(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key) == DataPath({"VertexDataContainer"}));
       CHECK(args.value<DataPath>(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key) == DataPath({"HullDataContainer"}));
     }
+  }
+}
+
+namespace
+{
+// Runs the filter on a solid 3x3x3 block of voxels with one point per voxel and checks the hull.
+// The points are written in z, y, x order, which is also the order of the voxel loop in the filter.
+// Oracle: 27 - 1 interior = 26 surface voxels. With an empty border on every side, each surface voxel has at least
+// 9 empty neighbors (more than the threshold of 1); the center voxel (point 13) has none. One point per voxel, so each
+// hull point equals its input point.
+void RunSolidBlockHullTest(float32 resolution, const std::array<float32, 3>& xs, const std::array<float32, 3>& ys, const std::array<float32, 3>& zs)
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  const DataPath inputPath({"Points"});
+  const DataPath outputPath({"Hull"});
+  CreateVertexGeometryAction action(inputPath, 27, INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
+  auto createResult = action.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(createResult);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(inputPath));
+  auto& points = *dataStructure.getDataRefAs<VertexGeom>(inputPath).getVertices();
+  usize index = 0;
+  for(float32 z : zs)
+  {
+    for(float32 y : ys)
+    {
+      for(float32 x : xs)
+      {
+        points[index++] = x;
+        points[index++] = y;
+        points[index++] = z;
+      }
+    }
+  }
+
+  ApproximatePointCloudHullFilter filter;
+  Arguments args;
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::make_any<std::vector<float32>>(std::vector<float32>{resolution, resolution, resolution}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, std::make_any<uint64>(1));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, std::make_any<DataPath>(outputPath));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(outputPath));
+  const auto& hull = dataStructure.getDataRefAs<VertexGeom>(outputPath);
+  REQUIRE(hull.getNumberOfVertices() == 26);
+  const auto& hullPoints = *hull.getVertices();
+  usize outputIndex = 0;
+  for(usize point = 0; point < 27; point++)
+  {
+    if(point == 13) // The center voxel is the only interior voxel.
+    {
+      continue;
+    }
+    for(usize component = 0; component < 3; component++)
+    {
+      REQUIRE(hullPoints[outputIndex++] == points[3 * point + component]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: One voxel border", "[SimplnxCore][ApproximatePointCloudHullFilter]")
+{
+  // Voxel size 2. The points 1, 3 and 5 on each axis are in voxels 0, 1 and 2, so they fill the whole block.
+  RunSolidBlockHullTest(2.0F, {1.0F, 3.0F, 5.0F}, {1.0F, 3.0F, 5.0F}, {1.0F, 3.0F, 5.0F});
+}
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: One voxel border on voxel boundary", "[SimplnxCore][ApproximatePointCloudHullFilter]")
+{
+  // Voxel size 0.01. The smallest X (-0.6) is on a voxel boundary. As a float it is slightly below -0.6, so it is in
+  // voxel -61. X -0.595 and -0.585 are in voxels -60 and -59. Y and Z are the centers of voxels 0, 1 and 2.
+  // Without the border on the X-min side, the face-center voxel of that face has no empty neighbor and drops out.
+  RunSolidBlockHullTest(0.01F, {-0.6F, -0.595F, -0.585F}, {0.005F, 0.015F, 0.025F}, {0.005F, 0.015F, 0.025F});
+}
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global indices", "[SimplnxCore][ApproximatePointCloudHullFilter]")
+{
+  UnitTest::LoadPlugins();
+  for(float32 coordinate : {16777218.0F, 33554432.0F, -16777218.0F, -33554432.0F})
+  {
+    CAPTURE(coordinate);
+    DataStructure dataStructure;
+    const DataPath inputPath({"Points"});
+    const DataPath outputPath({"Hull"});
+    CreateVertexGeometryAction action(inputPath, 1, INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
+    auto createResult = action.apply(dataStructure, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(createResult);
+    auto& points = *dataStructure.getDataRefAs<VertexGeom>(inputPath).getVertices();
+    // Each axis has a large global index, but the padded grid is only 3x3x3.
+    for(usize component = 0; component < 3; component++)
+    {
+      points[component] = coordinate;
+    }
+    ApproximatePointCloudHullFilter filter;
+    Arguments args;
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::make_any<std::vector<float32>>(std::vector<float32>{1.0F, 1.0F, 1.0F}));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, std::make_any<uint64>(25));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, std::make_any<DataPath>(outputPath));
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto& hull = dataStructure.getDataRefAs<VertexGeom>(outputPath);
+    // A singleton has 26 empty neighbors; the strict >25 threshold must retain it.
+    REQUIRE(hull.getNumberOfVertices() == 1);
+    for(usize component = 0; component < 3; component++)
+    {
+      REQUIRE((*hull.getVertices())[component] == coordinate);
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
