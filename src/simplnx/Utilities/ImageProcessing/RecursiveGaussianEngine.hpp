@@ -2118,8 +2118,9 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
         return accumulated;
       }
       const usize blockOffset = (z * dims[1] + yBegin) * dims[0];
-      accumulated = detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated),
-                                                          dst.copyFromBuffer(blockOffset, nonstd::span<const float32>(dstSlab.data() + (z * valuesPerPlaneBlock), valuesPerPlaneBlock)));
+      accumulated =
+          detail::MergeRecursiveGaussianResults(options.CheckedSmoothing, std::move(accumulated),
+                                                dst.copyFromBuffer(blockOffset, nonstd::span<const float32>(dstSlab.data(), dstSlab.size()).subspan(z * valuesPerPlaneBlock, valuesPerPlaneBlock)));
       if(accumulated.invalid())
       {
         return accumulated;
