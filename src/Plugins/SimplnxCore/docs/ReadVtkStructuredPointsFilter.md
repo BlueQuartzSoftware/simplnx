@@ -6,7 +6,7 @@ IO (Input)
 
 ## Description
 
-This filter reads a *STRUCTURED_POINTS* 3D array from a legacy `.vtk` file and stores it in an **Image Geometry** (a regular grid of equally-sized voxels). A *STRUCTURED_POINTS* file is a general form of an **Image Geometry** in which data values can be attached either to each voxel or to the corner points of each voxel. The file can be either binary or ASCII. The currently supported VTK attribute types are *SCALARS* and *VECTORS*; other attribute types are not read correctly and may cause the filter to fail.
+This filter reads a *STRUCTURED_POINTS* grid from a legacy `.vtk` file and stores it in an **Image Geometry** (a regular grid of equally-sized voxels). A *STRUCTURED_POINTS* file is a general form of an **Image Geometry** in which data values can be attached either to each voxel or to the corner points of each voxel. The file can be either binary or ASCII. The currently supported VTK attribute types are *SCALARS* and *VECTORS*; other attribute types are not read correctly and may cause the filter to fail.
 
 ### Point Data vs. Cell Data
 
@@ -22,6 +22,8 @@ When both are read, two independent outputs are created: the **Cell Data** is pl
 ### Spacing, Origin, and Units
 
 The grid dimensions, spacing, and origin are read directly from the `.vtk` file's `DIMENSIONS`, `SPACING`, and `ORIGIN` records. The spacing and origin are plain numbers with no embedded unit, so their length unit is whatever the file's author intended (dimensionless to the reader).
+
+Each cell dimension is one less than its point dimension, with a minimum of one. This supports 2D planes, 1D lines, and a single point. For example, `DIMENSIONS 10 10 1` has 81 cells in a `9 9 1` grid. Zero point dimensions return an error during preflight. These behaviors intentionally differ from DREAM3D 6.5.171, which rejects valid cell data on singleton axes and can underflow on zero dimensions.
 
 ### Example Input
 
