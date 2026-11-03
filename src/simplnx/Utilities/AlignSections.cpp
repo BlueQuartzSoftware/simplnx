@@ -55,7 +55,7 @@ public:
   {
     T var = static_cast<T>(0);
 
-    for(size_t i = 1; i < m_Dims[2]; i++)
+    for(size_t i = (!m_Xshifts.empty() && (m_Xshifts[0] != 0 || m_Yshifts[0] != 0)) ? 0 : 1; i < m_Dims[2]; i++)
     {
       m_Filter->sendThreadSafeProgressMessage(1);
       if(m_Filter->getCancel())
@@ -159,7 +159,7 @@ public:
     auto sliceBuffer = std::make_unique<T[]>(sliceElements);
     auto outBuffer = std::make_unique<T[]>(sliceElements);
 
-    for(usize i = 1; i < m_Dims[2]; i++)
+    for(usize i = (!m_Xshifts.empty() && (m_Xshifts[0] != 0 || m_Yshifts[0] != 0)) ? 0 : 1; i < m_Dims[2]; i++)
     {
       m_Filter->sendThreadSafeProgressMessage(1);
       if(m_Filter->getCancel())
@@ -311,7 +311,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
   }
 
   // Every transfer reports through one shared throttle, so the denominator is aggregate: each array
-  // contributes the slices its loop visits, which is every slice after the first. Arrays that are not
+  // contributes the slices its loop visits, including the first when its shift is nonzero. Arrays that are not
   // IDataArray objects are skipped below, so count only the ones that will actually run.
   usize transferArrayCount = 0;
   for(const auto& cellArrayPath : selectedCellArrays)
@@ -321,7 +321,8 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       transferArrayCount++;
     }
   }
-  const usize slicesPerArray = (udims[2] > 1) ? (udims[2] - 1) : 0;
+  const usize firstSlice = (!xShifts.empty() && (xShifts[0] != 0 || yShifts[0] != 0)) ? 0 : 1;
+  const usize slicesPerArray = udims[2] > firstSlice ? udims[2] - firstSlice : 0;
   m_Throttle.reset(transferArrayCount * slicesPerArray, "Updating cell data");
 
   ParallelTaskAlgorithm taskRunner;

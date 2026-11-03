@@ -24,6 +24,8 @@ Unlike the misorientation-based and mutual-information-based alignment methods, 
 
 If *Use Reference Slice* is enabled, each section is shifted to align with a single fixed reference slice rather than its immediate neighbor. This prevents small errors from accumulating across many sections.
 
+The highest-Z section is also shifted when the reference slice is not 0. This corrects DREAM3D 6.5.171 behavior, which left that section unchanged.
+
 ## Algorithm
 
 The algorithm proceeds in two phases:

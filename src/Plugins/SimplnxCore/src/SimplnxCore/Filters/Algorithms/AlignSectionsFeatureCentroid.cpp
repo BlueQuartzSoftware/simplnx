@@ -127,7 +127,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
     auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
     // Convert physical centroid differences to integer voxel offsets.
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
       if(m_InputValues->UseReferenceSlice)
@@ -179,7 +179,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];
@@ -191,7 +191,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
   else
   {
     // Compute shifts without writing diagnostic arrays.
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       if(m_InputValues->UseReferenceSlice)
       {
@@ -332,7 +332,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
   // Convert physical centroid differences to integer voxel offsets.
   bool xWarning = false;
   bool yWarning = false;
-  for(usize iter = 1; iter < dims[2]; iter++)
+  for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
   {
     if(m_InputValues->UseReferenceSlice)
     {
@@ -379,7 +379,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
     auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       usize slice = (dims[2] - 1) - iter;
       int64 relativexshift = 0;
@@ -398,7 +398,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];
