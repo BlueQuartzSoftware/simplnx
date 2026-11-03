@@ -1,3 +1,6 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
+#include "ImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/HMinimaImageFilter.hpp"
@@ -564,4 +567,55 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima
   UnitTest::LoadPlugins();
   rt::RunReconstructionMd5ItkGolden<HMinimaImageFilter>("RA-Short.nrrd", "7778067eeb752b6ac396dd9e362e8346",
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident fractional minima produce watershed markers", "[ImageProcessing][C15Compatibility][Issue1874][HMinimaImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  const auto input = ip_test::BuildScalarValuesImage<uint8>(ds, {0, 1, 2, 3, 2, 1, 0});
+  c15_test::SetGeometry(ds);
+  const ShapeType shape{1, 1, 7};
+  REQUIRE(c15_test::Read<uint8>(ds, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  const auto converted = c15_test::ConvertToFloat32(ds, input);
+  REQUIRE(c15_test::Read<float32>(ds, converted, shape, scope) == std::vector<float32>{0, 1, 2, 3, 2, 1, 0});
+  const HMinimaImageFilter minimaFilter;
+  auto args = c15_test::ImageArguments(minimaFilter, converted, "RaisedMinima");
+  args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(0.5));
+  args.insertOrAssign(HMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  c15_test::Execute(minimaFilter, ds, args, scope);
+  const auto raised = input.replaceName("RaisedMinima");
+  const std::vector<float32> expectedRaised{0.5F, 1, 2, 3, 2, 1, 0.5F};
+  REQUIRE(c15_test::Read<float32>(ds, raised, shape, scope) == expectedRaised);
+  const RegionalMinimaImageFilter regional;
+  args = c15_test::ImageArguments(regional, raised, "RegionalMinima");
+  args.insertOrAssign(RegionalMinimaImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_FlatIsMinima_Key, std::make_any<bool>(true));
+  c15_test::Execute(regional, ds, args, scope);
+  const auto regionalPath = input.replaceName("RegionalMinima");
+  REQUIRE(c15_test::Read<uint32>(ds, regionalPath, shape, scope) == std::vector<uint32>{1, 0, 0, 0, 0, 0, 1});
+  const auto markers = c15_test::Components(ds, regionalPath, "Markers");
+  const std::vector<uint32> expectedMarkers{1, 0, 0, 0, 0, 0, 2};
+  REQUIRE(c15_test::Read<uint32>(ds, markers, shape, scope) == expectedMarkers);
+  const MorphologicalWatershedFromMarkersImageFilter watershed;
+  args = c15_test::ImageArguments(watershed, raised, "Basins");
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markers));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  c15_test::ExecuteChecked(watershed, ds, args);
+  const auto labels = c15_test::Read<uint32>(ds, input.replaceName("Basins"), shape, scope);
+  // The unique central ridge separates three cells in each basin. Zero marks the watershed line.
+  REQUIRE(labels == std::vector<uint32>{1, 1, 1, 0, 2, 2, 2});
+  REQUIRE(std::count(labels.begin(), labels.end(), uint32{1}) == 3);
+  REQUIRE(std::count(labels.begin(), labels.end(), uint32{2}) == 3);
+  REQUIRE(c15_test::Read<float32>(ds, raised, shape, scope) == expectedRaised);
+  REQUIRE(c15_test::Read<uint32>(ds, markers, shape, scope) == expectedMarkers);
+  REQUIRE(c15_test::Read<uint8>(ds, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  c15_test::CheckGeometry(ds, {7, 1, 1});
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

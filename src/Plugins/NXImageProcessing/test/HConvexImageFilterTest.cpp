@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/HConvexImageFilter.hpp"
@@ -740,4 +742,28 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex
 {
   rt::RunReconstructionMd5ItkGolden<HConvexImageFilter>("RA-Short.nrrd", "f3a7b95a51710d51b3b73e0eb77eb1eb",
                                                         [](Arguments& args) { args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(10000.0)); });
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident exact widening supports fractional HConvex height", "[ImageProcessing][C15Compatibility][Issue1874][HConvexImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  const std::vector<uint8> original{2, 2, 2, 2, 4, 2, 2, 2, 2};
+  const auto input = recon_test::BuildImageFromPattern<uint8>(ds, 3, 3, 1, original);
+  c15_test::SetGeometry(ds);
+  const auto converted = c15_test::ConvertToFloat32(ds, input);
+  const std::vector<float32> exactConverted{2, 2, 2, 2, 4, 2, 2, 2, 2};
+  REQUIRE(c15_test::Read<float32>(ds, converted, {1, 3, 3}, scope) == exactConverted);
+  const HConvexImageFilter filter;
+  auto args = c15_test::ImageArguments(filter, converted, "Contrast");
+  args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(0.5));
+  args.insertOrAssign(HConvexImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  c15_test::Execute(filter, ds, args, scope);
+  REQUIRE(c15_test::Read<float32>(ds, input.replaceName("Contrast"), {1, 3, 3}, scope) == std::vector<float32>{0, 0, 0, 0, 0.5F, 0, 0, 0, 0});
+  REQUIRE(c15_test::Read<float32>(ds, converted, {1, 3, 3}, scope) == exactConverted);
+  REQUIRE(c15_test::Read<uint8>(ds, input, {1, 3, 3}, scope) == original);
+  c15_test::CheckGeometry(ds, {3, 3, 1});
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

@@ -1,3 +1,8 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "ImageProcessing/Filters/AcosImageFilter.hpp"
+#include "ImageProcessing/Filters/AsinImageFilter.hpp"
+#include "ImageProcessing/Filters/TanImageFilter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
 
@@ -2788,4 +2793,97 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().front().code == -27026);
   }
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident principal angles and tangent persist and export ordered fractions", "[ImageProcessing][C15Compatibility][Issue1874][WriteImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize operation = GENERATE(usize{0}, usize{1}, usize{2});
+  CAPTURE(operation, scenario);
+  const c15_test::Directory output;
+  const std::vector<int16> original = operation == 0 ? std::vector<int16>{1, 0, -1, -1, 0, 1} : (operation == 1 ? std::vector<int16>{-1, 0, 1, 1, 0, -1} : std::vector<int16>{0, 1, -1, -1, 1, 0});
+  const std::vector<float32> expected = operation == 0 ?
+                                            std::vector<float32>{0, 1.57079632679489661923F, 3.14159265358979323846F, 3.14159265358979323846F, 1.57079632679489661923F, 0} :
+                                            (operation == 1 ? std::vector<float32>{-1.57079632679489661923F, 0, 1.57079632679489661923F, 1.57079632679489661923F, 0, -1.57079632679489661923F} :
+                                                              std::vector<float32>{0, 1.5574077246549022305F, -1.5574077246549022305F, -1.5574077246549022305F, 1.5574077246549022305F, 0});
+  DataStructure source;
+  const auto input = recon_test::BuildImageFromPattern<int16>(source, 3, 1, 2, original);
+  c15_test::SetGeometry(source);
+  REQUIRE(c15_test::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  const std::string outputName = operation == 2 ? "Tangent" : "Radians";
+  const auto quantitative = operation == 0 ? c15_test::Pointwise<AcosImageFilter>(source, input, outputName) :
+                                             (operation == 1 ? c15_test::Pointwise<AsinImageFilter>(source, input, outputName) : c15_test::Pointwise<TanImageFilter>(source, input, outputName));
+  const auto values = c15_test::Read<float32>(source, quantitative, {2, 1, 3}, scope);
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    if(expected[index] == 0)
+    {
+      REQUIRE(values[index] == 0);
+    }
+    else
+    {
+      REQUIRE(values[index] == Approx(expected[index]).epsilon(1.0e-6));
+    }
+  }
+  // Inverse-trigonometric outputs are radians; tangent values are dimensionless.
+  // Geometry length units are a separate .dream3d field.
+  const auto save = DREAM3D::WriteFile(output.path() / "quantitative.dream3d", source);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  c15_test::CheckSaved<float32>(output.path() / "quantitative.dream3d", quantitative, {2, 1, 3}, values);
+  auto load = DREAM3D::LoadDataStructure(output.path() / "quantitative.dream3d");
+  SIMPLNX_RESULT_REQUIRE_VALID(load);
+  auto& reloaded = load.value();
+  REQUIRE(c15_test::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  c15_test::CheckGeometry(reloaded, {3, 1, 2});
+  const WriteImageFilter writer;
+  c15_test::Execute(writer, reloaded, c15_test::WriteArguments(quantitative, output.path() / "raw.mha"), scope);
+  if(operation == 0)
+  {
+    c15_test::Execute(writer, reloaded, c15_test::WriteArguments(quantitative, output.path() / "raw.tif"), scope);
+    auto displayArgs = c15_test::WriteArguments(quantitative, output.path() / "display.png");
+    displayArgs.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+    displayArgs.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>("Grayscale"));
+    c15_test::Execute(writer, reloaded, displayArgs, scope);
+  }
+  for(usize slice = 0; slice < 2; ++slice)
+  {
+    const auto suffix = slice == 0 ? "_000" : "_001";
+    auto raw = c15_test::ReadMha(output.path() / (std::string("raw") + suffix + ".mha"));
+    const auto pixels = c15_test::Read<float32>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 3}, scope);
+    const ImageGeom* rawGeometry = nullptr;
+    REQUIRE_NOTHROW(rawGeometry = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+    REQUIRE(rawGeometry->getDimensions() == SizeVec3{3, 1, 1});
+    REQUIRE(rawGeometry->getSpacing() == FloatVec3{1, 2, 1});
+    REQUIRE(rawGeometry->getOrigin() == FloatVec3{4, 5, 0});
+    for(usize x = 0; x < 3; ++x)
+    {
+      REQUIRE(pixels[x] == values[slice * 3 + x]);
+      REQUIRE(pixels[x] == Approx(expected[slice * 3 + x]).margin(1.0e-6));
+    }
+    if(operation == 0)
+    {
+      const auto tiffPath = output.path() / (std::string("raw") + suffix + ".tif");
+      const auto tiff = c15_test::Decode<float32>(tiffPath, 3, 1);
+      REQUIRE(tiff == pixels);
+      const auto io = CreateImageIO(tiffPath);
+      SIMPLNX_RESULT_REQUIRE_VALID(io);
+      const auto metadata = io.value()->readMetadata(tiffPath);
+      SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+      REQUIRE(metadata.value().spacing.has_value());
+      REQUIRE(metadata.value().origin.has_value());
+      REQUIRE(metadata.value().spacing.value() == FloatVec3{1, 2, 1});
+      REQUIRE(metadata.value().origin.value() == FloatVec3{4, 5, 0});
+      const auto display = c15_test::Decode<uint8>(output.path() / (std::string("display") + suffix + ".png"), 3, 1, 3);
+      const std::vector<uint8> expectedDisplay = slice == 0 ? std::vector<uint8>{0, 0, 0, 127, 127, 127, 255, 255, 255} : std::vector<uint8>{255, 255, 255, 127, 127, 127, 0, 0, 0};
+      REQUIRE(display == expectedDisplay);
+    }
+  }
+  REQUIRE(c15_test::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(c15_test::Read<float32>(source, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(c15_test::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  UnitTest::CheckArraysInheritTupleDims(source);
+  UnitTest::CheckArraysInheritTupleDims(reloaded);
 }
