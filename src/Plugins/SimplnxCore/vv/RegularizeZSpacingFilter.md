@@ -11,6 +11,8 @@
 
 *Updated 2026-10-29 for the Clear Feature Attribute Matrix change on `topic/correct_feature_am_updates`. Added the Feature Attribute Matrix paths, 12 new tests, the oracle for them, and deviation D1.*
 
+*Updated 2026-11-03: added one test for a Feature Attribute Matrix that is also linked inside another child group of the geometry (`Feature AM nested alias regression`).*
+
 ## At a glance
 
 | Aspect                 | Current state            |
@@ -18,7 +20,7 @@
 | Algorithm Relationship | **Port** of legacy `RegularizeZSpacing::execute()` — identical Z-plane mapping rule and `floor(extent/newZRes)` dim math (independently hand-traced, including the strict-`>` boundary and clamp cases). Six port-time deltas. Five (bulk copy, new-geometry output mode, preflight validation, parallelization, cell-AM binding) do not change output for valid input. The sixth, *Clear Feature Attribute Matrix* (default ON), empties the Feature Attribute Matrix in native pipelines (D1). |
 | Oracle (confirmed)     | **Class 1 (Analytical)** primary + **Class 4 (Invariant)** companion — closed-form indirection map `out[i] = in[map[i]]`. Element-wise Class 1 assertions in 2 fixtures (`Valid Execution (New Geometry)`, `Valid Execution (Spacing Exceeds Extent)`); Class 4 invariants across the valid fixtures. All pass in-core + OOC. The Feature Attribute Matrix tests use hand-computed Class 1 expectations from a 1×1×4 Feature fixture (see Oracle). The new tests have been run in-core only so far. |
 | Code paths enumerated  | 23 of 25 exercised; the 2 uncovered are the redundant file-open guard and the cancel checks (reasons below).                  |
-| Tests today | 18 `TEST_CASE`s: 17 registered cases plus one hidden HDF5 boundary test. 6 are kept from the V&V cycle (all 6 modified on `topic/correct_feature_am_updates`) and 12 are new on that branch. The in-core CTest selection passes 17/17 (2026-10-29). |
+| Tests today | 19 `TEST_CASE`s: 18 registered cases plus one hidden HDF5 boundary test. 6 are kept from the V&V cycle (all 6 modified on `topic/correct_feature_am_updates`) and 13 are new on that branch. The in-core CTest selection passes 18/18 (2026-11-03). |
 | Exemplar archive       | **None** — inline analytical fixtures (no `download_test_data`; avoids a circular oracle per project policy).                 |
 | Legacy comparison      | **Run** vs DREAM3D 6.5.171 on a synthetic multi-type fixture (int32 + bool + 3-component float). Bit-identical: legacy == SIMPLNX == Class-1 oracle on every array and on geometry (dims/spacing/origin). The fixture had no Feature Attribute Matrix. One documented deviation: `RegularizeZSpacingFilter-D1` (Feature Attribute Matrix cleared by default in native pipelines). |
 | Bug flags              | None. D1 is an intentional design choice, not a bug.              |
@@ -88,7 +90,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | 15 | OOC boundary | slice-copy oracle | `real HDF5 slice-copy oracle` — independent expected outputs on actual HDF5 stores |
 | 16 | (d) | Clear OFF → every non-cell Attribute Matrix copied unchanged; preflight value "Feature Data Not Cleared"; stored Renumber and Feature selections ignored | `Clear OFF preflight`, `Clear OFF execute copies Feature AM unchanged`, `Clear OFF ignores stored renumber` |
 | 17 | (d) | Clear ON → Feature Attribute Matrix recreated with source shape and no arrays; preflight value "Cleared Feature Data" lists the cleared arrays; Ensemble data copied unchanged | `Clear ON, renumber OFF preflight`, `Clear ON, renumber OFF execute` |
-| 18 | (d) | Clear ON, Feature Attribute Matrix and Feature Ids selected through a second parent → accepted; no second copy | `Clear ON accepts shared parent paths`, `StrictFeatureIds preflight` (alias section) |
+| 18 | (d) | Clear ON, Feature Attribute Matrix and Feature Ids selected through a second parent → accepted; no second copy, also when the second parent is inside another child group | `Clear ON accepts shared parent paths`, `StrictFeatureIds preflight` (alias section), `Feature AM nested alias regression` |
 | 19 | (d) | Feature Attribute Matrix is not a direct child of the geometry → error `-67431` | `Clear ON Feature AM errors` (code asserted). A missing path is rejected earlier by parameter validation, so the null branch of `-67431` is defensive. |
 | 20 | (d) | Feature Attribute Matrix is the Cell Attribute Matrix → error `-67432` | `Clear ON Feature AM errors` (code asserted) |
 | 21 | (d) | Clear + Renumber, Cell Feature Ids not in the Cell Attribute Matrix → error `-67433`; accepted with Renumber off | `StrictFeatureIds preflight` (code and message asserted) |
@@ -119,8 +121,9 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | `Clear ON, renumber ON execute` | new on `topic/correct_feature_am_updates` | Asserts the renumber text in "Cleared Feature Data", an empty matrix with shape {3}, Ids {1,2}, and Ensemble {999, 1}. |
 | `Clear OFF execute copies Feature AM unchanged` | new on `topic/correct_feature_am_updates` | Renumber off and on (ignored). Asserts the copied matrix has shape {5} and 3 arrays, `NumElements` {0,1,1,1,1}, the NeighborList and names unchanged, Ids {1,3}, and Ensemble {999, 1}. |
 | `Clear ON in place` | new on `topic/correct_feature_am_updates` | Clear and Renumber on, in place. Asserts `Image/Cell Feature Data` is empty with shape {3}, dims (1,1,2), Ids {1,2}, no temporary or output geometry left, and Ensemble {999, 1}. |
+| `Feature AM nested alias regression` | new on `topic/correct_feature_am_updates` | The Feature matrix is also linked in `Image/Misc`, and `Misc` is also linked in `Outside`. Clear, Renumber and the selected path (direct or nested) are each on and off. With Clear on, the output matrix has no arrays and `Misc` has no copy of the matrix; with Clear off, it has 3 arrays and the nested copy keeps the original counts. `Misc/Keep` is 123 in every case. The source matrix keeps its ID, parents, shape, 3 arrays, counts and the `Outside` link. |
 
-There are 18 `TEST_CASE`s: 6 from the V&V cycle (all modified on `topic/correct_feature_am_updates`) and 12 new on that branch. 17 are registered with CTest; `real HDF5 slice-copy oracle` is hidden. The 17 registered cases pass in the in-core build (`NX-Com-Qt69-Vtk96-Rel`, 2026-10-29).
+There are 19 `TEST_CASE`s: 6 from the V&V cycle (all modified on `topic/correct_feature_am_updates`) and 13 new on that branch. 18 are registered with CTest; `real HDF5 slice-copy oracle` is hidden. The 18 registered cases pass in the in-core build (`NX-Com-Qt69-Vtk96-Rel`, 2026-11-03).
 
 OOC recertification (2026-09-21): serial CTest passed 5/5 target entries in each DREAM3DNX build. The hidden `real HDF5 slice-copy oracle` passed 67 assertions in the OOC binary. The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
 

@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -353,23 +352,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
-      if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
-      {
-        std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-        auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
-        if(pathsToBeCopied.has_value())
-        {
-          for(const auto& sourcePath : pathsToBeCopied.value())
-          {
-            allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
-          }
-        }
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
-      }
-      else
-      {
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
-      }
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, options.clearFeatureAttributeMatrix ? cellFeatureAmPath : DataPath{});
     }
   }
 

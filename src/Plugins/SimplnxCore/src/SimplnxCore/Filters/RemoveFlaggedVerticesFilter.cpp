@@ -6,7 +6,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
@@ -242,23 +241,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 
       // If we got past that check, then keep going.
       const DataPath copiedChildPath = childPath.rebase(vertexGeomPath, reducedVertexPath).value();
-      if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
-      {
-        std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-        auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
-        if(pathsToBeCopied.has_value())
-        {
-          for(const auto& sourcePath : pathsToBeCopied.value())
-          {
-            allCreatedPaths.push_back(sourcePath.rebase(vertexGeomPath, reducedVertexPath).value());
-          }
-        }
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
-      }
-      else
-      {
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
-      }
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, clearFeatureAttributeMatrix ? featureAmPath : DataPath{});
     }
   }
 
