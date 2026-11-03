@@ -681,13 +681,22 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: su
   {
     input.warnOnRead();
     input.setReadFault(2, stage == 5 ? ThresholdFaultType::BadAllocation : ThresholdFaultType::LengthError);
-    expectedCode = stage == 5 ? -28617 : -28618;
+    expectedCode = stage == 5 ? -28634 : -28635;
   }
   const std::atomic_bool shouldCancel{false};
   const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == expectedCode);
+  CAPTURE(stage);
+  CHECK(result.errors().front().code == expectedCode);
+  if(stage == 1 || stage == 2)
+  {
+    REQUIRE(result.errors().front().message.find("scan buffer") != std::string::npos);
+  }
+  else if(stage >= 5)
+  {
+    REQUIRE(result.errors().front().message.find("output buffer") != std::string::npos);
+  }
   REQUIRE(result.warnings().size() == (stage == 3 || stage >= 5 ? 2 : (stage == 4 ? 1 : 0)));
   if(stage == 3 || stage >= 5)
   {
@@ -695,6 +704,36 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: su
     REQUIRE(result.warnings().at(1).code == -28614);
   }
   REQUIRE(output.getValue(0) == 99);
+}
+
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: outer exceptions preserve collected warnings before output",
+          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool allocationFailure = GENERATE(false, true);
+  const ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  ThresholdTransferStore<uint8> output({99, 99, 99});
+  const std::atomic_bool shouldCancel{false};
+  const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
+  // The engine sends this message after collecting the nonfinite warning and before writing any output.
+  const IFilter::MessageHandler handler{[allocationFailure](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info && message.message == "Applying the selected native threshold in bounded batches")
+    {
+      if(allocationFailure)
+      {
+        throw std::bad_alloc{};
+      }
+      throw std::length_error("Injected Threshold addressability failure");
+    }
+  }};
+  const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel, handler);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().front().code == -28614);
+  REQUIRE(input.reads() == 1);
+  REQUIRE(output.writes() == 0);
+  REQUIRE(output.getValue(0) == 99);
+  REQUIRE(result.errors().front().code == (allocationFailure ? -28636 : -28637));
 }
 
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine cancellation keeps warning Results without inventing a local cancellation error",
@@ -938,7 +977,8 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
   // can select fewer components after the arithmetic fix; this regression is not an ITK-parity or optimum claim.
 }
 
-TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects intended foreground", "[ImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::C15Compatibility resident threshold fallback selects intended foreground",
+          "[NXImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
