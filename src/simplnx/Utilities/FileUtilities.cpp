@@ -408,7 +408,7 @@ Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
   std::string line;
   std::getline(inStream, line);
   line = StringUtilities::replace(line, "\r", "");
-  std::vector<std::string> tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
+  std::vector<std::string> tokens = StringUtilities::split(line, delimiters, !consecutiveDelimiters);
   if(tokens.empty())
   {
     // An empty interior row cannot provide one token for each configured column.
@@ -507,7 +507,7 @@ Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, u
 
   std::string headersLine;
   std::getline(in, headersLine);
-  auto headers = StringUtilities::split(headersLine, delimiters, consecutiveDelimiters);
+  auto headers = StringUtilities::split(headersLine, delimiters, !consecutiveDelimiters);
   return {headers};
 }
 } // namespace CSV

@@ -52,9 +52,9 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
  * apply the stored Euler and sample reference-frame transforms after import.
  *
  * Destination writes use bulk DataStore operations and support out-of-core
- * stores. EbsdLib still materializes each selected source array. Oxford hexagonal
- * correction also caches the complete cell-phase array, so the import is not a
- * bounded-memory operation.
+ * stores. EbsdLib allocates complete source arrays, so memory use grows with the
+ * volume size. Oxford hexagonal correction uses the reader's phase buffer even
+ * when Phases is not selected for output.
  *
  * The current import and conversion loops do not inspect cancellation. The flag
  * is passed only to optional downstream rotation filters. Bulk-I/O and resize

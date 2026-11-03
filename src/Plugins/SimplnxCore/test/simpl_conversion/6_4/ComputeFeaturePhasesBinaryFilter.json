@@ -20,8 +20,9 @@
     },
     "FeaturePhasesArrayPath": {
       "Data Container Name": "DataContainer",
-      "Attribute Matrix Name": "CellData",
+      "Attribute Matrix Name": "CellFeatureData",
       "Data Array Name": "TestArray"
-    }
+    },
+    "CellEnsembleAttributeMatrixName": "Legacy Ensembles"
   }
 }

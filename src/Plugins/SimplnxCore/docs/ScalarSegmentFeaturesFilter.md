@@ -49,7 +49,7 @@ Both paths produce identical segmentation results. After segmentation, the Featu
 
 When operating on out-of-core data, the CCL path uses a rolling 2-slot buffer system. Before processing each Z-slice, the algorithm bulk-reads the scalar input and mask arrays for that slice into contiguous in-memory buffers. All voxel comparisons then read from these buffers rather than the underlying disk-backed DataStore, eliminating chunk load/evict cycles. Two buffer slots are maintained simultaneously (current and previous slice) because the CCL algorithm must compare voxels across adjacent slices.
 
-All scalar types are converted to `float64` in the buffer for uniform comparison, so a single comparison code path handles all input data types.
+The buffer preserves `int64` and `uint64` values exactly. Their absolute differences use unsigned arithmetic to avoid overflow. At tolerance 0, distinct integers remain separate, including values above 2^53. Other scalar types use a `float64` buffer.
 
 ### Neighbor Scheme
 

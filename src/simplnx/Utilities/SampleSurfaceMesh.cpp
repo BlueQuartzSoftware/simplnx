@@ -315,7 +315,8 @@ struct SampleSurfaceMeshFunctor
     for(usize featureId = 0; featureId < numFeatures; featureId++)
     {
       BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(triangleGeom, faceLists[featureId]));
-      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
+      // The ray starts at the sample point, not the box center. Use the full diagonal with a margin.
+      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) * 1.01F;
       featureBounds.emplace_back(FeatureBoundingVolume{boundingBox, radius});
     }
 

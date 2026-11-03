@@ -14,11 +14,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-const DataPath k_MaskArrayPath = DataPath({"mask array"});
-}
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -90,9 +85,7 @@ IFilter::UniquePointer ComputeVectorColorsFilter::clone() const
 IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pVectorsArrayPathValue = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellVectorColorsArrayNameValue = filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key);
 
   PreflightResult preflightResult;
@@ -102,12 +95,6 @@ IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStru
   std::vector<usize> vectorsTupShape = dataStructure.getDataAs<Float32Array>(pVectorsArrayPathValue)->getTupleShape();
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::uint8, vectorsTupShape, std::vector<usize>{3}, pVectorsArrayPathValue.replaceName(pCellVectorColorsArrayNameValue));
-    resultOutputActions.value().appendAction(std::move(action));
-  }
-
-  if(!pUseGoodVoxelsValue)
-  {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath, "", "true");
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -122,14 +109,7 @@ Result<> ComputeVectorColorsFilter::executeImpl(DataStructure& dataStructure, co
 
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.VectorsArrayPath = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
-  if(!inputValues.UseMask)
-  {
-    inputValues.MaskArrayPath = k_MaskArrayPath;
-  }
-  else
-  {
-    inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  }
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.replaceName(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
 
   return ComputeVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();

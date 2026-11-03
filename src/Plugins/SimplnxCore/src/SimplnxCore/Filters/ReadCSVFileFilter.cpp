@@ -21,7 +21,9 @@
 
 #include "SimplnxCore/Filters/Algorithms/ReadCSVFile.hpp"
 
+#include <algorithm>
 #include <fstream>
+#include <optional>
 
 using namespace nx::core;
 
@@ -35,6 +37,8 @@ struct ReadCSVFileFilterCache
   std::string FilePath;
   usize TotalLines = 0;
   usize HeadersLine = 0;
+  std::vector<char> Delimiters;
+  bool ConsecutiveDelimiters = false;
   std::vector<std::string> Headers;
   fs::file_time_type LastModifiedTime;
 };
@@ -117,9 +121,11 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 
     if(currentLine == readCsvData.headersLine)
     {
-      auto headers = StringUtilities::split(line, readCsvData.delimiters, readCsvData.consecutiveDelimiters);
+      auto headers = StringUtilities::split(line, readCsvData.delimiters, !readCsvData.consecutiveDelimiters);
       s_HeaderCache[instanceId].Headers = headers;
       s_HeaderCache[instanceId].HeadersLine = readCsvData.headersLine;
+      s_HeaderCache[instanceId].Delimiters = readCsvData.delimiters;
+      s_HeaderCache[instanceId].ConsecutiveDelimiters = readCsvData.consecutiveDelimiters;
       break;
     }
   }
@@ -127,10 +133,77 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
   return {};
 }
 
+// -----------------------------------------------------------------------------
+/**
+ * @brief Tells whether the cached header tokens came from a different header line or split settings.
+ * @param cache Supplies the cached header tokens and the settings that produced them.
+ * @param readCsvData Supplies the current header line and split settings.
+ * @return True when the header line must be read and split again.
+ */
+bool headersNeedReload(const ReadCSVFileFilterCache& cache, const ReadCSVData& readCsvData)
+{
+  return readCsvData.headersLine != cache.HeadersLine || readCsvData.delimiters != cache.Delimiters || readCsvData.consecutiveDelimiters != cache.ConsecutiveDelimiters;
+}
+
+// -----------------------------------------------------------------------------
+/**
+ * @brief Finds the first checked line that splits into an empty field when delimiters are kept separate.
+ *
+ * The check covers the header line in LINE mode and the first import row. It reads at most the
+ * first import row of the file.
+ * @param readCsvData Supplies the file, the header mode, the line numbers and the delimiters.
+ * @param headers Supplies the header tokens that preflight uses.
+ * @return The one-based line number, or no value when the checked lines have no empty field or
+ * the file cannot be read here. The import reports read failures.
+ */
+std::optional<usize> findLineWithEmptyField(const ReadCSVData& readCsvData, const std::vector<std::string>& headers)
+{
+  const auto isEmpty = [](const std::string& token) { return token.empty(); };
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && std::any_of(headers.begin(), headers.end(), isEmpty))
+  {
+    return readCsvData.headersLine;
+  }
+
+  std::fstream in(readCsvData.inputFilePath.c_str(), std::ios_base::in);
+  if(!in.is_open() || !FileUtilities::CSV::SkipNumberOfLines(in, readCsvData.startImportRow))
+  {
+    return std::nullopt;
+  }
+  std::string line;
+  std::getline(in, line);
+  line = StringUtilities::replace(line, "\r", "");
+  // An empty row has its own import error.
+  if(line.empty())
+  {
+    return std::nullopt;
+  }
+  const std::vector<std::string> tokens = StringUtilities::split(line, readCsvData.delimiters, true);
+  if(std::any_of(tokens.begin(), tokens.end(), isEmpty))
+  {
+    return readCsvData.startImportRow;
+  }
+  return std::nullopt;
+}
+
+// -----------------------------------------------------------------------------
+/**
+ * @brief Makes a preflight error that keeps the warnings found before it.
+ * @param code Specifies the error code.
+ * @param message Describes the error.
+ * @param warnings Supplies the warnings found before the error.
+ * @return The error result with the warnings attached.
+ */
+IFilter::PreflightResult makePreflightError(ReadCSVFile::IssueCodes code, std::string message, std::vector<Warning> warnings)
+{
+  Result<OutputActions> result = MakeErrorResult<OutputActions>(to_underlying(code), std::move(message));
+  result.warnings() = std::move(warnings);
+  return {std::move(result)};
+}
+
 Result<> cacheFullFile(int32 instanceId, const ReadCSVData& readCsvData)
 {
   s_HeaderCache[instanceId].FilePath = readCsvData.inputFilePath;
-  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && readCsvData.headersLine != s_HeaderCache[instanceId].HeadersLine)
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && headersNeedReload(s_HeaderCache[instanceId], readCsvData))
   {
     auto result = cacheHeaders(instanceId, readCsvData);
     if(result.invalid())
@@ -266,9 +339,9 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(result)), {})};
     }
   }
-  else if(headerMode == ReadCSVData::HeaderMode::LINE && readCSVData.headersLine != s_HeaderCache[m_InstanceId].HeadersLine)
+  else if(headerMode == ReadCSVData::HeaderMode::LINE && headersNeedReload(s_HeaderCache[m_InstanceId], readCSVData))
   {
-    // We are in header line mode and the header line number changed
+    // We are in header line mode and the header line number or the split settings changed
     auto result = cacheHeaders(m_InstanceId, readCSVData);
     if(result.invalid())
     {
@@ -313,6 +386,18 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(to_underlying(ReadCSVFile::IssueCodes::HEADER_LINE_OUT_OF_RANGE), errMsg), {}};
   }
 
+  // Kept empty fields change the column count. Attach this warning to the column-count errors below.
+  if(!readCSVData.consecutiveDelimiters)
+  {
+    if(const std::optional<usize> lineNumber = findLineWithEmptyField(readCSVData, headers); lineNumber.has_value())
+    {
+      std::string msg = fmt::format("Line #{} of '{}' has empty fields because 'Ignore Consecutive Delimiters' is off. To treat a run of delimiters as one separator (for example, "
+                                    "space-aligned columns), turn it on.",
+                                    *lineNumber, inputFilePath);
+      resultOutputActions.warnings().push_back(Warning{to_underlying(ReadCSVFile::IssueCodes::EMPTY_FIELDS), std::move(msg)});
+    }
+  }
+
   // Check that we have valid headers
   if(headers.empty())
   {
@@ -326,7 +411,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     std::string errMsg =
         fmt::format("The number of data types ({}) does not match the number of imported array headers ({}).  The number of data types must match the number of imported array headers.",
                     readCSVData.dataTypes.size(), headers.size());
-    return {MakeErrorResult<OutputActions>(to_underlying(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT), errMsg), {}};
+    return makePreflightError(ReadCSVFile::IssueCodes::INCORRECT_DATATYPE_COUNT, std::move(errMsg), resultOutputActions.warnings());
   }
 
   if(readCSVData.skippedArrayMask.size() != headers.size())
@@ -335,7 +420,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
         "The number of booleans in the skipped array mask ({}) does not match the number of imported array headers ({}).  The number of booleans in the skipped array mask must match the number "
         "of imported array headers.",
         readCSVData.skippedArrayMask.size(), headers.size());
-    return {MakeErrorResult<OutputActions>(to_underlying(ReadCSVFile::IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
+    return makePreflightError(ReadCSVFile::IssueCodes::INCORRECT_MASK_COUNT, std::move(errMsg), resultOutputActions.warnings());
   }
 
   headers = FileUtilities::CSV::RemoveIllegalCharacters(headers);
@@ -346,7 +431,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     if(headerName.empty())
     {
       std::string errMsg = fmt::format("The header for column #{} is empty.  Please fill in a header for column #{}.", i + 1, i + 1);
-      return {MakeErrorResult<OutputActions>(to_underlying(ReadCSVFile::IssueCodes::EMPTY_NAMES), errMsg), {}};
+      return makePreflightError(ReadCSVFile::IssueCodes::EMPTY_NAMES, std::move(errMsg), resultOutputActions.warnings());
     }
 
     if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))

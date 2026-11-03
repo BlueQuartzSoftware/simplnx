@@ -485,19 +485,31 @@ struct BinaryMorphology2DBlockBody
 
   void operator()(const Range& range) const
   {
+    // A single-slice image has no Z neighbors, including at its boundary.
+    const usize planeOffsets = static_cast<usize>(std::count_if(offsets, offsets + numOffsets, [](const SEOffset& offset) { return offset.dz == 0; }));
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
       const usize localX = tuple % outputWidth;
       const usize localY = tuple / outputWidth;
       const usize x = outputXBegin + localX;
       const usize y = outputYBegin + localY;
+      // Removing Z offsets can leave an empty kernel, which preserves the input.
+      if(planeOffsets == 0)
+      {
+        output[tuple] = input[(y - inputYBegin) * inputWidth + (x - inputXBegin)];
+        continue;
+      }
       usize foregroundCount = 0;
       for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
+        if(offset.dz != 0)
+        {
+          continue;
+        }
         const int64 neighborX = static_cast<int64>(x) + offset.dx;
         const int64 neighborY = static_cast<int64>(y) + offset.dy;
-        const bool inBounds = offset.dz == 0 && neighborX >= 0 && neighborX < static_cast<int64>(dimX) && neighborY >= 0 && neighborY < static_cast<int64>(dimY);
+        const bool inBounds = neighborX >= 0 && neighborX < static_cast<int64>(dimX) && neighborY >= 0 && neighborY < static_cast<int64>(dimY);
         if(!inBounds)
         {
           foregroundCount += boundaryToForeground ? 1 : 0;
@@ -506,7 +518,7 @@ struct BinaryMorphology2DBlockBody
         const usize inputIndex = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
         foregroundCount += input[inputIndex] == foreground ? 1 : 0;
       }
-      output[tuple] = dilate ? (foregroundCount > 0 ? foreground : background) : (foregroundCount == numOffsets ? foreground : background);
+      output[tuple] = dilate ? (foregroundCount > 0 ? foreground : background) : (foregroundCount == planeOffsets ? foreground : background);
     }
   }
 };
@@ -5042,12 +5054,14 @@ private:
  * increments, and the accumulator's @ref detail::FgCountAccumulator::getValue applies the pinned binary
  * formula: Dilate emits fg when ANY window voxel is foreground (count > 0), Erode only when ALL are
  * (count == |SE|). Membership is equality-based, so arbitrary non-{fg,bg} labels count as background and the
- * output is strictly @c {fg, bg}.
+ * output is strictly @c {fg, bg}. On a single-slice image only the in-plane offsets are in the window, so
+ * Erode compares with their count.
  *
  * Boundary. Out-of-image SE neighbors are folded via addBoundary/removeBoundary, which count as foreground
  * iff @p boundaryToForeground -- bit-identical to @ref BinaryMorphScanline treating an OOB neighbor as fg iff
  * boundaryToForeground. The empty-SE (radius-0 Annulus) case passes the input through unchanged, matching
- * @ref BinaryMorphScanline so the two agree on that degenerate case.
+ * @ref BinaryMorphScanline so the two agree on that degenerate case. On a single-slice image, an SE with no
+ * in-plane offsets (an Annulus with X and Y radius 0) is handled the same way.
  *
  * Its required constructor arguments match @ref BinaryMorphScanline so both drop into @ref DispatchAlgorithm.
  *
@@ -5108,11 +5122,12 @@ private:
       progressThrottle.incrementPercent(delta, 1);
     };
 
-    // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): pass the
-    // input through unchanged, byte-for-byte identical to BinaryMorphScanline so the two paths still agree.
-    // This rare edge case stays serial; its output-plane scratch lives here so the parallel fast path below
-    // never allocates it.
-    if(m_SE.offsets.empty())
+    // Only in-plane offsets belong to a single-slice image's moving window.
+    const usize windowSize = dimZ == 1 ? static_cast<usize>(std::count_if(m_SE.offsets.begin(), m_SE.offsets.end(), [](const SEOffset& offset) { return offset.dz == 0; })) : m_SE.offsets.size();
+
+    // An empty effective kernel preserves the input, including when removing Z offsets empties an Annulus.
+    // This serial path allocates one output plane without allocating the full resident input buffer.
+    if(windowSize == 0)
     {
       auto outPlane = std::make_unique<T[]>(sliceValues);
       for(usize z = 0; z < dimZ; ++z)
@@ -5171,13 +5186,13 @@ private:
     }
 
     // Per-axis "entering"/"leaving" offset sets for a +1 step, shared with MorphDirect (see
-    // detail::ComputeAxisAddRemoveSets). The two sets have equal size, so the window always holds |SE| entries.
+    // detail::ComputeAxisAddRemoveSets). The two sets have equal size, so the window always holds windowSize
+    // entries. On a single-slice image the Z offsets are skipped in both sets; an X/Y step keeps dz.
     const detail::AxisAddRemoveSets axisSets = detail::ComputeAxisAddRemoveSets(m_SE);
     const std::array<std::vector<SEOffset>, 3>& added = axisSets.added;
     const std::array<std::vector<SEOffset>, 3>& removed = axisSets.removed;
 
     using Acc = detail::FgCountAccumulator<T, Dilate>;
-    const usize windowSize = m_SE.offsets.size();
 
     const int64 nX = static_cast<int64>(dimX);
     const int64 nY = static_cast<int64>(dimY);
@@ -5221,6 +5236,10 @@ private:
       {
         for(const SEOffset& q : added[a])
         {
+          if(dimZ == 1 && q.dz != 0)
+          {
+            continue;
+          }
           const int64 x = cx + q.dx;
           const int64 y = cy + q.dy;
           const int64 z = cz + q.dz;
@@ -5235,6 +5254,10 @@ private:
         }
         for(const SEOffset& o : removed[a])
         {
+          if(dimZ == 1 && o.dz != 0)
+          {
+            continue;
+          }
           const int64 x = cx + o.dx;
           const int64 y = cy + o.dy;
           const int64 z = cz + o.dz;
@@ -5256,6 +5279,10 @@ private:
     auto seedAcc = [&](Acc& h, int64 zStart) {
       for(const SEOffset& o : m_SE.offsets)
       {
+        if(dimZ == 1 && o.dz != 0)
+        {
+          continue;
+        }
         const int64 x = o.dx;
         const int64 y = o.dy;
         const int64 z = zStart + o.dz;
@@ -5528,6 +5555,14 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   if(shouldCancel)
   {
     return {};
+  }
+  // A single-slice image has no Z neighbors. Drop out-of-plane offsets like the other binary routes.
+  // If none remain, the existing empty-kernel branches copy the input.
+  if(dims[2] == 1 && std::any_of(se.offsets.begin(), se.offsets.end(), [](const SEOffset& offset) { return offset.dz != 0; }))
+  {
+    StructuringElement inPlaneSE = se;
+    std::erase_if(inPlaneSE.offsets, [](const SEOffset& offset) { return offset.dz != 0; });
+    return ApplyBinaryMorphologyCompositePipeline<T>(input, output, dims, inPlaneSE, firstOp, secondOp, safeBorder, foreground, background, shouldCancel, grantedWorkingMemoryBytes);
   }
   auto requiredBytesResult = CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes<T>(dims, se, safeBorder);
   if(requiredBytesResult.invalid())

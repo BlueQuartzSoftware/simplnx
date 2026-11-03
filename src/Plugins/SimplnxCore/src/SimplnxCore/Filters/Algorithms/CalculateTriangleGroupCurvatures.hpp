@@ -67,6 +67,12 @@ public:
   using UniqueFaceIds_t = std::set<int64_t>;
 
 private:
+  /**
+   * @brief Writes NaN to every component of each allocated output for one triangle.
+   * @param triId Identifies the triangle that has no valid curvature.
+   */
+  void markOutputsInvalid(int64 triId) const;
+
   FeatureFaceCurvature* m_Filter = nullptr;
   int64_t m_NRing;
   std::vector<int64_t> m_TriangleIds;
