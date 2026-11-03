@@ -207,7 +207,7 @@ public:
   {
     ++m_WriteCount;
     m_MaxWriteValues = std::max(m_MaxWriteValues, values.size());
-    Result<> result = m_FailWrite ? MakeErrorResult(-28891, "Injected Curvature Flow output transfer failure.") : m_Store.copyFromBuffer(offset, values);
+    Result<> result = (m_FailWrite || m_WriteCount == m_FailWriteAt) ? MakeErrorResult(-28891, "Injected Curvature Flow output transfer failure.") : m_Store.copyFromBuffer(offset, values);
     if(m_WarnOnWrite)
     {
       result.warnings().push_back({.code = -28894, .message = "Injected Curvature Flow write warning."});
@@ -310,6 +310,10 @@ public:
   {
     m_FailReadAt = call;
   }
+  void failWriteAt(usize call)
+  {
+    m_FailWriteAt = call;
+  }
   void warnOnReads()
   {
     m_WarnOnRead = true;
@@ -335,6 +339,7 @@ private:
   mutable usize m_MaxReadValues = 0;
   usize m_MaxWriteValues = 0;
   usize m_FailReadAt = std::numeric_limits<usize>::max();
+  usize m_FailWriteAt = std::numeric_limits<usize>::max();
   bool m_WarnOnRead = false;
   bool m_WarnOnWrite = false;
   usize m_CancelWriteAt = std::numeric_limits<usize>::max();
@@ -852,6 +857,106 @@ TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D termi
   REQUIRE(countWarnings(-28894) == output.writeCount());
   REQUIRE(result.warnings().size() == second.readCount() + output.writeCount() + 1);
   REQUIRE(output.getTupleShape() == shape);
+}
+
+TEST_CASE("ImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain warnings", "[ImageProcessing][Issue1874][CurvatureFlowImageFilter]")
+{
+  enum class Exit
+  {
+    Success,
+    HaloReadFailure,
+    OutputWriteFailure,
+    CancelAfterWrite
+  };
+  const auto exit = GENERATE(Exit::Success, Exit::HaloReadFailure, Exit::OutputWriteFailure, Exit::CancelAfterWrite);
+  CAPTURE(exit);
+  const bool failRead = exit == Exit::HaloReadFailure;
+  const bool failWrite = exit == Exit::OutputWriteFailure;
+  const bool cancel = exit == Exit::CancelAfterWrite;
+
+  // Use resident forwarding stores to inject diagnostics into the real X-tile transfers.
+  constexpr usize nx = 5;
+  constexpr usize ny = 3;
+  const ShapeType shape{1, ny, nx};
+  DataStore<uint8> input(shape, ShapeType{1}, uint8{0});
+  const std::vector<uint8> field{0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 0, 100, 100, 100, 100};
+  const auto copyResult = input.copyFromBuffer(0, field);
+  SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+  CurvatureFlowForwardingStore<float64> first(shape);
+  CurvatureFlowForwardingStore<float64> second(shape);
+  CurvatureFlowForwardingStore<uint8> output(shape);
+  first.warnOnReads();
+  output.warnOnWrites();
+  output.setValue(6, uint8{255});
+  output.setValue(7, uint8{255});
+  std::atomic_bool shouldCancel{false};
+  if(failRead)
+  {
+    first.failReadAt(2); // The second row of the first halo fails after the first row warned.
+  }
+  if(failWrite)
+  {
+    output.failWriteAt(5); // The output tile after the clipped center fails.
+  }
+  if(cancel)
+  {
+    output.cancelOnWrite(4, shouldCancel); // The clipped tile finishes its write before cancellation.
+  }
+
+  constexpr usize limit = ImageProcessing::detail::k_FiniteDifference2DFixedStateBytes + (14 * sizeof(float64));
+  const auto plan = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(nx, ny, 1, sizeof(float64), limit);
+  REQUIRE(plan.valid);
+  REQUIRE(plan.coreCols == 2);
+  REQUIRE(plan.coreRows == 1);
+  const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(
+      input, output, first, second, nx, ny, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {}, limit);
+  if(failRead || failWrite)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == (failRead ? -28892 : -28891));
+    CHECK(result.errors().front().message == (failRead ? "Injected delayed Curvature Flow input transfer failure." : "Injected Curvature Flow output transfer failure."));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+
+  // Three X tiles each read 2, 3, and 2 halo rows for the three Y rows.
+  const usize expectedReads = failRead ? 2 : 21;
+  usize expectedWrites = 9;
+  if(failRead)
+  {
+    expectedWrites = 0;
+  }
+  else if(failWrite)
+  {
+    expectedWrites = 5;
+  }
+  else if(cancel)
+  {
+    expectedWrites = 4;
+  }
+  CHECK(first.readCount() == expectedReads);
+  CHECK(first.maxReadValues() == (failRead ? 3 : 4));
+  CHECK(output.writeCount() == expectedWrites);
+  CHECK(shouldCancel.load() == cancel);
+  // At (1, 1), the independently derived update is -125. A time step of 10 clips 100 - 1250 to zero.
+  CHECK(output.getValue(6) == (failRead ? 255 : 0));
+  if(failRead || failWrite || cancel)
+  {
+    CHECK(output.getValue(7) == 255);
+  }
+
+  const auto countWarnings = [&](int32 code, const std::string& message) {
+    return static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(), [&](const Warning& warning) { return warning.code == code && warning.message == message; }));
+  };
+  const usize expectedClipping = failRead ? 0 : 1;
+  CHECK(countWarnings(-28893, "Injected Curvature Flow read warning.") == expectedReads);
+  CHECK(countWarnings(-28894, "Injected Curvature Flow write warning.") == expectedWrites);
+  CHECK(static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(),
+                                         [](const Warning& warning) { return warning.code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput; })) == expectedClipping);
+  CHECK(result.warnings().size() == expectedReads + expectedWrites + expectedClipping);
 }
 
 // -----------------------------------------------------------------------------
