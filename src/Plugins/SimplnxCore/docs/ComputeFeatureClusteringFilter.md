@@ -22,6 +22,8 @@ The **Filter** also outputs the clustering list (every inter-**Feature** distanc
 
 *Note:* Because the algorithm iterates over all **Features**, each distance is double-counted. For example, the distance from **Feature** 1 to **Feature** 2 is counted along with the identical distance from **Feature** 2 to **Feature** 1.
 
+The random reference includes all pairs of distinct sample indices among its 1,000 sample points. DREAM3D 6.5.171 omitted pairs involving the first sample point. It omitted 1,998 of the 999,000 ordered reference pairs (0.2%). The correction can lower RDF values. The change in each bin depends on how many reference pairs were missing from that bin.
+
 ### Bin Count
 
 **Number of Bins for RDF** is a dimensionless count and must be at least 1. Preflight rejects zero and negative counts.

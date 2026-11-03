@@ -113,7 +113,27 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Valid Filter Execution",
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   CompareNeighborLists<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_ExemplarClusteringList), k_CellFeatureDataPath.createChildPath(k_GeneratedClusteringList));
-  CompareArrays<float32>(dataStructure, k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarRDF), k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedRDF));
+  // The legacy RDF exemplar omits reference pairs involving sample zero (L11 / #1820).
+  // Correct RDF normalization is checked by the independent closed-form test below.
+  // The same seed gives the same samples, and the fix only adds reference pairs. So no bin can grow.
+  // In this data set some of the 999 distances from sample zero fall inside the RDF distance range,
+  // so at least one bin must shrink.
+  {
+    const auto& legacyRdf = dataStructure.getDataRefAs<Float32Array>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarRDF));
+    const auto& generatedRdf = dataStructure.getDataRefAs<Float32Array>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedRDF));
+    REQUIRE(generatedRdf.getSize() == legacyRdf.getSize());
+    usize lowerBins = 0;
+    for(usize i = 0; i < generatedRdf.getSize(); i++)
+    {
+      INFO(fmt::format("RDF index {}: generated {} legacy {}", i, generatedRdf[i], legacyRdf[i]));
+      REQUIRE(generatedRdf[i] <= legacyRdf[i]);
+      if(generatedRdf[i] < legacyRdf[i])
+      {
+        lowerBins++;
+      }
+    }
+    REQUIRE(lowerBins > 0);
+  }
   CompareArrays<float32>(dataStructure, k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarMinMaxDistances), k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedMinMaxDistances));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -315,5 +335,52 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: positive bin count domain", "[
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, numberOfBins);
   const auto preflight = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair normalization", "[SimplnxCore][ComputeFeatureClusteringFilter]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* geometry = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({1, 1, 1});
+  geometry->setSpacing({1.0f, 1.0f, 1.0f});
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {4}, geometry->getId());
+  REQUIRE(features != nullptr);
+  auto* ensembles = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, geometry->getId());
+  REQUIRE(ensembles != nullptr);
+  auto* phases = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {4}, {1}, features->getId());
+  auto* centroids = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Centroids", {4}, {3}, features->getId());
+  REQUIRE(phases != nullptr);
+  REQUIRE(centroids != nullptr);
+  phases->fill(1);
+  (*phases)[0] = 0;
+  centroids->fill(0.0f);
+  (*centroids)[9] = 0.5f;
+
+  ComputeFeatureClusteringFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_SetRandomSeed_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Features", "Phases"})));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Features", "Centroids"})));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Image", "Ensembles"})));
+  args.insertOrAssign(ComputeFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>("RDF"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Closed form: a one-voxel reference puts all 1000 * 999 ordered pairs at distance zero.
+  // The three feature distances are 0, 0.5, 0.5. One bin contains all six ordered pairs.
+  // Its reference probability is 1, so RDF = 6 / (1 * 3 * 2) = 1, independent of seed.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Image", "Ensembles", "RDF"})));
+  const auto& rdf = dataStructure.getDataRefAs<Float32Array>(DataPath({"Image", "Ensembles", "RDF"}));
+  REQUIRE(rdf[1] == Approx(1.0f).margin(1.0e-6f));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
