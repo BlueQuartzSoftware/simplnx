@@ -209,8 +209,8 @@ inline OtsuBufferPlan ReserveOtsuBuffers(usize total, usize bytesPerValue, usize
 }
 
 template <class T, class MaskT, class VisitorT>
-Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel, const VisitorT& visitor,
-                         bool parallelRange = false)
+Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel, usize batchValues,
+                         const VisitorT& visitor, bool parallelRange = false)
 {
   Result<> status;
   const usize total = input.getSize();
@@ -240,20 +240,17 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
     return status;
   }
 
-  auto plan = ReserveOtsuBuffers(total, sizeof(T) + (maskPtr == nullptr ? 0 : sizeof(MaskT)), options.TargetBytes,
-                                 input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore),
-                                 parallelRange ? sizeof(OtsuFloatingRangeSummary<T>) : 0);
   // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
-  auto valuesPtr = std::make_unique_for_overwrite<T[]>(plan.Values);
+  auto valuesPtr = std::make_unique_for_overwrite<T[]>(batchValues);
   // MaskT may be bool and must provide contiguous values for store transfers.
-  auto maskValuesPtr = maskPtr == nullptr ? nullptr : std::make_unique_for_overwrite<MaskT[]>(plan.Values);
+  auto maskValuesPtr = maskPtr == nullptr ? nullptr : std::make_unique_for_overwrite<MaskT[]>(batchValues);
   for(usize start = 0; start < total;)
   {
     if(shouldCancel)
     {
       return status;
     }
-    const usize count = std::min(plan.Values, total - start);
+    const usize count = std::min(batchValues, total - start);
     if(maskPtr != nullptr)
     {
       Result<> readMaskResult = maskPtr->copyIntoBuffer(start, nonstd::span<MaskT>(maskValuesPtr.get(), count));
@@ -366,8 +363,8 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
  * @return Histogram and selected finite and nonfinite sample counts, or an input, numeric, or transfer error.
  * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
  *
- * Mask selection precedes nonfinite and range checks. Compact native integer ranges retain exact frequencies in a fixed ring.
- * Other ranges use a second bounded pass.
+ * Mask selection precedes nonfinite and range checks. Compact native integer ranges can retain exact frequencies in a fixed ring.
+ * The ring uses capacity left after the input and mask buffers. A scan without usable ring frequencies uses a second bounded pass for nonconstant input.
  */
 template <class T, class MaskT = uint8>
 Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel)
@@ -392,31 +389,32 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   result.HistogramData.counts.assign(options.NumberOfBins, 0);
   T minValue{};
   T maxValue{};
+  const bool external = input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore);
+  const usize total = input.getSize();
+  const usize bytesPerValue = sizeof(T) + (maskPtr == nullptr ? 0 : sizeof(MaskT));
+  constexpr bool k_ParallelRange = std::is_floating_point_v<T>;
+  auto plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external, k_ParallelRange ? sizeof(detail::OtsuFloatingRangeSummary<T>) : 0);
   constexpr usize ringSize = 65536;
-  std::unique_ptr<std::vector<detail::OtsuFrequencyEntry<T>>> frequenciesPtr;
   CacheMemoryBudgetManager::WorkingMemoryReservation ringReservation;
+  std::unique_ptr<std::vector<detail::OtsuFrequencyEntry<T>>> frequenciesPtr;
   using CompactRangeType = std::conditional_t<std::is_integral_v<T>, bool, const bool>;
   CompactRangeType compactRange = false;
   if constexpr(std::is_integral_v<T>)
   {
-    const bool external = input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore);
     const usize ringBytes = ringSize * sizeof(detail::OtsuFrequencyEntry<T>);
-    if(external)
+    // Admit the optional ring in full only after the required payload, without evicting cache entries.
+    if(external && ResolvePreferredWorkingMemoryBytes(ringBytes) >= ringBytes)
     {
-      ringReservation = ReserveWorkingMemory(ringBytes, ringBytes);
+      ringReservation = CacheMemoryBudgetManager::instance().tryReserveWorkingMemoryWithoutEviction(ringBytes);
     }
-    compactRange = !external || ringReservation.sizeBytes() >= ringBytes;
+    compactRange = !external || ringReservation.sizeBytes() == ringBytes;
     if(compactRange)
     {
       frequenciesPtr = std::make_unique<std::vector<detail::OtsuFrequencyEntry<T>>>(ringSize);
     }
-    else
-    {
-      ringReservation = {};
-    }
   }
   Result<> rangeResult = detail::VisitOtsuValues(
-      input, maskPtr, options, shouldCancel,
+      input, maskPtr, options, shouldCancel, plan.Values,
       [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
         if constexpr(std::is_floating_point_v<T>)
         {
@@ -492,13 +490,22 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
                     ++entry.Count;
                   }
                 }
+                if(!compactRange)
+                {
+                  frequenciesPtr.reset();
+                  ringReservation = {};
+                }
               }
             }
           }
           return {};
         }
       },
-      std::is_floating_point_v<T>);
+      k_ParallelRange);
+  if(k_ParallelRange || compactRange || minValue == maxValue)
+  {
+    plan.Reservation = {};
+  }
   if(rangeResult.invalid())
   {
     return ConvertInvalidResult<OtsuHistogramResult>(std::move(rangeResult));
@@ -550,9 +557,12 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   }
   else
   {
-    frequenciesPtr.reset();
-    ringReservation = {};
-    Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
+    if constexpr(k_ParallelRange)
+    {
+      // The floating-point histogram pass needs no range summaries.
+      plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external);
+    }
+    Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, plan.Values, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
       for(usize i = 0; i < values.size(); ++i)
       {
         if((i % 65536) == 0 && shouldCancel)
