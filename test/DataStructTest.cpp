@@ -24,6 +24,7 @@
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectExcludingAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -3105,3 +3106,101 @@ TEST_CASE("Import publication: complete rollback permits checkpoint reuse withou
   UnitTest::CheckArraysInheritTupleDims(prepared);
 }
 #endif
+
+namespace
+{
+/**
+ * @brief Builds Geom/{Feature, Misc/{Keep, Feature, Sub/{Feature}}} and Outside/Feature, where every Feature is one linked AttributeMatrix.
+ */
+DataStructure CreateExcludedLinkStructure()
+{
+  DataStructure ds;
+  auto* geom = DataGroup::Create(ds, "Geom");
+  auto* feature = AttributeMatrix::Create(ds, "Feature", {3}, geom->getId());
+  auto* counts = UnitTest::CreateTestDataArray<int32>(ds, "Counts", {3}, {1}, feature->getId());
+  (*counts)[0] = 5;
+  (*counts)[1] = 6;
+  (*counts)[2] = 7;
+  auto* misc = DataGroup::Create(ds, "Misc", geom->getId());
+  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, misc->getId());
+  (*keep)[0] = 123;
+  auto* sub = DataGroup::Create(ds, "Sub", misc->getId());
+  auto* outside = DataGroup::Create(ds, "Outside");
+  ds.setAdditionalParent(feature->getId(), misc->getId());
+  ds.setAdditionalParent(feature->getId(), sub->getId());
+  ds.setAdditionalParent(feature->getId(), outside->getId());
+  DataGroup::Create(ds, "Copy");
+  return ds;
+}
+} // namespace
+
+TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the source", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure ds = CreateExcludedLinkStructure();
+  const DataPath featurePath({"Geom", "Feature"});
+  const auto featureId = ds.getData(featurePath)->getId();
+  const auto parents = ds.getData(featurePath)->getParentIds();
+  REQUIRE(parents.size() == 4);
+
+  OutputActions actions;
+  AppendCopyDataObjectAction(ds, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), featurePath);
+  REQUIRE(actions.actions.size() == 1);
+  const auto* copy = dynamic_cast<const CopyDataObjectExcludingAction*>(actions.actions[0].get());
+  REQUIRE(copy != nullptr);
+  auto created = copy->getAllCreatedPaths();
+  std::sort(created.begin(), created.end());
+  std::vector<DataPath> expected = {DataPath({"Copy", "Misc"}), DataPath({"Copy", "Misc", "Keep"}), DataPath({"Copy", "Misc", "Sub"})};
+  std::sort(expected.begin(), expected.end());
+  CHECK(created == expected);
+
+  const Result<> applyResult = copy->apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+
+  // Copy: unrelated data copied, no link to the excluded object at any depth.
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(ds.getData(DataPath({"Copy", "Misc", "Sub"})) != nullptr);
+  CHECK(ds.getData(DataPath({"Copy", "Misc", "Feature"})) == nullptr);
+  CHECK(ds.getData(DataPath({"Copy", "Misc", "Sub", "Feature"})) == nullptr);
+  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc"})).getSize() == 2);
+  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Copy", "Misc", "Sub"})).getSize() == 0);
+
+  // Source: all four links restored, same object, same parents, same values.
+  for(const auto& path : {featurePath, DataPath({"Geom", "Misc", "Feature"}), DataPath({"Geom", "Misc", "Sub", "Feature"}), DataPath({"Outside", "Feature"})})
+  {
+    const auto* object = ds.getData(path);
+    REQUIRE(object != nullptr);
+    CHECK(object->getId() == featureId);
+  }
+  CHECK(ds.getData(featurePath)->getParentIds() == parents);
+  CHECK(ds.getDataRefAs<BaseGroup>(DataPath({"Geom", "Misc"})).getSize() == 3);
+  const auto& counts = ds.getDataRefAs<Int32Array>(featurePath.createChildPath("Counts"));
+  CHECK(counts[0] == 5);
+  CHECK(counts[1] == 6);
+  CHECK(counts[2] == 7);
+}
+
+TEST_CASE("CopyDataObjectExcludingAction: helper with a missing excluded object copies everything", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
+{
+  DataStructure ds = CreateExcludedLinkStructure();
+  OutputActions actions;
+  REQUIRE_NOTHROW(AppendCopyDataObjectAction(ds, actions, DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), DataPath({"Geom", "Missing"})));
+  REQUIRE(actions.actions.size() == 1);
+  const auto* copy = dynamic_cast<const CopyDataObjectAction*>(actions.actions[0].get());
+  REQUIRE(copy != nullptr);
+  // Copy/Misc, Keep, Feature, Feature/Counts, Sub, Sub/Feature, Sub/Feature/Counts
+  CHECK(copy->getAllCreatedPaths().size() == 7);
+  const Result<> applyResult = copy->apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+}
+
+TEST_CASE("CopyDataObjectExcludingAction: missing excluded object copies everything", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
+{
+  DataStructure ds = CreateExcludedLinkStructure();
+  const CopyDataObjectExcludingAction copy(DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), {DataPath({"Copy", "Misc"})}, DataPath({"Geom", "Missing"}));
+  const Result<> applyResult = copy.apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+}

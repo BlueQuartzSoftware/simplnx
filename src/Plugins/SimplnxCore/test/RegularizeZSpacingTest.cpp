@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IO/Generic/InMemoryFormatResolver.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -994,4 +995,85 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON in place", "[SimplnxC
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regression", "[SimplnxCore][RegularizeZSpacingFilter][NestedFeatureAlias]")
+{
+  UnitTest::LoadPlugins();
+  const bool clear = GENERATE(true, false);
+  const bool renumber = GENERATE(false, true);
+  const bool selectNested = GENERATE(false, true);
+  auto ds = CreateFeatureRegularizeFixture();
+  const DataPath sourcePath({"Image"});
+  const DataPath outputPath({"Regularized"});
+  const auto featurePath = sourcePath.createChildPath("Cell Feature Data");
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  const auto featureId = features->getId();
+  const auto shape = features->getShape();
+  const auto countsPath = featurePath.createChildPath("NumElements");
+  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  std::vector<int32> originalCounts(counts.getSize());
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    originalCounts[i] = counts[i];
+  }
+  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
+  REQUIRE(nested != nullptr);
+  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
+  REQUIRE(keep != nullptr);
+  (*keep)[0] = 123;
+  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  auto* outside = DataGroup::Create(ds, "Outside");
+  REQUIRE(outside != nullptr);
+  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
+  const auto parents = ds.getData(featurePath)->getParentIds();
+  auto args = MakeFeatureRegularizeArgs(clear, renumber);
+  if(selectNested)
+  {
+    args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(sourcePath.createChildPath("Misc").createChildPath("Cell Feature Data")));
+  }
+  RegularizeZSpacingFilter filter;
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool foundNestedCopy = false;
+  const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
+  for(const auto& action : preflight.outputActions.value().actions)
+  {
+    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
+    {
+      foundNestedCopy = true;
+      bool declaresFeature = false;
+      for(const auto& created : copy->getAllCreatedPaths())
+      {
+        if(created.rebase(nestedOutputPath, DataPath{}).has_value())
+        {
+          declaresFeature = true;
+        }
+      }
+      CHECK(declaresFeature == !clear);
+    }
+  }
+  REQUIRE(foundNestedCopy);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Cell Feature Data"));
+  REQUIRE(outputFeatures != nullptr);
+  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
+  CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
+  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getData(featurePath)->getId() == featureId);
+  CHECK(ds.getData(featurePath)->getParentIds() == parents);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getSize() == 3);
+  CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    if(!clear)
+    {
+      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+    }
+  }
 }

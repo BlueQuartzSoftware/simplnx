@@ -2,6 +2,9 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectExcludingAction.hpp"
+
+#include <algorithm>
 
 #include <nonstd/span.hpp>
 
@@ -21,6 +24,44 @@ constexpr int32 k_MissingFeatureGroupError = -46000;
  */
 constexpr int32 k_FeatureTupleCountMismatchError = -46001;
 } // namespace
+
+void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputActions& actions, const DataPath& source, const DataPath& destination, const DataPath& excludedPath)
+{
+  const DataObject* excluded = excludedPath.empty() ? nullptr : dataStructure.getData(excludedPath);
+  std::vector<DataPath> aliases;
+  if(excluded != nullptr)
+  {
+    aliases = excluded->getDataPaths();
+  }
+  const auto isExcluded = [&aliases](const DataPath& path) {
+    return std::any_of(aliases.begin(), aliases.end(), [&path](const DataPath& alias) { return path.rebase(alias, DataPath{}).has_value(); });
+  };
+  if(isExcluded(source))
+  {
+    return;
+  }
+  std::vector<DataPath> createdPaths = {destination};
+  if(dataStructure.getDataAs<BaseGroup>(source) != nullptr)
+  {
+    const auto children = GetAllChildDataPathsRecursive(dataStructure, source);
+    if(children.has_value())
+    {
+      for(const auto& child : children.value())
+      {
+        if(!isExcluded(child))
+        {
+          createdPaths.push_back(child.rebase(source, destination).value());
+        }
+      }
+    }
+    if(excluded != nullptr)
+    {
+      actions.appendAction(std::make_unique<CopyDataObjectExcludingAction>(source, destination, createdPaths, excludedPath));
+      return;
+    }
+  }
+  actions.appendAction(std::make_unique<CopyDataObjectAction>(source, destination, createdPaths));
+}
 
 FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bool>& activeObjects)
 {
