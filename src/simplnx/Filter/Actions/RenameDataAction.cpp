@@ -82,18 +82,25 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       }
     }
 
-    DataObject::IdType targetId = std::numeric_limits<DataObject::IdType>::max();
-    for(auto dataObjectID : dataStructure.getAllDataObjectIds())
+    const auto* selectedParent = dataStructure.getData(m_Path.getParent());
+    for(const auto parentId : dataObject->getParentIds())
     {
-      if(dataStructure.getData(dataObjectID)->getName() == m_NewName)
+      if(selectedParent != nullptr && parentId == selectedParent->getId())
       {
-        targetId = dataObjectID;
-        break;
+        continue;
+      }
+      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
+      if(parent != nullptr && parent->contains(m_NewName))
+      {
+        const auto clashPath = parent->getDataPaths().front().createChildPath(m_NewName);
+        return MakeErrorResult(-6604, fmt::format("{}Could not rename DataObject at '{}' to '{}': another parent has a child at '{}'", prefix, m_Path.toString(), m_NewName, clashPath.toString()));
       }
     }
 
-    if(targetId != std::numeric_limits<DataObject::IdType>::max())
+    auto* target = dataStructure.getData(m_Path.replaceName(m_NewName));
+    if(target != nullptr)
     {
+      const auto targetId = target->getId();
       if(mode == Mode::Preflight)
       {
         std::string ss = fmt::format("{}Another object exists with that name, will overwrite destroying other DataObject at '{}' and replacing it with '{}'", prefix, m_NewName, m_Path.toString());
