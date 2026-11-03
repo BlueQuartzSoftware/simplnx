@@ -12,6 +12,8 @@ This filter generates an RGB color for each **Cell** based on the vector assigne
 
 When *Apply to Good Voxels Only* is enabled, the supplied boolean or uint8 **Mask** array marks which **Cells** are valid; **Cells** flagged as bad are left black (RGB 0,0,0) instead of being colored.
 
+A trend that rounds to 360 degrees selects the red hue, the same as 0 degrees. The plunge then blends this hue toward white. For horizontal vectors, this corrects the black output in DREAM3D 6.5.171 to red.
+
 ### Required Input Sources
 
 - **Vector Attribute Array** -- a 3-component float32 per-**Cell** vector array. This may come from any filter that produces a per-**Cell** vector field (for example, a dipole, gradient, or orientation-derived vector array).
