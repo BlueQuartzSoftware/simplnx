@@ -188,6 +188,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
       }
     }
     std::vector<ThresholdMaxCCSummary<T>> blocks(blockCapacity);
+    // T may be bool. A raw array provides the contiguous storage that vector<bool> cannot provide.
     auto valuesPtr = direct ? nullptr : std::make_unique_for_overwrite<T[]>(batchValues);
     for(usize start = 0; start < total;)
     {
@@ -393,8 +394,9 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
     auto reservation = ReserveWorkingMemory(preferredBytes, usefulBytes);
     const usize chunkValues = std::max<usize>(minimumValues, std::min(total, static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / valueBytes, std::numeric_limits<usize>::max()))));
     reservation.shrinkTo(static_cast<uint64>(std::min(chunkValues, total)) * valueBytes);
+    // T may be bool and must provide contiguous values for store transfers.
     auto inputPtr = fillOutside ? nullptr : std::make_unique_for_overwrite<T[]>(std::min(chunkValues, total));
-    auto outputPtr = std::make_unique_for_overwrite<uint8[]>(std::min(chunkValues, total));
+    auto outputPtr = std::make_unique<std::vector<uint8>>(std::min(chunkValues, total));
     for(usize start = 0; start < total;)
     {
       if(shouldCancel)
@@ -413,9 +415,9 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
       }
       for(usize index = 0; index < count; ++index)
       {
-        outputPtr[index] = !fillOutside && inputPtr[index] >= threshold && inputPtr[index] <= cap ? options.InsideValue : options.OutsideValue;
+        (*outputPtr)[index] = !fillOutside && inputPtr[index] >= threshold && inputPtr[index] <= cap ? options.InsideValue : options.OutsideValue;
       }
-      auto writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(outputPtr.get(), count));
+      auto writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(outputPtr->data(), count));
       status = MergeResults(std::move(status), std::move(writeResult));
       if(status.invalid())
       {
