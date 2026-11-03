@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "ImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
@@ -976,5 +978,69 @@ TEST_CASE("ImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-imag
   const Result<> compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident SmoothingRecursiveGaussianImageFilter feeds quantitative gradient",
+          "[ImageProcessing][C15Compatibility][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool step = GENERATE(false, true);
+  CAPTURE(step, scenario);
+  std::vector<float32> original(16 * 4, 4);
+  if(step)
+  {
+    for(usize index = 0; index < original.size(); ++index)
+    {
+      original[index] = index % 16 < 8 ? 0 : 1;
+    }
+  }
+  DataStructure ds;
+  const auto input = recon_test::BuildImageFromPattern<float32>(ds, 16, 4, 1, original);
+  c15_test::SetGeometry(ds);
+  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  const SmoothingRecursiveGaussianImageFilter filter;
+  auto args = c15_test::ImageArguments(filter, input, "Smoothed");
+  args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1, 1, 1}));
+  args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
+  c15_test::Execute(filter, ds, args, scope);
+  const auto smoothed = input.replaceName("Smoothed");
+  const auto values = c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope);
+  const GradientMagnitudeImageFilter gradient;
+  args = c15_test::ImageArguments(gradient, smoothed, "Gradient");
+  args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
+  c15_test::Execute(gradient, ds, args, scope);
+  const auto edges = c15_test::Read<float32>(ds, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  for(usize y = 0; y < 4; ++y)
+  {
+    for(usize x = 0; x < 16; ++x)
+    {
+      const usize index = y * 16 + x;
+      CAPTURE(x, y);
+      REQUIRE(std::isfinite(values[index]));
+      REQUIRE(std::isfinite(edges[index]));
+      if(!step)
+      {
+        REQUIRE(values[index] == Approx(4).margin(1.0e-6));
+        REQUIRE(std::abs(edges[index]) <= 1.0e-6);
+      }
+      else
+      {
+        // Reflection/complement and row invariance are independent of the recursive implementation.
+        REQUIRE(values[index] + values[y * 16 + 15 - x] == Approx(1).margin(1.0e-5));
+        REQUIRE(values[index] == Approx(values[x]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[y * 16 + 15 - x]).margin(1.0e-5));
+        REQUIRE(edges[index] == Approx(edges[x]).margin(1.0e-5));
+        REQUIRE(edges[index] <= edges[y * 16 + 7] + 1.0e-5F);
+        REQUIRE(edges[y * 16 + 7] > 0);
+        REQUIRE(edges[y * 16 + 7] == Approx(edges[y * 16 + 8]).margin(1.0e-5));
+      }
+    }
+  }
+  REQUIRE(c15_test::Read<float32>(ds, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(c15_test::Read<float32>(ds, input, {1, 4, 16}, scope) == original);
+  c15_test::CheckGeometry(ds, {16, 4, 1});
   UnitTest::CheckArraysInheritTupleDims(ds);
 }

@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
@@ -305,4 +307,45 @@ TEST_CASE("ImageProcessing::SquareImageFilter: ITK real-image golden (defaults)"
   REQUIRE(ourMd5 == "314065b457b66e102b9cafd7c49be6b3");
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident widened Square persists and feeds integer components", "[ImageProcessing][C15Compatibility][Issue1874][SquareImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const c15_test::Directory output;
+  DataStructure source;
+  const std::vector<int32> original{0, 2147483647, 0, 2};
+  const auto input = ip_test::BuildScalarValuesImage<int32>(source, original);
+  c15_test::SetGeometry(source);
+  REQUIRE(c15_test::Read<int32>(source, input, {1, 1, 4}, scope) == original);
+  const auto square = c15_test::Pointwise<SquareImageFilter>(source, input, "ExactSquare");
+  // (2^31-1)^2 is exact in Int64 and cannot be transported exactly through Float64.
+  const std::vector<int64> expected{0, 4611686014132420609LL, 0, 4};
+  REQUIRE(c15_test::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
+  const auto save = DREAM3D::WriteFile(output.path() / "square.dream3d", source);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  c15_test::CheckSaved<int64>(output.path() / "square.dream3d", square, {1, 1, 4}, expected);
+  auto load = DREAM3D::LoadDataStructure(output.path() / "square.dream3d");
+  SIMPLNX_RESULT_REQUIRE_VALID(load);
+  auto& reloaded = load.value();
+  REQUIRE(c15_test::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
+  c15_test::CheckGeometry(reloaded, {4, 1, 1});
+  const WriteImageFilter writer;
+  c15_test::Execute(writer, reloaded, c15_test::WriteArguments(square, output.path() / "square.mha"), scope);
+  auto raw = c15_test::ReadMha(output.path() / "square.mha");
+  REQUIRE(c15_test::Read<int64>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 4}, scope) == expected);
+  const ImageGeom* rawGeometry = nullptr;
+  REQUIRE_NOTHROW(rawGeometry = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+  REQUIRE(rawGeometry->getDimensions() == SizeVec3{4, 1, 1});
+  REQUIRE(rawGeometry->getSpacing() == FloatVec3{1, 2, 1});
+  REQUIRE(rawGeometry->getOrigin() == FloatVec3{4, 5, 0});
+  const auto labels = c15_test::Components(reloaded, square, "Components");
+  REQUIRE(c15_test::Read<uint32>(reloaded, labels, {1, 1, 4}, scope) == std::vector<uint32>{0, 1, 0, 2});
+  REQUIRE(c15_test::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
+  REQUIRE(c15_test::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
+  REQUIRE(c15_test::Read<int32>(source, input, {1, 1, 4}, scope) == original);
+  UnitTest::CheckArraysInheritTupleDims(source);
+  UnitTest::CheckArraysInheritTupleDims(reloaded);
 }

@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
@@ -934,4 +936,69 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corr
   REQUIRE(ip_golden::ComputeMd5Hash(dataStructure, inputPath.replaceName("Output")) == "63d4c611a5633ba010f1857401b13150");
   // Independent flood-fill evidence gives 3715 legacy versus 3712 corrected components. The retained search
   // can select fewer components after the arithmetic fix; this regression is not an ITK-parity or optimum claim.
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects intended foreground", "[ImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
+  const auto inf = std::numeric_limits<float64>::infinity();
+  DataStructure ds;
+  const bool noFinite = variant >= 3;
+  const uint8 outside = variant == 4 ? 7 : 0;
+  const auto input = noFinite ? ip_test::BuildScalarValuesImage<float64>(ds, {std::numeric_limits<float64>::quiet_NaN(), -inf, inf}) : ip_test::BuildScalarValuesImage<int32>(ds, {100, 102});
+  const ShapeType shape{1, 1, noFinite ? usize{3} : usize{2}};
+  const ThresholdMaximumConnectedComponentsImageFilter filter;
+  auto args = c15_test::ImageArguments(filter, input, "Thresholded");
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0));
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(variant == 1 ? 99 : (variant == 2 ? -inf : 65536)));
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_InsideValue_Key, std::make_any<uint8>(1));
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_OutsideValue_Key, std::make_any<uint8>(outside));
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(noFinite ? 1 : 0));
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == (variant == 0 ? 0 : 1));
+  if(noFinite)
+  {
+    REQUIRE(result.result.warnings().front().code == -28614);
+    REQUIRE(result.result.warnings().front().message.find("1 NaN, 1 negative infinity and 1 positive infinity") != std::string::npos);
+    REQUIRE(result.result.warnings().front().message.find("No finite pixels are available") != std::string::npos);
+  }
+  if(variant == 1 || variant == 2)
+  {
+    REQUIRE(result.result.warnings().front().code == -28615);
+    REQUIRE(result.result.warnings().front().message.find("empty native intensity band") != std::string::npos);
+  }
+  const auto thresholded = input.replaceName("Thresholded");
+  const std::vector<uint8> expected = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, outside);
+  REQUIRE(c15_test::Read<uint8>(ds, thresholded, shape, expectedStore) == expected);
+  if(outside == 7)
+  {
+    // CC treats all nonzero values as foreground, including the documented expert Outside Value.
+    const auto direct = c15_test::Components(ds, thresholded, "DirectComponents");
+    REQUIRE(c15_test::Read<uint32>(ds, direct, shape, expectedStore) == std::vector<uint32>{1, 1, 1});
+  }
+  const auto desired = c15_test::Select(ds, thresholded, 1, 1, "DesiredInside");
+  const std::vector<uint8> expectedDesired = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, 0);
+  REQUIRE(c15_test::Read<uint8>(ds, desired, shape, expectedStore) == expectedDesired);
+  const auto labels = c15_test::Components(ds, desired, "Components");
+  const std::vector<uint32> expectedLabels = variant == 0 ? std::vector<uint32>{0, 1} : std::vector<uint32>(noFinite ? 3 : 2, 0);
+  REQUIRE(c15_test::Read<uint32>(ds, labels, shape, expectedStore) == expectedLabels);
+  REQUIRE(c15_test::Read<uint8>(ds, thresholded, shape, expectedStore) == expected);
+  if(noFinite)
+  {
+    const auto sourceValues = c15_test::Read<float64>(ds, input, shape, expectedStore);
+    REQUIRE(std::isnan(sourceValues[0]));
+    REQUIRE(sourceValues[1] == -inf);
+    REQUIRE(sourceValues[2] == inf);
+  }
+  else
+  {
+    REQUIRE(c15_test::Read<int32>(ds, input, shape, expectedStore) == std::vector<int32>{100, 102});
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

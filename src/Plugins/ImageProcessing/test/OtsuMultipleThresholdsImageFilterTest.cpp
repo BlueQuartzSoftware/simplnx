@@ -1,3 +1,5 @@
+#include "C15CompatibilityTestUtils.hpp"
+
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
@@ -1278,4 +1280,55 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: floating summarie
     REQUIRE(transferPtr->maximumRead() <= (targetBytes / (sizeof(float64) + sizeof(uint8))));
   }
   // These are output/transfer-bound assertions. No thread-count or throughput claim follows from them.
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds selected components", "[ImageProcessing][C15Compatibility][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const bool includeNonfinite = GENERATE(false, true);
+  const auto nan = std::numeric_limits<float64>::quiet_NaN();
+  const auto inf = std::numeric_limits<float64>::infinity();
+  const std::vector<float64> original = includeNonfinite ? std::vector<float64>{0, 0, 4, 4, nan, -inf, inf} : std::vector<float64>{0, 0, 4, 4};
+  const ShapeType shape{1, 1, original.size()};
+  DataStructure ds;
+  const auto input = ip_test::BuildScalarValuesImage<float64>(ds, original);
+  const auto validity = c15_test::Select(ds, input, 0, 4, "Validity");
+  const std::vector<uint8> expectedValidity = includeNonfinite ? std::vector<uint8>{1, 1, 1, 1, 0, 0, 0} : std::vector<uint8>{1, 1, 1, 1};
+  REQUIRE(c15_test::Read<uint8>(ds, validity, shape, expectedStore) == expectedValidity);
+  const OtsuMultipleThresholdsImageFilter filter;
+  auto args = c15_test::ImageArguments(filter, input, "Classes");
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(2));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(1));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(7));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(255));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(validity));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<bool>(false));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<bool>(false));
+  c15_test::ExecuteChecked(filter, ds, args);
+  const auto classes = input.replaceName("Classes");
+  const std::vector<uint8> expectedClasses = includeNonfinite ? std::vector<uint8>{7, 7, 8, 8, 255, 255, 255} : std::vector<uint8>{7, 7, 8, 8};
+  REQUIRE(c15_test::Read<uint8>(ds, classes, shape, expectedStore) == expectedClasses);
+  const auto selected = c15_test::Select(ds, classes, 8, 8, "DesiredClass");
+  const std::vector<uint8> expectedSelected = includeNonfinite ? std::vector<uint8>{0, 0, 1, 1, 0, 0, 0} : std::vector<uint8>{0, 0, 1, 1};
+  REQUIRE(c15_test::Read<uint8>(ds, selected, shape, expectedStore) == expectedSelected);
+  const auto labels = c15_test::Components(ds, selected, "Components");
+  const std::vector<uint32> expectedLabels = includeNonfinite ? std::vector<uint32>{0, 0, 1, 1, 0, 0, 0} : std::vector<uint32>{0, 0, 1, 1};
+  const auto actualLabels = c15_test::Read<uint32>(ds, labels, shape, expectedStore);
+  REQUIRE(actualLabels == expectedLabels);
+  REQUIRE(std::count(actualLabels.begin(), actualLabels.end(), uint32{1}) == 2);
+  REQUIRE(c15_test::Read<uint8>(ds, classes, shape, expectedStore) == expectedClasses);
+  REQUIRE(c15_test::Read<uint8>(ds, validity, shape, expectedStore) == expectedValidity);
+  const auto values = c15_test::Read<float64>(ds, input, shape, expectedStore);
+  REQUIRE(std::vector<float64>(values.begin(), values.begin() + 4) == std::vector<float64>{0, 0, 4, 4});
+  if(includeNonfinite)
+  {
+    REQUIRE(std::isnan(values[4]));
+    REQUIRE(values[5] == -inf);
+    REQUIRE(values[6] == inf);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

@@ -1,3 +1,8 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "ImageProcessing/Filters/ExpImageFilter.hpp"
+#include "ImageProcessing/Filters/Log10ImageFilter.hpp"
+#include "ImageProcessing/Filters/LogImageFilter.hpp"
+#include "ImageProcessing/Filters/SqrtImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
@@ -335,5 +340,117 @@ TEST_CASE("ImageProcessing::ExpNegativeImageFilter: ITK real-image golden (defau
   const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain masks feed components", "[ImageProcessing][C15Compatibility][Issue1874][ExpNegativeImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4}, usize{5}, usize{6});
+  CAPTURE(variant);
+  DataStructure ds;
+  DataPath input;
+  DataPath quantitative;
+  std::vector<float64> expected;
+  std::vector<uint8> selected;
+  std::vector<uint32> components;
+  float64 lower = 0;
+  float64 upper = 2;
+  const auto nan = std::numeric_limits<float64>::quiet_NaN();
+  const auto inf = std::numeric_limits<float64>::infinity();
+  switch(variant)
+  {
+  case 0:
+    input = ip_test::BuildScalarValuesImage<int16>(ds, {0, 1, 2});
+    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(ds, input, "Quantitative");
+    expected = {1, 0.36787944117144232160, 0.13533528323661269189};
+    lower = 0.5;
+    upper = 1;
+    selected = {1, 0, 0};
+    components = {1, 0, 0};
+    REQUIRE(c15_test::Read<int16>(ds, input, {1, 1, 3}, expectedStore) == std::vector<int16>{0, 1, 2});
+    break;
+  case 1:
+    input = ip_test::BuildScalarValuesImage<int16>(ds, {0, 1});
+    quantitative = c15_test::Pointwise<ExpImageFilter>(ds, input, "Quantitative");
+    expected = {1, 2.71828182845904523536};
+    lower = 1;
+    selected = {1, 0};
+    components = {1, 0};
+    REQUIRE(c15_test::Read<int16>(ds, input, {1, 1, 2}, expectedStore) == std::vector<int16>{0, 1});
+    break;
+  case 2:
+    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 1000, nan, -inf, inf});
+    quantitative = c15_test::Pointwise<ExpImageFilter>(ds, input, "Quantitative");
+    expected = {1, inf, nan, 0, inf};
+    selected = {1, 0, 0, 1, 0};
+    components = {1, 0, 0, 2, 0};
+    break;
+  case 3:
+    input = ip_test::BuildScalarValuesImage<float64>(ds, {1, 0, -1, inf, nan});
+    quantitative = c15_test::Pointwise<LogImageFilter>(ds, input, "Quantitative");
+    expected = {0, -inf, nan, inf, nan};
+    lower = -1;
+    upper = 1;
+    selected = {1, 0, 0, 0, 0};
+    components = {1, 0, 0, 0, 0};
+    break;
+  case 4:
+    input = ip_test::BuildScalarValuesImage<float64>(ds, {1, 10, 0, -1});
+    quantitative = c15_test::Pointwise<Log10ImageFilter>(ds, input, "Quantitative");
+    expected = {0, 1, -inf, nan};
+    upper = 1;
+    selected = {1, 1, 0, 0};
+    components = {1, 1, 0, 0};
+    break;
+  case 5:
+    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 4, -1, inf, nan});
+    quantitative = c15_test::Pointwise<SqrtImageFilter>(ds, input, "Quantitative");
+    expected = {0, 2, nan, inf, nan};
+    selected = {1, 1, 0, 0, 0};
+    components = {1, 1, 0, 0, 0};
+    break;
+  default:
+    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 1, 2});
+    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(ds, input, "Quantitative");
+    expected = {1, 0.36787944117144232160, 0.13533528323661269189};
+    lower = 0.5;
+    upper = 1;
+    selected = {1, 0, 0};
+    components = {1, 0, 0};
+    break;
+  }
+  const ShapeType shape{1, 1, expected.size()};
+  auto checkQuantitative = [&] {
+    const auto values = c15_test::Read<float64>(ds, quantitative, shape, expectedStore);
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      CAPTURE(index);
+      if(std::isnan(expected[index]))
+      {
+        REQUIRE(std::isnan(values[index]));
+      }
+      else if(std::isinf(expected[index]) || expected[index] == 0)
+      {
+        REQUIRE(values[index] == expected[index]);
+      }
+      else
+      {
+        REQUIRE(values[index] == Approx(expected[index]).epsilon(1.0e-15));
+      }
+    }
+  };
+  if(variant >= 2)
+  {
+    REQUIRE(c15_test::Read<float64>(ds, input, shape, expectedStore).size() == expected.size());
+  }
+  checkQuantitative();
+  const auto mask = c15_test::Select(ds, quantitative, lower, upper, "Selected");
+  REQUIRE(c15_test::Read<uint8>(ds, mask, shape, expectedStore) == selected);
+  const auto labels = c15_test::Components(ds, mask, "Components");
+  REQUIRE(c15_test::Read<uint32>(ds, labels, shape, expectedStore) == components);
+  checkQuantitative();
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
