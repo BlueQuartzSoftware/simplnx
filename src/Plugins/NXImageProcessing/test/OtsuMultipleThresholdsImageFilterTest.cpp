@@ -27,6 +27,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/OtsuImageEngine.hpp"
 
@@ -291,8 +292,9 @@ template <class T>
 class OtsuTransferStore : public DataStore<T>
 {
 public:
-  explicit OtsuTransferStore(usize size)
+  explicit OtsuTransferStore(usize size, IDataStore::StoreType storeType = IDataStore::StoreType::Empty)
   : DataStore<T>({size}, {1}, T{})
+  , m_StoreType(storeType)
   {
   }
   ~OtsuTransferStore() noexcept override = default;
@@ -304,7 +306,7 @@ public:
   IDataStore::StoreType getStoreType() const override
   {
     // An abstract-store route witness only. This test store has no disk backing.
-    return IDataStore::StoreType::Empty;
+    return m_StoreType;
   }
   Result<> copyIntoBuffer(usize start, nonstd::span<T> buffer) const override
   {
@@ -368,6 +370,7 @@ public:
   }
 
 private:
+  const IDataStore::StoreType m_StoreType;
   bool m_FailRead = false;
   bool m_WarnOnFirstRead = false;
   usize m_FailReadAt = 0;
@@ -615,6 +618,47 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants an
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.value() == std::vector<float64>{2});
   }
+}
+
+TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer ring preserves full payload batches at its grant boundary",
+          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuRingGrant]")
+{
+  // The counting store exercises charged scan buffers and records caller transfers. It has no disk backing.
+  constexpr usize k_ValueCount = 16;
+  constexpr uint64 k_PayloadBytes = k_ValueCount * sizeof(uint16);
+  constexpr uint64 k_RingBytes = 65536ULL * sizeof(ImageProcessing::detail::OtsuFrequencyEntry<uint16>);
+  const uint64 grant = GENERATE_COPY(k_RingBytes - 1, k_RingBytes, k_RingBytes + k_PayloadBytes);
+  CAPTURE(grant);
+
+  OtsuTransferStore<uint16> input(k_ValueCount, IDataStore::StoreType::OutOfCore);
+  for(usize i = 1; i < k_ValueCount; i += 2)
+  {
+    input.setValue(i, uint16{4});
+  }
+
+  auto& budget = CacheMemoryBudgetManager::instance();
+  const uint64 reservedBefore = budget.reservedWorkingMemoryBytes();
+  const uint64 ceiling = budget.maximumWorkingMemoryBytes();
+  REQUIRE(ceiling >= reservedBefore + grant);
+  const uint64 pressureBytes = ceiling - reservedBefore - grant;
+  {
+    const auto pressure = budget.tryReserveWorkingMemoryWithoutEviction(pressureBytes);
+    REQUIRE(pressure.sizeBytes() == pressureBytes);
+    const uint64 reservedWithPressure = budget.reservedWorkingMemoryBytes();
+    REQUIRE(ceiling - reservedWithPressure == grant);
+
+    const std::atomic_bool shouldCancel{false};
+    const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2};
+    const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(result.value().FiniteCount == 16);
+    REQUIRE(result.value().HistogramData.counts == std::vector<usize>{8, 8});
+    REQUIRE(budget.reservedWorkingMemoryBytes() == reservedWithPressure);
+    // The grant must fit both resources for a single pass. The fallback reads one full buffer per pass.
+    CHECK(input.maximumRead() == k_ValueCount);
+    CHECK(input.reads() == (grant == k_RingBytes + k_PayloadBytes ? 1 : 2));
+  }
+  REQUIRE(budget.reservedWorkingMemoryBytes() == reservedBefore);
 }
 
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: bounded transfers preserve failures and cancellation", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
