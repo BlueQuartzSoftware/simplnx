@@ -528,7 +528,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
   {
     if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween))
     {
-      return MakeErrorResult<std::vector<float64>>(-8320, "Otsu class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
+      return MakeErrorResult<std::vector<float64>>(-28650, "Otsu class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
     }
   }
 
@@ -548,7 +548,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, maxVarBetween, valleyEmphasisFactor == 0.0))
       {
-        return MakeErrorResult<std::vector<float64>>(-8321, "Otsu valley-weighted initial objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
+        return MakeErrorResult<std::vector<float64>>(-28651, "Otsu valley-weighted initial objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
       }
     }
   }
@@ -637,7 +637,8 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
     {
       if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween))
       {
-        return MakeErrorResult<std::vector<float64>>(-8322, "Otsu candidate class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
+        return MakeErrorResult<std::vector<float64>>(-28652,
+                                                     "Otsu candidate class means or variance overflowed or collapsed through underflow. Rescale the selected finite input before thresholding.");
       }
     }
 
@@ -654,7 +655,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& h, usize num
       {
         if(!OtsuObjectiveIsUsable(globalMean, classMean, classFrequency, varBetween, valleyEmphasisFactor == 0.0))
         {
-          return MakeErrorResult<std::vector<float64>>(-8323, "Otsu valley-weighted candidate objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
+          return MakeErrorResult<std::vector<float64>>(-28653, "Otsu valley-weighted candidate objective is not finite or usable. Rescale the selected finite input or disable Valley Emphasis.");
         }
       }
     }
