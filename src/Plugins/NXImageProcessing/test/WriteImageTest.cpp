@@ -586,6 +586,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: wide and tiny interiors decode w
   requireWriteImageGray(scope, std::array<uint64, 3>{unsignedMaximum - 2, unsignedMaximum - 1, unsignedMaximum}, expected);
   requireWriteImageGray(scope, std::array<float64, 3>{0, std::numeric_limits<float64>::min(), 2 * std::numeric_limits<float64>::min()}, expected);
   requireWriteImageGray(scope, std::array<float32, 4>{0, 1, 2, 3}, std::array<uint8, 4>{0, 85, 170, 255});
+
+  // The unscaled width rounds to infinity at the overflow midpoint.
+  INFO("Binary64 width at the overflow midpoint");
+  constexpr float64 high = 0x1.ffffffffffffep+1023;
+  requireWriteImageGray(scope, std::array<float64, 3>{-0x1.8p+971, high * 0.5, high}, expected);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: subnormal double interior has a distinct runtime witness", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
