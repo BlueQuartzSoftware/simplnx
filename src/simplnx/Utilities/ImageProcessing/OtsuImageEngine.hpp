@@ -392,8 +392,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   const bool external = input.getStoreType() == IDataStore::StoreType::OutOfCore || (maskPtr != nullptr && maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore);
   const usize total = input.getSize();
   const usize bytesPerValue = sizeof(T) + (maskPtr == nullptr ? 0 : sizeof(MaskT));
-  constexpr bool k_ParallelRange = std::is_floating_point_v<T>;
-  auto plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external, k_ParallelRange ? sizeof(detail::OtsuFloatingRangeSummary<T>) : 0);
+  auto plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external, std::is_floating_point_v<T> ? sizeof(detail::OtsuFloatingRangeSummary<T>) : 0);
   constexpr usize ringSize = 65536;
   CacheMemoryBudgetManager::WorkingMemoryReservation ringReservation;
   std::unique_ptr<std::vector<detail::OtsuFrequencyEntry<T>>> frequenciesPtr;
@@ -501,8 +500,8 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
           return {};
         }
       },
-      k_ParallelRange);
-  if(k_ParallelRange || compactRange || minValue == maxValue)
+      std::is_floating_point_v<T>);
+  if(std::is_floating_point_v<T> || compactRange || minValue == maxValue)
   {
     plan.Reservation = {};
   }
@@ -557,7 +556,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   }
   else
   {
-    if constexpr(k_ParallelRange)
+    if constexpr(std::is_floating_point_v<T>)
     {
       // The floating-point histogram pass needs no range summaries.
       plan = detail::ReserveOtsuBuffers(total, bytesPerValue, options.TargetBytes, external);
