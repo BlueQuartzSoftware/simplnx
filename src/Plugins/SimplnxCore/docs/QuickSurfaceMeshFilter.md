@@ -28,6 +28,11 @@ The resulting mesh is "blocky" because each triangle aligns with a voxel face. T
 
 The user may select any number of **Cell Attribute Arrays** to transfer onto the new **Triangle Geometry**. Each output **Face** inherits the values of the **Cell** it came from. Only scalar and vector arrays can be transferred; multi-dimensional component shapes (e.g., N×M matrices) are not supported.
 
+Selected feature arrays are transferred in the same way. Each **Face** has two sides, so a transferred array
+with N components per tuple has 2N components per **Face**. The first N components come from the side of
+Face Labels[0]. The last N components come from the side of Face Labels[1]. In DREAM3D 6.5.171, the two
+halves were reversed on some internal faces. This filter corrects that, so its output is different there.
+
 ### Face Labels Convention
 
 Each triangle gets a 2-component *Face Labels* attribute storing the two Feature IDs on either side of the boundary. The filter guarantees the smaller Feature ID is in component 0, so downstream filters can rely on a consistent ordering.
