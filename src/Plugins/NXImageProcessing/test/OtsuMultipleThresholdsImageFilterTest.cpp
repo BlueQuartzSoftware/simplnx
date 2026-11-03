@@ -427,7 +427,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects eac
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, otsuArguments(inputPath));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -8324);
+  REQUIRE(result.result.errors().front().code == -28654);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -479,7 +479,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite d
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -8325);
+  REQUIRE(result.result.errors().front().code == -28655);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -585,7 +585,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants an
     input.setValue(0, std::numeric_limits<uint64>::max() - 1);
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8326);
+    REQUIRE(result.errors().front().code == -28656);
   }
   SECTION("opposite float64 extrema overflow the range")
   {
@@ -593,21 +593,21 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants an
     input.setValue(0, -std::numeric_limits<float64>::max());
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8326);
+    REQUIRE(result.errors().front().code == -28656);
   }
   SECTION("nonzero means square to zero")
   {
     const ImageProcessing::Histogram histogram{.counts = {1, 1, 100}, .min = 0, .max = 3e-200, .binWidth = 1e-200};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8320);
+    REQUIRE(result.errors().front().code == -28650);
   }
   SECTION("finite means square to infinity")
   {
     const ImageProcessing::Histogram histogram{.counts = {1, 1, 100}, .min = 1e200, .max = 4e200, .binWidth = 1e200};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8320);
+    REQUIRE(result.errors().front().code == -28650);
   }
   SECTION("unique rational optimum stays unchanged at ordinary scale")
   {
@@ -1104,11 +1104,11 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep ex
   input.setValue(0, std::numeric_limits<float64>::quiet_NaN());
   const auto noFiniteResult = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(noFiniteResult);
-  REQUIRE(noFiniteResult.errors().front().code == -8325);
+  REQUIRE(noFiniteResult.errors().front().code == -28655);
   const DataStore<float64> empty({0}, {1}, 0.0);
   const auto emptyResult = ImageProcessing::ComputeOtsuHistogram(empty, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(emptyResult);
-  REQUIRE(emptyResult.errors().front().code == -8325);
+  REQUIRE(emptyResult.errors().front().code == -28655);
 }
 
 TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper configuration errors are actionable", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
@@ -1176,7 +1176,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper co
     input.setValue(1, 1e20 + 32768.0);
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8327);
+    REQUIRE(result.errors().front().code == -28657);
   }
 }
 
