@@ -1180,7 +1180,7 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
     for(usize localRow = 0; localRow < rowCount; ++localRow)
     {
       const usize rowOffset = localRow * dimX;
-      if(auto result = EncodeLineInto<T, Pred>(nonstd::span<const T>(inputBlock.data() + rowOffset, dimX), signedDimX, pred, uf, currentLine); result.invalid())
+      if(auto result = EncodeLineInto<T, Pred>(nonstd::span<const T>(inputBlock.data(), blockValues).subspan(rowOffset, dimX), signedDimX, pred, uf, currentLine); result.invalid())
       {
         return result;
       }

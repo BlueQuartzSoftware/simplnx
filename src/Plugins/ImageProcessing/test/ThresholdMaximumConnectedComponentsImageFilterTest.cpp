@@ -2,6 +2,7 @@
 
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "UnaryFilterTestUtils.hpp"
 
 #include "ImageProcessing/Filters/ThresholdMaximumConnectedComponentsImageFilter.hpp"
 
@@ -30,6 +31,7 @@
 #include <nlohmann/json.hpp>
 #include <nonstd/span.hpp>
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <atomic>
@@ -933,14 +935,8 @@ TEST_CASE("ImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corr
   {
     const float32 value = inputPtr->getValue(index);
     allFinite = allFinite && std::isfinite(value);
-    if(value < minimum)
-    {
-      minimum = value;
-    }
-    if(value > maximum)
-    {
-      maximum = value;
-    }
+    minimum = std::min(minimum, value);
+    maximum = std::max(maximum, value);
     const bool legacyInside = value >= legacyThreshold && value <= upperBoundary;
     const bool correctedInside = value >= correctedThreshold && value <= upperBoundary;
     legacyMask[index] = legacyInside ? uint8{1} : uint8{0};
@@ -984,21 +980,23 @@ TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects
   const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
   const auto inf = std::numeric_limits<float64>::infinity();
-  DataStructure ds;
+  DataStructure dataStructure;
   const bool noFinite = variant >= 3;
   const uint8 outside = variant == 4 ? 7 : 0;
-  const auto input = noFinite ? ip_test::BuildScalarValuesImage<float64>(ds, {std::numeric_limits<float64>::quiet_NaN(), -inf, inf}) : ip_test::BuildScalarValuesImage<int32>(ds, {100, 102});
+  const auto input =
+      noFinite ? ip_test::BuildScalarValuesImage<float64>(dataStructure, {std::numeric_limits<float64>::quiet_NaN(), -inf, inf}) : ip_test::BuildScalarValuesImage<int32>(dataStructure, {100, 102});
   const ShapeType shape{1, 1, noFinite ? usize{3} : usize{2}};
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   auto args = c15_test::ImageArguments(filter, input, "Thresholded");
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0));
-  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(variant == 1 ? 99 : (variant == 2 ? -inf : 65536)));
+  const std::array<float64, 5> upperBounds{65536, 99, -inf, 65536, 65536};
+  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(upperBounds.at(variant)));
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_InsideValue_Key, std::make_any<uint8>(1));
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_OutsideValue_Key, std::make_any<uint8>(outside));
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(noFinite ? 1 : 0));
-  const auto preflight = filter.preflight(ds, args);
+  const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto result = filter.execute(ds, args);
+  const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == (variant == 0 ? 0 : 1));
   if(noFinite)
@@ -1014,30 +1012,30 @@ TEST_CASE("ImageProcessing::C15Compatibility resident threshold fallback selects
   }
   const auto thresholded = input.replaceName("Thresholded");
   const std::vector<uint8> expected = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, outside);
-  REQUIRE(c15_test::Read<uint8>(ds, thresholded, shape, expectedStore) == expected);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
   if(outside == 7)
   {
     // CC treats all nonzero values as foreground, including the documented expert Outside Value.
-    const auto direct = c15_test::Components(ds, thresholded, "DirectComponents");
-    REQUIRE(c15_test::Read<uint32>(ds, direct, shape, expectedStore) == std::vector<uint32>{1, 1, 1});
+    const auto direct = c15_test::Components(dataStructure, thresholded, "DirectComponents");
+    REQUIRE(c15_test::Read<uint32>(dataStructure, direct, shape, expectedStore) == std::vector<uint32>{1, 1, 1});
   }
-  const auto desired = c15_test::Select(ds, thresholded, 1, 1, "DesiredInside");
+  const auto desired = c15_test::Select(dataStructure, thresholded, 1, 1, "DesiredInside");
   const std::vector<uint8> expectedDesired = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, 0);
-  REQUIRE(c15_test::Read<uint8>(ds, desired, shape, expectedStore) == expectedDesired);
-  const auto labels = c15_test::Components(ds, desired, "Components");
+  REQUIRE(c15_test::Read<uint8>(dataStructure, desired, shape, expectedStore) == expectedDesired);
+  const auto labels = c15_test::Components(dataStructure, desired, "Components");
   const std::vector<uint32> expectedLabels = variant == 0 ? std::vector<uint32>{0, 1} : std::vector<uint32>(noFinite ? 3 : 2, 0);
-  REQUIRE(c15_test::Read<uint32>(ds, labels, shape, expectedStore) == expectedLabels);
-  REQUIRE(c15_test::Read<uint8>(ds, thresholded, shape, expectedStore) == expected);
+  REQUIRE(c15_test::Read<uint32>(dataStructure, labels, shape, expectedStore) == expectedLabels);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
   if(noFinite)
   {
-    const auto sourceValues = c15_test::Read<float64>(ds, input, shape, expectedStore);
+    const auto sourceValues = c15_test::Read<float64>(dataStructure, input, shape, expectedStore);
     REQUIRE(std::isnan(sourceValues[0]));
     REQUIRE(sourceValues[1] == -inf);
     REQUIRE(sourceValues[2] == inf);
   }
   else
   {
-    REQUIRE(c15_test::Read<int32>(ds, input, shape, expectedStore) == std::vector<int32>{100, 102});
+    REQUIRE(c15_test::Read<int32>(dataStructure, input, shape, expectedStore) == std::vector<int32>{100, 102});
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

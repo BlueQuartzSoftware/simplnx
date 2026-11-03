@@ -18,6 +18,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -28,6 +29,7 @@
 #include <any>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -39,12 +41,16 @@ TEMPLATE_TEST_CASE("ImageProcessing::ExpNegativeImageFilter: integer input produ
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  std::vector<TestType> values = {0, 1, std::numeric_limits<TestType>::max()};
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    values.push_back(-1);
-    values.push_back(std::numeric_limits<TestType>::lowest());
-  }
+  const auto values = [] {
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      return std::vector<TestType>{0, 1, std::numeric_limits<TestType>::max(), -1, std::numeric_limits<TestType>::lowest()};
+    }
+    else
+    {
+      return std::vector<TestType>{0, 1, std::numeric_limits<TestType>::max()};
+    }
+  }();
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
   const DataPath output = input.replaceName("Output");
@@ -350,7 +356,7 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
   const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4}, usize{5}, usize{6});
   CAPTURE(variant);
-  DataStructure ds;
+  DataStructure dataStructure;
   DataPath input;
   DataPath quantitative;
   std::vector<float64> expected;
@@ -363,34 +369,34 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
   switch(variant)
   {
   case 0:
-    input = ip_test::BuildScalarValuesImage<int16>(ds, {0, 1, 2});
-    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<int16>(dataStructure, {0, 1, 2});
+    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, 0.36787944117144232160, 0.13533528323661269189};
     lower = 0.5;
     upper = 1;
     selected = {1, 0, 0};
     components = {1, 0, 0};
-    REQUIRE(c15_test::Read<int16>(ds, input, {1, 1, 3}, expectedStore) == std::vector<int16>{0, 1, 2});
+    REQUIRE(c15_test::Read<int16>(dataStructure, input, {1, 1, 3}, expectedStore) == std::vector<int16>{0, 1, 2});
     break;
   case 1:
-    input = ip_test::BuildScalarValuesImage<int16>(ds, {0, 1});
-    quantitative = c15_test::Pointwise<ExpImageFilter>(ds, input, "Quantitative");
-    expected = {1, 2.71828182845904523536};
+    input = ip_test::BuildScalarValuesImage<int16>(dataStructure, {0, 1});
+    quantitative = c15_test::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
+    expected = {1, std::numbers::e};
     lower = 1;
     selected = {1, 0};
     components = {1, 0};
-    REQUIRE(c15_test::Read<int16>(ds, input, {1, 1, 2}, expectedStore) == std::vector<int16>{0, 1});
+    REQUIRE(c15_test::Read<int16>(dataStructure, input, {1, 1, 2}, expectedStore) == std::vector<int16>{0, 1});
     break;
   case 2:
-    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 1000, nan, -inf, inf});
-    quantitative = c15_test::Pointwise<ExpImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 1000, nan, -inf, inf});
+    quantitative = c15_test::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, inf, nan, 0, inf};
     selected = {1, 0, 0, 1, 0};
     components = {1, 0, 0, 2, 0};
     break;
   case 3:
-    input = ip_test::BuildScalarValuesImage<float64>(ds, {1, 0, -1, inf, nan});
-    quantitative = c15_test::Pointwise<LogImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {1, 0, -1, inf, nan});
+    quantitative = c15_test::Pointwise<LogImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, -inf, nan, inf, nan};
     lower = -1;
     upper = 1;
@@ -398,23 +404,23 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
     components = {1, 0, 0, 0, 0};
     break;
   case 4:
-    input = ip_test::BuildScalarValuesImage<float64>(ds, {1, 10, 0, -1});
-    quantitative = c15_test::Pointwise<Log10ImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {1, 10, 0, -1});
+    quantitative = c15_test::Pointwise<Log10ImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, 1, -inf, nan};
     upper = 1;
     selected = {1, 1, 0, 0};
     components = {1, 1, 0, 0};
     break;
   case 5:
-    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 4, -1, inf, nan});
-    quantitative = c15_test::Pointwise<SqrtImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 4, -1, inf, nan});
+    quantitative = c15_test::Pointwise<SqrtImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, 2, nan, inf, nan};
     selected = {1, 1, 0, 0, 0};
     components = {1, 1, 0, 0, 0};
     break;
   default:
-    input = ip_test::BuildScalarValuesImage<float64>(ds, {0, 1, 2});
-    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(ds, input, "Quantitative");
+    input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 1, 2});
+    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, 0.36787944117144232160, 0.13533528323661269189};
     lower = 0.5;
     upper = 1;
@@ -424,7 +430,7 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
   }
   const ShapeType shape{1, 1, expected.size()};
   auto checkQuantitative = [&] {
-    const auto values = c15_test::Read<float64>(ds, quantitative, shape, expectedStore);
+    const auto values = c15_test::Read<float64>(dataStructure, quantitative, shape, expectedStore);
     for(usize index = 0; index < expected.size(); ++index)
     {
       CAPTURE(index);
@@ -444,13 +450,13 @@ TEST_CASE("ImageProcessing::C15Compatibility resident exponential and domain mas
   };
   if(variant >= 2)
   {
-    REQUIRE(c15_test::Read<float64>(ds, input, shape, expectedStore).size() == expected.size());
+    REQUIRE(c15_test::Read<float64>(dataStructure, input, shape, expectedStore).size() == expected.size());
   }
   checkQuantitative();
-  const auto mask = c15_test::Select(ds, quantitative, lower, upper, "Selected");
-  REQUIRE(c15_test::Read<uint8>(ds, mask, shape, expectedStore) == selected);
-  const auto labels = c15_test::Components(ds, mask, "Components");
-  REQUIRE(c15_test::Read<uint32>(ds, labels, shape, expectedStore) == components);
+  const auto mask = c15_test::Select(dataStructure, quantitative, lower, upper, "Selected");
+  REQUIRE(c15_test::Read<uint8>(dataStructure, mask, shape, expectedStore) == selected);
+  const auto labels = c15_test::Components(dataStructure, mask, "Components");
+  REQUIRE(c15_test::Read<uint32>(dataStructure, labels, shape, expectedStore) == components);
   checkQuantitative();
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
