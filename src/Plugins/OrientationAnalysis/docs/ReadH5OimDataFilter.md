@@ -33,7 +33,9 @@ the user should **CHECK** the option **ON** for "Perform Slice By Slice Transfor
 
 ## Algorithm
 
-Each selected scan is appended in selection order along the **Image Geometry** Z direction. Phase values are clamped and Euler components are interleaved into their output array; scalar measurements, including X and Y positions, are copied at that scan's tuple offset. Pattern data uses the same tuple offset multiplied by its pattern component count. Output arrays are written in bounded bulk transfers, which supports out-of-core output storage.
+The **Scan Names** stacking order controls placement along the **Image Geometry** Z direction. **Low to High** places the first selected scan at the lowest Z slice. **High to Low** places it at the highest Z slice and places the last selected scan at the lowest Z slice. A single scan has the same placement in either order. High to Low output intentionally differs from DREAM3D 6.5.171, which ignored this setting (errata KI-011).
+
+Phase values are clamped and Euler components are interleaved into their output array; scalar measurements, including X and Y positions, are copied at that scan's tuple offset. Pattern data uses the same tuple offset multiplied by its pattern component count. Output arrays are written in bounded bulk transfers, which supports out-of-core output storage.
 
 ### X Position and Y Position
 
