@@ -1391,7 +1391,8 @@ Result<> ReadFiniteDifference2DRegion(const StoreT& store, usize nx, usize xBegi
   Result<> accumulated;
   for(usize row = 0; row < rows; ++row)
   {
-    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyIntoBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width))); result.invalid())
+    const usize imageOffset = ((yBegin + row) * nx) + xBegin;
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyIntoBuffer(imageOffset, buffer.subspan(row * width, width))); result.invalid())
     {
       if constexpr(CheckedOutput)
       {
@@ -1416,7 +1417,8 @@ Result<> WriteFiniteDifference2DRegion(StoreT& store, usize nx, usize xBegin, us
   Result<> accumulated;
   for(usize row = 0; row < rows; ++row)
   {
-    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyFromBuffer((yBegin + row) * nx + xBegin, buffer.subspan(row * width, width))); result.invalid())
+    const usize imageOffset = ((yBegin + row) * nx) + xBegin;
+    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(accumulated, store.copyFromBuffer(imageOffset, buffer.subspan(row * width, width))); result.invalid())
     {
       if constexpr(CheckedOutput)
       {
@@ -2280,18 +2282,20 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       {
         return finish();
       }
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(planeIn.data(), slice))); rr.invalid())
+      if(Result<> transferResult = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, inStore.copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<T>(planeIn.data(), slice)));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
       for(usize i = 0; i < slice; ++i)
       {
         planeOut[i] = static_cast<Real>(planeIn[i]);
       }
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(planeOut.data(), slice)));
-         rr.invalid())
+      if(Result<> transferResult =
+             detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, accum.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(planeOut.data(), slice)));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
     }
   }
@@ -2450,9 +2454,10 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     // (aniso) global reduction hook -- no-op unless F::k_NeedsGlobalGradient (Task 4 specializes this).
     if constexpr(F::k_NeedsGlobalGradient)
     {
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, effDim, iter, shouldCancel)); rr.invalid())
+      if(Result<> transferResult = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::UpdateGlobalConductance<F, Real>(fn, *currentStore, dims, sc, effDim, iter, shouldCancel));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
     }
 
@@ -2460,9 +2465,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     // seed the window at z = -r .. +r
     for(int64 k = 0; k < static_cast<int64>(windowPlanes); ++k)
     {
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[static_cast<usize>(k)], (k - r))); rr.invalid())
+      if(Result<> transferResult = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[static_cast<usize>(k)], (k - r))); transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
     }
     progressThrottle.reset(static_cast<usize>(nZ), fmt::format("Finite Difference: Updating Slices for Iteration {} of {}", iter + 1, numberOfIterations));
@@ -2518,10 +2523,11 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, static_cast<usize>(nY));
       parallelAlgorithm.execute(calculateChangeRows);
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, nextStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)));
-         rr.invalid())
+      if(Result<> transferResult =
+             detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, nextStore->copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const Real>(nextPlane.data(), slice)));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
       progressThrottle.updateCount(static_cast<usize>(z + 1));
       // advance the rolling window by one z (drop the oldest plane, load clamp(z+1+r))
@@ -2531,9 +2537,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         {
           std::swap(win[k], win[k + 1]);
         }
-        if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[windowPlanes - 1], z + 1 + r)); rr.invalid())
+        if(Result<> transferResult = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, loadPlane(win[windowPlanes - 1], z + 1 + r)); transferResult.invalid())
         {
-          return finish(std::move(rr));
+          return finish(std::move(transferResult));
         }
       }
     }
@@ -2554,20 +2560,22 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       {
         return finish();
       }
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(planeIn.data(), slice)));
-         rr.invalid())
+      if(Result<> transferResult =
+             detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, currentStore->copyIntoBuffer(static_cast<usize>(z) * slice, nonstd::span<Real>(planeIn.data(), slice)));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
       if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(planeIn.data(), slice), nonstd::span<T>(planeOut.data(), slice), static_cast<usize>(z) * slice,
                                                                      conversionState, shouldCancel))
       {
         return finish();
       }
-      if(Result<> rr = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(planeOut.data(), slice)));
-         rr.invalid())
+      if(Result<> transferResult =
+             detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(planeOut.data(), slice)));
+         transferResult.invalid())
       {
-        return finish(std::move(rr));
+        return finish(std::move(transferResult));
       }
     }
   }

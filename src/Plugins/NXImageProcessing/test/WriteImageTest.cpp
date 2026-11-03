@@ -2,7 +2,7 @@
 #include "NXImageProcessing/Filters/AcosImageFilter.hpp"
 #include "NXImageProcessing/Filters/AsinImageFilter.hpp"
 #include "NXImageProcessing/Filters/TanImageFilter.hpp"
-#include "simplnx/Parameters/CreateColorMapParameter.hpp"
+#include "ReconstructionFilterTestUtils.hpp"
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
 
@@ -42,6 +42,7 @@
 #include "simplnx/Utilities/ImageIO/IImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <algorithm>
 #include <any>
@@ -55,6 +56,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <span>
 #include <string>
@@ -2850,29 +2852,46 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
   const usize operation = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(operation, scenario);
   const c15_test::Directory output;
-  const std::vector<int16> original = operation == 0 ? std::vector<int16>{1, 0, -1, -1, 0, 1} : (operation == 1 ? std::vector<int16>{-1, 0, 1, 1, 0, -1} : std::vector<int16>{0, 1, -1, -1, 1, 0});
-  const std::vector<float32> expected = operation == 0 ?
-                                            std::vector<float32>{0, 1.57079632679489661923F, 3.14159265358979323846F, 3.14159265358979323846F, 1.57079632679489661923F, 0} :
-                                            (operation == 1 ? std::vector<float32>{-1.57079632679489661923F, 0, 1.57079632679489661923F, 1.57079632679489661923F, 0, -1.57079632679489661923F} :
-                                                              std::vector<float32>{0, 1.5574077246549022305F, -1.5574077246549022305F, -1.5574077246549022305F, 1.5574077246549022305F, 0});
+  using InputSamplesType = std::array<int16, 6>;
+  using OutputSamplesType = std::array<float32, 6>;
+  constexpr auto piRadians = std::numbers::pi_v<float32>;
+  constexpr auto halfPi = piRadians / 2.0F;
+  constexpr float32 tangent = 1.5574077246549022305F;
+  constexpr std::array inputSamples{InputSamplesType{1, 0, -1, -1, 0, 1}, InputSamplesType{-1, 0, 1, 1, 0, -1}, InputSamplesType{0, 1, -1, -1, 1, 0}};
+  constexpr std::array outputSamples{OutputSamplesType{0, halfPi, piRadians, piRadians, halfPi, 0}, OutputSamplesType{-halfPi, 0, halfPi, halfPi, 0, -halfPi},
+                                     OutputSamplesType{0, tangent, -tangent, -tangent, tangent, 0}};
+  const auto& inputValues = inputSamples.at(operation);
+  const std::vector<int16> original(inputValues.begin(), inputValues.end());
+  const auto& expected = outputSamples.at(operation);
   DataStructure source;
   const auto input = recon_test::BuildImageFromPattern<int16>(source, 3, 1, 2, original);
   c15_test::SetGeometry(source);
   REQUIRE(c15_test::Read<int16>(source, input, {2, 1, 3}, scope) == original);
   const std::string outputName = operation == 2 ? "Tangent" : "Radians";
-  const auto quantitative = operation == 0 ? c15_test::Pointwise<AcosImageFilter>(source, input, outputName) :
-                                             (operation == 1 ? c15_test::Pointwise<AsinImageFilter>(source, input, outputName) : c15_test::Pointwise<TanImageFilter>(source, input, outputName));
+  DataPath quantitative;
+  switch(operation)
+  {
+  case 0:
+    quantitative = c15_test::Pointwise<AcosImageFilter>(source, input, outputName);
+    break;
+  case 1:
+    quantitative = c15_test::Pointwise<AsinImageFilter>(source, input, outputName);
+    break;
+  default:
+    quantitative = c15_test::Pointwise<TanImageFilter>(source, input, outputName);
+    break;
+  }
   const auto values = c15_test::Read<float32>(source, quantitative, {2, 1, 3}, scope);
   for(usize index = 0; index < expected.size(); ++index)
   {
     CAPTURE(index);
-    if(expected[index] == 0)
+    if(expected.at(index) == 0)
     {
       REQUIRE(values[index] == 0);
     }
     else
     {
-      REQUIRE(values[index] == Approx(expected[index]).epsilon(1.0e-6));
+      REQUIRE(values[index] == Approx(expected.at(index)).epsilon(1.0e-6));
     }
   }
   // Inverse-trigonometric outputs are radians; tangent values are dimensionless.
@@ -2897,32 +2916,32 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
   }
   for(usize slice = 0; slice < 2; ++slice)
   {
-    const auto suffix = slice == 0 ? "_000" : "_001";
+    const std::string suffix = slice == 0 ? "_000" : "_001";
     auto raw = c15_test::ReadMha(output.path() / (std::string("raw") + suffix + ".mha"));
     const auto pixels = c15_test::Read<float32>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 3}, scope);
-    const ImageGeom* rawGeometry = nullptr;
-    REQUIRE_NOTHROW(rawGeometry = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
-    REQUIRE(rawGeometry->getDimensions() == SizeVec3{3, 1, 1});
-    REQUIRE(rawGeometry->getSpacing() == FloatVec3{1, 2, 1});
-    REQUIRE(rawGeometry->getOrigin() == FloatVec3{4, 5, 0});
-    for(usize x = 0; x < 3; ++x)
+    const ImageGeom* rawGeometryPtr = nullptr;
+    REQUIRE_NOTHROW(rawGeometryPtr = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+    REQUIRE(rawGeometryPtr->getDimensions() == SizeVec3{3, 1, 1});
+    REQUIRE(rawGeometryPtr->getSpacing() == FloatVec3{1, 2, 1});
+    REQUIRE(rawGeometryPtr->getOrigin() == FloatVec3{4, 5, 0});
+    for(usize column = 0; column < 3; ++column)
     {
-      REQUIRE(pixels[x] == values[slice * 3 + x]);
-      REQUIRE(pixels[x] == Approx(expected[slice * 3 + x]).margin(1.0e-6));
+      REQUIRE(pixels[column] == values[(slice * 3) + column]);
+      REQUIRE(pixels[column] == Approx(expected.at((slice * 3) + column)).margin(1.0e-6));
     }
     if(operation == 0)
     {
       const auto tiffPath = output.path() / (std::string("raw") + suffix + ".tif");
       const auto tiff = c15_test::Decode<float32>(tiffPath, 3, 1);
       REQUIRE(tiff == pixels);
-      const auto io = CreateImageIO(tiffPath);
-      SIMPLNX_RESULT_REQUIRE_VALID(io);
-      const auto metadata = io.value()->readMetadata(tiffPath);
+      const auto imageIO = CreateImageIO(tiffPath);
+      SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+      const auto metadata = imageIO.value()->readMetadata(tiffPath);
       SIMPLNX_RESULT_REQUIRE_VALID(metadata);
       REQUIRE(metadata.value().spacing.has_value());
       REQUIRE(metadata.value().origin.has_value());
-      REQUIRE(metadata.value().spacing.value() == FloatVec3{1, 2, 1});
-      REQUIRE(metadata.value().origin.value() == FloatVec3{4, 5, 0});
+      REQUIRE(metadata.value().spacing == FloatVec3{1, 2, 1});
+      REQUIRE(metadata.value().origin == FloatVec3{4, 5, 0});
       const auto display = c15_test::Decode<uint8>(output.path() / (std::string("display") + suffix + ".png"), 3, 1, 3);
       const std::vector<uint8> expectedDisplay = slice == 0 ? std::vector<uint8>{0, 0, 0, 127, 127, 127, 255, 255, 255} : std::vector<uint8>{255, 255, 255, 127, 127, 127, 0, 0, 0};
       REQUIRE(display == expectedDisplay);
