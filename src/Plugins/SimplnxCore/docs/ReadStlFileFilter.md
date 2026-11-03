@@ -29,6 +29,8 @@ The filter inspects the header to try to determine the vendor of the STL file, b
 
 ## IMPORTANT NOTES
 
+After validating the binary header and triangle count, preflight checks the minimum file size: 80 header bytes, 4 count bytes, and 50 bytes for each declared triangle. If this size check fails, preflight returns a file-length error before mesh arrays are allocated. This differs from DREAM3D 6.5.171, where a corrupt triangle count can cause a very large allocation or an allocation failure.
+
 The reader follows the STL specification strictly and obeys the "Attribute byte count" value written after each triangle. If you are writing an STL file, set the "Attribute byte count" to *zero* (0) unless you are deliberately encoding extra data after each triangle, in which case the count must exactly match the number of extra bytes. An incorrect "Attribute byte count" is the most common cause of read failures, because the reader will skip the number of bytes the file claims are present.
 
 ## Known Vendors Who Write Out-of-Spec STL Files
