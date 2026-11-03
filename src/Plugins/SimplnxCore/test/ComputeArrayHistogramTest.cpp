@@ -1,7 +1,11 @@
 #include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -10,10 +14,16 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <algorithm>
+#include <any>
+#include <array>
+#include <atomic>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <nonstd/span.hpp>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -359,4 +369,388 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramFilter: SIMPL Backwards Compatibili
       CHECK(args.value<std::string>(ComputeArrayHistogramFilter::k_HistoBinCountName_Key) == "TestName");
     }
   }
+}
+
+namespace
+{
+class CancelAfterFirstReadStore : public DataStore<int32>
+{
+public:
+  explicit CancelAfterFirstReadStore(std::atomic_bool& cancelled)
+  : DataStore<int32>({21846}, {3}, 0)
+  , m_Cancelled(cancelled)
+  {
+  }
+
+  ~CancelAfterFirstReadStore() override = default;
+  CancelAfterFirstReadStore(const CancelAfterFirstReadStore&) = delete;
+  CancelAfterFirstReadStore(CancelAfterFirstReadStore&&) = delete;
+  CancelAfterFirstReadStore& operator=(const CancelAfterFirstReadStore&) = delete;
+  CancelAfterFirstReadStore& operator=(CancelAfterFirstReadStore&&) = delete;
+
+  [[nodiscard]] Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
+  {
+    Result<> result = DataStore<int32>::copyIntoBuffer(startIndex, buffer);
+    if(result.valid())
+    {
+      m_Reads.emplace_back(startIndex, buffer.size());
+      m_Cancelled.store(true);
+    }
+    return result;
+  }
+
+  const std::vector<std::pair<usize, usize>>& reads() const
+  {
+    return m_Reads;
+  }
+
+private:
+  std::atomic_bool& m_Cancelled;
+  mutable std::vector<std::pair<usize, usize>> m_Reads;
+};
+
+Arguments c02HistogramArgs(bool customRange = true)
+{
+  const ComputeArrayHistogramFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(4));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(customRange));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MinRange_Key, std::make_any<float64>(0));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MaxRange_Key, std::make_any<float64>(8));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input"})}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Mask"})));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  return args;
+}
+
+template <typename T, usize N>
+void c02CheckExact(const AbstractDataStore<T>& store, const std::array<T, N>& expected)
+{
+  REQUIRE(store.getSize() == expected.size());
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    REQUIRE(store[index] == expected.at(index));
+  }
+}
+
+void c02CheckCounts(const DataStructure& dataStructure, const std::array<uint64, 4>& expected)
+{
+  const UInt64Array* countsPtr = nullptr;
+  REQUIRE_NOTHROW(countsPtr = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"Histograms", "\"Input\" Histogram", "Bin Counts"})));
+  REQUIRE(countsPtr != nullptr);
+  c02CheckExact(countsPtr->getDataStoreRef(), expected);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::C02 histogram tuple mask safe RED", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
+  REQUIRE(inputPtr != nullptr);
+  fillArray(*inputPtr, std::vector<int32>{0, 2, 4, 100, 102, 104, 4, 6, 6});
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {3}, {1});
+  REQUIRE(maskPtr != nullptr);
+  fillArray(*maskPtr, std::vector<uint8>{2, 0, 255});
+  scope.requireExpectedStore(*inputPtr);
+  scope.requireExpectedStore(*maskPtr);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  c02CheckCounts(dataStructure, {1, 1, 2, 2});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram tuple masks full outputs", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  const bool boolMask = GENERATE(false, true);
+  const bool customRange = GENERATE(false, true);
+  CAPTURE(boolMask, customRange);
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
+  REQUIRE(inputPtr != nullptr);
+  fillArray(*inputPtr, std::vector<int32>{0, 2, 4, 100, 102, 104, 4, 6, 6});
+  if(boolMask)
+  {
+    auto* maskPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {3}, {1});
+    REQUIRE(maskPtr != nullptr);
+    (*maskPtr)[0] = true;
+    (*maskPtr)[1] = false;
+    (*maskPtr)[2] = true;
+    scope.requireExpectedStore(*maskPtr);
+  }
+  else
+  {
+    auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {3}, {1});
+    REQUIRE(maskPtr != nullptr);
+    fillArray(*maskPtr, std::vector<uint8>{2, 0, 255});
+    scope.requireExpectedStore(*maskPtr);
+  }
+  scope.requireExpectedStore(*inputPtr);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs(customRange);
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  c02CheckCounts(dataStructure, {1, 1, 2, 2});
+  const DataPath output({"Histograms", "\"Input\" Histogram"});
+  const Int32Array* rangesPtr = nullptr;
+  const UInt64Array* mostPtr = nullptr;
+  const NeighborList<int32>* modesPtr = nullptr;
+  REQUIRE_NOTHROW(rangesPtr = &dataStructure.getDataRefAs<Int32Array>(output.createChildPath("Bin Ranges")));
+  REQUIRE_NOTHROW(mostPtr = &dataStructure.getDataRefAs<UInt64Array>(output.createChildPath("Most Populated Bin")));
+  REQUIRE_NOTHROW(modesPtr = &dataStructure.getDataRefAs<NeighborList<int32>>(output.createChildPath("Modal Bin Ranges")));
+  REQUIRE(rangesPtr != nullptr);
+  REQUIRE(mostPtr != nullptr);
+  REQUIRE(modesPtr != nullptr);
+  if(customRange)
+  {
+    c02CheckExact(rangesPtr->getDataStoreRef(), std::array<int32, 8>{0, 2, 2, 4, 4, 6, 6, 8});
+  }
+  else
+  {
+    c02CheckExact(rangesPtr->getDataStoreRef(), std::array<int32, 8>{0, 1, 1, 3, 3, 5, 5, 7});
+  }
+  c02CheckExact(mostPtr->getDataStoreRef(), std::array<uint64, 2>{2, 2});
+  const std::vector<int32> expectedModes = {4, 5, 6, 7};
+  REQUIRE(modesPtr->getList(0) == expectedModes);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram real OOC tuple masks", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const bool maskOnlyDisk = GENERATE(false, true);
+  CAPTURE(maskOnlyDisk);
+  DataStructure dataStructure;
+  Int32Array* inputPtr = nullptr;
+  if(maskOnlyDisk)
+  {
+    inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
+  }
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  if(!maskOnlyDisk)
+  {
+    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Input"}), {3}, {3});
+    inputPtr = Int32Array::Create(dataStructure, "Input", store);
+  }
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, DataPath({"Mask"}), {3}, {1});
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", maskStore);
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  REQUIRE((inputPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC") == !maskOnlyDisk);
+  REQUIRE(maskPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  fillArray(*inputPtr, std::vector<int32>{0, 2, 4, 100, 102, 104, 4, 6, 6});
+  fillArray(*maskPtr, std::vector<uint8>{2, 0, 255});
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  c02CheckCounts(dataStructure, {1, 1, 2, 2});
+  const NeighborList<int32>* modesPtr = nullptr;
+  REQUIRE_NOTHROW(modesPtr = &dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Histograms", "\"Input\" Histogram", "Modal Bin Ranges"})));
+  REQUIRE(modesPtr != nullptr);
+  const std::vector<int32> expectedModes = {4, 5, 6, 7};
+  REQUIRE(modesPtr->getList(0) == expectedModes);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram tuple masks cross value pages", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  const bool wideTuple = GENERATE(false, true);
+  CAPTURE(wideTuple);
+  const usize tuples = wideTuple ? 1 : 21846;
+  const usize components = wideTuple ? 65537 : 3;
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {tuples}, {components});
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {tuples}, {1});
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  inputPtr->fill(0);
+  maskPtr->fill(1);
+  if(wideTuple)
+  {
+    (*inputPtr)[0] = 2;
+    (*inputPtr)[65535] = 4;
+    (*inputPtr)[65536] = 6;
+  }
+  else
+  {
+    (*inputPtr)[65535] = 4;
+    (*inputPtr)[65536] = 6;
+    (*inputPtr)[65537] = 6;
+  }
+  scope.requireExpectedStore(*inputPtr);
+  scope.requireExpectedStore(*maskPtr);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  if(wideTuple)
+  {
+    c02CheckCounts(dataStructure, {65534, 1, 1, 1});
+  }
+  else
+  {
+    c02CheckCounts(dataStructure, {65535, 0, 1, 2});
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram all masked automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
+  REQUIRE(inputPtr != nullptr);
+  inputPtr->fill(2);
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {3}, {1});
+  REQUIRE(maskPtr != nullptr);
+  maskPtr->fill(0);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs(false);
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  REQUIRE(result.result.invalid());
+  REQUIRE(result.result.errors().front().code == -23766);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram mixed component arrays", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
+  auto* secondPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Second", {3}, {2});
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {3}, {1});
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(secondPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  fillArray(*inputPtr, std::vector<int32>{0, 2, 4, 100, 102, 104, 4, 6, 6});
+  fillArray(*secondPtr, std::vector<int32>{0, 2, 100, 102, 4, 6});
+  fillArray(*maskPtr, std::vector<uint8>{2, 0, 255});
+  scope.requireExpectedStore(*inputPtr);
+  scope.requireExpectedStore(*secondPtr);
+  scope.requireExpectedStore(*maskPtr);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input"}), DataPath({"Second"})}));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  c02CheckCounts(dataStructure, {1, 1, 2, 2});
+  const UInt64Array* countsPtr = nullptr;
+  REQUIRE_NOTHROW(countsPtr = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"Histograms", "\"Second\" Histogram", "Bin Counts"})));
+  REQUIRE(countsPtr != nullptr);
+  c02CheckExact(countsPtr->getDataStoreRef(), std::array<uint64, 4>{1, 1, 1, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram HDF5 tuple straddles page", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure;
+  auto inputStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Input"}), {21846}, {3});
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, DataPath({"Mask"}), {21846}, {1});
+  auto* inputPtr = Int32Array::Create(dataStructure, "Input", inputStore);
+  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", maskStore);
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  REQUIRE(inputPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(maskPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  inputPtr->fill(0);
+  maskPtr->fill(0);
+  (*maskPtr)[21845] = 2;
+  (*inputPtr)[65535] = 2;
+  (*inputPtr)[65536] = 4;
+  (*inputPtr)[65537] = 6;
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  c02CheckCounts(dataStructure, {0, 1, 1, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  UnitTest::LoadPlugins();
+  std::atomic_bool cancelled = false;
+  DataStructure dataStructure;
+  auto inputStore = std::make_shared<CancelAfterFirstReadStore>(cancelled);
+  auto* inputPtr = Int32Array::Create(dataStructure, "Input", inputStore);
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {21846}, {1});
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  maskPtr->fill(1);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs();
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(inputStore->reads().empty());
+  REQUIRE_FALSE(cancelled.load());
+  auto result = filter.execute(dataStructure, args, nullptr, {}, cancelled);
+  REQUIRE(result.result.invalid());
+  REQUIRE(result.result.errors().front().code == -1);
+  REQUIRE(cancelled.load());
+  REQUIRE(inputStore->reads().size() == 1);
+  REQUIRE(inputStore->reads().front().first == 0);
+  REQUIRE(inputStore->reads().front().second == 65536);
+}
+
+TEST_CASE("SimplnxCore::C02 histogram empty automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {0}, {3});
+  auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {0}, {1});
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  const ComputeArrayHistogramFilter filter;
+  auto args = c02HistogramArgs(false);
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  REQUIRE(result.result.invalid());
+  REQUIRE(result.result.errors().front().code == -23766);
 }
