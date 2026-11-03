@@ -205,6 +205,27 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Unsupported Extension", "[Simp
   REQUIRE(preflightResult.outputActions.errors().front().code == -3003);
 }
 
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Missing Extension", "[SimplnxCore][RegularizeZSpacingFilter]")
+{
+  UnitTest::LoadPlugins();
+  const DataStructure dataStructure = createTestDataStructure();
+  const fs::path zBoundsFile = writeZBoundsFile("RegularizeZSpacing_no_extension", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
+  REQUIRE(fs::exists(zBoundsFile));
+  REQUIRE_FALSE(zBoundsFile.has_extension());
+
+  const RegularizeZSpacingFilter filter;
+  Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -3002);
+}
+
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Exceeds Extent)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
   DataStructure dataStructure = createTestDataStructure();
