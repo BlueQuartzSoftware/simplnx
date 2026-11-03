@@ -65,7 +65,7 @@ struct Range
 };
 
 /**
- * @brief Scans scalar and optional mask pages before any slice is opened.
+ * @brief Scans scalar pages before any slice is opened. For floating-point input, reads the optional mask to check nonfinite values.
  * Finite masked values participate in the range. Masked nonfinite values do not
  * trigger the policy, and no nonfinite value participates in the range.
  * @tparam T Scalar input type.
@@ -86,14 +86,15 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
     return MakeErrorResult<Range<T>>(-27020, "Input array is empty.");
   }
   constexpr usize targetPageBytes = 1024 * 1024;
-  const usize maskBytes = maskArray == nullptr ? 0 : (maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8));
+  const bool scanMask = std::is_floating_point_v<T> && maskArray != nullptr;
+  const usize maskBytes = scanMask ? (maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8)) : 0;
   const usize pageCount = std::min(count, std::max<usize>(1, targetPageBytes / (sizeof(T) + maskBytes)));
   // Scalar input can use bool. The store needs a contiguous bool buffer, which std::vector<bool> cannot provide.
   auto values = std::make_unique<T[]>(pageCount);
   // The Boolean mask store also needs a contiguous bool buffer.
   std::unique_ptr<bool[]> boolMask;
   std::unique_ptr<std::vector<uint8>> byteMask;
-  if(maskArray != nullptr)
+  if(scanMask)
   {
     if(maskArray->getDataType() == DataType::boolean)
     {

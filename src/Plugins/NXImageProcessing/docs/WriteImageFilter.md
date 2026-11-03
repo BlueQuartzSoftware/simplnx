@@ -66,7 +66,7 @@ Enabling *Create Color Table* converts a single-component **Data Array** to an R
 
 - *Select Preset...* chooses the color preset (for example grayscale, rainbow, or jet) that is applied to the array's values.
 - When *Create Color Table* is enabled, the **Input Image Data Array** must be a single-component numeric array, but it may be **any** numeric type: int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, or float64. This is wider than the type restrictions that apply when writing an array's raw pixel values directly (see *Pixel Data Type Support By Format* above), since color-table mode always produces a uint8 RGB image regardless of the input array's type. If the selected array has more than one component, the filter will fail during preflight.
-- Colorization uses bounded source groups and writes one RGB slice at a time. The initial scan reads bounded scalar and optional mask pages. Every finite scalar value participates in the minimum and maximum, including finite masked values. NaN and infinity do not participate in this range.
+- Colorization uses bounded source groups and writes one RGB slice at a time. The initial scan reads bounded scalar pages. For floating-point input, it also reads the selected mask to check nonfinite values. Integer and Boolean inputs use the mask when rendering each slice. Every finite scalar value participates in the minimum and maximum, including finite masked values. NaN and infinity do not participate in this range.
 - If the finite range is constant, each unmasked voxel uses the preset's first control color. Masked voxels use the mask color.
 
 #### Nonfinite Input Handling
