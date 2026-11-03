@@ -428,10 +428,10 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
     return status;
   } catch(const std::bad_alloc&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28617, "Threshold Maximum Connected Components could not allocate its output buffers. Reduce the data size or provide more memory."));
+    return MergeResults(std::move(status), MakeErrorResult(-28634, "Threshold Maximum Connected Components could not allocate its output buffers. Reduce the data size or provide more memory."));
   } catch(const std::length_error&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28618, "Threshold Maximum Connected Components exceeded an addressable output buffer size. Reduce the image dimensions."));
+    return MergeResults(std::move(status), MakeErrorResult(-28635, "Threshold Maximum Connected Components exceeded an addressable output buffer size. Reduce the image dimensions."));
   }
 }
 } // namespace detail
@@ -528,10 +528,10 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
   } catch(const std::bad_alloc&)
   {
     return MergeResults(std::move(status),
-                        MakeErrorResult(-28617, "Threshold Maximum Connected Components could not allocate its scan or output buffers. Reduce the data size or provide more memory."));
+                        MakeErrorResult(-28636, "Threshold Maximum Connected Components could not allocate its scan or output buffers. Reduce the data size or provide more memory."));
   } catch(const std::length_error&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28618, "Threshold Maximum Connected Components exceeded an addressable buffer size. Reduce the image dimensions."));
+    return MergeResults(std::move(status), MakeErrorResult(-28637, "Threshold Maximum Connected Components exceeded an addressable buffer size. Reduce the image dimensions."));
   }
 }
 } // namespace nx::core::ImageProcessing
