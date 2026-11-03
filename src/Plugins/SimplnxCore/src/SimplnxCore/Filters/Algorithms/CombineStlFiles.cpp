@@ -95,7 +95,7 @@ Result<> CombineStlFiles::operator()()
     }
   }
 
-  // Sort the paths for something sort of reasonable.
+  // Sort paths so file lists and geometry labels are independent of directory iteration order.
   std::sort(paths.begin(), paths.end());
 
   auto pCellFeatureAttributeMatrixPath = m_InputValues->TriangleDataContainerName.createChildPath(m_InputValues->CellFeatureAttributeMatrixName);
@@ -106,6 +106,7 @@ Result<> CombineStlFiles::operator()()
   activeArray[0] = 0;
   auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
 
+  std::vector<TriangleGeom*> stlGeometries;
   int32 currentIndex = 1;
   m_MessageHandler.sendProgressCount("Reading STL Files", 0, paths.size());
   for(const auto& filePath : paths)
@@ -128,27 +129,19 @@ Result<> CombineStlFiles::operator()()
     {
       return executeResult.result;
     }
+    stlGeometries.push_back(&tempDataStructure.getDataRefAs<TriangleGeom>(DataPath({filePath.stem().string()})));
     m_MessageHandler.sendProgressCount("Reading STL Files", static_cast<usize>(currentIndex), paths.size(), stlFilePath);
     currentIndex++;
   }
 
   usize totalTriangles = 0;
   usize totalVertices = 0;
-  std::vector<TriangleGeom*> stlGeometries;
-  for(auto* stlGeom : tempDataStructure.getTopLevelData())
+  // Preserve the sorted file read order used by File List.
+  for(const auto* triangleGeom : stlGeometries)
   {
-    if(auto* triangleGeom = dynamic_cast<TriangleGeom*>(stlGeom); triangleGeom != nullptr)
-    {
-      totalTriangles += triangleGeom->getNumberOfFaces();
-      totalVertices += triangleGeom->getNumberOfVertices();
-      stlGeometries.push_back(triangleGeom);
-    }
+    totalTriangles += triangleGeom->getNumberOfFaces();
+    totalVertices += triangleGeom->getNumberOfVertices();
   }
-
-  // Sort the Geometries in lexicographical order based on the name of the geometry which should
-  // match the file name. We do this because some file systems do not iterate through the directory
-  // contents in lexicographical order (GitHub CI)
-  std::sort(stlGeometries.begin(), stlGeometries.end(), [](const auto& lhs, const auto& rhs) { return lhs->getName() < rhs->getName(); });
 
   auto& combinedGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainerName);
   auto* combinedFaceAM = combinedGeom.getFaceAttributeMatrix();

@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -23,6 +24,7 @@
 #include <any>
 #include <array>
 #include <bit>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -278,4 +280,105 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "
       CHECK(args.value<std::string>(CombineStlFilesFilter::k_FaceNormalsArrayName_Key) == "FaceNormals");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: Part numbers match file list", "[SimplnxCore][CombineStlFilesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path outputDirectory(unit_test::k_BinaryTestOutputDir.view());
+  fs::create_directories(outputDirectory);
+  const fs::path directory = outputDirectory / ("CombineStlFiles_L08_" + Uuid::GenerateV4().str());
+  // Only clean up a directory this invocation successfully created.
+  REQUIRE(fs::create_directory(directory));
+  auto cleanup = MakeScopeGuard([&directory]() noexcept {
+    std::error_code error;
+    fs::remove_all(directory, error);
+  });
+
+  // Create in the opposite order to the sorted file list. Each file has one hand-written triangle.
+  const std::array<std::string, 2> names = {"part.stl", "part-2.stl"};
+  const std::array<float32, 2> origins = {10.0f, 20.0f};
+  for(usize file = 0; file < names.size(); file++)
+  {
+    std::ofstream stream(directory / names[file], std::ios::binary);
+    REQUIRE(stream.is_open());
+    const std::array<char, 80> header = {};
+    stream.write(header.data(), header.size());
+    // STL uses little-endian IEEE floats. Emit the bytes explicitly for portability.
+    const std::array<char, 4> triangleCount = {1, 0, 0, 0};
+    stream.write(triangleCount.data(), triangleCount.size());
+    const std::array<float32, 12> values = {0, 0, 1, origins[file], 0, 0, origins[file] + 1, 0, 0, origins[file], 1, 0};
+    for(float32 value : values)
+    {
+      uint32 bits = 0;
+      std::memcpy(&bits, &value, sizeof(bits));
+      for(usize byte = 0; byte < 4; byte++)
+      {
+        stream.put(static_cast<char>((bits >> (8 * byte)) & 0xff));
+      }
+    }
+    stream.put(0);
+    stream.put(0);
+    stream.close();
+    REQUIRE(stream.good());
+  }
+
+  CombineStlFilesFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  const DataPath geometryPath({"Combined"});
+  args.insertOrAssign(CombineStlFilesFilter::k_StlFilesPath_Key, std::make_any<fs::path>(directory));
+  args.insertOrAssign(CombineStlFilesFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(CombineStlFilesFilter::k_CreatePartNumbers_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CombineStlFilesFilter::k_PartNumbersName_Key, std::make_any<std::string>("Parts"));
+  args.insertOrAssign(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>("Faces"));
+  args.insertOrAssign(CombineStlFilesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("Files"));
+  args.insertOrAssign(CombineStlFilesFilter::k_FileListName_Key, std::make_any<std::string>("Paths"));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(geometryPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(geometryPath.createChildPath("Faces").createChildPath("Parts")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(geometryPath.createChildPath("Files").createChildPath("Paths")));
+  const auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
+  const auto& parts = dataStructure.getDataRefAs<Int32Array>(geometryPath.createChildPath("Faces").createChildPath("Parts"));
+  const auto& paths = dataStructure.getDataRefAs<StringArray>(geometryPath.createChildPath("Files").createChildPath("Paths"));
+  REQUIRE(geometry.getNumberOfFaces() == 2);
+  REQUIRE(geometry.getNumberOfVertices() == 6);
+  REQUIRE(paths.getNumberOfTuples() == 3);
+  CHECK(paths[0].empty());
+  CHECK(paths[1] == (directory / "part-2.stl").string());
+  CHECK(paths[2] == (directory / "part.stl").string());
+  const auto& faces = geometry.getFacesRef();
+  const auto& vertices = geometry.getVerticesRef();
+  for(usize part = 1; part <= 2; part++)
+  {
+    const float32 origin = fs::path(paths[part]).filename() == "part.stl" ? 10.0f : 20.0f;
+    const std::array<float32, 9> expected = {origin, 0, 0, origin + 1, 0, 0, origin, 1, 0};
+    usize count = 0;
+    for(usize face = 0; face < geometry.getNumberOfFaces(); face++)
+    {
+      REQUIRE(parts[face] >= 1);
+      REQUIRE(parts[face] <= 2);
+      if(parts[face] != static_cast<int32>(part))
+      {
+        continue;
+      }
+      count++;
+      for(usize corner = 0; corner < 3; corner++)
+      {
+        const usize vertex = faces[3 * face + corner];
+        REQUIRE(vertex < geometry.getNumberOfVertices());
+        for(usize component = 0; component < 3; component++)
+        {
+          INFO("Part " << part << " file " << paths[part]);
+          CHECK(vertices[3 * vertex + component] == expected[3 * corner + component]);
+        }
+      }
+    }
+    CHECK(count == 1);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
