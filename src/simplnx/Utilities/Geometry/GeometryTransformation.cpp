@@ -1,14 +1,19 @@
 #include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
@@ -22,8 +27,10 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/SamplingUtils.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <optional>
 #include <sstream>
 
 using namespace nx::core;
@@ -31,7 +38,99 @@ using namespace nx::core;
 namespace
 {
 const std::string k_UnknownPrecomputedMatrixDescription = "Precomputed transformation matrix unknown during preflight.";
+
+// Detach only the Feature AM's links. Shared arrays remain available under their other parents.
+void ClearFeatureAttributeMatrix(DataStructure& dataStructure, const DataPath& path)
+{
+  auto& featureAm = dataStructure.getDataRefAs<AttributeMatrix>(path);
+  const auto names = featureAm.getDataMap().getNames();
+  for(const auto& name : names)
+  {
+    featureAm.remove(name);
+  }
 }
+
+// Deferred clearing keeps transformation inputs available until execution consumes them.
+class ClearFeatureAttributeMatrixAction : public IDataAction
+{
+public:
+  explicit ClearFeatureAttributeMatrixAction(DataPath path)
+  : m_Path(std::move(path))
+  {
+  }
+  ~ClearFeatureAttributeMatrixAction() noexcept override = default;
+  ClearFeatureAttributeMatrixAction(const ClearFeatureAttributeMatrixAction&) = delete;
+  ClearFeatureAttributeMatrixAction(ClearFeatureAttributeMatrixAction&&) noexcept = delete;
+  ClearFeatureAttributeMatrixAction& operator=(const ClearFeatureAttributeMatrixAction&) = delete;
+  ClearFeatureAttributeMatrixAction& operator=(ClearFeatureAttributeMatrixAction&&) noexcept = delete;
+
+  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  {
+    ClearFeatureAttributeMatrix(dataStructure, m_Path);
+    return {};
+  }
+  UniquePointer clone() const override
+  {
+    return std::make_unique<ClearFeatureAttributeMatrixAction>(m_Path);
+  }
+
+private:
+  DataPath m_Path;
+};
+
+// Recursive group copies need a view without any link to the selected Feature AM.
+class CopyGeometryChildAction : public CopyDataObjectAction
+{
+public:
+  CopyGeometryChildAction(const DataPath& source, const DataPath& destination, const std::vector<DataPath>& createdPaths, DataPath featureAmPath)
+  : CopyDataObjectAction(source, destination, createdPaths)
+  , m_FeatureAmPath(std::move(featureAmPath))
+  {
+  }
+  ~CopyGeometryChildAction() noexcept override = default;
+  CopyGeometryChildAction(const CopyGeometryChildAction&) = delete;
+  CopyGeometryChildAction(CopyGeometryChildAction&&) noexcept = delete;
+  CopyGeometryChildAction& operator=(const CopyGeometryChildAction&) = delete;
+  CopyGeometryChildAction& operator=(CopyGeometryChildAction&&) noexcept = delete;
+
+  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  {
+    const auto featureAm = dataStructure.getSharedDataAs<AttributeMatrix>(m_FeatureAmPath);
+    std::vector<std::pair<BaseGroup*, DataMap>> parentMaps;
+    for(const auto parentId : featureAm->getParentIds())
+    {
+      auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
+      parentMaps.emplace_back(parent, parent->getDataMap());
+    }
+    // Keep the original parent IDs. Restore the maps even if deepCopy throws.
+    // Only the copy reads this temporary view; new objects belong to the separate destination geometry.
+    const auto restore = MakeScopeGuard([&parentMaps]() noexcept {
+      for(auto& [parent, dataMap] : parentMaps)
+      {
+        parent->getDataMap() = std::move(dataMap);
+      }
+    });
+    for(auto& [parent, dataMap] : parentMaps)
+    {
+      parent->getDataMap().remove(featureAm->getId());
+    }
+    return CopyDataObjectAction::apply(dataStructure, mode);
+  }
+  UniquePointer clone() const override
+  {
+    return std::make_unique<CopyGeometryChildAction>(path(), newPath(), getAllCreatedPaths(), m_FeatureAmPath);
+  }
+
+private:
+  DataPath m_FeatureAmPath;
+};
+
+bool ResamplesImageGeometry(const ApplyTransformationToGeometryInputValues& inputValues)
+{
+  return inputValues.TransformationSelection != detail::k_NoTransformIdx && inputValues.TransformationSelection != detail::k_TranslationIdx &&
+         inputValues.TransformationSelection != detail::k_ScaleIdx;
+}
+} // namespace
 
 IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
 {
@@ -58,6 +157,120 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
+  const AttributeMatrix* sourceFeatureAm = nullptr;
+  const bool clearFeatureAttributeMatrix = inputValues.ClearFeatureAttributeMatrix;
+  const bool renumberFeatures = clearFeatureAttributeMatrix && inputValues.RenumberFeatures;
+  const bool replacesImageGeometry = imageGeomPtr != nullptr && ResamplesImageGeometry(inputValues);
+  if(clearFeatureAttributeMatrix)
+  {
+    const auto& geometry = dataStructure.getDataRefAs<IGeometry>(pSelectedGeometryPathValue);
+    const auto& featureAmPath = inputValues.FeatureAttributeMatrixPath;
+    sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(sourceFeatureAm == nullptr || !geometry.contains(sourceFeatureAm))
+    {
+      return IFilter::MakePreflightErrorResult(-67451, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected {} '{}'.", featureAmPath.toString(),
+                                                                   imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
+    }
+
+    // Each registered element AM has its own element count, including lower-dimensional node data.
+    std::vector<std::pair<const AttributeMatrix*, usize>> elementMatrices;
+    if(const auto* grid = dynamic_cast<const IGridGeometry*>(&geometry); grid != nullptr)
+    {
+      elementMatrices.emplace_back(grid->getCellData(), grid->getNumberOfCells());
+    }
+    if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(&geometry); nodes != nullptr)
+    {
+      elementMatrices.emplace_back(nodes->getVertexAttributeMatrix(), nodes->getNumberOfVertices());
+    }
+    if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(&geometry); edges != nullptr)
+    {
+      elementMatrices.emplace_back(edges->getEdgeAttributeMatrix(), edges->getNumberOfEdges());
+    }
+    if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(&geometry); faces != nullptr)
+    {
+      elementMatrices.emplace_back(faces->getFaceAttributeMatrix(), faces->getNumberOfFaces());
+    }
+    if(const auto* cells = dynamic_cast<const INodeGeometry3D*>(&geometry); cells != nullptr)
+    {
+      elementMatrices.emplace_back(cells->getPolyhedraAttributeMatrix(), cells->getNumberOfPolyhedra());
+    }
+    for(const auto& [elementAm, count] : elementMatrices)
+    {
+      if(elementAm == sourceFeatureAm)
+      {
+        return IFilter::MakePreflightErrorResult(
+            -67452,
+            fmt::format("The Feature Attribute Matrix '{}' is the {} Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn off 'Clear Feature Attribute Matrix'.",
+                        featureAmPath.toString(), imageGeomPtr != nullptr ? "Cell" : "Vertex, Edge, Face, or Polyhedron", pSelectedGeometryPathValue.toString()));
+      }
+    }
+    if(renumberFeatures)
+    {
+      const auto& featureIdsPath = inputValues.FeatureIdsPath;
+      const auto* idsAm = dataStructure.getDataAs<AttributeMatrix>(featureIdsPath.getParent());
+      // Feature Ids must label elements, so they must be in a registered element AM of the geometry.
+      std::optional<usize> elementCount;
+      for(const auto& [elementAm, count] : elementMatrices)
+      {
+        if(idsAm != nullptr && elementAm == idsAm)
+        {
+          elementCount = count;
+          break;
+        }
+      }
+      bool validLocation = elementCount.has_value();
+      if(imageGeomPtr != nullptr)
+      {
+        // Execution resamples the geometry's registered Cell AM. The selected AM must identify that same object.
+        validLocation = validLocation && idsAm == dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
+      }
+      if(!validLocation)
+      {
+        return IFilter::MakePreflightErrorResult(
+            -67453, fmt::format("**Feature Ids** DataArray '{}' must be in {} of the selected geometry '{}'. Select an array from that Attribute Matrix.", featureIdsPath.toString(),
+                                imageGeomPtr != nullptr ? "the selected Cell Attribute Matrix" : "a Vertex, Edge, Face, or Polyhedron Attribute Matrix", pSelectedGeometryPathValue.toString()));
+      }
+      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+      if(featureIds.getNumberOfTuples() != *elementCount)
+      {
+        return IFilter::MakePreflightErrorResult(
+            -67454, fmt::format("**Feature Ids** DataArray '{}' has {} tuples, but the selected geometry '{}' has {} elements. Select an array with one tuple per element.", featureIdsPath.toString(),
+                                featureIds.getNumberOfTuples(), pSelectedGeometryPathValue.toString(), *elementCount));
+      }
+    }
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *sourceFeatureAm)
+    {
+      const auto childPath = featureAmPath.createChildPath(object->getName());
+      clearedList += "\n" + childPath.toString();
+    }
+    if(!replacesImageGeometry)
+    {
+      resultOutputActions.value().appendDeferredAction(std::make_unique<ClearFeatureAttributeMatrixAction>(featureAmPath));
+    }
+    std::string message = replacesImageGeometry ? fmt::format("The Feature Attribute Matrix '{}' is recreated in the transformed geometry with no arrays.", featureAmPath.toString()) :
+                                                  fmt::format("The Feature Attribute Matrix '{}' is cleared in place and keeps its tuple shape.", featureAmPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the original geometry and are not retained. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    if(renumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the transformation.";
+      if(!replacesImageGeometry)
+      {
+        AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAmPath, {});
+        AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, inputValues.FeatureIdsPath, {});
+      }
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Feature Attribute Matrices keep their values. For a replacement geometry, these matrices are copied unchanged. Their values "
+                                                                  "describe the original geometry and can be invalid for the transformed geometry."});
+  }
   if(imageGeomPtr != nullptr)
   {
     auto origin = imageGeomPtr->getOrigin();
@@ -68,7 +281,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     {
     case detail::k_NoTransformIdx: // No-Op
     {
-      resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected. This filter will NOT modify any data."});
+      resultOutputActions.warnings().push_back(Warning{82001, clearFeatureAttributeMatrix ? "No spatial transformation has been selected. Feature Attribute Matrix options still apply." :
+                                                                                            "No transformation has been selected. This filter will NOT modify any data."});
       transformationMatrixDesc = "No transformation matrix selected.";
       break;
     }
@@ -171,7 +385,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
 
     std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
 
-    if(pInterpolationTypeValue == detail::k_LinearInterpolationIdx)
+    // No Transform keeps every cell array in place, so nothing is dropped from Linear interpolation.
+    if(pInterpolationTypeValue == detail::k_LinearInterpolationIdx && pTransformationMatrixTypeValue != detail::k_NoTransformIdx)
     {
       // Remove all the DataArrays from the src Cell AttributeMatrix and substitute with just what the user wants to interpolate on.
       selectedCellArrayNames.clear();
@@ -205,7 +420,11 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       }
     }
 
-    if(pTransformationMatrixTypeValue == detail::k_TranslationIdx)
+    if(pTransformationMatrixTypeValue == detail::k_NoTransformIdx)
+    {
+      // Keep cell values in place so optional renumbering sees the original Feature Ids.
+    }
+    else if(pTransformationMatrixTypeValue == detail::k_TranslationIdx)
     {
       // If the user is purely doing a translation then just adjust the origin and be done.
       auto pTranslationValue = inputValues.Translation;
@@ -297,6 +516,16 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         }
       }
 
+      std::vector<DataPath> featureAmPaths;
+      if(clearFeatureAttributeMatrix)
+      {
+        // Exclude every alias so the copy cannot restore stale Feature arrays.
+        featureAmPaths = sourceFeatureAm->getDataPaths();
+        ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+        const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAm->getName());
+        resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
+      }
+
       // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
       auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
       if(childPaths.has_value())
@@ -313,11 +542,23 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
             {
               for(const auto& sourcePath : pathsToBeCopied.value())
               {
+                if(std::any_of(featureAmPaths.begin(), featureAmPaths.end(), [&sourcePath](const DataPath& alias) { return sourcePath.rebase(alias, DataPath{}).has_value(); }))
+                {
+                  continue;
+                }
                 const std::string createdPathName = nx::core::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
                 allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
               }
             }
-            resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+            if(clearFeatureAttributeMatrix)
+            {
+              resultOutputActions.value().appendAction(
+                  std::make_unique<CopyGeometryChildAction>(childPath, copiedChildPath, allCreatedPaths, srcImagePath.createChildPath(sourceFeatureAm->getName())));
+            }
+            else
+            {
+              resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+            }
           }
           else
           {
@@ -594,5 +835,43 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
                                                const std::atomic_bool& shouldCancel)
 {
   ApplyTransformationToGeometryInputValues resolvedValues = inputValues;
-  return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &resolvedValues)();
+  const bool renumberFeatures = inputValues.ClearFeatureAttributeMatrix && inputValues.RenumberFeatures;
+  if(renumberFeatures)
+  {
+    // Validate the source before resampling can discard cells with invalid IDs.
+    const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsPath);
+    auto validation = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, inputValues.FeatureAttributeMatrixPath, featureIds, false, messageHandler);
+    if(validation.invalid())
+    {
+      return validation;
+    }
+  }
+  auto result = ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &resolvedValues)();
+  if(result.invalid() || shouldCancel)
+  {
+    return result;
+  }
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath);
+  if(inputValues.ClearFeatureAttributeMatrix && (imageGeom == nullptr || !ResamplesImageGeometry(inputValues)))
+  {
+    // Clear after transformation inputs are consumed, but before renumbering resizes the Feature AM.
+    ClearFeatureAttributeMatrix(dataStructure, inputValues.FeatureAttributeMatrixPath);
+  }
+  if(!renumberFeatures)
+  {
+    return result;
+  }
+
+  auto destFeatureAmPath = inputValues.FeatureAttributeMatrixPath;
+  auto destFeatureIdsPath = inputValues.FeatureIdsPath;
+  if(imageGeom != nullptr && ResamplesImageGeometry(inputValues))
+  {
+    // Renumber before deferred actions delete the source and rename the replacement geometry.
+    auto pathVector = inputValues.SelectedGeometryPath.getPathVector();
+    pathVector.back() = "." + pathVector.back();
+    const DataPath destImagePath(pathVector);
+    destFeatureAmPath = destImagePath.createChildPath(inputValues.FeatureAttributeMatrixPath.getTargetName());
+    destFeatureIdsPath = destImagePath.createChildPath(imageGeom->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
+  }
+  return MergeResults(std::move(result), Sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.FeatureIdsPath, destFeatureIdsPath, messageHandler, shouldCancel));
 }

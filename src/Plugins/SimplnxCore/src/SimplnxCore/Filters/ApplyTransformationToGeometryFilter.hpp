@@ -34,6 +34,10 @@ public:
   static constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix_path";
   static constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
   static constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_SaveTransformMatrix_Key = "save_transform_matrix";
   static constexpr StringLiteral k_TransformMatrixOutputPath_Key = "output_transform_matrix_path";
 

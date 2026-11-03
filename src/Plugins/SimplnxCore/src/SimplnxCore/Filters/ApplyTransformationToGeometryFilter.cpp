@@ -30,6 +30,10 @@ ApplyTransformationToGeometryInputValues CreateInputValues(const Arguments& filt
   inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key);
   inputValues.TranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key);
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key);
+  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureAttributeMatrixPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureIdsPath_Key);
   inputValues.RemoveOriginalGeometry = true;
   inputValues.SaveTransformMatrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_SaveTransformMatrix_Key);
   inputValues.TransformMatrixPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_TransformMatrixOutputPath_Key);
@@ -113,6 +117,18 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix (Image Geometry Only)",
                                                                     "The path to the Cell level data that should be interpolated. Only applies when selecting an Image Geometry.", DataPath{}));
 
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+                                                                 "Removes all arrays from the selected Feature Attribute Matrix. Transformations can invalidate feature positions, directions, and "
+                                                                 "sizes. Recompute any feature data needed later in the pipeline.",
+                                                                 true));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after transformation", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which feature each element belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Optional Output Transform Matrix"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveTransformMatrix_Key, "Save Transformation Matrix", "Save the generated transform matrix as a Data Array", false));
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformMatrixOutputPath_Key, "Transform Matrix Output Path", "The output array that contains the transformation Matrix.",
@@ -128,6 +144,9 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_NearestNeighborInterpolationIdx);
   params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_LinearInterpolationIdx);
 
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrixPath_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureIdsPath_Key, true);
   params.linkParameters(k_SaveTransformMatrix_Key, k_TransformMatrixOutputPath_Key, true);
 
   return params;
@@ -136,7 +155,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ApplyTransformationToGeometryFilter::parametersVersion() const
 {
-  return 2;
+  return 3;
 }
 
 //------------------------------------------------------------------------------
@@ -180,6 +199,9 @@ constexpr StringLiteral k_DataArraySelectionKey = "DataArraySelection";
 Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = ApplyTransformationToGeometryFilter().getDefaultArguments();
+  // The legacy filter had no Feature AM handling and preserved Feature data.
+  args.insertOrAssign(k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
+  args.insertOrAssign(k_RenumberFeatures_Key, std::make_any<BoolParameter::ValueType>(false));
 
   std::vector<Result<>> results;
 
