@@ -829,6 +829,15 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   origin[2] = convertResultF32.value();
 
+  // Center the one-voxel slab on the VTK point along each singleton axis.
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    if(pointDims[axis] == 1)
+    {
+      origin[axis] -= 0.5f * spacing[axis];
+    }
+  }
+
   if(m_InputValues->ReadPointData && m_Preflight)
   {
     auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->PointGeomPath, pointDims, origin, spacing, m_InputValues->PointAttributeMatrixName);
