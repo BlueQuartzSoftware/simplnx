@@ -20,26 +20,28 @@ struct SIMPLNX_EXPORT SortedVerticesList
 };
 
 /**
- * @brief This function sorts the vertices along the axis with the widest range of values. It doesn't modify the input mesh, but instead returns an object containing the relevant information
- * @param geom The input mesh
- * @returns SortedVerticesList which is a struct containing the sorted indices and the axis they were sorted on
+ * @brief Sorts vertex indices by X, Y, Z, then input index. NaNs follow numbers on each axis.
+ * @param geom Input mesh. The function does not modify the mesh.
+ * @param shouldCancel Skips sorting if cancellation is already requested.
+ * @return Sorted indices with X as the primary axis.
  */
 SIMPLNX_EXPORT SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geom, const std::atomic_bool& shouldCancel);
 
 /**
- * @brief This function sorts the vertices along the given axis. It doesn't modify the input mesh, but instead returns an object containing the relevant information
- * @param axis The axis to sort them by
- * @param geom The input mesh
- * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
+ * @brief Sorts indices by the given axis, the next two axes cyclically, then input index. NaNs follow numbers on each axis.
+ * @param axis Primary sort axis.
+ * @param vertexList Input coordinates. The function does not modify the coordinates.
+ * @param shouldCancel Skips sorting if cancellation is already requested.
+ * @return Sorted vertex indices.
  */
 SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
                                                                                   const std::atomic_bool& shouldCancel);
 
 /**
- * @brief This function attempts to find duplicate vertices. Vertices are all unique if `false`
- * @param verts The SharedVertexList the sorted vertices are based on
- * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
- * @returns bool false means vertices are unique
+ * @brief Finds adjacent vertices with exactly equal coordinates. Signed zeros are equal; NaNs are never equal.
+ * @param verts Input coordinates.
+ * @param sortedVertices Indices sorted by OrderSharedVertices or OrderSharedVerticesAlongAxis, without cancellation.
+ * @return True if any two vertices have exactly equal X, Y, and Z coordinates.
  */
 SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
 } // namespace nx::core::MeshingUtilities

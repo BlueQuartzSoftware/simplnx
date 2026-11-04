@@ -131,6 +131,10 @@ Result<> VerifyTriangleWinding::operator()()
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - sorting vertices");
   const MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - validating");
   auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);

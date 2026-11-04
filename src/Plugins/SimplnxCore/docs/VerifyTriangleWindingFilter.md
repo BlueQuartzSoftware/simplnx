@@ -16,7 +16,7 @@ While this filter modifies nothing more than the *Shared Faces List*, it has wid
 
 The meshes treat both sides of each triangle as valid. The upside is that less space is needed to store meshes, but it means giving every feature the proper winding is impossible. The order of execution is based on feature label numbering, so randomizing that order may lead to more visual distinction.
 
-This filter requires that vertices are unique; well-formed meshes should not have an issue with this. The filter checks this at runtime and returns an error if duplicates are found. If this happens, run [Identify Duplicate Vertices](IdentifyDuplicateVerticesFilter.md) followed by [Remove Flagged Vertices](RemoveFlaggedVerticesFilter.md) prior to this filter.
+This filter requires that vertices are unique; well-formed meshes should not have an issue with this. Duplicate vertices have exactly equal X, Y, and Z coordinates. Negative zero and positive zero are equal. A vertex with any NaN coordinate is never a duplicate. The filter checks this at runtime and returns an error if duplicates are found. If this happens, run [Identify Duplicate Vertices](IdentifyDuplicateVerticesFilter.md) followed by [Remove Flagged Vertices](RemoveFlaggedVerticesFilter.md) prior to this filter.
 
 This filter offers recalculating triangle normals as an option; this is a convenience that simply calls [Compute Triangle Normals](TriangleNormalFilter.md) at the end.
 

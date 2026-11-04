@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/Algorithms/VerifyTriangleWinding.hpp"
 #include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/Filters/VerifyTriangleWindingFilter.hpp"
@@ -355,4 +356,31 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
       CHECK(args.value<DataPath>(VerifyTriangleWindingFilter::k_LabelsPath_Key) == DataPath({"DataContainer", "FaceData", "FaceLabels"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Cancel after sorting", "[SimplnxCore][VerifyTriangleWindingFilter][L19]")
+{
+  DataStructure data;
+  auto* geom = TriangleGeom::Create(data, "Mesh");
+  REQUIRE(geom != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(data, "Vertices", {3}, {3}, geom->getId());
+  vertices->fill(0);
+  geom->setVertices(*vertices);
+  auto* faces = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(data, "Faces", {1}, {3}, geom->getId());
+  (*faces)[0] = 0;
+  (*faces)[1] = 1;
+  (*faces)[2] = 2;
+  geom->setFaceList(*faces);
+  VerifyTriangleWindingInputValues inputs;
+  inputs.TargetGeometryPath = DataPath({"Mesh"});
+  inputs.RepairNormals = false;
+  const std::atomic_bool cancel = true;
+  const IFilter::MessageHandler handler;
+  // No labels are needed: cancellation must return before duplicate validation or winding work.
+  auto result = VerifyTriangleWinding(data, handler, cancel, &inputs)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK_FALSE(geom->getElementNeighborsId().has_value());
+  CHECK((*faces)[0] == 0);
+  CHECK((*faces)[1] == 1);
+  CHECK((*faces)[2] == 2);
 }
