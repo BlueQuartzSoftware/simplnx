@@ -660,3 +660,69 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Disabled X minimum pad
   REQUIRE(CountWarnings(warnings, -67402) == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves Cell Data", "[SimplnxCore][PadImageGeometry][L21]")
+{
+  UnitTest::LoadPlugins();
+  const bool inPlace = GENERATE(false, true);
+  const usize paddedAxis = GENERATE(0, 1, 2, 3); // 3 means all enabled axes have zero padding.
+  const bool padZ = GENERATE(false, true);
+  CAPTURE(inPlace, paddedAxis, padZ);
+  if(paddedAxis == 2 && !padZ)
+  {
+    return;
+  }
+
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Geom");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({2, 2, 1});
+  geom->setOrigin({0.0F, 0.0F, 0.0F});
+  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellAm = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 2, 2}, geom->getId());
+  REQUIRE(cellAm != nullptr);
+  geom->setCellData(*cellAm);
+  const DataPath cellPath({"Geom", "Cell Data"});
+  auto* scalar = Int32Array::Create(dataStructure, "Scalar", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Scalar"), {1, 2, 2}, {1}), cellAm->getId());
+  auto* vector = Int32Array::Create(dataStructure, "Vector", DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Vector"), {1, 2, 2}, {2}), cellAm->getId());
+  REQUIRE(scalar != nullptr);
+  REQUIRE(vector != nullptr);
+  const std::vector<int32> inputScalar = {1, 2, 3, 4};
+  const std::vector<int32> inputVector = {11, 12, 21, 22, 31, 32, 41, 42};
+  for(usize i = 0; i < inputScalar.size(); ++i)
+  {
+    (*scalar)[i] = inputScalar[i];
+  }
+  for(usize i = 0; i < inputVector.size(); ++i)
+  {
+    (*vector)[i] = inputVector[i];
+  }
+
+  // X is fastest. A minimum-side cell shifts every source tuple by one on the selected axis.
+  const std::vector<std::vector<int32>> expectedScalars = {{9, 1, 2, 9, 3, 4}, {9, 9, 1, 2, 3, 4}, {9, 9, 9, 9, 1, 2, 3, 4}, {1, 2, 3, 4}};
+  const std::vector<std::vector<int32>> expectedVectors = {
+      {9, 9, 11, 12, 21, 22, 9, 9, 31, 32, 41, 42}, {9, 9, 9, 9, 11, 12, 21, 22, 31, 32, 41, 42}, {9, 9, 9, 9, 9, 9, 9, 9, 11, 12, 21, 22, 31, 32, 41, 42}, {11, 12, 21, 22, 31, 32, 41, 42}};
+  Arguments args = MakePadArgs(true, true, padZ, {paddedAxis == 0 ? 1 : 0, 0}, {paddedAxis == 1 ? 1 : 0, 0}, {paddedAxis == 2 ? 1 : 0, 0}, 9, false);
+  args.insertOrAssign(PadImageGeometryFilter::k_PerformInPlace_Key, std::make_any<bool>(inPlace));
+  PadImageGeometryFilter filter;
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath outputPath = inPlace ? cellPath : DataPath({"Padded Geom", "Cell Data"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath.createChildPath("Scalar")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath.createChildPath("Vector")));
+  const auto& outputScalar = dataStructure.getDataRefAs<Int32Array>(outputPath.createChildPath("Scalar"));
+  const auto& outputVector = dataStructure.getDataRefAs<Int32Array>(outputPath.createChildPath("Vector"));
+  REQUIRE(outputScalar.getSize() == expectedScalars[paddedAxis].size());
+  REQUIRE(outputVector.getSize() == expectedVectors[paddedAxis].size());
+  for(usize i = 0; i < outputScalar.getSize(); ++i)
+  {
+    CHECK(outputScalar[i] == expectedScalars[paddedAxis][i]);
+  }
+  for(usize i = 0; i < outputVector.getSize(); ++i)
+  {
+    CHECK(outputVector[i] == expectedVectors[paddedAxis][i]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
