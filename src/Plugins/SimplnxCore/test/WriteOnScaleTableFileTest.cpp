@@ -562,9 +562,12 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Reorders Z Then X", "[Simpl
   RequireReorderedExportMatchesRotation({2, 4, 3}, compositeRotation, outputPath, "OnScale_Reordered_ZX");
 }
 
-TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Anisotropic Two Axis Reorder Fails Loudly", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Anisotropic Two Axis Reorder Preserves Cells", "[SimplnxCore][WriteOnScaleTableFileFilter]")
 {
   UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
 
   std::vector<int32> featureIds(24);
   std::iota(featureIds.begin(), featureIds.end(), 1);
@@ -574,12 +577,14 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Anisotropic Two Axis Reorde
   fs::create_directories(outputPath);
 
   const WriteOnScaleTableFileFilter filter;
-  auto executeResult = filter.execute(dataStructure, CreateArguments(outputPath, "OnScale_Anisotropic_Two_Axis"));
-  REQUIRE(executeResult.result.invalid());
-  REQUIRE(executeResult.result.errors().front().code == -12041);
-  REQUIRE(executeResult.result.errors().front().message.find("produced dimensions (Z=1, Y=9, X=3)") != std::string::npos);
-  REQUIRE(executeResult.result.errors().front().message.find("expected (Z=2, Y=3, X=4)") != std::string::npos);
-  REQUIRE_FALSE(fs::exists(outputPath / "OnScale_Anisotropic_Two_Axis.flxtbl"));
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, CreateArguments(outputPath, "OnScale_Anisotropic_Two_Axis"));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const std::string contents = ReadFile(outputPath / "OnScale_Anisotropic_Two_Axis.flxtbl");
+  // Rx * Rz maps (x,y,z) to (-y,-z,x). Dimensions become (4,3,2).
+  // Output (i,j,k) samples input (k,3-i,2-j), giving 1+k+2*(3-i)+8*(2-j).
+  REQUIRE(contents.find("divisions\n4 3 2\n") != std::string::npos);
+  REQUIRE(ExtractMatrBlock(contents) == "23 21 19 17 15 13 11 9 7 5 3 1 24 22 20 18 16 14 12 10 8 6 4 2");
+  RequireFeatureIdMultiset(ExtractMatrBlock(contents), featureIds);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

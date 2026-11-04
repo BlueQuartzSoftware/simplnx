@@ -19,8 +19,8 @@
 | Code paths enumerated  | 11 (filter preflight guard + geometry setup, and the NN-resample execute). 10 of 12 exercised.          |
 | Tests today | 12 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 12/12. |
 | Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                               |
-| Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. 1 deviation, on the *unsupported* arbitrary-rotation domain only.    |
-| Bug flags              | None. The single deviation (D1) is an intentional guard, not a bug.                                    |
+| Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four isotropic principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** dims and voxel values. Two documented deviations: D1 rejects unsupported rotations; D2 corrects anisotropic three-cycle spacing (analytical evidence, no new legacy binary comparison). |
+| Bug flags              | KI-008 / L28 corrected (D2). D1 is an intentional guard. |
 | V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
@@ -100,6 +100,15 @@ OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in ea
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison run on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y) — see `vv/comparisons/RotateSampleRefFrameFilter/results.md`. On the supported domain, **no deviations** (bit-identical dims and voxel values). One deviation on the unsupported domain:
+Comparison run on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y) — see `vv/comparisons/RotateSampleRefFrameFilter/results.md`. These four isotropic fixtures have bit-identical dims and voxel values. They do not cover anisotropic three-cycle rotations. The documented deviations are:
 
 - `RotateSampleRefFrameFilter-D1` — legacy silently runs arbitrary (non-principal-90) rotations as a lossy resample; SIMPLNX rejects them in preflight (`-6850`). Root cause: algorithmic choice (intentional; not a bug). See `vv/deviations/RotateSampleRefFrameFilter.md`.
+- `RotateSampleRefFrameFilter-D2` — corrected spacing and dimensions for anisotropic three-cycle rotations (KI-008 / L28). Independent analytical tests cover both algorithms on in-memory stores. No new legacy binary comparison was run. See `vv/deviations/RotateSampleRefFrameFilter.md`.
+
+## Bugs found and fixed: errata KI-008 (L28)
+
+`SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid` uses an inline analytical oracle. The map R(x,y,z)=(z,x,y) sends dimensions (2,3,4) to (4,2,3) and spacing (2,3,5) to (5,2,3). Output (i,j,k) has value 1+j+2*k+6*i. The test checks every cell in Direct and Scanline paths on in-memory stores. No exemplar is used.
+
+Test sensitivity verification: before the fix, both paths returned dimensions (7,1,5), spacing (3,5,2), and 35 cells instead of 24. For grid rotations (signed axis permutations), the shared helper now selects spacing from matrix rows and applies the selected source axis scale. Other transformations keep the earlier spacing rule. This intentionally corrects DREAM3D 6.5.171 behavior; see `RotateSampleRefFrameFilter-D2`. No new legacy binary comparison or disk-backed OOC validation is claimed.
+
+To repeat the L28 check, run the `SimplnxCore::RotateSampleRefFrame` CTest entries serially. The historical A/B results above are unchanged and apply only to their four fixtures.

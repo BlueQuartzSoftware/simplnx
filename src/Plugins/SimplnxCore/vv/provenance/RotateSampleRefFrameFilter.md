@@ -42,3 +42,9 @@ These A/B artifacts are working files, not a test-consumed archive; they are kep
 ## Regenerated to fix a circular-oracle situation?
 
 Yes — this replaces the retired `Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` golden-file archives with an independently-derived Class 1 analytical oracle. The new oracle is *not* derived from SIMPLNX (or legacy) output; it is hand-derived from the definition of a principal-90 reference-frame rotation.
+
+## Errata KI-008 regression (L28)
+
+`SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid` uses an inline analytical oracle. The map R(x,y,z)=(z,x,y) sends dimensions (2,3,4) to (4,2,3) and spacing (2,3,5) to (5,2,3). Output (i,j,k) has value 1+j+2*k+6*i. The test checks every cell in Direct and Scanline paths on in-memory stores. No exemplar is used.
+
+Test sensitivity verification: before the fix, both paths returned dimensions (7,1,5), spacing (3,5,2), and 35 cells instead of 24. For grid rotations (signed axis permutations), the shared helper now selects spacing from matrix rows and applies the selected source axis scale. Other transformations keep the earlier spacing rule. This intentionally corrects DREAM3D 6.5.171 behavior; see `RotateSampleRefFrameFilter-D2`. No new legacy binary comparison or disk-backed OOC validation is claimed.

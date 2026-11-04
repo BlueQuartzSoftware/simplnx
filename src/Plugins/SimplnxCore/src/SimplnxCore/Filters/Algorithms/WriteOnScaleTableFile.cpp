@@ -370,15 +370,13 @@ Result<> WriteOnScaleTableFile::operator()()
     const SizeVec3 reorderedDimensions = exportGeometry->getDimensions();
     SizeVec3 expectedDimensions = inputDimensions;
     std::sort(expectedDimensions.begin(), expectedDimensions.end(), std::greater<usize>());
-    // ImageRotationUtilities::CreateRotationArgs selects output spacing from matrix columns, which show where each old axis lands.
-    // New-axis spacing requires matrix rows, or equivalently the columns of the transposed matrix.
+    // Check that the rotation preserved the intended axis permutation before exporting.
     if(reorderedDimensions != expectedDimensions)
     {
-      return MakeErrorResult(
-          k_UnexpectedReorderedDimensionsError,
-          fmt::format("Rotate Sample Reference Frame produced dimensions ({}) for geometry '{}' but the OnScale reorder expected ({}). This happens for two-axis reorders of geometries with "
-                      "anisotropic spacing because the rotation utility assigns output spacing from the wrong matrix axis. Resample to isotropic spacing or reorder the axes before this filter.",
-                      StringUtilities::formatDimensions3D(reorderedDimensions), m_InputValues->InputGeometryPath.toString(), StringUtilities::formatDimensions3D(expectedDimensions)));
+      return MakeErrorResult(k_UnexpectedReorderedDimensionsError, fmt::format("Rotate Sample Reference Frame produced dimensions ({}) for geometry '{}' but the OnScale reorder expected ({}). "
+                                                                               "The rotated geometry cannot be exported with the required axis order.",
+                                                                               StringUtilities::formatDimensions3D(reorderedDimensions), m_InputValues->InputGeometryPath.toString(),
+                                                                               StringUtilities::formatDimensions3D(expectedDimensions)));
     }
     exportFeatureIds = &rotatedDataStructure.getDataRefAs<IDataArray>(k_ScratchCellDataPath.createChildPath(inputFeatureIds.getName()));
     m_MessageHandler.sendInfoMessage(

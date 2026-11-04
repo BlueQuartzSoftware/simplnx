@@ -42,6 +42,8 @@ The *Perform Slice By Slice Transform* option applies the rotation independently
 
 ## Notes
 
+Spacing follows the source axis for each output axis. For example, a 120 degree rotation about (111) maps (x,y,z) to (z,x,y). Input spacing (2,3,5) becomes (5,2,3). This corrects DREAM3D 6.5.171 errata KI-008. The output intentionally differs from 6.5.171 for affected anisotropic rotations.
+
 The rotation will most likely produce an origin that differs from the input geometry's origin (the transformed bounding box is repositioned). The *Keep Input Geometry's Origin* option preserves the original origin instead; by default it is OFF and the transform-derived origin is used. To reset the origin and spacing afterward, use the [Set Origin & Spacing](SetImageGeomOriginScalingFilter.md) filter.
 
 ## Example
