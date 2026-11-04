@@ -55,8 +55,6 @@ Parameters MinimumProjectionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
-  params.insert(std::make_unique<BoolParameter>(k_CopyNonCellAttributeMatrices_Key, "Copy Non-Cell Attribute Matrices",
-                                                "Move non-cell Attribute Matrices to the projected geometry in-place, or copy them when creating a new geometry.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -77,7 +75,7 @@ Parameters MinimumProjectionImageFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType MinimumProjectionImageFilter::parametersVersion() const
 {
-  return 2;
+  return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -95,13 +93,12 @@ IFilter::PreflightResult MinimumProjectionImageFilter::preflightImpl(const DataS
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
   auto performInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  auto copyNonCellAttributeMatrices = filterArgs.value<bool>(k_CopyNonCellAttributeMatrices_Key);
   auto outputGeomName = filterArgs.value<std::string>(k_OutputImageGeomName_Key);
 
   // Minimum projection preserves the element type, so both preflight and execute use the default
   // SameAsInput OutTypeMap (kept in lock-step so the allocated and written output types agree).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection(dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace,
-                                                                                       outputGeomName, outputArrayName, copyNonCellAttributeMatrices);
+  Result<OutputActions> resultOutputActions =
+      ImageProcessing::PreflightAxisProjection(dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   return {std::move(resultOutputActions)};
 }
 

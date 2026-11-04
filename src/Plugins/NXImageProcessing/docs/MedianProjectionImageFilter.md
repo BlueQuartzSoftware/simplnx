@@ -12,13 +12,7 @@ Collapses the selected **Projection Dimension** of a scalar Image Geometry to a 
 
 The **Projection Dimension** selects the collapsed axis: 0 = X, 1 = Y, 2 = Z.
 
-When **Perform In-Place** is enabled, the input Image Geometry is replaced by the collapsed geometry containing the output array. Other Cell Data arrays are discarded. Preflight warning `-8343` lists the paths of the discarded objects. The contents of each listed object are also discarded.
-
-**Copy Non-Cell Attribute Matrices** is disabled by default. With this option disabled, the projected geometry contains only the projected Cell Data. In-place projection discards other geometry children, including Cell Feature Data and Cell Ensemble Data. Warning `-8343` names these objects even when there are no other Cell Data arrays.
-
-Enable **Copy Non-Cell Attribute Matrices** to keep every non-cell Attribute Matrix and its contents in the projected geometry. In-place projection moves these matrices without copying their arrays. They are then omitted from warning `-8343`. This optional preservation differs from DREAM3D 6.5.171, which discards these matrices during in-place projection. The preserved data is unchanged; feature measurements are not recalculated for the projection.
-
-Disable **Perform In-Place** to keep the original geometry and all its data. The result is written to a new geometry named by **Created Image Geometry**. Its cell-data Attribute Matrix uses the same name as the input. When **Copy Non-Cell Attribute Matrices** is enabled, the new geometry also receives independent copies of the non-cell Attribute Matrices and their contents. String arrays in the copied Attribute Matrices currently share their values with the input; they are not independent copies.
+When **Perform In-Place** is enabled, the input Image Geometry is replaced by the projected (collapsed) geometry containing the output array. Because the whole original geometry is replaced, any *other* arrays that were in its cell-data Attribute Matrix are discarded (they have the original, non-collapsed shape and cannot survive the projection). Preflight warning `-8343` names every discarded object by its full path, including other children of the geometry such as Cell Feature Data. Disable **Perform In-Place** to keep the original geometry: the input geometry is then preserved and the result is written to a newly created geometry named by **Created Image Geometry**, whose cell-data Attribute Matrix name is copied from the input geometry.
 
 The input array must be single-component (scalar) and one of the supported types: `uint8`, `int16`, `uint16`, or `float32`. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Median Projection Image Filter.
 
