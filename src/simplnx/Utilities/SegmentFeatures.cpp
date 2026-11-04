@@ -749,24 +749,8 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
   std::vector<int32> featureIdsSliceCur(sliceSize, 0);
-
-  // Process one current Z slice and one optional wrapped partner slice.
-  // Keep first and last labels available for both Z-boundary passes.
-  std::vector<int32> featureIdsSlice0(sliceSize, 0);
-  std::vector<int32> featureIdsSliceLast(sliceSize, 0);
-  auto firstReadResult = featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(featureIdsSlice0.data(), sliceSize));
-  if(firstReadResult.invalid())
-  {
-    return firstReadResult;
-  }
-  if(dimZ > 1)
-  {
-    auto lastReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(dimZ - 1) * sliceSize, nonstd::span<int32>(featureIdsSliceLast.data(), sliceSize));
-    if(lastReadResult.invalid())
-    {
-      return lastReadResult;
-    }
-  }
+  std::vector<int32> featureIdsSlicePartner(sliceSize, 0);
+  int64 partnerZ = -1; // Z slice held by featureIdsSlicePartner; -1 means none.
 
   for(int64 iz = 0; iz < dimZ; iz++)
   {
@@ -775,14 +759,11 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
       return {};
     }
 
-    // Reuse boundary buffers and read each interior slice when needed.
-    if(iz == 0)
+    // The previous slice's dz = +1 partner is this slice, so reuse it instead of reading it again.
+    if(partnerZ == iz)
     {
-      std::copy(featureIdsSlice0.begin(), featureIdsSlice0.end(), featureIdsSliceCur.begin());
-    }
-    else if(iz == dimZ - 1)
-    {
-      std::copy(featureIdsSliceLast.begin(), featureIdsSliceLast.end(), featureIdsSliceCur.begin());
+      std::swap(featureIdsSliceCur, featureIdsSlicePartner);
+      partnerZ = -1;
     }
     else
     {
@@ -793,69 +774,71 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
       }
     }
 
-    auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
-    if(prepareResult.invalid())
+    // Handle one Z offset at a time so comparisons need only two input slices.
+    for(int64 dz = -1; dz <= 1; ++dz)
     {
-      return prepareResult;
-    }
-
-    // Only first and last Z slices need a wrapped partner.
-    int64 wrappedPartnerZ = -1; // sentinel: no Z-wrapped partner
-    const int32* wrappedSlicePtr = nullptr;
-    if(iz == 0 && dimZ > 1)
-    {
-      wrappedPartnerZ = dimZ - 1;
-      wrappedSlicePtr = featureIdsSliceLast.data();
-      // Prepare the wrapped partner for cross-slice comparisons.
-      auto wrappedPrepareResult = segmenter.prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
-      if(wrappedPrepareResult.invalid())
+      int64 nz = iz + dz;
+      const bool wrappedZ = nz < 0 || nz >= dimZ;
+      if(nz < 0)
       {
-        return wrappedPrepareResult;
+        nz += dimZ;
       }
-    }
-    else if(iz == dimZ - 1 && dimZ > 1)
-    {
-      wrappedPartnerZ = 0;
-      wrappedSlicePtr = featureIdsSlice0.data();
-      auto wrappedPrepareResult = segmenter.prepareForSlice(wrappedPartnerZ, dimX, dimY, dimZ);
-      if(wrappedPrepareResult.invalid())
+      else if(nz >= dimZ)
       {
-        return wrappedPrepareResult;
+        nz -= dimZ;
       }
-    }
-
-    for(int64 iy = 0; iy < dimY; iy++)
-    {
-      for(int64 ix = 0; ix < dimX; ix++)
+      // Symmetric pairs are processed only from their smaller flat index.
+      if(nz < iz)
       {
-        // Only boundary voxels can have wrapped neighbors.
-        const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
-        if(!onBoundary)
-        {
-          continue;
-        }
+        continue;
+      }
 
-        const usize inSlice = static_cast<usize>(iy * dimX + ix);
-        const int64 index = iz * sliceStride + iy * dimX + ix;
-        const int32 labelCurrent = featureIdsSliceCur[inSlice];
-        if(labelCurrent <= 0)
+      const int32* neighborSlice = featureIdsSliceCur.data();
+      if(nz != iz)
+      {
+        // With dimZ == 2, dz = -1 and dz = +1 give the same partner slice.
+        if(partnerZ != nz)
         {
-          continue;
-        }
-
-        for(int64 dz = -1; dz <= 1; ++dz)
-        {
-          int64 nz = iz + dz;
-          bool wrappedZ = false;
-          if(nz < 0)
+          auto partnerReadResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(nz) * sliceSize, nonstd::span<int32>(featureIdsSlicePartner.data(), sliceSize));
+          if(partnerReadResult.invalid())
           {
-            nz += dimZ;
-            wrappedZ = true;
+            return partnerReadResult;
           }
-          else if(nz >= dimZ)
+          partnerZ = nz;
+        }
+        neighborSlice = featureIdsSlicePartner.data();
+      }
+      auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
+      if(prepareResult.invalid())
+      {
+        return prepareResult;
+      }
+      if(nz != iz)
+      {
+        auto neighborPrepareResult = segmenter.prepareForSlice(nz, dimX, dimY, dimZ);
+        if(neighborPrepareResult.invalid())
+        {
+          return neighborPrepareResult;
+        }
+      }
+
+      for(int64 iy = 0; iy < dimY; iy++)
+      {
+        for(int64 ix = 0; ix < dimX; ix++)
+        {
+          // Only boundary voxels can have wrapped neighbors.
+          const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
+          if(!onBoundary)
           {
-            nz -= dimZ;
-            wrappedZ = true;
+            continue;
+          }
+
+          const usize inSlice = static_cast<usize>(iy * dimX + ix);
+          const int64 index = iz * sliceStride + iy * dimX + ix;
+          const int32 labelCurrent = featureIdsSliceCur[inSlice];
+          if(labelCurrent <= 0)
+          {
+            continue;
           }
 
           for(int64 dy = -1; dy <= 1; ++dy)
@@ -906,16 +889,7 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
                 continue;
               }
 
-              // Select the current or wrapped label slice from the neighbor Z index.
-              int32 labelNeigh = 0;
-              if(nz == iz)
-              {
-                labelNeigh = featureIdsSliceCur[static_cast<usize>(ny * dimX + nx)];
-              }
-              else if(nz == wrappedPartnerZ && wrappedSlicePtr != nullptr)
-              {
-                labelNeigh = wrappedSlicePtr[static_cast<usize>(ny * dimX + nx)];
-              }
+              const int32 labelNeigh = neighborSlice[static_cast<usize>(ny * dimX + nx)];
 
               auto uniteResult = unitePeriodicPair(labelCurrent, labelNeigh, index, neighIdx, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
               if(uniteResult.invalid())
