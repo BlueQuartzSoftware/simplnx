@@ -8,8 +8,10 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include <H5Dpublic.h>
+#include <H5Fpublic.h>
 #include <H5Ipublic.h>
 #include <H5Lpublic.h>
+#include <H5Opublic.h>
 #include <H5Ppublic.h>
 
 #include <catch2/catch.hpp>
@@ -24,6 +26,7 @@
 #include <future>
 #include <limits>
 #include <mutex>
+#include <new>
 #include <numeric>
 #include <string>
 #include <system_error>
@@ -102,6 +105,73 @@ public:
   using HDF5::DatasetIO::CreateH5DatasetChunkProperties;
 };
 } // namespace
+
+#if SIMPLNX_BUILD_TESTS
+TEST_CASE("HDF5 group construction failure preserves native ownership", "[simplnx][HDF5][group-ownership]")
+{
+  const auto operation = GENERATE(0, 1, 2);
+  const auto groupName = GENERATE(std::string{"child"}, std::string(256, 'g'));
+  const auto operationName = operation == 0 ? "open existing group" : operation == 1 ? "create existing group" : "create missing group";
+  DYNAMIC_SECTION(operationName << " with " << groupName.size() << " name bytes")
+  {
+    const auto path = std::filesystem::temp_directory_path() / ("h5io_group_ownership_" + Uuid::GenerateV4().str() + ".h5");
+    auto cleanup = MakeScopeGuard([&path]() noexcept {
+      std::error_code error;
+      std::filesystem::remove(path, error);
+    });
+    auto resetFault = MakeScopeGuard([]() noexcept { HDF5::ResetGroupConstructionFailureForTesting(); });
+    auto file = HDF5::FileIO::WriteFile(path);
+    REQUIRE(file.isValid());
+    const hid_t fileId = file.getId();
+    const bool existsBefore = operation != 2;
+    H5O_info2_t originalInfo{};
+    if(existsBefore)
+    {
+      auto child = file.createGroup(groupName);
+      REQUIRE(child.isValid());
+      const hid_t childId = child.getId();
+      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      REQUIRE(H5Oget_info3(childId, &originalInfo, H5O_INFO_BASIC) >= 0);
+    }
+
+    int64 initialHandles = 0;
+    {
+      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      initialHandles = H5Fget_obj_count(fileId, H5F_OBJ_ALL);
+      REQUIRE(initialHandles == 1);
+    }
+    HDF5::FailNextGroupConstructionForTesting(groupName);
+    if(operation == 0)
+    {
+      REQUIRE_THROWS_AS(file.openGroup(groupName), std::bad_alloc);
+    }
+    else
+    {
+      REQUIRE_THROWS_AS(file.createGroup(groupName), std::bad_alloc);
+    }
+
+    {
+      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      CHECK(H5Fget_obj_count(fileId, H5F_OBJ_ALL) == initialHandles);
+      CHECK(H5Lexists(fileId, groupName.c_str(), H5P_DEFAULT) == (existsBefore ? 1 : 0));
+      if(existsBefore)
+      {
+        H5O_info2_t currentInfo{};
+        REQUIRE(H5Oget_info_by_name3(fileId, groupName.c_str(), &currentInfo, H5O_INFO_BASIC, H5P_DEFAULT) >= 0);
+        int comparison = -1;
+        REQUIRE(H5Otoken_cmp(fileId, &originalInfo.token, &currentInfo.token, &comparison) >= 0);
+        CHECK(comparison == 0);
+      }
+    }
+    {
+      auto retry = operation == 0 ? file.openGroup(groupName) : file.createGroup(groupName);
+      REQUIRE(retry.isValid());
+    }
+    std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+    CHECK(H5Fget_obj_count(fileId, H5F_OBJ_ALL) == initialHandles);
+  }
+}
+#endif
 
 TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5][concurrency]")
 {
