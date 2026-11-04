@@ -59,6 +59,7 @@ result = nximgproc.BinaryProjectionImageFilter.execute(
     output_array_name='Pore Occupancy',
     output_image_geometry_name='Binary Pore Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.BinaryProjectionImageFilter, result)
@@ -71,6 +72,7 @@ result = nximgproc.MaximumProjectionImageFilter.execute(
     output_array_name='Maximum Intensity',
     output_image_geometry_name='Maximum XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.MaximumProjectionImageFilter, result)
@@ -83,6 +85,7 @@ result = nximgproc.MeanProjectionImageFilter.execute(
     output_array_name='Mean Intensity',
     output_image_geometry_name='Mean XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.MeanProjectionImageFilter, result)
@@ -95,6 +98,7 @@ result = nximgproc.MedianProjectionImageFilter.execute(
     output_array_name='Median Intensity',
     output_image_geometry_name='Median XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.MedianProjectionImageFilter, result)
@@ -107,6 +111,7 @@ result = nximgproc.MinimumProjectionImageFilter.execute(
     output_array_name='Minimum Intensity',
     output_image_geometry_name='Minimum XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.MinimumProjectionImageFilter, result)
@@ -119,6 +124,7 @@ result = nximgproc.StandardDeviationProjectionImageFilter.execute(
     output_array_name='Intensity Deviation',
     output_image_geometry_name='Deviation XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.StandardDeviationProjectionImageFilter, result)
@@ -131,6 +137,7 @@ result = nximgproc.SumProjectionImageFilter.execute(
     output_array_name='Integrated Intensity',
     output_image_geometry_name='Sum XCT Projection',
     projection_dimension=2,
+    copy_non_cell_attribute_matrices=False,
     remove_original_geometry=False,
 )
 simplnx_utilities.check_filter_result(nximgproc.SumProjectionImageFilter, result)

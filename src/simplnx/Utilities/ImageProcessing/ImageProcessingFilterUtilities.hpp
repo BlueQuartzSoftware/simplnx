@@ -8,13 +8,16 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/AdaptiveHistogramEqualizationEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
@@ -684,7 +687,10 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  *            is impossible because the collapsed output array cannot be inserted into the still-full cell
  *            AttributeMatrix (tuple-count mismatch), and resizing the AttributeMatrix before executeImpl
  *            would destroy the input the engine still has to read. Because that swap replaces the whole
- *            original geometry, any OTHER arrays in its cell data are discarded; a warning enumerates them.
+ *            original geometry, any OTHER arrays in its cell data and unpreserved geometry children are
+ *            discarded; a warning enumerates them.
+ *          - copyNonCellAttributeMatrices == true: non-cell Attribute Matrices are moved before the deferred
+ *            in-place swap (no array copies), or deep-copied into the new geometry in non-in-place mode.
  *
  * The output element type is the input type mapped through @p OutTypeMap (SameAsInput for type-preserving
  * reducers like Max; a fixed float map for Mean/StdDev/Sum). The execute façade MUST be instantiated with
@@ -695,7 +701,7 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  */
 template <class TypeSetPolicy = ProjectionScalar, template <class> class OutTypeMap = SameAsInput>
 Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, usize projDim, bool performInPlace,
-                                              const std::string& outputGeomName, const std::string& outputArrayName)
+                                              const std::string& outputGeomName, const std::string& outputArrayName, bool copyNonCellAttributeMatrices = false)
 {
   if(projDim > 2)
   {
@@ -764,6 +770,38 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
   result.value().appendAction(std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1}, outputArrayPath, inputArray.getDataFormat(), "", std::nullopt,
                                                                   DataStoreInitializationMode::DeferredZeroFill));
 
+  if(copyNonCellAttributeMatrices)
+  {
+    for(const auto& [childId, childObject] : imageGeom)
+    {
+      if(childId == cellData->getId() || dynamic_cast<const AttributeMatrix*>(childObject.get()) == nullptr)
+      {
+        continue;
+      }
+      const DataPath sourcePath = imageGeomPath.createChildPath(childObject->getName());
+      if(performInPlace)
+      {
+        // Preserve the original objects and stores after projection, before deleting their old geometry.
+        result.value().appendDeferredAction(std::make_unique<MoveDataAction>(sourcePath, targetGeomPath));
+      }
+      else
+      {
+        const DataPath destinationPath = targetGeomPath.createChildPath(childObject->getName());
+        std::vector<DataPath> allCreatedPaths = {destinationPath};
+        const auto childPaths = GetAllChildDataPathsRecursive(dataStructure, sourcePath);
+        if(childPaths.has_value())
+        {
+          for(const auto& childPath : childPaths.value())
+          {
+            allCreatedPaths.push_back(childPath.rebase(sourcePath, destinationPath).value());
+          }
+        }
+        // Data-store deep copies use bounded transfers and respect the destination storage policy.
+        result.value().appendAction(std::make_unique<CopyDataObjectAction>(sourcePath, destinationPath, allCreatedPaths));
+      }
+    }
+  }
+
   if(performInPlace)
   {
     // Deferred (post-executeImpl) swap: rename the original geometry away, delete it, then rename the
@@ -776,9 +814,9 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     result.value().appendDeferredAction(std::make_unique<DeleteDataAction>(renamedOriginalPath));
     result.value().appendDeferredAction(std::make_unique<RenameDataAction>(targetGeomPath, originalName));
 
-    // In-place discards the whole original geometry, so any OTHER cell-data arrays are lost. They cannot
-    // survive the collapse (they have the original, non-collapsed tuple count), but say so rather than
-    // dropping them silently. The selected input (consumed by the projection) is not listed.
+    // In-place discards the original geometry. List unpreserved children as well as other cell-data
+    // arrays. Non-cell Attribute Matrices can be moved above. The selected input is consumed by the
+    // projection and the output name is replaced, so neither is listed.
     const std::string inputArrayName = inputArrayPath.getTargetName();
     std::string discarded;
     for(const auto& [childId, childObject] : *cellData)
@@ -792,13 +830,25 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
       {
         discarded += ", ";
       }
-      discarded += childName;
+      discarded += imageGeom.getCellDataPath().createChildPath(childName).toString();
+    }
+    for(const auto& [childId, childObject] : imageGeom)
+    {
+      if(childId == cellData->getId() || (copyNonCellAttributeMatrices && dynamic_cast<const AttributeMatrix*>(childObject.get()) != nullptr))
+      {
+        continue;
+      }
+      if(!discarded.empty())
+      {
+        discarded += ", ";
+      }
+      discarded += imageGeomPath.createChildPath(childObject->getName()).toString();
     }
     if(!discarded.empty())
     {
-      result.warnings().push_back(Warning{-8343, fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection, so the following other array(s) in cell data '{}' will be "
-                                                             "discarded (they cannot be projected and do not fit the collapsed shape): {}. Disable 'Perform In-Place' to keep the original geometry.",
-                                                             imageGeomPath.toString(), cellDataName, discarded)});
+      result.warnings().push_back(Warning{-8343, fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection. The following other data object(s), including their "
+                                                             "contents, will be discarded: {}. Disable 'Perform In-Place' to keep the original geometry.",
+                                                             imageGeomPath.toString(), discarded)});
     }
   }
 
