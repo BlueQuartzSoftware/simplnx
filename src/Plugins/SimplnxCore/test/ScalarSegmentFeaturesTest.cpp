@@ -504,6 +504,81 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Boundary Wrap", "[Simpln
   }
 }
 
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Cross Slice Diagonals", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
+  const usize dimZ = GENERATE(usize{2}, usize{3}, usize{4});
+  const usize sourceZ = GENERATE_COPY(Catch::Generators::range(usize{0}, dimZ - 1));
+  const usize offset = GENERATE(2, 6, 8); // X, Y, and X+Y wraps into the next Z slice.
+  const usize source = sourceZ * 9;
+  const usize target = (sourceZ + 1) * 9 + offset;
+  CAPTURE(dimZ, source, target);
+
+  // Only source and target match: 9 * dimZ cells minus one merge gives 9 * dimZ - 1 Features.
+  // Two Z slices exercise partner reuse; three and four exercise successive buffer swaps.
+  // Four Z slices prevent a Z-boundary wrap from hiding the original missing link.
+  auto runFilter = [scenario, dimZ, source, target](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
+    UnitTest::AlgorithmTestScope scope(scenario);
+    DataStructure dataStructure;
+    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeom->setDimensions({3, 3, dimZ});
+    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{dimZ, 3, 3}, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+    auto* scalarArrayPtr = CreateTestDataArray<int32>(dataStructure, "ScalarValues", ShapeType{dimZ, 3, 3}, {1}, cellAM->getId());
+    std::vector<int32> scalarValues(9 * dimZ);
+    for(usize i = 0; i < scalarValues.size(); i++)
+    {
+      scalarValues[i] = static_cast<int32>(i);
+    }
+    scalarValues[target] = scalarValues[source];
+    for(usize cellIdx = 0; cellIdx < scalarValues.size(); cellIdx++)
+    {
+      (*scalarArrayPtr)[cellIdx] = scalarValues[cellIdx];
+    }
+
+    ScalarSegmentFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(DataPath({"Geometry"})));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int32>(0));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "ScalarValues"})));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Mask"})));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})).getDataStoreRef();
+    std::vector<int32> featureIds(featureIdsRef.getNumberOfTuples());
+    for(usize cellIdx = 0; cellIdx < featureIds.size(); cellIdx++)
+    {
+      featureIds[cellIdx] = featureIdsRef[cellIdx];
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    return featureIds;
+  };
+
+  const auto featureIds = runFilter(true, 1);
+  CHECK(featureIds[source] == featureIds[target]);
+  for(usize i = 0; i < featureIds.size(); i++)
+  {
+    const int32 expected = static_cast<int32>(i == target ? source + 1 : (i < target ? i + 1 : i));
+    CHECK(featureIds[i] == expected);
+  }
+  CHECK(*std::max_element(featureIds.begin(), featureIds.end()) == static_cast<int32>(9 * dimZ - 1));
+}
+
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked (-87000)", "[SimplnxCore][ScalarSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
