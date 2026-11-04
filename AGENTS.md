@@ -68,7 +68,7 @@ simplnx is the C++20 data-processing library behind DREAM3D-NX. It has no UI dep
 
 - Use a build directory whose `CMakeCache.txt` points at this checkout: `CMAKE_HOME_DIRECTORY` in a simplnx build,
   `simplnx_SOURCE_DIR` in a DREAM3D-NX build. In-core work can use either; when both exist, use the simplnx build.
-  Out-of-core tests need a DREAM3D-NX build with `DREAM3DNX_USE_OOC=ON`; there is no simplnx-only out-of-core build.
+  Out-of-core tests need a DREAM3D-NX build with `DREAM3DNX_ENABLE_OOC=ON`; there is no simplnx-only out-of-core build.
   When no in-core build exists, configure one with a preset that sets `SIMPLNX_BUILD_TESTS=ON` (the `ci-<platform>`
   presets in `CMakePresets.json` do, and build in `build/`). For an out-of-core build, follow the build instructions
   of the DREAM3D-NX and SimplnxOoc repositories. Configure, build and test only in a build directory that you created
