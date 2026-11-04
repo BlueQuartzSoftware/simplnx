@@ -17,6 +17,19 @@ namespace nx::core::HDF5
 class FileIO;
 class DatasetIO;
 
+#if SIMPLNX_BUILD_TESTS
+/**
+ * @brief Fails the next matching group construction on the calling thread before identifier adoption.
+ * @param groupName Selects the exact child name whose construction throws std::bad_alloc.
+ */
+SIMPLNX_EXPORT void FailNextGroupConstructionForTesting(const std::string& groupName);
+
+/**
+ * @brief Clears the calling thread's pending group-construction failure.
+ */
+SIMPLNX_EXPORT void ResetGroupConstructionFailureForTesting() noexcept;
+#endif
+
 /**
  * @class GroupIO
  * @brief Owns or lazily opens one move-only HDF5 group identifier.
@@ -57,6 +70,8 @@ public:
    * @brief Opens an existing child group.
    * @param name Identifies the child group.
    * @return Owning child wrapper, or an invalid wrapper on failure.
+   *
+   * The method prepares wrapper metadata before opening the child group.
    */
   GroupIO openGroup(const std::string& name) const;
 
@@ -73,6 +88,7 @@ public:
    * @return Owning child wrapper, or an invalid wrapper on failure.
    *
    * An existing child of another HDF5 object type causes failure.
+   * The method prepares wrapper metadata before opening or creating the child group.
    */
   GroupIO createGroup(const std::string& childName);
 
@@ -177,10 +193,10 @@ public:
 
 protected:
   /**
-   * @brief Takes ownership of an open HDF5 group identifier.
+   * @brief Prepares wrapper metadata and adopts the supplied group identifier.
    * @param parentId Identifies the parent object. It must outlive this wrapper.
    * @param groupName Stores the child name relative to the parent.
-   * @param groupId Supplies the identifier to close during destruction.
+   * @param groupId Supplies the identifier to close, or H5I_INVALID_HID to prepare an unopened wrapper.
    */
   GroupIO(hid_t parentId, const std::string& groupName, hid_t groupId);
 
