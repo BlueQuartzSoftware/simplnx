@@ -128,6 +128,10 @@
           "value": 0.0,
           "version": 1
         },
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "foreground_value": {
           "value": 1.0,
           "version": 1
@@ -148,7 +152,7 @@
           "value": "Binary Pore Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -167,6 +171,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -183,7 +191,7 @@
           "value": "Maximum XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -202,6 +210,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -218,7 +230,7 @@
           "value": "Mean XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -237,6 +249,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -253,7 +269,7 @@
           "value": "Median XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -272,6 +288,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -288,7 +308,7 @@
           "value": "Minimum XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -307,6 +327,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -323,7 +347,7 @@
           "value": "Deviation XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
@@ -342,6 +366,10 @@
     },
     {
       "args": {
+        "copy_non_cell_attribute_matrices": {
+          "value": false,
+          "version": 1
+        },
         "input_image_data_path": {
           "value": "Projection Volume/Cell Data/XCT Intensity",
           "version": 1
@@ -358,7 +386,7 @@
           "value": "Sum XCT Projection",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "projection_dimension": {
           "value": 2,
           "version": 1
