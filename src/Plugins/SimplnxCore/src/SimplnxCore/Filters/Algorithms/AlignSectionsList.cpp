@@ -46,10 +46,10 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
     // Size validated in preflight
     const auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
     const usize numTup = relativeShiftsStore.getNumberOfTuples();
-    for(usize i = 0; i < numTup; i++)
+    for(usize i = 1; i < numTup; i++)
     {
-      xShifts[i] = (i == 0 ? 0 : xShifts[i - 1]) + relativeShiftsStore[i * 2];
-      yShifts[i] = (i == 0 ? 0 : yShifts[i - 1]) + relativeShiftsStore[(i * 2) + 1];
+      xShifts[i] = xShifts[i - 1] + relativeShiftsStore[i * 2];
+      yShifts[i] = yShifts[i - 1] + relativeShiftsStore[(i * 2) + 1];
     }
   }
   else if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::CumulativeShifts)))
@@ -57,7 +57,7 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
     // Size validated in preflight
     const auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
     const usize numTup = cumulativeShiftsStore.getNumberOfTuples();
-    for(usize i = 0; i < numTup; i++)
+    for(usize i = 1; i < numTup; i++)
     {
       xShifts[i] = cumulativeShiftsStore[i * 2];
       yShifts[i] = cumulativeShiftsStore[(i * 2) + 1];
