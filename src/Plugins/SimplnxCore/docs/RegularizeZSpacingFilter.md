@@ -27,7 +27,7 @@ The input file is a simple text file with one floating point value per line (or 
     9.5
     12.0
 
-The values must be monotonically non-decreasing, and the final value (the total Z extent) must be greater than zero. The `.txt` extension is a file-dialog hint only; any readable text file is accepted.
+The values must be monotonically non-decreasing, and the final value (the total Z extent) must be greater than zero. The file must have a `.txt`, `.dat`, or `.csv` extension.
 
 ### Output Geometry
 
