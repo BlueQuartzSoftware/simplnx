@@ -724,7 +724,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
         int thisSize = 1 + (stop - start);
         for(int j = count + 1; j < 1 + count + thisSize; j++)
         {
-          int effectiveJ = j % thisSize;
+          int effectiveJ = start + (j - start) % thisSize;
           vtemp.push_back(fb[effectiveJ].first);
           if(vs.type(fb[effectiveJ].first) % 10 == 4)
           {

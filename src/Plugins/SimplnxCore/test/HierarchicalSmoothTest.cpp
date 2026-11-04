@@ -519,3 +519,105 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Idempotency", "[SimplnxCore][H
 
   UnitTest::CheckArraysInheritTupleDims(twiceDs);
 }
+
+namespace
+{
+// Builds a TriangleGeom from inline vertices, faces and node types. Every face gets the
+// same label pair (1,2), so all loops belong to one boundary and are processed together.
+MeshPaths buildInlineMesh(DataStructure& dataStructure, const std::vector<F64Vec3>& coords, const std::vector<uint64>& connectivity, const std::vector<int8>& types)
+{
+  const usize numVertices = coords.size();
+  const usize numFaces = connectivity.size() / 3;
+  auto* geom = TriangleGeom::Create(dataStructure, "Patches");
+  REQUIRE(geom != nullptr);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "Vertex Data", {numVertices}, geom->getId());
+  auto* faceData = AttributeMatrix::Create(dataStructure, "Face Data", {numFaces}, geom->getId());
+  REQUIRE(vertexData != nullptr);
+  REQUIRE(faceData != nullptr);
+  geom->setVertexAttributeMatrix(*vertexData);
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(dataStructure, TriangleGeom::k_SharedVertexListName, {numVertices}, {3}, geom->getId());
+  auto* faces = UnitTest::CreateTestDataArray<uint64>(dataStructure, TriangleGeom::k_SharedFacesListName, {numFaces}, {3}, geom->getId());
+  auto* nodeTypes = UnitTest::CreateTestDataArray<int8>(dataStructure, "Node Type", {numVertices}, {1}, vertexData->getId());
+  auto* labels = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {numFaces}, {2}, faceData->getId());
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  for(usize v = 0; v < numVertices; v++)
+  {
+    for(usize axis = 0; axis < 3; axis++)
+    {
+      (*vertices)[v * 3 + axis] = static_cast<float32>(coords[v][axis]);
+    }
+    (*nodeTypes)[v] = types[v];
+  }
+  for(usize i = 0; i < connectivity.size(); i++)
+  {
+    (*faces)[i] = connectivity[i];
+  }
+  for(usize f = 0; f < numFaces; f++)
+  {
+    (*labels)[f * 2] = 1;
+    (*labels)[f * 2 + 1] = 2;
+  }
+  const DataPath geomPath({"Patches"});
+  return MeshPaths{geomPath, geomPath.createChildPath("Vertex Data").createChildPath("Node Type"), geomPath.createChildPath("Face Data").createChildPath("Face Labels"),
+                   geomPath.createChildPath(TriangleGeom::k_SharedVertexListName)};
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Later free boundary loops are smoothed", "[SimplnxCore][HierarchicalSmoothFilter][L18]")
+{
+  UnitTest::LoadPlugins();
+
+  // One triangle: quad -> mobile triple-line node -> quad. Its free boundary is one loop.
+  const std::vector<F64Vec3> triangle = {{0, 0, 0}, {1, 1, 0}, {2, 0, 0}};
+  const std::vector<int8> triangleTypes = {NodeType::QuadPoint, NodeType::TriplePoint, NodeType::QuadPoint};
+
+  // Reference: the triangle smoothed alone (its loop is the first and only loop).
+  DataStructure referenceDs;
+  const MeshPaths referencePaths = buildInlineMesh(referenceDs, triangle, {0, 1, 2}, triangleTypes);
+  runHierarchicalSmooth(referenceDs, referencePaths);
+  const auto& reference = referenceDs.getDataRefAs<Float32Array>(referencePaths.vertices);
+  // The mobile node must really move, so an unchanged copy cannot pass.
+  REQUIRE(std::fabs(reference[1 * 3 + 1] - 1.0f) > 0.01f);
+
+  // Same boundary: first a 4-node loop (square of two triangles, all corners fixed quad
+  // points), then the triangle, then the triangle translated by (0,0,8). The triangle loops
+  // start at fb index 4 and 7, which are not multiples of their size 3, so an index that wraps
+  // relative to 0 (or adds the start without removing it) reads the wrong nodes.
+  // Oracle (no captured solver output): a disconnected loop is smoothed the same way whether or
+  // not other loops share its boundary, and translation commutes with smoothing.
+  std::vector<F64Vec3> coords = {{0, 0, -8}, {2, 0, -8}, {2, 2, -8}, {0, 2, -8}};
+  std::vector<int8> types(4, NodeType::QuadPoint);
+  std::vector<uint64> connectivity = {0, 1, 2, 0, 2, 3};
+  constexpr std::array<float64, 2> k_ZOffsets = {0.0, 8.0};
+  for(usize loop = 0; loop < k_ZOffsets.size(); loop++)
+  {
+    const usize first = coords.size();
+    for(usize v = 0; v < triangle.size(); v++)
+    {
+      coords.push_back({triangle[v][0], triangle[v][1], triangle[v][2] + k_ZOffsets[loop]});
+      types.push_back(triangleTypes[v]);
+      connectivity.push_back(first + v);
+    }
+  }
+  DataStructure dataStructure;
+  const MeshPaths paths = buildInlineMesh(dataStructure, coords, connectivity, types);
+  runHierarchicalSmooth(dataStructure, paths);
+  const auto& vertices = dataStructure.getDataRefAs<Float32Array>(paths.vertices);
+
+  for(usize loop = 0; loop < k_ZOffsets.size(); loop++)
+  {
+    for(usize v = 0; v < triangle.size(); v++)
+    {
+      const usize index = 4 + loop * 3 + v;
+      for(usize axis = 0; axis < 3; axis++)
+      {
+        CAPTURE(loop, v, axis);
+        const float32 expected = reference[v * 3 + axis] + (axis == 2 ? static_cast<float32>(k_ZOffsets[loop]) : 0.0f);
+        CHECK(vertices[index * 3 + axis] == Approx(expected).margin(1e-4));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
