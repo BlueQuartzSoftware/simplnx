@@ -16,7 +16,7 @@ The principal directions can have their signs flipped: they come from eigenvecto
 
 *Note*: Computing the Weingarten matrix values is an experimental feature, and there is no guarantee at this time that the values are correct.
 
-The fitting neighborhood contains the triangle itself and its neighbors within the **Neighborhood Ring Count**. Only neighbors with the same pair of **Face Labels** are included. If this neighborhood initially contains fewer than two triangles, the filter returns an error. Otherwise, triangles with a NaN component in their face normal or face centroid are excluded from the fit. If the evaluated triangle is excluded, all of its requested outputs are NaN. The outputs are also NaN if this exclusion leaves fewer than two triangles. The evaluated triangle counts toward this minimum.
+The fitting neighborhood contains the triangle itself and its neighbors within the **Neighborhood Ring Count**. Only neighbors with the same pair of **Face Labels** are included. If this neighborhood contains fewer than two triangles, all requested outputs for that triangle are NaN and the filter continues. This includes a Feature face with only one triangle. This differs from DREAM3D 6.5.171, which wrote invalid values for one-triangle faces. Triangles with a NaN component in their face normal or face centroid are excluded from the fit. If the evaluated triangle is excluded, all of its requested outputs are NaN. The outputs are also NaN if this exclusion leaves fewer than two triangles. The evaluated triangle counts toward this minimum.
 
 ### Units
 
