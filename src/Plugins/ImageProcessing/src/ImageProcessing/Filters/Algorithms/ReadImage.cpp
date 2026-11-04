@@ -336,7 +336,6 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     // extent of its own decoded segments and reject any mismatch rather than mis-sizing the slice.
     usize observedRows = 0;
     usize observedColumns = 0;
-    bool pixelStrideMismatch = false;
 
     readResult = imageIO->readPixelDataRows(
         inputFilePath,
@@ -362,7 +361,10 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           observedColumns = std::max(observedColumns, sourceColumn + pixelCount);
           if(pixels.size() != pixelCount * bytesPerPixel)
           {
-            pixelStrideMismatch = true;
+            // Reject an incompatible segment before forming a span with page 0's pixel stride.
+            return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has a differing pixel byte count from page 0. Every page of a multi-page volume must share identical dimensions, "
+                                                      "component count, and scalar type.",
+                                                      sourcePage, inputFilePath.string()));
           }
 
           // Y crop: skip rows outside the destination window.
@@ -408,9 +410,9 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       return readResult;
     }
 
-    if(observedRows != stream.srcHeight || observedColumns != stream.srcWidth || pixelStrideMismatch)
+    if(observedRows != stream.srcHeight || observedColumns != stream.srcWidth)
     {
-      return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} (or a differing component count / scalar type) that do not match page 0 ({}x{}). Every page of a "
+      return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} that do not match page 0 ({}x{}). Every page of a "
                                                 "multi-page volume must share identical dimensions, component count, and scalar type.",
                                                 sourcePage, inputFilePath.string(), observedColumns, observedRows, stream.srcWidth, stream.srcHeight));
     }

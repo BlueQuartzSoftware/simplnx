@@ -736,6 +736,81 @@ TEST_CASE("ImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[ImageProc
   }
 }
 
+TEST_CASE("ImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale_Rejected_Before_Copy", "[ImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const bool convertData = GENERATE(false, true);
+  CAPTURE(convertData);
+  const fs::path tiffPath = ReadImageOutputDir() / "rgb_then_grayscale.tif";
+  constexpr uint32_t width = 3;
+  constexpr uint32_t height = 2;
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(tiffPath.string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    for(const uint16_t components : {uint16_t{3}, uint16_t{1}})
+    {
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, width) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, height) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_BITSPERSAMPLE, 8) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLESPERPIXEL, components) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PHOTOMETRIC, components == 3 ? PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, height) == 1);
+      std::vector<uint8_t> row(width * components, components == 3 ? uint8_t{255} : uint8_t{127});
+      for(uint32_t y = 0; y < height; ++y)
+      {
+        REQUIRE(TIFFWriteScanline(tiff.get(), row.data(), y, 0) == 1);
+      }
+      REQUIRE(TIFFWriteDirectory(tiff.get()) == 1);
+    }
+  }
+
+  const DataPath geomPath({"Mixed Pages"});
+  const DataPath arrayPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+  Arguments args;
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, tiffPath);
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
+  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::string("Pixels"));
+  args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, convertData);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, ChoicesParameter::ValueType{1});
+  ReadImageFilter filter;
+  DataStructure dataStructure;
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  IFilter::ExecuteResult execute;
+  REQUIRE_NOTHROW(execute = filter.execute(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
+  REQUIRE(execute.result.errors()[0].code == -2007); // The page-layout check must reject page 1, not another error path.
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{width, height, 2});
+
+  // Oracle: page 0 has 3*2*3 = 18 white components (255, or 65535 after conversion).
+  // Page 1 supplies only 3 bytes per row, but the RGB destination needs 3*3 = 9.
+  // Reject that segment before copying any bytes; its 18 destination components must
+  // retain their initial zero values. This detects a late error even without a sanitizer.
+  const auto checkPixels = [](const auto& pixels, auto white) {
+    REQUIRE(pixels.getSize() == 36);
+    for(usize i = 0; i < 18; ++i)
+    {
+      REQUIRE(pixels[i] == white);
+      REQUIRE(pixels[18 + i] == 0);
+    }
+  };
+  if(convertData)
+  {
+    checkPixels(dataStructure.getDataRefAs<UInt16Array>(arrayPath), uint16_t{65535});
+  }
+  else
+  {
+    checkPixels(dataStructure.getDataRefAs<UInt8Array>(arrayPath), uint8_t{255});
+  }
+}
+
 TEST_CASE("ImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[ImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
