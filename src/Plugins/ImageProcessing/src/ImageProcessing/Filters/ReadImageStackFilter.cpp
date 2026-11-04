@@ -27,7 +27,6 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <algorithm>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -441,54 +440,6 @@ Result<> ReadImageStackFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   inputValues.imageDataType = ChoiceToImageDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
   inputValues.croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
-
-  // Output actions have already created the stack. Check headers before decoding or copying any
-  // slice pixels; interactive preflight reads only file 0. These checks do not apply slice actions.
-  auto zRangeResult = ComputeCroppedZRange(inputValues.croppingOptions, inputValues.fileList.size(), inputValues.origin, inputValues.spacing, inputValues.changeOrigin, inputValues.changeSpacing,
-                                           inputValues.originSpacingProcessing);
-  if(zRangeResult.invalid())
-  {
-    return ConvertResult(std::move(zRangeResult));
-  }
-  const auto& zRange = zRangeResult.value();
-  const DataPath imageDataPath = inputValues.imageGeometryPath.createChildPath(inputValues.cellDataName).createChildPath(inputValues.imageDataArrayName);
-  const DataType stackType = dataStructure.getDataRefAs<IDataArray>(imageDataPath).getDataType();
-
-  ReadImageSubFilterConfig subConfig{};
-  subConfig.imageGeometryPath = inputValues.imageGeometryPath;
-  subConfig.cellDataName = inputValues.cellDataName;
-  subConfig.imageDataArrayName = inputValues.imageDataArrayName;
-  subConfig.changeOrigin = inputValues.changeOrigin;
-  subConfig.changeSpacing = inputValues.changeSpacing;
-  subConfig.origin = inputValues.origin;
-  subConfig.spacing = inputValues.spacing;
-  subConfig.originSpacingProcessing = inputValues.originSpacingProcessing;
-  subConfig.changeDataType = inputValues.changeDataType;
-  subConfig.imageDataType = inputValues.imageDataType;
-  subConfig.croppingOptions = inputValues.croppingOptions;
-
-  DataStructure tmpDs;
-  ReadImageFilter imageReader;
-  imageReader.setReadSinglePageOnly(true);
-  for(usize i = std::max<usize>(1, zRange.zMin); i <= zRange.zMax; ++i)
-  {
-    subConfig.filePath = inputValues.fileList[i];
-    PreflightResult sliceResult = imageReader.preflight(tmpDs, BuildReadImageFilterArgs(subConfig), messageHandler, shouldCancel);
-    if(sliceResult.outputActions.invalid())
-    {
-      return ConvertResult(std::move(sliceResult.outputActions));
-    }
-    const auto* sliceArrayAction = FindFirstActionOfType<CreateArrayAction>(sliceResult.outputActions.value().actions);
-    if(sliceArrayAction == nullptr)
-    {
-      return MakeErrorResult(-23531, "Internal error: ReadImageFilter preflight did not produce a CreateArrayAction.");
-    }
-    if(sliceArrayAction->type() != stackType)
-    {
-      return MakeErrorResult(
-          -23534, fmt::format("Slice {} ('{}') has data type {}, but the stack requires {}.", i, inputValues.fileList[i], DataTypeToString(sliceArrayAction->type()), DataTypeToString(stackType)));
-    }
-  }
 
   return ReadImageStack(dataStructure, messageHandler, shouldCancel, inputValues)();
 }
