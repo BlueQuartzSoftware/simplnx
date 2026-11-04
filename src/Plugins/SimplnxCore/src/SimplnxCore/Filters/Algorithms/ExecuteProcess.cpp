@@ -140,11 +140,6 @@ Result<> ExecuteProcess::operator()()
     return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
 
-  if(m_InputValues->Blocking)
-  {
-    outFile << output;
-  }
-
   outFile.close();
   return {};
 }
