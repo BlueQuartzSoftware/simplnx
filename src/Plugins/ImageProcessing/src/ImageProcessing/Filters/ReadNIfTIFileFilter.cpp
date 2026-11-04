@@ -273,6 +273,13 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   preflightUpdatedValues.push_back({"NIfTI Header", fmt::format("datatype code: {}  |  components: {}  |  byte-swap: {}  |  vox_offset: {}  |  scaling: {}", md.niftiDatatype, md.componentCount,
                                                                 md.byteSwapRequired ? "yes" : "no", md.voxOffset, scalingSummary)});
 
+  if(md.affineHasFlip)
+  {
+    resultOutputActions.warnings().push_back(Warning{
+        -34750, fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
+                            "orientation. Voxels are loaded in their stored order.",
+                            md.filePath)});
+  }
   if(md.affineHasRotation)
   {
     resultOutputActions.warnings().push_back(Warning{

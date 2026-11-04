@@ -200,6 +200,7 @@ struct IMAGEPROCESSING_EXPORT NiftiMetadata
   int16 qformCode{0};                                  ///< NIFTI_XFORM_* code for the qform; 0 = not set.
   int16 sformCode{0};                                  ///< NIFTI_XFORM_* code for the sform; 0 = not set.
   std::array<std::array<float32, 4>, 3> sformMatrix{}; ///< 3x4 affine `[srow_x; srow_y; srow_z]` when sformCode > 0.
+  bool affineHasFlip{false};                           ///< True if a selected axis sign is discarded.
   bool affineHasRotation{false};                       ///< True if the selected transform has non-trivial rotation.
   /** @} */
 
