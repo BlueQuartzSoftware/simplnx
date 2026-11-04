@@ -14,6 +14,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include <algorithm>
 #include <array>
 #include <catch2/catch.hpp>
 #include <memory>
@@ -731,4 +732,73 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTuple: Dimension inactive tables and exa
     REQUIRE(array[1] == static_cast<int32>(outputIndex * 2 + 1));
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - L03 tuple rank validation", "[SimplnxCore][SplitDataArrayByTupleFilter][L03]")
+{
+  UnitTest::LoadPlugins();
+  const auto container = GENERATE(SplitDataArrayByTuple::OutputContainer::NewDataGroup, SplitDataArrayByTuple::OutputContainer::ExistingDataGroup,
+                                  SplitDataArrayByTuple::OutputContainer::NewAttrMatrix, SplitDataArrayByTuple::OutputContainer::ExistingAttrMatrix);
+  CAPTURE(container);
+  SplitDataArrayByTupleFilter filter;
+  Arguments args;
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(container)));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({k_NewDGName})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_ExistingDataGroupPath, std::make_any<DataPath>(DataPath({k_ExistingDGName})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_NewAMName})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_ExistingAttributeMatrixPath, std::make_any<DataPath>(DataPath({k_ExistingAMName})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}, {1}}));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}}));
+
+  SECTION("Split dimension equals input rank")
+  {
+    auto ds = createDataStructure<uint8>({1}, {1});
+    DataGroup::Create(ds, k_ExistingDGName);
+    AttributeMatrix::Create(ds, k_ExistingAMName, {1});
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<NumberParameter<uint64>::ValueType>(1));
+    auto preflight = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange));
+    CHECK(std::any_of(preflight.outputValues.cbegin(), preflight.outputValues.cend(), [](const IFilter::PreflightValue& value) { return value.name == "Input Array"; }));
+    auto execution = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+    REQUIRE(execution.result.errors().size() == 1);
+    CHECK(execution.result.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange));
+  }
+
+  SECTION("Output rank is smaller than the valid input split dimension")
+  {
+    if(container == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix || container == SplitDataArrayByTuple::OutputContainer::ExistingAttrMatrix)
+    {
+      auto ds = createDataStructure<uint8>({1, 1}, {1});
+      AttributeMatrix::Create(ds, k_ExistingAMName, {1});
+      args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<NumberParameter<uint64>::ValueType>(1));
+      auto preflight = filter.preflight(ds, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+      REQUIRE(preflight.outputActions.errors().size() == 1);
+      CHECK(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
+      INFO(preflight.outputActions.errors()[0].message);
+      CHECK(preflight.outputActions.errors()[0].message.find("The selected tuple shape has 1 and the input array tuple shape has 2.") != std::string::npos);
+    }
+  }
+
+  SECTION("Selected value does not divide the input value")
+  {
+    if(container == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix || container == SplitDataArrayByTuple::OutputContainer::ExistingAttrMatrix)
+    {
+      auto ds = createDataStructure<uint8>({3}, {1});
+      AttributeMatrix::Create(ds, k_ExistingAMName, {2});
+      args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
+      args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<NumberParameter<uint64>::ValueType>(0));
+      auto preflight = filter.preflight(ds, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+      REQUIRE(preflight.outputActions.errors().size() == 1);
+      CHECK(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
+      INFO(preflight.outputActions.errors()[0].message);
+      CHECK(preflight.outputActions.errors()[0].message.find("The input array tuple shape has the value 3 at dimension 0. This value cannot be divided evenly by the selected tuple shape value 2.") !=
+            std::string::npos);
+    }
+  }
 }
