@@ -31,7 +31,7 @@ of the person or team responsible for reviewing proposed changes. -->
 
 ## Naming Conventions
 
-Naming of variables should descriptive where needed. Loop Control Variables can use `i` if warranted. Most of these conventions are enforced through the clang-tidy and clang-format configuration files. See the file `simplnx/docs/Code_Style_Guide.md` for a more in depth explanation.
+Naming of variables should descriptive where needed. Loop Control Variables can use `i` if warranted. Most of these conventions are enforced through the clang-tidy and clang-format configuration files. The project's coding rules are in `simplnx/docs/Coding_Knowledge_Base.md`.
 
 
 ## Filter Checklist

@@ -1,8 +1,8 @@
 # AGENTS.md
 
 Guidance for every coding agent working in this repository. The coding rules are in the `bluequartz-skills` skills
-below and in the two documents they point to, the code style guide and the coding knowledge base. This file holds what
-they cannot know about this checkout.
+below and in the document they point to, the coding knowledge base. This file holds what they cannot know about this
+checkout.
 
 ## Required skills
 
@@ -19,10 +19,10 @@ Also load every task skill whose description matches the work that the change co
 parallel code, `ooc-architecture` for out-of-core storage, `pipeline-files` for `.d3dpipeline` files, and
 `github-workflow` for commits and pull requests. The plugin's skill list gives each skill's description.
 
-The skills, DREAM3D-NX and SimplnxOoc are private BlueQuartz repositories. An agent without access to them follows
-[the code style guide](docs/Code_Style_Guide.md) and [the coding knowledge base](docs/Coding_Knowledge_Base.md), which
-hold the rules of this project, and runs the in-core build and tests. The pull request lists what it could not do: the
-skills it could not load and the out-of-core validation it could not run. A maintainer completes that validation.
+The skills, DREAM3D-NX and SimplnxOoc are private BlueQuartz repositories. An agent without access to them follows [the
+coding knowledge base](docs/Coding_Knowledge_Base.md), which holds the rules of this project, and runs the in-core build
+and tests. The pull request lists what it could not do: the skills it could not load and the out-of-core validation it
+could not run. A maintainer completes that validation.
 
 ## Where new rules go
 
@@ -30,14 +30,16 @@ Record a rule when a reviewer or the user had to correct something that no docum
 came from it. Record it in exactly one place. Search all of them first and
 update an existing rule instead of adding a second one.
 
-- `docs/Coding_Knowledge_Base.md`: a lesson from a real defect in simplnx or its plugins. State the rule, the evidence
-  (what broke and the pull request or issue that fixed it) and how to recognize it next time, using the entry format
-  in that file. When a rule comes from a defect, it goes here even if it is also a convention.
-- `docs/Code_Style_Guide.md`: a convention of this project that well-written C++ could still break (names, layout,
-  project APIs, filter and test structure), with no defect behind it.
+- `docs/Coding_Knowledge_Base.md`: a rule of this project that was broken in many places, either a defect that recurred
+  or a convention that several changes missed. Write it in the entry format of that file: the rule, an example of the
+  broken rule (what broke, where, and the pull request or issue), why it fails, what to look for and the pattern to use.
+  A fix that was needed in one place only does not get an entry; a systemic class of defects that produce wrong data
+  (see the `bq-review-code` skill) always does.
+- Nowhere: a rule that a tool already enforces (`.clang-format` through the *clang-format pr* check, line endings
+  through `.gitattributes`).
 - A `bluequartz-skills` skill: a general C++ rule that applies to every BlueQuartz repository
-  (`cpp-best-practices`), or a procedure (how to implement, test, review or publish). Skills point to the two
-  documents above; they do not copy their rules. Skill changes go to the `bluequartz-skills` plugin repository, so
+  (`cpp-best-practices`), or a procedure (how to implement, test, review or publish). Skills point to the knowledge
+  base above; they do not copy its rules. Skill changes go to the `bluequartz-skills` plugin repository, so
   they cannot be part of a change here: open a pull request or an issue there and link it from this pull request.
   Without access to that repository, describe the proposed skill change in the pull request description.
 - This file: only facts about this checkout that no skill can know, such as layout and build and test commands.
@@ -55,7 +57,7 @@ simplnx is the C++20 data-processing library behind DREAM3D-NX. It has no UI dep
 - `src/Plugins/<Plugin>/`: in-tree filter plugins. Each holds its filters, `Filters/Algorithms/`, `docs/` (one Markdown
   page per filter) and `test/`.
 - `src/nxrunner/`: the command-line pipeline runner. `test/`: core library tests. `docs/`: developer documentation,
-  including `docs/Code_Style_Guide.md`.
+  including `docs/Coding_Knowledge_Base.md`.
 - Out-of-tree filter plugins, such as SimplnxReview, live in their own repositories and join the build through
   `SIMPLNX_PLUGIN_SEARCH_DIRS` and `SIMPLNX_EXTRA_PLUGINS`. These variables do not enable SimplnxOoc. When you need
   out-of-core storage, follow the build instructions of the SimplnxOoc repository.
