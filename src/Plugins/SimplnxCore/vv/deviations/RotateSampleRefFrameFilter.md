@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`RotateSampleRefFrameFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. On the **supported domain** (a 90/180/270-degree rotation about the X, Y, or Z axis) SIMPLNX and 6.5.171 are **bit-identical** — same output dimensions and same voxel values on all four A/B fixtures (see `../comparisons/RotateSampleRefFrameFilter/results.md`). The single deviation below is about rotations *outside* that domain.
+Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}`) in the Sampling plugin. On the **supported domain** (a 90/180/270-degree rotation about the X, Y, or Z axis) SIMPLNX and 6.5.171 are **bit-identical** — same output dimensions and same voxel values on all four A/B fixtures (see `../comparisons/RotateSampleRefFrameFilter/results.md`). Those four isotropic fixtures do not cover anisotropic three-cycle rotations. The deviations below include that correction.
 
 ---
 
@@ -25,3 +25,12 @@ Legacy equivalent: `RotateSampleRefFrame` (SIMPL UUID `{e25d9b4c-2b37-578c-b1de-
 **Blast radius — internal callers.** `ReadH5Ebsd` (`ReadH5Ebsd.cpp`) forwards the sample-reference-frame transform stored in the `.h5ebsd` file directly into this filter with slice-by-slice enabled, and propagates preflight errors. If a file's *recommended* sample transform is not a lossless, Z-preserving rotation (for example a stored 90° about X, which trips `-6851`, or any non-group angle, which trips `-6850`), the entire H5EBSD import now fails preflight with an error naming a filter the user never placed. The prior behavior was a silently corrupted (slice-pinned) import, so failing loudly is arguably correct, but the message can be confusing in that context. The practical workaround is to uncheck *Use Recommended Transformations* in `ReadH5Ebsd` (or apply the transform separately). This is called out here so the failure mode is documented rather than surprising.
 
 **Recommendation:** Trust SIMPLNX. For an arbitrary rotation with interpolation, use the `Apply Transformation To Geometry` filter, which is designed for lossy resampling rotations (nearest-neighbor or trilinear). The legacy result for a lossy rotation was a silent lossy resample, not a faithful reference-frame rotation. For H5EBSD imports whose recommended transform is lossy, uncheck *Use Recommended Transformations* in `ReadH5Ebsd`.
+
+## RotateSampleRefFrameFilter-D2
+
+- **Filter UUID:** `d2451dc1-a5a1-4ac2-a64d-7991669dcffc`
+- **Status:** active
+- **Symptom:** DREAM3D 6.5.171 errata KI-008 assigns spacing from the wrong source axis for three-cycle rotations. Anisotropic output spacing and dimensions are wrong.
+- **Correction:** Select the source axis from each output matrix row. For R(x,y,z)=(z,x,y), spacing (2,3,5) becomes (5,2,3).
+- **Evidence:** The inline analytical regression checks dimensions and every voxel in both Direct and Scanline paths. Both paths failed before the fix. No new legacy binary comparison was run.
+- **Recommendation:** Use the corrected output. Affected anisotropic rotations intentionally differ from DREAM3D 6.5.171.
