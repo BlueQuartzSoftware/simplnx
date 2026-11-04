@@ -53,7 +53,7 @@ A **Feature** is a group of cells with the same Feature Id. A **Feature Attribut
 
 Renumbering alone does not correct these values. It compacts Feature Ids. It does not recompute feature values.
 
-*Clear Feature Attribute Matrix* is on by default. It recreates the selected matrix in the resampled geometry with no arrays. This removes numeric arrays, string arrays, and **NeighborLists** (lists of neighboring features). Recompute any arrays needed by later filters. A later filter that selects a cleared array fails preflight until that array is created again.
+*Clear Feature Attribute Matrix* is on by default. It recreates the selected matrix in the resampled geometry with no arrays. This removes numeric arrays, string arrays, and **NeighborLists** (lists of neighboring features). Recompute any arrays needed by later filters. A later filter that selects a cleared array fails preflight until that array is created again. Pipelines converted from DREAM.3D 6.x set Clear to the old "Renumber Features" setting, because the old filter changed the Feature data only when it renumbered features.
 
 ### Clearing and Renumbering Modes
 

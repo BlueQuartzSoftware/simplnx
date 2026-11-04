@@ -991,7 +991,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL Backwards Compatibility",
       CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == true);
       CHECK(args.value<bool>(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key) == false);
       CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"DataContainer", "CellData"}));
+      CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"DataContainer", "CellFeatureData"}));
       CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CreatedImageGeometry_Key) == DataPath({"DataContainer"}));
     }
@@ -1168,4 +1168,83 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM selected through sec
   }
   CHECK(source.getSize() == 3);
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL conversion Feature options", "[SimplnxCore][ResampleImageGeomFilter][SIMPL]")
+{
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test/simpl_conversion/6_5/ResampleImageGeomFilter.json";
+  std::ifstream stream(fixturePath);
+  REQUIRE(stream.is_open());
+  auto json = nlohmann::json::parse(stream).at("0");
+  json["CellFeatureAttributeMatrixPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}};
+  const bool renumber = GENERATE(true, false);
+  json["RenumberFeatures"] = renumber ? 1 : 0;
+  auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  CHECK(converted.value().value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
+  CHECK(converted.value().value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == renumber);
+  CHECK(converted.value().value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Image", "Cell Feature Data"}));
+
+  SECTION("Missing RenumberFeatures follows the standard conversion error")
+  {
+    json.erase("RenumberFeatures");
+    auto missing = ResampleImageGeomFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_INVALID(missing);
+    CHECK(missing.errors().front().code == -571);
+  }
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL converted preflight", "[SimplnxCore][ResampleImageGeomFilter][SIMPL]")
+{
+  UnitTest::LoadPlugins();
+  auto dataStructure = CreateFeatureResampleFixture();
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test/simpl_conversion/6_5/ResampleImageGeomFilter.json";
+  std::ifstream stream(fixturePath);
+  REQUIRE(stream.is_open());
+  auto json = nlohmann::json::parse(stream).at("0");
+  json["CellAttributeMatrixPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", ""}};
+  json["CellFeatureAttributeMatrixPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}};
+  json["FeatureIdsArrayPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", "FeatureIds"}};
+  json["NewDataContainerPath"] = {{"Data Container Name", "Resampled"}};
+  json["RenumberFeatures"] = 1;
+  auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  auto preflight = ResampleImageGeomFilter().preflight(dataStructure, converted.value());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto cleared = std::find_if(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(cleared != preflight.outputValues.end());
+  CHECK(cleared->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL 6.5 ChangeResolution keys", "[SimplnxCore][ResampleImageGeomFilter][SIMPL]")
+{
+  // Keys and value shapes written by DREAM.3D 6.5.171 ChangeResolution: "Resolution" and a string "NewDataContainerName".
+  // Flags are unsigned because that is how nlohmann parses the 0 and 1 in a legacy pipeline file.
+  const bool renumber = GENERATE(true, false);
+  const bool saveAsNew = GENERATE(true, false);
+  nlohmann::json json = {{"Filter_Name", "ChangeResolution"},
+                         {"Filter_Uuid", "{1966e540-759c-5798-ae26-0c6a3abc65c0}"},
+                         {"Resolution", {{"x", 2.0}, {"y", 3.0}, {"z", 4.0}}},
+                         {"RenumberFeatures", renumber ? 1U : 0U},
+                         {"SaveAsNewDataContainer", saveAsNew ? 1U : 0U},
+                         {"NewDataContainerName", "Resampled"},
+                         {"CellAttributeMatrixPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", ""}}},
+                         {"CellFeatureAttributeMatrixPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}}},
+                         {"FeatureIdsArrayPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", "FeatureIds"}}}};
+  auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  const Arguments& args = converted.value();
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == renumber);
+  CHECK(args.value<bool>(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key) == !saveAsNew);
+  CHECK(args.value<VectorFloat32Parameter::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{2.0F, 3.0F, 4.0F});
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"Image"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Image", "Cell Feature Data"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"Image", "Cell Data", "FeatureIds"}));
+  CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CreatedImageGeometry_Key) == DataPath({"Resampled"}));
+
+  UnitTest::LoadPlugins();
+  auto dataStructure = CreateFeatureResampleFixture();
+  auto preflight = ResampleImageGeomFilter().preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 }

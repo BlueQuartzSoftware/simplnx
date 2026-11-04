@@ -2328,6 +2328,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL Backwards Compatibility",
       const Arguments args = pipelineFilter->getArguments();
       // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
       // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<bool>(CropImageGeometryFilter::k_UsePhysicalBounds_Key) == false);
       CHECK(args.value<bool>(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key) == false);
       CHECK(args.value<DataPath>(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<bool>(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key) == true);
@@ -2722,4 +2723,62 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Feature AM selected through sec
   }
   CHECK(source.getSize() == 3);
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL conversion Feature options", "[SimplnxCore][CropImageGeometryFilter][SIMPL]")
+{
+  const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test/simpl_conversion/6_5/CropImageGeometryFilter.json";
+  std::ifstream stream(fixturePath);
+  REQUIRE(stream.is_open());
+  auto json = nlohmann::json::parse(stream).at("0");
+  json["CellFeatureAttributeMatrixPath"] = {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}};
+  const bool renumber = GENERATE(true, false);
+  json["RenumberFeatures"] = renumber ? 1 : 0;
+  auto converted = CropImageGeometryFilter::FromSIMPLJson(json);
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  CHECK(converted.value().value<bool>(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
+  CHECK(converted.value().value<bool>(CropImageGeometryFilter::k_RenumberFeatures_Key) == renumber);
+  CHECK(converted.value().value<DataPath>(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"Image", "Cell Feature Data"}));
+
+  SECTION("Missing RenumberFeatures follows the standard conversion error")
+  {
+    json.erase("RenumberFeatures");
+    auto missing = CropImageGeometryFilter::FromSIMPLJson(json);
+    SIMPLNX_RESULT_REQUIRE_INVALID(missing);
+    CHECK(missing.errors().front().code == -571);
+  }
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL conversion uses voxel bounds", "[SimplnxCore][CropImageGeometryFilter][SIMPL]")
+{
+  const nlohmann::json json = {
+      {"Filter_Name", "CropImageGeometry"},
+      {"Filter_Uuid", "{baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf}"},
+      {"XMin", 2U},
+      {"YMin", 1U},
+      {"ZMin", 0U},
+      {"XMax", 3U},
+      {"YMax", 2U},
+      {"ZMax", 0U},
+      {"SaveAsNewDataContainer", 1U},
+      {"NewDataContainerName", "Cropped"},
+      {"RenumberFeatures", 1U},
+      {"CellAttributeMatrixPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", ""}}},
+      {"FeatureIdsArrayPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Data"}, {"Data Array Name", "FeatureIds"}}},
+      {"CellFeatureAttributeMatrixPath", {{"Data Container Name", "Image"}, {"Attribute Matrix Name", "Cell Feature Data"}, {"Data Array Name", ""}}},
+  };
+  auto converted = CropImageGeometryFilter::FromSIMPLJson(json);
+  SIMPLNX_RESULT_REQUIRE_VALID(converted);
+  const auto& args = converted.value();
+  CHECK(args.value<bool>(CropImageGeometryFilter::k_UsePhysicalBounds_Key) == false);
+  CHECK(args.value<std::vector<uint64>>(CropImageGeometryFilter::k_MinVoxel_Key) == std::vector<uint64>{2, 1, 0});
+  CHECK(args.value<std::vector<uint64>>(CropImageGeometryFilter::k_MaxVoxel_Key) == std::vector<uint64>{3, 2, 0});
+
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureCropFixture();
+  auto result = CropImageGeometryFilter().execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* cropped = ds.getDataAs<ImageGeom>(DataPath({"Cropped"}));
+  REQUIRE(cropped != nullptr);
+  CHECK(cropped->getDimensions() == SizeVec3(2, 2, 1));
 }
