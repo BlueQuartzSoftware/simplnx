@@ -16,6 +16,8 @@ The following image types are supported:
 - TIFF / TIF, including multi-page TIFF read as a 3D Z-stack (via libtiff)
 - NRRD (`.nrrd` attached, `.nhdr` detached) (ITK-free, zlib only)
 
+If the first page of a multi-page TIFF is RGB and a later page is grayscale, the filter fails with error `-2007` when it reads that later page. It fails before it copies any pixels of that page. This intentionally differs from DREAM3D 6.5.171, which could crash on mixed-page TIFF files (KI-053).
+
 ### NRRD Volumes
 
 For a [NRRD](https://teem.sourceforge.net/nrrd/format.html) input (attached single-file `.nrrd`, or detached `.nhdr` + external data file), the geometry is built directly from the NRRD header. Supported header features:
