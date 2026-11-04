@@ -28,4 +28,5 @@ target_sources(SimplnxUnitTestCommon
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/DataObjectComparison.hpp
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/HDF5DatasetProbe.hpp
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/ScopedDefaultFormatResolver.hpp
+    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/FailCloseVfd.hpp
 )
