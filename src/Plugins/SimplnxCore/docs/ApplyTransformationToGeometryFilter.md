@@ -21,6 +21,8 @@ For Image Geometries, transformation requires re-gridding because cell positions
 - **Interpolation Method** -- how cell data values are sampled from the old grid (see below).
 - **Cell Attribute Matrix** -- which attribute matrix holds the cell data to transform.
 
+For transforms classified as grid rotations, each output axis uses its matched source axis spacing and scale. This also applies when uneven scaling includes a small shear within the grid tolerance. For example, the transform (x,y,z) to (x+5y,100000y,z) changes spacing (2,3,5) to (2,300000,5).
+
 ### Image Geometry Caveat: Successive Transformations
 
 Applying multiple transformations one-at-a-time to an Image Geometry produces visible re-gridding artifacts because each intermediate step re-samples the data. The following example shows a 90-degree rotation done as a single step versus as two 45-degree steps:
