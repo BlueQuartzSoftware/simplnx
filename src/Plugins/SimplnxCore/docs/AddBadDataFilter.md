@@ -32,6 +32,8 @@ This means a volume fraction of 0.2 in boundary-only mode introduces far fewer b
 
 To flag a cell as bad, the filter sets the corresponding tuple in every **Attribute Array** in the same **Attribute Matrix** as the *Boundary Euclidean Distances* input to **0**. This includes Feature Ids, Phases, Quaternions, and any other cell-level data sharing that matrix. Be aware that "0" may be a legitimate value for some arrays (e.g., a phase index) and that the convention here is shared with experimental cleanup filters that interpret Feature Id 0 as bad.
 
+The filter rejects StringArray and NeighborList objects in the geometry's Cell Data Attribute Matrix during preflight. The error identifies the array to move. DREAM3D 6.5.171 did not check these types before execution.
+
 ### Prerequisite Steps
 
 This filter needs to know which cells are near a feature boundary. That information comes from a Manhattan-distance map, which must be computed and converted before this filter runs:
