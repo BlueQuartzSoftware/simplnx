@@ -47,9 +47,9 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode mode) c
 
     for(uint8 i = 0; i < 3; i++)
     {
-      // absolute center - absolute min point = absolute offset
-      float32 offset = std::abs(centerPoint[i]) - std::abs(minPoint[i]);
-      // subtract absolute offset and save point into "new" origin
+      // Preserve the signed offset from the bounds minimum to their center.
+      float32 offset = centerPoint[i] - minPoint[i];
+      // Shift the bounds center to the requested origin.
       origin[i] -= offset;
     }
     image->setOrigin(origin);
