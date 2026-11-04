@@ -45,7 +45,8 @@ public:
     InconsistentGeometryElements = -460,
     InconsistentGeometryElementArrayTypes = -461,
     InconsistentGeometryElementDataTypes = -462,
-    InconsistentGeometryElementCompDims = -463
+    InconsistentGeometryElementCompDims = -463,
+    NodeGeometryHasNoElements = -464
   };
 
   Result<> operator()();
