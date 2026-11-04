@@ -91,6 +91,16 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
     return MakePreflightErrorResult(-2070, "No cell data arrays are selected. You must select at least one array.");
   }
 
+  for(const auto& arrayPath : pSelectedDataArrayPathsValue)
+  {
+    const usize components = dataStructure.getDataRefAs<IDataArray>(arrayPath).getNumberOfComponents();
+    if(components < 1 || components > 4)
+    {
+      return MakePreflightErrorResult(
+          -12073, fmt::format("Array '{}' has {} components. Legacy VTK SCALARS requires 1 to 4 components. Select an array with 1 to 4 components.", arrayPath.toString(), components));
+    }
+  }
+
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {

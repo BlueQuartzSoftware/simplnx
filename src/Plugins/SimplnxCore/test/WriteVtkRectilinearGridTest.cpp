@@ -621,3 +621,47 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibi
     }
   }
 }
+
+TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component limits", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const usize components = GENERATE(1, 2, 3, 4, 5, 6, 9);
+  const bool binary = GENERATE(false, true);
+  CAPTURE(components, binary);
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({1, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  const DataPath arrayPath({"Image", "Cells", "Values"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
+  auto* values = Float32Array::Create(dataStructure, "Values", store, cells->getId());
+  REQUIRE(values != nullptr);
+
+  WriteVtkRectilinearGridFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_OutputFile_Key,
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "component_limits_RectilinearGrid.vtk"));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key, std::make_any<bool>(binary));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{arrayPath}));
+
+  // Independent format oracle: legacy VTK SCALARS permits 1 through 4 components.
+  // Counts 5, 6 and 9 must be rejected before a file can be written, for either encoding.
+  IFilter::PreflightResult result;
+  REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
+  if(components <= 4)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == -12073);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
