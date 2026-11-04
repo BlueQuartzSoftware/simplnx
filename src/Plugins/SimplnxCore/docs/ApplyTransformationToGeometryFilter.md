@@ -140,7 +140,7 @@ represents the 4x4 matrix:
 
 **Cleared Feature Data** lists the arrays removed from the selected Feature Attribute Matrix.
 If Renumber is on, it also states that Feature Ids and the matrix size change.
-**Feature Data Not Cleared** warns that retained Feature values can describe the original geometry.
+The preflight value **Feature Data Not Cleared** explains that retained Feature values can describe the original geometry. These values are information, not warnings.
 
 Errors -67451 and -67452 are checked whenever Clear is on, also when Renumber is off.
 Errors -67453 and -67454 are checked only when Clear and Renumber are both on.
