@@ -50,6 +50,7 @@ repository, but contains no code from one.
   - [Check the file close and the stream state before you report a successful write](#check-the-file-close-and-the-stream-state-before-you-report-a-successful-write)
   - [Check for cancel in every long loop](#check-for-cancel-in-every-long-loop)
   - [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast)
+  - [Let the user choose whether a NaN input value is an error or is skipped](#let-the-user-choose-whether-a-nan-input-value-is-an-error-or-is-skipped)
   - [Copy every field that sets behavior when you clone an object](#copy-every-field-that-sets-behavior-when-you-clone-an-object)
 - [Feature data](#feature-data)
   - [Do not compute anything for feature 0, and give empty features a defined output](#do-not-compute-anything-for-feature-0-and-give-empty-features-a-defined-output)
@@ -630,6 +631,52 @@ of `cpp-best-practices`.
 
 **Pattern to use:** `SaturateCastFromDouble<U>()` in
 `simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp`.
+
+### Let the user choose whether a NaN input value is an error or is skipped
+
+**Rule:** a calculation in which a NaN input value would change a result other than its own element's output, or would
+reach a comparison, an ordering, an index or an integer conversion, lets the user choose how NaN is handled. This covers
+reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and unique-value
+counts, per feature or per region), neighborhood operations on floating-point data (smoothing, median and gradient
+filters, morphology) and decisions made from a value (thresholds, segmentation tolerances, bin and index selection,
+conversion to an integer).
+
+- The filter has a choice parameter **NaN Value Handling** with two choices: **Error** (the default) and **Warning**.
+- **Error:** the algorithm stops at the first NaN value with a filter-specific error. The message names the array and
+  the tuple, and says that setting **NaN Value Handling** to **Warning** skips NaN values instead.
+- **Warning:** the algorithm skips every NaN value and reports one warning with the number of values it skipped. A
+  reduction or a neighborhood leaves the value out; a decision gives the NaN element a defined output that the filter
+  documentation states (for example "not selected" or "no bin").
+- The check reads array values, so it runs in execute. The parameter has no effect on integer arrays.
+- The in-core and out-of-core algorithms use one shared NaN test and skip rule.
+
+Element-wise math, where NaN in gives NaN out at the same element and no other element changes (Array Calculator, an
+orientation conversion of one tuple), may let NaN pass through. A NaN that the algorithm itself produces from degenerate
+input (a zero-length vector, a singular matrix) is a degenerate-input problem, not this rule.
+
+**Example of the broken rule:** **Compute Bounding Box Stats** gives two different wrong answers for Float32 values
+{NaN, 1, 2}: the in-core algorithm treats NaN as equal to every value (`Equivalent()` in
+`ComputeBoundingBoxStatsDirect`) and reports one unique value and a NaN median, and the out-of-core algorithm sorts with
+`operator<`, which is undefined when a value is NaN (issue #1867, `ComputeBoundingBoxStatsFilter#9`). **Compute Array
+Histogram** groups values with the same equality test, and the shared statistics helpers in `StatisticsCalculations.hpp`
+and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
+(issue #1874).
+
+**Why:** every comparison with NaN is false. `operator<` is then not a strict weak ordering, so `std::sort`,
+`std::stable_sort` and `std::map` keys are undefined; a threshold or a bin search puts NaN on one side without saying
+so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN to an
+integer is undefined behavior. Whether NaN means "bad data" or "no measurement" depends on the user's data, so the
+code cannot pick one answer for everyone.
+
+**What to look for:**
+
+- `std::sort`, `std::stable_sort`, `std::map`, `std::set` or `std::unique` over floating-point input values;
+- an equivalence written as `!(a < b) && !(b < a)` on floating-point values;
+- a running minimum, maximum or sum over input values with no NaN test;
+- a threshold, tolerance or bin index computed from an input value with no NaN test.
+
+**Pattern to use:** the **NaN Value Handling** parameter and the shared NaN skip rule of **Compute Bounding Box Stats**
+(the fix for `ComputeBoundingBoxStatsFilter#9` of issue #1867).
 
 ### Copy every field that sets behavior when you clone an object
 
