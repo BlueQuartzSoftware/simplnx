@@ -106,19 +106,6 @@ Result<> PadImageGeometry::operator()()
   {
     return {};
   }
-  if(m_InputValues->XMinMax[0] == 0 && m_InputValues->XMinMax[1] == 0 && m_InputValues->PadInX)
-  {
-    return {};
-  }
-  if(m_InputValues->YMinMax[0] == 0 && m_InputValues->YMinMax[1] == 0 && m_InputValues->PadInY)
-  {
-    return {};
-  }
-  if(m_InputValues->ZMinMax[0] == 0 && m_InputValues->ZMinMax[1] == 0 && m_InputValues->PadInZ)
-  {
-    return {};
-  }
-
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to pad
   SizeVec3 imageDims = srcImageGeom.getDimensions();
 
