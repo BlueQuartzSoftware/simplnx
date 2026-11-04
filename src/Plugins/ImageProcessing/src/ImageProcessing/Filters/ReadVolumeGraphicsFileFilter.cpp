@@ -22,6 +22,7 @@ namespace
 constexpr int32 k_FileDoesNotExist = -91501;
 constexpr int32 k_IncorrectTokenCount = -91502;
 constexpr int32 k_VgiParseError = -91503;
+constexpr int32 k_UnsupportedDataType = -91505;
 constexpr StringLiteral k_Millimeter = "mm";
 
 // File Block
@@ -310,6 +311,13 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
       }
       geomBlock = result.value();
     }
+  }
+
+  if(fileBlock.Datatype != "float" || fileBlock.BitsPerElement != 32)
+  {
+    return MakeErrorResult<ReadVolumeGraphicsFileFilter::HeaderMetadata>(
+        k_UnsupportedDataType,
+        fmt::format("Unsupported Volume Graphics Datatype '{}' with BitsPerElement {} in '{}'. Only 32-bit float data is supported.", fileBlock.Datatype, fileBlock.BitsPerElement, vgHeaderFilePath));
   }
 
   vgHeaderFile.clear();
