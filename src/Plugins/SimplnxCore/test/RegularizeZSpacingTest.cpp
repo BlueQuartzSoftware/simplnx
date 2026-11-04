@@ -249,6 +249,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Supported Extensions", "[Simpl
 
   const RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -270,6 +274,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Unsupported Extension", "[Simp
 
   const RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
@@ -291,6 +299,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Missing Extension", "[SimplnxC
 
   const RegularizeZSpacingFilter filter;
   Arguments args;
+  args.insertOrAssign(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularizeZSpacingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputGeometryPath));
   args.insertOrAssign(RegularizeZSpacingFilter::k_InputFile_Key, std::make_any<fs::path>(zBoundsFile));
   args.insertOrAssign(RegularizeZSpacingFilter::k_NewZRes_Key, std::make_any<float32>(2.0F));
