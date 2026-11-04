@@ -82,7 +82,7 @@ set(DISABLED_TESTS
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})
 
-if(DREAM3DNX_USE_OOC)
+if(DREAM3DNX_ENABLE_OOC)
   add_test(NAME OrientationAnalysisOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
   set_tests_properties(OrientationAnalysisOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500)
