@@ -18,6 +18,8 @@ Simple command with arguments (for Windows users)
 
 > C:/Applications/DREAM3D-NX/nxrunner.exe --execute C:/Applications/DREAM3D-NX/Data/MyPipeline.d3dpipeline
 
+Spaces between arguments are ignored. Spaces inside double quotes are preserved. This corrects DREAM3D 6.5.171 behavior, which could add a leading space to an argument after a quoted argument or repeated spaces.
+
 For a command with spaces in the path
 
 > "C:/Program Files/DREAM3D-NX/nxrunner.exe" --execute "C:/Program Files/DREAM3D-NX/pipelines/OrientationAnalysis/Small_IN100_Processing/(01) Small IN100 Archive.d3dpipeline"

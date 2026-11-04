@@ -12,6 +12,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ExecuteProcess.hpp"
 #include "SimplnxCore/Filters/ExecuteProcessFilter.hpp"
 
 #include <filesystem>
@@ -143,6 +144,26 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[
       CHECK(args.value<std::string>(ExecuteProcessFilter::k_Arguments_Key) == "TestName");
       CHECK(args.value<bool>(ExecuteProcessFilter::k_Blocking_Key) == true);
       CHECK(args.value<int32>(ExecuteProcessFilter::k_Timeout_Key) == 5);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ExecuteProcessFilter: Argument separator regression", "[SimplnxCore][ExecuteProcessFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Oracle: spaces outside quotes separate tokens; spaces inside quotes are literal.
+  // Each command below therefore has exactly the explicitly listed arguments.
+  const std::vector<std::pair<std::string, std::vector<std::string>>> cases = {
+      {R"("/a b/prog" --help)", {"/a b/prog", "--help"}}, {"prog  --help", {"prog", "--help"}}, {R"(prog "a b" --help)", {"prog", "a b", "--help"}},
+      {R"(  "a b"   " c d "  )", {"a b", " c d "}},       {"prog --help", {"prog", "--help"}},
+  };
+  for(const auto& [command, expected] : cases)
+  {
+    DYNAMIC_SECTION(command)
+    {
+      const auto actual = ExecuteProcess::splitArgumentsString(command);
+      REQUIRE(actual == expected);
     }
   }
 }
