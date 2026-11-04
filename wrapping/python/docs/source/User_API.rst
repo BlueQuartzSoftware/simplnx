@@ -18,7 +18,7 @@ Error & Warning Reporting
 
    .. code:: python
 
-      result = cxor.ConvertOrientations.execute(data_structure=data_structure,
+      result = nxor.ConvertOrientations.execute(data_structure=data_structure,
                                           input_orientation_array_path=array_path,
                                           input_type=0,
                                           output_orientation_array_name='Quaternions',
@@ -545,7 +545,7 @@ General Parameters
     ensemble_info_parameter = []
     ensemble_info_parameter.append(["Hexagonal-High 6/mmm","Primary","Phase 1"])
     ensemble_info_parameter.append(["Cubic-High m-3m","Primary","Phase 2"])
-    result = cxor.CreateEnsembleInfoFilter.execute(data_structure=data_structure,
+    result = nxor.CreateEnsembleInfoFilter.execute(data_structure=data_structure,
                              cell_ensemble_attribute_matrix_name=nx.DataPath(["Phase Data"]), 
                              crystal_structures_array_name="CrystalStructures", 
                              phase_names_array_name="Phase Names", 
@@ -643,7 +643,7 @@ General Parameters
     generated_file_list_value.increment_index = 1
     generated_file_list_value.padding_digits = 2
 
-    result = cximgproc.ReadImageStackFilter.execute(data_structure=data_structure, 
+    result = nximgproc.ReadImageStackFilter.execute(data_structure=data_structure, 
                                       cell_attribute_matrix_name="Cell Data", 
                                       image_data_array_name="Image Data", 
                                       output_image_geometry_path=nx.DataPath(["Image Stack"]), 
@@ -748,7 +748,7 @@ General Parameters
 
       data_structure = nx.DataStructure()
       # Create the ReadH5EbsdFileParameter and assign values to it.
-      h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+      h5ebsdParameter = nxor.ReadH5EbsdFileParameter.ValueType()
       h5ebsdParameter.euler_representation=0
       h5ebsdParameter.end_slice=117
       h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
@@ -757,7 +757,7 @@ General Parameters
       h5ebsdParameter.use_recommended_transform=True
 
       # Execute Filter with Parameters
-      result = cxor.ReadH5EbsdFilter.execute(
+      result = nxor.ReadH5EbsdFilter.execute(
          data_structure=data_structure,
          cell_attribute_matrix_name="Cell Data",
          cell_ensemble_attribute_matrix_name="Cell Ensemble Data",

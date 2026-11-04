@@ -425,9 +425,9 @@ set(PREBUILT_PIPELINE_NAMES
 )
 
 # -----------------------------------------------------------------------------
-# These pipelines need the ImageProcessing Plugin to write out Images
+# These pipelines need the NXImageProcessing Plugin to write out Images
 # -----------------------------------------------------------------------------
-if(TARGET ImageProcessing)
+if(TARGET NXImageProcessing)
   set(PREBUILT_PIPELINE_NAMES
     ${PREBUILT_PIPELINE_NAMES}
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Edax_IPF_Colors.d3dpipeline"
