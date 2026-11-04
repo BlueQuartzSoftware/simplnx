@@ -833,6 +833,40 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     polyDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Consistency checks above allow every input to omit a list. The geometry's defining element list is required.
+  std::string missingListName;
+  switch(geometryTypeOpt.value())
+  {
+  case IGeometry::Type::Edge:
+    if(!edgeArraysExist.front())
+    {
+      missingListName = INodeGeometry1D::k_SharedEdgeListName;
+    }
+    break;
+  case IGeometry::Type::Triangle:
+  case IGeometry::Type::Quad:
+    if(!faceArraysExist.front())
+    {
+      missingListName = INodeGeometry2D::k_SharedFacesListName;
+    }
+    break;
+  case IGeometry::Type::Tetrahedral:
+  case IGeometry::Type::Hexahedral:
+    if(!polyArraysExist.front())
+    {
+      missingListName = INodeGeometry3D::k_SharedPolyhedronListName;
+    }
+    break;
+  default:
+    break;
+  }
+  if(!missingListName.empty())
+  {
+    return {MakeErrorResult<OutputActions>(
+        to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoElements),
+        fmt::format("None of the chosen geometries has the required array '{}'.  Every {} geometry MUST have this array.", missingListName, GeometryTypeToString(geometryTypeOpt.value())))};
+  }
+
   // Create the output geometry with all its vertex, edge, face, and polyhedra attribute matrices and arrays
   OutputActions actions;
   IGeometry::Type geometryType = geometryTypeOpt.value();
