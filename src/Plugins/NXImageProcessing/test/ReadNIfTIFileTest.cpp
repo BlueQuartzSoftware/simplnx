@@ -1487,3 +1487,91 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[N
   REQUIRE(croppedGeom.getOrigin() == origin);
   UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
 }
+
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[ImageProcessing][ReadNIfTIFileFilter][L59]")
+{
+  UnitTest::LoadPlugins();
+
+  // The reader keeps positive spacing, the stored translation, and storage order.
+  // Reflection support is intentionally absent; each discarded sign must warn.
+  // 0: LPS sform (X, Y negative), 1: qfac = -1, 2: negative pixdim Y (qform), 3: positive qform control,
+  // 4: sform Y only, 5: sform Z only, 6: no transform with negative pixdim X, 7: positive sform control.
+  const auto kind = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+  const bool useAffine = GENERATE(true, false);
+  CAPTURE(kind, useAffine);
+  SyntheticNiftiParams params;
+  params.dims = {2, 2, 2};
+  params.spacing = {2.0f, 3.0f, 4.0f};
+  params.origin = {10.0f, 20.0f, 30.0f};
+  auto hdr = MakeHeader(params);
+  if(kind == 0)
+  {
+    hdr.sform_code = 1;
+    hdr.srow_x[0] = -2.0f;
+    hdr.srow_y[1] = -3.0f;
+    hdr.srow_z[2] = 4.0f;
+    hdr.srow_x[3] = 10.0f;
+    hdr.srow_y[3] = 20.0f;
+    hdr.srow_z[3] = 30.0f;
+  }
+  else if(kind == 1)
+  {
+    hdr.pixdim[0] = -1.0f;
+  }
+  else if(kind == 2)
+  {
+    hdr.pixdim[2] = -3.0f;
+  }
+  else if(kind == 4 || kind == 5 || kind == 7)
+  {
+    // Axis-aligned sform with spacing (2, 3, 4) and translation (10, 20, 30).
+    hdr.sform_code = 1;
+    hdr.srow_x[0] = 2.0f;
+    hdr.srow_y[1] = kind == 4 ? -3.0f : 3.0f;
+    hdr.srow_z[2] = kind == 5 ? -4.0f : 4.0f;
+    hdr.srow_x[3] = 10.0f;
+    hdr.srow_y[3] = 20.0f;
+    hdr.srow_z[3] = 30.0f;
+    if(kind == 7)
+    {
+      // The selected sform wins; unused qform and pixdim signs must not warn.
+      hdr.pixdim[0] = -1.0f;
+      hdr.pixdim[3] = -4.0f;
+    }
+  }
+  else if(kind == 6)
+  {
+    hdr.qform_code = 0;
+    hdr.pixdim[1] = -2.0f;
+  }
+  // kind 3 is the positive qform control.
+  const std::vector<uint8> voxels{0, 1, 2, 3, 4, 5, 6, 7};
+  const fs::path filePath = OutputDir() / "ignored_axis_flip.nii";
+  WriteNiftiFile(filePath, hdr, voxels, false);
+  const DataPath geomPath({"NIfTI Flip"});
+  const auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", false, useAffine);
+  DataStructure ds;
+  ReadNIfTIFileFilter filter;
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool warned = false;
+  for(const auto& warning : preflight.outputActions.warnings())
+  {
+    if(warning.code == -34750)
+    {
+      warned = true;
+      // Kind 0 is a 180-degree Z rotation, not a single-axis reflection.
+      // Describe the lost directions without promising a particular mirror.
+      CHECK(warning.message.find("does not preserve these directions") != std::string::npos);
+      CHECK(warning.message.find("mirrored along that axis") == std::string::npos);
+    }
+  }
+  CHECK(warned == (useAffine && kind != 3 && kind != 7));
+  const auto execute = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions() == SizeVec3(2, 2, 2));
+  REQUIRE(geom.getSpacing() == FloatVec3(2.0f, 3.0f, 4.0f));
+  REQUIRE(geom.getOrigin() == (useAffine && kind != 6 ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
+  RequireArrayEquals<uint8>(ds, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
+}
