@@ -25,6 +25,8 @@ The grid dimensions, spacing, and origin are read directly from the `.vtk` file'
 
 Each cell dimension is one less than its point dimension, with a minimum of one. This supports 2D planes, 1D lines, and a single point. For example, `DIMENSIONS 10 10 1` has 81 cells in a `9 9 1` grid. Zero point dimensions return an error during preflight. These behaviors intentionally differ from DREAM3D 6.5.171, which rejects valid cell data on singleton axes and can underflow on zero dimensions.
 
+On each axis with one point, both output geometries use the file origin minus half the spacing to keep the voxel center at the point's physical position.
+
 ### Example Input
 
     # vtk DataFile Version 2.0
