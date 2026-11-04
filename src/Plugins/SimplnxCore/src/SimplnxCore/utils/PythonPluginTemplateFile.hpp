@@ -323,6 +323,49 @@ inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPa
 }
 
 /**
+ * @brief Escapes text so that it can be placed between single quotes in Python source code.
+ * @param text The text to escape (UTF-8 bytes are kept as they are)
+ * @return The escaped text without the surrounding quotes
+ */
+inline std::string EscapePythonSingleQuotedString(std::string_view text)
+{
+  std::string escaped;
+  escaped.reserve(text.size());
+  for(const char character : text)
+  {
+    switch(character)
+    {
+    case '\\':
+      escaped.append("\\\\");
+      break;
+    case '\'':
+      escaped.append("\\'");
+      break;
+    case '\n':
+      escaped.append("\\n");
+      break;
+    case '\r':
+      escaped.append("\\r");
+      break;
+    case '\t':
+      escaped.append("\\t");
+      break;
+    default:
+      if(const auto byte = static_cast<unsigned char>(character); byte < 0x20 || byte == 0x7F)
+      {
+        escaped.append(fmt::format("\\x{:02x}", byte));
+      }
+      else
+      {
+        escaped.push_back(character);
+      }
+      break;
+    }
+  }
+  return escaped;
+}
+
+/**
  *
  * @param pluginName
  * @param pluginUUID
@@ -337,7 +380,6 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
 
   content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
   content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
-  content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
   content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
   content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
@@ -352,6 +394,8 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
                << "# FILTER_END: " << name << "\n\n";
   }
   content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
+  // Insert the human name last so its literal text is not interpreted as template tokens.
+  content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", EscapePythonSingleQuotedString(pluginShortName));
 
   return content;
 }

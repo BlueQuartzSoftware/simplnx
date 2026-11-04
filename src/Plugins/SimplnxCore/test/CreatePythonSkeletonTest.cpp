@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <fstream>
 #include <sstream>
@@ -260,4 +261,99 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Embedded NUL is not a separa
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -105150);
+}
+
+TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves plugin human name", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  CreatePythonSkeletonFilter filter;
+  const ScopedOutputDirectory outputDir("CreatePythonSkeleton_HumanName");
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, false);
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginOutputDirectory_Key, outputDir.path());
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginName_Key, std::string("LabChecks"));
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("Laboratory Quality Checks"));
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("CheckFeatureTable,CheckPhaseMetadata"));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const auto pluginDir = outputDir.path() / "LabChecks";
+  const auto sourceDir = pluginDir / "src" / "LabChecks";
+  const auto checkMetadata = [&sourceDir]() {
+    std::ifstream input(sourceDir / "Plugin.py");
+    REQUIRE(input.is_open());
+    std::stringstream buffer;
+    buffer << input.rdbuf();
+    REQUIRE_FALSE(input.bad());
+    auto text = buffer.str();
+    // A Windows checkout can embed the template with CRLF line endings.
+    text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
+    // Literal template context distinguishes the user-facing metadata from the machine identifier.
+    CHECK(text.find("    return 'Laboratory Quality Checks'\n\n  def vendor") != std::string::npos);
+    CHECK(text.find("    return 'LabChecks'\n\n  def vendor") == std::string::npos);
+    CHECK(text.find("class LabChecks:") != std::string::npos);
+    CHECK(text.find("    return 'LabChecks'\n\n  def description") != std::string::npos);
+    CHECK(text.find("from .CheckFeatureTable import CheckFeatureTable\n") != std::string::npos);
+    CHECK(text.find("from .CheckPhaseMetadata import CheckPhaseMetadata\n") != std::string::npos);
+  };
+  checkMetadata();
+  for(const auto& relativePath : {"src/LabChecks/Plugin.py", "src/LabChecks/__init__.py", "src/LabChecks/CheckFeatureTable.py", "src/LabChecks/CheckPhaseMetadata.py", "docs/CheckFeatureTable.md",
+                                  "docs/CheckPhaseMetadata.md", "environment.yml", "pyproject.toml", "conda/meta.yaml"})
+  {
+    CAPTURE(relativePath);
+    CHECK(fs::is_regular_file(pluginDir / relativePath));
+  }
+
+  // Existing-plugin mode adds filters without replacing the plugin's configured metadata.
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, true);
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginInputDirectory_Key, pluginDir);
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("Unused Existing Plugin Label"));
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("AdditionalCheck"));
+  auto existingPreflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(existingPreflight.outputActions);
+  auto existingResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(existingResult.result);
+  checkMetadata();
+  CHECK(fs::is_regular_file(sourceDir / "AdditionalCheck.py"));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Escapes plugin human name in Python literal", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  CreatePythonSkeletonFilter filter;
+  const ScopedOutputDirectory outputDir("CreatePythonSkeleton_HumanNameEscape");
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, false);
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginOutputDirectory_Key, outputDir.path());
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginName_Key, std::string("LabChecks"));
+  // Apostrophe, backslash, line break, tab and another control byte would end or break a single-quoted Python string.
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("O'Brien \\ Lab\nTools\tA\x01"));
+  args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("CheckFeatureTable"));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  std::ifstream input(outputDir.path() / "LabChecks" / "src" / "LabChecks" / "Plugin.py");
+  REQUIRE(input.is_open());
+  std::stringstream buffer;
+  buffer << input.rdbuf();
+  REQUIRE_FALSE(input.bad());
+  auto text = buffer.str();
+  text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
+  // Python reads this literal back as the exact human name.
+  CHECK(text.find("    return 'O\\'Brien \\\\ Lab\\nTools\\tA\\x01'\n\n  def vendor") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves template tokens in human name", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")
+{
+  const auto text = GeneratePythonPlugin("LabChecks", "Lab #PLUGIN_DESCRIPTION# #PLUGIN_FILTER_LIST# #PLUGIN_IMPORT_CODE#", "Description", {"CheckFeatureTable"});
+  CHECK(text.find("    return 'Lab #PLUGIN_DESCRIPTION# #PLUGIN_FILTER_LIST# #PLUGIN_IMPORT_CODE#'") != std::string::npos);
+  CHECK(text.find("from .CheckFeatureTable import CheckFeatureTable\n") != std::string::npos);
 }
