@@ -1,7 +1,15 @@
 #include <catch2/catch.hpp>
 
+#include <array>
+#include <atomic>
 #include <cmath>
 #include <limits>
+#include <thread>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "simplnx/DataStructure/DataStore.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/IdentifyDuplicateVertices.hpp"
 #include "SimplnxCore/Filters/IdentifyDuplicateVerticesFilter.hpp"
@@ -313,4 +321,112 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Cancel after sorting", 
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK((*mask)[0] == 0);
   CHECK((*mask)[1] == 0);
+}
+
+TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Store ordering equivalence", "[SimplnxCore][IdentifyDuplicateVerticesFilter][P19]")
+{
+  // An OOC-style test double exercises accessor dispatch without requiring a disk-store plugin.
+  class AccessorStore : public DataStore<float32>
+  {
+  public:
+    using DataStore<float32>::DataStore;
+    IDataStore::StoreType getStoreType() const override
+    {
+      return IDataStore::StoreType::OutOfCore;
+    }
+    float32 getValue(usize index) const override
+    {
+      Reads.fetch_add(1);
+      if(std::this_thread::get_id() != Owner)
+      {
+        WorkerRead.store(true);
+      }
+      return DataStore<float32>::getValue(index);
+    }
+    const std::thread::id Owner = std::this_thread::get_id();
+    mutable std::atomic_size_t Reads = 0;
+    mutable std::atomic_bool WorkerRead = false;
+  };
+  constexpr usize k_Count = 3072;
+  DataStore<float32> resident({k_Count}, {3}, 0);
+  AccessorStore accessor({k_Count}, {3}, 0);
+  std::vector<std::array<float32, 3>> points(k_Count);
+  for(usize i = 0; i < k_Count; ++i)
+  {
+    const usize point = (i * 197) % 257;
+    points[i] = {static_cast<float32>(point % 7), static_cast<float32>((point / 7) % 5), static_cast<float32>(point / 35)};
+    if(i % 19 == 0)
+    {
+      points[i][i % 3] = std::numeric_limits<float32>::quiet_NaN();
+    }
+    if(i % 23 == 0)
+    {
+      points[i][i % 3] = std::numeric_limits<float32>::infinity();
+    }
+    if(i % 29 == 0)
+    {
+      points[i][i % 3] = -std::numeric_limits<float32>::infinity();
+    }
+    if(i % 11 == 0)
+    {
+      points[i] = {i % 2 == 0 ? -0.0f : +0.0f, 0, 0};
+    }
+    for(usize c = 0; c < 3; ++c)
+    {
+      resident.setValue(3 * i + c, points[i][c]);
+      accessor.setValue(3 * i + c, points[i][c]);
+    }
+  }
+  REQUIRE(resident.getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(accessor.getStoreType() == IDataStore::StoreType::OutOfCore);
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    CAPTURE(axis);
+    // Independent brute-force rank oracle: count all smaller keys, never sort an expected array.
+    // Canonical NaN keys follow numbers; signed zeros compare equal. Index resolves every tie.
+    const auto key = [&](usize i) {
+      const auto coordinate = [&](usize c) {
+        const float32 value = points[i][(axis + c) % 3];
+        return std::pair{std::isnan(value), std::isnan(value) ? 0.0f : value};
+      };
+      return std::tuple{coordinate(0), coordinate(1), coordinate(2), i};
+    };
+    std::vector<IGeometry::MeshIndexType> expected(k_Count);
+    for(usize i = 0; i < k_Count; ++i)
+    {
+      usize rank = 0;
+      const auto current = key(i);
+      for(usize j = 0; j < k_Count; ++j)
+      {
+        rank += key(j) < current ? 1 : 0;
+      }
+      expected[rank] = i;
+    }
+    const auto alignment = static_cast<MeshingUtilities::AxialAlignment>(axis);
+    const std::atomic_bool cancel = false;
+    const auto fast = MeshingUtilities::OrderSharedVerticesAlongAxis(alignment, resident, cancel);
+    const auto serial = MeshingUtilities::OrderSharedVerticesAlongAxis(alignment, accessor, cancel);
+    CHECK(fast == expected);
+    CHECK(serial == expected);
+    CHECK(accessor.Reads.load() > 0);
+    CHECK_FALSE(accessor.WorkerRead.load());
+  }
+
+  // A small input can finish on one thread even in a parallel sort.
+  // This larger input makes worker threads read the store if the accessor path ever becomes parallel.
+  constexpr usize k_LargeCount = 131072;
+  DataStore<float32> largeResident({k_LargeCount}, {3}, 0);
+  AccessorStore largeAccessor({k_LargeCount}, {3}, 0);
+  for(usize i = 0; i < 3 * k_LargeCount; ++i)
+  {
+    const auto value = static_cast<float32>((i * 7919) % 1021);
+    largeResident.setValue(i, value);
+    largeAccessor.setValue(i, value);
+  }
+  const std::atomic_bool cancel = false;
+  const auto largeFast = MeshingUtilities::OrderSharedVerticesAlongAxis(MeshingUtilities::AxialAlignment::X, largeResident, cancel);
+  const auto largeSerial = MeshingUtilities::OrderSharedVerticesAlongAxis(MeshingUtilities::AxialAlignment::X, largeAccessor, cancel);
+  CHECK(largeSerial == largeFast);
+  CHECK(largeAccessor.Reads.load() > 0);
+  CHECK_FALSE(largeAccessor.WorkerRead.load());
 }

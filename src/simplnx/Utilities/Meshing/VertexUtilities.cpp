@@ -1,5 +1,11 @@
 #include "VertexUtilities.hpp"
 
+#include "simplnx/DataStructure/DataStore.hpp"
+
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/parallel_sort.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -21,12 +27,12 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
     return sorted;
   }
 
-  std::sort(sorted.begin(), sorted.end(), [&vertexList, axis](IGeometry::MeshIndexType lhs, IGeometry::MeshIndexType rhs) {
+  const auto compare = [axis](const auto& vertices, IGeometry::MeshIndexType lhs, IGeometry::MeshIndexType rhs) {
     for(usize c = 0; c < 3; ++c)
     {
       const usize offset = (static_cast<usize>(axis) + c) % 3;
-      const float32 left = vertexList[lhs * 3 + offset];
-      const float32 right = vertexList[rhs * 3 + offset];
+      const float32 left = vertices[lhs * 3 + offset];
+      const float32 right = vertices[rhs * 3 + offset];
       // NaNs follow numbers on each axis to preserve a strict weak order.
       const bool leftNaN = std::isnan(left);
       const bool rightNaN = std::isnan(right);
@@ -45,7 +51,24 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
     }
     // The first input instance precedes all copies, including signed zeros.
     return lhs < rhs;
-  });
+  };
+  if(const auto* store = dynamic_cast<const DataStore<float32>*>(&vertexList); vertexList.getStoreType() == IDataStore::StoreType::InMemory && store != nullptr)
+  {
+    // This resident buffer stays alive and unchanged until the synchronous sort joins.
+    // Workers read only the buffer, never the store API.
+    const float32* data = store->data();
+    const auto residentCompare = [data, &compare](IGeometry::MeshIndexType lhs, IGeometry::MeshIndexType rhs) { return compare(data, lhs, rhs); };
+#ifdef SIMPLNX_ENABLE_MULTICORE
+    tbb::parallel_sort(sorted.begin(), sorted.end(), residentCompare);
+#else
+    std::sort(sorted.begin(), sorted.end(), residentCompare);
+#endif
+  }
+  else
+  {
+    // Other stores may mutate internal state even on reads; keep their access serial.
+    std::sort(sorted.begin(), sorted.end(), [&vertexList, &compare](IGeometry::MeshIndexType lhs, IGeometry::MeshIndexType rhs) { return compare(vertexList, lhs, rhs); });
+  }
   return sorted;
 }
 
