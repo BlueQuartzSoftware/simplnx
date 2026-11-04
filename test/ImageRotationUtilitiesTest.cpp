@@ -94,6 +94,37 @@ TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the sca
   }
 }
 
+TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source axis", "[ImageRotationUtilities][CreateRotationArgs]")
+{
+  DataStructure dataStructure;
+  ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 2, 2});
+  image->setSpacing({2.0F, 3.0F, 5.0F});
+  image->setOrigin({0.0F, 0.0F, 0.0F});
+
+  ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
+  transform(0, 1) = 5.0F;
+  transform(1, 1) = 100000.0F;
+
+  // Hand calculation: (x,y,z) -> (x+5y,100000y,z). The normalized Y column's
+  // off-axis entry is about 5e-5, so the classified source axes remain X, Y, Z.
+  // Spacing is (2, 3*sqrt(100000^2+5^2), 5), which rounds to (2,300000,5) in float32.
+  // Input extents (4,6,10) become (4+5*6,100000*6,10) = (34,600000,10).
+  // Dividing by spacing and rounding gives dimensions (17,2,2).
+  const auto args = ImageRotationUtilities::CreateRotationArgs(*image, transform);
+  const std::array<float32, 3> expectedSpacing = {2.0F, 300000.0F, 5.0F};
+  const std::array<usize, 3> expectedDims = {17, 2, 2};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    CAPTURE(axis);
+    CHECK(args.outputSpacing[axis] == Approx(expectedSpacing[axis]));
+    CHECK(args.TransformedSpacing[axis] == Approx(expectedSpacing[axis]));
+    CHECK(args.outputDims[axis] == expectedDims[axis]);
+    CHECK(args.TransformedDims[axis] == expectedDims[axis]);
+  }
+}
+
 TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spacing", "[ImageRotationUtilities][CreateRotationArgs]")
 {
   DataStructure dataStructure;

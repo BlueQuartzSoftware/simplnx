@@ -82,6 +82,7 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   constexpr float32 k_GridTolerance = k_RawGridTolerance / (1.0F - k_RawGridTolerance);
   bool isGridRotation = true;
   std::array<bool, 3> usedRows = {false, false, false};
+  FloatVec3 gridSpacing;
   for(int32 col = 0; col < 3; ++col)
   {
     const float32 scale = rotationMatrix.col(col).norm();
@@ -99,6 +100,8 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
       break;
     }
     usedRows[sourceRow] = true;
+    // Preserve the classified source axis and its scale for this output row.
+    gridSpacing[sourceRow] = spacing[col] * scale;
     for(int32 row = 0; row < 3; ++row)
     {
       if(row != sourceRow && std::abs(normalized[row]) > k_GridTolerance)
@@ -111,10 +114,7 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   FloatVec3 outputSpacing;
   if(isGridRotation)
   {
-    // Each row identifies the source axis for an output axis. Scale belongs to that source column.
-    const FloatVec3 scaledSpacing = {spacing[0] * rotationMatrix.col(0).norm(), spacing[1] * rotationMatrix.col(1).norm(), spacing[2] * rotationMatrix.col(2).norm()};
-    outputSpacing = {DetermineSpacing(scaledSpacing, rotationMatrix.row(0).transpose()), DetermineSpacing(scaledSpacing, rotationMatrix.row(1).transpose()),
-                     DetermineSpacing(scaledSpacing, rotationMatrix.row(2).transpose())};
+    outputSpacing = gridSpacing;
   }
   else
   {
