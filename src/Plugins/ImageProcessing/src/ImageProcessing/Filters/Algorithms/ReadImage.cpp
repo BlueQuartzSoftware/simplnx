@@ -330,10 +330,9 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     const usize sourcePage = stream.singlePageOnly ? 0 : (stream.zStart + dz);
     const usize destSliceBase = dz * sliceElements;
 
-    // Per-page geometry check: the destination offsets are computed from page-0-derived dimensions, so a
-    // page whose dimensions / component count / scalar type differ would silently mis-map. Because the
-    // IImageIO interface exposes metadata only for page 0, we validate each page against the observed
-    // extent of its own decoded segments and reject any mismatch rather than mis-sizing the slice.
+    // Destination offsets use page 0's dimensions and pixel stride. Check each page's decoded segment
+    // byte counts and observed dimensions against page 0. IImageIO exposes metadata only for page 0,
+    // so these checks cannot detect different component counts or scalar types with the same byte width.
     usize observedRows = 0;
     usize observedColumns = 0;
 
@@ -362,8 +361,8 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
           if(pixels.size() != pixelCount * bytesPerPixel)
           {
             // Reject an incompatible segment before forming a span with page 0's pixel stride.
-            return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has a differing pixel byte count from page 0. Every page of a multi-page volume must share identical dimensions, "
-                                                      "component count, and scalar type.",
+            return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has a pixel byte count that differs from page 0. All pages must have the same dimensions, component count, and "
+                                                      "scalar type.",
                                                       sourcePage, inputFilePath.string()));
           }
 
@@ -412,8 +411,8 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
 
     if(observedRows != stream.srcHeight || observedColumns != stream.srcWidth)
     {
-      return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} that do not match page 0 ({}x{}). Every page of a "
-                                                "multi-page volume must share identical dimensions, component count, and scalar type.",
+      return MakeErrorResult(-2007, fmt::format("Page {} of '{}' has dimensions {}x{} that do not match page 0 ({}x{}). All pages must have the same dimensions, component count, and "
+                                                "scalar type.",
                                                 sourcePage, inputFilePath.string(), observedColumns, observedRows, stream.srcWidth, stream.srcHeight));
     }
     if(singlePage)
