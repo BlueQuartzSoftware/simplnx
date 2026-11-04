@@ -27,7 +27,6 @@ public:
   // Parameter Keys
   static constexpr StringLiteral k_ProjectionDimension_Key = "projection_dimension";
   static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static constexpr StringLiteral k_CopyNonCellAttributeMatrices_Key = "copy_non_cell_attribute_matrices";
   static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
   static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
   static constexpr StringLiteral k_OutputImageGeomName_Key = "output_image_geometry_name";

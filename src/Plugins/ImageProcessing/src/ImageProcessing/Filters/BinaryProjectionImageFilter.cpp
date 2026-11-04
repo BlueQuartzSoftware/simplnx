@@ -113,8 +113,6 @@ Parameters BinaryProjectionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
-  params.insert(std::make_unique<BoolParameter>(k_CopyNonCellAttributeMatrices_Key, "Copy Non-Cell Attribute Matrices",
-                                                "Move non-cell Attribute Matrices to the projected geometry in-place, or copy them when creating a new geometry.", false));
   params.insert(std::make_unique<Float64Parameter>(
       k_ForegroundValue_Key, "Foreground Value",
       "The value a projected column is set to when ANY voxel along the projection axis equals this value. For an integer input image the value must be finite and within the image type's range.",
@@ -143,7 +141,7 @@ Parameters BinaryProjectionImageFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType BinaryProjectionImageFilter::parametersVersion() const
 {
-  return 2;
+  return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -161,7 +159,6 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
   auto performInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  auto copyNonCellAttributeMatrices = filterArgs.value<bool>(k_CopyNonCellAttributeMatrices_Key);
   auto outputGeomName = filterArgs.value<std::string>(k_OutputImageGeomName_Key);
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
@@ -171,7 +168,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   // default SameAsInput OutTypeMap keeps the allocated and written output types in lock-step). The scalar
   // (single-component) and tuple-consistency checks are performed inside PreflightAxisProjection.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric>(
-      dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName, copyNonCellAttributeMatrices);
+      dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
     return {std::move(resultOutputActions)};

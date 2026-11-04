@@ -125,54 +125,31 @@ TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: ITK real-image golden 
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("Ramp-Up-Short.nrrd", /*projDim=*/1, /*removeOriginalGeometry=*/true, "5390344262c91e83bc9208b0991a2fc9");
 }
 
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Copy non-cell Attribute Matrices", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Warning names discarded objects", "[ImageProcessing][MaximumProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
-  const bool inPlace = GENERATE(true, false);
-  const bool extraCellArray = GENERATE(false, true);
-  // Omitted exercises callers written before this option existed.
-  const int copyOption = GENERATE(-1, 0, 1);
-  const bool copyNonCell = copyOption == 1;
-  CAPTURE(inPlace, extraCellArray, copyOption);
-
+  // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
+  const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
   DataStructure ds;
   const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, 3, 0.0, 1.0);
   const DataPath geomPath({"Image Geometry"});
   auto& imageGeom = ds.getDataRefAs<ImageGeom>(geomPath);
   const DataPath featurePath = geomPath.createChildPath("Cell Feature Data");
-  auto* featureAM = AttributeMatrix::Create(ds, "Cell Feature Data", {2}, imageGeom.getId());
-  REQUIRE(featureAM != nullptr);
-  const DataPath featureArrayPath = featurePath.createChildPath("Feature Values");
-  auto featureStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureArrayPath, {2}, {1});
-  REQUIRE(Int32Array::Create(ds, "Feature Values", featureStore, featureAM->getId()) != nullptr);
-  featureStore->setValue(0, 17);
-  featureStore->setValue(1, 29);
-  const DataPath ensemblePath = geomPath.createChildPath("Cell Ensemble Data");
-  REQUIRE(AttributeMatrix::Create(ds, "Cell Ensemble Data", {1}, imageGeom.getId()) != nullptr);
-  const auto featureId = featureAM->getId();
-  const auto featureArrayId = ds.getDataRefAs<Int32Array>(featureArrayPath).getId();
-  const auto ensembleId = ds.getDataRefAs<AttributeMatrix>(ensemblePath).getId();
-  if(extraCellArray)
+  REQUIRE(AttributeMatrix::Create(ds, "Cell Feature Data", {2}, imageGeom.getId()) != nullptr);
+  const DataPath extraPath = inputPath.getParent().createChildPath(extraName.empty() ? "Extra" : extraName);
+  if(!extraName.empty())
   {
-    const DataPath cellPath = inputPath.getParent();
-    auto& cellAM = ds.getDataRefAs<AttributeMatrix>(cellPath);
-    auto extraStore = DataStoreUtilities::CreateDataStore<int16>(ds, cellPath.createChildPath("Extra"), cellAM.getShape(), {1});
-    REQUIRE(Int16Array::Create(ds, "Extra", extraStore, cellAM.getId()) != nullptr);
+    auto& cellAM = ds.getDataRefAs<AttributeMatrix>(inputPath.getParent());
+    auto store = DataStoreUtilities::CreateDataStore<int16>(ds, extraPath, cellAM.getShape(), {1});
+    REQUIRE(Int16Array::Create(ds, extraName, store, cellAM.getId()) != nullptr);
   }
-
   MaximumProjectionImageFilter filter;
   Arguments args;
   args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(MaximumProjectionImageFilter::k_ProjectionDimension_Key, std::make_any<uint32>(0));
-  args.insertOrAssign(MaximumProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(inPlace));
-  args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
+  args.insertOrAssign(MaximumProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  if(copyOption >= 0)
-  {
-    args.insertOrAssign("copy_non_cell_attribute_matrices", std::make_any<bool>(copyNonCell));
-  }
   const auto preflightResult = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   std::string discardedWarning;
@@ -183,92 +160,62 @@ TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Copy non-cell Attribut
       discardedWarning += warning.message;
     }
   }
-  // Only discarded objects belong in the warning. Preserved matrices must not be listed.
-  if(inPlace)
+  // The geometry swap deletes the original children. The warning excludes the consumed input,
+  // but must name the feature matrix even when it is the only other discarded object, using full paths.
+  CHECK(discardedWarning.find(featurePath.toString()) != std::string::npos);
+  CHECK(discardedWarning.find(inputPath.toString()) == std::string::npos);
+  if(!extraName.empty())
   {
-    CHECK((discardedWarning.find("Cell Feature Data") != std::string::npos) == !copyNonCell);
-    CHECK((discardedWarning.find("Cell Ensemble Data") != std::string::npos) == !copyNonCell);
-    CHECK(discardedWarning.empty() == (copyNonCell && !extraCellArray));
-    if(extraCellArray)
-    {
-      CHECK(discardedWarning.find("Extra") != std::string::npos);
-    }
+    CHECK(discardedWarning.find(extraPath.toString()) != std::string::npos);
   }
-  else
-  {
-    CHECK(discardedWarning.empty());
-  }
-
-  // Axis projection dispatches by store type; it has no Direct/Scanline AlgorithmTestScope override.
+  // Axis projection dispatches by store type; it has no Direct/Scanline override.
   const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath outputGeomPath = inPlace ? geomPath : DataPath({"Projected Image"});
-  REQUIRE(ds.getDataRefAs<ImageGeom>(outputGeomPath).getDimensions() == SizeVec3{1, 3, 3});
-  const auto& output = ds.getDataRefAs<Float32Array>(outputGeomPath.createChildPath("CellData").createChildPath("Output"));
+  CHECK(ds.getData(featurePath) == nullptr);
+  if(extraName != "Output")
+  {
+    CHECK(ds.getData(extraPath) == nullptr);
+  }
+  REQUIRE(ds.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{1, 3, 3});
+  const auto& output = ds.getDataRefAs<Float32Array>(inputPath.getParent().createChildPath("Output"));
   REQUIRE(output.getNumberOfTuples() == 9);
   for(usize slot = 0; slot < 9; ++slot)
   {
-    // Along X, the 3x3x3 ramp has columns {3*s, 3*s+1, 3*s+2}, so max = 3*s+2.
-    REQUIRE(output[slot] == static_cast<float32>(3 * slot + 2));
-  }
-  if(copyNonCell)
-  {
-    const DataPath outputFeaturePath = outputGeomPath.createChildPath("Cell Feature Data");
-    const auto* outputFeatureAM = ds.getDataAs<AttributeMatrix>(outputFeaturePath);
-    REQUIRE(outputFeatureAM != nullptr);
-    CHECK(outputFeatureAM->getShape() == ShapeType{2});
-    auto& features = ds.getDataRefAs<Int32Array>(outputFeaturePath.createChildPath("Feature Values"));
-    CHECK(features[0] == 17);
-    CHECK(features[1] == 29);
-    const auto* ensemble = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath("Cell Ensemble Data"));
-    REQUIRE(ensemble != nullptr);
-    CHECK(ensemble->getShape() == ShapeType{1});
-    CHECK(ensemble->getSize() == 0);
-    if(inPlace)
-    {
-      CHECK(outputFeatureAM->getId() == featureId);
-      CHECK(features.getId() == featureArrayId);
-      CHECK(features.getDataStore() == featureStore.get());
-      CHECK(ensemble->getId() == ensembleId);
-    }
-    else
-    {
-      CHECK(outputFeatureAM->getId() != featureId);
-      CHECK(features.getId() != featureArrayId);
-      CHECK(features.getDataStore() != featureStore.get());
-      CHECK(ensemble->getId() != ensembleId);
-      features[0] = 101;
-      CHECK(ds.getDataRefAs<Int32Array>(featureArrayPath)[0] == 17);
-      featureStore->setValue(1, 103);
-      CHECK(features[1] == 29);
-      featureStore->setValue(1, 29);
-    }
-  }
-  else
-  {
-    CHECK(ds.getData(outputGeomPath.createChildPath("Cell Feature Data")) == nullptr);
-    CHECK(ds.getData(outputGeomPath.createChildPath("Cell Ensemble Data")) == nullptr);
-  }
-  if(!inPlace)
-  {
-    const auto& features = ds.getDataRefAs<Int32Array>(featureArrayPath);
-    CHECK(features[0] == 17);
-    CHECK(features[1] == 29);
-    CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getId() == featureId);
-    CHECK(ds.getDataRefAs<AttributeMatrix>(ensemblePath).getId() == ensembleId);
-    CHECK(ds.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{3, 3, 3});
+    // X columns are {3*s, 3*s+1, 3*s+2}: max = 3*s+2.
+    CHECK(output[slot] == static_cast<float32>(3 * slot + 2));
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Older pipelines default to discarding non-cell matrices", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Warning excludes an input outside cell data", "[ImageProcessing][MaximumProjectionImageFilter]")
 {
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  DataStructure ds;
+  const DataPath cellInputPath = ip_test::BuildRampImage<float32>(ds, 3, 0.0, 1.0);
+  const DataPath geomPath({"Image Geometry"});
+  auto& imageGeom = ds.getDataRefAs<ImageGeom>(geomPath);
+  // The selected input is a direct child of the geometry. It has the cell tuple count, so it is accepted.
+  const DataPath inputPath = geomPath.createChildPath("Geometry Input");
+  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, ShapeType{3, 3, 3}, {1});
+  REQUIRE(Float32Array::Create(ds, "Geometry Input", store, imageGeom.getId()) != nullptr);
   MaximumProjectionImageFilter filter;
-  auto json = filter.toJson(filter.getDefaultArguments());
-  json.erase("copy_non_cell_attribute_matrices");
-  json["parameters_version"] = 1;
-  const auto converted = filter.fromJson(json);
-  SIMPLNX_RESULT_REQUIRE_VALID(converted);
-  REQUIRE(converted.value().contains("copy_non_cell_attribute_matrices"));
-  CHECK_FALSE(converted.value().value<bool>("copy_non_cell_attribute_matrices"));
+  Arguments args;
+  args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(MaximumProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  std::string discardedWarning;
+  for(const auto& warning : preflightResult.outputActions.warnings())
+  {
+    if(warning.code == -8343)
+    {
+      discardedWarning += warning.message;
+    }
+  }
+  // The cell array is not the input, so it is named. The consumed input is not named.
+  CHECK(discardedWarning.find(cellInputPath.toString()) != std::string::npos);
+  CHECK(discardedWarning.find(inputPath.toString()) == std::string::npos);
 }

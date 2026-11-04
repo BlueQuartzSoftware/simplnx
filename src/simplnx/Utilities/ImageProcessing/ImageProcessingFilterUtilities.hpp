@@ -8,16 +8,13 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
-#include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/AdaptiveHistogramEqualizationEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
@@ -687,10 +684,8 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  *            is impossible because the collapsed output array cannot be inserted into the still-full cell
  *            AttributeMatrix (tuple-count mismatch), and resizing the AttributeMatrix before executeImpl
  *            would destroy the input the engine still has to read. Because that swap replaces the whole
- *            original geometry, any OTHER arrays in its cell data and unpreserved geometry children are
+ *            original geometry, any OTHER arrays in its cell data and other geometry children are
  *            discarded; a warning enumerates them.
- *          - copyNonCellAttributeMatrices == true: non-cell Attribute Matrices are moved before the deferred
- *            in-place swap (no array copies), or deep-copied into the new geometry in non-in-place mode.
  *
  * The output element type is the input type mapped through @p OutTypeMap (SameAsInput for type-preserving
  * reducers like Max; a fixed float map for Mean/StdDev/Sum). The execute façade MUST be instantiated with
@@ -701,7 +696,7 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  */
 template <class TypeSetPolicy = ProjectionScalar, template <class> class OutTypeMap = SameAsInput>
 Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, usize projDim, bool performInPlace,
-                                              const std::string& outputGeomName, const std::string& outputArrayName, bool copyNonCellAttributeMatrices = false)
+                                              const std::string& outputGeomName, const std::string& outputArrayName)
 {
   if(projDim > 2)
   {
@@ -770,38 +765,6 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
   result.value().appendAction(std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1}, outputArrayPath, inputArray.getDataFormat(), "", std::nullopt,
                                                                   DataStoreInitializationMode::DeferredZeroFill));
 
-  if(copyNonCellAttributeMatrices)
-  {
-    for(const auto& [childId, childObject] : imageGeom)
-    {
-      if(childId == cellData->getId() || dynamic_cast<const AttributeMatrix*>(childObject.get()) == nullptr)
-      {
-        continue;
-      }
-      const DataPath sourcePath = imageGeomPath.createChildPath(childObject->getName());
-      if(performInPlace)
-      {
-        // Preserve the original objects and stores after projection, before deleting their old geometry.
-        result.value().appendDeferredAction(std::make_unique<MoveDataAction>(sourcePath, targetGeomPath));
-      }
-      else
-      {
-        const DataPath destinationPath = targetGeomPath.createChildPath(childObject->getName());
-        std::vector<DataPath> allCreatedPaths = {destinationPath};
-        const auto childPaths = GetAllChildDataPathsRecursive(dataStructure, sourcePath);
-        if(childPaths.has_value())
-        {
-          for(const auto& childPath : childPaths.value())
-          {
-            allCreatedPaths.push_back(childPath.rebase(sourcePath, destinationPath).value());
-          }
-        }
-        // Data-store deep copies use bounded transfers and respect the destination storage policy.
-        result.value().appendAction(std::make_unique<CopyDataObjectAction>(sourcePath, destinationPath, allCreatedPaths));
-      }
-    }
-  }
-
   if(performInPlace)
   {
     // Deferred (post-executeImpl) swap: rename the original geometry away, delete it, then rename the
@@ -814,15 +777,15 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     result.value().appendDeferredAction(std::make_unique<DeleteDataAction>(renamedOriginalPath));
     result.value().appendDeferredAction(std::make_unique<RenameDataAction>(targetGeomPath, originalName));
 
-    // In-place discards the original geometry. List unpreserved children as well as other cell-data
-    // arrays. Non-cell Attribute Matrices can be moved above. The selected input is consumed by the
-    // projection and the output name is replaced, so neither is listed.
+    // In-place discards the original geometry. List its other children and cell-data arrays. The selected
+    // input is consumed by the projection, so it is not listed. The output array is created in the new
+    // geometry, so an old cell-data array with the output name is discarded and listed.
     const std::string inputArrayName = inputArrayPath.getTargetName();
     std::string discarded;
     for(const auto& [childId, childObject] : *cellData)
     {
       const std::string childName = childObject->getName();
-      if(childName == inputArrayName || childName == outputArrayName)
+      if(childName == inputArrayName)
       {
         continue;
       }
@@ -834,7 +797,7 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     }
     for(const auto& [childId, childObject] : imageGeom)
     {
-      if(childId == cellData->getId() || (copyNonCellAttributeMatrices && dynamic_cast<const AttributeMatrix*>(childObject.get()) != nullptr))
+      if(childId == cellData->getId() || childId == inputArray.getId())
       {
         continue;
       }
