@@ -4,6 +4,7 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -191,4 +192,34 @@ TEST_CASE("SimplnxCore::CreateDataGroupFilter: SIMPL Backwards Compatibility", "
       CHECK(args.value<DataPath>(CreateDataGroupFilter::k_DataObjectPath) == DataPath({"DataContainer"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateDataGroupFilter rejects a path below an Attribute Matrix", "[SimplnxCore][CreateDataGroupFilter][L02]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* image = DataGroup::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Cell Data", {1}, image->getId()) != nullptr);
+
+  CreateDataGroupFilter filter;
+  Arguments args;
+  const DataPath path({"Image", "Cell Data", "Sub", "X"});
+  args.insert(CreateDataGroupFilter::k_DataObjectPath, std::make_any<DataPath>(path));
+  SECTION("Pipeline preflight applies creation actions")
+  {
+    Pipeline pipeline;
+    auto pipelineFilter = std::make_shared<PipelineFilter>(filter.clone(), args);
+    REQUIRE(pipeline.push_back(pipelineFilter));
+    REQUIRE_FALSE(pipeline.preflight(dataStructure, std::atomic_bool{false}));
+    REQUIRE_FALSE(pipelineFilter->getErrors().empty());
+    REQUIRE(pipelineFilter->getErrors().front().code == -5301);
+  }
+  SECTION("Execute applies creation actions")
+  {
+    auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().front().code == -5301);
+  }
+  REQUIRE_FALSE(dataStructure.containsData(path));
 }

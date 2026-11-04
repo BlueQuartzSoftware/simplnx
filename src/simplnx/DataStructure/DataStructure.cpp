@@ -221,6 +221,11 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
       if(data == nullptr)
       {
         data = DataGroup::Create(*this, name, pathIds.back());
+        if(data == nullptr)
+        {
+          return nx::core::MakeErrorResult<LinkedPath>(-10004,
+                                                       fmt::format("Cannot create DataGroup '{}' in path '{}': parent '{}' does not accept a DataGroup.", name, path.toString(), parent->getName()));
+        }
         createdIds.push_back(data->getId());
       }
       pathIds.push_back(data->getId());
