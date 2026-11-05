@@ -96,6 +96,204 @@ void WriteSectionValues(std::ostream& output, nonstd::span<const T> values, bool
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimensions", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "ReadVtkDimensions.vtk";
+  auto fileGuard = MakeScopeGuard([&filePath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(filePath, errorCode);
+  });
+  ReadVtkStructuredPointsFilter filter;
+  DataStructure ds;
+  Arguments args = createArgs(filePath);
+
+  SECTION("Singleton axes retain one cell dimension")
+  {
+    const bool binary = GENERATE(false, true);
+    const usize grid = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+    CAPTURE(binary, grid);
+    // Hand calculation: adjacent points define n-1 cells along an active axis.
+    // A singleton axis contributes a factor of one, including a single vertex cell.
+    // Thus 10x10x1 points have 9x9x1 = 81 cells, and 4x1x1 points have 3 cells.
+    const std::array<SizeVec3, 8> pointDimensions = {SizeVec3{10, 10, 1}, SizeVec3{3, 1, 4}, SizeVec3{1, 3, 4}, SizeVec3{4, 1, 1},
+                                                     SizeVec3{1, 4, 1},   SizeVec3{1, 1, 4}, SizeVec3{1, 1, 1}, SizeVec3{3, 3, 3}};
+    const std::array<SizeVec3, 8> cellDimensions = {SizeVec3{9, 9, 1}, SizeVec3{2, 1, 3}, SizeVec3{1, 2, 3}, SizeVec3{3, 1, 1},
+                                                    SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{1, 1, 1}, SizeVec3{2, 2, 2}};
+    const auto& pointDims = pointDimensions[grid];
+    const auto& cellDims = cellDimensions[grid];
+    std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
+    std::vector<int32> cellValues(cellDims[0] * cellDims[1] * cellDims[2]);
+    for(usize index = 0; index < pointValues.size(); index++)
+    {
+      pointValues[index] = static_cast<int32>(index) + 1;
+    }
+    for(usize index = 0; index < cellValues.size(); index++)
+    {
+      cellValues[index] = static_cast<int32>(index) + 100;
+    }
+    {
+      std::ofstream output(filePath, std::ios::binary | std::ios::trunc);
+      REQUIRE(output.is_open());
+      output << "# vtk DataFile Version 3.0\nDimension regression\n" << (binary ? "BINARY\n" : "ASCII\n");
+      output << "DATASET STRUCTURED_POINTS\nDIMENSIONS " << pointDims[0] << ' ' << pointDims[1] << ' ' << pointDims[2] << "\nSPACING 1 1 1\nORIGIN 0 0 0\n";
+      output << "POINT_DATA " << pointValues.size() << "\nSCALARS Values int 1\nLOOKUP_TABLE default\n";
+      WriteSectionValues<int32>(output, pointValues, binary);
+      output << "CELL_DATA " << cellValues.size() << "\nSCALARS Values int 1\nLOOKUP_TABLE default\n";
+      WriteSectionValues<int32>(output, cellValues, binary);
+      output.close();
+      REQUIRE(output.good());
+    }
+
+    const auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    for(const bool points : {false, true})
+    {
+      const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
+      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
+      const auto& values = ds.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
+      REQUIRE(values.getNumberOfComponents() == 1);
+      for(usize index = 0; index < values.getNumberOfTuples(); index++)
+      {
+        REQUIRE(values[index] == static_cast<int32>(index) + (points ? 1 : 100));
+      }
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+
+  SECTION("Zero dimensions are rejected before creating geometry")
+  {
+    const usize axis = GENERATE(0, 1, 2);
+    CAPTURE(axis);
+    SizeVec3 pointDims{1, 1, 1};
+    pointDims[axis] = 0;
+    // A structured-points dimension must be at least one. A zero axis is invalid,
+    // even when CELL_DATA declares zero tuples; unsigned subtraction must not wrap.
+    {
+      std::ofstream output(filePath, std::ios::trunc);
+      REQUIRE(output.is_open());
+      output << "# vtk DataFile Version 3.0\nZero dimension\nASCII\nDATASET STRUCTURED_POINTS\nDIMENSIONS ";
+      output << pointDims[0] << ' ' << pointDims[1] << ' ' << pointDims[2] << "\nSPACING 1 1 1\nORIGIN 0 0 0\nCELL_DATA 0\n";
+      output.close();
+      REQUIRE(output.good());
+    }
+    args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<bool>(false));
+    IFilter::PreflightResult preflightResult;
+    REQUIRE_NOTHROW(preflightResult = filter.preflight(ds, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -10354);
+    // The message names the axis as X, Y or Z, not as a zero-based index.
+    const std::array<std::string, 3> axisNames = {"X axis", "Y axis", "Z axis"};
+    REQUIRE(preflightResult.outputActions.errors()[0].message.find(axisNames[axis]) != std::string::npos);
+    IFilter::ExecuteResult executeResult;
+    REQUIRE_NOTHROW(executeResult = filter.execute(ds, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    REQUIRE(executeResult.result.errors()[0].code == -10354);
+    REQUIRE(ds.getData(DataPath({"VTK Cell Data"})) == nullptr);
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical Position", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const bool binary = GENERATE(false, true);
+  const usize grid = GENERATE(0, 1, 2, 3, 4);
+  CAPTURE(binary, grid);
+  // Hand calculation: for origin (2, 6, 10) and spacing (2, 6, 4), a singleton
+  // axis needs origin - spacing/2 so its voxel center stays at the VTK point.
+  // The Z plane therefore has origin Z = 8 and center Z = 10. The next three
+  // cases are X, Y and Z lines; the last is a 3D control with unchanged origin.
+  // Active axes have n-1 cells and retain their original origin and spacing.
+  const std::array<SizeVec3, 5> pointDimensions = {SizeVec3{3, 3, 1}, SizeVec3{3, 1, 1}, SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{3, 3, 3}};
+  const std::array<SizeVec3, 5> cellDimensions = {SizeVec3{2, 2, 1}, SizeVec3{2, 1, 1}, SizeVec3{1, 2, 1}, SizeVec3{1, 1, 2}, SizeVec3{2, 2, 2}};
+  const std::array<FloatVec3, 5> expectedOrigins = {FloatVec3{2, 6, 8}, FloatVec3{2, 3, 8}, FloatVec3{1, 6, 8}, FloatVec3{1, 3, 10}, FloatVec3{2, 6, 10}};
+  const std::array<FloatVec3, 5> expectedCenters = {FloatVec3{3, 9, 10}, FloatVec3{3, 6, 10}, FloatVec3{2, 9, 10}, FloatVec3{2, 6, 12}, FloatVec3{3, 9, 12}};
+  const auto& pointDims = pointDimensions[grid];
+  const auto& cellDims = cellDimensions[grid];
+  std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
+  std::vector<int32> cellValues(cellDims[0] * cellDims[1] * cellDims[2]);
+  for(usize index = 0; index < pointValues.size(); index++)
+  {
+    pointValues[index] = static_cast<int32>(index) + 1;
+  }
+  for(usize index = 0; index < cellValues.size(); index++)
+  {
+    cellValues[index] = static_cast<int32>(index) + 100;
+  }
+
+  const fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "ReadVtkPhysicalPosition.vtk";
+  auto fileGuard = MakeScopeGuard([&filePath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(filePath, errorCode);
+  });
+  {
+    std::ofstream output(filePath, std::ios::binary | std::ios::trunc);
+    REQUIRE(output.is_open());
+    output << "# vtk DataFile Version 3.0\nPhysical position regression\n" << (binary ? "BINARY\n" : "ASCII\n");
+    output << "DATASET STRUCTURED_POINTS\nDIMENSIONS " << pointDims[0] << ' ' << pointDims[1] << ' ' << pointDims[2] << "\nSPACING 2 6 4\nORIGIN 2 6 10\n";
+    output << "POINT_DATA " << pointValues.size() << "\nSCALARS Values int 1\nLOOKUP_TABLE default\n";
+    WriteSectionValues<int32>(output, pointValues, binary);
+    output << "CELL_DATA " << cellValues.size() << "\nSCALARS Values int 1\nLOOKUP_TABLE default\n";
+    WriteSectionValues<int32>(output, cellValues, binary);
+    output.close();
+    REQUIRE(output.good());
+  }
+
+  ReadVtkStructuredPointsFilter filter;
+  Arguments args = createArgs(filePath);
+  for(const bool preflight : {true, false})
+  {
+    CAPTURE(preflight);
+    DataStructure ds;
+    if(preflight)
+    {
+      auto preflightResult = filter.preflight(ds, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      const auto applyResult = preflightResult.outputActions.value().applyRegular(ds, IDataAction::Mode::Preflight);
+      SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+    }
+    else
+    {
+      const auto executeResult = filter.execute(ds, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+    for(const bool points : {false, true})
+    {
+      CAPTURE(points);
+      const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
+      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
+      REQUIRE(geom.getSpacing() == FloatVec3{2, 6, 4});
+      const auto center = geom.getCoordsf(0, 0, 0);
+      for(usize axis = 0; axis < 3; axis++)
+      {
+        CAPTURE(axis);
+        CHECK(geom.getOrigin()[axis] == expectedOrigins[grid][axis]);
+        CHECK(center[axis] == expectedCenters[grid][axis]);
+      }
+      const auto& values = ds.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
+      REQUIRE(values.getNumberOfComponents() == 1);
+      if(!preflight)
+      {
+        // Values must match the literal sequence written above, regardless of origin.
+        for(usize index = 0; index < values.getNumberOfTuples(); index++)
+        {
+          REQUIRE(values[index] == static_cast<int32>(index) + (points ? 1 : 100));
+        }
+      }
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
   UnitTest::LoadPlugins();

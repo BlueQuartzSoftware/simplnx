@@ -18,7 +18,9 @@ This **Filter** writes out **Cell** data from an **Image Geometry** to a file fo
 - Phase Id -- the ensemble (phase) each cell belongs to
 - Symmetry -- the crystal-symmetry code for the cell's phase
 
-The **Symmetry** column holds the integer crystal-symmetry code corresponding to the cell's crystal structure (for example, *43* denotes cubic m-3m and *62* denotes hexagonal 6/mmm). The codes follow the EBSDLib `CrystalStructure` enumeration and are taken from the **Crystal Structures** ensemble array.
+The **Symmetry** column holds the TSL phase-symmetry code for the cell's crystal structure. For example, *43* denotes cubic m-3m and *62* denotes hexagonal 6/mmm. The filter converts the **Crystal Structures** values to these codes. The phase headers and data rows use the same mapping for all 11 Laue classes. Unknown or unsupported structures use *999*. Cells with phase zero also use *999*.
+
+This intentionally differs from DREAM.3D 6.5.171. That version wrote *999* in data rows for every Laue class except cubic-high and hexagonal-high.
 
 Some information about the phase is included in the header section of the file in addition to values for the origin, step size, and dimensions. The origin, **step sizes** (`X_STEP`, `Y_STEP`, `Z_STEP`), and min/max positions in the header are all in **microns**. The header also reports the number of **Features** in the file.
 

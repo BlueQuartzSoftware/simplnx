@@ -1,4 +1,5 @@
 #include <array>
+#include <cmath>
 
 #include "AlignSectionsFeatureCentroid.hpp"
 
@@ -10,6 +11,19 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 using namespace nx::core;
+
+namespace
+{
+int64 ComputeCentroidShift(float32 centroid, float32 referenceCentroid, float32 spacing)
+{
+  // Empty mask slices have NaN centroids and contribute no relative shift.
+  if(!std::isfinite(centroid) || !std::isfinite(referenceCentroid))
+  {
+    return 0;
+  }
+  return static_cast<int64>((centroid - referenceCentroid) / spacing);
+}
+} // namespace
 
 AlignSectionsFeatureCentroid::AlignSectionsFeatureCentroid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                            AlignSectionsFeatureCentroidInputValues* inputValues)
@@ -127,22 +141,22 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
     auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
     // Convert physical centroid differences to integer voxel offsets.
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
       if(m_InputValues->UseReferenceSlice)
       {
         // Reference-relative and cumulative shifts are identical in this mode.
-        relativexshift = static_cast<int64>((xCentroid[iter] - xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[0]);
-        relativeyshift = static_cast<int64>((yCentroid[iter] - yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
+        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
         xShifts[iter] = relativexshift;
         yShifts[iter] = relativeyshift;
       }
       else
       {
         // Accumulate consecutive-slice offsets.
-        relativexshift = static_cast<int64>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-        relativeyshift = static_cast<int64>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[iter - 1], spacing[0]);
+        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[iter - 1], spacing[1]);
         xShifts[iter] = xShifts[iter - 1] + relativexshift;
         yShifts[iter] = yShifts[iter - 1] + relativeyshift;
       }
@@ -165,13 +179,13 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
-        std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
+        std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter);
         m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
-        std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
+        std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter);
         m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
@@ -179,7 +193,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];
@@ -191,17 +205,17 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
   else
   {
     // Compute shifts without writing diagnostic arrays.
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       if(m_InputValues->UseReferenceSlice)
       {
-        xShifts[iter] = static_cast<int64>((xCentroid[iter] - xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[0]);
-        yShifts[iter] = static_cast<int64>((yCentroid[iter] - yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+        xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
+        yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
       }
       else
       {
-        xShifts[iter] = xShifts[iter - 1] + static_cast<int64>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-        yShifts[iter] = yShifts[iter - 1] + static_cast<int64>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+        xShifts[iter] = xShifts[iter - 1] + ComputeCentroidShift(xCentroid[iter], xCentroid[iter - 1], spacing[0]);
+        yShifts[iter] = yShifts[iter - 1] + ComputeCentroidShift(yCentroid[iter], yCentroid[iter - 1], spacing[1]);
       }
 
       if((xShifts[iter] < -sdims[0] || xShifts[iter] > sdims[0]) && !xWarning)
@@ -222,13 +236,13 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
-        std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
+        std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter);
         m_MessageHandler.sendInfoMessage(message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
-        std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
+        std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter);
         m_MessageHandler.sendInfoMessage(message);
         yWarning = true;
       }
@@ -332,17 +346,17 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
   // Convert physical centroid differences to integer voxel offsets.
   bool xWarning = false;
   bool yWarning = false;
-  for(usize iter = 1; iter < dims[2]; iter++)
+  for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
   {
     if(m_InputValues->UseReferenceSlice)
     {
-      xShifts[iter] = static_cast<int64>((xCentroid[iter] - xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[0]);
-      yShifts[iter] = static_cast<int64>((yCentroid[iter] - yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+      xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
+      yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
     }
     else
     {
-      xShifts[iter] = xShifts[iter - 1] + static_cast<int64>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-      yShifts[iter] = yShifts[iter - 1] + static_cast<int64>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+      xShifts[iter] = xShifts[iter - 1] + ComputeCentroidShift(xCentroid[iter], xCentroid[iter - 1], spacing[0]);
+      yShifts[iter] = yShifts[iter - 1] + ComputeCentroidShift(yCentroid[iter], yCentroid[iter - 1], spacing[1]);
     }
 
     if((xShifts[iter] < -sdims[0] || xShifts[iter] > sdims[0]) && !xWarning)
@@ -361,12 +375,12 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
     }
     if(std::isnan(xCentroid[iter]) && !xWarning)
     {
-      m_MessageHandler.sendMessage(nx::core::IFilter::Message::Type::Info, fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter));
+      m_MessageHandler.sendMessage(nx::core::IFilter::Message::Type::Info, fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter));
       xWarning = true;
     }
     if(std::isnan(yCentroid[iter]) && !yWarning)
     {
-      m_MessageHandler.sendMessage(nx::core::IFilter::Message::Type::Info, fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter));
+      m_MessageHandler.sendMessage(nx::core::IFilter::Message::Type::Info, fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice={}", iter));
       yWarning = true;
     }
   }
@@ -379,7 +393,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
     auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
-    for(usize iter = 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       usize slice = (dims[2] - 1) - iter;
       int64 relativexshift = 0;
@@ -391,14 +405,14 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       }
       else
       {
-        relativexshift = static_cast<int64>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-        relativeyshift = static_cast<int64>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[iter - 1], spacing[0]);
+        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[iter - 1], spacing[1]);
       }
 
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];

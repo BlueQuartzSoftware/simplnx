@@ -44,7 +44,7 @@ public:
 
   /**
    * @brief Converts and copies one loaded scan into its volume range.
-   * @param sliceIndex Zero-based scan index.
+   * @param sliceIndex Zero-based destination Z slice, chosen by IEbsdOemReader::execute() from the stacking order.
    * @return Success, or an error for a failed transfer, an unavailable scalar channel, or missing pattern data.
    */
   Result<> copyRawEbsdData(int sliceIndex) override;

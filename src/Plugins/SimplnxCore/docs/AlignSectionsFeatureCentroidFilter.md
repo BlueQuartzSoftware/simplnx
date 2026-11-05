@@ -24,6 +24,10 @@ Unlike the misorientation-based and mutual-information-based alignment methods, 
 
 If *Use Reference Slice* is enabled, each section is shifted to align with a single fixed reference slice rather than its immediate neighbor. This prevents small errors from accumulating across many sections.
 
+The highest-Z section is also shifted when the reference slice is not 0. This corrects DREAM3D 6.5.171 behavior, which left that section unchanged.
+
+An empty mask section has no finite centroid. If either centroid used for a shift is not finite, the relative shift is zero. In consecutive mode, the cumulative shift stays equal to the previous section's shift. In reference mode, the section stays unchanged. This defines behavior that was undefined in DREAM3D 6.5.171.
+
 ## Algorithm
 
 The algorithm proceeds in two phases:

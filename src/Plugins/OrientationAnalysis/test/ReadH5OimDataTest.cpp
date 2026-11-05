@@ -17,6 +17,8 @@
 #include <EbsdLib/IO/TSL/AngConstants.h>
 #include <EbsdLib/IO/TSL/AngFields.h>
 
+#include <H5Support/H5ScopedSentinel.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -82,6 +84,87 @@ void RequireAcquisitionCoordinates(const DataStructure& dataStructure, usize sca
   }
 }
 } // namespace
+
+TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Scan Stacking Order", "[OrientationAnalysis][ReadH5OimDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v3.tar.gz", "7_read_oem_ebsd_h5_files_v3");
+  const auto sourceFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
+  const auto inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadH5OimData_StackingOrder.h5";
+  fs::copy_file(sourceFile, inputFile, fs::copy_options::overwrite_existing);
+
+  constexpr usize k_TuplesPerScan = 186 * 151;
+  {
+    const hid_t fileId = H5Fopen(inputFile.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    REQUIRE(fileId >= 0);
+    H5Support::H5ScopedFileSentinel sentinel(fileId, true);
+    // The downloaded scans have identical IQ values. Give scan s the exact
+    // integer-valued signal IQ(s, p) = 100000*s + p, where p is the pixel index.
+    for(int32 scan = 1; scan <= 3; scan++)
+    {
+      std::vector<float32> values(k_TuplesPerScan);
+      for(usize pixel = 0; pixel < k_TuplesPerScan; pixel++)
+      {
+        values[pixel] = static_cast<float32>(100000 * scan + pixel);
+      }
+      const std::string datasetPath = fmt::format("/Scan {}/EBSD/Data/IQ", scan);
+      const hid_t datasetId = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
+      REQUIRE(datasetId >= 0);
+      const herr_t writeResult = H5Dwrite(datasetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, values.data());
+      REQUIRE(H5Dclose(datasetId) >= 0);
+      REQUIRE(writeResult >= 0);
+    }
+  }
+
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {inputFile, RefFrameZDir::k_LowtoHigh, {k_ScanName_2, k_ScanName_1, k_ScanName_3}};
+  std::vector<int32> expectedScans;
+  // For N selected scans, selection index i occupies Z slice i (Low to High)
+  // or N-1-i (High to Low). Thus [2,1,3] becomes [2,1,3] or [3,1,2] in Z.
+  SECTION("Low to High")
+  {
+    expectedScans = {2, 1, 3};
+  }
+  SECTION("High to Low")
+  {
+    scanSelections.stackingOrder = RefFrameZDir::k_HightoLow;
+    expectedScans = {3, 1, 2};
+  }
+  SECTION("High to Low single scan")
+  {
+    scanSelections.stackingOrder = RefFrameZDir::k_HightoLow;
+    scanSelections.scanNames = {k_ScanName_2};
+    expectedScans = {2};
+  }
+
+  DataStructure dataStructure;
+  ReadH5OimDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+  args.insertOrAssign(ReadH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
+  args.insertOrAssign(ReadH5OimDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
+  args.insertOrAssign(ReadH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
+  const DataPath geometryPath({ImageGeom::k_TypeName});
+  args.insertOrAssign(ReadH5OimDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(ReadH5OimDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geometryPath).getDimensions() == SizeVec3{186, 151, expectedScans.size()});
+  const auto& imageQuality = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::Ang::ImageQuality));
+  REQUIRE(imageQuality.getNumberOfTuples() == k_TuplesPerScan * expectedScans.size());
+  for(usize slice = 0; slice < expectedScans.size(); slice++)
+  {
+    for(usize pixel = 0; pixel < k_TuplesPerScan; pixel++)
+    {
+      CAPTURE(slice, pixel);
+      REQUIRE(imageQuality[slice * k_TuplesPerScan + pixel] == static_cast<float32>(100000 * expectedScans[slice] + pixel));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Acquisition Coordinates", "[OrientationAnalysis][ReadH5OimDataFilter]")
 {

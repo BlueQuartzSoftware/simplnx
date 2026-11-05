@@ -293,6 +293,13 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       }
     }
 
+    DataPath srcImageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
+    const DataType sliceType = importedDataStructure.getDataRefAs<IDataArray>(srcImageDataPath).getDataType();
+    if(sliceType != GetDataType<T>())
+    {
+      return MakeErrorResult(-23534, fmt::format("Slice {} ('{}') has data type {}, but the stack requires {}.", i, filePath, DataTypeToString(sliceType), DataTypeToString(GetDataType<T>())));
+    }
+
     if(resample != k_NoResampleModeIndex)
     {
       if(resample == k_ScalingModeIndex)
@@ -332,8 +339,6 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       // deferred actions complete.
       destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});
     }
-
-    DataPath srcImageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
 
     bool validInputForGrayScaleConversion = importedDataStructure.getDataRefAs<IDataArray>(srcImageDataPath).getDataType() == DataType::uint8;
     if(convertToGrayscale && validInputForGrayScaleConversion)

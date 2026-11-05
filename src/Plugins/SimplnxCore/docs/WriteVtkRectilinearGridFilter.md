@@ -16,10 +16,14 @@ The user selects which **Cell** **Data Array**s from the **Image Geometry** are 
 
 The *Write Binary File* parameter controls the on-disk encoding. When *false* (the default), the data is written as plain ASCII text, which is portable and easy to inspect but larger and slower to read. When *true*, the data is written in VTK's binary form, producing smaller files that load faster.
 
+ASCII coordinates retain the precision of the computed float values, including small spacing such as `1e-7`. This corrects the six-decimal rounding in DREAM3D 6.5.171, so ASCII coordinate output can differ from that version.
+
+Arrays are written as legacy VTK `SCALARS`, which supports 1 to 4 components. Preflight rejects arrays with more than 4 components, including 6- and 9-component arrays. This corrects DREAM3D 6.5.171 behavior, which wrote these arrays with invalid `SCALARS` headers.
+
 ### Required Input Sources
 
 - **Image Geometry** -- the geometry whose dimensions and spacing define the grid.
-- **Cell Data Array(s) to write** -- any per-cell arrays on the **Image Geometry**. A common choice is a *FeatureIds* array produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+- **Cell Data Array(s) to write** -- any per-cell arrays with 1 to 4 components on the **Image Geometry**. A common choice is a *FeatureIds* array produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

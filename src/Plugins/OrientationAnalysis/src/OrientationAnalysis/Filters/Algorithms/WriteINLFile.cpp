@@ -30,7 +30,7 @@ constexpr usize k_EulerComponents = 3;
 /**
  * @brief Maps a simplnx crystal structure to the INL TSL symmetry code.
  * @param symmetry Simplnx crystal-structure value.
- * @return Matching TSL phase symmetry, or UnknownCrystalStructure when unsupported.
+ * @return Matching TSL phase symmetry, or UnknownSymmetry when unsupported.
  */
 uint32 mapCrystalSymmetryToTslSymmetry(uint32 symmetry)
 {
@@ -59,7 +59,7 @@ uint32 mapCrystalSymmetryToTslSymmetry(uint32 symmetry)
   case ebsdlib::CrystalStructure::Trigonal_Low:
     return ebsdlib::Ang::PhaseSymmetry::Trigonal;
   default:
-    return ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    return ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
   }
 }
 } // namespace
@@ -303,26 +303,7 @@ Result<> WriteINLFile::operator()()
       const float64 yPos = origin[1] + (static_cast<float64>(y) * res[1]);
       const float64 zPos = origin[2] + (static_cast<float64>(z) * res[2]);
       const int32 phaseId = cellPhasesChunk[chunkIndex];
-      uint32 symmetry = crystalStructuresCache[phaseId];
-      if(phaseId > 0)
-      {
-        if(symmetry == ebsdlib::CrystalStructure::Cubic_High)
-        {
-          symmetry = ebsdlib::Ang::PhaseSymmetry::Cubic;
-        }
-        else if(symmetry == ebsdlib::CrystalStructure::Hexagonal_High)
-        {
-          symmetry = ebsdlib::Ang::PhaseSymmetry::DiHexagonal;
-        }
-        else
-        {
-          symmetry = ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
-        }
-      }
-      else
-      {
-        symmetry = ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
-      }
+      const uint32 symmetry = phaseId > 0 ? mapCrystalSymmetryToTslSymmetry(crystalStructuresCache[phaseId]) : ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
 
       textStream << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureIdsChunk[chunkIndex] << " " << phaseId << " " << symmetry << "\n";
 

@@ -26,9 +26,7 @@ namespace
 {
 constexpr usize k_ChunkTuples = 65536;
 constexpr usize k_EulerComponents = 3;
-// Choice three is labeled Colon but currently writes a double quote. Preserve
-// this mismatch until output-format behavior is changed explicitly.
-constexpr std::array<char, 5> k_Delimiters = {',', ';', ' ', '"', '\t'};
+constexpr std::array<char, 5> k_Delimiters = {',', ';', ' ', ':', '\t'};
 const std::array<std::string, 5> k_DelimiterStr = {"Comma", "Semicolon", "Space", "Colon", "Tab"};
 
 void WriteHeader(std::ofstream& out, const WriteStatsGenOdfAngleFileInputValues& inputValues, int32 lineCount)

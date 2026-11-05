@@ -12,6 +12,8 @@ Each measurement is placed at the grid cell named by its own `X BEAM` and `Y BEA
 
 The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample).
 
+The **Scan Names** stacking order controls placement along the **Image Geometry** Z direction. **Low to High** places the first selected scan at the lowest Z slice. **High to Low** places it at the highest Z slice and places the last selected scan at the lowest Z slice. A single scan has the same placement in either order. High to Low output intentionally differs from DREAM3D 6.5.171, which ignored this setting (errata KI-011).
+
 | User interface before entering a proper "Z Spacing" value and selecting which scans to include. |
 |-------|
 |![](Images/ReadEspritH5_1.png)|

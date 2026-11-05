@@ -94,7 +94,8 @@ public:
     AsciiDataReadErr = -268,             ///< Reports truncated or failed ASCII data.
     AsciiTokenTooLongErr = -269,         ///< Reports a token longer than 1,024 characters.
     AsciiStreamPositionErr = -270,       ///< Reports failure to restore the next header position.
-    NumberConvertErr = -10351            ///< Reports numeric text conversion failure.
+    NumberConvertErr = -10351,           ///< Reports numeric text conversion failure.
+    DimsValueErr = -10354                ///< Reports a zero point dimension.
   };
 
   /**

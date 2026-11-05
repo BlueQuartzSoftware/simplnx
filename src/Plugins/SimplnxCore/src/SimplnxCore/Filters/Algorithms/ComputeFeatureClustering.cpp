@@ -71,7 +71,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   distanceList.resize(largeNumber);
 
-  for(usize i = 1; i < largeNumber; i++)
+  for(usize i = 0; i < largeNumber; i++)
   {
     const float32 x = randomCentroids[3 * i];
     const float32 y = randomCentroids[3 * i + 1];

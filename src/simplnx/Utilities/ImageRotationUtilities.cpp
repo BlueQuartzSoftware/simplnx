@@ -74,13 +74,59 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
 
   FloatVec6 minMaxCoords = DetermineMinMaxCoords(imageGeom, transformationMatrix);
 
-  const Eigen::Vector3f xAxisNew = rotationMatrix * k_XAxis;
-  const Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
-  const Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
+  // Normalize each source column to distinguish grid rotations from general transforms.
+  // A signed permutation has exactly one unit entry in each column and each row.
+  // The filter checks raw entries with tolerance t. Accepted column norms are at least 1-t,
+  // so normalized off-axis entries can be as large as t/(1-t).
+  constexpr float32 k_RawGridTolerance = 1.0e-4F;
+  constexpr float32 k_GridTolerance = k_RawGridTolerance / (1.0F - k_RawGridTolerance);
+  bool isGridRotation = true;
+  std::array<bool, 3> usedRows = {false, false, false};
+  FloatVec3 gridSpacing;
+  for(int32 col = 0; col < 3; ++col)
+  {
+    const float32 scale = rotationMatrix.col(col).norm();
+    if(!std::isfinite(scale) || scale <= 0.0F)
+    {
+      isGridRotation = false;
+      break;
+    }
+    const Eigen::Vector3f normalized = rotationMatrix.col(col) / scale;
+    Eigen::Index sourceRow = 0;
+    normalized.cwiseAbs().maxCoeff(&sourceRow);
+    if(usedRows[sourceRow] || std::abs(std::abs(normalized[sourceRow]) - 1.0F) > k_GridTolerance)
+    {
+      isGridRotation = false;
+      break;
+    }
+    usedRows[sourceRow] = true;
+    // Preserve the classified source axis and its scale for this output row.
+    gridSpacing[sourceRow] = spacing[col] * scale;
+    for(int32 row = 0; row < 3; ++row)
+    {
+      if(row != sourceRow && std::abs(normalized[row]) > k_GridTolerance)
+      {
+        isGridRotation = false;
+      }
+    }
+  }
 
-  FloatVec3 transformScale = {(rotationMatrix * k_XAxis).norm(), (rotationMatrix * k_YAxis).norm(), (rotationMatrix * k_ZAxis).norm()};
+  FloatVec3 outputSpacing;
+  if(isGridRotation)
+  {
+    outputSpacing = gridSpacing;
+  }
+  else
+  {
+    // Keep the column-based spacing rule for off-axis rotations and general transforms.
+    const Eigen::Vector3f xAxisNew = rotationMatrix * k_XAxis;
+    const Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
+    const Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
 
-  FloatVec3 outputSpacing = {DetermineSpacing(spacing, xAxisNew) * transformScale[0], DetermineSpacing(spacing, yAxisNew) * transformScale[1], DetermineSpacing(spacing, zAxisNew) * transformScale[2]};
+    FloatVec3 transformScale = {(rotationMatrix * k_XAxis).norm(), (rotationMatrix * k_YAxis).norm(), (rotationMatrix * k_ZAxis).norm()};
+
+    outputSpacing = {DetermineSpacing(spacing, xAxisNew) * transformScale[0], DetermineSpacing(spacing, yAxisNew) * transformScale[1], DetermineSpacing(spacing, zAxisNew) * transformScale[2]};
+  }
 
   USizeVec3 outputDims = {static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / outputSpacing[0])),
                           static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),

@@ -42,3 +42,11 @@ These A/B artifacts are working files, not a test-consumed archive; they are kep
 ## Regenerated to fix a circular-oracle situation?
 
 Yes — this replaces the retired `Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` golden-file archives with an independently-derived Class 1 analytical oracle. The new oracle is *not* derived from SIMPLNX (or legacy) output; it is hand-derived from the definition of a principal-90 reference-frame rotation.
+
+## Errata KI-008 regression (L28)
+
+`SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid` uses an inline analytical oracle. The map R(x,y,z)=(z,x,y) sends dimensions (2,3,4) to (4,2,3) and spacing (2,3,5) to (5,2,3). Output (i,j,k) has value 1+j+2*k+6*i. The test checks every cell in Direct and Scanline paths on in-memory stores. No exemplar is used.
+
+Test sensitivity verification: before the fix, both paths returned dimensions (7,1,5), spacing (3,5,2), and 35 cells instead of 24. For transforms classified as grid rotations, the shared helper uses the classified source axis and its column scale for each output axis. Other transformations keep the earlier spacing rule. This intentionally corrects DREAM3D 6.5.171 behavior; see `RotateSampleRefFrameFilter-D2`. No new legacy binary comparison or disk-backed OOC validation is claimed.
+
+The R5 helper regression and Apply Transformation to Geometry regression check uneven scaling with a small shear. For (x,y,z) to (x+5y,100000y,z), a 2×2×2 image with spacing (2,3,5) has transformed extents (34,600000,10). The analytical spacing is (2,3*sqrt(100000^2+5^2),5), or (2,300000,5) in float32. The expected dimensions are (17,2,2). Both regressions failed before R5 and pass after it; the filter test covers Direct and Scanline on in-memory stores. This is shared-helper evidence, not a new DREAM3D 6.5.171 comparison.

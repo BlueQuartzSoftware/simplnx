@@ -7,6 +7,8 @@
 
 #include "SimplnxCore/utils/VtkUtilities.hpp"
 
+#include <limits>
+
 using namespace nx::core;
 
 WriteVtkRectilinearGrid::WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -130,7 +132,7 @@ Result<> WriteVtkRectilinearGrid::writeCoords(FILE* outputFile, const std::strin
     for(int idx = 0; idx < nPoints; ++idx)
     {
       d = idx * step + min;
-      fprintf(outputFile, "%f ", d);
+      fprintf(outputFile, "%.*g ", std::numeric_limits<T>::max_digits10, static_cast<double>(d));
       if(idx % 20 == 0 && idx != 0)
       {
         fprintf(outputFile, "\n");

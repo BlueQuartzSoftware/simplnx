@@ -12,6 +12,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <cmath>
 #include <filesystem>
 
@@ -181,4 +182,210 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple 
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference top slice", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool storeShifts = GENERATE(false, true);
+  CAPTURE(scenario, storeShifts);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  using FilterType = AlignSectionsFeatureCentroidFilter;
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({3, 3, 4});
+  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  auto* mask = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
+  REQUIRE(mask != nullptr);
+  mask->fill(0);
+  // One marked cell per slice: (1,1), (0,0), (1,1), (2,2) in ascending Z.
+  // Reference index 1 counts from the top, so it is physical slice 2.
+  // Centroid differences in descending Z are (+1,+1), (0,0), (-1,-1), (0,0).
+  // Reading source at destination + shift must place all marks at (1,1).
+  (*mask)[4] = 1;
+  (*mask)[9] = 1;
+  (*mask)[22] = 1;
+  (*mask)[35] = 1;
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cells", "Mask"})));
+  args.insertOrAssign(FilterType::k_UseReferenceSlice_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FilterType::k_ReferenceSlice_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FilterType::k_StoreAlignmentShifts_Key, std::make_any<bool>(storeShifts));
+  args.insertOrAssign(FilterType::k_AlignmentAMName_Key, std::make_any<std::string>("Shifts"));
+  args.insertOrAssign(FilterType::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>("Cumulative"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(usize z = 0; z < 4; z++)
+  {
+    for(usize xy = 0; xy < 9; xy++)
+    {
+      CAPTURE(z, xy);
+      CHECK((*mask)[(z * 9) + xy] == (xy == 4 ? 1 : 0));
+    }
+  }
+  if(storeShifts)
+  {
+    const auto& slices = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Shifts", "Slice Indices"}));
+    // Row 0 pairs the top slice (physical 3) with the reference (physical 2).
+    CHECK(slices[0] == 3);
+    CHECK(slices[1] == 2);
+    const DataPath shiftsPath({"Image", "Shifts", "Cumulative"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(shiftsPath));
+    const auto& shifts = dataStructure.getDataRefAs<Int64Array>(shiftsPath);
+    const std::array<int64, 4> expectedShifts = {1, 0, -1, 0};
+    for(usize iter = 0; iter < 4; iter++)
+    {
+      CAPTURE(iter);
+      CHECK(shifts[iter * 2] == expectedShifts[iter]);
+      CHECK(shifts[(iter * 2) + 1] == expectedShifts[iter]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool storeShifts = GENERATE(false, true);
+  const int emptyCase = GENERATE(0, 1, 2); // Empty top, middle, or fixed reference.
+  const bool useReference = emptyCase != 1;
+  CAPTURE(scenario, storeShifts, emptyCase);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  using FilterType = AlignSectionsFeatureCentroidFilter;
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({3, 3, 4});
+  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  auto* mask = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
+  REQUIRE(mask != nullptr);
+  mask->fill(0);
+  // Descending-Z centroids are (2,2), (1,1), (0,0), (1,1) before removing a mark.
+  // Empty top with reference 1: offsets [0,0,-1,0]. Empty reference: all offsets 0.
+  // Empty middle (index 2), consecutive: relative [0,-1,0,0], cumulative [0,-1,-1,-1].
+  // Both axes have the same values. A zero relative shift preserves the previous cumulative shift.
+  std::array<int64, 4> expectedShifts = emptyCase == 0 ? std::array<int64, 4>{0, 0, -1, 0} : emptyCase == 1 ? std::array<int64, 4>{0, -1, -1, -1} : std::array<int64, 4>{0, 0, 0, 0};
+  std::array<int64, 4> expectedRelative = emptyCase == 1 ? std::array<int64, 4>{0, -1, 0, 0} : expectedShifts;
+  const usize emptyZ = emptyCase == 0 ? 3 : emptyCase == 1 ? 1 : 2;
+  const std::array<usize, 4> markXY = {4, 0, 4, 8};
+  for(usize z = 0; z < 4; z++)
+  {
+    if(z != emptyZ)
+    {
+      (*mask)[z * 9 + markXY[z]] = 1;
+    }
+  }
+  // A separate marker makes the empty slice's applied shift observable without diagnostics.
+  auto* values = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cells->getId());
+  REQUIRE(values != nullptr);
+  values->fill(0);
+  for(usize z = 0; z < 4; z++)
+  {
+    (*values)[z * 9 + 4] = 7;
+  }
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cells", "Mask"})));
+  args.insertOrAssign(FilterType::k_UseReferenceSlice_Key, std::make_any<bool>(useReference));
+  args.insertOrAssign(FilterType::k_ReferenceSlice_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FilterType::k_StoreAlignmentShifts_Key, std::make_any<bool>(storeShifts));
+  args.insertOrAssign(FilterType::k_AlignmentAMName_Key, std::make_any<std::string>("Shifts"));
+  args.insertOrAssign(FilterType::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>("Cumulative"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(usize z = 0; z < 4; z++)
+  {
+    const int64 shift = expectedShifts[3 - z];
+    for(usize xy = 0; xy < 9; xy++)
+    {
+      CAPTURE(z, xy);
+      const int64 sourceX = static_cast<int64>(xy % 3) + shift;
+      const int64 sourceY = static_cast<int64>(xy / 3) + shift;
+      CHECK((*values)[z * 9 + xy] == (sourceX == 1 && sourceY == 1 ? 7 : 0));
+    }
+  }
+  if(storeShifts)
+  {
+    const DataPath shiftsPath({"Image", "Shifts", "Cumulative"});
+    const DataPath relativePath({"Image", "Shifts", "Relative Shifts"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(shiftsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(relativePath));
+    const auto& shifts = dataStructure.getDataRefAs<Int64Array>(shiftsPath);
+    const auto& relative = dataStructure.getDataRefAs<Int64Array>(relativePath);
+    for(usize iter = 0; iter < 4; iter++)
+    {
+      CAPTURE(iter);
+      for(usize axis = 0; axis < 2; axis++)
+      {
+        CHECK(shifts[iter * 2 + axis] == expectedShifts[iter]);
+        CHECK(relative[iter * 2 + axis] == expectedRelative[iter]);
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice bounds", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+  using FilterType = AlignSectionsFeatureCentroidFilter;
+  const usize zDim = GENERATE(usize{1}, usize{3});
+  const bool useReference = GENERATE(true, false);
+  const bool atUpperBound = GENERATE(true, false);
+  const bool storeShifts = GENERATE(false, true);
+  // Z slices have exactly the integer indices 0 through Z-1. Z itself is not an index.
+  const int32 reference = static_cast<int32>(atUpperBound ? zDim : zDim - 1);
+  CAPTURE(zDim, useReference, reference, storeShifts);
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({3, 3, zDim});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{zDim, 3, 3}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  REQUIRE(UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cells->getId()) != nullptr);
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cells", "Mask"})));
+  args.insertOrAssign(FilterType::k_UseReferenceSlice_Key, std::make_any<bool>(useReference));
+  args.insertOrAssign(FilterType::k_ReferenceSlice_Key, std::make_any<int32>(reference));
+  args.insertOrAssign(FilterType::k_StoreAlignmentShifts_Key, std::make_any<bool>(storeShifts));
+  // Stop at preflight: invalid references must never reach the alignment algorithm.
+  IFilter::PreflightResult result;
+  REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
+  if(useReference && atUpperBound)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -68073);
+    CHECK(error.message.find(fmt::format("Reference Slice value ({}) is too large.", reference)) != std::string::npos);
+    CHECK(error.message.find(fmt::format("Z dimension {}", zDim)) != std::string::npos);
+    CHECK(error.message.find(fmt::format("0 to {}", zDim - 1)) != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

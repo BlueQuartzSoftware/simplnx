@@ -16,6 +16,10 @@ The following image types are supported:
 - TIFF / TIF, including multi-page TIFF read as a 3D Z-stack (via libtiff)
 - NRRD (`.nrrd` attached, `.nhdr` detached) (ITK-free, zlib only)
 
+All pages of a multi-page TIFF must have the same dimensions, component count, and scalar type. The filter compares the number of bytes per pixel and the dimensions of each page it reads with page 0. It does not compare component counts or scalar types. A change in component count or scalar type can go undetected when the number of bytes per pixel stays the same. This can cause incorrect pixel values.
+
+If the first page is 8-bit RGB and a later page is 8-bit grayscale, the filter fails with error `-2007` when it reads that later page. The number of bytes per pixel differs (3 and 1), so it fails before it copies any pixels of that page. This intentionally differs from DREAM3D 6.5.171, which could crash on mixed-page TIFF files (KI-053).
+
 ### NRRD Volumes
 
 For a [NRRD](https://teem.sourceforge.net/nrrd/format.html) input (attached single-file `.nrrd`, or detached `.nhdr` + external data file), the geometry is built directly from the NRRD header. Supported header features:
