@@ -563,11 +563,8 @@ TEST_CASE("Resident bounded reads need zero scratch and preserve the destination
 TEST_CASE("Bounded diagnostics retain complete long Unicode context", "[DataStore][bounded][payload-contract]")
 {
   const std::string context = std::string(700, 'a') + "\xF0\x9F\x8C\x90";
-  BoundedRead::Diagnostic diagnostic;
-  diagnostic.set(BoundedRead::ReadFailure, context);
   const std::filesystem::path path(std::u8string(180, u8'p') + u8"\U0001F310.h5");
-  diagnostic.context(path, context);
-  const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  const auto result = MakeErrorResult<>(BoundedRead::ReadFailure, context + BoundedRead::FormatSourceContext(path, context));
   REQUIRE(result.invalid());
   REQUIRE(result.errors().front().code == BoundedRead::ReadFailure);
   REQUIRE(result.errors().front().message.starts_with(context));
@@ -598,27 +595,24 @@ TEST_CASE("Resident bounded result construction failure preserves the whole call
 
 TEST_CASE("Bounded extent arithmetic rejects shape and byte overflow without allocation", "[DataStore][bounded]")
 {
-  BoundedRead::Diagnostic diagnostic;
+  Result<> diagnostic;
   uint64 selected = 0;
   const Extent extent({0, 0}, {0, 0});
   const std::array<uint64, 2> overflowingShape{std::numeric_limits<uint64>::max(), 2};
   REQUIRE(BoundedRead::ValidateExtent(extent, overflowingShape, 1, 1, selected, diagnostic, sizeof(uint16)) == BoundedRead::Status::Failed);
-  REQUIRE(diagnostic.code == BoundedRead::InvalidExtent);
+  REQUIRE(diagnostic.errors().front().code == BoundedRead::InvalidExtent);
   const Extent oneDimension({0}, {0});
   const std::array<uint64, 1> byteOverflow{std::numeric_limits<uint64>::max()};
   REQUIRE(BoundedRead::ValidateExtent(oneDimension, byteOverflow, 1, 1, selected, diagnostic, sizeof(uint16)) == BoundedRead::Status::Failed);
-  REQUIRE(diagnostic.code == BoundedRead::InvalidExtent);
+  REQUIRE(diagnostic.errors().front().code == BoundedRead::InvalidExtent);
 }
 
 TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malformed native units", "[DataStore][bounded]")
 {
   const std::string supplementary = "\xF0\x9F\x8C\x90";
-  BoundedRead::Diagnostic diagnostic;
-  diagnostic.set(BoundedRead::ReadFailure, "Read failed");
 #ifdef _WIN32
   const std::filesystem::path path(std::wstring{L'p', wchar_t{0xD83C}, wchar_t{0xDF10}, wchar_t{0xD800}});
-  diagnostic.context(path, "data");
-  const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  const auto result = MakeErrorResult<>(BoundedRead::ReadFailure, "Read failed" + BoundedRead::FormatSourceContext(path, "data"));
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
@@ -626,14 +620,21 @@ TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malfor
   REQUIRE(result.errors().front().message.find("malformed units escaped") != std::string::npos);
 #else
   const std::filesystem::path path(std::string("p") + supplementary + std::string(1, static_cast<char>(0xFF)));
-  diagnostic.context(path, "data");
-  const auto result = diagnostic.finish(BoundedRead::Status::Failed);
+  const auto result = MakeErrorResult<>(BoundedRead::ReadFailure, "Read failed" + BoundedRead::FormatSourceContext(path, "data"));
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);
   REQUIRE(result.errors().front().message.find("\\xFF") != std::string::npos);
   REQUIRE(result.errors().front().message.find("invalid UTF-8/control bytes escaped") != std::string::npos);
 #endif
+}
+
+TEST_CASE("Bounded diagnostic source context escapes invalid dataset bytes", "[DataStore][bounded]")
+{
+  const std::string dataset = std::string("/data\n") + static_cast<char>(0xff) + "\xF0\x9F\x8C\x90";
+  const auto context = BoundedRead::FormatSourceContext(std::filesystem::path("sample.h5"), dataset);
+  REQUIRE(context.find("sample.h5") != std::string::npos);
+  REQUIRE(context.find("/data\\x0A\\xFF\xF0\x9F\x8C\x90") != std::string::npos);
 }
 
 TEST_CASE("Default bounded store API declines without an allocating fallback", "[DataStore][bounded]")
@@ -652,20 +653,24 @@ TEST_CASE("Default bounded store API declines without an allocating fallback", "
 
 TEST_CASE("Bounded diagnostics preserve refusal and error codes", "[DataStore][bounded]")
 {
-  BoundedRead::Diagnostic diagnostic;
-  diagnostic.counts(BoundedRead::Insufficient, "Insufficient test allowance", 8192, 4096);
-  const auto refused = diagnostic.finish(BoundedRead::Status::Unavailable);
+  Result<> diagnostic;
+  uint64 selected = 0;
+  const std::vector<uint64> shape(33, 1);
+  const Extent extent(std::vector<uint64>(33, 0), std::vector<uint64>(33, 0));
+  REQUIRE(BoundedRead::ValidateExtent(extent, shape, 1, 1, selected, diagnostic) == BoundedRead::Status::Unavailable);
+  const auto refused = ConvertResultTo(std::move(diagnostic), false);
   REQUIRE(refused.valid());
   REQUIRE_FALSE(refused.value());
   REQUIRE(refused.warnings().size() == 1);
-  REQUIRE(refused.warnings().front().code == BoundedRead::Insufficient);
-  REQUIRE(refused.warnings().front().message.find("required=8192, available=4096") != std::string::npos);
-  diagnostic.counts(BoundedRead::InvalidExtent, "Invalid test count", 7, 6);
-  const auto failure = diagnostic.finish(BoundedRead::Status::Failed);
+  REQUIRE(refused.warnings().front().code == BoundedRead::Unsupported);
+  REQUIRE(refused.warnings().front().message.find("required=33, available=32") != std::string::npos);
+  diagnostic = {};
+  REQUIRE(BoundedRead::ValidateExtent(Extent({0}, {0}), std::array<uint64, 2>{1, 1}, 1, 1, selected, diagnostic) == BoundedRead::Status::Failed);
+  const auto failure = ConvertResultTo(std::move(diagnostic), false);
   REQUIRE(failure.invalid());
   REQUIRE(failure.errors().size() == 1);
   REQUIRE(failure.errors().front().code == BoundedRead::InvalidExtent);
-  REQUIRE(failure.errors().front().message.find("required=7, available=6") != std::string::npos);
+  REQUIRE(failure.errors().front().message.find("required=2, available=1") != std::string::npos);
 }
 
 TEST_CASE("Resident bounded reads retain bool and missing-buffer behavior at zero grant", "[DataStore][bounded]")

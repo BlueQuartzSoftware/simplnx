@@ -473,28 +473,29 @@ public:
   [[nodiscard]] Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const override
   {
     static_cast<void>(scratchBudgetBytes);
-    BoundedRead::Diagnostic diagnostic;
+    Result<> diagnostic;
     if constexpr(std::is_same_v<T, bool>)
     {
-      return diagnostic.finish(diagnostic.set(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores."));
+      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores.");
+      return ConvertResultTo(std::move(diagnostic), false);
     }
     uint64 components = 1;
     for(const auto size : getComponentShape())
     {
       if(size == 0 || !BoundedRead::Multiply(components, static_cast<uint64>(size), components))
       {
-        return diagnostic.finish(diagnostic.set(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64."));
+        return MakeErrorResult<bool>(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
       }
     }
     uint64 selectedTuples = 0;
     const auto status = BoundedRead::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
     if(status != BoundedRead::Status::Complete)
     {
-      return diagnostic.finish(status);
+      return ConvertResultTo(std::move(diagnostic), false);
     }
     if(m_Data == nullptr)
     {
-      return diagnostic.finish(diagnostic.set(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer."));
+      return MakeErrorResult<bool>(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer.");
     }
     const int exceptions = std::uncaught_exceptions();
     auto publish = MakeScopeGuard([&]() noexcept {
