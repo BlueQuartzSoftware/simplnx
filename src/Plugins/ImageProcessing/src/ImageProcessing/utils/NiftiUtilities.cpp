@@ -217,7 +217,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
 
   md.sclSlope = hdr.scl_slope;
   md.sclInter = hdr.scl_inter;
-  md.hasNontrivialScaling = (hdr.scl_slope != 0.0f) && (hdr.scl_slope != 1.0f || hdr.scl_inter != 0.0f);
+  md.hasNontrivialScaling = std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f) && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f));
   if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
   {
     md.hasNontrivialScaling = false;
@@ -235,6 +235,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   const float32 rotEps = 1.0e-5f;
   if(useAffineIfPresent && hdr.sform_code > 0)
   {
+    md.affineHasFlip = hdr.srow_x[0] < 0.0f || hdr.srow_y[1] < 0.0f || hdr.srow_z[2] < 0.0f;
     md.origin = {hdr.srow_x[3], hdr.srow_y[3], hdr.srow_z[3]};
     for(int col = 0; col < 3; col++)
     {
@@ -262,6 +263,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   }
   else if(useAffineIfPresent && hdr.qform_code > 0)
   {
+    md.affineHasFlip = hdr.pixdim[0] < 0.0f;
     md.origin = {hdr.qoffset_x, hdr.qoffset_y, hdr.qoffset_z};
     const float32 bcdSq = hdr.quatern_b * hdr.quatern_b + hdr.quatern_c * hdr.quatern_c + hdr.quatern_d * hdr.quatern_d;
     if(bcdSq > rotEps)
@@ -272,6 +274,11 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   else
   {
     md.origin = {0.0f, 0.0f, 0.0f};
+  }
+
+  if(useAffineIfPresent && hdr.sform_code <= 0)
+  {
+    md.affineHasFlip = md.affineHasFlip || hdr.pixdim[1] < 0.0f || hdr.pixdim[2] < 0.0f || hdr.pixdim[3] < 0.0f;
   }
 
   md.intentCode = hdr.intent_code;

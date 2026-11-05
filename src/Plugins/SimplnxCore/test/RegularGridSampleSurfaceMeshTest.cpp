@@ -639,3 +639,111 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Use Custom Output Ty
     REQUIRE(params.isParameterActive(RegularGridSampleSurfaceMeshFilter::k_OutputType_Key, args));
   }
 }
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Nested single label boxes", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][L24]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  // Two closed boxes: [1, 6] x [0, 3] x [0, 3] and [2, 4] x [1, 2] x [1, 2].
+  auto* geom = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  REQUIRE(geom != nullptr);
+  auto* vertices = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {16}, {3}), geom->getId());
+  auto* faces = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
+                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {24}, {3}), geom->getId());
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  auto* faceData = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{24}, geom->getId());
+  REQUIRE(faceData != nullptr);
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* labels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {24}, {1}), faceData->getId());
+  REQUIRE(labels != nullptr);
+  const std::array<float32, 48> coords = {1, 0, 0, 6, 0, 0, 6, 3, 0, 1, 3, 0, 1, 0, 3, 6, 0, 3, 6, 3, 3, 1, 3, 3, 2, 1, 1, 4, 1, 1, 4, 2, 1, 2, 2, 1, 2, 1, 2, 4, 1, 2, 4, 2, 2, 2, 2, 2};
+  const std::array<usize, 36> indices = {0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7};
+  for(usize i = 0; i < coords.size(); ++i)
+  {
+    (*vertices)[i] = coords[i];
+  }
+  for(usize box = 0; box < 2; ++box)
+  {
+    for(usize i = 0; i < indices.size(); ++i)
+    {
+      (*faces)[box * 36 + i] = box * 8 + indices[i];
+    }
+    for(usize i = 0; i < 12; ++i)
+    {
+      (*labels)[box * 12 + i] = static_cast<int32>(box + 1);
+    }
+  }
+  auto args = MakeSmallGridArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{7, 3, 3}));
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedFeatureIdsPath);
+  // Cell centers are half-integers. Only the middle Y row of the middle Z slice intersects the inner box.
+  const std::vector<int32> expected = {0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2,
+                                       1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0};
+  const std::vector<int32> actual(featureIds.begin(), featureIds.end());
+  REQUIRE(actual == expected);
+}
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlapping single label boxes", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][L24]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* geom = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  auto* vertices = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {24}, {3}), geom->getId());
+  auto* faces = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
+                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {36}, {3}), geom->getId());
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  auto* faceData = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{36}, geom->getId());
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* labels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {36}, {1}), faceData->getId());
+  // All boxes have y in [0,1] and z in [0,3]. Each row samples y = z = 0.5.
+  std::array<std::array<float32, 3>, 3> boxes;
+  std::vector<int32> expected;
+  SECTION("Touching parts with B entry before A exit")
+  {
+    // Face order B, A, C puts B's entry first at the shared x = 3 boundary.
+    boxes = {{{3, 5, 2}, {1, 3, 1}, {6, 8, 3}}};
+    // A occupies centers 1.5, 2.5; B 3.5, 4.5; C 6.5, 7.5.
+    expected = {0, 1, 1, 2, 2, 0, 3, 3, 0, 0};
+  }
+  SECTION("Overlapping parts close below the stack top")
+  {
+    boxes = {{{1, 4, 1}, {3, 6, 2}, {7, 9, 3}}};
+    // Crossings: 1 opens A, 3 opens B, 4 closes A below B, 6 closes B,
+    // 7 opens C, 9 closes C. The most recently opened remaining part wins.
+    expected = {0, 1, 1, 2, 2, 2, 0, 3, 3, 0, 0};
+  }
+  const std::array<usize, 36> indices = {0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7};
+  for(usize b = 0; b < 3; ++b)
+  {
+    const float32 x0 = boxes[b][0];
+    const float32 x1 = boxes[b][1];
+    const std::array<float32, 24> c = {x0, 0, 0, x1, 0, 0, x1, 1, 0, x0, 1, 0, x0, 0, 3, x1, 0, 3, x1, 1, 3, x0, 1, 3};
+    for(usize i = 0; i < 24; ++i)
+    {
+      (*vertices)[b * 24 + i] = c[i];
+    }
+    for(usize i = 0; i < 36; ++i)
+    {
+      (*faces)[b * 36 + i] = b * 8 + indices[i];
+    }
+    for(usize i = 0; i < 12; ++i)
+    {
+      (*labels)[b * 12 + i] = static_cast<int32>(boxes[b][2]);
+    }
+  }
+  auto args = MakeSmallGridArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{static_cast<uint64>(expected.size()), 1, 1}));
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedFeatureIdsPath);
+  const std::vector<int32> actual(featureIds.begin(), featureIds.end());
+  REQUIRE(actual == expected);
+}

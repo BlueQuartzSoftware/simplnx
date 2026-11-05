@@ -54,7 +54,8 @@ struct IMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
   bool UseAffineIfPresent{true};
 
   /** @brief When `true` and the header declares a non-trivial scaling
-   *         (`scl_slope != 0` and `(scl_slope != 1 or scl_inter != 0)`)
+   *         (finite `scl_slope != 0` and `(scl_slope != 1 or scl_inter != 0)`,
+   *         with a non-finite intercept treated as 0)
    *         on a single-component datatype, the voxels are promoted
    *         to `float32` and `y = slope * x + inter` is applied on
    *         read. Scaling is always skipped for RGB24/RGBA32 per the

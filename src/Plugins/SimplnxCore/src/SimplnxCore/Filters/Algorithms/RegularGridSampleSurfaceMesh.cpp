@@ -195,6 +195,8 @@ public:
 
     // Fill each Y row from sorted triangle crossings.
     std::vector<ScanlineIntersection> intersections;
+    // Reuse capacity across rows; storage follows the maximum open-part depth.
+    std::vector<T> openParts;
     for(usize y = 0; y < m_YDim; y++)
     {
       float32 yCoord = m_Origin[1] + (static_cast<float32>(y) + 0.5f) * m_Spacing[1];
@@ -235,6 +237,7 @@ public:
 
       // Walk left to right and toggle the active Feature ID at each crossing.
       T currentFeature = 0;
+      openParts.clear();
       usize nextIsect = 0;
       usize rowOffset = y * m_XDim;
 
@@ -253,8 +256,29 @@ public:
           }
           else
           {
-            label0 = m_FaceLabelsBuffer[faceIdx];
-            label1 = T{0};
+            const T label = m_FaceLabelsBuffer[faceIdx];
+            if(label > 0)
+            {
+              // Single labels identify closed parts, not both sides of a face.
+              // Close an already-open label even below the top (touching or overlapping parts).
+              // Otherwise open it; the most recently opened remaining part labels the cell.
+              const auto openPart = std::find(openParts.begin(), openParts.end(), label);
+              if(openPart != openParts.end())
+              {
+                openParts.erase(openPart);
+              }
+              else
+              {
+                openParts.push_back(label);
+              }
+            }
+            else
+            {
+              openParts.clear();
+            }
+            currentFeature = openParts.empty() ? T{0} : openParts.back();
+            ++nextIsect;
+            continue;
           }
 
           // Surface meshers use negative labels for the exterior region.

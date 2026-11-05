@@ -181,3 +181,42 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: SIMPL Backwards Compati
     }
   }
 }
+
+TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Signed Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const bool changeSpacing = GENERATE(false, true);
+  const bool mixedSigns = GENERATE(false, true);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Image Geometry"});
+  auto* geometry = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometry != nullptr);
+  geometry->setDimensions({2, 2, 2});
+  geometry->setOrigin({10.0f, 20.0f, 30.0f});
+  geometry->setSpacing({1.0f, 1.0f, 1.0f});
+
+  const std::vector<float32> requestedCenter = mixedSigns ? std::vector<float32>{-5.0f, 3.0f, -1.0f} : std::vector<float32>{-5.0f, -3.0f, -1.0f};
+  // Two cells give half-extents (1,1,1), or (2,3,4) with the new spacing.
+  const FloatVec3 expectedOrigin =
+      changeSpacing ? (mixedSigns ? FloatVec3{-7.0f, 0.0f, -5.0f} : FloatVec3{-7.0f, -6.0f, -5.0f}) : (mixedSigns ? FloatVec3{-6.0f, 2.0f, -2.0f} : FloatVec3{-6.0f, -4.0f, -2.0f});
+  Arguments args;
+  args.insert(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, std::make_any<bool>(true));
+  args.insert(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, std::make_any<bool>(true));
+  args.insert(SetImageGeomOriginScalingFilter::k_ChangeSpacing_Key, std::make_any<bool>(changeSpacing));
+  args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float32>>(requestedCenter));
+  args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{2.0f, 3.0f, 4.0f}));
+
+  CAPTURE(changeSpacing, mixedSigns);
+  SetImageGeomOriginScalingFilter filter;
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CHECK(geometry->getOrigin() == expectedOrigin);
+  const auto center = geometry->getBoundingBoxf().center();
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    CHECK(center[axis] == requestedCenter[axis]);
+  }
+  CHECK(geometry->getSpacing() == (changeSpacing ? FloatVec3{2.0f, 3.0f, 4.0f} : FloatVec3{1.0f, 1.0f, 1.0f}));
+}
