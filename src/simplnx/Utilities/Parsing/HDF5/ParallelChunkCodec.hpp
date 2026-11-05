@@ -89,6 +89,8 @@ enum class BoundedFaultPointForTesting
   SelectedAllocation,
   DecoderCleanup,
   MetadataCleanup,
+  NativeGuardCleanup,
+  CandidateCleanup,
   SuccessResultConstruction,
   RawRead
 };
@@ -601,7 +603,7 @@ public:
    * @return Completion, refusal, or failure after backend scratch cleanup.
    * @warning This internal entry does not protect caller-visible output. The publication layer must stage and publish once.
    */
-  BoundedRead::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, BoundedRead::Diagnostic& diagnostic) const;
+  BoundedRead::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const;
 
   /**
    * @brief Inflates one chunk into an edge-clamped byte buffer.
@@ -756,7 +758,7 @@ private:
    * @param selectedOutput Receives the admitted output stage on success; null lets the caller own private destination scratch.
    * @return Completion, refusal, or failure after backend cleanup.
    */
-  BoundedRead::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, BoundedRead::Diagnostic& diagnostic,
+  BoundedRead::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
                                                       std::unique_ptr<std::byte[]>* selectedOutput) const;
 
   /**

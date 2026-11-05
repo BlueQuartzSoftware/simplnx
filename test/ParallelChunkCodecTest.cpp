@@ -2706,7 +2706,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
   }
   SECTION("private state uses the backend grant without another output stage")
   {
-    BoundedRead::Diagnostic diagnostic;
+    Result<> diagnostic;
     const auto status = codec.readExtentIntoBufferBoundedState(extent, nonstd::span<std::byte>(output.data(), 8), required - 8, diagnostic);
     REQUIRE(status == BoundedRead::Status::Complete);
     REQUIRE(output[0] == std::byte{0});
