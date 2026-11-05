@@ -645,7 +645,7 @@ TEST_CASE("ImageProcessing::ContourEngine: single voxel (empty neighbor span) is
   }
 }
 
-TEST_CASE("ImageProcessing::ContourEngine: LabelContour hand-computed (background never a contour; labels differ)", "[ImageProcessing][ContourEngine]")
+TEST_CASE("ImageProcessing::ContourEngine: LabelContour hand-computed (background never a contour, labels differ)", "[ImageProcessing][ContourEngine]")
 {
   // A 4x1x1 line: label 5, label 5, background 0, label 8. background = 0. Face connectivity.
   //   x=0 (5): in-bounds neighbor x=1 (5) same; x=-1 OOB ignored -> no differing neighbor -> background.
