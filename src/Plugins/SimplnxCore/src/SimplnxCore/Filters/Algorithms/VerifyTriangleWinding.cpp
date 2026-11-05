@@ -30,6 +30,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
+#include "simplnx/Utilities/Meshing/WindingTransferWarnings.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
@@ -80,8 +81,9 @@ void AccumulateGatheredTriangleVolume(const float32* coordinates, const int32* i
   }
 }
 
-bool MergeWindingTransfer(Result<>& result, Result<> transfer, const std::string& geometryPath, const char* phasePtr, usize firstTuple, usize tupleCount)
+bool MergeWindingTransfer(Result<>& result, WindingTransferWarnings& warnings, Result<> transfer, const std::string& geometryPath, const char* phasePtr, usize firstTuple, usize tupleCount)
 {
+  warnings.append(transfer.warnings());
   if(transfer.invalid())
   {
     transfer = MergeResults(std::move(transfer), MakeErrorResult(-56325, fmt::format("Triangle winding for geometry '{}': {} failed at tuple {} ({} tuples). Check the preceding storage diagnostic.",
@@ -103,8 +105,8 @@ bool MergeWindingTransfer(Result<>& result, Result<> transfer, const std::string
  * @note The working reservation bounds block buffers; the dense feature-volume array scales with the largest feature ID.
  * Cancellation discards incomplete volume sums. Completed reversal blocks remain written.
  */
-Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, const Int32AbstractDataStore& idsStore, const std::string& geometryPath,
-                                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStore& vertices,
+                                           const Int32AbstractDataStore& idsStore, const std::string& geometryPath, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   Result<> result;
   const usize triangleCount = triangles.getNumberOfTuples();
@@ -159,7 +161,7 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
         return result;
       }
       const usize count = std::min(blockCapacity, triangleCount - begin);
-      if(!MergeWindingTransfer(result, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, phasePtr, begin, count))
+      if(!MergeWindingTransfer(result, warnings, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, phasePtr, begin, count))
       {
         return result;
       }
@@ -194,8 +196,8 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
         return result;
       }
       const usize count = std::min(blockCapacity, triangleCount - begin);
-      if(!MergeWindingTransfer(result, triangles.copyIntoBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "reading volume faces", begin, count) ||
-         !MergeWindingTransfer(result, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, "reading volume IDs", begin, count))
+      if(!MergeWindingTransfer(result, warnings, triangles.copyIntoBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "reading volume faces", begin, count) ||
+         !MergeWindingTransfer(result, warnings, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, "reading volume IDs", begin, count))
       {
         return result;
       }
@@ -230,7 +232,7 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
             return result;
           }
           const usize pageCount = std::min(pageCapacity, vertexCount - pageBegin);
-          if(!MergeWindingTransfer(result, vertices.copyIntoBuffer(pageBegin * 3, {vertexPage->data(), pageCount * 3}), geometryPath, "reading volume vertices", pageBegin, pageCount))
+          if(!MergeWindingTransfer(result, warnings, vertices.copyIntoBuffer(pageBegin * 3, {vertexPage->data(), pageCount * 3}), geometryPath, "reading volume vertices", pageBegin, pageCount))
           {
             return result;
           }
@@ -273,8 +275,8 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
         return result;
       }
       const usize count = std::min(blockCapacity, triangleCount - begin);
-      if(!MergeWindingTransfer(result, triangles.copyIntoBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "reading reversal faces", begin, count) ||
-         !MergeWindingTransfer(result, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, "reading reversal IDs", begin, count))
+      if(!MergeWindingTransfer(result, warnings, triangles.copyIntoBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "reading reversal faces", begin, count) ||
+         !MergeWindingTransfer(result, warnings, idsStore.copyIntoBuffer(begin * idComponents, {ids->data(), count * idComponents}), geometryPath, "reading reversal IDs", begin, count))
       {
         return result;
       }
@@ -300,7 +302,7 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
       {
         return result;
       }
-      if(changed && !MergeWindingTransfer(result, triangles.copyFromBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "writing reversed faces", begin, count))
+      if(changed && !MergeWindingTransfer(result, warnings, triangles.copyFromBuffer(begin * 3, {faces->data(), count * 3}), geometryPath, "writing reversed faces", begin, count))
       {
         return result;
       }
@@ -325,6 +327,23 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
   }
 }
 
+Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, const Int32AbstractDataStore& idsStore, const std::string& geometryPath,
+                                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+{
+  WindingTransferWarnings warnings;
+  auto result = ReverseNegativeVolumesBoundedImpl(warnings, triangles, vertices, idsStore, geometryPath, shouldCancel, messageHandler);
+  try
+  {
+    warnings.attach(result);
+  } catch(const std::bad_alloc&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-56324, "Triangle winding failed to allocate memory while collecting transfer warnings. Free memory before retrying."));
+  } catch(const std::length_error&)
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-56324, "Triangle winding could not collect transfer warnings because their size is unsupported."));
+  }
+  return result;
+}
 class ReverseWindingImpl
 {
 public:
