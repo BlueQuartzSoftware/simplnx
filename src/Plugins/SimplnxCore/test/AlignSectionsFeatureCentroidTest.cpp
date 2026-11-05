@@ -342,3 +342,50 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Rec
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice bounds", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+  using FilterType = AlignSectionsFeatureCentroidFilter;
+  const usize zDim = GENERATE(usize{1}, usize{3});
+  const bool useReference = GENERATE(true, false);
+  const bool atUpperBound = GENERATE(true, false);
+  const bool storeShifts = GENERATE(false, true);
+  // Z slices have exactly the integer indices 0 through Z-1. Z itself is not an index.
+  const int32 reference = static_cast<int32>(atUpperBound ? zDim : zDim - 1);
+  CAPTURE(zDim, useReference, reference, storeShifts);
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({3, 3, zDim});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{zDim, 3, 3}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  REQUIRE(UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cells->getId()) != nullptr);
+
+  FilterType filter;
+  Arguments args;
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cells", "Mask"})));
+  args.insertOrAssign(FilterType::k_UseReferenceSlice_Key, std::make_any<bool>(useReference));
+  args.insertOrAssign(FilterType::k_ReferenceSlice_Key, std::make_any<int32>(reference));
+  args.insertOrAssign(FilterType::k_StoreAlignmentShifts_Key, std::make_any<bool>(storeShifts));
+  // Stop at preflight: invalid references must never reach the alignment algorithm.
+  IFilter::PreflightResult result;
+  REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
+  if(useReference && atUpperBound)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    const auto& error = result.outputActions.errors()[0];
+    REQUIRE(error.code == -68073);
+    CHECK(error.message.find(fmt::format("Reference Slice value ({}) is too large.", reference)) != std::string::npos);
+    CHECK(error.message.find(fmt::format("Z dimension {}", zDim)) != std::string::npos);
+    CHECK(error.message.find(fmt::format("0 to {}", zDim - 1)) != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
