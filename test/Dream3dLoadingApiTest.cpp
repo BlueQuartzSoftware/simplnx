@@ -696,6 +696,33 @@ fs::path CreateMalformedLegacyArrayFile(const std::string& fileName)
   return outputPath;
 }
 
+fs::path CreateLegacyStringCountMismatchFile(const std::string& fileName)
+{
+  const fs::path outputPath = GetTestOutputDir() / fileName;
+  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  REQUIRE(fileWriter.isValid());
+  auto result = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto containers = fileWriter.createGroup("DataContainers");
+  auto container = containers.createGroup("StringContainer");
+  auto attributeMatrix = container.createGroup("StringAM");
+  result = attributeMatrix.writeVectorAttribute("TupleDimensions", ShapeType{2});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto dataset = attributeMatrix.createDataset("Strings");
+  std::vector<std::string> values{"alpha", "beta", "gamma"};
+  result = dataset.writeVectorOfStrings(values);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeStringAttribute(Constants::k_ObjectTypeTag, "StringDataArray");
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeVectorAttribute("TupleDimensions", ShapeType{2});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeVectorAttribute("ComponentDimensions", ShapeType{1});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  return outputPath;
+}
+
 fs::path CreateLegacyStatisticsFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
@@ -1952,4 +1979,23 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with all in-core data")
   {
     CHECK(smallStore[i] == static_cast<int32>(i * 3));
   }
+}
+
+TEST_CASE("Dream3dLoadingApi: legacy StringArray with more strings than tuples is reshaped")
+{
+  UnitTest::LoadPlugins();
+  ScopedTempFile fileGuard{GetTestOutputDir() / "Dream3dLoadingApiTest_LegacyStringCount.dream3d"};
+  CreateLegacyStringCountMismatchFile(fileGuard.path.filename().string());
+  const DataPath path({"StringContainer", "StringAM", "Strings"});
+  auto metadata = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  auto* placeholder = metadata.value().getDataAs<StringArray>(path);
+  REQUIRE(placeholder != nullptr);
+  REQUIRE(placeholder->getTupleShape() == ShapeType{2});
+  auto loaded = DREAM3D::LoadDataStructure(fileGuard.path);
+  SIMPLNX_RESULT_REQUIRE_VALID(loaded);
+  auto* array = loaded.value().getDataAs<StringArray>(path);
+  REQUIRE(array != nullptr);
+  REQUIRE(array->getTupleShape() == ShapeType{3});
+  REQUIRE(array->values() == std::vector<std::string>{"alpha", "beta", "gamma"});
 }

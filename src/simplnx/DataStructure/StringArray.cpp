@@ -2,6 +2,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
+#include <new>
 #include <numeric>
 #include <stdexcept>
 
@@ -15,7 +16,13 @@ StringArray* StringArray::Create(DataStructure& dataStructure, const std::string
 StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
-  data->m_Strings = std::make_shared<StringStore>(strings, tupleShape);
+  try
+  {
+    data->m_Strings = std::make_shared<StringStore>(std::move(strings), tupleShape);
+  } catch(const std::invalid_argument&)
+  {
+    return nullptr;
+  }
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -26,12 +33,32 @@ StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const s
 StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
                                  const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
+  std::shared_ptr<StringArray> data;
+  try
+  {
+    data.reset(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
+  } catch(const std::invalid_argument&)
+  {
+    return nullptr;
+  }
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
+}
+
+StringArray* StringArray::CreateWithStore(DataStructure& dataStructure, const std::string_view& name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId,
+                                          const std::optional<IdType>& importId)
+{
+  if(store == nullptr)
+  {
+    return nullptr;
+  }
+  auto data =
+      importId.has_value() ? std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), {0}, *importId, {})) : std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
+  data->m_Strings = std::move(store);
+  return AttemptToAddObject(dataStructure, data, parentId) ? data.get() : nullptr;
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name)
@@ -103,8 +130,23 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
+  std::shared_ptr<store_type> copiedStore;
+  try
+  {
+    copiedStore = m_Strings->deepCopy("");
+  } catch(const std::bad_alloc&)
+  {
+    throw;
+  } catch(const std::exception&)
+  {
+    return nullptr;
+  }
+  if(copiedStore == nullptr)
+  {
+    return nullptr;
+  }
   // The non-import constructor generates an identifier for the copied object.
-  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
+  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), copiedStore));
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
