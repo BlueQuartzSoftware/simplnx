@@ -46,11 +46,15 @@ Both options transfer data from the **Vertex Geometry** onto the **Image Geometr
 
 - **Arrays to Interpolate** use the selected kernel (Uniform or Gaussian). The kernel weight multiplies each vertex's value before being accumulated into surrounding voxels. The final output is a kernel-weighted average. Optional statistics (length, min, max, mean, standard deviation, summation) can be computed on the weighted contributions. The output array type is always *float64* because the weighted average produces floating-point values regardless of the input type.
 
-- **Arrays to Copy** always use a uniform kernel (weight = 1.0), even when Gaussian interpolation is selected. The final output is a simple arithmetic average of all values that fell within the kernel radius. No statistics are computed for copied arrays. The output array type matches the source array type.
+- **Arrays to Copy** always use a uniform kernel (weight = 1.0), even when Gaussian interpolation is selected. The final output is a simple arithmetic average of all values that fell within the kernel radius. No statistics are computed for copied arrays. The output array type matches the source array type; integer results are truncated toward zero.
 
-Use *Arrays to Interpolate* for data values that should be smoothed or blended by the kernel (e.g., measured scalar fields). Use *Arrays to Copy* for categorical or index data where Gaussian weighting would not be meaningful.
+Use *Attribute Arrays to Interpolate* for data values that should be smoothed or blended by the kernel (e.g., measured scalar fields). Use *Attribute Arrays to Copy* when an arithmetic average is appropriate and the output must keep the source array type.
 
 All arrays selected for interpolation or copying must be **scalar** (single-component) arrays. Boolean arrays cannot be selected for interpolation or copying.
+
+### Warning: Categorical Arrays
+
+*Attribute Arrays to Copy* writes the average of all values that contribute to a voxel through the kernel, converted to the source array type. For categorical arrays such as Phases, Feature Ids, or other labels, this average may not be a valid label. For example, phase values 1 and 3 produce 2, even when phase 2 is not present. To reduce this problem, set each **Kernel Size** value smaller than the grid spacing in that dimension. Then each vertex reaches only its own voxel. This does not remove the problem, because one voxel can still contain more than one vertex. Always check the output labels. A voxel that no vertex reaches gets the value 0.
 
 ### Inline Statistics
 

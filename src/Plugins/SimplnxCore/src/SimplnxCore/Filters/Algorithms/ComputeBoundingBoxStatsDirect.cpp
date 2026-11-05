@@ -394,7 +394,7 @@ template <typename T>
 struct FrequencySummaryState
 {
   usize cumulativeFrequency = 0;
-  std::optional<T> previousValue;
+  std::optional<T> lowerMiddleValue;
   uint64 maxFrequency = 0;
   bool medianFound = false;
 };
@@ -416,11 +416,16 @@ void AccumulateFrequencyBatch(const FixedFrequencyTable<T>& frequencies, Complet
     const auto& entry = frequencies[index];
     stats.uniqueValCount++;
     state.cumulativeFrequency += entry.count;
+    if(stats.count % 2 == 0 && !state.lowerMiddleValue.has_value() && state.cumulativeFrequency >= stats.count / 2)
+    {
+      state.lowerMiddleValue = entry.value;
+    }
     if(!state.medianFound && state.cumulativeFrequency >= medianPosition)
     {
-      if(stats.count % 2 == 0 && state.cumulativeFrequency == medianPosition && state.previousValue.has_value())
+      // Average only when the lower middle rank is in an earlier entry. One shared value is used as is, so it cannot overflow.
+      if(stats.count % 2 == 0 && state.cumulativeFrequency - entry.count >= stats.count / 2)
       {
-        stats.medianValue = (static_cast<float32>(state.previousValue.value()) + static_cast<float32>(entry.value)) / 2.0f;
+        stats.medianValue = (static_cast<float32>(state.lowerMiddleValue.value()) + static_cast<float32>(entry.value)) / 2.0f;
       }
       else
       {
@@ -442,7 +447,6 @@ void AccumulateFrequencyBatch(const FixedFrequencyTable<T>& frequencies, Complet
         modes->push_back(entry.value);
       }
     }
-    state.previousValue = entry.value;
   }
 }
 

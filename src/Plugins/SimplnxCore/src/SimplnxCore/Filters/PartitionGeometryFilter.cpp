@@ -486,6 +486,12 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
   }
 
+  const auto startingFeatureId = filterArgs.value<int32>(k_StartingFeatureID_Key);
+  if(startingFeatureId < 0)
+  {
+    return {MakeErrorResult<OutputActions>(-3046, fmt::format("Starting Feature ID ({}) must be non-negative so partition IDs can index the feature Attribute Matrix.", startingFeatureId))};
+  }
+
   nx::core::Result<OutputActions> resultOutputActions;
 
   DataPath dap = pInputGeomCellAMPathValue.createChildPath(pPartitionIdsArrayNameValue);
@@ -494,7 +500,9 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   dap = pInputGeomCellAMPathValue.getParent();
   dap = dap.createChildPath(pFeatureAttrMatrixNameValue);
-  resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(dap, attrMatrix.getShape()));
+  const auto& partitionDims = psInfo.value().geometryDims;
+  const usize featureTupleCount = partitionDims[0] * partitionDims[1] * partitionDims[2] + static_cast<usize>(startingFeatureId);
+  resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(dap, ShapeType{featureTupleCount}));
 
   std::string partitioningSchemeInformation;
 

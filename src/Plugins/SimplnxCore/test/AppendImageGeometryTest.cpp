@@ -443,3 +443,38 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility
     }
   }
 }
+
+TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[SimplnxCore][AppendImageGeometryFilter][L05]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  for(const auto& name : {"Destination", "Input"})
+  {
+    const usize width = std::string(name) == "Destination" ? 2 : 1;
+    auto* geom = ImageGeom::Create(dataStructure, name);
+    REQUIRE(geom != nullptr);
+    geom->setDimensions({width, 2, 1});
+    geom->setSpacing({1.0F, 1.0F, 1.0F});
+    auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 2, width}, geom->getId());
+    REQUIRE(cellData != nullptr);
+    geom->setCellData(*cellData);
+    auto* values = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1, 2, width}, ShapeType{1}, 0), cellData->getId());
+    REQUIRE(values != nullptr);
+    const std::vector<int32> initial = width == 2 ? std::vector<int32>{1, 2, 3, 4} : std::vector<int32>{5, 6};
+    std::copy(initial.begin(), initial.end(), values->begin());
+  }
+
+  appendGeometries(dataStructure, DataPath({"Destination"}), {DataPath({"Input"})}, 0, std::nullopt, false);
+  const DataPath valuesPath({"Destination", "Cell Data", "Values"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(valuesPath));
+  const auto& values = dataStructure.getDataRefAs<Int32Array>(valuesPath);
+  // X is fastest: append 5 to row {1, 2} and 6 to row {3, 4}.
+  const std::vector<int32> expected = {1, 2, 5, 3, 4, 6};
+  REQUIRE(values.getSize() == expected.size());
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    CAPTURE(i);
+    CHECK(values[i] == expected[i]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

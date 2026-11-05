@@ -1,6 +1,7 @@
 #include "CreatePythonSkeletonFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/CreatePythonSkeleton.hpp"
+#include "SimplnxCore/utils/PythonPluginTemplateFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -97,7 +98,12 @@ IFilter::PreflightResult CreatePythonSkeletonFilter::preflightImpl(const DataStr
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto filterList = StringUtilities::split(filterNames, ',');
+  auto namesResult = ParsePythonFilterNames(filterNames);
+  if(namesResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(namesResult))};
+  }
+  const auto& filterList = namesResult.value();
 
   std::stringstream preflightUpdatedValue;
 
