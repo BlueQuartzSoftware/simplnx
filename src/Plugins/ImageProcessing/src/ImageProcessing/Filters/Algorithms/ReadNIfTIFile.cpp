@@ -14,6 +14,7 @@
 #include <zlib.h>
 
 #include <algorithm>
+#include <cmath>
 #include <type_traits>
 #include <vector>
 
@@ -190,7 +191,7 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
   const usize componentCount = md.componentCount;
   const bool byteSwap = md.byteSwapRequired;
   const float32 slope = md.sclSlope;
-  const float32 inter = md.sclInter;
+  const float32 inter = std::isfinite(md.sclInter) ? md.sclInter : 0.0f;
   const std::string& filePath = md.filePath;
 
   const usize srcScanlineElements = srcNx * componentCount;

@@ -17,6 +17,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -1574,4 +1575,150 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[Ima
   REQUIRE(geom.getSpacing() == FloatVec3(2.0f, 3.0f, 4.0f));
   REQUIRE(geom.getOrigin() == (useAffine && kind != 6 ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
   RequireArrayEquals<uint8>(ds, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
+}
+
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[ImageProcessing][ReadNIfTIFileFilter][L60]")
+{
+  UnitTest::LoadPlugins();
+
+  // Cases 0-5 cover NaN and both infinities in each coefficient; case 6 is the zero-slope control.
+  // Case 7: zero slope with a NaN intercept is no scaling, so no intercept warning.
+  // Case 8: slope 1 with a NaN intercept is 1 * x + 0, the identity, so int16 is kept and the intercept warning is given.
+  const auto kind = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
+  const bool applyScaling = GENERATE(false, true);
+  CAPTURE(kind, applyScaling);
+  SyntheticNiftiParams params;
+  params.dims = {2, 1, 1};
+  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.bitpix = 16;
+  params.sclSlope = 2.0f;
+  params.sclInter = 10.0f;
+  const std::array<float, 3> invalidValues{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()};
+  if(kind < 3)
+  {
+    params.sclSlope = invalidValues[kind];
+  }
+  else if(kind < 6)
+  {
+    params.sclInter = invalidValues[kind - 3];
+  }
+  else if(kind == 8)
+  {
+    params.sclSlope = 1.0f;
+    params.sclInter = invalidValues[0];
+  }
+  else
+  {
+    params.sclSlope = 0.0f;
+    if(kind == 7)
+    {
+      params.sclInter = invalidValues[0];
+    }
+  }
+  const std::vector<int16> voxels{-7, 23};
+  const fs::path filePath = OutputDir() / "nonfinite_scaling.nii";
+  WriteNiftiFile(filePath, MakeHeader(params), ToBytes(voxels), false);
+  const DataPath geomPath({"NIfTI Nonfinite Scaling"});
+  const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
+  const auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", applyScaling, true);
+  ReadNIfTIFileFilter filter;
+  DataStructure preflightData;
+  auto preflight = filter.preflight(preflightData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const bool invalidIntercept = kind >= 3 && kind < 6;
+  const bool scaled = applyScaling && invalidIntercept;
+  const bool interceptWarning = applyScaling && (invalidIntercept || kind == 8);
+  REQUIRE(preflight.outputActions.warnings().size() == (interceptWarning ? 1 : 0));
+  if(interceptWarning)
+  {
+    const auto& warning = preflight.outputActions.warnings().front();
+    CHECK(warning.code == -34752);
+    CHECK(warning.message.find(filePath.string()) != std::string::npos);
+    CHECK(warning.message.find("intercept is not finite") != std::string::npos);
+    CHECK(warning.message.find("0 is used") != std::string::npos);
+  }
+  bool foundHeader = false;
+  for(const auto& value : preflight.outputValues)
+  {
+    if(value.name == "NIfTI Header")
+    {
+      foundHeader = true;
+      CHECK(value.value.find(invalidIntercept ? "slope=2, inter=0" : "scaling: none") != std::string::npos);
+    }
+  }
+  REQUIRE(foundHeader);
+  auto actions = preflight.outputActions.value().applyAll(preflightData, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(actions);
+  CHECK((scaled ? preflightData.getDataAs<Float32Array>(arrPath) != nullptr : preflightData.getDataAs<Int16Array>(arrPath) != nullptr));
+
+  DataStructure executeData;
+  const auto execute = filter.execute(executeData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  if(scaled)
+  {
+    // Hand oracle: {-7, 23} * 2 + 0 = {-14, 46}.
+    RequireArrayEquals<float32>(executeData, arrPath, {-14.0f, 46.0f});
+  }
+  else
+  {
+    RequireArrayEquals<int16>(executeData, arrPath, voxels);
+  }
+  UnitTest::CheckArraysInheritTupleDims(executeData);
+}
+
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[ImageProcessing][ReadNIfTIFileFilter][L60]")
+{
+  UnitTest::LoadPlugins();
+
+  // Non-finite slopes disable scaling; non-finite intercepts use 0. RGB24 is never scaled.
+  // Case 4: finite non-trivial scaling, so the RGB24 warning -34751 is expected.
+  const auto kind = GENERATE(0, 1, 2, 3, 4);
+  CAPTURE(kind);
+  SyntheticNiftiParams params;
+  params.dims = {2, 1, 1};
+  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.bitpix = 24;
+  params.sclSlope = 2.0f;
+  params.sclInter = 10.0f;
+  switch(kind)
+  {
+  case 0:
+    params.sclSlope = std::numeric_limits<float>::quiet_NaN();
+    break;
+  case 1:
+    params.sclSlope = std::numeric_limits<float>::infinity();
+    break;
+  case 2:
+    params.sclInter = std::numeric_limits<float>::quiet_NaN();
+    break;
+  case 3:
+    params.sclInter = -std::numeric_limits<float>::infinity();
+    break;
+  default:
+    break;
+  }
+  const std::vector<uint8> voxels{1, 2, 3, 4, 5, 6};
+  const fs::path filePath = OutputDir() / "nonfinite_scaling_rgb24.nii";
+  WriteNiftiFile(filePath, MakeHeader(params), voxels, false);
+  const DataPath geomPath({"NIfTI Nonfinite Scaling RGB"});
+  const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
+  const auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+  ReadNIfTIFileFilter filter;
+  DataStructure dataStructure;
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool hasScalingWarning = false;
+  bool hasInterceptWarning = false;
+  for(const auto& warning : preflight.outputActions.warnings())
+  {
+    hasScalingWarning = hasScalingWarning || warning.code == -34751;
+    hasInterceptWarning = hasInterceptWarning || warning.code == -34752;
+  }
+  CHECK(hasScalingWarning == (kind >= 2));
+  // RGB24 is never scaled, so no intercept is used and warning -34752 must not be given.
+  CHECK_FALSE(hasInterceptWarning);
+
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
 }

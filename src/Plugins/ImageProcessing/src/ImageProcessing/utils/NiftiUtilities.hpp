@@ -192,7 +192,7 @@ struct IMAGEPROCESSING_EXPORT NiftiMetadata
   /** @{ */
   float32 sclSlope{0.0f};           ///< `scl_slope` from the header; 0 means "no scaling" per spec.
   float32 sclInter{0.0f};           ///< `scl_inter` from the header.
-  bool hasNontrivialScaling{false}; ///< True when (slope != 0) and (slope != 1 or inter != 0); always false for RGB24/RGBA32.
+  bool hasNontrivialScaling{false}; ///< True for finite nonzero slope and non-identity scaling, treating a non-finite intercept as 0; always false for RGB24/RGBA32.
   /** @} */
 
   /** @name Orientation */
