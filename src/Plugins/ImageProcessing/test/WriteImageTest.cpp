@@ -7,6 +7,7 @@
 #include "ImageProcessing/ImageProcessing_test_dirs.hpp"
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -23,11 +24,14 @@
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <random>
+#include <set>
 #include <string>
 #include <system_error>
 #include <type_traits>
@@ -2137,5 +2141,77 @@ TEST_CASE("ImageProcessing::WriteImageFilter: rejects a source-group grant small
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().front().code == -27026);
+  }
+}
+
+TEST_CASE("ImageProcessing::WriteImageFilter: each slice file runs the hook once before it is written", "[ImageProcessing][WriteImageFilter][FileWriteHook]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  constexpr int32 k_HookWarningCode = 99401;
+  constexpr int32 k_RefusalCode = -99402;
+  // Both implementations are tested: the in-core path runs WriteImageDirect, the out-of-core path runs WriteImageScanline.
+  const auto scenario = GENERATE(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore, UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  const bool refusesWithoutErrors = GENERATE(false, true);
+  CAPTURE(scenario, refusesWithoutErrors);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 3});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {3, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {3, 4, 4}, {1}, cellAmPtr->getId());
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  ScopedTempDir tempDir(k_BinaryTestOutputDir);
+  WriteImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+  args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
+  args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+
+  std::vector<std::string> calledFiles;
+  std::vector<bool> wasAbsentAtCall;
+  usize refusedCallIndex = std::numeric_limits<usize>::max();
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode) -> Result<> {
+    calledFiles.push_back(target.filename().string());
+    wasAbsentAtCall.push_back(!fs::exists(target));
+    if(calledFiles.size() - 1 == refusedCallIndex)
+    {
+      return refusesWithoutErrors ? Result<>{{nonstd::make_unexpected(ErrorCollection{})}} : MakeErrorResult(k_RefusalCode, "refused");
+    }
+    return MakeWarningVoidResult(k_HookWarningCode, "hook warning");
+  });
+
+  const auto listFiles = [&tempDir]() {
+    std::set<std::string> files;
+    for(const auto& entry : fs::directory_iterator(tempDir.path()))
+    {
+      files.insert(entry.path().filename().string());
+    }
+    return files;
+  };
+
+  SECTION("success: one call per slice file, before the file exists, with the hook warning kept")
+  {
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(calledFiles.size() == 3);
+    CHECK(std::set<std::string>(calledFiles.begin(), calledFiles.end()) == listFiles());
+    CHECK(std::all_of(wasAbsentAtCall.begin(), wasAbsentAtCall.end(), [](bool isAbsent) { return isAbsent; }));
+    const auto warningCount = std::count_if(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == k_HookWarningCode; });
+    CHECK(warningCount == 3);
+  }
+  SECTION("a refused second slice keeps the first slice and writes no later slice")
+  {
+    refusedCallIndex = 1;
+    auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    CHECK(executeResult.result.errors().size() == (refusesWithoutErrors ? 0U : 1U));
+    REQUIRE(calledFiles.size() == 2);
+    CHECK(listFiles() == std::set<std::string>{calledFiles[0]});
   }
 }

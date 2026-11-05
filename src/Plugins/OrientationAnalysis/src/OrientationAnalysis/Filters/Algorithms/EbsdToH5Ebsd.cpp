@@ -17,6 +17,11 @@
 
 using namespace nx::core;
 
+namespace
+{
+constexpr int32 k_FilterCancelledError = -1;
+} // namespace
+
 // -----------------------------------------------------------------------------
 EbsdToH5Ebsd::EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EbsdToH5EbsdInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -51,6 +56,8 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
+  // AtomicFile::Create() runs the file-replace hook on the final path, so a component that reads the output file stops reading it
+  // before the commit replaces the file.
   auto atomicFileResult = AtomicFile::Create(absPath);
   if(atomicFileResult.invalid())
   {
@@ -58,6 +65,15 @@ Result<> EbsdToH5Ebsd::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
+  // Components released by the hook before a cancel stay released; the final file stays unchanged.
+  Result<> result = m_ShouldCancel ? MakeErrorResult(k_FilterCancelledError, "Filter cancelled") : writeAndCommit(atomicFile);
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+  return result;
+}
+
+// -----------------------------------------------------------------------------
+Result<> EbsdToH5Ebsd::writeAndCommit(AtomicFile& atomicFile)
+{
   // Scope file writer in code block to get around file lock on Windows (enforce destructor order)
   {
     hid_t fileId = H5Support::H5Utilities::createFile(atomicFile.tempFilePath().string());
@@ -315,7 +331,7 @@ Result<> EbsdToH5Ebsd::operator()()
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
   if(m_ShouldCancel)
   {
-    return MakeErrorResult(-1, "Filter cancelled");
+    return MakeErrorResult(k_FilterCancelledError, "Filter cancelled");
   }
   Result<> commitResult = atomicFile.commit();
   if(commitResult.invalid())

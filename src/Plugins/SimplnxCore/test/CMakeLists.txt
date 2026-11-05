@@ -89,6 +89,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractTripleLinesTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
+  FileReplaceWritersTest.cpp
   FillBadDataTest.cpp
   FlyingEdges3DTest.cpp
   HierarchicalSmoothTest.cpp

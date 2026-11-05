@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/RecordingFileReplaceHandler.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -204,6 +205,66 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: analytical Bool
   RequireAnalyticalOdfFile(outputDirectory / fmt::format("{}_Phase_2.txt", outputStem), "90.00000000 0.00000000 90.00000000 2.50000000 3");
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: the file-replace hook runs once on each phase file before it changes",
+          "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter][FileWriteHook]")
+{
+  UnitTest::LoadPlugins();
+  constexpr int32 k_RecorderWarningCode = 99211;
+  constexpr int32 k_RecorderErrorCode = -99212;
+  const fs::path outputDirectory = fs::temp_directory_path() / "simplnx_odf_angle_file_hook";
+  fs::remove_all(outputDirectory);
+  fs::create_directories(outputDirectory);
+  const fs::path outputFile = outputDirectory / "HookedOdf.txt";
+  const fs::path phase1File = outputDirectory / "HookedOdf_Phase_1.txt";
+  const fs::path phase2File = outputDirectory / "HookedOdf_Phase_2.txt";
+
+  DataStructure dataStructure = CreateAnalyticalDataStructure();
+  WriteStatsGenOdfAngleFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputFile));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AnalyticalEulersPath));
+  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_AnalyticalPhasesPath));
+
+  UnitTest::RecordingFileReplaceHandler& recorder = UnitTest::ProcessRecorder();
+  const UnitTest::RecorderDisarmGuard disarmGuard({&recorder});
+  int32 callCount = 0;
+  bool isPhase2AbsentAtCall = false;
+  bool isPhase1WrittenAtCall = false;
+  const auto observe = [&](const fs::path&, FileWriteHookMode) {
+    callCount++;
+    isPhase2AbsentAtCall = !fs::exists(phase2File);
+    isPhase1WrittenAtCall = fs::exists(phase1File);
+  };
+
+  SECTION("success keeps the hook warning")
+  {
+    recorder.arm(phase2File, observe, MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const bool hasRecorderWarning =
+        std::any_of(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == k_RecorderWarningCode; });
+    CHECK(hasRecorderWarning);
+    CHECK(callCount == 1);
+    CHECK(isPhase1WrittenAtCall);
+    CHECK(isPhase2AbsentAtCall);
+    CHECK(fs::exists(phase2File));
+  }
+  SECTION("a refused phase file is not written")
+  {
+    recorder.arm(phase2File, observe, MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    CHECK(executeResult.result.errors().front().code == k_RecorderErrorCode);
+    CHECK(callCount == 1);
+    CHECK(fs::exists(phase1File));
+    CHECK_FALSE(fs::exists(phase2File));
+  }
+  std::error_code ignored;
+  fs::remove_all(outputDirectory, ignored);
 }
 
 TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter Execution", "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter]")

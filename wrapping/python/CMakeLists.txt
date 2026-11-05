@@ -348,4 +348,11 @@ if(SIMPLNX_BUILD_PYTHON_TESTS)
     INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
     TEST_NAMES storage_contract_test
   )
+  # The module registers the handler that this test selects only in builds with SIMPLNX_BUILD_TESTS.
+  if(SIMPLNX_BUILD_TESTS)
+    CreatePythonTests(PREFIX "PY_SIMPLNX"
+      INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
+      TEST_NAMES file_replace_hook_test
+    )
+  endif()
 endif()

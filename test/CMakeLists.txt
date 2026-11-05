@@ -30,7 +30,9 @@ set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   AppTest.cpp
   ArgumentsTest.cpp
+  AtomicFileTest.cpp
   BitTest.cpp
+  ChunkAlignedTransferTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   DataArrayTest.cpp
@@ -50,6 +52,7 @@ set(SIMPLNX_TEST_SRCS
   ExtentTest.cpp
   ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
+  FileWriteHookTest.cpp
   FilterTest.cpp
   GeometryTest.cpp
   GeometryBulkContractsTest.cpp

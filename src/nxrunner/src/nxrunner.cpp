@@ -1,5 +1,6 @@
 #include "CliObserver.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -16,6 +17,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -43,8 +45,8 @@ constexpr int32 k_FailedParsingArguments = -105;
 constexpr int32 k_ExecutePipelineError = -110;
 constexpr int32 k_PreflightPipelineError = -110;
 constexpr int32 k_InvalidArgumentError = -120;
-constexpr int32 k_LogFileError = -121;
 constexpr int32 k_NullLogFileError = -122;
+constexpr int32 k_UnreportedFailureError = -6066;
 
 constexpr StringLiteral k_HelpParamLong = "--help";
 constexpr StringLiteral k_ExecuteParamLong = "--execute";
@@ -111,7 +113,8 @@ public:
   /**
    * @brief Opens a log file and truncates its existing content.
    * @param filepath Nonempty destination path.
-   * @return An error if the path is empty or the file cannot open.
+   * @return Success with the warnings of the file-replace hook. Otherwise -122 for an empty path, the hook error, or -6067
+   * (k_ReplaceFileOpenError) when the file cannot open. BeforeFileReplace() runs on filepath before the file is truncated.
    */
   Result<> setLogFile(const std::filesystem::path& filepath)
   {
@@ -121,15 +124,12 @@ public:
       return nx::core::MakeErrorResult(k_NullLogFileError, errorMessage);
     }
 
-    const std::ios_base::openmode openmode = std::ios_base::out | std::ios_base::trunc;
-    m_LogStream = std::fstream(filepath, openmode);
-    if(m_LogStream.is_open() == false)
+    // OpenFileForReplace() runs the file-replace hook before it truncates the log file.
+    if(m_LogStream.is_open())
     {
-      std::string errorMessage = fmt::format("Failed to open log file: '{}'", filepath.string());
-      return nx::core::MakeErrorResult(k_LogFileError, errorMessage);
+      m_LogStream.close();
     }
-
-    return {};
+    return nx::core::OpenFileForReplace(filepath, m_LogStream);
   }
 
   /**
@@ -321,24 +321,31 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
 }
 
 /**
- * @brief Writes Result diagnostics and converts the first error code to a process code.
+ * @brief Writes the warnings and errors of a Result and converts the first error code to a process code.
  * @tparam T Specifies the Result value type.
  * @param result Result to print.
- * @return 0 for a valid Result, or the first error code for an invalid Result.
- * @pre An invalid Result must contain at least one error.
+ * @return 0 for a valid Result, the first error code for an invalid Result, or -6066 for an invalid Result without errors.
  */
 template <typename T = void>
 int PrintResult(const Result<T>& result)
 {
+  // Warnings of a valid result reach the user too, for example a file-replace hook warning.
+  for(const auto& warning : result.warnings())
+  {
+    cliOut << fmt::format("Warning {}: {}", warning.code, warning.message);
+    cliOut.endline();
+  }
   if(result.valid())
   {
     return 0;
   }
 
-  for(const auto& warning : result.warnings())
+  if(result.errors().empty())
   {
-    cliOut << fmt::format("Warning {}: {}", warning.code, warning.message);
+    // An invalid result without errors still fails the command; a component refused the operation without a message.
+    cliOut << fmt::format("Error {}: The operation failed, but no error message was reported.", k_UnreportedFailureError);
     cliOut.endline();
+    return k_UnreportedFailureError;
   }
   for(const auto& error : result.errors())
   {
@@ -534,9 +541,18 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
     pipelinePath.erase(pipelinePath.size() - extension.size());
     pipelinePath += Pipeline::k_Extension;
 
-    std::fstream fout(pipelinePath, std::ios_base::out | std::ios_base::trunc);
-    fout << pipeline.toJson().dump(4);
-    fout.flush();
+    // ReplaceFileWithText() runs the file-replace hook before it truncates the converted file.
+    Result<> writeResult = ReplaceFileWithText(pipelinePath, pipeline.toJson().dump(4));
+    if(writeResult.invalid())
+    {
+      cliOut << fmt::format("Error: Could not write the converted pipeline file: '{}'", pipelinePath);
+      cliOut.endline();
+      return writeResult;
+    }
+    for(const auto& warning : writeResult.warnings())
+    {
+      loadPipelineResult.warnings().push_back(warning);
+    }
 
     cliOut << fmt::format("Converted File: '{}'", pipelinePath);
     cliOut.endline();
@@ -699,6 +715,10 @@ Result<> SetLogFile(const Argument& argument)
 int main(int argc, char* argv[])
 {
   cliOut << fmt::format("nxrunner: Version {} Build Date:{}\n\n", nx::core::Version::Package(), nx::core::Version::BuildDate());
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  // Registered before the options run, so the hook calls for the log file are covered too.
+  const std::shared_ptr<void> testFileReplaceHandler = RegisterFileReplaceHandlerFromEnvironmentForTesting();
+#endif
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)

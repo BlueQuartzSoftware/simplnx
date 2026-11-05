@@ -404,15 +404,21 @@ Result<> WriteOnScaleTableFile::operator()()
   auto atomicFileResult = AtomicFile::Create(outputPath);
   if(atomicFileResult.invalid())
   {
-    return MakeErrorResult(-12033, fmt::format("Failed to create a temporary output file for '{}': {}", outputPath.string(), atomicFileResult.errors().front().message));
+    return ConvertResult(std::move(atomicFileResult));
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
+  // The file-replace hook in AtomicFile::Create() can report warnings; every later result carries them first.
+  const std::vector<Warning> hookWarnings = std::move(atomicFileResult.warnings());
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
   const fs::path tempPath = atomicFile.tempFilePath();
   std::ofstream output;
   const WriteStatus openStatus = OpenOutput(tempPath, output);
   if(openStatus == WriteStatus::OpenError)
   {
-    return MakeErrorResult(-12034, fmt::format("Could not open '{}' for writing (target '{}').", tempPath.string(), outputPath.string()));
+    return withHookWarnings(MakeErrorResult(-12034, fmt::format("Could not open '{}' for writing (target '{}').", tempPath.string(), outputPath.string())));
   }
 
   const auto makeWriteError = [&tempPath, &outputPath]() {
@@ -422,7 +428,7 @@ Result<> WriteOnScaleTableFile::operator()()
 
   if(m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale header...");
   output << "hedr 0\ninfo 1\n";
@@ -437,12 +443,12 @@ Result<> WriteOnScaleTableFile::operator()()
     {
       if(m_ShouldCancel)
       {
-        return {};
+        return withHookWarnings({});
       }
       m_MessageHandler.sendInfoMessage(fmt::format("Writing {} coordinates...", labels[axis]));
       if(WriteImageCoordinates(output, labels[axis], dimensions[axis] + 1, origin[axis], spacing[axis]) == WriteStatus::WriteError)
       {
-        return makeWriteError();
+        return withHookWarnings(makeWriteError());
       }
     }
   }
@@ -451,8 +457,8 @@ Result<> WriteOnScaleTableFile::operator()()
     const auto* rectGridGeometry = dynamic_cast<const RectGridGeom*>(exportGeometry);
     if(rectGridGeometry == nullptr)
     {
-      return MakeErrorResult(k_InvalidRectGridGeometryError,
-                             fmt::format("The grid geometry '{}' is neither an Image Geometry nor a Rectilinear Grid Geometry.", m_InputValues->InputGeometryPath.toString()));
+      return withHookWarnings(MakeErrorResult(k_InvalidRectGridGeometryError,
+                                              fmt::format("The grid geometry '{}' is neither an Image Geometry nor a Rectilinear Grid Geometry.", m_InputValues->InputGeometryPath.toString())));
     }
     const std::array<std::pair<std::string_view, const Float32Array*>, 3> bounds = {
         {{"xcrd", rectGridGeometry->getXBounds()}, {"ycrd", rectGridGeometry->getYBounds()}, {"zcrd", rectGridGeometry->getZBounds()}}};
@@ -460,33 +466,33 @@ Result<> WriteOnScaleTableFile::operator()()
     {
       if(m_ShouldCancel)
       {
-        return {};
+        return withHookWarnings({});
       }
       m_MessageHandler.sendInfoMessage(fmt::format("Writing {} coordinates...", label));
       if(WriteRectGridCoordinates(output, label, *boundsArray) == WriteStatus::WriteError)
       {
-        return makeWriteError();
+        return withHookWarnings(makeWriteError());
       }
     }
   }
 
   if(m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale keypoints...");
   output << "keypoints\n" << m_InputValues->NumKeypoints[0] << ' ' << m_InputValues->NumKeypoints[1] << ' ' << m_InputValues->NumKeypoints[2] << '\n';
 
   if(m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale divisions...");
   output << "divisions\n" << dimensions[0] << ' ' << dimensions[1] << ' ' << dimensions[2] << '\n';
 
   if(m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale phase names...");
   output << "name " << maxGrainId << '\n';
@@ -499,29 +505,29 @@ Result<> WriteOnScaleTableFile::operator()()
 
   if(m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale matrix values...");
   const WriteStatus matrixStatus = ExecuteDataFunctionIntType(WriteFeatureIds{}, exportFeatureIds->getDataType(), output, *exportFeatureIds, dimensions, m_ShouldCancel, progressThrottle);
   if(matrixStatus == WriteStatus::Cancelled || m_ShouldCancel)
   {
-    return {};
+    return withHookWarnings({});
   }
   if(matrixStatus == WriteStatus::WriteError)
   {
-    return makeWriteError();
+    return withHookWarnings(makeWriteError());
   }
 
   output.close();
   if(output.fail())
   {
-    return makeWriteError();
+    return withHookWarnings(makeWriteError());
   }
 
   Result<> commitResult = atomicFile.commit();
   if(commitResult.invalid())
   {
-    return MakeErrorResult(-12036, fmt::format("Failed to commit the OnScale table file '{}': {}", outputPath.string(), commitResult.errors().front().message));
+    return withHookWarnings(MakeErrorResult(-12036, fmt::format("Failed to commit the OnScale table file '{}': {}", outputPath.string(), commitResult.errors().front().message)));
   }
-  return {};
+  return withHookWarnings({});
 }

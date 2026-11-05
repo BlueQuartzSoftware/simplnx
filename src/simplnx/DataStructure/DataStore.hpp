@@ -974,7 +974,7 @@ public:
    * @throws std::bad_alloc If an allocation fails.
    *
    * In-core builds use memory for unavailable formats. OOC builds reject unavailable formats. Factory failures never fall back.
-   * The numeric transfer buffer uses at most 1 MiB. Backend buffers can hold a complete tuple.
+   * The numeric transfer buffer uses at most 1 MiB, or at most 128 MiB for a chunk-aligned copy into an out-of-core store (see AbstractDataStore::copyFrom). Backend buffers can hold a complete tuple.
    * @warning Explicit in-memory selection requires a complete resident destination and can exhaust available RAM.
    * This store obeys destinationFormat and does not resolve storage policy itself.
    * Resolve the destination policy before this call. Use DataArray::deepCopy for automatic policy selection.

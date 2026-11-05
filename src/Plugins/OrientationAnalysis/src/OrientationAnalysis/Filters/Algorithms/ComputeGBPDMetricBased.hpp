@@ -46,6 +46,13 @@ public:
   ComputeGBPDMetricBased& operator=(const ComputeGBPDMetricBased&) = delete;
   ComputeGBPDMetricBased& operator=(ComputeGBPDMetricBased&&) noexcept = delete;
 
+  /**
+   * @brief Computes the metric-based GBPD and writes the distribution and errors files.
+   * @return An error for an invalid crystal structure, file operation, or bulk I/O. Error -8328 when the distribution and
+   * errors output paths resolve to the same file, before any file-replace hook runs. A file-replace hook error.
+   *
+   * BeforeFileReplace() runs once on each output file before either file is opened.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

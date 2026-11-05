@@ -1,0 +1,96 @@
+{
+  "isDisabled": false,
+  "name": "save_over_input_generate.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "data_object_path": {
+          "value": "Generated",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Creates the parent group of the fixture's only numeric array. A plain group holds no data store, and unlike an Attribute Matrix it accepts the array's own tuple dimensions.",
+      "filter": {
+        "name": "nx::core::CreateDataGroupFilter",
+        "uuid": "e7d2f9b8-4131-4b28-a843-ea3c6950f101"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "3",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 8,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "Generated/Data",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              96.0,
+              512.0,
+              512.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "96 x 512 x 512 = 25,165,824 float32 tuples with one component (96 MiB), every value 3. The array is larger than one 64 MiB promotion window, so releasing its imported store copies more than one window.",
+      "filter": {
+        "name": "nx::core::CreateDataArrayFilter",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "compression_level": {
+          "value": 1,
+          "version": 1
+        },
+        "export_file_path": {
+          "value": "@SAVE_OVER_INPUT_FILE@",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "use_compression": {
+          "value": false,
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "Writes the fixture. OocSaveOverInputFailureTest.cmake replaces the export path token with the fixture file in its work directory.",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

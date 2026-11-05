@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -21,6 +22,50 @@
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 namespace fs = std::filesystem;
+
+namespace
+{
+/**
+ * @brief Resolves an output path for a comparison with another output path.
+ * @param path Output path.
+ * @return std::filesystem::weakly_canonical() of path, or the absolute path without removal of ".." when that fails.
+ */
+fs::path ResolveDestination(const fs::path& path)
+{
+  std::error_code resolveError;
+  fs::path resolved = fs::weakly_canonical(path, resolveError);
+  if(!resolveError)
+  {
+    return resolved;
+  }
+  std::error_code absoluteError;
+  return fs::absolute(path, absoluteError);
+}
+
+/**
+ * @brief Reports whether two output paths name the same file.
+ * @param first First output path.
+ * @param second Second output path.
+ * @return True when the resolved paths are equal, or when both files exist and are the same file.
+ *
+ * Each path is resolved with std::filesystem::weakly_canonical(), which resolves the symbolic links of the existing part
+ * of the path. A new file in a linked folder is therefore compared through the real folder on every platform. The order
+ * of ".." and link resolution differs by platform: on POSIX the link is resolved first, so "link/../a" names a file next
+ * to the target of "link"; Windows path handling removes ".." lexically first, so "link/../a" names the file next to
+ * "link". If a path cannot be resolved, its absolute form is compared without removing "..", so that fallback never
+ * reports two different files as one. Known limit: on a case-insensitive volume, two absent files that differ only in
+ * letter case are reported as different files.
+ */
+bool IsSameDestination(const fs::path& first, const fs::path& second)
+{
+  if(ResolveDestination(first) == ResolveDestination(second))
+  {
+    return true;
+  }
+  std::error_code equivalenceError;
+  return fs::equivalent(first, second, equivalenceError) && !equivalenceError;
+}
+} // namespace
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
@@ -362,6 +407,13 @@ Result<> ComputeGBCDMetricBased::operator()()
     errorOutput = fs::path(m_InputValues->ErrOutputFile.parent_path() / errFName);
   }
 
+  // The two outputs are rejected before any file-replace hook runs, so each hook runs once per file.
+  if(IsSameDestination(distributionOutput, errorOutput))
+  {
+    return MakeErrorResult(-7239, fmt::format("The distribution output file '{}' and the distribution errors output file '{}' are the same file. Choose two different output files.",
+                                              distributionOutput.string(), errorOutput.string()));
+  }
+
   // Create requested output directories before opening files.
   Result<> createDirectoriesResult = CreateOutputDirectories(distributionOutput.parent_path());
   if(createDirectoriesResult.invalid())
@@ -639,16 +691,34 @@ Result<> ComputeGBCDMetricBased::operator()()
 
   // ------------------------------------------- writing the output --------------------------------
 
+  // Both output files are truncated in place, so the file-replace hook runs on both before either one is opened. The hooks can
+  // report warnings; every later result carries them first.
+  std::vector<Warning> hookWarnings;
+  for(const fs::path& outputPath : {distributionOutput, errorOutput})
+  {
+    Result<> hookResult = BeforeFileReplace(outputPath);
+    if(hookResult.invalid())
+    {
+      hookResult.warnings().insert(hookResult.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+      return hookResult;
+    }
+    hookWarnings.insert(hookWarnings.end(), hookResult.warnings().begin(), hookResult.warnings().end());
+  }
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
+
   std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
   if(!distributionOutStream.is_open())
   {
-    return MakeErrorResult(-7237, fmt::format("Error creating GBCD Metric distribution output file {}", distributionOutput.string()));
+    return withHookWarnings(MakeErrorResult(-7237, fmt::format("Error creating GBCD Metric distribution output file {}", distributionOutput.string())));
   }
 
   std::ofstream errorOutStream(errorOutput, std::ios_base::out);
   if(!errorOutStream.is_open())
   {
-    return MakeErrorResult(-7238, fmt::format("Error creating GBCD Metric distribution errors output file {}", errorOutput.string()));
+    return withHookWarnings(MakeErrorResult(-7238, fmt::format("Error creating GBCD Metric distribution errors output file {}", errorOutput.string())));
   }
 
   std::string outputString = fmt::format("{:.1F} {:.1F} {:.1F} {:.1F}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
@@ -686,5 +756,5 @@ Result<> ComputeGBCDMetricBased::operator()()
   distributionOutStream.close();
   errorOutStream.close();
 
-  return {};
+  return withHookWarnings({});
 }

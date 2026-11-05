@@ -369,6 +369,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Any.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Array.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/FileReplaceGuard.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Bit.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
@@ -381,6 +382,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Numbers.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/NumericBounds.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/PathText.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range3D.hpp
@@ -577,6 +579,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ChunkAlignedTransfer.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StoreCopyUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
@@ -669,6 +672,8 @@ set(SIMPLNX_GENERATED_HEADERS
 
 set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/FileReplaceGuard.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/PathText.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.cpp
@@ -820,6 +825,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ChunkAlignedTransfer.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StoreCopyUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp

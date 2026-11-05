@@ -133,7 +133,10 @@ struct CopyNumericFunctor
       }
       return std::move(result.value());
     }
-    auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt, DataStoreInitializationMode::Default);
+    // The copyFrom() below replaces every value, and a failed copy discards the destination, so a nonempty
+    // destination does not need an initial zero-fill. Unwritten deferred chunks still read as zero.
+    const auto initializationMode = bytes != 0 ? DataStoreInitializationMode::DeferredZeroFill : DataStoreInitializationMode::Default;
+    auto destination = manager->dataStoreCreationFnc(format)(source.getDataType(), source.getTupleShape(), source.getComponentShape(), std::nullopt, initializationMode);
     auto* typedDestination = dynamic_cast<AbstractDataStore<T>*>(destination.get());
     if(typedDestination == nullptr || destination->getDataType() != source.getDataType() || destination->getTupleShape() != source.getTupleShape() ||
        destination->getComponentShape() != source.getComponentShape() || destination->getNumberOfTuples() != source.getNumberOfTuples() ||
@@ -150,7 +153,8 @@ struct CopyNumericFunctor
     }
     if(bytes != 0)
     {
-      // This four-argument overload owns the transfer buffer. Backend adapters can also allocate one complete tuple.
+      // This four-argument overload owns the transfer buffer. It follows the chunk grid of an out-of-core
+      // destination. Backend adapters can also allocate one complete tuple.
       const auto result = typedDestination->copyFrom(0, *typedSource, 0, source.getNumberOfTuples());
       if(result.invalid())
       {

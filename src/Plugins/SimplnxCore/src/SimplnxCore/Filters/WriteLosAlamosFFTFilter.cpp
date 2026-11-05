@@ -126,15 +126,18 @@ Result<> WriteLosAlamosFFTFilter::executeImpl(DataStructure& dataStructure, cons
   {
     if(shouldCancel)
     {
-      return MakeErrorResult(-1, "Filter cancelled");
+      Result<> cancelResult = MakeErrorResult(-1, "Filter cancelled");
+      cancelResult.warnings() = std::move(result.warnings());
+      result = std::move(cancelResult);
     }
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
+    else if(Result<> commitResult = atomicFile.commit(); commitResult.invalid())
     {
-      return commitResult;
+      commitResult.warnings().insert(commitResult.warnings().begin(), result.warnings().begin(), result.warnings().end());
+      result = std::move(commitResult);
     }
   }
-
+  // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
   return result;
 }
 

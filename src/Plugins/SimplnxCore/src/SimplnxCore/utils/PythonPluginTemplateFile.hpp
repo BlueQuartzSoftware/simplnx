@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -59,10 +60,12 @@ inline std::string GeneratePythonFilter(const std::string& filterName, const std
 }
 
 /**
+ * @brief Adds the import lines of a filter to the __init__.py and Plugin.py files of an existing Python plugin.
+ * @param pluginPath Source folder of the plugin that holds both files.
+ * @param filterName Name of the filter module.
+ * @return Success with the warnings of the file-replace hooks, -2000 or -2001 when a file is missing, or the first hook error.
  *
- * @param outputPath
- * @param filterName
- * @return
+ * Both files are rewritten in place. BeforeFileReplace() runs on both files before either one is truncated.
  */
 inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& pluginPath, const std::string& filterName)
 {
@@ -85,6 +88,18 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
   if(!fs::exists(initPyPath))
   {
     return MakeErrorResult(-2001, fmt::format("Non-existent plugin file at path: {}", initPyPath.string()));
+  }
+
+  // Both files are rewritten in place, so the file-replace hook runs on both before either one is truncated.
+  for(const fs::path& rewrittenPath : {initPyPath, pluginPyPath})
+  {
+    Result<> hookResult = BeforeFileReplace(rewrittenPath);
+    if(hookResult.invalid())
+    {
+      hookResult.warnings().insert(hookResult.warnings().begin(), result.warnings().begin(), result.warnings().end());
+      return hookResult;
+    }
+    result.warnings().insert(result.warnings().end(), hookResult.warnings().begin(), hookResult.warnings().end());
   }
 
   // Update the __init__.py file
@@ -171,8 +186,11 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
 }
 
 /**
- *
- * @return
+ * @brief Writes text to a file through AtomicFile.
+ * @param content Text to write.
+ * @param outputFilePath Final path of the file.
+ * @return Success with the warnings of the file-replace hook. Otherwise the AtomicFile creation error, -74100 when the
+ * temporary file cannot open, or the commit error, each with the hook warnings.
  */
 inline Result<> AtomicallyWriteFile(const std::string& content, const std::filesystem::path& outputFilePath)
 {
@@ -183,27 +201,55 @@ inline Result<> AtomicallyWriteFile(const std::string& content, const std::files
   }
 
   AtomicFile tempFile = std::move(atomicFileResult.value());
+  Result<> result;
   {
     // Scope this so that the file closes first before we then 'commit' with the atomic file
     std::ofstream fileOut(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-    if(!fileOut.is_open())
+    if(fileOut.is_open())
     {
-      return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", tempFile.tempFilePath().string()));
+      fileOut << content;
     }
-
-    fileOut << content;
+    else
+    {
+      result = MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", tempFile.tempFilePath().string()));
+    }
   }
-
-  return tempFile.commit();
+  if(result.valid())
+  {
+    result = tempFile.commit();
+  }
+  // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+  return result;
 }
 
 /**
+ * @brief Adds the warnings of a valid result to the warnings collected so far, or returns the failing result.
+ * @param collected Result that collects the warnings of each step. It stays valid.
+ * @param stepResult Result of the next step.
+ * @return True when stepResult is valid. Otherwise false, and stepResult holds the warnings of collected in front of its own.
  *
- * @param outputPath
- * @param filterName
- * @param humanName
- * @param uuidString
- * @return
+ * MergeResults() is not used, because it would turn a step result that is invalid with no errors into a success.
+ */
+inline bool CollectStepResult(Result<>& collected, Result<>& stepResult)
+{
+  if(stepResult.invalid())
+  {
+    stepResult.warnings().insert(stepResult.warnings().begin(), collected.warnings().begin(), collected.warnings().end());
+    return false;
+  }
+  collected.warnings().insert(collected.warnings().end(), stepResult.warnings().begin(), stepResult.warnings().end());
+  return true;
+}
+
+/**
+ * @brief Writes the Python source file of a filter and its documentation stub, and optionally registers the filter.
+ * @param outputPath Source folder of the plugin.
+ * @param filterName Name of the filter module.
+ * @param humanName Human-readable filter name.
+ * @param updatePluginFiles True to add the filter to the __init__.py and Plugin.py files.
+ * @return Success with the warnings of every step, or the first error with the earlier warnings. The first failure stops
+ * before a later file changes.
  */
 inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& outputPath, const std::string& filterName, const std::string& humanName, bool updatePluginFiles)
 {
@@ -215,7 +261,11 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& outputPat
   {
     const std::string content = GeneratePythonFilter(filterName, humanName, Uuid::GenerateV4().str());
     const fs::path outputFilePath = outputPath / fmt::format("{}.py", filterName);
-    result = MergeResults(result, AtomicallyWriteFile(content, outputFilePath));
+    Result<> writeResult = AtomicallyWriteFile(content, outputFilePath);
+    if(!CollectStepResult(result, writeResult))
+    {
+      return writeResult;
+    }
   }
 
   // **************************************************************************
@@ -242,23 +292,29 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& outputPat
 
     const fs::path outputFilePath = outputPath / ".." / ".." / "docs" / fmt::format("{}.md", filterName);
 
-    result = MergeResults(result, AtomicallyWriteFile(docOut.str(), outputFilePath));
+    Result<> writeResult = AtomicallyWriteFile(docOut.str(), outputFilePath);
+    if(!CollectStepResult(result, writeResult))
+    {
+      return writeResult;
+    }
   }
 
   if(updatePluginFiles)
   {
-    result = MergeResults(result, InsertFilterNameInPluginFiles(outputPath, filterName));
+    Result<> insertResult = InsertFilterNameInPluginFiles(outputPath, filterName);
+    if(!CollectStepResult(result, insertResult))
+    {
+      return insertResult;
+    }
   }
   return result;
 }
 
 /**
- *
- * @param outputPath
- * @param filterName
- * @param humanName
- * @param uuidString
- * @return
+ * @brief Writes and registers each filter of a comma-separated list in an existing Python plugin.
+ * @param pluginPath Source folder of the plugin.
+ * @param filterNames Comma-separated filter names.
+ * @return Success with the warnings of every filter, or the first error with the earlier warnings.
  */
 inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPath, const std::string& filterNames)
 {
@@ -267,11 +323,10 @@ inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPa
   for(const auto& filterName : filterNamesSplit)
   {
     auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginPath, filterName, filterName, true);
-    if(filterWriteResult.invalid())
+    if(!CollectStepResult(result, filterWriteResult))
     {
       return filterWriteResult;
     }
-    result = MergeResults(result, filterWriteResult);
   }
 
   return result;
@@ -316,7 +371,6 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
  *
  * @param outputDirectory
  * @param pluginName
- * @param pluginUUID
  * @param pluginShortName
  * @param pluginDescription
  * @param pluginFilterList
@@ -344,176 +398,93 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   {
     return result;
   }
-  auto outputPath = pluginSrcPath / "Plugin.py";
+  // Each file is written through AtomicFile. The first failure stops before a later file is prepared or changed.
   {
-    auto atomicFileResult = AtomicFile::Create(outputPath);
-    if(atomicFileResult.invalid())
+    Result<> writeResult = AtomicallyWriteFile(GeneratePythonPlugin(pluginName, pluginShortName, pluginDescription, pluginFilterList), pluginSrcPath / "Plugin.py");
+    if(!CollectStepResult(result, writeResult))
     {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    AtomicFile tempFile = std::move(atomicFileResult.value());
-    {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", tempFile.tempFilePath().string()));
-      }
-
-      fout << GeneratePythonPlugin(pluginName, pluginShortName, pluginDescription, pluginFilterList);
-    }
-    Result<> commitResult = tempFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
+      return writeResult;
     }
   }
 
   // Write the __init__.py file
-  outputPath = pluginSrcPath / "__init__.py";
   {
-    auto atomicFileResult = AtomicFile::Create(outputPath);
-    if(atomicFileResult.invalid())
+    std::string content = PluginInitPythonFile();
+
+    content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+    content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
+    content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
+    content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
+
+    auto filterList = StringUtilities::split(pluginFilterList, ',');
+
+    std::string aList(fmt::format("'{}', ", pluginName));
+    for(const auto& name : filterList)
     {
-      return ConvertResult(std::move(atomicFileResult));
+      aList.append(fmt::format("'{}', ", name));
     }
-    AtomicFile initTempFile = std::move(atomicFileResult.value());
+    aList.append("'get_plugin'");
+    content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", aList);
+
+    std::stringstream codeStream;
+    for(const auto& name : filterList)
     {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(initTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", initTempFile.tempFilePath().string()));
-      }
-      std::string content = PluginInitPythonFile();
-
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
-      content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
-      content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
-      content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
-
-      auto filterList = StringUtilities::split(pluginFilterList, ',');
-
-      std::string aList(fmt::format("'{}', ", pluginName));
-      for(const auto& name : filterList)
-      {
-        aList.append(fmt::format("'{}', ", name));
-      }
-      aList.append("'get_plugin'");
-      content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", aList);
-
-      std::stringstream codeStream;
-      for(const auto& name : filterList)
-      {
-        codeStream << "# FILTER_START: " << name << "\n"
-                   << "from ." << name << " import " << name << "\n"
-                   << "__all__.append('" << name << "')\n"
-                   << "# FILTER_END: " << name << "\n\n";
-      }
-      content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
-
-      fout << content;
+      codeStream << "# FILTER_START: " << name << "\n"
+                 << "from ." << name << " import " << name << "\n"
+                 << "__all__.append('" << name << "')\n"
+                 << "# FILTER_END: " << name << "\n\n";
     }
-    Result<> commitResult = initTempFile.commit();
-    if(commitResult.invalid())
+    content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
+
+    Result<> writeResult = AtomicallyWriteFile(content, pluginSrcPath / "__init__.py");
+    if(!CollectStepResult(result, writeResult))
     {
-      return commitResult;
+      return writeResult;
     }
   }
 
   // Write the environment.yml file
-  outputPath = pluginRootPath / "environment.yml";
   {
-    auto atomicFileResult = AtomicFile::Create(outputPath);
-    if(atomicFileResult.invalid())
+    std::string content = PluginEnvironmentPythonFile();
+    content = StringUtilities::replace(content, "#PLUGIN_ENV_NAME#", CamelCaseToSnakeCase(pluginName));
+    Result<> writeResult = AtomicallyWriteFile(content, pluginRootPath / "environment.yml");
+    if(!CollectStepResult(result, writeResult))
     {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    AtomicFile envTempFile = std::move(atomicFileResult.value());
-    {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(envTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", envTempFile.tempFilePath().string()));
-      }
-      std::string content = PluginEnvironmentPythonFile();
-
-      content = StringUtilities::replace(content, "#PLUGIN_ENV_NAME#", CamelCaseToSnakeCase(pluginName));
-
-      fout << content;
-    }
-    Result<> commitResult = envTempFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
+      return writeResult;
     }
   }
 
   // Write the pyproject.toml file
-  outputPath = pluginRootPath / "pyproject.toml";
   {
-    auto atomicFileResult = AtomicFile::Create(outputPath);
-    if(atomicFileResult.invalid())
+    std::string content = PluginPyProjectPythonFile();
+    content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+    Result<> writeResult = AtomicallyWriteFile(content, pluginRootPath / "pyproject.toml");
+    if(!CollectStepResult(result, writeResult))
     {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    AtomicFile pyProjTempFile = std::move(atomicFileResult.value());
-    {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(pyProjTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", pyProjTempFile.tempFilePath().string()));
-      }
-      std::string content = PluginPyProjectPythonFile();
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
-      fout << content;
-    }
-    Result<> commitResult = pyProjTempFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
+      return writeResult;
     }
   }
 
   // Write the meta.yaml file
-  outputPath = pluginCondaPath / "meta.yaml";
   {
-    auto atomicFileResult = AtomicFile::Create(outputPath);
-    if(atomicFileResult.invalid())
+    std::string content = PluginMetaPythonFile();
+    content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+    Result<> writeResult = AtomicallyWriteFile(content, pluginCondaPath / "meta.yaml");
+    if(!CollectStepResult(result, writeResult))
     {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    AtomicFile metaTempFile = std::move(atomicFileResult.value());
-    {
-      // Scope this so that the file closes first before we then 'commit' with the atomic file
-      std::ofstream fout(metaTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-      if(!fout.is_open())
-      {
-        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", metaTempFile.tempFilePath().string()));
-      }
-      std::string content = PluginMetaPythonFile();
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
-      fout << content;
-    }
-    Result<> commitResult = metaTempFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
+      return writeResult;
     }
   }
 
-  // Now loop over each Filter and generate the skeleton files
+  // Generate the skeleton files of each filter.
   auto filterNamesSplit = StringUtilities::split(pluginFilterList, ',');
   for(const auto& filterName : filterNamesSplit)
   {
     auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginSrcPath, filterName, filterName, false);
-    if(filterWriteResult.invalid())
+    if(!CollectStepResult(result, filterWriteResult))
     {
       return filterWriteResult;
     }
-    result = MergeResults(result, filterWriteResult);
   }
 
   return result;

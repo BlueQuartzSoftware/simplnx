@@ -31,7 +31,15 @@ Result<> WriteFeatureDataCSV::operator()()
     return ConvertResult(std::move(atomicFileResult));
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
+  Result<> result = writeAndCommit(atomicFile);
+  // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+  return result;
+}
 
+// -----------------------------------------------------------------------------
+Result<> WriteFeatureDataCSV::writeAndCommit(AtomicFile& atomicFile) const
+{
   auto pOutputFilePath = atomicFile.tempFilePath();
 
   const std::string delimiter = OStreamUtilities::DelimiterToString(m_InputValues->DelimiterIndex);
@@ -89,11 +97,5 @@ Result<> WriteFeatureDataCSV::operator()()
   {
     return MakeErrorResult(-1, "Filter cancelled");
   }
-  Result<> commitResult = atomicFile.commit();
-  if(commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  return {};
+  return atomicFile.commit();
 }

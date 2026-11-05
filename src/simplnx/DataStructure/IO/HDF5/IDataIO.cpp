@@ -49,10 +49,8 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   int32 value = (importable ? 1 : 0);
   objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
 
-  // Add to DataStructureWriter for use in linking
-  dataStructureWriter.addWriter(objectWriter, dataObject.getId());
-
-  return {};
+  // Record the object's path so later parents of the object receive hard links to it.
+  return dataStructureWriter.addWriter(objectWriter, dataObject);
 }
 
 Result<> IDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const

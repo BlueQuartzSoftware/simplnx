@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/WriteOnScaleTableFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -854,5 +855,64 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: SIMPL Backwards Compatibili
       CHECK(args.value<DataPath>(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
       CHECK(args.value<DataPath>(WriteOnScaleTableFileFilter::k_PhaseNamesArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "PhaseName"}));
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: the file-replace hook runs once on the table file before it changes", "[SimplnxCore][WriteOnScaleTableFileFilter][FileWriteHook]")
+{
+  UnitTest::LoadPlugins();
+  constexpr int32 k_HookWarningCode = 99601;
+  constexpr int32 k_RefusalCode = -99602;
+  DataStructure dataStructure = CreateImageDataStructure<int32>({3, 2, 1}, {1, 2, 3, 1, 2, 3}, {"", "Phase1", "Phase2", "Phase3"});
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteOnScaleTableFile" / "Hook";
+  fs::remove_all(outputPath);
+  fs::create_directories(outputPath);
+  const fs::path tableFile = outputPath / "OnScale_Hook.flxtbl";
+  {
+    std::ofstream stream(tableFile, std::ios::binary);
+    stream << "previous table";
+  }
+
+  int32 callCount = 0;
+  bool isTableUnchangedAtCall = false;
+  Result<> hookResult = MakeWarningVoidResult(k_HookWarningCode, "hook warning");
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode) -> Result<> {
+    if(target.filename() != tableFile.filename())
+    {
+      return {};
+    }
+    callCount++;
+    isTableUnchangedAtCall = ReadFile(tableFile) == "previous table";
+    return hookResult;
+  });
+
+  const WriteOnScaleTableFileFilter filter;
+  SECTION("success keeps the hook warning")
+  {
+    auto executeResult = filter.execute(dataStructure, CreateArguments(outputPath, "OnScale_Hook"));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(callCount == 1);
+    CHECK(isTableUnchangedAtCall);
+    CHECK(ReadFile(tableFile) != "previous table");
+    CHECK(std::any_of(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == k_HookWarningCode; }));
+  }
+  SECTION("a refusal with any code or with no errors reaches the caller and changes nothing")
+  {
+    const bool refusesWithoutErrors = GENERATE(false, true);
+    hookResult = refusesWithoutErrors ? Result<>{{nonstd::make_unexpected(ErrorCollection{})}} : MakeErrorResult(k_RefusalCode, "refused");
+    auto executeResult = filter.execute(dataStructure, CreateArguments(outputPath, "OnScale_Hook"));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    if(refusesWithoutErrors)
+    {
+      CHECK(executeResult.result.errors().empty());
+    }
+    else
+    {
+      REQUIRE(executeResult.result.errors().size() == 1);
+      CHECK(executeResult.result.errors().front().code == k_RefusalCode);
+    }
+    CHECK(callCount == 1);
+    CHECK(ReadFile(tableFile) == "previous table");
+    CHECK(std::distance(fs::directory_iterator(outputPath), fs::directory_iterator{}) == 1);
   }
 }

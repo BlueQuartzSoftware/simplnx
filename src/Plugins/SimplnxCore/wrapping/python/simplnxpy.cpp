@@ -12,6 +12,7 @@
 #include "SimplnxCore/SimplnxCoreFilterBinding.hpp"
 #include "SimplnxCore/SimplnxCorePlugin.hpp"
 
+#include <simplnx/Common/FileReplaceGuard.hpp>
 #include <simplnx/DataStructure/AttributeMatrix.hpp>
 #include <simplnx/DataStructure/DataArray.hpp>
 #include <simplnx/DataStructure/DataGroup.hpp>
@@ -712,6 +713,10 @@ private:
 
 PYBIND11_MODULE(simplnx, mod)
 {
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+  // A Python test process selects a file-replace handler through an environment variable before it imports the module.
+  static const std::shared_ptr<void> s_TestFileReplaceHandler = RegisterFileReplaceHandlerFromEnvironmentForTesting();
+#endif
   auto* internals = new Internals();
 
   const auto* corePlugin = internals->addPlugin<SimplnxCorePlugin>();
@@ -1909,17 +1914,11 @@ PYBIND11_MODULE(simplnx, mod)
   pipeline.def(
       "to_file",
       [](const Pipeline& self, const std::filesystem::path& path) {
-        nlohmann::json pipelineJson = self.toJson();
-        std::ofstream file(path);
-        if(!file.is_open())
+        // ReplaceFileWithText() runs the file-replace hook before it truncates the file.
+        const Result<> writeResult = ReplaceFileWithText(path, self.toJson().dump(2) + "\n");
+        if(writeResult.invalid())
         {
-          throw std::runtime_error(fmt::format("Failed to open '{}'", path.string()));
-        }
-        file << pipelineJson.dump(2) << "\n";
-        file.flush();
-        if(!file)
-        {
-          throw std::runtime_error(fmt::format("Failed to write pipeline json to '{}'", path.string()));
+          throw std::runtime_error(fmt::format("Failed to write pipeline json to '{}'. Errors={}", path.string(), writeResult.errors()));
         }
       },
       "path"_a);

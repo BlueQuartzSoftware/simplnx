@@ -1,3 +1,4 @@
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -27,6 +28,7 @@
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include "simplnx/UnitTest/DataObjectComparison.hpp"
+#include "simplnx/UnitTest/FailCloseVfd.hpp"
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -41,6 +43,9 @@
 
 #include <hdf5.h>
 
+#include <algorithm>
+#include <fstream>
+#include <functional>
 #include <mutex>
 #include <numeric>
 #include <string>
@@ -1500,4 +1505,531 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
 #else
   SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
 #endif
+}
+
+namespace
+{
+constexpr int32 k_DuplicateRegistrationCode = -6055;
+
+/**
+ * @brief Reports whether two paths in an open HDF5 file name the same object, as hard links to one object do.
+ * @param fileId Open HDF5 file identifier.
+ * @param firstPath Absolute path of the first link.
+ * @param secondPath Absolute path of the second link.
+ * @return True when both links resolve to the same object token; false when they differ or either lookup fails.
+ */
+bool LinksNameSameObject(hid_t fileId, const std::string& firstPath, const std::string& secondPath)
+{
+  std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+  H5O_info2_t firstInfo{};
+  H5O_info2_t secondInfo{};
+  if(H5Oget_info_by_name3(fileId, firstPath.c_str(), &firstInfo, H5O_INFO_BASIC, H5P_DEFAULT) < 0)
+  {
+    return false;
+  }
+  if(H5Oget_info_by_name3(fileId, secondPath.c_str(), &secondInfo, H5O_INFO_BASIC, H5P_DEFAULT) < 0)
+  {
+    return false;
+  }
+  int tokenOrder = 1;
+  if(H5Otoken_cmp(fileId, &firstInfo.token, &secondInfo.token, &tokenOrder) < 0)
+  {
+    return false;
+  }
+  return tokenOrder == 0;
+}
+} // namespace
+
+TEST_CASE("DataStructureWriter: an object written after a NeighborList keeps its own dataset", "[DataStructureWriter][NeighborList]")
+{
+  auto app = Application::GetOrCreateInstance();
+  constexpr usize k_TupleCount = 5;
+  const std::vector<int32> sharedValues = {1001, 1002, 1003, 1004, 1005};
+
+  DataStructure dataStructure;
+  // Created first, so it has object id 1: the same id that NeighborListIO gives its temporary counts array.
+  auto* sharedArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Shared", ShapeType{k_TupleCount}, ShapeType{1});
+  REQUIRE(sharedArray != nullptr);
+  REQUIRE(sharedArray->getId() == 1);
+  for(usize index = 0; index < k_TupleCount; ++index)
+  {
+    sharedArray->getDataStoreRef()[index] = sharedValues[index];
+  }
+
+  auto* listGroup = DataGroup::Create(dataStructure, "A_Lists");
+  REQUIRE(listGroup != nullptr);
+  auto* neighborList = NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{k_TupleCount}, listGroup->getId());
+  REQUIRE(neighborList != nullptr);
+  neighborList->setLists({{1}, {2, 2}, {3}, {4, 4, 4}, {5}});
+
+  // The writer reaches "Shared" a second time after the NeighborList and writes it as a hard link.
+  auto* copyGroup = DataGroup::Create(dataStructure, "Z_Copy");
+  REQUIRE(copyGroup != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(sharedArray->getId(), copyGroup->getId()));
+
+  const fs::path filePath = GetDataDir() / "WriterIdMapNeighborList.dream3d";
+  fs::create_directories(filePath.parent_path());
+  {
+    auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  // Read the dataset at the second path directly, as any HDF5 reader of the file does.
+  auto fileReader = HDF5::FileIO::ReadFile(filePath);
+  REQUIRE(fileReader.isValid());
+  auto dataStructureGroup = fileReader.openGroup("DataStructure");
+  REQUIRE(dataStructureGroup.isValid());
+  auto copyGroupReader = dataStructureGroup.openGroup("Z_Copy");
+  REQUIRE(copyGroupReader.isValid());
+  auto linkedDataset = copyGroupReader.openDataset("Shared");
+  // The returned DatasetIO opens lazily; resolving its identifier lets isValid() report whether the dataset opened.
+  (void)linkedDataset.getId();
+  REQUIRE(linkedDataset.isValid());
+  const std::vector<int32> linkedValues = linkedDataset.readAsVector<int32>();
+  CHECK(linkedValues == sharedValues);
+
+  // The second path is a hard link to the first-written dataset, and no counts link was written beside it.
+  CHECK(LinksNameSameObject(fileReader.getId(), "/DataStructure/Shared", "/DataStructure/Z_Copy/Shared"));
+  CHECK_FALSE(copyGroupReader.exists(neighborList->getNumNeighborsArrayName()));
+}
+
+TEST_CASE("WriterFix: a NeighborList with two parents keeps its counts link at both locations", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  constexpr usize k_TupleCount = 4;
+  const std::vector<std::vector<int32>> expectedLists = {{1}, {2, 2}, {}, {4, 4, 4}};
+  const std::vector<std::string> parentNames = {"A_First", "B_Second"};
+  const std::string listName = "Neighbors";
+
+  DataStructure dataStructure;
+  auto* firstParent = DataGroup::Create(dataStructure, parentNames[0]);
+  REQUIRE(firstParent != nullptr);
+  auto* secondParent = DataGroup::Create(dataStructure, parentNames[1]);
+  REQUIRE(secondParent != nullptr);
+  auto* neighborList = NeighborList<int32>::Create(dataStructure, listName, ShapeType{k_TupleCount}, firstParent->getId());
+  REQUIRE(neighborList != nullptr);
+  neighborList->setLists(expectedLists);
+  REQUIRE(dataStructure.setAdditionalParent(neighborList->getId(), secondParent->getId()));
+  const std::string countsName = neighborList->getNumNeighborsArrayName();
+
+  const fs::path filePath = GetDataDir() / "WriterFixNeighborListTwoParents.dream3d";
+  fs::create_directories(filePath.parent_path());
+  {
+    const Result<> writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  }
+
+  // Each parent group lists the NeighborList and its counts link, as an h5py key listing of the group does.
+  {
+    auto fileReader = HDF5::FileIO::ReadFile(filePath);
+    REQUIRE(fileReader.isValid());
+    auto dataStructureGroup = fileReader.openGroup("DataStructure");
+    REQUIRE(dataStructureGroup.isValid());
+    for(const auto& parentName : parentNames)
+    {
+      INFO(fmt::format("Parent group '{}'", parentName));
+      auto parentGroup = dataStructureGroup.openGroup(parentName);
+      REQUIRE(parentGroup.isValid());
+      const std::vector<std::string> childNames = parentGroup.getChildNames();
+      CHECK(std::find(childNames.begin(), childNames.end(), listName) != childNames.end());
+      CHECK(std::find(childNames.begin(), childNames.end(), countsName) != childNames.end());
+    }
+  }
+
+  auto loadResult = DREAM3D::LoadDataStructure(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(loadResult);
+  const DataStructure& loadedStructure = loadResult.value();
+  for(const auto& parentName : parentNames)
+  {
+    INFO(fmt::format("Parent group '{}'", parentName));
+    const auto* loadedList = loadedStructure.getDataAs<NeighborList<int32>>(DataPath({parentName, listName}));
+    REQUIRE(loadedList != nullptr);
+    CHECK(loadedList->getVectors() == expectedLists);
+  }
+}
+
+TEST_CASE("WriterFix: registering one object at two paths is an error", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  constexpr usize k_TupleCount = 4;
+  const std::vector<int32> expectedValues = {11, 12, 13, 14};
+  const std::string firstPath = "/DataStructure/A_First/Values";
+  const std::string secondPath = "/DataStructure/B_Second/Values";
+
+  DataStructure dataStructure;
+  auto* firstParent = DataGroup::Create(dataStructure, "A_First");
+  REQUIRE(firstParent != nullptr);
+  auto* secondParent = DataGroup::Create(dataStructure, "B_Second");
+  REQUIRE(secondParent != nullptr);
+  auto* valuesArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Values", ShapeType{k_TupleCount}, ShapeType{1}, firstParent->getId());
+  REQUIRE(valuesArray != nullptr);
+  for(usize index = 0; index < k_TupleCount; ++index)
+  {
+    valuesArray->getDataStoreRef()[index] = expectedValues[index];
+  }
+
+  const fs::path filePath = GetDataDir() / "WriterFixDuplicateRegistration.h5";
+  fs::create_directories(filePath.parent_path());
+  {
+    auto fileWriter = HDF5::FileIO::WriteFile(filePath);
+    REQUIRE(fileWriter.isValid());
+    auto dataStructureGroup = fileWriter.createGroup("DataStructure");
+    HDF5::DataStructureWriter writer;
+    const Result<> writeResult = writer.writeDataStructure(dataStructure, dataStructureGroup);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+    // Registering the written object again at its own path is accepted.
+    {
+      auto firstParentGroup = dataStructureGroup.openGroup("A_First");
+      auto writtenDataset = firstParentGroup.openDataset("Values");
+      // Resolve the lazily opened dataset so its object path is the HDF5 path, not only its name.
+      REQUIRE(writtenDataset.getId() >= 0);
+      REQUIRE(writtenDataset.getObjectPath() == firstPath);
+      const Result<> samePathResult = HDF5::WriteObjectAttributes(writer, writtenDataset, valuesArray, true);
+      SIMPLNX_RESULT_REQUIRE_VALID(samePathResult);
+    }
+
+    // Registering it through another object writer is refused and names the path it was written at.
+    {
+      auto otherGroup = dataStructureGroup.createGroup("C_Other");
+      REQUIRE(otherGroup.getId() >= 0);
+      const Result<> otherPathResult = HDF5::WriteObjectAttributes(writer, otherGroup, valuesArray, true);
+      REQUIRE(otherPathResult.invalid());
+      REQUIRE(otherPathResult.errors().size() == 1);
+      CHECK(otherPathResult.errors().front().code == k_DuplicateRegistrationCode);
+      CHECK(otherPathResult.errors().front().message.find(fmt::format("'{}'", firstPath)) != std::string::npos);
+    }
+
+    // The second parent has no link yet; the link the writer creates there still points at the first path.
+    {
+      auto secondParentGroup = dataStructureGroup.openGroup("B_Second");
+      const Result<> linkResult = writer.writeDataObject(valuesArray, secondParentGroup);
+      SIMPLNX_RESULT_REQUIRE_VALID(linkResult);
+    }
+  }
+
+  auto fileReader = HDF5::FileIO::ReadFile(filePath);
+  REQUIRE(fileReader.isValid());
+  CHECK(LinksNameSameObject(fileReader.getId(), firstPath, secondPath));
+  auto dataStructureGroup = fileReader.openGroup("DataStructure");
+  REQUIRE(dataStructureGroup.isValid());
+  auto secondParentGroup = dataStructureGroup.openGroup("B_Second");
+  REQUIRE(secondParentGroup.isValid());
+  auto linkedDataset = secondParentGroup.openDataset("Values");
+  // The returned DatasetIO opens lazily; resolving its identifier lets isValid() report whether the dataset opened.
+  (void)linkedDataset.getId();
+  REQUIRE(linkedDataset.isValid());
+  CHECK(linkedDataset.readAsVector<int32>() == expectedValues);
+}
+
+namespace
+{
+constexpr int32 k_FailedCloseCode = -6056;
+
+/**
+ * @brief Builds a small in-memory DataStructure with one top-level array, so a writer has something to write.
+ * @param arrayName Name of the top-level array.
+ * @return DataStructure holding one 4-tuple int32 array.
+ */
+DataStructure MakeCloseTestStructure(const std::string& arrayName)
+{
+  DataStructure dataStructure;
+  auto* array = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, arrayName, ShapeType{4}, ShapeType{1});
+  REQUIRE(array != nullptr);
+  return dataStructure;
+}
+
+/**
+ * @brief Requires the result to be exactly the checked-close error for filePath.
+ * @param result Writer or closeChecked() result.
+ * @param filePath File the error must name.
+ */
+void RequireFailedCloseError(const Result<>& result, const fs::path& filePath)
+{
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == k_FailedCloseCode);
+  CHECK(result.errors().front().message.find(filePath.string()) != std::string::npos);
+}
+
+/**
+ * @brief Runs one writer call with the failing-close driver armed and requires it to report the failed close.
+ * @param filePath File the writer writes; the error must name it.
+ * @param writerCall Writer call under test. Any fixture it appends to must already exist and be closed.
+ *
+ * The close-failure counter must increase, so the -6056 comes from a close that really failed.
+ */
+void RequireWriterReportsFailedClose(const fs::path& filePath, const std::function<Result<>()>& writerCall)
+{
+  const hid_t driverId = UnitTest::FailCloseVfd::RegisterFailCloseVfd();
+  REQUIRE(driverId >= 0);
+  const int32 failuresBefore = UnitTest::FailCloseVfd::CloseFailureCount();
+  Result<> writeResult;
+  {
+    const UnitTest::FailCloseVfd::FailCloseArmGuard armGuard(driverId);
+    writeResult = writerCall();
+  }
+  REQUIRE(UnitTest::FailCloseVfd::CloseFailureCount() > failuresBefore);
+  RequireFailedCloseError(writeResult, filePath);
+}
+
+/**
+ * @brief Writes a closed .dream3d fixture holding the top-level array "Existing", for append tests.
+ * @param filePath Fixture path; any existing file is replaced.
+ */
+void WriteAppendFixture(const fs::path& filePath)
+{
+  fs::create_directories(filePath.parent_path());
+  const DataStructure fixtureStructure = MakeCloseTestStructure("Existing");
+  const Result<> fixtureResult = DREAM3D::WriteFile(filePath, fixtureStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(fixtureResult);
+}
+
+/**
+ * @brief Closes a raw HDF5 identifier under the HDF5 API lock and marks it closed.
+ * @param objectId Identifier to close; left as H5I_INVALID_HID afterwards.
+ * @param closeFunction H5Gclose or H5Fclose, matching the identifier's type.
+ */
+void CloseRawId(hid_t& objectId, herr_t (*closeFunction)(hid_t))
+{
+  if(objectId < 0)
+  {
+    return;
+  }
+  std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+  closeFunction(objectId);
+  objectId = H5I_INVALID_HID;
+}
+} // namespace
+
+TEST_CASE("DREAM3D::WriteFile reports a failure while the file closes", "[DataStructureWriter][CloseFailure][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const DataStructure dataStructure = MakeCloseTestStructure("Values");
+  const fs::path filePath = GetDataDir() / "WriteFileCloseFailure.dream3d";
+  fs::create_directories(filePath.parent_path());
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return DREAM3D::WriteFile(filePath, dataStructure); });
+}
+
+TEST_CASE("WriterFix: DataStructureWriter::WriteFile reports a failed close", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const DataStructure dataStructure = MakeCloseTestStructure("Values");
+  const fs::path filePath = GetDataDir() / "WriterFixStructureWriteCloseFailure.h5";
+  fs::create_directories(filePath.parent_path());
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return HDF5::DataStructureWriter::WriteFile(dataStructure, filePath); });
+}
+
+TEST_CASE("WriterFix: DREAM3D::AppendFile reports a failed close", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const fs::path filePath = GetDataDir() / "WriterFixDream3dAppendCloseFailure.dream3d";
+  WriteAppendFixture(filePath);
+  const DataStructure appendStructure = MakeCloseTestStructure("Appended");
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return DREAM3D::AppendFile(filePath, appendStructure, DataPath({"Appended"})); });
+}
+
+TEST_CASE("WriterFix: DataStructureWriter::AppendFile reports a failed close", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const fs::path filePath = GetDataDir() / "WriterFixStructureAppendCloseFailure.dream3d";
+  WriteAppendFixture(filePath);
+  const DataStructure appendStructure = MakeCloseTestStructure("Appended");
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return HDF5::DataStructureWriter::AppendFile(filePath, appendStructure, DataPath({"Appended"})); });
+}
+
+TEST_CASE("WriterFix: full recovery reports a failed close", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const DataStructure dataStructure = MakeCloseTestStructure("Values");
+  const fs::path filePath = GetDataDir() / "WriterFixFullRecoveryCloseFailure.dream3d";
+  fs::create_directories(filePath.parent_path());
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return DREAM3D::WriteRecoveryFile(filePath, dataStructure, Pipeline{}); });
+}
+
+TEST_CASE("WriterFix: redirect recovery reports a failed close", "[DataStructureWriter][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const DataStructure dataStructure = MakeCloseTestStructure("Values");
+  const fs::path filePath = GetDataDir() / "WriterFixRedirectRecoveryCloseFailure.dream3d";
+  const fs::path userDataFilePath = GetDataDir() / "WriterFixRedirectRecoveryUserData.dream3d";
+  fs::create_directories(filePath.parent_path());
+
+  RequireWriterReportsFailedClose(filePath, [&]() { return DREAM3D::WriteRecoveryFile(filePath, dataStructure, Pipeline{}, userDataFilePath); });
+}
+
+namespace
+{
+/**
+ * @brief Counts the open file identifiers of every file in this process.
+ * @return H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_FILE), read under the HDF5 API lock.
+ */
+ssize_t CountOpenFileIds()
+{
+  std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+  return H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_FILE);
+}
+} // namespace
+
+TEST_CASE("WriterFix: a failed close still releases the file identifier", "[FileIO][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const fs::path filePath = GetDataDir() / "WriterFixFailedCloseReleasesId.h5";
+  fs::create_directories(filePath.parent_path());
+  const hid_t driverId = UnitTest::FailCloseVfd::RegisterFailCloseVfd();
+  REQUIRE(driverId >= 0);
+  const ssize_t openFileIdsBefore = CountOpenFileIds();
+  REQUIRE(openFileIdsBefore >= 0);
+  const int32 failuresBefore = UnitTest::FailCloseVfd::CloseFailureCount();
+
+  hid_t rawFileId = H5I_INVALID_HID;
+  {
+    const UnitTest::FailCloseVfd::FailCloseArmGuard armGuard(driverId);
+    {
+      auto file = HDF5::FileIO::WriteFile(filePath);
+      REQUIRE(file.isValid());
+      rawFileId = file.getId();
+
+      RequireFailedCloseError(file.closeChecked(), filePath);
+      REQUIRE(UnitTest::FailCloseVfd::CloseFailureCount() == failuresBefore + 1);
+
+      // HDF5 keeps the identifier after its close callback failed, so the wrapper must keep owning it.
+      REQUIRE(IsHdf5IdValid(rawFileId));
+      REQUIRE(file.isValid());
+    }
+    // The wrapper's destructor released the identifier without running the failing driver close again.
+    CHECK(UnitTest::FailCloseVfd::CloseFailureCount() == failuresBefore + 1);
+  }
+
+  CHECK_FALSE(IsHdf5IdValid(rawFileId));
+  CHECK(CountOpenFileIds() == openFileIdsBefore);
+}
+
+TEST_CASE("WriterFix: closeChecked refuses while another holder is open", "[FileIO][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const fs::path filePath = GetDataDir() / "WriterFixCloseCheckedHolders.h5";
+  fs::create_directories(filePath.parent_path());
+
+  auto file = HDF5::FileIO::WriteFile(filePath);
+  REQUIRE(file.isValid());
+  const hid_t fileId = file.getId();
+
+  // Every raw identifier a section opens is closed here even when a REQUIRE fails, before the wrapper closes the file.
+  hid_t groupId = H5I_INVALID_HID;
+  hid_t reopenedId = H5I_INVALID_HID;
+  auto cleanup = MakeScopeGuard([&]() noexcept {
+    CloseRawId(groupId, H5Gclose);
+    CloseRawId(reopenedId, H5Fclose);
+  });
+
+  SECTION("a group still open")
+  {
+    {
+      std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+      groupId = H5Gcreate2(fileId, "Held", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
+    REQUIRE(groupId >= 0);
+
+    RequireFailedCloseError(file.closeChecked(), filePath);
+    REQUIRE(file.isValid());
+
+    CloseRawId(groupId, H5Gclose);
+  }
+
+  SECTION("a second identifier from H5Freopen")
+  {
+    {
+      std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+      reopenedId = H5Freopen(fileId);
+    }
+    REQUIRE(reopenedId >= 0);
+
+    RequireFailedCloseError(file.closeChecked(), filePath);
+    REQUIRE(file.isValid());
+
+    CloseRawId(reopenedId, H5Fclose);
+  }
+
+  SECTION("a child opened through the second identifier")
+  {
+    {
+      std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+      reopenedId = H5Freopen(fileId);
+      if(reopenedId >= 0)
+      {
+        groupId = H5Gcreate2(reopenedId, "HeldThroughReopen", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      }
+    }
+    REQUIRE(reopenedId >= 0);
+    REQUIRE(groupId >= 0);
+
+    RequireFailedCloseError(file.closeChecked(), filePath);
+
+    // With the reopened identifier gone, only the child opened through it still holds the file.
+    CloseRawId(reopenedId, H5Fclose);
+    RequireFailedCloseError(file.closeChecked(), filePath);
+    REQUIRE(file.isValid());
+
+    CloseRawId(groupId, H5Gclose);
+  }
+
+  // Every holder is closed, so the checked close succeeds and releases the wrapper's identifier.
+  const Result<> closeResult = file.closeChecked();
+  SIMPLNX_RESULT_REQUIRE_VALID(closeResult);
+  CHECK_FALSE(file.isValid());
+}
+
+TEST_CASE("WriterFix: FileIO::WriteFile refuses a directory target and leaves it intact", "[FileIO][WriterFix]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const fs::path testDirectory = GetDataDir() / "WriterFixDirectoryTarget";
+  fs::remove_all(testDirectory);
+  fs::create_directories(testDirectory);
+  const auto removeTestDirectory = MakeScopeGuard([&testDirectory]() noexcept {
+    std::error_code ignored;
+    fs::remove_all(testDirectory, ignored);
+  });
+  const fs::path emptyDirectory = testDirectory / "empty";
+  const fs::path filledDirectory = testDirectory / "filled";
+  fs::create_directories(emptyDirectory);
+  fs::create_directories(filledDirectory);
+  const fs::path entry = filledDirectory / "entry.txt";
+  {
+    std::ofstream stream(entry, std::ios::binary);
+    stream << "directory entry";
+  }
+
+  std::vector<fs::path> targets = {emptyDirectory, filledDirectory};
+#ifndef _WIN32
+  // The status follows links, so a link to a directory is refused like the directory.
+  const fs::path directoryLink = testDirectory / "linked";
+  fs::create_directory_symlink(emptyDirectory, directoryLink);
+  targets.push_back(directoryLink);
+#endif
+
+  const DataStructure dataStructure = MakeCloseTestStructure("Values");
+  for(const fs::path& target : targets)
+  {
+    INFO("target: " << target.string());
+    {
+      auto file = HDF5::FileIO::WriteFile(target);
+      CHECK_FALSE(file.isValid());
+    }
+    const Result<> writeResult = DREAM3D::WriteFile(target, dataStructure);
+    REQUIRE(writeResult.invalid());
+    CHECK(writeResult.errors().front().code == -9045);
+    const Result<> structureResult = HDF5::DataStructureWriter::WriteFile(dataStructure, target);
+    REQUIRE(structureResult.invalid());
+    CHECK(structureResult.errors().front().code == -8054);
+    CHECK(fs::is_directory(target));
+  }
+  CHECK(fs::is_directory(emptyDirectory));
+  CHECK(fs::is_empty(emptyDirectory));
+  CHECK(fs::is_regular_file(entry));
 }

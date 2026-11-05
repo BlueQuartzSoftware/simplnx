@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/RecordingFileReplaceHandler.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeGBPDMetricBasedFilter.hpp"
@@ -332,4 +333,134 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: SIMPL Backwards Co
       CHECK(args.value<DataPath>(ComputeGBPDMetricBasedFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: the file-replace hook runs on both output files before either opens",
+          "[OrientationAnalysis][ComputeGBPDMetricBasedFilter][FileWriteHook]")
+{
+  UnitTest::LoadPlugins();
+  constexpr int32 k_RecorderWarningCode = 99221;
+  constexpr int32 k_RecorderErrorCode = -99222;
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz", "6_6_find_gbpd_metric_based");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_find_gbpd_metric_based.dream3d", unit_test::k_TestFilesDir)));
+
+  const fs::path outputDirectory = fs::temp_directory_path() / "simplnx_6_6_find_gbpd_metric_based_hook";
+  fs::remove_all(outputDirectory);
+  fs::create_directories(outputDirectory);
+  const fs::path distOutput = outputDirectory / "hook_distribution_1.dat";
+  const fs::path errorOutput = outputDirectory / "hook_distribution_errors_1.dat";
+
+  const ComputeGBPDMetricBasedFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_LimitDist_Key, std::make_any<float32>(7.0f));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(distOutput));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(errorOutput));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_SaveRelativeErr_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleDataContainerPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(k_FaceNormalsPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(k_FaceAreasPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FeatureFaceLabelsPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AvgEulerAnglesPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+
+  static const std::shared_ptr<UnitTest::RecordingFileReplaceHandler> s_ErrorFileRecorder = std::make_shared<UnitTest::RecordingFileReplaceHandler>();
+  static const std::shared_ptr<void> s_ErrorFileRegistration = UnitTest::RegisterRecorder(s_ErrorFileRecorder);
+  UnitTest::RecordingFileReplaceHandler& distRecorder = UnitTest::ProcessRecorder();
+  UnitTest::RecordingFileReplaceHandler& errorRecorder = *s_ErrorFileRecorder;
+  const UnitTest::RecorderDisarmGuard disarmGuard({&distRecorder, &errorRecorder});
+  std::vector<std::string> calls;
+  std::vector<bool> areFilesAbsentAtCall;
+  const auto observe = [&](const std::string& name) {
+    return [&, name](const fs::path&, FileWriteHookMode) {
+      calls.push_back(name);
+      areFilesAbsentAtCall.push_back(!fs::exists(distOutput) && !fs::exists(errorOutput));
+    };
+  };
+
+  SECTION("a refused error file prevents the distribution file")
+  {
+    distRecorder.arm(distOutput, observe("distribution"), MakeWarningVoidResult(k_RecorderWarningCode, "recorder warning"), false);
+    errorRecorder.arm(errorOutput, observe("errors"), MakeErrorResult(k_RecorderErrorCode, "recorder error"), false);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    CHECK(executeResult.result.errors().front().code == k_RecorderErrorCode);
+    const bool hasRecorderWarning =
+        std::any_of(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == k_RecorderWarningCode; });
+    CHECK(hasRecorderWarning);
+    CHECK(calls == std::vector<std::string>{"distribution", "errors"});
+    CHECK(areFilesAbsentAtCall == std::vector<bool>{true, true});
+    CHECK_FALSE(fs::exists(distOutput));
+    CHECK_FALSE(fs::exists(errorOutput));
+  }
+  SECTION("outputs that resolve to the same file are rejected before any hook")
+  {
+    // The distribution file gets the _1 suffix, so it resolves to the error file name.
+    args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputDirectory / "hook_distribution_errors.dat"));
+    distRecorder.arm(errorOutput, observe("distribution"), {}, false);
+    errorRecorder.arm(errorOutput, observe("errors"), {}, false);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    CHECK(executeResult.result.errors().front().code == -8328);
+    CHECK(calls.empty());
+    CHECK_FALSE(fs::exists(errorOutput));
+  }
+  SECTION("outputs reached through symbolic links are compared by the files they name")
+  {
+    // Creating a symbolic link can need a privilege on Windows; the section is skipped when the link cannot be created.
+    fs::create_directories(outputDirectory / "real" / "sub");
+    std::error_code linkError;
+    fs::create_directory_symlink(outputDirectory / "real" / "sub", outputDirectory / "link", linkError);
+    if(!linkError)
+    {
+      fs::create_directory_symlink(outputDirectory / "real", outputDirectory / "alias", linkError);
+    }
+    if(linkError)
+    {
+      WARN("symbolic-link capability unavailable: " << linkError.message());
+      return;
+    }
+    // Two absent files reached through a linked folder and its real folder are one file.
+    args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputDirectory / "real" / "same_1.dat"));
+    args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputDirectory / "alias" / "same_1.dat"));
+    auto sameResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(sameResult.result);
+    REQUIRE(sameResult.result.errors().size() == 1);
+    CHECK(sameResult.result.errors().front().code == -8328);
+
+    args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputDirectory / "link" / ".." / "other_1.dat"));
+    args.insertOrAssign(ComputeGBPDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputDirectory / "other_1.dat"));
+    auto linkParentResult = filter.execute(dataStructure, args);
+#ifdef _WIN32
+    // Windows path handling removes ".." before it resolves "link", so "link/../other_1.dat" names the same file.
+    SIMPLNX_RESULT_REQUIRE_INVALID(linkParentResult.result);
+    REQUIRE(linkParentResult.result.errors().size() == 1);
+    CHECK(linkParentResult.result.errors().front().code == -8328);
+#else
+    // POSIX resolves "link" first, so "link/../other_1.dat" names real/other_1.dat, a different file.
+    SIMPLNX_RESULT_REQUIRE_VALID(linkParentResult.result);
+    CHECK(fs::is_regular_file(outputDirectory / "real" / "other_1.dat"));
+    CHECK(fs::is_regular_file(outputDirectory / "other_1.dat"));
+#endif
+  }
+  SECTION("success calls each hook once before the files exist")
+  {
+    distRecorder.arm(distOutput, observe("distribution"), {}, false);
+    errorRecorder.arm(errorOutput, observe("errors"), {}, false);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK(calls == std::vector<std::string>{"distribution", "errors"});
+    CHECK(areFilesAbsentAtCall == std::vector<bool>{true, true});
+    CHECK(fs::exists(distOutput));
+    CHECK(fs::exists(errorOutput));
+  }
+  std::error_code ignored;
+  fs::remove_all(outputDirectory, ignored);
 }

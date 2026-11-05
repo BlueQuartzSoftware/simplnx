@@ -441,6 +441,13 @@ Result<> WriteImageDirect::operator()()
     }
   };
 
+  // The file-replace hook in AtomicFile::Create() can report warnings for each slice file. The slice writer runs on this thread,
+  // so it collects them here, and every result after this point carries them first.
+  std::vector<Warning> hookWarnings;
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
   // Encode and atomically commit one independently named slice file.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
     // Add an index only when the selection produces multiple slices.
@@ -456,6 +463,7 @@ Result<> WriteImageDirect::operator()()
     {
       return ConvertResult(std::move(atomicFileResult));
     }
+    hookWarnings.insert(hookWarnings.end(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     // Flip before padding so the scale bar stays upright at the output bottom.
@@ -501,18 +509,18 @@ Result<> WriteImageDirect::operator()()
     auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues.presetName);
     if(controlPointsResult.invalid())
     {
-      return ConvertResult(std::move(controlPointsResult));
+      return withHookWarnings(ConvertResult(std::move(controlPointsResult)));
     }
     std::vector<float32> controlPoints = controlPointsResult.value();
     if(controlPoints.empty())
     {
-      return MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName));
+      return withHookWarnings(MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName)));
     }
     // Each control color has four values in [A,R,G,B] order.
     // Interpolation requires two colors to prevent an out-of-bounds read.
     if(controlPoints.size() < 8)
     {
-      return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName));
+      return withHookWarnings(MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName)));
     }
     std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
     const usize numControlColors = controlPoints.size() / 4;
@@ -523,8 +531,9 @@ Result<> WriteImageDirect::operator()()
       maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath);
     }
 
-    return ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, binPoints, controlPoints, numControlColors,
-                               maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange, reportRows);
+    return withHookWarnings(ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, binPoints, controlPoints,
+                                                numControlColors, maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice),
+                                                reportRange, reportRows));
   }
 
   // The non-color path preserves typed bytes for one slice at a time.
@@ -534,18 +543,18 @@ Result<> WriteImageDirect::operator()()
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return withHookWarnings({});
     }
     auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp, reportRows);
     if(extractResult.invalid())
     {
-      return extractResult;
+      return withHookWarnings(std::move(extractResult));
     }
     auto sliceResult = writeSlice(sliceBuffer, slice);
     if(sliceResult.invalid())
     {
-      return sliceResult;
+      return withHookWarnings(std::move(sliceResult));
     }
   }
-  return {};
+  return withHookWarnings({});
 }

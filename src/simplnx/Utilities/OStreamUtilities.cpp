@@ -552,13 +552,20 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     throw std::runtime_error(fmt::format("{}({}): Function {}: Error. OutputPath must be a directory. '{}'", "PrintDataSetsToMultipleFiles", __FILE__, __LINE__, directoryPath));
   }
 
+  // The file-replace hook in AtomicFile::Create() can report warnings for each file; every returned result carries them first.
+  std::vector<Warning> hookWarnings;
+  const auto withHookWarnings = [&hookWarnings](Result<> result) {
+    result.warnings().insert(result.warnings().begin(), hookWarnings.begin(), hookWarnings.end());
+    return result;
+  };
   for(const auto& dataPath : objectPaths)
   {
     auto atomicFileResult = AtomicFile::Create(fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension));
     if(atomicFileResult.invalid())
     {
-      return ConvertResult(std::move(atomicFileResult));
+      return withHookWarnings(ConvertResult(std::move(atomicFileResult)));
     }
+    hookWarnings.insert(hookWarnings.end(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
 
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
@@ -600,7 +607,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
       }
       if(result.invalid())
       {
-        return result;
+        return withHookWarnings(std::move(result));
       }
     }
     if(shouldCancel)
@@ -608,16 +615,16 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
       // Earlier loop iterations already committed their files, so a cancellation here
       // leaves a partially published file set. Reporting success would let the caller
       // treat that partial set as the complete output.
-      return MakeErrorResult(-1, "Filter cancelled");
+      return withHookWarnings(MakeErrorResult(-1, "Filter cancelled"));
     }
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {
-      return commitResult;
+      return withHookWarnings(std::move(commitResult));
     }
   }
 
-  return {};
+  return withHookWarnings({});
 }
 
 void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

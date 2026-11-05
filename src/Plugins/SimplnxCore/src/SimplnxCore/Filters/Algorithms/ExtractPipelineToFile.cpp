@@ -12,6 +12,35 @@ using namespace nx::core;
 
 namespace fs = std::filesystem;
 
+namespace
+{
+/**
+ * @brief Writes the pipeline JSON to the temporary file and commits it onto the output path.
+ * @param atomicFile Temporary file whose commit() replaces the output file.
+ * @param pipelineJson Pipeline to write.
+ * @param shouldCancel Stops before the commit when true.
+ * @return Success, or the open, cancel or commit error.
+ */
+Result<> WriteAndCommit(AtomicFile& atomicFile, const nlohmann::json& pipelineJson, const std::atomic_bool& shouldCancel)
+{
+  {
+    const fs::path exportFilePath = atomicFile.tempFilePath();
+    std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
+    if(!fOut.is_open())
+    {
+      return MakeErrorResult(-2582, fmt::format("Error opening output path {}", exportFilePath.string()));
+    }
+
+    fOut << pipelineJson.dump(2);
+  }
+  if(shouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
+  return atomicFile.commit();
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 ExtractPipelineToFile::ExtractPipelineToFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              ExtractPipelineToFileInputValues* inputValues)
@@ -54,25 +83,8 @@ Result<> ExtractPipelineToFile::operator()()
     return ConvertResult(std::move(atomicFileResult));
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
-  {
-    const fs::path exportFilePath = atomicFile.tempFilePath();
-    std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
-    if(!fOut.is_open())
-    {
-      return MakeErrorResult(-2582, fmt::format("Error opening output path {}", exportFilePath.string()));
-    }
-
-    fOut << pipelineJson.dump(2);
-  }
-  if(m_ShouldCancel)
-  {
-    return MakeErrorResult(-1, "Filter cancelled");
-  }
-  Result<> commitResult = atomicFile.commit();
-  if(commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  return {};
+  Result<> result = WriteAndCommit(atomicFile, pipelineJson, m_ShouldCancel);
+  // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+  result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+  return result;
 }

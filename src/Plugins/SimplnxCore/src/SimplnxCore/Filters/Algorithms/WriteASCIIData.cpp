@@ -83,37 +83,10 @@ Result<> WriteASCIIData::operator()()
       return ConvertResult(std::move(atomicFileResult));
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
-
-    auto outputPath = atomicFile.tempFilePath();
-    // Make sure any directory path is also available as the user may have just typed
-    // in a path without actually creating the full path
-    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(outputPath.parent_path());
-    if(createDirectoriesResult.invalid())
-    {
-      return createDirectoriesResult;
-    }
-
-    // Scope file writer in code block to get around file lock on windows (enforce destructor order)
-    {
-      // Create the output file
-      std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
-      if(!outStrm.is_open())
-      {
-        return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
-      }
-
-      OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, includeIndex, includeHeaders);
-    }
-
-    if(m_ShouldCancel)
-    {
-      return MakeErrorResult(-1, "Filter cancelled");
-    }
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
+    Result<> result = writeSingleFile(atomicFile, delimiter, includeIndex, includeHeaders);
+    // The file-replace hook in AtomicFile::Create() can report warnings; they come first.
+    result.warnings().insert(result.warnings().begin(), atomicFileResult.warnings().begin(), atomicFileResult.warnings().end());
+    return result;
   }
 
   if(fileType == k_MultipleFiles)
@@ -136,4 +109,35 @@ Result<> WriteASCIIData::operator()()
   }
 
   return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> WriteASCIIData::writeSingleFile(AtomicFile& atomicFile, const std::string& delimiter, bool includeIndex, bool includeHeaders) const
+{
+  auto outputPath = atomicFile.tempFilePath();
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(outputPath.parent_path());
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
+
+  // Scope file writer in code block to get around file lock on windows (enforce destructor order)
+  {
+    // Create the output file
+    std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
+    if(!outStrm.is_open())
+    {
+      return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
+    }
+
+    OStreamUtilities::PrintDataSetsToSingleFile(outStrm, m_InputValues->InputDataArrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, includeIndex, includeHeaders);
+  }
+
+  if(m_ShouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
+  return atomicFile.commit();
 }

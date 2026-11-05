@@ -28,6 +28,7 @@
 
 namespace nx::core
 {
+class AtomicFile;
 
 struct SIMPLNXCORE_EXPORT WriteASCIIDataInputValues
 {
@@ -57,9 +58,25 @@ public:
   WriteASCIIData& operator=(const WriteASCIIData&) = delete;
   WriteASCIIData& operator=(WriteASCIIData&&) noexcept = delete;
 
+  /**
+   * @brief Writes the selected arrays to one file or to one file per array.
+   * @return Success with the warnings of the file-replace hooks, or the first error with those warnings in front.
+   *
+   * AtomicFile::Create() runs the file-replace hook on each output path before that file is written.
+   */
   Result<> operator()();
 
 private:
+  /**
+   * @brief Writes all selected arrays to the temporary file and commits it onto the single output path.
+   * @param atomicFile Temporary file whose commit() replaces the output file.
+   * @param delimiter Text between the values of one line.
+   * @param includeIndex Writes the tuple index column when true.
+   * @param includeHeaders Writes the header line when true.
+   * @return Success, or the directory, open, cancel or commit error.
+   */
+  Result<> writeSingleFile(AtomicFile& atomicFile, const std::string& delimiter, bool includeIndex, bool includeHeaders) const;
+
   DataStructure& m_DataStructure;
   const WriteASCIIDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

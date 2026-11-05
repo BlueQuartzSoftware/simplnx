@@ -5,6 +5,7 @@
 #include "SimplnxCore/Filters/CombineStlFilesFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 
+#include "simplnx/Common/FileReplaceGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -23,7 +24,10 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <set>
+#include <stdexcept>
+#include <thread>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -672,5 +676,159 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: SIMPL Backwards Compatibility", "[Si
       CHECK(args.value<DataPath>(WriteStlFileFilter::k_TriangleGeomPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(WriteStlFileFilter::k_FeatureIdsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
+  }
+}
+
+namespace
+{
+/**
+ * @brief One file-replace hook call observed by an STL test.
+ */
+struct StlHookCall
+{
+  std::string fileName;
+  FileWriteHookMode mode = FileWriteHookMode::ReleaseReaders;
+  bool isCallingThread = false;
+  bool doesTargetExist = false;
+};
+
+/**
+ * @brief Runs the grouped STL writer on the phases-and-features fixture with one triangle per file.
+ * @param directory Output directory.
+ * @return The writer result.
+ */
+Result<> RunGroupedOverflowStlWrite(const fs::path& directory)
+{
+  DataStructure dataStructure;
+  CreatePhasesAndFeaturesFixture(dataStructure);
+  WriteStlFileInputValues inputValues{};
+  inputValues.GroupingType = 1;
+  inputValues.OutputStlDirectory = directory;
+  inputValues.OutputStlPrefix = "PF_";
+  inputValues.TriangleGeomPath = DataPath({"TriGeom"});
+  inputValues.FeatureIdsPath = DataPath({"TriGeom", "FaceData", "FaceLabels"});
+  inputValues.FeaturePhasesPath = DataPath({"TriGeom", "FaceData", "FacePhases"});
+  inputValues.HIDDEN_MaxTrianglesPerFile = 1;
+  return WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)();
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::WriteStlFileFilter: grouped and overflow files run the hook once per final path on the calling thread", "[SimplnxCore][WriteStlFileFilter][FileWriteHook]")
+{
+  constexpr int32 k_HookWarningCode = 99301;
+  constexpr int32 k_RefusalCode = -99302;
+  const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_grouped_hook");
+  const std::set<std::string> expectedFiles = {
+      "PF_Ensemble_5_Feature_1.stl", "PF_Ensemble_6_Feature_2.stl", "PF_Ensemble_6_Feature_2_overflow_1.stl", "PF_Ensemble_7_Feature_3.stl", "PF_Ensemble_7_Feature_3_overflow_1.stl",
+      "PF_Ensemble_0_Feature_-1.stl"};
+  const std::thread::id callingThread = std::this_thread::get_id();
+  std::vector<StlHookCall> calls;
+  std::string refusedFileName;
+  std::string throwingFileName;
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode mode) -> Result<> {
+    const std::string fileName = target.filename().string();
+    calls.push_back({fileName, mode, std::this_thread::get_id() == callingThread, fs::exists(target)});
+    if(fileName == throwingFileName)
+    {
+      throw std::runtime_error("hook failure");
+    }
+    // A refusing component refuses only in the RefuseIfRead mode, like a component that still reads the file.
+    if(fileName == refusedFileName && mode == FileWriteHookMode::RefuseIfRead)
+    {
+      return MakeErrorResult(k_RefusalCode, "the overflow destination is in use");
+    }
+    return MakeWarningVoidResult(k_HookWarningCode, "hook warning");
+  });
+  const ScopedFileReplacePolicy policy(FileWriteHookMode::RefuseIfRead);
+
+  SECTION("success: one call per final file, on the calling thread, with its policy and warning")
+  {
+    const Result<> result = RunGroupedOverflowStlWrite(directory);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    std::multiset<std::string> calledFiles;
+    for(const StlHookCall& call : calls)
+    {
+      calledFiles.insert(call.fileName);
+      CHECK(call.isCallingThread);
+      CHECK(call.mode == FileWriteHookMode::RefuseIfRead);
+      CHECK_FALSE(call.doesTargetExist);
+    }
+    CHECK(calledFiles == std::multiset<std::string>(expectedFiles.begin(), expectedFiles.end()));
+    const auto warningCount = std::count_if(result.warnings().begin(), result.warnings().end(), [](const Warning& warning) { return warning.code == k_HookWarningCode; });
+    CHECK(warningCount == static_cast<std::ptrdiff_t>(expectedFiles.size()));
+    RequireFileNames(directory, expectedFiles);
+  }
+  SECTION("a refused overflow destination stops before any worker writes")
+  {
+    refusedFileName = "PF_Ensemble_6_Feature_2_overflow_1.stl";
+    {
+      std::ofstream stream(directory / refusedFileName, std::ios::binary);
+      stream << "occupied";
+    }
+    const Result<> result = RunGroupedOverflowStlWrite(directory);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == k_RefusalCode);
+    CHECK(std::any_of(result.warnings().begin(), result.warnings().end(), [](const Warning& warning) { return warning.code == k_HookWarningCode; }));
+    // Only the occupied file remains, unchanged, and no temporary directory is left.
+    RequireFileNames(directory, {refusedFileName});
+    std::ifstream stream(directory / refusedFileName, std::ios::binary);
+    const std::string content((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+    CHECK(content == "occupied");
+  }
+  SECTION("a throwing hook propagates before any worker starts")
+  {
+    throwingFileName = "PF_Ensemble_7_Feature_3.stl";
+    CHECK_THROWS_WITH(RunGroupedOverflowStlWrite(directory), "hook failure");
+    RequireFileNames(directory, {});
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteStlFileFilter: single-file overflow keeps a refusal without errors invalid", "[SimplnxCore][WriteStlFileFilter][FileWriteHook]")
+{
+  const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_single_overflow_hook");
+  DataStructure dataStructure;
+  CreatePhasesAndFeaturesFixture(dataStructure);
+  WriteStlFileInputValues inputValues{};
+  inputValues.GroupingType = 2;
+  inputValues.OutputStlFile = directory / "single.stl";
+  inputValues.TriangleGeomPath = DataPath({"TriGeom"});
+  inputValues.HIDDEN_MaxTrianglesPerFile = 1;
+
+  const std::thread::id callingThread = std::this_thread::get_id();
+  std::multiset<std::string> calledFiles;
+  bool areAllOnCallingThread = true;
+  std::string refusedFileName;
+  const std::shared_ptr<void> registration = RegisterFileReplaceHandler([&](const fs::path& target, FileWriteHookMode) -> Result<> {
+    calledFiles.insert(target.filename().string());
+    areAllOnCallingThread = areAllOnCallingThread && std::this_thread::get_id() == callingThread;
+    if(target.filename().string() == refusedFileName)
+    {
+      return Result<>{{nonstd::make_unexpected(ErrorCollection{})}};
+    }
+    return {};
+  });
+
+  SECTION("success: each overflow file is hooked once on the calling thread")
+  {
+    const Result<> result = WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(areAllOnCallingThread);
+    std::multiset<std::string> writtenFiles;
+    for(const auto& entry : fs::directory_iterator(directory))
+    {
+      writtenFiles.insert(entry.path().filename().string());
+    }
+    CHECK(calledFiles == writtenFiles);
+    CHECK(calledFiles.count("single_overflow_1.stl") == 1);
+  }
+  SECTION("a refusal without errors reaches the caller unchanged")
+  {
+    refusedFileName = "single_overflow_1.stl";
+    const Result<> result = WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors().empty());
+    CHECK(areAllOnCallingThread);
+    RequireFileNames(directory, {});
   }
 }
