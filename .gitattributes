@@ -2,3 +2,5 @@
 
 *.bat text eol=crlf
 *.sh text eol=lf
+*.d3dpipeline text
+*.d3dworkflow text

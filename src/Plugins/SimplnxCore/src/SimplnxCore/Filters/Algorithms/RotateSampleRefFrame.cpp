@@ -39,6 +39,7 @@ const std::atomic_bool& RotateSampleRefFrame::getCancel()
 
 Result<> RotateSampleRefFrame::operator()()
 {
+  // Preflight actions have already cleared or copied the Feature Attribute Matrix.
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SourceGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestGeometryPath);
 

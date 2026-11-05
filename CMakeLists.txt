@@ -528,6 +528,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectExcludingAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.hpp
@@ -772,6 +773,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CopyDataObjectExcludingAction.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.cpp

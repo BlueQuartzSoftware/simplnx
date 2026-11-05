@@ -2,7 +2,6 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
@@ -93,63 +92,29 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 }
 
 // -----------------------------------------------------------------------------
-void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists)
+void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
+                                            std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
-  const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
-  if(srcCellFeatureData == nullptr)
+  const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrix == nullptr)
   {
     return;
   }
 
-  std::string neighborListWarningMsg;
-  std::string arrayWarningMsg;
-  for(const auto& [identifier, object] : *srcCellFeatureData)
+  std::string list;
+  for(const auto& [identifier, object] : *featureAttributeMatrix)
   {
-    std::string objectText = "\n" + cellFeatureAmPath.toString() + "/" + object->getName();
     if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
     {
-      arrayWarningMsg += objectText;
-    }
-    else if(warnNeighborLists && dynamic_cast<const INeighborList*>(object.get()) != nullptr)
-    {
-      neighborListWarningMsg += objectText;
+      list += "\n" + featureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }
   }
 
-  if(!neighborListWarningMsg.empty())
+  if(!list.empty())
   {
-    preflightUpdatedValues.push_back(
-        {"Invalidated NeighborLists",
-         fmt::format(
-             "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-             featureIdsArrayPath.toString(), neighborListWarningMsg)});
-  }
-  if(!arrayWarningMsg.empty())
-  {
-    preflightUpdatedValues.push_back(
-        {"Stale Arrays", fmt::format("This filter will modify the Cell Level Array(s) '{}', due to the dependent nature of feature level arrays, the pruning process will cause the data contained "
-                                     "within to be stale. It's highly recommended to recalculate the following:{}",
-                                     featureIdsArrayPath.toString(), arrayWarningMsg)});
-  }
-}
-
-// -----------------------------------------------------------------------------
-void AppendCopiedAMStaleWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, nx::core::Result<OutputActions>& resultOutputActions)
-{
-  std::string amWarningMsg;
-  for(const auto& childPath : childPaths)
-  {
-    if(dataStructure.getDataAs<AttributeMatrix>(childPath) != nullptr)
-    {
-      amWarningMsg += "\n" + childPath.toString();
-    }
-  }
-  if(!amWarningMsg.empty())
-  {
-    resultOutputActions.m_Warnings.emplace_back(
-        -4015,
-        fmt::format("Attribute Matrices with arrays dependent upon Cell Data will be copied across as-is. It's highly recommended to recalculate the child arrays in the following:{}", amWarningMsg));
+    preflightUpdatedValues.push_back({"Stale Arrays", fmt::format("This filter modifies '{}' and removes Features from '{}'. The values in the following Feature Data Arrays are not recomputed and "
+                                                                  "will be stale. Recompute any of the following Data Arrays:{}",
+                                                                  featureIdsPath.toString(), featureAttributeMatrixPath.toString(), list)});
   }
 }
 

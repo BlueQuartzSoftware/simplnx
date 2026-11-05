@@ -2,8 +2,10 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/SamplingUtils.hpp"
 
 #include <fstream>
 
@@ -195,6 +197,31 @@ Result<> RegularizeZSpacing::operator()()
   }
 
   taskRunner.wait();
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // Validate Feature Ids against the source AM before compacting the resampled data.
+  DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
+  auto destImagePath = m_InputValues->CreatedImageGeometryPath;
+  DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+
+  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
+  {
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
+    if(validateNumFeatResult.invalid())
+    {
+      return validateNumFeatResult;
+    }
+
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+    // Renumber resampled Feature Ids and resize the empty destination Feature AM.
+    DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
+    return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+  }
 
   return {};
 }

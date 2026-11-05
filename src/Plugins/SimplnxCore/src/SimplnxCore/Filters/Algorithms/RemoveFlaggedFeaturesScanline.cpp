@@ -687,7 +687,8 @@ Result<> RemoveFlaggedFeaturesScanline::operator()()
 
       DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
-      taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath, cropTaskResult));
+      taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath,
+                                                  m_InputValues->TempBoundsPath.getParent().getTargetName(), cropTaskResult));
 
       // Stop scheduling crops once one has failed, so the failure is reported instead of
       // being buried behind later work.

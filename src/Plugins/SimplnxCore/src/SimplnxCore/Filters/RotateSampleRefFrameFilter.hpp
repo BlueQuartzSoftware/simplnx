@@ -25,6 +25,8 @@ public:
   RotateSampleRefFrameFilter& operator=(RotateSampleRefFrameFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
   static constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
   static constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
   static constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";

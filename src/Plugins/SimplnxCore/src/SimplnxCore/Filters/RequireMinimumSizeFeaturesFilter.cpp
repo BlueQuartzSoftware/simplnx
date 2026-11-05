@@ -150,8 +150,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion below
-  nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, featureNumCellsPath.getParent(), featureIdsPath, preflightUpdatedValues, false);
+  nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, featureNumCellsPath.getParent(), featureIdsPath, preflightUpdatedValues);
 
   // This section will warn the user about the removal of NeighborLists
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, featureNumCellsPath, resultOutputActions);

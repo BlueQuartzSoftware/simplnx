@@ -39,6 +39,10 @@ struct SIMPLNX_EXPORT ImageGeometryCropOptions
   std::vector<uint64> maxVoxel = {0, 0, 0};
   std::vector<float64> minCoordinate = {0.0, 0.0, 0.0};
   std::vector<float64> maxCoordinate = {0.0, 0.0, 0.0};
+  // Recreate the Feature AM with no arrays; required for renumberFeatures.
+  bool clearFeatureAttributeMatrix = false;
+  // Report unchanged Feature data only for callers that request this information.
+  bool reportUnclearedFeatureData = false;
   bool renumberFeatures = false;
   bool removeOriginalGeometry = false;
   bool usePhysicalBounds = false;

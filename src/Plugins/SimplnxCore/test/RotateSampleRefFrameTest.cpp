@@ -7,7 +7,10 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
@@ -104,6 +107,7 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
 Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPath, const VectorFloat32Parameter::ValueType& axisAngle, bool sliceBySlice = false, bool keepOrigin = false)
 {
   Arguments args;
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
@@ -735,6 +739,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibilit
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
+      CHECK_FALSE(args.value<BoolParameter::ValueType>(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key));
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<ChoicesParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key) == 0);
@@ -742,6 +747,11 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibilit
         // Complex type (FloatVec3p1FilterParameterConverter) - verified by successful pipeline loading
       }
       CHECK(args.value<DataPath>(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      DataStructure ds;
+      CreateSequentialImageGeom(ds, "DataContainer", {2, 3, 1});
+      REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({"DataContainer", "Cell Feature Data"})) == nullptr);
+      CHECK(pipeline.preflight(ds, false));
+      UnitTest::CheckArraysInheritTupleDims(ds);
     }
   }
 }
@@ -773,6 +783,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   valuesPtr->fill(42);
   RotateSampleRefFrameFilter filter;
   Arguments args;
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
@@ -809,4 +820,344 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
     REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+// A half turn reverses {1,1,3,3} to {3,3,1,1}; membership and counts stay fixed.
+DataStructure CreateFeatureRotateFixture()
+{
+  DataStructure ds;
+  auto* geom = ImageGeom::Create(ds, "Input");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({2, 2, 1});
+  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  geom->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cells = AttributeMatrix::Create(ds, k_CellDataName, {1, 2, 2}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  auto* ids = UnitTest::CreateTestDataArray<int32>(ds, "FeatureIds", cells->getShape(), {1}, cells->getId());
+  REQUIRE(ids != nullptr);
+  (*ids)[0] = 1;
+  (*ids)[1] = 1;
+  (*ids)[2] = 3;
+  (*ids)[3] = 3;
+  auto* features = AttributeMatrix::Create(ds, "Cell Feature Data", {2, 2}, geom->getId());
+  REQUIRE(features != nullptr);
+  auto* counts = UnitTest::CreateTestDataArray<int32>(ds, "NumElements", features->getShape(), {1}, features->getId());
+  REQUIRE(counts != nullptr);
+  (*counts)[0] = 0;
+  (*counts)[1] = 2;
+  (*counts)[2] = 0;
+  (*counts)[3] = 2;
+  auto* neighbors = NeighborList<int32>::Create(ds, "NeighborList", features->getShape(), features->getId());
+  REQUIRE(neighbors != nullptr);
+  neighbors->setList(1, std::vector<int32>{3});
+  neighbors->setList(3, std::vector<int32>{1});
+  REQUIRE(StringArray::CreateWithValues(ds, "Names", features->getShape(), {"Background", "One", "Unused", "Three"}, features->getId()) != nullptr);
+  auto* ensemble = AttributeMatrix::Create(ds, "Cell Ensemble Data", {2}, geom->getId());
+  REQUIRE(ensemble != nullptr);
+  auto* structures = UnitTest::CreateTestDataArray<uint32>(ds, "CrystalStructures", {2}, {1}, ensemble->getId());
+  REQUIRE(structures != nullptr);
+  (*structures)[0] = 999;
+  (*structures)[1] = 1;
+  return ds;
+}
+
+Arguments MakeFeatureRotateArgs(bool clear)
+{
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0.0F, 0.0F, 1.0F, 180.0F});
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(clear));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_InputPath.createChildPath("Cell Feature Data")));
+  return args;
+}
+
+void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& ds, const DataPath& geomPath)
+{
+  const auto* ids = ds.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath("FeatureIds"));
+  REQUIRE(ids != nullptr);
+  REQUIRE(ids->getNumberOfTuples() == 4);
+  const std::vector<int32> expected = {3, 3, 1, 1};
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    CHECK((*ids)[i] == expected[i]);
+  }
+  const auto* ensemble = ds.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Ensemble Data"));
+  REQUIRE(ensemble != nullptr);
+  CHECK(ensemble->getShape() == ShapeType{2});
+  CHECK(ensemble->getSize() == 1);
+  const auto* structures = ds.getDataAs<UInt32Array>(geomPath.createChildPath("Cell Ensemble Data").createChildPath("CrystalStructures"));
+  REQUIRE(structures != nullptr);
+  REQUIRE(structures->getNumberOfTuples() == 2);
+  CHECK((*structures)[0] == 999);
+  CHECK((*structures)[1] == 1);
+}
+
+void CheckUnchangedFeatureData(const DataStructure& ds, const DataPath& geomPath)
+{
+  const auto path = geomPath.createChildPath("Cell Feature Data");
+  const auto* am = ds.getDataAs<AttributeMatrix>(path);
+  REQUIRE(am != nullptr);
+  CHECK(am->getShape() == ShapeType{2, 2});
+  CHECK(am->getSize() == 3);
+  const auto* counts = ds.getDataAs<Int32Array>(path.createChildPath("NumElements"));
+  REQUIRE(counts != nullptr);
+  REQUIRE(counts->getNumberOfTuples() == 4);
+  const std::vector<int32> expectedCounts = {0, 2, 0, 2};
+  const auto* neighbors = ds.getDataAs<NeighborList<int32>>(path.createChildPath("NeighborList"));
+  REQUIRE(neighbors != nullptr);
+  const std::vector<std::vector<int32>> expectedNeighbors = {{}, {3}, {}, {1}};
+  const auto* names = ds.getDataAs<StringArray>(path.createChildPath("Names"));
+  REQUIRE(names != nullptr);
+  const std::vector<std::string> expectedNames = {"Background", "One", "Unused", "Three"};
+  for(usize i = 0; i < 4; ++i)
+  {
+    CHECK((*counts)[i] == expectedCounts[i]);
+    CHECK(neighbors->getList(i) == expectedNeighbors[i]);
+    CHECK((*names)[i] == expectedNames[i]);
+  }
+}
+
+void CheckClearedFeatureData(const DataStructure& ds, const DataPath& geomPath)
+{
+  const auto* am = ds.getDataAs<AttributeMatrix>(geomPath.createChildPath("Cell Feature Data"));
+  REQUIRE(am != nullptr);
+  CHECK(am->getShape() == ShapeType{2, 2});
+  CHECK(am->getNumberOfTuples() == 4);
+  CHECK(am->getSize() == 0);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON preflight", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRotateFixture();
+  RotateSampleRefFrameFilter filter;
+  CHECK(filter.parametersVersion() == 2);
+  CHECK(filter.getDefaultArguments().value<BoolParameter::ValueType>(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key));
+  auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(result.outputActions.warnings().empty());
+  const auto info = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
+  REQUIRE(info != result.outputValues.end());
+  CHECK(info->value.find("Input/Cell Feature Data/NumElements") != std::string::npos);
+  CHECK(info->value.find("Input/Cell Feature Data/NeighborList") != std::string::npos);
+  CHECK(info->value.find("Input/Cell Feature Data/Names") != std::string::npos);
+  CHECK(info->value.find("Ensemble") == std::string::npos);
+  CHECK(info->value.find("renumber") == std::string::npos);
+  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
+  auto applied = result.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  CheckClearedFeatureData(ds, k_OutputPath);
+  CheckUnchangedFeatureData(ds, k_InputPath);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear OFF copies Feature AM unchanged", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = CreateFeatureRotateFixture();
+  RotateSampleRefFrameFilter filter;
+  auto args = MakeFeatureRotateArgs(false);
+  // The disabled selection is ignored, even when it points to a missing object.
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Missing"})));
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  CHECK(preflight.outputActions.warnings().empty());
+  CHECK(std::any_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; }));
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckUnchangedFeatureData(ds, k_OutputPath);
+  CheckUnchangedFeatureData(ds, k_InputPath);
+  CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON execute", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = CreateFeatureRotateFixture();
+  RotateSampleRefFrameFilter filter;
+  auto result = scope.executeFilter(filter, ds, MakeFeatureRotateArgs(true));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckClearedFeatureData(ds, k_OutputPath);
+  CheckUnchangedFeatureData(ds, k_InputPath);
+  CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child Feature AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRotateFixture();
+  RotateSampleRefFrameFilter filter;
+  auto args = MakeFeatureRotateArgs(true);
+  SECTION("Matrix outside geometry")
+  {
+    REQUIRE(AttributeMatrix::Create(ds, "Elsewhere", {4}) != nullptr);
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
+  }
+  SECTION("Matrix nested inside geometry")
+  {
+    const auto* geom = ds.getDataAs<ImageGeom>(k_InputPath);
+    REQUIRE(geom != nullptr);
+    auto* group = DataGroup::Create(ds, "Nested", geom->getId());
+    REQUIRE(group != nullptr);
+    REQUIRE(AttributeMatrix::Create(ds, "Features", {4}, group->getId()) != nullptr);
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Input", "Nested", "Features"})));
+  }
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67441);
+  CHECK(result.outputActions.errors()[0].message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON rejects the Cell AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRotateFixture();
+  RotateSampleRefFrameFilter filter;
+  auto args = MakeFeatureRotateArgs(true);
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_InputPath.createChildPath(k_CellDataName)));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67442);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent paths", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = CreateFeatureRotateFixture();
+  auto* aliases = DataGroup::Create(ds, "Aliases");
+  REQUIRE(aliases != nullptr);
+  const auto* features = ds.getDataAs<AttributeMatrix>(k_InputPath.createChildPath("Cell Feature Data"));
+  REQUIRE(features != nullptr);
+  REQUIRE(ds.setAdditionalParent(features->getId(), aliases->getId()));
+  auto args = MakeFeatureRotateArgs(true);
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Aliases", "Cell Feature Data"})));
+  RotateSampleRefFrameFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckClearedFeatureData(ds, k_OutputPath);
+  CheckUnchangedFeatureData(ds, k_InputPath);
+  CheckUnchangedFeatureData(ds, DataPath({"Aliases"}));
+  CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON in place", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = CreateFeatureRotateFixture();
+  auto args = MakeFeatureRotateArgs(true);
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<BoolParameter::ValueType>(true));
+  RotateSampleRefFrameFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckClearedFeatureData(ds, k_InputPath);
+  CheckRotatedFeatureCellsAndEnsemble(ds, k_InputPath);
+  const auto* geom = ds.getDataAs<ImageGeom>(k_InputPath);
+  REQUIRE(geom != nullptr);
+  CHECK(geom->getDimensions() == SizeVec3{2, 2, 1});
+  CHECK_FALSE(ds.containsData(k_OutputPath));
+  CHECK_FALSE(ds.containsData(DataPath({".Input"})));
+  CHECK_FALSE(ds.containsData(DataPath({".rotated_image_geometry"})));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regression", "[SimplnxCore][RotateSampleRefFrameFilter][NestedFeatureAlias]")
+{
+  UnitTest::LoadPlugins();
+  const bool clear = GENERATE(true, false);
+  const bool selectNested = GENERATE(false, true);
+  auto ds = CreateFeatureRotateFixture();
+  const DataPath sourcePath({"Input"});
+  const DataPath outputPath({"Output"});
+  const auto featurePath = sourcePath.createChildPath("Cell Feature Data");
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  const auto featureId = features->getId();
+  const auto shape = features->getShape();
+  const auto countsPath = featurePath.createChildPath("NumElements");
+  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  std::vector<int32> originalCounts(counts.getSize());
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    originalCounts[i] = counts[i];
+  }
+  auto* nested = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
+  REQUIRE(nested != nullptr);
+  auto* keep = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nested->getId());
+  REQUIRE(keep != nullptr);
+  (*keep)[0] = 123;
+  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  auto* outside = DataGroup::Create(ds, "Outside");
+  REQUIRE(outside != nullptr);
+  REQUIRE(ds.setAdditionalParent(nested->getId(), outside->getId()));
+  const auto parents = ds.getData(featurePath)->getParentIds();
+  auto args = MakeFeatureRotateArgs(clear);
+  if(selectNested)
+  {
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(sourcePath.createChildPath("Misc").createChildPath("Cell Feature Data")));
+  }
+  RotateSampleRefFrameFilter filter;
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  bool foundNestedCopy = false;
+  const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
+  for(const auto& action : preflight.outputActions.value().actions)
+  {
+    const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copy != nullptr && copy->path() == sourcePath.createChildPath("Misc"))
+    {
+      foundNestedCopy = true;
+      bool declaresFeature = false;
+      for(const auto& created : copy->getAllCreatedPaths())
+      {
+        if(created.rebase(nestedOutputPath, DataPath{}).has_value())
+        {
+          declaresFeature = true;
+        }
+      }
+      CHECK(declaresFeature == !clear);
+    }
+  }
+  REQUIRE(foundNestedCopy);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* outputFeatures = ds.getDataAs<AttributeMatrix>(outputPath.createChildPath("Cell Feature Data"));
+  REQUIRE(outputFeatures != nullptr);
+  CHECK(outputFeatures->getSize() == (clear ? 0 : 3));
+  CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
+  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getData(featurePath)->getId() == featureId);
+  CHECK(ds.getData(featurePath)->getParentIds() == parents);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
+  CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getSize() == 3);
+  CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
+  for(usize i = 0; i < originalCounts.size(); ++i)
+  {
+    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    if(!clear)
+    {
+      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+    }
+  }
 }

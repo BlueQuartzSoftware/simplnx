@@ -31,6 +31,11 @@ public:
   static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
   static constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
 
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteral k_EdgeFeatureIdsPath_Key = "edge_feature_ids_path";
+  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+
   /**
    * @brief
    * @return std::string

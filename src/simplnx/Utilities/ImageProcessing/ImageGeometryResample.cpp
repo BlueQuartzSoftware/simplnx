@@ -6,8 +6,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -329,31 +327,52 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   preflightUpdatedValues.push_back(
       {"Resampled Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(geometryDimensions, resolvedValues.Spacing, srcOrigin, srcImageGeom.getUnits())});
 
-  if(inputValues.RenumberFeatures)
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(inputValues.ClearFeatureAttributeMatrix)
   {
     const DataPath& cellFeatureAttributeMatrixPath = inputValues.CellFeatureAttributeMatrix;
-    ignorePaths.push_back(cellFeatureAttributeMatrixPath);
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
     if(srcCellFeatureData == nullptr)
     {
       return IFilter::MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAttributeMatrixPath.toString()));
     }
-
-    const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
-    const auto tupleDimensions = srcCellFeatureData->getShape();
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, tupleDimensions));
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    auto featureAmResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, srcImagePath, cellFeatureAttributeMatrixPath, -55503, "Feature Attribute Matrix");
+    if(featureAmResult.invalid())
     {
-      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
-      {
-        const DataType dataType = srcArray->getDataType();
-        ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
-        const DataPath dataArrayPath = destCellFeatureAttributeMatrixPath.createChildPath(srcArray->getName());
-        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDimensions, std::move(componentShape), dataArrayPath));
-      }
+      featureAmResult.errors().front().message += " Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.";
+      return {ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
+    }
+    if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellData))
+    {
+      return IFilter::MakePreflightErrorResult(
+          -55505, fmt::format("**Cell Feature Ids** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected Image Geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                              inputValues.FeatureIdsArrayPath.toString(), srcImagePath.createChildPath(cellDataName).toString(), srcImagePath.toString()));
     }
 
-    AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, inputValues.FeatureIdsArrayPath, preflightUpdatedValues);
+    ignorePaths.push_back(cellFeatureAttributeMatrixPath);
+    const DataPath destCellFeatureAttributeMatrixPath = destImagePath.createChildPath(cellFeatureAttributeMatrixPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAttributeMatrixPath, srcCellFeatureData->getShape()));
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *srcCellFeatureData)
+    {
+      clearedList += "\n" + cellFeatureAttributeMatrixPath.createChildPath(object->getName()).toString();
+    }
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the resampled geometry with no arrays.", cellFeatureAttributeMatrixPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    if(inputValues.RenumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else if(inputValues.ReportUnclearedFeatureData)
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the resampled geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the original geometry and are not valid for the resampled geometry."});
   }
 
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
@@ -362,27 +381,9 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
-      if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
-      {
-        std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-        auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
-        if(pathsToBeCopied.has_value())
-        {
-          for(const auto& sourcePath : pathsToBeCopied.value())
-          {
-            allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
-          }
-        }
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
-      }
-      else
-      {
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
-      }
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, inputValues.ClearFeatureAttributeMatrix ? inputValues.CellFeatureAttributeMatrix : DataPath{});
     }
   }
-
-  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   if(inputValues.RemoveOriginalImageGeom)
   {
@@ -460,12 +461,12 @@ Result<> ResampleImageGeom::operator()()
     return {};
   }
 
-  // Feature renumbering needs independent arrays because compaction resizes them.
+  // Validate Feature Ids against the source AM before compacting the resampled data.
   DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
   auto destImagePath = m_InputValues->CreatedImageGeometryPath;
   DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
 
-  if(m_InputValues->RenumberFeatures)
+  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
@@ -474,42 +475,8 @@ Result<> ResampleImageGeom::operator()()
       return validateNumFeatResult;
     }
 
-    std::vector<DataPath> sourceFeatureDataPaths;
-    auto childPathsResult = GetAllChildArrayDataPaths(m_DataStructure, cellFeatureAMPath);
-    if(childPathsResult.has_value())
-    {
-      sourceFeatureDataPaths = childPathsResult.value();
-    }
-    std::vector<DataPath> destFeatureDataPaths = sourceFeatureDataPaths;
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
-
-    for(auto& dataPath : destFeatureDataPaths)
-    {
-      dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
-    }
-
-    // Replace preflight placeholders with deep copies before feature compaction.
-    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
-    {
-      DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
-      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
-      {
-        auto result = DeepCopy<IDataArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
-      {
-        auto result = DeepCopy<StringArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-    }
-
+    // Renumber resampled Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
     return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }

@@ -27,6 +27,7 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
   ArraySelectionParameter::ValueType FeatureIdsPath;
   VectorUInt64Parameter::ValueType MinVoxel;
   VectorUInt64Parameter::ValueType MaxVoxel;
+  BoolParameter::ValueType ClearFeatureAttributeMatrix;
   BoolParameter::ValueType RenumberFeatures;
   AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
   BoolParameter::ValueType RemoveOriginalGeometry;
@@ -46,6 +47,8 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
 /**
  * @class CropImageGeometry
  * @brief Copies an inclusive voxel region to a smaller ImageGeom.
+ *
+ * Optionally renumbers Feature Ids and resizes the cleared Feature Attribute Matrix.
  *
  * Resident pairs copy selected rows directly.
  * Other pairs use buffers with a 1 MiB total cap for
@@ -72,8 +75,8 @@ public:
   CropImageGeometry& operator=(CropImageGeometry&&) noexcept = delete;
 
   /**
-   * @brief Copies cell arrays and optionally renumbers feature data.
-   * @return Success, or a validation, transfer, deep-copy, or feature-processing error.
+   * @brief Copies cell arrays and optionally renumbers Feature Ids and resizes the cleared Feature Attribute Matrix.
+   * @return Success, or a validation, transfer, or feature-processing error.
    *
    * Cell-array tasks can run concurrently across separate arrays. The shared
    * task result propagates the first transfer error.

@@ -328,6 +328,16 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
   REQUIRE(dataStructure.setAdditionalParent(otherPtr->getId(), groupPtr->getId()));
   CHECK(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, DataPath({"Elsewhere", "Other"}), -12345, "Feature Ranking Array", DataPath({"Elsewhere", "Other", "Ids"})).valid());
 
+  CHECK(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, featurePath, -12345, "Feature Attribute Matrix").valid());
+  CHECK(ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, DataPath({"Elsewhere", "Other"}), -12345, "Feature Attribute Matrix").valid());
+  for(const auto& invalidPath : {cellPath, nestedPath, groupPath, DataPath({"Missing"})})
+  {
+    auto result = ValidateFeatureAttributeMatrixInGeometry(dataStructure, geometryPath, invalidPath, -12345, "Feature Attribute Matrix");
+    checkError(result, {invalidPath.toString(), geometryPath.toString(), "**Feature Attribute Matrix**", "must not be its Cell Attribute Matrix"});
+    REQUIRE(result.invalid());
+    CHECK(result.errors().front().message.find("parent of") == std::string::npos);
+  }
+
   auto* noCellsPtr = ImageGeom::Create(dataStructure, "No Cells");
   REQUIRE(noCellsPtr != nullptr);
   const DataPath noCellsPath({"No Cells"});
@@ -335,6 +345,10 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
   checkError(ValidateArraysInGeometryCellData(dataStructure, noCellsPath, {}, -12345, "Attribute Arrays to Ignore"), {noCellsPath.toString(), "**Attribute Arrays to Ignore**"});
   checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, noCellsPath, featurePath, -12345, "Feature Ranking Array", otherPath),
              {noCellsPath.toString(), featurePath.toString(), otherPath.toString()});
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, noCellsPath, featurePath, -12345, "Feature Attribute Matrix"),
+             {noCellsPath.toString(), featurePath.toString(), "**Feature Attribute Matrix**", "requires a Cell Attribute Matrix"});
+  checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, DataPath({"Missing"}), featurePath, -12345, "Feature Attribute Matrix"),
+             {"Missing", featurePath.toString(), "requires a Cell Attribute Matrix"});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

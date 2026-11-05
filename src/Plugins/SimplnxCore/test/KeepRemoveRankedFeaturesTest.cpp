@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -942,4 +943,33 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
     REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getNumberOfTuples() == 5);
   }
+}
+
+TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][KeepRemoveRankedFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = BuildTestData();
+  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAmPath);
+  REQUIRE(featureAM != nullptr);
+  const DataPath neighborListPath = k_FeatureAmPath.createChildPath("NeighborList");
+  const DataPath labelsPath = k_FeatureAmPath.createChildPath("Labels");
+  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Labels", featureAM->getShape(), {"Background", "One", "Two", "Three", "Four"}, featureAM->getId()) != nullptr);
+
+  KeepRemoveRankedFeaturesFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, MakeArgs(0, 0, 2));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  usize staleArrayCount = 0;
+  for(const auto& value : preflightResult.outputValues)
+  {
+    if(value.name == "Stale Arrays")
+    {
+      ++staleArrayCount;
+      CHECK(value.value.find(k_RankingArrayPath.toString()) != std::string::npos);
+      CHECK(value.value.find(neighborListPath.toString()) == std::string::npos);
+      CHECK(value.value.find(labelsPath.toString()) == std::string::npos);
+    }
+  }
+  CHECK(staleArrayCount == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

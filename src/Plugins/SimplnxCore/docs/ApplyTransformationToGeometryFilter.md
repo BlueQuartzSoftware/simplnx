@@ -78,6 +78,43 @@ If *Translate Geometry To Global Origin Before Transformation* is enabled, the g
 - **Linear (trilinear in 3D) [1]** -- each output cell value is interpolated from surrounding input cells. Smoother; may blur sharp features.
 - **No Interpolation [2]** -- no resampling. Use only when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
 
+### Feature Attribute Matrix
+
+A **Feature** is a group of elements (cells, vertices, edges, faces, or polyhedra) with the same Feature Id.
+A **Feature Attribute Matrix** stores one row for each Feature Id.
+
+**Clear Feature Attribute Matrix** is on by default. Transformations can make Feature data incorrect.
+For example, translation changes centroids. Scaling changes sizes. Image resampling can remove Features.
+Recompute any Feature data needed later in the pipeline.
+
+Select the Feature Attribute Matrix that is a direct child of the selected geometry.
+Do not select the Cell, Vertex, Edge, Face, or Polyhedron Attribute Matrix that holds element data.
+
+With **Clear Feature Attribute Matrix** on, the filter removes all children of the selected Feature Attribute Matrix.
+This includes numeric arrays, String Arrays, and NeighborLists. The empty matrix keeps its original tuple shape.
+Image rotation and matrix transformations create this empty matrix in the replacement geometry.
+Image translation, image scaling, and node transformations clear the matrix in place.
+Other Attribute Matrices, such as Ensemble data, keep their values.
+The Clear option also applies when **No Transform** is selected.
+
+**Renumber Features** applies only when Clear is on. The remaining Feature Ids become 1 through N.
+The empty Feature Attribute Matrix is resized to N+1 rows. Row 0 is for background (Feature Id 0).
+Renumbering does not compute new Feature values.
+For an Image Geometry, select Feature Ids in the selected Cell Attribute Matrix so they are resampled.
+For a node geometry, select Feature Ids in a Vertex, Edge, Face, or Polyhedron Attribute Matrix of that geometry. Other Attribute Matrices are not accepted.
+Use nearest neighbor resampling for Feature Ids. Linear interpolation can mix integer labels.
+
+With Clear off, Feature data keeps its values. A replacement geometry receives a copy of this data.
+The Renumber setting is ignored. These Feature values can be incorrect for the transformed geometry.
+Pipelines imported from DREAM3D 6.x start with Clear and Renumber off to preserve legacy behavior.
+Native pipelines without the Clear parameter use its default value, on.
+
+| Clear Feature Attribute Matrix | Renumber Features | Result |
+|---|---|---|
+| On | On | Remaining Feature Ids become 1 through N. The empty matrix has N+1 rows, including row 0. |
+| On | Off (default) | The empty matrix keeps its original tuple shape. Feature Ids keep their original values. |
+| Off | Hidden and ignored | The Feature Attribute Matrix keeps its arrays and values. Feature Ids keep their original values. |
+
 ### Saving the Final Transformation Matrix
 
 Optionally, the final 4x4 transformation matrix can be saved as an Attribute Array. The output is a 16-element float32 array in **row-major** order:
@@ -98,6 +135,25 @@ represents the 4x4 matrix:
 - **Cell Attribute Matrix** (Image Geometry only) -- the cell-level data to be re-gridded.
 
 % Auto generated parameter table will be inserted here
+
+## Preflight Information and Errors
+
+**Cleared Feature Data** lists the arrays removed from the selected Feature Attribute Matrix.
+If Renumber is on, it also states that Feature Ids and the matrix size change.
+The preflight value **Feature Data Not Cleared** explains that retained Feature values can describe the original geometry. These values are information, not warnings.
+
+Errors -67451 and -67452 are checked whenever Clear is on, also when Renumber is off.
+Errors -67453 and -67454 are checked only when Clear and Renumber are both on.
+
+| Code | Cause | Correction |
+|---|---|---|
+| -67451 | The Feature Attribute Matrix is not a direct child of the selected geometry. | Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'. |
+| -67452 | The selected Feature Attribute Matrix holds Cell, Vertex, Edge, Face, or Polyhedron data. | Select the matrix that holds Feature data, or turn Clear off. |
+| -67453 | Feature Ids are outside the required Attribute Matrix. | For images, select Feature Ids in the selected Cell Attribute Matrix. For nodes, select an array in a Vertex, Edge, Face, or Polyhedron Attribute Matrix of the geometry. |
+| -67454 | The Feature Ids tuple count differs from the element count. | Select an array with one tuple per element. |
+
+When Clear and Renumber are both on, the filter checks all source Feature Ids before it transforms the geometry. Negative IDs and IDs outside the source Feature Attribute Matrix are errors.
+This check includes source cells that image resampling removes.
 
 ## Example Pipelines
 

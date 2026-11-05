@@ -118,6 +118,7 @@ constexpr StringLiteral k_RotateRotationRepresentation_Key = "rotation_represent
 constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 constexpr StringLiteral k_RotateRemoveOriginalGeometry_Key = "remove_original_geometry";
 constexpr StringLiteral k_RotateKeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+constexpr StringLiteral k_RotateClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
 
 template <typename T>
 void CompareNumericValues(const IDataArray& generated, const IDataArray& expected, bool bitExact)
@@ -256,6 +257,7 @@ void ApplyExplicitTransforms(DataStructure& dataStructure)
   auto sampleFilter = Application::Instance()->getFilterList()->createFilter(FilterHandle(filterId, pluginId));
   REQUIRE(sampleFilter != nullptr);
   Arguments sampleArgs;
+  sampleArgs.insertOrAssign(k_RotateClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   sampleArgs.insertOrAssign(k_RotateSelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   sampleArgs.insertOrAssign(k_RotateCreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   sampleArgs.insertOrAssign(k_RotateRotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 1.0F, 0.0F, k_SampleRotationDegrees}));

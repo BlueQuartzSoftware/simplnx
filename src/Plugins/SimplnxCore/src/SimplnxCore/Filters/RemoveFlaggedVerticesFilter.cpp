@@ -3,18 +3,23 @@
 #include "SimplnxCore/Filters/Algorithms/RemoveFlaggedVertices.hpp"
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -60,9 +65,26 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array (Mask)",
                                                           "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
+                                                                 "Recreates the selected Feature Attribute Matrix in the reduced geometry with no arrays. Removing vertices changes which vertices "
+                                                                 "belong to each feature, so every feature value computed before this "
+                                                                 "filter is invalid. Recompute any feature data needed later in the pipeline.",
+                                                                 true));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Vertex Feature Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
+                                                "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after removing vertices", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_VertexFeatureIdsPath_Key, "Vertex Feature Ids", "Specifies to which feature each vertex belongs.", DataPath({"Vertex Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
                                                              DataPath()));
+
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_FeatureAttributeMatrixPath_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_RenumberFeatures_Key, true);
+  params.linkParameters(k_ClearFeatureAttributeMatrix_Key, k_VertexFeatureIdsPath_Key, true);
 
   return params;
 }
@@ -70,7 +92,7 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType RemoveFlaggedVerticesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
@@ -84,7 +106,13 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
 
+  const bool clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  const bool renumberFeatures = clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
+  const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
+
   nx::core::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -136,6 +164,67 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     }
   }
 
+  // The cleared Feature AM keeps its source shape until optional renumbering.
+  if(clearFeatureAttributeMatrix)
+  {
+    const auto* sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(sourceFeatureAm == nullptr || !inputVertexGeom.contains(sourceFeatureAm))
+    {
+      return MakePreflightErrorResult(-67421, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Vertex Geometry '{}'. Select an Attribute Matrix that is a direct "
+                                                          "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                          featureAmPath.toString(), vertexGeomPath.toString()));
+    }
+    if(inputVertexGeom.getVertexAttributeMatrix() == sourceFeatureAm)
+    {
+      return MakePreflightErrorResult(-67422, fmt::format("The Feature Attribute Matrix '{}' is the Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
+                                                          "off 'Clear Feature Attribute Matrix'.",
+                                                          featureAmPath.toString(), vertexGeomPath.toString()));
+    }
+    if(renumberFeatures)
+    {
+      if(!IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *inputVertexGeom.getVertexAttributeMatrix()))
+      {
+        return MakePreflightErrorResult(
+            -67423,
+            fmt::format("**Vertex Feature Ids** DataArray '{}' must be in the Vertex Attribute Matrix '{}' of the selected Vertex Geometry '{}'. Select the DataArray from that Attribute Matrix.",
+                        featureIdsPath.toString(), vertexGeomPath.createChildPath(vertexAttrMatName).toString(), vertexGeomPath.toString()));
+      }
+      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+      if(featureIds.getNumberOfTuples() != numVertices)
+      {
+        return MakePreflightErrorResult(
+            -67424, fmt::format("**Vertex Feature Ids** DataArray '{}' has {} tuples, but the selected Vertex Geometry '{}' has {} vertices. Select a DataArray with one tuple per vertex.",
+                                featureIdsPath.toString(), featureIds.getNumberOfTuples(), vertexGeomPath.toString(), numVertices));
+      }
+    }
+    // Ignore every path to the Feature AM, so a selection through another parent is not copied too.
+    const auto featureAmPaths = sourceFeatureAm->getDataPaths();
+    ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+    const DataPath destFeatureAmPath = reducedVertexPath.createChildPath(featureAmPath.getTargetName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
+
+    std::string clearedList;
+    for(const auto& [identifier, object] : *sourceFeatureAm)
+    {
+      clearedList += "\n" + featureAmPath.createChildPath(object->getName()).toString();
+    }
+    std::string message = fmt::format("The Feature Attribute Matrix '{}' is recreated in the reduced geometry with no arrays.", featureAmPath.toString());
+    if(!clearedList.empty())
+    {
+      message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
+    }
+    if(renumberFeatures)
+    {
+      message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after removing vertices.";
+    }
+    preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
+  }
+  else
+  {
+    preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Vertex Attribute Matrix are copied to the reduced geometry unchanged. If one of them holds "
+                                                                  "Feature data, its values describe the original geometry and are not valid for the reduced geometry."});
+  }
+
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
   auto childPaths = GetAllChildDataPaths(dataStructure, vertexGeomPath, DataObject::Type::DataObject, ignorePaths);
@@ -153,29 +242,12 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 
       // If we got past that check, then keep going.
       const DataPath copiedChildPath = childPath.rebase(vertexGeomPath, reducedVertexPath).value();
-      if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
-      {
-        std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-        auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
-        if(pathsToBeCopied.has_value())
-        {
-          for(const auto& sourcePath : pathsToBeCopied.value())
-          {
-            allCreatedPaths.push_back(sourcePath.rebase(vertexGeomPath, reducedVertexPath).value());
-          }
-        }
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
-      }
-      else
-      {
-        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
-      }
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, clearFeatureAttributeMatrix ? featureAmPath : DataPath{});
     }
   }
-  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
@@ -185,6 +257,11 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
   inputValues.MaskPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputMaskPath_Key);
   inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
+
+  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.VertexFeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
+  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
 
   return RemoveFlaggedVertices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -202,6 +279,8 @@ constexpr StringLiteral k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
 Result<Arguments> RemoveFlaggedVerticesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = RemoveFlaggedVerticesFilter().getDefaultArguments();
+  // The legacy filter had no Feature parameters and copied every non-Vertex Attribute Matrix unchanged.
+  args.insertOrAssign(k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
 
   std::vector<Result<>> results;
 

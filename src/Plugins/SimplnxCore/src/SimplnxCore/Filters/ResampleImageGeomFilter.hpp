@@ -28,6 +28,7 @@ public:
   static constexpr StringLiteral k_Spacing_Key = "spacing";
   static constexpr StringLiteral k_Scaling_Key = "scaling";
   static constexpr StringLiteral k_ExactDimensions_Key = "exact_dimensions";
+  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
   static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
   static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";

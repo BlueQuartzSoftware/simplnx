@@ -248,9 +248,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pRankingArrayPathValue.getParent(), {});
 
   std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion below
-  nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, featureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
+  nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, featureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues);
 
   // This section will warn the user about the removal of NeighborLists
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, pFeatureIdsArrayPathValue, pRankingArrayPathValue, resultOutputActions);
