@@ -48,7 +48,7 @@ If *Update Origin* is **ON**, the origin moves by minus the minimum-side padding
 
 ## WARNING: Feature Data
 
-Every Cell Data Array receives the *Default Padding Value* in the added cells, including any **Feature Ids** array. Use *0* to add background cells. A nonzero value assigns the added cells to that Feature and makes its previously computed Feature data incorrect. A negative value or a value larger than the last Feature Id creates invalid Feature Ids. Warning *-67401* reports any nonzero padding value.
+Every Cell Data Array receives the *Default Padding Value* in the added cells, including any **Feature Ids** array. Use *0* to add background cells. A nonzero value assigns the added cells to that Feature and makes its previously computed Feature data incorrect. A negative value or a value larger than the last Feature Id creates invalid Feature Ids. Warning *-67401* reports a nonzero padding value when the filter adds cells.
 
 Other **Attribute Matrices**, such as Feature and Ensemble data, are copied unchanged. When *Update Origin* is **OFF**, minimum-side padding in an enabled dimension moves the original cells in physical space. Values stored in physical coordinates in these copied matrices, such as Feature Centroids, no longer match the cells. Warning *-67402* reports this condition when at least one non-cell Attribute Matrix is copied. Turn on *Update Origin* to keep the original cells in place, or recompute those values.
 

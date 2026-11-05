@@ -568,7 +568,7 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Nonzero default paddin
   DataStructure dataStructure = CreatePadFeatureFixture(false, false);
 
   PadImageGeometryFilter filter;
-  Arguments args = MakePadArgs(true, true, true, {0, 0}, {0, 0}, {0, 0}, 5, false);
+  Arguments args = MakePadArgs(true, true, true, {0, 1}, {0, 0}, {0, 0}, 5, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -578,6 +578,24 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Nonzero default paddin
   const auto warningIter = std::find_if(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -67401; });
   REQUIRE(warningIter != warnings.end());
   REQUIRE(warningIter->message.find("5") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Preflight Nonzero fill without added cells", "[SimplnxCore][PadImageGeometryFilter][L21]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure = CreatePadFeatureFixture(true, true);
+
+  const bool padX = GENERATE(false, true);
+  CAPTURE(padX);
+  PadImageGeometryFilter filter;
+  Arguments args = MakePadArgs(padX, true, true, padX ? VectorInt32Parameter::ValueType{0, 0} : VectorInt32Parameter::ValueType{2, 1}, {0, 0}, {0, 0}, 5, false);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(CountWarnings(warnings, -67401) == 0);
+  REQUIRE(CountWarnings(warnings, -67402) == 0);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

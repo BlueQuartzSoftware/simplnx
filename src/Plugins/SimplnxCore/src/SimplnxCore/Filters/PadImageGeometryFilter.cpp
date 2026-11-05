@@ -282,7 +282,8 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
   }
 
-  if(pDefaultFillValue != 0)
+  if(pDefaultFillValue != 0 &&
+     ((pPadXDim && (pXMinMaxValue[0] > 0 || pXMinMaxValue[1] > 0)) || (pPadYDim && (pYMinMaxValue[0] > 0 || pYMinMaxValue[1] > 0)) || (pPadZDim && (pZMinMaxValue[0] > 0 || pZMinMaxValue[1] > 0))))
   {
     resultOutputActions.warnings().emplace_back(Warning{
         -67401,
