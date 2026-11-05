@@ -13,9 +13,11 @@ namespace nx::core
  *
  * Supports 3D NIfTI-1 volumes only. Recognized voxel datatypes: uint8/int8,
  * uint16/int16, uint32/int32, uint64/int64, float32, float64, RGB24, RGBA32.
- * When the input file specifies a non-identity scaling transform
+ * When the input file specifies a finite, non-identity scaling transform
  * (scl_slope != 0 and (slope != 1 or inter != 0)) and the user elects to
- * apply it, the output array is promoted to float32.
+ * apply it, the output array is promoted to float32. A non-finite slope
+ * disables scaling; a non-finite intercept is treated as 0 before testing
+ * for a non-identity transform and applying it.
  */
 class NXIMAGEPROCESSING_EXPORT ReadNIfTIFileFilter : public IFilter
 {

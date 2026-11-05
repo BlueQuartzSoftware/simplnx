@@ -217,7 +217,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
 
   md.sclSlope = hdr.scl_slope;
   md.sclInter = hdr.scl_inter;
-  md.hasNontrivialScaling = (hdr.scl_slope != 0.0f) && (hdr.scl_slope != 1.0f || hdr.scl_inter != 0.0f);
+  md.hasNontrivialScaling = std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f) && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f));
   if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
   {
     md.hasNontrivialScaling = false;

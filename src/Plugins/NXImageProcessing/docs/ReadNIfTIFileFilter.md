@@ -65,9 +65,16 @@ native storage order.
 NIfTI can store a linear intensity rescaling defined by two header fields:
 `scl_slope` (the multiplicative slope) and `scl_inter` (the additive
 intercept). When *Apply Scaling Transform* is enabled and the header
-specifies a non-trivial scaling (`scl_slope != 0` and (`scl_slope != 1` or
-`scl_inter != 0`)), the filter computes `y = scl_slope * x + scl_inter` at
-read time and promotes the output array to `float32`. Per the NIfTI-1
+specifies a non-trivial scaling (the slope is finite, `scl_slope != 0`,
+and (`scl_slope != 1` or `scl_inter != 0`)), the filter computes `y = scl_slope * x + scl_inter` at
+read time and promotes the output array to `float32`. A non-finite slope
+means no scaling, so the stored values and type are kept. A non-finite
+intercept is treated as 0 when deciding whether scaling is non-trivial and
+when applying it. If the intercept is not finite, scaling is enabled, the
+slope is finite and not 0, and the data is not `RGB24` or `RGBA32`, a
+warning names the file and states that the intercept is not finite and 0 is
+used.
+Per the NIfTI-1
 specification, scaling is never applied to `RGB24` or `RGBA32` data and a
 warning is emitted if a scaling transform is present for those types.
 

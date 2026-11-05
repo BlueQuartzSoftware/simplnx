@@ -17,6 +17,7 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryCrop.hpp"
 
 #include <atomic>
+#include <cmath>
 #include <filesystem>
 #include <map>
 #include <mutex>
@@ -115,10 +116,12 @@ Parameters ReadNIfTIFileFilter::parameters() const
                                                 "If enabled and the file contains an sform/qform, use it to set the ImageGeom origin and spacing. Rotation components cannot be represented in an "
                                                 "axis-aligned image geometry; a warning will be emitted if the transform has a non-trivial rotation.",
                                                 true));
-  params.insert(std::make_unique<BoolParameter>(k_ApplyScalingTransform_Key, "Apply Scaling Transform",
-                                                "If enabled and the file defines a non-trivial scaling (scl_slope != 0 and (slope != 1 or inter != 0)), apply y = slope*x + inter at read time. The "
-                                                "output array will be promoted to float32. Scaling is never applied to RGB24/RGBA32 data per the NIfTI-1 specification.",
-                                                true));
+  params.insert(std::make_unique<BoolParameter>(
+      k_ApplyScalingTransform_Key, "Apply Scaling Transform",
+      "If enabled and the file defines a non-trivial scaling with a finite slope (scl_slope != 0 and (slope != 1 or inter != 0)), apply y = slope*x + inter at read time. The "
+      "output array will be promoted to float32. A non-finite slope disables scaling. A non-finite intercept is replaced by 0. Scaling is never applied to "
+      "RGB24/RGBA32 data per the NIfTI-1 specification.",
+      true));
 
   params.insertSeparator(Parameters::Separator{"Cropping Options"});
   params.insert(std::make_unique<CropGeometryParameter>(k_CroppingOptions_Key, "Cropping Options",
@@ -269,7 +272,8 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
-  std::string scalingSummary = md.hasNontrivialScaling ? fmt::format("slope={}, inter={}{}", md.sclSlope, md.sclInter, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";
+  std::string scalingSummary =
+      md.hasNontrivialScaling ? fmt::format("slope={}, inter={}{}", md.sclSlope, std::isfinite(md.sclInter) ? md.sclInter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";
   preflightUpdatedValues.push_back({"NIfTI Header", fmt::format("datatype code: {}  |  components: {}  |  byte-swap: {}  |  vox_offset: {}  |  scaling: {}", md.niftiDatatype, md.componentCount,
                                                                 md.byteSwapRequired ? "yes" : "no", md.voxOffset, scalingSummary)});
 
@@ -287,9 +291,13 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
                             "spacing and origin were extracted. Voxels will be loaded in their stored orientation.",
                             md.filePath, (md.sformCode > 0 ? "sform" : "qform"))});
   }
+  if(pApplyScaling && md.componentCount == 1 && std::isfinite(md.sclSlope) && md.sclSlope != 0.0f && !std::isfinite(md.sclInter))
+  {
+    resultOutputActions.warnings().push_back(Warning{-34752, fmt::format("NIfTI file '{}' scaling intercept is not finite; 0 is used for the intercept.", md.filePath)});
+  }
   if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
   {
-    if(pApplyScaling && (md.sclSlope != 0.0f && (md.sclSlope != 1.0f || md.sclInter != 0.0f)))
+    if(pApplyScaling && std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f))))
     {
       resultOutputActions.warnings().push_back(Warning{
           -34751, fmt::format("NIfTI file '{}' has datatype {} with a scaling transform. Per the NIfTI-1 specification, scaling is not applied to RGB24/RGBA32 data; voxels were copied verbatim.",
