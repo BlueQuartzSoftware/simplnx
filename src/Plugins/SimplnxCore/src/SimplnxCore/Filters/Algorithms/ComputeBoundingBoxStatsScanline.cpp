@@ -874,7 +874,7 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
     if(inputValues->CalculateMedian)
     {
       medianArray = dataStructure.getDataRefAs<Float32Array>(inputValues->MedianPath).getDataStore();
-      if(meanArray == nullptr)
+      if(medianArray == nullptr)
       {
         return MakeErrorResult(-69315, fmt::format("Median array from path {} invalid", inputValues->MedianPath.toString()));
       }

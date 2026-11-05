@@ -1168,8 +1168,10 @@ TEST_CASE("ImageProcessing::MaurerDistanceMapEngine: featureless volume normalis
         {
           CAPTURE(inputValue, insideIsPositive, squared, useSpacing);
           const std::vector<int32> pattern(valueCount, inputValue);
-          const bool inside = inputValue != 0;
-          const float32 expectedValue = squared ? kMax : ImageProcessing::detail::MaurerSignedValue(std::sqrt(kMax), inside, insideIsPositive);
+          // ITK leaves +FLT_MAX for squared boundary-free images and signs the square root by input classification.
+          const float32 root = static_cast<float32>(std::sqrt(static_cast<float64>(kMax)));
+          const std::array<std::array<float32, 2>, 2> signTable = {{{root, -root}, {-root, root}}};
+          const float32 expectedValue = squared ? kMax : signTable[inputValue == 0 ? 0 : 1][insideIsPositive ? 1 : 0];
           const std::vector<float32> expected(valueCount, expectedValue);
           const std::vector<float32> inCore = RunInCore<uint8>(pattern, dimX, dimY, dimZ, 0, insideIsPositive, squared, useSpacing, spacing);
           const std::vector<float32> slab = RunSlab<uint8>(pattern, dimX, dimY, dimZ, 0, insideIsPositive, squared, useSpacing, spacing);

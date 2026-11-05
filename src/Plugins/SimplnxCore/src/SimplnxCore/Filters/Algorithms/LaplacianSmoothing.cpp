@@ -21,18 +21,25 @@ LaplacianSmoothing::~LaplacianSmoothing() noexcept = default;
 
 Result<> LaplacianSmoothing::operator()()
 {
+  auto* nodeGeom2D = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  const bool hadEdges = nodeGeom2D != nullptr && nodeGeom2D->getEdges() != nullptr;
+  const DataPath edgesPath = m_InputValues->pTriangleGeometryDataPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName);
+  const bool hadNamedChild = nodeGeom2D != nullptr && m_DataStructure.getData(edgesPath) != nullptr;
+
   auto result = edgeBasedSmoothing();
 
-  // At the end of the algorithm, the 2D Node Geometry will have edges that are not
-  // needed. This will remove those from the DataStructure
-  if(auto* nodeGeom2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath); nullptr != nodeGeom2DPtr)
+  // All returned results share this cleanup, including cancellation and failed edge creation.
+  if(nodeGeom2D != nullptr && !hadEdges)
   {
-    auto edgeListId = nodeGeom2DPtr->getEdgeListId();
-    nodeGeom2DPtr->setEdgeListId(0);
-    auto edgeDataId = nodeGeom2DPtr->getEdgeListDataArrayId();
-    nodeGeom2DPtr->setEdgeDataId(0);
-    m_DataStructure.removeData(edgeListId);
-    m_DataStructure.removeData(edgeDataId);
+    if(!hadNamedChild)
+    {
+      // Failed findEdges() can clear the association after it creates the array.
+      if(auto* temporaryEdges = m_DataStructure.getData(edgesPath); temporaryEdges != nullptr)
+      {
+        m_DataStructure.removeData(temporaryEdges->getId());
+      }
+    }
+    nodeGeom2D->setEdgeListId(std::nullopt);
   }
   return result;
 }

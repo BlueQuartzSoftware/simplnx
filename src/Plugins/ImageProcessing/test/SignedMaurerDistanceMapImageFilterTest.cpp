@@ -10,7 +10,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <bit>
+#include <cmath>
 #include <limits>
 #include <string>
 #include <vector>
@@ -21,6 +23,33 @@ namespace rt = recon_test;
 namespace
 {
 using MaurerFilter = SignedMaurerDistanceMapImageFilter;
+
+class MaurerSentinelBudgetScope
+{
+public:
+  explicit MaurerSentinelBudgetScope(uint64 budget)
+  : m_Manager(CacheMemoryBudgetManager::instance())
+  , m_PreviousBudget(m_Manager.budgetBytes())
+  {
+    m_Manager.clear();
+    m_Manager.setBudgetBytes(budget);
+  }
+
+  ~MaurerSentinelBudgetScope() noexcept
+  {
+    m_Manager.clear();
+    m_Manager.setBudgetBytes(m_PreviousBudget);
+  }
+
+  MaurerSentinelBudgetScope(const MaurerSentinelBudgetScope&) = delete;
+  MaurerSentinelBudgetScope(MaurerSentinelBudgetScope&&) = delete;
+  MaurerSentinelBudgetScope& operator=(const MaurerSentinelBudgetScope&) = delete;
+  MaurerSentinelBudgetScope& operator=(MaurerSentinelBudgetScope&&) = delete;
+
+private:
+  CacheMemoryBudgetManager& m_Manager;
+  uint64 m_PreviousBudget;
+};
 
 // Sets the geometry, input, and output keys plus the four Maurer parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
@@ -486,4 +515,48 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: ITK real-image g
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   rt::RunDistanceMapItkGoldenBaseline<SignedMaurerDistanceMapImageFilter>("2th_cthead1.png", "BasicFilters_SignedMaurerDistanceMapImageFilter_default.nrrd", 0.01, rt::NoExtraParams(), &scope);
+}
+
+TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free sentinel matches ITK sign rules", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize shapeIndex = GENERATE(0, 1, 2, 3);
+  const bool foreground = GENERATE(false, true);
+  const bool insideIsPositive = GENERATE(false, true);
+  const bool squared = GENERATE(false, true);
+  const uint64 budget = GENERATE(uint64{1024}, uint64{1048576});
+  CAPTURE(scenario, shapeIndex, foreground, insideIsPositive, squared, budget);
+  const MaurerSentinelBudgetScope budgetScope(budget);
+  const std::array<SizeVec3, 4> shapes = {SizeVec3{1, 1, 1}, SizeVec3{2, 3, 4}, SizeVec3{2, 3, 1}, SizeVec3{5, 6, 7}};
+  const SizeVec3 dims = shapes[shapeIndex];
+  const usize count = dims[0] * dims[1] * dims[2];
+  DataStructure dataStructure;
+  const std::vector<uint8> input(count, foreground ? uint8{1} : uint8{0});
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, dims[0], dims[1], dims[2], input);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
+  auto& geometry = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"}));
+  geometry.setSpacing({2, 3, 5});
+  geometry.setOrigin({10, 20, 30});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  MaurerFilter filter;
+  RunMaurer(filter, dataStructure, inputPath, insideIsPositive, squared, true, 0.0, &scope);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float32Array>(outputPath);
+  scope.requireExpectedStore(output);
+  constexpr float32 k_Max = std::numeric_limits<float32>::max();
+  const float32 root = static_cast<float32>(std::sqrt(static_cast<float64>(k_Max)));
+  // ITK keeps +FLT_MAX for squared images without boundaries.
+  // For square roots, rows are background/foreground and columns are InsideIsPositive false/true.
+  const std::array<std::array<float32, 2>, 2> signTable = {{{root, -root}, {-root, root}}};
+  const float32 expected = squared ? k_Max : signTable[foreground ? 1 : 0][insideIsPositive ? 1 : 0];
+  for(usize i = 0; i < count; ++i)
+  {
+    CAPTURE(i);
+    REQUIRE(std::bit_cast<uint32>(output[i]) == std::bit_cast<uint32>(expected));
+  }
+  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

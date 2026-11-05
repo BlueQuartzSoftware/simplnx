@@ -260,7 +260,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
     centroidShift1 = 1;
   }
 
-  std::vector<float32> boundBox = {xOrigin, xOrigin + static_cast<float32>(xPoints) * spacing[0], yOrigin, yOrigin + static_cast<float32>(yPoints) * spacing[1], 0.0f, 0.0f};
+  std::vector<float32> boundBox = {xOrigin, xOrigin + static_cast<float32>(xPoints) * spacing[centroidShift0], yOrigin, yOrigin + static_cast<float32>(yPoints) * spacing[centroidShift1], 0.0f, 0.0f};
 
   for(usize i = 1; i < size; i++)
   {
@@ -317,19 +317,19 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   }
   for(usize j = 1; j < size; j++)
   {
-    if(centroidsStore[3 * j] <= boundBox[0])
+    if(centroidsStore[3 * j + centroidShift0] <= boundBox[0])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j] >= boundBox[1])
+    if(centroidsStore[3 * j + centroidShift0] >= boundBox[1])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j + 1] <= boundBox[2])
+    if(centroidsStore[3 * j + centroidShift1] <= boundBox[2])
     {
       biasedFeaturesStore[j] = true;
     }
-    if(centroidsStore[3 * j + 1] >= boundBox[3])
+    if(centroidsStore[3 * j + centroidShift1] >= boundBox[3])
     {
       biasedFeaturesStore[j] = true;
     }

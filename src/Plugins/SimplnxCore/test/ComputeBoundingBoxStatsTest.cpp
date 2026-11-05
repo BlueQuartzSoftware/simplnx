@@ -1186,3 +1186,52 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
 }
+
+TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median does not require mean output", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool evenCount = GENERATE(false, true);
+  CAPTURE(scenario, evenCount);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const usize count = evenCount ? 2 : 1;
+  auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
+  geom->setDimensions({count, 1, 1});
+  geom->setSpacing({2, 3, 5});
+  geom->setOrigin({10, 20, 30});
+  auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, count}, geom->getId());
+  geom->setCellData(*cells);
+  auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, count}, ShapeType{1}, cells->getId());
+  (*values)[0] = evenCount ? 2 : 7;
+  if(evenCount)
+  {
+    (*values)[1] = 6;
+  }
+  auto* features = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {1}, geom->getId());
+  auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{1}, ShapeType{6}, features->getId());
+  const std::array<float32, 6> boundValues = {10, 20, 30, evenCount ? 14.0F : 12.0F, 23, 35};
+  for(usize i = 0; i < boundValues.size(); i++)
+  {
+    (*bounds)[i] = boundValues[i];
+  }
+  Arguments args;
+  FillArgs<false, false>(args);
+  for(const auto key : {ComputeBoundingBoxStatsFilter::k_CalculateLength_Key, ComputeBoundingBoxStatsFilter::k_CalculateMin_Key, ComputeBoundingBoxStatsFilter::k_CalculateMax_Key,
+                        ComputeBoundingBoxStatsFilter::k_CalculateMean_Key, ComputeBoundingBoxStatsFilter::k_CalculateStandardDeviation_Key, ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key})
+  {
+    args.insertOrAssign(key, std::make_any<bool>(false));
+  }
+  args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_CalculateMedian_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_MedianName_Key, std::make_any<std::string>(k_Median));
+  ComputeBoundingBoxStatsFilter filter;
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* median = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+  const auto* hasData = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
+  REQUIRE(median != nullptr);
+  REQUIRE(hasData != nullptr);
+  CHECK((*hasData)[0]);
+  // The singleton median is 7. The even median is (2 + 6) / 2 = 4.
+  CHECK((*median)[0] == (evenCount ? 4.0F : 7.0F));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

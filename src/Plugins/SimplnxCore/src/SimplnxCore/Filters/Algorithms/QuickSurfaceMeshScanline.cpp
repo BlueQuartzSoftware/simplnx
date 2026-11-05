@@ -842,7 +842,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
             }
             count++;
           }
-          if(f1 == f3 && f1 == f4 && f1 == f5 && f1 == f7 && f2 == f8 && f1 != f2 && f1 != f7)
+          if(f1 == f3 && f1 == f4 && f1 == f5 && f1 == f6 && f1 == f8 && f1 != f2 && f1 != f7)
           {
             auto val = static_cast<float32>(distribution(generator));
             if(val < 0.5f)

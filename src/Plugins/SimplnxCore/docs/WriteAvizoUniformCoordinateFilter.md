@@ -10,7 +10,7 @@ This filter writes an **Image Geometry** and its **Cell** *FeatureIds* array to 
 
 The filter requires two inputs: an **Image Geometry**, and an Int32 *FeatureIds* **Cell** **Data Array** that labels which **Feature** (for example, which grain) each cell belongs to. The *FeatureIds* values are produced earlier in the pipeline by a segmentation filter such as [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md); this filter does not compute them. If no valid *FeatureIds* array is supplied, the filter will not execute.
 
-The data is written in the **uniform-coordinate** form: the file records a single uniform spacing together with the grid's bounding box (minimum and maximum X, Y, and Z), rather than listing per-axis coordinate values. This is the compact counterpart to the [Write Avizo Rectilinear Coordinate](WriteAvizoRectilinearCoordinateFilter.md) filter, which writes explicit per-axis coordinate arrays. Use the uniform variant when the grid has uniform spacing (the usual case for an **Image Geometry**).
+The file uses the **uniform-coordinate** form. Its bounding box records the first and last cell centers along each axis. Avizo derives uniform sample spacing from these bounds. The [Write Avizo Rectilinear Coordinate](WriteAvizoRectilinearCoordinateFilter.md) filter writes explicit per-axis coordinate arrays. Use the uniform variant when the grid has uniform spacing, as an **Image Geometry** does.
 
 The *Write Binary File* parameter selects the on-disk encoding: *false* (the default) writes the data section as ASCII text, while *true* writes it in little-endian binary, producing smaller files.
 
@@ -18,10 +18,17 @@ The *Write Binary File* parameter selects the on-disk encoding: *false* (the def
 
 ### Example AmiraMesh Header
 
+For dimensions `{3, 2, 1}`, spacing `{2, 3, 4}` microns, and origin `{10, -5, 2}` microns, the cell centers give:
+
+- X: `11, 13, 15` microns.
+- Y: `-3.5, -0.5` microns.
+- Z: `4` microns.
+
+The bounding box is `11 15 -3.5 -0.5 4 4`. Each endpoint is a sample center: `origin + spacing / 2` through `origin + (dimension - 0.5) * spacing`.
+
     # AmiraMesh BINARY-LITTLE-ENDIAN 2.1
     # Dimensions in x-, y-, and z-direction
-    define Lattice
-    define Coordinates
+    define Lattice 3 2 1
     Parameters {
         DREAM3DParams {
             Author "DREAM3D",
@@ -30,9 +37,9 @@ The *Write Binary File* parameter selects the on-disk encoding: *false* (the def
         Units {
             Coordinates "microns"
         }
-        Content "int, uniform coordinates",
+        Content "3x2x1 int, uniform coordinates",
         # Bounding Box is xmin xmax ymin ymax zmin zmax
-        BoundingBox 0 64 0 64 0 64,
+        BoundingBox 11 15 -3.5 -0.5 4 4
         CoordType "uniform"
     }
     Lattice { int FeatureIds } = @1
