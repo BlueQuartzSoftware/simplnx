@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <list>
 #include <memory>
@@ -275,7 +276,9 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateWindingRecordStore(uint64 r
   auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.valid() && result.value() == nullptr)
   {
-    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-65781, "Triangle winding temporary-record provider returned a null store.");
+    auto failure = MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-65781, "Triangle winding temporary-record provider returned a null store.");
+    failure.warnings() = std::move(result.warnings());
+    return failure;
   }
   return result;
 }
@@ -528,17 +531,83 @@ private:
 };
 
 /**
+ * @brief Increments a warning count without wrapping.
+ * @param count Supplies the current count.
+ * @return The incremented count, or the maximum if already saturated.
+ */
+constexpr uint64 IncrementWindingWarningCount(uint64 count) noexcept
+{
+  return count == std::numeric_limits<uint64>::max() ? count : count + 1;
+}
+static_assert(IncrementWindingWarningCount(0) == 1);
+static_assert(IncrementWindingWarningCount(std::numeric_limits<uint64>::max() - 1) == std::numeric_limits<uint64>::max());
+static_assert(IncrementWindingWarningCount(std::numeric_limits<uint64>::max()) == std::numeric_limits<uint64>::max());
+
+/**
+ * @class WindingTransferWarnings
+ * @brief Retains the first 64 distinct transfer warnings and summarizes later occurrences.
+ * @note This bounds retained entries, not individual message lengths or provider allocations.
+ */
+class WindingTransferWarnings
+{
+public:
+  /** @brief Moves warnings from one targeted operation into the bounded accumulator. @param source Supplies the operation warnings. */
+  void append(std::vector<Warning>& source)
+  {
+    for(auto& warning : source)
+    {
+      const auto duplicate = std::find_if(m_Warnings.begin(), m_Warnings.end(), [&warning](const Warning& retained) { return retained.code == warning.code && retained.message == warning.message; });
+      if(duplicate != m_Warnings.end())
+      {
+        m_Repeated = IncrementWindingWarningCount(m_Repeated);
+      }
+      else if(m_Warnings.size() < k_MaxWarnings)
+      {
+        m_Warnings.push_back(std::move(warning));
+      }
+      else
+      {
+        m_Additional = IncrementWindingWarningCount(m_Additional);
+      }
+    }
+    source.clear();
+  }
+
+  /** @brief Prepends retained details and any summary to the returned result. @param result Receives the warnings. */
+  void attach(Result<>& result)
+  {
+    if(m_Repeated != 0 || m_Additional != 0)
+    {
+      const auto countText = [](uint64 count) { return count == std::numeric_limits<uint64>::max() ? fmt::format("{} or more", count) : fmt::format("{}", count); };
+      m_Warnings.push_back({-65796, fmt::format("Triangle winding retained at most 64 distinct transfer warnings; suppressed {} repeated and {} additional warning occurrences.", countText(m_Repeated),
+                                                countText(m_Additional))});
+    }
+    if(!m_Warnings.empty())
+    {
+      result.warnings().insert(result.warnings().begin(), std::make_move_iterator(m_Warnings.begin()), std::make_move_iterator(m_Warnings.end()));
+    }
+  }
+
+private:
+  static constexpr usize k_MaxWarnings = 64;
+  std::vector<Warning> m_Warnings;
+  uint64 m_Repeated = 0;
+  uint64 m_Additional = 0;
+};
+
+/**
  * @brief Copies repaired scratch connectivity back in bounded sequential batches.
  * @param triangles Receives the repaired connectivity.
  * @param faceStore Provides the scratch connectivity.
  * @param faceCache Provides pending scratch writes.
  * @param buffer Reuses the initial connectivity scan buffer.
  * @param facesModified Skips destination writes when no triangle was flipped.
+ * @param transferWarnings Receives bounded transfer warnings.
  * @return Scratch flush/read or destination-write error, or success.
  * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
  */
 Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
-                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified)
+                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified, WindingTransferWarnings& transferWarnings)
 {
   if(!facesModified)
   {
@@ -546,31 +615,35 @@ Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangle
   }
   // Preserve completed flips when traversal is cancelled.
   const std::atomic_bool neverCancel = false;
-  auto flushResult = faceCache.flush(neverCancel);
-  if(flushResult.invalid())
+  auto result = faceCache.flush(neverCancel);
+  transferWarnings.append(result.warnings());
+  if(result.invalid())
   {
-    return flushResult;
+    return result;
   }
   for(uint64 offset = 0; offset < faceStore.recordCount(); offset += k_WindingBatchRecords)
   {
     const uint64 count = std::min<uint64>(k_WindingBatchRecords, faceStore.recordCount() - offset);
     auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(buffer.data()), static_cast<usize>(count * sizeof(WindingFaceType)));
     auto readResult = faceStore.read(offset, count, bytes, neverCancel);
+    transferWarnings.append(readResult.warnings());
     if(readResult.invalid())
     {
       return ConvertResult(std::move(readResult));
     }
-    if(readResult.value() != count)
+    const uint64 recordsRead = readResult.value();
+    if(recordsRead != count)
     {
-      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, readResult.value(), count));
+      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, recordsRead, count));
     }
     auto writeResult = triangles.copyFromBuffer(static_cast<usize>(offset * 3), nonstd::span<const IGeometry::MeshIndexType>(buffer.data(), static_cast<usize>(count * 3)));
+    transferWarnings.append(writeResult.warnings());
     if(writeResult.invalid())
     {
       return writeResult;
     }
   }
-  return {};
+  return result;
 }
 
 /**
@@ -963,8 +1036,19 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   return result;
 }
 
-Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
-                                                         const IFilter::MessageHandler& mesgHandler)
+namespace
+{
+/**
+ * @brief Repairs winding using bounded scratch storage.
+ * @param triangles Supplies and receives triangle connectivity.
+ * @param idsStore Supplies face labels.
+ * @param shouldCancel Requests cancellation.
+ * @param mesgHandler Receives progress messages.
+ * @param transferWarnings Receives bounded warnings from scratch creation and transfers.
+ * @return The repair result, including copy-back warnings.
+ */
+Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+                                           const IFilter::MessageHandler& mesgHandler, WindingTransferWarnings& transferWarnings)
 {
   const usize componentCount = idsStore.getNumberOfComponents();
   if(componentCount > 2 || componentCount == 0)
@@ -1015,6 +1099,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   // uncompressed scratch records, not HDF5 chunks that the next read must compress
   // and inflate again. Copy back only when traversal completes or is cancelled.
   auto faceStoreResult = CreateWindingRecordStore<WindingFaceType>(triangleCount);
+  transferWarnings.append(faceStoreResult.warnings());
   if(faceStoreResult.invalid())
   {
     return ConvertResult(std::move(faceStoreResult));
@@ -1050,6 +1135,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     }
     auto faceStageResult =
         faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFaceType))), shouldCancel);
+    transferWarnings.append(faceStageResult.warnings());
     if(faceStageResult.invalid())
     {
       return faceStageResult;
@@ -1356,7 +1442,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   {
     if(shouldCancel)
     {
-      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
     }
     auto seedRecordResult = seedReader.read(seedOffset);
     if(seedRecordResult.invalid())
@@ -1451,7 +1537,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     {
       if(shouldCancel)
       {
-        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
       }
       auto queuedResult = queueCache.read(queueHead, shouldCancel);
       if(queuedResult.invalid())
@@ -1572,16 +1658,26 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     seedOffset = nextFeatureOffset;
   }
 
-  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
   if(faceFlushResult.invalid())
   {
     return faceFlushResult;
   }
   if(unrepairedCount > 0)
   {
-    return MakeWarningVoidResult(-56730, fmt::format("{} triangles cold not be made consistent, due to the nature of mesh implementation.", unrepairedCount));
+    return MergeResults(std::move(faceFlushResult), MakeWarningVoidResult(-56730, fmt::format("{} triangles cold not be made consistent, due to the nature of mesh implementation.", unrepairedCount)));
   }
-  return {};
+  return faceFlushResult;
+}
+} // namespace
+
+Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+                                                         const IFilter::MessageHandler& mesgHandler)
+{
+  WindingTransferWarnings transferWarnings;
+  auto result = RepairTriangleWindingExternalImpl(triangles, idsStore, shouldCancel, mesgHandler, transferWarnings);
+  transferWarnings.attach(result);
+  return result;
 }
 
 MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
