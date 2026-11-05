@@ -95,29 +95,25 @@ struct LineSegment
  * @param p2 Specifies the second rotated edge endpoint.
  * @param lineYprime Specifies the rotated hatch-line Y coordinate.
  * @param intersection Receives one intersection point.
- * @return True when the edge intersects the hatch line.
+ * @return True when the hatch line is in the edge's half-open Y range [minY, maxY).
  */
 bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vector3f& p2, float lineYprime, Eigen::Vector3f& intersection)
 {
   float y1 = p1.y();
   float y2 = p2.y();
 
-  if((y1 <= lineYprime && y2 >= lineYprime) || (y2 <= lineYprime && y1 >= lineYprime))
+  // Count crossings in [minY, maxY): through-vertices count once,
+  // tangent minima count twice, tangent maxima and parallel edges count zero.
+  if((y1 <= lineYprime && lineYprime < y2) || (y2 <= lineYprime && lineYprime < y1))
   {
     // The segment crosses y' = lineYprime
     float dy = y2 - y1;
-    if(std::abs(dy) < 1e-9f)
-    {
-      // A coincident edge returns its first endpoint.
-      intersection = p1;
-      return true;
-    }
-    else if(std::abs(lineYprime - p1.y()) < 1e-9f)
+    if(lineYprime == y1)
     {
       intersection = p1;
       return true;
     }
-    else if(std::abs(lineYprime - p2.y()) < 1e-9f)
+    else if(lineYprime == y2)
     {
       intersection = p2;
       return true;
@@ -140,10 +136,11 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
  * @param lineSpacing Specifies spacing between rotated hatch lines.
  * @param angleRadians Specifies hatch rotation in radians.
  * @return Hatch segments in the original coordinate system.
- * @pre Each hatch line has one filled interval and lineSpacing is positive.
+ * @pre lineSpacing is positive.
  *
- * The loop connects adjacent sorted crossings. Concave polygons can fill
- * exterior gaps. Malformed or complex CAD meshes can produce incorrect hatches.
+ * The loop pairs sorted crossings by the even-odd rule. Contours must be closed,
+ * and adjacent edges must share identical vertex coordinates. Open or unwelded
+ * contours can produce incorrect hatches.
  */
 std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float lineSpacing, float angleRadians)
 {

@@ -14,6 +14,7 @@
 
 #include "SimplnxCore/Filters/ExecuteProcessFilter.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 namespace fs = std::filesystem;
@@ -145,4 +146,37 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[
       CHECK(args.value<int32>(ExecuteProcessFilter::k_Timeout_Key) == 5);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ExecuteProcessFilter: Process output is logged exactly once", "[SimplnxCore][ExecuteProcessFilter][L16]")
+{
+  UnitTest::LoadPlugins();
+
+  const bool blocking = GENERATE(true, false);
+  CAPTURE(blocking);
+  ExecuteProcessFilter filter;
+  DataStructure ds;
+  Arguments args;
+  const fs::path processOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / (blocking ? "L16_blocking.txt" : "L16_nonblocking.txt");
+  // CMake is available on all build/test platforms. A single quoted argument preserves the embedded newline.
+  const std::string testCommand = "cmake -E echo \"L16_unique_first_line\nL16_unique_second_line\"";
+  const std::string expectedOutput = "L16_unique_first_line\nL16_unique_second_line\n";
+  args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>(testCommand));
+  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(blocking));
+  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(5000));
+  args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<FileSystemPathParameter::ValueType>(processOutput));
+
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // On Windows the child writes CRLF and the filter's text-mode log adds one more CR. Remove every CR, then compare the
+  // whole file exactly, so a repeated block still fails.
+  std::ifstream processOutputFile(processOutput, std::ios_base::in | std::ios_base::binary);
+  REQUIRE(processOutputFile.is_open());
+  std::stringstream buffer;
+  buffer << processOutputFile.rdbuf();
+  std::string logContent = buffer.str();
+  logContent.erase(std::remove(logContent.begin(), logContent.end(), '\r'), logContent.end());
+  CHECK(logContent == expectedOutput);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

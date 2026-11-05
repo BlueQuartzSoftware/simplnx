@@ -53,6 +53,7 @@ Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edge
 
 #include <algorithm>
 #include <array>
+#include <type_traits>
 #include <vector>
 
 namespace util
@@ -1228,8 +1229,34 @@ private:
     uint8 i0 = util::edgeVertices[edge][0];
     uint8 i1 = util::edgeVertices[edge][1];
 
-    T weight = (m_IsoVal - isoVals[i0]) / (isoVals[i1] - isoVals[i0]);
+    const float64 weight = difference(isoVals[i0], m_IsoVal) / difference(isoVals[i0], isoVals[i1]);
     return interpolate(pts[i0], pts[i1], weight);
+  }
+
+  /**
+   * @brief Computes to - from as float64 without integer overflow.
+   * @param from Specifies the subtrahend.
+   * @param to Specifies the minuend.
+   * @return The difference, rounded once to float64.
+   *
+   * Integer values are subtracted exactly as a uint64 magnitude, then converted. Converting
+   * 64-bit values first can round two different values to the same float64.
+   */
+  static float64 difference(T from, T to)
+  {
+    if constexpr(std::is_integral_v<T>)
+    {
+      // Unsigned subtraction is modulo 2^64, so it is exact for every ordered pair.
+      if(to >= from)
+      {
+        return static_cast<float64>(static_cast<uint64>(to) - static_cast<uint64>(from));
+      }
+      return -static_cast<float64>(static_cast<uint64>(from) - static_cast<uint64>(to));
+    }
+    else
+    {
+      return static_cast<float64>(to) - static_cast<float64>(from);
+    }
   }
 
   /**
@@ -1239,12 +1266,12 @@ private:
    * @param weight Specifies interpolation weight.
    * @return Interpolated vector.
    */
-  inline std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
+  inline std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, float64 weight) const
   {
     std::array<float32, 3> ret = {};
-    ret[0] = a[0] + (weight * (b[0] - a[0]));
-    ret[1] = a[1] + (weight * (b[1] - a[1]));
-    ret[2] = a[2] + (weight * (b[2] - a[2]));
+    ret[0] = static_cast<float32>(a[0] + (weight * (b[0] - a[0])));
+    ret[1] = static_cast<float32>(a[1] + (weight * (b[1] - a[1])));
+    ret[2] = static_cast<float32>(a[2] + (weight * (b[2] - a[2])));
     return ret;
   }
 

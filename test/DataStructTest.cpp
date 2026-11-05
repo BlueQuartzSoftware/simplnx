@@ -1675,3 +1675,21 @@ TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
 
   UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
 }
+
+TEST_CASE("DataStructure makePath rejects groups below an Attribute Matrix", "[DataStructure][L02]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1}, image->getId());
+  REQUIRE(cellData != nullptr);
+
+  const DataPath path({"Image", "Cell Data", "Sub", "X"});
+  auto result = dataStructure.makePath(path);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -10004);
+  REQUIRE_FALSE(dataStructure.containsData(path));
+  REQUIRE_FALSE(dataStructure.containsData(path.getParent()));
+  REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({"Image", "Cell Data"})) == cellData);
+}

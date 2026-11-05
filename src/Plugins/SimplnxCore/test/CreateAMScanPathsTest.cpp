@@ -1,6 +1,9 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -136,4 +139,117 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: SIMPL Backwards Compatibility",
       CHECK(args.value<std::string>(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key) == "RegionIds");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Scan vector geometry below an Attribute Matrix", "[SimplnxCore][CreateAMScanPathsFilter][L02]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* sliceGeom = EdgeGeom::Create(dataStructure, "Slice Geometry");
+  REQUIRE(sliceGeom != nullptr);
+  auto* edgeData = AttributeMatrix::Create(dataStructure, "Edge Data", {1}, sliceGeom->getId());
+  REQUIRE(edgeData != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Slice Ids", {1}, {1}, edgeData->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Part Number", {1}, {1}, edgeData->getId()) != nullptr);
+
+  auto* image = DataGroup::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "Cell Data", {1}, image->getId()) != nullptr);
+
+  // The parent path 'Image/Cell Data/Sub' of the scan vector geometry needs a DataGroup inside an Attribute Matrix
+  const DataPath hatchPath({"Image", "Cell Data", "Sub", "X"});
+  Arguments args;
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(DataPath({"Slice Geometry"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Slice Geometry", "Edge Data", "Slice Ids"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Slice Geometry", "Edge Data", "Part Number"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(hatchPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_EdgeData));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_RegionIdsName));
+
+  CreateAMScanPathsFilter filter;
+  Pipeline pipeline;
+  auto pipelineFilter = std::make_shared<PipelineFilter>(filter.clone(), args);
+  REQUIRE(pipeline.push_back(pipelineFilter));
+  REQUIRE_FALSE(pipeline.preflight(dataStructure, std::atomic_bool{false}));
+  REQUIRE_FALSE(pipelineFilter->getErrors().empty());
+  REQUIRE(pipelineFilter->getErrors().front().code == -5403);
+  REQUIRE_FALSE(dataStructure.containsData(hatchPath));
+  REQUIRE_FALSE(dataStructure.containsData(hatchPath.getParent()));
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Hatch crossings at vertices", "[SimplnxCore][CreateAMScanPathsFilter][L13]")
+{
+  UnitTest::LoadPlugins();
+  const bool reverseEdges = GENERATE(false, true);
+  CAPTURE(reverseEdges);
+  std::vector<float32> inputVertices;
+  std::vector<float32> expectedVertices;
+  SECTION("Diamond through vertices and tangent extrema")
+  {
+    // At y=0 and y=2 the hatch only touches a tip. At y=1 it crosses
+    // (-1,1) and (1,1), so exactly one segment must survive.
+    inputVertices = {0, 0, 0, 1, 1, 0, 0, 2, 0, -1, 1, 0};
+    expectedVertices = {-1, 1, 0, 1, 1, 0};
+  }
+  SECTION("Square with hatch-parallel boundary edges")
+  {
+    // Half-open [minY,maxY) includes y=0 and y=1, excludes y=2.
+    // Horizontal edges do not contribute crossings of their own.
+    inputVertices = {0, 0, 0, 2, 0, 0, 2, 2, 0, 0, 2, 0};
+    expectedVertices = {0, 0, 0, 2, 0, 0, 0, 1, 0, 2, 1, 0};
+  }
+
+  DataStructure dataStructure;
+  auto* geom = EdgeGeom::Create(dataStructure, "Polygon");
+  REQUIRE(geom != nullptr);
+  auto* vertices = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {4}, {3}, geom->getId());
+  REQUIRE(vertices != nullptr);
+  geom->setVertices(*vertices);
+  for(usize i = 0; i < inputVertices.size(); i++)
+  {
+    (*vertices)[i] = inputVertices[i];
+  }
+  auto* edges = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Edges", {4}, {2}, geom->getId());
+  REQUIRE(edges != nullptr);
+  geom->setEdgeList(*edges);
+  for(usize i = 0; i < 4; i++)
+  {
+    (*edges)[2 * i] = reverseEdges ? (i + 1) % 4 : i;
+    (*edges)[2 * i + 1] = reverseEdges ? i : (i + 1) % 4;
+  }
+  auto* edgeData = AttributeMatrix::Create(dataStructure, "Edge Data", {4}, geom->getId());
+  REQUIRE(edgeData != nullptr);
+  geom->setEdgeAttributeMatrix(*edgeData);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Slice Ids", {4}, {1}, edgeData->getId()) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Part Number", {4}, {1}, edgeData->getId()) != nullptr);
+
+  Arguments args;
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(1.0f));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, std::make_any<float32>(0.0f));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(DataPath({"Polygon"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Polygon", "Edge Data", "Slice Ids"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Polygon", "Edge Data", "Part Number"})));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(k_ComputedScanVectorsPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<std::string>(k_EdgeData));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<std::string>(k_RegionIdsName));
+
+  CreateAMScanPathsFilter filter;
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* output = dataStructure.getDataAs<EdgeGeom>(k_ComputedScanVectorsPath);
+  REQUIRE(output != nullptr);
+  REQUIRE(output->getNumberOfEdges() == expectedVertices.size() / 6);
+  REQUIRE(output->getNumberOfVertices() == expectedVertices.size() / 3);
+  const auto& outputVertices = output->getVerticesRef();
+  const auto& outputEdges = output->getEdgesRef();
+  for(usize i = 0; i < expectedVertices.size(); i++)
+  {
+    CAPTURE(i);
+    REQUIRE(outputVertices[i] == expectedVertices[i]);
+  }
+  for(usize i = 0; i < outputEdges.getSize(); i++)
+  {
+    REQUIRE(outputEdges[i] == i);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
