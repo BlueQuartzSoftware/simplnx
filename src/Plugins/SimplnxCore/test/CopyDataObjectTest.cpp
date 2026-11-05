@@ -4,6 +4,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -16,6 +17,8 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <string>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -270,5 +273,34 @@ TEST_CASE("SimplnxCore::CopyDataObject: Recursive paths use the new parent", "[S
   REQUIRE(dataStructure.getDataAs<DataGroup>(DataPath({"OldParent", "A_copy", "child"})) == nullptr);
   REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath) == groupPtr);
   REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath.createChildPath("child")) == childPtr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CopyDataObjectFilter: StringArray copy has independent values", "[SimplnxCore][CopyDataObjectFilter][StringArray]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"a", "b"});
+  REQUIRE(original != nullptr);
+  CopyDataObjectFilter filter;
+  Arguments args;
+  args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>(MultiPathSelectionParameter::ValueType{DataPath({"Original"})}));
+  args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(false));
+  args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  auto* copy = dataStructure.getDataAs<StringArray>(DataPath({"Original_COPY"}));
+  REQUIRE(copy != nullptr);
+  REQUIRE(copy != original);
+  REQUIRE(copy->getTupleShape() == ShapeType{2});
+  REQUIRE(copy->values() == std::vector<std::string>{"a", "b"});
+  (*copy)[0] = "z";
+  REQUIRE((*copy)[0] == "z");
+  REQUIRE((*original)[0] == "a");
+  (*original)[1] = "y";
+  REQUIRE((*original)[1] == "y");
+  REQUIRE((*copy)[1] == "b");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

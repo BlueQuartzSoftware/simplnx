@@ -46,10 +46,7 @@ public:
    * @param tupleShape Specifies tuple dimensions.
    * @param strings Supplies initial values.
    * @param parentId Identifies the optional parent object.
-   * @return DataStructure-owned array, or nullptr when insertion fails.
-   *
-   * When tupleShape represents nonzero tuples, an empty initial value set must
-   * replace its store before value access. A zero-tuple array is valid.
+   * @return DataStructure-owned array, or nullptr when insertion fails or the shape product differs from strings.size().
    */
   static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId = {});
 
@@ -61,13 +58,22 @@ public:
    * @param importId Identifies the imported object.
    * @param strings Supplies imported values.
    * @param parentId Identifies the optional parent object.
-   * @return DataStructure-owned array, or nullptr when insertion fails.
-   *
-   * When tupleShape represents nonzero tuples, an empty imported value set must
-   * replace its initial store before value access. A zero-tuple array is valid.
+   * @return DataStructure-owned array, or nullptr when insertion fails or the shape product differs from strings.size().
    */
   static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
                              const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief Creates an array using an existing store, including a metadata-only placeholder.
+   * @param dataStructure Owns the new array.
+   * @param name Names the array.
+   * @param store Shares ownership with the array. The store is not copied.
+   * @param parentId Identifies the optional parent object.
+   * @param importId Sets the array ID when supplied. Otherwise, a new ID is generated.
+   * @return DataStructure-owned array, or nullptr if the store is null or insertion fails.
+   */
+  static StringArray* CreateWithStore(DataStructure& dataStructure, const std::string_view& name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {},
+                                      const std::optional<IdType>& importId = {});
 
   /**
    * @brief Copies the array.
@@ -98,8 +104,10 @@ public:
   /**
    * @brief Copies the array into the data structure.
    * @param copyPath Identifies the destination array.
-   * @return Inserted object, or nullptr when copyPath exists or insertion fails.
-   * @post The inserted object shares this string store.
+   * @return Inserted object, or nullptr when copyPath exists, store copying fails, or insertion fails.
+   * @throws std::bad_alloc If allocation fails.
+   * @post The copy has its own store. The store holds an in-memory copy of the values.
+   * If this array is a placeholder, the copy is a new placeholder with the same tuple shape.
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 

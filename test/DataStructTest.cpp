@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -14,6 +15,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/StringStore.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -24,6 +26,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -1674,4 +1677,57 @@ TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
   dataStructure1.removeData(DataPath({Constants::k_ImageGeometry}));
 
   UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
+}
+
+TEST_CASE("StringArray deepCopy preserves independent values", "[DataStructure][StringArray]")
+{
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"a", "b"});
+  REQUIRE(original != nullptr);
+  auto copiedObject = original->deepCopy(DataPath({"Copy"}));
+  REQUIRE(copiedObject != nullptr);
+  auto* copy = dataStructure.getDataAs<StringArray>(DataPath({"Copy"}));
+  REQUIRE(copy != nullptr);
+  REQUIRE(copy != original);
+  REQUIRE(copy->getTupleShape() == ShapeType{2});
+  REQUIRE(copy->values() == std::vector<std::string>{"a", "b"});
+  (*copy)[0] = "z";
+  REQUIRE((*copy)[0] == "z");
+  REQUIRE((*original)[0] == "a");
+  (*original)[1] = "y";
+  REQUIRE((*original)[1] == "y");
+  REQUIRE((*copy)[1] == "b");
+}
+
+TEST_CASE("StringArray deepCopy gives a placeholder its own placeholder", "[DataStructure][StringArray]")
+{
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"", ""});
+  REQUIRE(original != nullptr);
+  original->setStore(std::make_shared<EmptyStringStore>(ShapeType{2}));
+  REQUIRE(original->isPlaceholder());
+  auto copiedObject = original->deepCopy(DataPath({"Copy"}));
+  REQUIRE(copiedObject != nullptr);
+  auto* copy = dataStructure.getDataAs<StringArray>(DataPath({"Copy"}));
+  REQUIRE(copy != nullptr);
+  REQUIRE(copy != original);
+  REQUIRE(copy->isPlaceholder());
+  REQUIRE(copy->getTupleShape() == ShapeType{2});
+  // A shared placeholder would also change the shape of the original.
+  REQUIRE(copy->resizeTuples(ShapeType{5}).valid());
+  REQUIRE(copy->getTupleShape() == ShapeType{5});
+  REQUIRE(original->getTupleShape() == ShapeType{2});
+}
+
+TEST_CASE("StringStore rejects mismatched tuple shape", "[StringStore][DataStruct]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE_THROWS_AS((StringStore({"one"}, ShapeType{2})), std::invalid_argument);
+  REQUIRE_NOTHROW((StringStore({"one", "two"}, ShapeType{2})));
+  REQUIRE_NOTHROW((StringStore({"one"}, ShapeType{})));
+  REQUIRE_NOTHROW((StringStore({}, ShapeType{0})));
+  DataStructure dataStructure;
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Bad", {2}, {"one"}) == nullptr);
+  REQUIRE(StringArray::Import(dataStructure, "BadImport", {2}, 1234, {"one"}) == nullptr);
+  REQUIRE(dataStructure.getAllDataPaths().empty());
 }

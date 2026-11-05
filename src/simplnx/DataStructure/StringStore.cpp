@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <numeric>
+#include <stdexcept>
 
 namespace nx::core
 {
@@ -24,6 +25,11 @@ StringStore::StringStore(std::vector<std::string> strings, const ShapeType& tupl
 , m_NumTuples(strings.size())
 , m_Data(std::move(strings))
 {
+  const usize count = std::accumulate(tupleShape.begin(), tupleShape.end(), usize{1}, std::multiplies<>());
+  if(count != m_NumTuples)
+  {
+    throw std::invalid_argument(fmt::format("StringStore: tuple shape [{}] holds {} tuples, but the string count is {}", fmt::join(tupleShape, ", "), count, m_NumTuples));
+  }
 }
 
 StringStore::~StringStore() = default;

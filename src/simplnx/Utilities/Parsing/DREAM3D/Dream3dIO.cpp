@@ -779,12 +779,11 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
       return result;
     }
 
-    auto* stringArray = StringArray::CreateWithValues(dataStructure, daName, tDims, {}, parentId);
+    auto* stringArray = StringArray::CreateWithStore(dataStructure, daName, std::make_shared<EmptyStringStore>(tDims), parentId);
     if(stringArray == nullptr)
     {
       return MakeErrorResult(-4210429, fmt::format("Failed to create legacy StringArray '{}' during metadata import.", daName));
     }
-    stringArray->setStore(std::make_shared<EmptyStringStore>(tDims));
   }
   else
   {
@@ -804,6 +803,7 @@ Result<> finishImportingLegacyStringArray(DataStructure& dataStructure, const nx
 
   const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
   ShapeType tupShape = existingArray->getTupleShape();
+  // Legacy SIMPL files may have a string count different from TupleDimensions; reshape to the string count for #1439 tolerance.
   if(existingArray->getNumberOfTuples() != strings.size())
   {
     tupShape = ShapeType{strings.size()};
