@@ -18,8 +18,10 @@
 
 #include <array>
 #include <bit>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <fmt/format.h>
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -88,6 +90,44 @@ std::string WithoutAuthorAndDate(const std::string& content)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Tiny spacing bounds round trip", "[SimplnxCore][WriteAvizoUniformCoordinateFilter]")
+{
+  const bool binary = GENERATE(false, true);
+  CAPTURE(binary);
+  DataStructure dataStructure;
+  const SizeVec3 dims = {3, 2, 1};
+  const DataPath labelsPath = CreateUniformWriterInput(dataStructure, dims, {101, 102, 103, 104, 105, 106});
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setOrigin({0, 0, 0});
+  imageGeomPtr->setSpacing({1e-7f, 2e-7f, 3e-7f});
+  const std::string actual = WriteUniformFile(dataStructure, labelsPath, binary, binary ? "UniformTinySpacingBinary.am" : "UniformTinySpacingAscii.am");
+  const std::string marker = "     BoundingBox ";
+  const usize boxStart = actual.find(marker);
+  REQUIRE(boxStart != std::string::npos);
+  const std::string boxLine = actual.substr(boxStart + marker.size(), actual.find('\n', boxStart) - boxStart - marker.size());
+  INFO("BoundingBox " << boxLine);
+  std::istringstream bounds(boxLine);
+  const std::array<float64, 3> origin = {0, 0, 0};
+  const std::array<float64, 3> spacing = {static_cast<float64>(1e-7f), static_cast<float64>(2e-7f), static_cast<float64>(3e-7f)};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    const std::array<float64, 2> expectedBounds = {origin[axis] + 0.5 * spacing[axis], origin[axis] + (static_cast<float64>(dims[axis]) - 0.5) * spacing[axis]};
+    for(float64 expected : expectedBounds)
+    {
+      CAPTURE(axis, expected);
+      std::string token;
+      REQUIRE(static_cast<bool>(bounds >> token));
+      char* endPtr = nullptr;
+      const float64 value = std::strtod(token.c_str(), &endPtr);
+      REQUIRE(endPtr == token.c_str() + token.size());
+      REQUIRE(value > 0);
+      REQUIRE(value == expected);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoUniformCoordinateFilter]")
 {
   const bool binary = GENERATE(false, true);
@@ -97,6 +137,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Valid Filter Executio
   const std::string actual = WriteUniformFile(dataStructure, labelsPath, binary, binary ? "UniformCentersBinary.am" : "UniformCentersAscii.am");
   const std::string firstLine = binary ? (std::endian::native == std::endian::little ? "# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n" : "# AmiraMesh BINARY 2.1\n") : "# AmiraMesh 3D ASCII 2.0\n";
   // X centers are 10+(i+0.5)*2=11,13,15; Y centers are -3.5,-0.5; the only Z center is 4.
+  const std::array<float64, 6> expectedBox = {11, 15, -3.5, -0.5, 4, 4};
   const std::string expectedHeader = firstLine + R"(
 # Dimensions in x-, y-, and z-direction
 define Lattice 3 2 1
@@ -111,8 +152,8 @@ Parameters {
      }
      Content "3x2x1 int, uniform coordinates",
      # Bounding Box is xmin xmax ymin ymax zmin zmax
-     BoundingBox 11.000000 15.000000 -3.500000 -0.500000 4.000000 4.000000
-     CoordType "uniform"
+)" + fmt::format("     BoundingBox {} {} {} {} {} {}\n", expectedBox[0], expectedBox[1], expectedBox[2], expectedBox[3], expectedBox[4], expectedBox[5]) +
+                                     R"(     CoordType "uniform"
 }
 
 Lattice { int FeatureIds } = @1
@@ -128,7 +169,6 @@ Lattice { int FeatureIds } = @1
   std::string boxName;
   boxStream >> boxName;
   CHECK(boxName == "BoundingBox");
-  const std::array<float64, 6> expectedBox = {11, 15, -3.5, -0.5, 4, 4};
   for(float64 expected : expectedBox)
   {
     float64 value = 0;

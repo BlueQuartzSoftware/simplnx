@@ -49,6 +49,7 @@ repository, but contains no code from one.
   - [Never drop a Result](#never-drop-a-result)
   - [Check the file close and the stream state before you report a successful write](#check-the-file-close-and-the-stream-state-before-you-report-a-successful-write)
   - [Check for cancel in every long loop](#check-for-cancel-in-every-long-loop)
+  - [Write floating-point data as text that reads back to the same value](#write-floating-point-data-as-text-that-reads-back-to-the-same-value)
   - [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast)
   - [Let the user choose whether a NaN input value is an error or is skipped](#let-the-user-choose-whether-a-nan-input-value-is-an-error-or-is-skipped)
   - [Copy every field that sets behavior when you clone an object](#copy-every-field-that-sets-behavior-when-you-clone-an-object)
@@ -613,6 +614,56 @@ phase with no check between its steps.
 
 **Pattern to use:** a check at each interruptible work boundary, as PR #1582 added them; the
 `bluequartz-skills:progress-messaging` skill.
+
+### Write floating-point data as text that reads back to the same value
+
+**Rule:** write floating-point data with fmt `{}` (shortest round-trip text) or `max_digits10` of the type actually
+written. Apply this rule to files, text headers inside binary files, generated code and saved state. Never use `%f`,
+`std::fixed`, `{:.Nf}`, `std::to_string(float|double)`, `digits10` or default stream precision for this data. A precision
+that the user selects or that a file-format specification fixes is an exception; name the applicable contract.
+
+**Example of the broken rule:** these writers lose floating-point data (issue #1927):
+
+- `WriteAvizoUniformCoordinate.cpp`, `WriteAvizoUniformCoordinate::generateHeader()`, writes the `BoundingBox` with
+  `%f`, including the text header in binary files. PR #1919 fixes this case.
+- `WriteAvizoRectilinearCoordinate.cpp`, `WriteAvizoRectilinearCoordinate::writeData()`, writes ASCII coordinates with
+  `%f`. `WriteVtkRectilinearGrid.cpp`, `WriteVtkRectilinearGrid::writeCoords()`, does the same (issue #1908 item L29;
+  PR #1915).
+- `WriteLAMMPSFile.cpp`, `WriteLAMMPSFile::operator()()`, writes bounds and atom coordinates with `{:f}`.
+  `WriteINLFile.cpp`, `WriteINLFile::operator()()`, uses fixed stream formatting for header values and data rows.
+- `WriteLosAlamosFFT.cpp`, `WriteChunkedData()` and `WriteDirectData()`, writes Euler angles with `{:.3f}`.
+  `WriteGBCDTriangleData.cpp`, `WriteGBCDTriangleData::operator()()`, uses `{:0.4f}` for angles, normals and areas.
+- `WriteGBCDGMTFile.cpp`, `WriteGBCDGMTFile::operator()()`, uses `%.1f` for misorientation parameters and `%f` for data
+  rows. `WriteStatsGenOdfAngleFile.cpp`, `WriteEulerLine()`, uses fixed stream formatting with precision 8.
+- `WriteNodesAndElementsFiles.cpp`, `WriteValue<T>()`, writes floating-point node data with fixed stream formatting
+  and precision 4.
+- `ConvertHexGridToSquareGrid.cpp`, `Converter::operator()()`, writes `.ang` rows with default stream precision.
+  Its `modifyAngHeaderLine()` calls `StringUtilities::number()` with `digits10` for XSTEP and YSTEP.
+- `Dream3dIO.cpp`, `WriteGeomXdmf()` for `ImageGeom`, writes XDMF origin and spacing with default stream precision.
+  `OStreamUtilities.cpp`, `TupleWriter::write()`, uses 8 digits for float32 and 16 for float64 (issue #1867).
+- `WriteAbaqusHexahedron.cpp`, `writeNodes()`, and `WriteAbaqusCrystalPlasticity.cpp`, `WriteNodes()`, format computed
+  float64 coordinates with `{:.9g}`. Float32 inputs do not make the double expressions safe to write with 9 digits.
+- `wrapping/python/utils/simplnx_utilities.py`, `_encode_float()`, rounds numeric parameters before it generates
+  Python code.
+
+**Why:** fixed decimal places turn small nonzero values into zero. Too few significant digits change a value when a
+reader parses the text. `digits10` describes the decimal-to-binary guarantee, not the binary-to-text-to-binary
+guarantee. Wider arithmetic can require more digits than the input type.
+
+**What to look for:**
+
+- `%f`, `{:f}`, `{:.Nf}`, `std::fixed`, `std::to_string()` or default stream precision on exported floating-point data.
+- `digits10`, or a precision selected from the input type before arithmetic produces a wider type.
+- Text in a binary header, a saved-state string or generated numeric code that passes through display formatting.
+- Tiny positive values that become zero, or nearby values that become the same text.
+- A claimed precision exception without a named user setting or file-format requirement.
+
+**Pattern to use:** prefer `fmt::format("{}", value)`, as `WriteVtkStructuredPoints.cpp`,
+`WriteVtkStructuredPoints::operator()()`, writes spacing and origin. For streams, use
+`std::defaultfloat << std::setprecision(std::numeric_limits<T>::max_digits10)` for the type actually written.
+`MhaImageIO.cpp`, `MhaImageIO::writePixelData()`, sets float32 `max_digits10` on a fresh stream with default notation.
+Reset a prior fixed notation explicitly with `std::defaultfloat`. For printf, use
+`fprintf(file, "%.*g", std::numeric_limits<T>::max_digits10, static_cast<double>(value))` for float32 or float64 `T`.
 
 ### Write floating-point output through a saturating cast
 

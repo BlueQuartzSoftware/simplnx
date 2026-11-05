@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <ctime>
+#include <fmt/format.h>
 
 using namespace nx::core;
 
@@ -66,8 +67,8 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
   FloatVec3 origin = geom.getOrigin();
   FloatVec3 res = geom.getSpacing();
   fprintf(outputFile, "     # Bounding Box is xmin xmax ymin ymax zmin zmax\n");
-  fprintf(outputFile, "     BoundingBox %f %f %f %f %f %f\n", origin[0] + 0.5 * res[0], origin[0] + (static_cast<float64>(dims[0]) - 0.5) * res[0], origin[1] + 0.5 * res[1],
-          origin[1] + (static_cast<float64>(dims[1]) - 0.5) * res[1], origin[2] + 0.5 * res[2], origin[2] + (static_cast<float64>(dims[2]) - 0.5) * res[2]);
+  fmt::print(outputFile, "     BoundingBox {} {} {} {} {} {}\n", origin[0] + 0.5 * res[0], origin[0] + (static_cast<float64>(dims[0]) - 0.5) * res[0], origin[1] + 0.5 * res[1],
+             origin[1] + (static_cast<float64>(dims[1]) - 0.5) * res[1], origin[2] + 0.5 * res[2], origin[2] + (static_cast<float64>(dims[2]) - 0.5) * res[2]);
 
   fprintf(outputFile, "     CoordType \"uniform\"\n");
   fprintf(outputFile, "}\n\n");
