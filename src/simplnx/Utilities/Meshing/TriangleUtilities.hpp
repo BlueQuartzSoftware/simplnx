@@ -166,6 +166,8 @@ SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::s
  * @param shouldCancel Cooperative cancellation flag.
  * @param mesgHandler Progress-message callback.
  * @return Provider, sort, cache, topology, or DataStore error, or success after cancellation.
+ * @note Connectivity scratch creation, staging, and copy-back retain the first 64 distinct warnings.
+ * Repeated and additional warnings are summarized. The limit does not bound individual messages or provider allocations.
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
                                                       const IFilter::MessageHandler& mesgHandler);
