@@ -60,8 +60,9 @@ public:
     if(m_Repeated != 0 || m_Additional != 0)
     {
       const auto countText = [](uint64 count) { return count == std::numeric_limits<uint64>::max() ? fmt::format("{} or more", count) : fmt::format("{}", count); };
-      m_Warnings.push_back({-65796, fmt::format("Triangle winding retained at most 64 distinct transfer warnings; suppressed {} repeated and {} additional warning occurrences.", countText(m_Repeated),
-                                                countText(m_Additional))});
+      m_Warnings.push_back({.code = -65796,
+                            .message = fmt::format("Triangle winding retained at most 64 distinct transfer warnings; suppressed {} repeated and {} additional warning occurrences.",
+                                                   countText(m_Repeated), countText(m_Additional))});
     }
     if(!m_Warnings.empty())
     {
