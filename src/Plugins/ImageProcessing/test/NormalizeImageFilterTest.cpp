@@ -21,7 +21,8 @@ using namespace nx::core;
 
 TEST_CASE("ImageProcessing::C02 NormalizeImage component contract", "[ImageProcessing][NormalizeImageFilter][ComponentContract][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const usize components = GENERATE(usize{1}, usize{3});
   CAPTURE(components);

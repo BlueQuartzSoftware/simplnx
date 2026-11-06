@@ -690,7 +690,8 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
 
 TEST_CASE("ImageProcessing::C02 montage rejects unsupported components", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Red]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   const auto count = GENERATE(2, 5);
   const bool gray = GENERATE(false, true);
   const fs::path dir = FijiOutputDir();
@@ -717,7 +718,6 @@ TEST_CASE("ImageProcessing::C02 montage accepted components and grayscale", "[Im
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
   const fs::path dir = FijiOutputDir();
   writeC02Tile(dir / "c02_scalar.tif", {64});
   writeC02Tile(dir / "c02_rgb.tif", {200, 100, 50});
@@ -761,7 +761,8 @@ TEST_CASE("ImageProcessing::C02 montage accepted components and grayscale", "[Im
 
 TEST_CASE("ImageProcessing::C02 montage real OOC grayscale", "[ImageProcessing][ImportFijiMontageFilter][C02][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, 1);
   const fs::path dir = FijiOutputDir();
@@ -808,7 +809,8 @@ TEST_CASE("ImageProcessing::C02 montage real OOC grayscale", "[ImageProcessing][
 
 TEST_CASE("ImageProcessing::C02 montage datatype conversion before grayscale", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Green]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   const fs::path dir = FijiOutputDir();
   writeC02Tile(dir / "c02_type_scalar.tif", {64});
   writeC02Tile(dir / "c02_type_rgb.tif", {200, 100, 50});
@@ -850,7 +852,6 @@ TEST_CASE("ImageProcessing::C02 montage grayscale feeds scalar pipeline filter",
   UnitTest::AlgorithmTestScope scope(scenario);
   const usize components = GENERATE(usize{3}, usize{4});
   CAPTURE(components);
-  UnitTest::LoadPlugins();
   const fs::path dir = FijiOutputDir();
   const std::string file = fmt::format("c02_pipeline_{}.tif", components);
   const fs::path imagePath = dir / file;
@@ -921,7 +922,6 @@ TEST_CASE("ImageProcessing::C02 montage failed color tile retains scalar shape",
   UnitTest::AlgorithmTestScope scope(scenario);
   const usize components = GENERATE(usize{3}, usize{4});
   CAPTURE(components);
-  UnitTest::LoadPlugins();
   const fs::path dir = FijiOutputDir();
   writeC02Tile(dir / "c02_partial_good.tif", {64, 64, 64});
   const std::string badName = fmt::format("c02_partial_bad_{}.tif", components);
@@ -981,7 +981,8 @@ TEST_CASE("ImageProcessing::C02 montage failed color tile real OOC zeros", "[Ima
 {
   const usize components = GENERATE(usize{3}, usize{4});
   CAPTURE(components);
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, 1);
   const fs::path dir = FijiOutputDir();

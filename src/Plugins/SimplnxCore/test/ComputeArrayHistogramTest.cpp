@@ -451,7 +451,6 @@ TEST_CASE("SimplnxCore::C02 histogram tuple mask safe RED", "[SimplnxCore][Compu
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
   REQUIRE(inputPtr != nullptr);
@@ -476,7 +475,6 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks full outputs", "[SimplnxCore][
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
   const bool boolMask = GENERATE(false, true);
   const bool customRange = GENERATE(false, true);
   CAPTURE(boolMask, customRange);
@@ -534,7 +532,8 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks full outputs", "[SimplnxCore][
 
 TEST_CASE("SimplnxCore::C02 histogram real OOC tuple masks", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool maskOnlyDisk = GENERATE(false, true);
   CAPTURE(maskOnlyDisk);
@@ -582,7 +581,6 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks cross value pages", "[SimplnxC
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
   const bool wideTuple = GENERATE(false, true);
   CAPTURE(wideTuple);
   const usize tuples = wideTuple ? 1 : 21846;
@@ -627,7 +625,8 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks cross value pages", "[SimplnxC
 
 TEST_CASE("SimplnxCore::C02 histogram all masked automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   DataStructure dataStructure;
   auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
   REQUIRE(inputPtr != nullptr);
@@ -649,7 +648,6 @@ TEST_CASE("SimplnxCore::C02 histogram mixed component arrays", "[SimplnxCore][Co
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3});
   auto* secondPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Second", {3}, {2});
@@ -680,7 +678,8 @@ TEST_CASE("SimplnxCore::C02 histogram mixed component arrays", "[SimplnxCore][Co
 
 TEST_CASE("SimplnxCore::C02 histogram HDF5 tuple straddles page", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   DataStructure dataStructure;
@@ -714,7 +713,8 @@ TEST_CASE("SimplnxCore::C02 histogram HDF5 tuple straddles page", "[SimplnxCore]
 
 TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[SimplnxCore][ComputeArrayHistogram][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   std::atomic_bool cancelled = false;
   DataStructure dataStructure;
   auto inputStore = std::make_shared<CancelAfterFirstReadStore>(cancelled);
@@ -740,7 +740,8 @@ TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[Simpl
 
 TEST_CASE("SimplnxCore::C02 histogram empty automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   DataStructure dataStructure;
   auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {0}, {3});
   auto* maskPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {0}, {1});

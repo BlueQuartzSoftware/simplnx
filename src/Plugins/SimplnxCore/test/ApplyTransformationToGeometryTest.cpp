@@ -111,7 +111,8 @@ void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom&
 
 TEST_CASE("SimplnxCore::C02 ApplyTransformationToGeometry matrix contract", "[SimplnxCore][ApplyTransformationToGeometryFilter][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   const DataPath geometryPath({"Geometry"});
   const DataPath vertexPath({"Geometry", "Vertices"});
   const DataPath matrixPath({"Matrix"});
