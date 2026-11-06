@@ -255,6 +255,15 @@ public:
   bool insert(const std::weak_ptr<DataObject>& obj);
 
   /**
+   * @brief Checks the group's insertion rules without changing the group or object.
+   * @param object Supplies the candidate; null is rejected.
+   * @return True when the current virtual insertion rules accept the object.
+   * @pre The caller excludes concurrent changes to this group and the candidate.
+   * @note This query does not reserve a placement or prevent later insertion failure.
+   */
+  [[nodiscard]] bool acceptsChild(const DataObject* object) const;
+
+  /**
    * @brief Attempts to remove the specified DataObject from the container. Returns
    * true if it succeeded. Returns false otherwise.
    *
