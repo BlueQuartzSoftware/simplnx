@@ -1,4 +1,5 @@
 find_package(Catch2 CONFIG REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/../TestProfileSupport.cmake")
 
 add_library(SimplnxUnitTestCommon INTERFACE)
 add_library(simplnx::UnitTestCommon ALIAS SimplnxUnitTestCommon)
@@ -13,6 +14,7 @@ target_link_libraries(SimplnxUnitTestCommon
     simplnx
     Catch2::Catch2
     ZLIB::ZLIB
+    simplnx::TestProfile
 )
 
 target_sources(SimplnxUnitTestCommon
