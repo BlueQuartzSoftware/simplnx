@@ -27,9 +27,11 @@
 #include <cstddef>
 #include <cstring>
 #include <filesystem>
+#include <iostream>
 #include <latch>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -900,7 +902,9 @@ TEST_CASE("ParallelChunkCodec skips deflate only for incompressible chunks", "[P
   REQUIRE(H5Dread(dataset, H5T_NATIVE_UINT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, readBack.data()) >= 0);
   REQUIRE(readBack == source);
   std::vector<std::byte> boundedReadBack(source.size());
-  const auto bounded = codec.readExtentIntoBufferBounded(Extent({0, 0, 0}, {1, k_ChunkBytes - 1, 0}), boundedReadBack, 1024 * 1024);
+  // The public read stages the selected output beside raw, decoded, and decoder workspace payload.
+  const uint64 boundedGrant = source.size() + randomStoredSize + k_ChunkBytes + 128 * 1024;
+  const auto bounded = codec.readExtentIntoBufferBounded(Extent({0, 0, 0}, {1, k_ChunkBytes - 1, 0}), boundedReadBack, boundedGrant);
   REQUIRE(bounded.valid());
   REQUIRE(bounded.value());
   REQUIRE(boundedReadBack == source);
@@ -2141,7 +2145,7 @@ TEST_CASE("ParallelChunkCodec preserves legacy stream acceptance", "[ParallelChu
   ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, tupleShape, componentShape, sizeof(uint8), datasetId, codecMemoryType<uint8>());
   REQUIRE(codec.isEligible());
   std::vector<std::byte> boundedOutput(expected.size(), std::byte{0});
-  const auto bounded = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), boundedOutput, 128 * 1024);
+  const auto bounded = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), boundedOutput, 256 * 1024);
   if(streamCase == StreamCase::Complete)
   {
     REQUIRE(bounded.valid());
@@ -2400,9 +2404,16 @@ struct BoundedCodecObservation
   uint64 decoded = 0;
   uint64 queries = 0;
   uint64 metadataCalls = 0;
-  uint64 terminalRequests = 0;
+  uint64 successConstructions = 0;
+  uint64 liveAtSuccessConstruction = 0;
+  uint64 metadataCleanups = 0;
+  uint64 decoderCleanups = 0;
+  uint64 metadataCleanupsAtSuccessConstruction = 0;
+  uint64 decoderCleanupsAtSuccessConstruction = 0;
+  uint64 activeTasksAtSuccessConstruction = 0;
   bool invalid = false;
   bool inject = false;
+  uint64 faultAfterReads = 0;
   BoundedFaultPointForTesting fault = BoundedFaultPointForTesting::MetadataQuery;
 
   static void Observe(void* context, const fs::path&, std::string_view, CodecIoEventForTesting event, uint64 input, uint64 output) noexcept
@@ -2426,17 +2437,6 @@ struct BoundedCodecObservation
         self.released += input;
       }
     }
-    else if(event == CodecIoEventForTesting::DiagnosticRequested)
-    {
-      ++self.terminalRequests;
-    }
-    else if(event == CodecIoEventForTesting::DiagnosticRetained)
-    {
-      if(self.live != 0 || input + output > BoundedRead::k_DiagnosticBytes)
-      {
-        self.invalid = true;
-      }
-    }
     else if(event == CodecIoEventForTesting::StoredRead)
     {
       ++self.rawReads;
@@ -2457,8 +2457,24 @@ struct BoundedCodecObservation
 
   static bool Fault(void* context, const fs::path&, std::string_view, BoundedFaultPointForTesting point) noexcept
   {
-    const auto& self = *static_cast<BoundedCodecObservation*>(context);
-    return self.inject && self.fault == point;
+    auto& self = *static_cast<BoundedCodecObservation*>(context);
+    if(point == BoundedFaultPointForTesting::SuccessResultConstruction)
+    {
+      ++self.successConstructions;
+      self.liveAtSuccessConstruction = self.live;
+      self.metadataCleanupsAtSuccessConstruction = self.metadataCleanups;
+      self.decoderCleanupsAtSuccessConstruction = self.decoderCleanups;
+      self.activeTasksAtSuccessConstruction = GetCodecOwnershipStateForTesting().activeTasks;
+    }
+    else if(point == BoundedFaultPointForTesting::MetadataCleanup)
+    {
+      ++self.metadataCleanups;
+    }
+    else if(point == BoundedFaultPointForTesting::DecoderCleanup)
+    {
+      ++self.decoderCleanups;
+    }
+    return self.inject && self.fault == point && self.rawReads >= self.faultAfterReads;
   }
 };
 } // namespace
@@ -2524,46 +2540,15 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
   const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16));
-  SECTION("checked metadata returns empty invalid state before work on an unreviewed build")
+  SECTION("zero allowance refuses with required and available bytes before payload I/O")
   {
-    REQUIRE(BoundedRead::DiagnosticRepresentationSupported());
-    REQUIRE(BoundedRead::EmptyInvalidResultControlBytes<ParallelChunkCodec::ChunkInfo>() >= 2 * sizeof(Result<ParallelChunkCodec::ChunkInfo>));
-    observation.inject = true;
-    observation.fault = BoundedFaultPointForTesting::CheckedMetadataUnsupportedBuild;
-    const std::array<uint64, 3> origin{0, 0, 0};
-    auto result = codec.getChunkInfoChecked(origin);
-    REQUIRE(result.invalid());
-    REQUIRE(result.errors().empty());
-    REQUIRE(result.errors().capacity() == 0);
-    REQUIRE(result.warnings().empty());
-    REQUIRE(result.warnings().capacity() == 0);
-    auto moved = std::move(result);
-    REQUIRE(moved.invalid());
-    REQUIRE(moved.errors().empty());
-    REQUIRE(moved.warnings().empty());
-    REQUIRE(observation.queries == 0);
-    REQUIRE(observation.metadataCalls == 0);
-    REQUIRE(observation.terminalRequests == 0);
-    REQUIRE(observation.rawReads == 0);
-    REQUIRE(observation.acquired == 0);
-    REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
-  }
-  SECTION("subminimum and metadata refusal preserve the sentinel before any query")
-  {
-    for(const uint64 allowance : std::array<uint64, 2>{0, BoundedRead::k_DiagnosticBytes - 1})
-    {
-      auto result = codec.readExtentIntoBufferBounded(extent, destination, allowance);
-      REQUIRE(result.valid());
-      REQUIRE_FALSE(result.value());
-      REQUIRE(result.warnings().empty());
-    }
-    auto result = codec.readExtentIntoBufferBounded(extent, destination, BoundedRead::k_DiagnosticBytes);
+    const auto result = codec.readExtentIntoBufferBounded(extent, destination, 0);
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
     REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
-    REQUIRE(BoundedRead::ResultCapacityBytes(result) <= BoundedRead::k_DiagnosticBytes);
-    REQUIRE(observation.queries == 0);
+    REQUIRE(result.warnings().front().message.find("available=0") != std::string::npos);
+    REQUIRE(observation.queries > 0);
     REQUIRE(observation.rawReads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
   }
@@ -2575,7 +2560,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     REQUIRE(result.value());
     REQUIRE(output == expected);
     REQUIRE(observation.rawReads > 0);
-    REQUIRE(observation.peak <= allowance - BoundedRead::k_DiagnosticBytes);
+    REQUIRE(observation.peak <= allowance);
     REQUIRE(observation.queries >= 2 * observation.rawReads);
   }
   SECTION("native tag independently rejects the wrong element size")
@@ -2639,6 +2624,194 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
       REQUIRE(observation.rawReads == 0);
     }
+  }
+  REQUIRE_FALSE(observation.invalid);
+  REQUIRE(observation.live == 0);
+  REQUIRE(observation.acquired == observation.released);
+}
+
+TEST_CASE("Bounded codec payload grants and late failure preserve all caller bytes", "[ParallelChunkCodec][bounded][payload-contract]")
+{
+  const bool compressed = GENERATE(false, true);
+  const auto path = testFilePath(compressed ? "bounded_payload_deflate.h5" : "bounded_payload_raw.h5");
+  const std::array<uint8, 12> source{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  hid_t file = H5I_INVALID_HID;
+  hid_t dataset = H5I_INVALID_HID;
+  uint64 maximumStored = 0;
+  {
+    std::lock_guard lock(Support::ApiLock());
+    file = H5Fcreate(path.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    REQUIRE(file >= 0);
+    const hsize_t dimension = 12;
+    const hsize_t chunk = 4;
+    const hid_t space = H5Screate_simple(1, &dimension, nullptr);
+    const hid_t properties = H5Pcreate(H5P_DATASET_CREATE);
+    REQUIRE(space >= 0);
+    REQUIRE(properties >= 0);
+    REQUIRE(H5Pset_chunk(properties, 1, &chunk) >= 0);
+    if(compressed)
+    {
+      REQUIRE(H5Pset_deflate(properties, 1) >= 0);
+    }
+    dataset = H5Dcreate2(file, "data", H5T_NATIVE_UINT8, space, H5P_DEFAULT, properties, H5P_DEFAULT);
+    REQUIRE(dataset >= 0);
+    REQUIRE(H5Dwrite(dataset, H5T_NATIVE_UINT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, source.data()) >= 0);
+    REQUIRE(H5Fflush(file, H5F_SCOPE_LOCAL) >= 0);
+    for(const hsize_t origin : {hsize_t{0}, hsize_t{4}})
+    {
+      hsize_t stored = 0;
+      REQUIRE(H5Dget_chunk_storage_size(dataset, &origin, &stored) >= 0);
+      maximumStored = std::max(maximumStored, static_cast<uint64>(stored));
+    }
+    REQUIRE(H5Pclose(properties) >= 0);
+    REQUIRE(H5Sclose(space) >= 0);
+  }
+  auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::lock_guard lock(Support::ApiLock());
+    H5Dclose(dataset);
+    H5Fclose(file);
+  });
+  REQUIRE(fs::exists(path));
+  ParallelChunkCodec codec(path, "data", {12}, {4}, {}, 1, dataset, codecMemoryType<uint8>());
+  const Extent extent({0}, {7});
+  std::array<std::byte, 11> output{};
+  output.fill(std::byte{0xCA});
+  const auto sentinel = output;
+  // Two selected four-byte chunks share one input buffer; deflate also owns four decoded bytes and its named workspace.
+  const uint64 required = 8 + maximumStored + (compressed ? 4 + 128 * 1024 : 0);
+  BoundedCodecObservation observation;
+  const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+  auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
+  SECTION("one byte short refuses before payload I/O")
+  {
+    const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required - 1);
+    REQUIRE(result.valid());
+    REQUIRE_FALSE(result.value());
+    REQUIRE(result.warnings().size() == 1);
+    REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+    REQUIRE(result.warnings().front().message.find("required=" + std::to_string(required)) != std::string::npos);
+    REQUIRE(result.warnings().front().message.find("available=" + std::to_string(required - 1)) != std::string::npos);
+    REQUIRE(observation.rawReads == 0);
+    REQUIRE(output == sentinel);
+  }
+  SECTION("exact payload allowance publishes selected bytes and preserves the tail")
+  {
+    const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
+    REQUIRE(result.valid());
+    REQUIRE(result.value());
+    REQUIRE((output == std::array<std::byte, 11>{std::byte{0}, std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}, std::byte{5}, std::byte{6}, std::byte{7}, std::byte{0xCA}, std::byte{0xCA},
+                                                 std::byte{0xCA}}));
+    REQUIRE(observation.rawReads == 2);
+    REQUIRE(observation.peak <= required);
+  }
+  SECTION("private state uses the backend grant without another output stage")
+  {
+    Result<> diagnostic;
+    const auto status = codec.readExtentIntoBufferBoundedState(extent, nonstd::span<std::byte>(output.data(), 8), required - 8, diagnostic);
+    REQUIRE(status == BoundedRead::Status::Complete);
+    REQUIRE(output[0] == std::byte{0});
+    REQUIRE(output[7] == std::byte{7});
+    REQUIRE(output[8] == std::byte{0xCA});
+    REQUIRE(observation.peak <= required - 8);
+  }
+  SECTION("allocation failure preserves the whole caller allocation")
+  {
+    observation.inject = true;
+    observation.fault = BoundedFaultPointForTesting::SelectedAllocation;
+    const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
+    REQUIRE(observation.rawReads == 0);
+    REQUIRE(output == sentinel);
+  }
+  SECTION("metadata cleanup failure leaves all successfully read chunks unpublished")
+  {
+    observation.inject = true;
+    observation.fault = BoundedFaultPointForTesting::MetadataCleanup;
+    const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().front().code == BoundedRead::MetadataFailure);
+    REQUIRE(observation.rawReads == 2);
+    REQUIRE(output == sentinel);
+  }
+  SECTION("decoder cleanup failure leaves all successfully decoded chunks unpublished")
+  {
+    if(compressed)
+    {
+      observation.inject = true;
+      observation.fault = BoundedFaultPointForTesting::DecoderCleanup;
+      const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
+      REQUIRE(observation.rawReads == 2);
+      REQUIRE(observation.decoded > 0);
+      REQUIRE(output == sentinel);
+    }
+  }
+  SECTION("actual result construction failure leaves both successful chunks unpublished")
+  {
+    observation.inject = true;
+    observation.fault = BoundedFaultPointForTesting::SuccessResultConstruction;
+    REQUIRE_THROWS_AS(static_cast<void>(codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required)), std::bad_alloc);
+    REQUIRE(observation.successConstructions == 1);
+    REQUIRE(observation.rawReads == 2);
+    REQUIRE(observation.metadataCleanupsAtSuccessConstruction == 1);
+    REQUIRE(observation.decoderCleanupsAtSuccessConstruction == (compressed ? 1 : 0));
+    REQUIRE(observation.activeTasksAtSuccessConstruction > 0);
+    REQUIRE(output == sentinel);
+    REQUIRE(observation.liveAtSuccessConstruction == 8);
+  }
+  SECTION("second chunk read failure leaves the successful first chunk unpublished")
+  {
+    observation.inject = true;
+    observation.fault = BoundedFaultPointForTesting::RawRead;
+    observation.faultAfterReads = 1;
+    const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().front().code == BoundedRead::ReadFailure);
+    REQUIRE(observation.rawReads == 1);
+    REQUIRE(output == sentinel);
+  }
+  SECTION("second compressed checksum failure leaves the successful first chunk unpublished")
+  {
+    if(compressed)
+    {
+      std::lock_guard lock(Support::ApiLock());
+      const hsize_t origin = 4;
+      hsize_t stored = 0;
+      REQUIRE(H5Dget_chunk_storage_size(dataset, &origin, &stored) >= 0);
+      std::vector<std::byte> bytes(static_cast<usize>(stored));
+      unsigned mask = 0;
+      REQUIRE(H5Dread_chunk(dataset, H5P_DEFAULT, &origin, &mask, bytes.data()) >= 0);
+      bytes.back() ^= std::byte{1};
+      REQUIRE(H5Dwrite_chunk(dataset, H5P_DEFAULT, mask, &origin, bytes.size(), bytes.data()) >= 0);
+      REQUIRE(H5Fflush(file, H5F_SCOPE_LOCAL) >= 0);
+    }
+    if(compressed)
+    {
+      const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
+      REQUIRE(result.invalid());
+      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
+      REQUIRE(observation.rawReads == 2);
+      REQUIRE(observation.decoded > 0);
+      REQUIRE(output == sentinel);
+    }
+  }
+  SECTION("repeatable multi-chunk timing witness")
+  {
+    const auto start = std::chrono::steady_clock::now();
+    for(usize repeat = 0; repeat < 100; ++repeat)
+    {
+      const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
+      REQUIRE(result.valid());
+      REQUIRE(result.value());
+      REQUIRE(output[0] == std::byte{0});
+      REQUIRE(output[7] == std::byte{7});
+      REQUIRE(output[8] == std::byte{0xCA});
+    }
+    const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
+    std::cout << "bounded-payload-timing compressed=" << compressed << " repeats=100 elapsed_us=" << elapsed << " reads=" << observation.rawReads << " input_decoded=" << observation.decoded
+              << " peak_payload=" << observation.peak << '\n';
   }
   REQUIRE_FALSE(observation.invalid);
   REQUIRE(observation.live == 0);
@@ -2851,7 +3024,7 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
       REQUIRE_FALSE(observation.invalid);
       REQUIRE(observation.live == 0);
       REQUIRE(observation.acquired == observation.released);
-      REQUIRE(observation.peak <= allowance - BoundedRead::k_DiagnosticBytes);
+      REQUIRE(observation.peak <= allowance);
       if(fixture.sparse)
       {
         REQUIRE(observation.rawReads == 0);

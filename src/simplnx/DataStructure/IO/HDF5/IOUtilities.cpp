@@ -16,6 +16,34 @@
 
 namespace nx::core
 {
+#if SIMPLNX_BUILD_TESTS
+namespace
+{
+thread_local bool s_FailWriteDiagnosticAllocation = false;
+thread_local bool s_WriteDiagnosticAllocationFailureConsumed = false;
+} // namespace
+
+void HDF5::SetWriteDiagnosticAllocationFailure(bool enabled)
+{
+  s_FailWriteDiagnosticAllocation = enabled;
+  s_WriteDiagnosticAllocationFailureConsumed = false;
+}
+
+bool HDF5::WriteDiagnosticAllocationFailureConsumed()
+{
+  return s_WriteDiagnosticAllocationFailureConsumed;
+}
+
+void HDF5::FailWriteDiagnosticAllocation()
+{
+  if(s_FailWriteDiagnosticAllocation)
+  {
+    s_FailWriteDiagnosticAllocation = false;
+    s_WriteDiagnosticAllocationFailureConsumed = true;
+    throw std::bad_alloc{};
+  }
+}
+#endif
 Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
 {
   // Add to DataStructureWriter for use in linking

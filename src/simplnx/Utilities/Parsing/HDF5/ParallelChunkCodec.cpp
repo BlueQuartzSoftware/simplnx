@@ -35,6 +35,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <numeric>
 #include <stdexcept>
 #include <utility>
@@ -1445,12 +1446,14 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
 #if SIMPLNX_BUILD_TESTS
 namespace nx::core::BoundedRead
 {
-void ObserveTerminalForTesting(const std::filesystem::path* file, std::string_view dataset, bool requested, uint64 first, uint64 second) noexcept
+WarningCollection MakeSuccessWarningsForTesting(const std::filesystem::path* file, std::string_view dataset)
 {
-  if(file != nullptr)
+  const std::filesystem::path residentIdentity;
+  if(HDF5::InjectCodecFaultForTesting(file != nullptr ? *file : residentIdentity, dataset, HDF5::BoundedFaultPointForTesting::SuccessResultConstruction))
   {
-    HDF5::ObserveCodecIoForTesting(*file, dataset, requested ? HDF5::CodecIoEventForTesting::DiagnosticRequested : HDF5::CodecIoEventForTesting::DiagnosticRetained, first, second);
+    throw std::bad_alloc{};
   }
+  return WarningCollection{};
 }
 } // namespace nx::core::BoundedRead
 #endif

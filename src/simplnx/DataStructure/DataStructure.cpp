@@ -1598,6 +1598,11 @@ Result<> DataStructure::flushChecked() const
       warning.message = fmt::format("{}: {}", context, warning.message);
       warnings.push_back(std::move(warning));
     }
+    if(objectResult.invalid())
+    {
+      // Stop at the first failed object. Later objects keep their unflushed state for a later flush.
+      break;
+    }
   }
 
   Result<> result;

@@ -10,7 +10,10 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <limits>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -25,64 +28,55 @@ namespace nx::core::HDF5
  */
 enum class CodecIoEventForTesting
 {
-  StoredRead,                       ///< Complete successful raw read; input is transferred bytes.
-  Inflated,                         ///< Successful zlib decode; input is supplied buffer bytes, output is decoded bytes.
-  StoredWrite,                      ///< Successful raw write; input is stored bytes.
-  StoredReadAttempt,                ///< Native read attempt; input is requested bytes.
-  StoredReadShort,                  ///< Short read; input is received bytes and output is requested bytes.
-  StoredReadFailed,                 ///< Failed native read; input is requested bytes.
-  InflateAttempt,                   ///< Decode attempt; input is stored bytes and output is expected bytes.
-  InflateFailed,                    ///< Failed decode; input is stored bytes and output is expected bytes.
-  SkippedDeflate,                   ///< Native bytes bypass zlib; input is stored bytes and output is nominal bytes.
-  ChunkRecordQuery,                 ///< One completed chunk-record query, including a failed native status.
-  RawAcquired,                      ///< Raw carrier acquired; input is actual capacity in bytes.
-  RawReleased,                      ///< Raw carrier destroyed; input is its prior capacity in bytes.
-  LegacyAcquired,                   ///< Payload acquired; input is capacity and output is its category.
-  LegacyReleased,                   ///< Payload destroyed; input is capacity and output is its category.
-  LegacyToReturned,                 ///< Category transfer; input is capacity and output is the previous category.
-  LegacyTransferred,                ///< Cache takes ownership; input is capacity and output is its category.
-  TypedReadAttempt,                 ///< Typed H5Dread attempt; input is logical requested bytes.
-  TypedReadCompleted,               ///< Successful typed read; input is logical bytes, not device traffic.
-  TypedReadFailed,                  ///< Failed typed H5Dread; input is requested bytes.
-  ContiguousReadAttempt,            ///< Positional contiguous read attempt; input is requested bytes.
-  ContiguousReadCompleted,          ///< Successful positional contiguous read; input is received bytes.
-  ContiguousReadFailed,             ///< Failed or short contiguous read; input is requested bytes.
-  MetadataTypeCall,                 ///< One instrumented datatype API call.
-  MetadataLayoutCall,               ///< One instrumented layout API call.
-  MetadataFilterCall,               ///< One instrumented filter-list API call.
-  MetadataFillCall,                 ///< One instrumented fill-policy API call.
-  MetadataSpaceCall,                ///< One instrumented dataspace or selection API call.
-  ExtentAcquired,                   ///< Returned-extent payload acquired; input is retained byte capacity.
-  ExtentReleased,                   ///< Failed extent payload destroyed; input is retained capacity.
-  ExtentReturned,                   ///< Successful extent return; input is capacity and output is logical bytes.
-  SamplerAcquired,                  ///< Sample carrier acquired; input is bytes and output is category.
-  SamplerReleased,                  ///< Sample carrier destroyed; input is bytes and output is category.
-  SamplerPublished,                 ///< Sample payload becomes output; input is bytes and output is category.
-  SamplerHistogramReturned,         ///< Histogram helper returns charged payload; input is bytes.
-  SamplerHistogramAdopted,          ///< Accumulator replacement; input is new capacity, output is destroyed capacity.
-  SamplerTypedAdopted,              ///< Caller adopts the already-observed returned extent capacity.
-  SamplerReadRequest,               ///< Bulk request; input is values and output is logical bytes.
-  SamplerReadCompleted,             ///< Successful bounded read; input is values, output is logical bytes.
-  SamplerReserveRequest,            ///< Allocation request; input is requested bytes and output is category.
-  SamplerWorkingReservation,        ///< Shared working reservation observed outside backend locks.
-  SamplerInvalid,                   ///< Measurement metadata cannot be represented; production flow is unchanged.
-  PendingWriteScan,                 ///< Visited resident/parked entries during an optional clean-state proof.
-  DiagnosticRequested,              ///< Terminal reserve request; input bytes, output zero vector or one string.
-  DiagnosticRetained,               ///< Terminal retained record-vector bytes and message bytes; no pending ownership record.
-  BoundedDeferredRequest,           ///< Recorded exact request delivered after identity protection; not a live event.
-  BoundedDeferredPublishedCapacity, ///< Recorded retained capacity already published; not a live event.
-  BoundedAdmissionCharge,           ///< Conservative pre-service charge; input is bound bytes, output is carrier.
-  BoundedRequested,                 ///< Before owned storage service; input is bytes, output is carrier category.
-  BoundedAcquired,                  ///< Actual owned bytes acquired; input is bytes, output is carrier category.
-  BoundedPublished,                 ///< Owned scratch becomes retained store state; input is bytes, output is carrier.
-  BoundedReleased,                  ///< Actual owned bytes released; input is bytes, output is carrier category.
-  Count                             ///< Supplies the fixed observation-array size.
+  StoredRead,                ///< Complete successful raw read; input is transferred bytes.
+  Inflated,                  ///< Successful zlib decode; input is supplied buffer bytes, output is decoded bytes.
+  StoredWrite,               ///< Successful raw write; input is stored bytes.
+  StoredReadAttempt,         ///< Native read attempt; input is requested bytes.
+  StoredReadShort,           ///< Short read; input is received bytes and output is requested bytes.
+  StoredReadFailed,          ///< Failed native read; input is requested bytes.
+  InflateAttempt,            ///< Decode attempt; input is stored bytes and output is expected bytes.
+  InflateFailed,             ///< Failed decode; input is stored bytes and output is expected bytes.
+  SkippedDeflate,            ///< Native bytes bypass zlib; input is stored bytes and output is nominal bytes.
+  ChunkRecordQuery,          ///< One completed chunk-record query, including a failed native status.
+  RawAcquired,               ///< Raw carrier acquired; input is actual capacity in bytes.
+  RawReleased,               ///< Raw carrier destroyed; input is its prior capacity in bytes.
+  LegacyAcquired,            ///< Payload acquired; input is capacity and output is its category.
+  LegacyReleased,            ///< Payload destroyed; input is capacity and output is its category.
+  LegacyToReturned,          ///< Category transfer; input is capacity and output is the previous category.
+  LegacyTransferred,         ///< Cache takes ownership; input is capacity and output is its category.
+  TypedReadAttempt,          ///< Typed H5Dread attempt; input is logical requested bytes.
+  TypedReadCompleted,        ///< Successful typed read; input is logical bytes, not device traffic.
+  TypedReadFailed,           ///< Failed typed H5Dread; input is requested bytes.
+  ContiguousReadAttempt,     ///< Positional contiguous read attempt; input is requested bytes.
+  ContiguousReadCompleted,   ///< Successful positional contiguous read; input is received bytes.
+  ContiguousReadFailed,      ///< Failed or short contiguous read; input is requested bytes.
+  MetadataTypeCall,          ///< One instrumented datatype API call.
+  MetadataLayoutCall,        ///< One instrumented layout API call.
+  MetadataFilterCall,        ///< One instrumented filter-list API call.
+  MetadataFillCall,          ///< One instrumented fill-policy API call.
+  MetadataSpaceCall,         ///< One instrumented dataspace or selection API call.
+  ExtentAcquired,            ///< Returned-extent payload acquired; input is retained byte capacity.
+  ExtentReleased,            ///< Failed extent payload destroyed; input is retained capacity.
+  ExtentReturned,            ///< Successful extent return; input is capacity and output is logical bytes.
+  SamplerReadRequest,        ///< Bulk request; input is values and output is logical bytes.
+  SamplerReadCompleted,      ///< Successful bounded read; input is values, output is logical bytes.
+  SamplerWorkingReservation, ///< Shared reservation; input is grant bytes and output is simultaneous algorithm payload bytes.
+  SamplerInvalid,            ///< Measurement metadata cannot be represented; production flow is unchanged.
+  PendingWriteScan,          ///< Visited resident/parked entries during an optional clean-state proof.
+  BoundedRequested,          ///< Before owned storage service; input is bytes, output is carrier category.
+  BoundedAcquired,           ///< Actual owned bytes acquired; input is bytes, output is carrier category.
+  BoundedPublished,          ///< Owned scratch becomes retained store state; input is bytes, output is carrier.
+  BoundedReleased,           ///< Actual owned bytes released; input is bytes, output is carrier category.
+  TypedWriteAttempt,         ///< Typed H5Dwrite attempt; input is selected logical bytes.
+  TypedWriteCompleted,       ///< Successful typed H5Dwrite; input is logical bytes, not stored or device bytes.
+  TypedWriteFailed,          ///< Failed or throwing typed write; input is selected logical bytes.
+  TypedWriteSizeInvalid,     ///< Unrepresentable logical byte count; invalidates measurement without changing the native call.
+  Count                      ///< Supplies the fixed observation-array size.
 };
 
 /** @brief Names narrow bounded-read failure sites on the existing quiescent test observer. */
 enum class BoundedFaultPointForTesting
 {
-  CheckedMetadataUnsupportedBuild,
   NativeSizeQuery,
   MetadataQuery,
   ContradictoryRecord,
@@ -92,6 +86,12 @@ enum class BoundedFaultPointForTesting
   NominalAllocation,
   DecoderAllocation,
   DecoderQuotaAfterPayload,
+  SelectedAllocation,
+  DecoderCleanup,
+  MetadataCleanup,
+  NativeGuardCleanup,
+  CandidateCleanup,
+  SuccessResultConstruction,
   RawRead
 };
 
@@ -115,7 +115,9 @@ public:
   BoundedReadTaskScopeForTesting() noexcept;
   ~BoundedReadTaskScopeForTesting() noexcept;
   BoundedReadTaskScopeForTesting(const BoundedReadTaskScopeForTesting&) = delete;
+  BoundedReadTaskScopeForTesting(BoundedReadTaskScopeForTesting&&) = delete;
   BoundedReadTaskScopeForTesting& operator=(const BoundedReadTaskScopeForTesting&) = delete;
+  BoundedReadTaskScopeForTesting& operator=(BoundedReadTaskScopeForTesting&&) = delete;
 
 private:
   bool m_Active = false;
@@ -299,7 +301,9 @@ public:
    */
   void observeExceptionAggregation() noexcept;
   LegacyPayloadTaskScopeForTesting(const LegacyPayloadTaskScopeForTesting&) = delete;
+  LegacyPayloadTaskScopeForTesting(LegacyPayloadTaskScopeForTesting&&) = delete;
   LegacyPayloadTaskScopeForTesting& operator=(const LegacyPayloadTaskScopeForTesting&) = delete;
+  LegacyPayloadTaskScopeForTesting& operator=(LegacyPayloadTaskScopeForTesting&&) = delete;
 
 private:
   bool m_Active = false;
@@ -324,7 +328,9 @@ public:
    */
   ~LegacyPayloadAdmissionScopeForTesting() noexcept;
   LegacyPayloadAdmissionScopeForTesting(const LegacyPayloadAdmissionScopeForTesting&) = delete;
+  LegacyPayloadAdmissionScopeForTesting(LegacyPayloadAdmissionScopeForTesting&&) = delete;
   LegacyPayloadAdmissionScopeForTesting& operator=(const LegacyPayloadAdmissionScopeForTesting&) = delete;
+  LegacyPayloadAdmissionScopeForTesting& operator=(LegacyPayloadAdmissionScopeForTesting&&) = delete;
 
 private:
   LegacyPayloadTicketForTesting* m_Previous = nullptr;
@@ -355,7 +361,9 @@ public:
    */
   ~MetadataIdentityForTesting() noexcept;
   MetadataIdentityForTesting(const MetadataIdentityForTesting&) = delete;
+  MetadataIdentityForTesting(MetadataIdentityForTesting&&) = delete;
   MetadataIdentityForTesting& operator=(const MetadataIdentityForTesting&) = delete;
+  MetadataIdentityForTesting& operator=(MetadataIdentityForTesting&&) = delete;
 
 private:
   const std::filesystem::path* m_PreviousFile = nullptr;
@@ -399,6 +407,68 @@ auto InvokeTypedReadForTesting(const std::filesystem::path& file, std::string_vi
   auto result = function();
   ObserveCodecIoForTesting(file, dataset, result >= 0 ? CodecIoEventForTesting::TypedReadCompleted : CodecIoEventForTesting::TypedReadFailed, bytes, 0);
   return result;
+}
+
+/**
+ * @brief Checks the logical byte count for an observed typed-write selection.
+ * @param dimensions Selected scalar counts, including component dimensions.
+ * @param elementBytes Bytes in one native scalar.
+ * @return Logical bytes, or no value when the count cannot be represented.
+ */
+inline std::optional<uint64> CheckedTypedWriteBytesForTesting(nonstd::span<const hsize_t> dimensions, uint64 elementBytes) noexcept
+{
+  if(elementBytes == 0)
+  {
+    return std::nullopt;
+  }
+  // A zero extent makes the selection empty even when an earlier product would overflow.
+  for(const hsize_t extent : dimensions)
+  {
+    if(extent == 0)
+    {
+      return uint64{0};
+    }
+  }
+  uint64 bytes = elementBytes;
+  for(const hsize_t extent : dimensions)
+  {
+    if(bytes > std::numeric_limits<uint64>::max() / extent)
+    {
+      return std::nullopt;
+    }
+    bytes *= extent;
+  }
+  return bytes;
+}
+
+/**
+ * @brief Runs one typed write and preserves its return value or exception.
+ * @tparam Function Supplies the native write expression.
+ * @param file Borrows the selected file identity.
+ * @param dataset Borrows the selected dataset identity.
+ * @param bytes Supplies checked logical bytes; absence invalidates the measurement only.
+ * @param function Performs the unchanged native call exactly once.
+ * @return The unchanged native status.
+ */
+template <class Function>
+auto InvokeTypedWriteForTesting(const std::filesystem::path& file, std::string_view dataset, std::optional<uint64> bytes, Function&& function) -> decltype(function())
+{
+  if(!bytes)
+  {
+    ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteSizeInvalid, 0, 0);
+    return function();
+  }
+  ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteAttempt, *bytes, 0);
+  try
+  {
+    auto result = function();
+    ObserveCodecIoForTesting(file, dataset, result >= 0 ? CodecIoEventForTesting::TypedWriteCompleted : CodecIoEventForTesting::TypedWriteFailed, *bytes, 0);
+    return result;
+  } catch(...)
+  {
+    ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::TypedWriteFailed, *bytes, 0);
+    throw;
+  }
 }
 #endif
 
@@ -507,47 +577,33 @@ public:
    * @return True for one deflate filter, exact file/memory representation, and compatible byte order.
    */
   bool isEligible() const;
-#if SIMPLNX_BUILD_TESTS
-  /**
-   * @brief Reports observable retained native/string/shape capacities.
-   * @return Native-string bytes including terminator, dataset bytes including terminator, and three vector payloads.
-   * @note GNU path component-list storage is admitted separately and is not observed by this receipt.
-   */
-  uint64 boundedMetadataCapacityBytesForTesting() const noexcept;
-#endif
-
   /**
    * @brief Reads checked metadata for one full-rank physical chunk origin.
    * @param fullRankChunkOffset Supplies tuple and component coordinates.
    * @return A sparse/allocated record, or an invalid query/validation result.
-   * @note An unreviewed diagnostic build returns invalid with empty element collections
-   * before metadata work. Supported builds retain reason-coded errors. The caller
-   * funds BoundedRead::EmptyInvalidResultControlBytes<ChunkInfo>() for mandatory
-   * typed return/move controls; debug empty-container bookkeeping remains permitted.
    */
   Result<ChunkInfo> getChunkInfoChecked(nonstd::span<const uint64> fullRankChunkOffset) const;
 
   /**
-   * @brief Reads full-value coordinates without exceeding admitted backend scratch.
+   * @brief Reads full-value coordinates and publishes only after successful cleanup.
    * @param fullValueExtent Selects tuple and component axes in row-major order.
    * @param destination Receives the exact selected scalar byte count.
-   * @param scratchBudgetBytes Funds metadata, raw/decoded carriers, zlib and diagnostics.
+   * @param scratchBudgetBytes Limits simultaneous input, decoded, selected-output, and decoder workspace bytes.
    * @return True when complete; false before payload transfer; invalid on a real failure.
-   * @note The caller funds mandatory empty Result controls outside scratchBudgetBytes.
-   * Subminimum calls start no preparation, payload or diagnostic-text allocation.
-   * Iterator-debug empty-vector bookkeeping retains its normal ABI behavior.
+   * @note Every non-success return leaves the entire destination unchanged. Control objects and diagnostic text are outside the grant.
    */
   Result<bool> readExtentIntoBufferBounded(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 scratchBudgetBytes) const;
 
   /**
-   * @brief Uses the outer store's diagnostic owner after its minimum is funded.
+   * @brief Reads into private scratch owned by the publication layer.
    * @param fullValueExtent Selects all value-space dimensions.
-   * @param destination Receives selected scalar bytes.
-   * @param payloadBudgetBytes Excludes the outer diagnostic allowance.
-   * @param diagnostic Borrows the sole fixed diagnostic carrier.
-   * @return Fixed state; payload scratch has been destroyed before return.
+   * @param destination Receives selected scalar bytes in private scratch; failure can leave a partial prefix.
+   * @param payloadBudgetBytes Excludes the private destination already funded by the caller.
+   * @param diagnostic Receives ordinary failure or refusal text outside the data grant.
+   * @return Completion, refusal, or failure after backend scratch cleanup.
+   * @warning This internal entry does not protect caller-visible output. The publication layer must stage and publish once.
    */
-  BoundedRead::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, BoundedRead::Diagnostic& diagnostic) const;
+  BoundedRead::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const;
 
   /**
    * @brief Inflates one chunk into an edge-clamped byte buffer.
@@ -694,6 +750,18 @@ public:
 
 private:
   /**
+   * @brief Shares payload admission; only public reads stage and publish their destination.
+   * @param fullValueExtent Selects tuple and component axes.
+   * @param destination Receives exactly the selected scalar bytes.
+   * @param payloadBudgetBytes Limits simultaneous data scratch.
+   * @param diagnostic Receives failure or refusal context.
+   * @param selectedOutput Receives the admitted output stage on success; null lets the caller own private destination scratch.
+   * @return Completion, refusal, or failure after backend cleanup.
+   */
+  BoundedRead::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
+                                                      std::unique_ptr<std::byte[]>* selectedOutput) const;
+
+  /**
    * @struct PreparedChunkBytes
    * @brief Stores one adaptive raw or deflate representation.
    */
@@ -839,4 +907,18 @@ private:
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) (expression)
+#endif
+
+/**
+ * @def SIMPLNX_OBSERVE_TYPED_WRITE
+ * @brief Preserves a typed write and observes its native boundary only in test builds.
+ * @param file Borrows the file identity.
+ * @param dataset Borrows the dataset identity.
+ * @param bytes Supplies checked logical bytes.
+ * @param expression Supplies H5Dwrite, evaluated exactly once.
+ */
+#if SIMPLNX_BUILD_TESTS
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
+#else
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) (expression)
 #endif
