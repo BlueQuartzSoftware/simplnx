@@ -174,16 +174,15 @@ void checkC05NestedVertexLabels(bool requireDiskStores)
 }
 } // namespace
 
-TEST_CASE("CombineStlFilesFilter: C05 nested vertex label path", "[SimplnxCore][CombineStlFilesFilter][C05]")
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: C05 nested vertex label path", "[SimplnxCore][CombineStlFilesFilter][C05]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   checkC05NestedVertexLabels(false);
 }
 
-TEST_CASE("CombineStlFilesFilter: C05 nested vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][C05][.OocStoreContract]")
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: C05 nested vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][C05][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   checkC05NestedVertexLabels(true);
