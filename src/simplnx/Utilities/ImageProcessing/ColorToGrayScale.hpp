@@ -29,7 +29,7 @@ struct SIMPLNX_EXPORT ConvertColorToGrayScaleInputValues
 
 /**
  * @class ConvertColorToGrayScale
- * @brief Converts selected three-component uint8 RGB arrays to single-component grayscale arrays.
+ * @brief Converts selected uint8 color arrays to single-component grayscale arrays.
  *
  * Concrete in-memory stores use parallel raw pointers. Disk-backed arrays use bounded chunk buffers and bulk I/O.
  * The abstract direct fallback accesses DataStore instances in parallel and has no general thread-safety guarantee.
@@ -96,6 +96,7 @@ private:
  * @param dataStructure Contains the selected input arrays.
  * @param inputValues Contains conversion settings and output naming settings.
  * @return Output actions or a validation error.
+ * RGB modes require at least 3 components. Single-channel mode requires a valid component index.
  */
 SIMPLNX_EXPORT IFilter::PreflightResult PreflightColorToGrayScale(const DataStructure& dataStructure, const ConvertColorToGrayScaleInputValues& inputValues);
 

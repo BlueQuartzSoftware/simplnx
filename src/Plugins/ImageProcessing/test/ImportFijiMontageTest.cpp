@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ImageProcessing/Filters/ImportFijiMontageFilter.hpp"
+#include "ImageProcessing/Filters/NormalizeImageFilter.hpp"
 #include "ImageProcessing/ImageProcessing_test_dirs.hpp"
 #include "ImageProcessing/utils/FijiMontageUtilities.hpp"
 
@@ -12,17 +13,28 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/FilterList.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
 
+#include <fmt/format.h>
+
+#include <any>
+#include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <tuple>
+#include <utility>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -570,4 +582,455 @@ TEST_CASE("ImageProcessing::ImportFijiMontageFilter: metadata cache correctness 
   {
     REQUIRE(renamed[i] == 11);
   }
+}
+
+namespace
+{
+// Minimal uncompressed TIFF. The normal writer does not support 2 or 5 samples.
+void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
+{
+  const uint32 count = static_cast<uint32>(pixel.size());
+  uint16 extras = 0;
+  if(count == 2)
+  {
+    extras = 1;
+  }
+  else if(count > 3)
+  {
+    extras = static_cast<uint16>(count - 3);
+  }
+  const uint16 entries = extras == 0 ? 10 : 11;
+  const uint32 bitsOffset = 8 + 2 + (entries * 12) + 4;
+  const uint32 pixelsOffset = bitsOffset + (count > 2 ? count * 2 : 0);
+  std::ofstream out(path, std::ios::binary);
+  REQUIRE(out.is_open());
+  auto u16 = [&](uint16 value) {
+    out.put(static_cast<char>(value & 255));
+    out.put(static_cast<char>((value >> 8) & 255));
+  };
+  auto u32 = [&](uint32 value) {
+    u16(static_cast<uint16>(value & 65535));
+    u16(static_cast<uint16>(value >> 16));
+  };
+  struct TiffEntry
+  {
+    uint16 Tag;
+    uint16 Type;
+    uint32 Count;
+    uint32 Value;
+  };
+  auto entry = [&](const TiffEntry& item) {
+    u16(item.Tag);
+    u16(item.Type);
+    u32(item.Count);
+    u32(item.Value);
+  };
+  out.put('I');
+  out.put('I');
+  u16(42);
+  u32(8);
+  u16(entries);
+  entry({.Tag = 256, .Type = 4, .Count = 1, .Value = 2});
+  entry({.Tag = 257, .Type = 4, .Count = 1, .Value = 2});
+  uint32 bitsValue = bitsOffset;
+  if(count == 1)
+  {
+    bitsValue = 8;
+  }
+  else if(count == 2)
+  {
+    bitsValue = 0x00080008;
+  }
+  entry({.Tag = 258, .Type = 3, .Count = count, .Value = bitsValue});
+  entry({.Tag = 259, .Type = 3, .Count = 1, .Value = 1});
+  entry({.Tag = 262, .Type = 3, .Count = 1, .Value = count < 3 ? 1U : 2U});
+  entry({.Tag = 273, .Type = 4, .Count = 1, .Value = pixelsOffset});
+  entry({.Tag = 277, .Type = 3, .Count = 1, .Value = count});
+  entry({.Tag = 278, .Type = 4, .Count = 1, .Value = 2});
+  entry({.Tag = 279, .Type = 4, .Count = 1, .Value = 4 * count});
+  entry({.Tag = 284, .Type = 3, .Count = 1, .Value = 1});
+  if(extras != 0)
+  {
+    entry({.Tag = 338, .Type = 3, .Count = extras, .Value = 2});
+  }
+  u32(0);
+  if(count > 2)
+  {
+    for(uint32 i = 0; i < count; i++)
+    {
+      u16(8);
+    }
+  }
+  for(int i = 0; i < 4; i++)
+  {
+    for(const uint8 value : pixel)
+    {
+      out.put(static_cast<char>(value));
+    }
+  }
+  out.close();
+  REQUIRE(out.good());
+  auto imageIO = CreateImageIO(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+  auto metadata = imageIO.value()->readMetadata(path);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().numComponents == count);
+  REQUIRE(metadata.value().width == 2);
+  REQUIRE(metadata.value().height == 2);
+  REQUIRE(metadata.value().dataType == DataType::uint8);
+  std::vector<uint8> actual(4 * static_cast<usize>(count));
+  auto readResult = imageIO.value()->readPixelData(path, actual);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  for(usize i = 0; i < actual.size(); i++)
+  {
+    REQUIRE(actual[i] == pixel[i % count]);
+  }
+}
+} // namespace
+
+TEST_CASE("ImageProcessing::C02 montage rejects unsupported components", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Red]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  const auto count = GENERATE(2, 5);
+  const bool gray = GENERATE(false, true);
+  const fs::path dir = FijiOutputDir();
+  const std::string name = fmt::format("c02_bad_{}.tif", count);
+  writeC02Tile(dir / name, std::vector<uint8>(count, 42));
+  writeC02Tile(dir / "c02_before_bad.tif", {64});
+  const fs::path cfg = dir / fmt::format("c02_bad_{}.txt", count);
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_before_bad.tif; ; (0, 0)", fmt::format("{}; ; (2, 0)", name)});
+  const ImportFijiMontageFilter filter;
+  const DataStructure dataStructure;
+  auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  for(const bool option : {gray, !gray})
+  {
+    args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(option));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE_FALSE(result.outputActions.errors().empty());
+    REQUIRE(result.outputActions.errors().front().code == -35927);
+  }
+}
+
+TEST_CASE("ImageProcessing::C02 montage accepted components and grayscale", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Green]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const fs::path dir = FijiOutputDir();
+  writeC02Tile(dir / "c02_scalar.tif", {64});
+  writeC02Tile(dir / "c02_rgb.tif", {200, 100, 50});
+  writeC02Tile(dir / "c02_rgba.tif", {200, 100, 50, 3});
+  const fs::path cfg = dir / "c02_mixed.txt";
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_scalar.tif; ; (0, 0)", "c02_rgb.tif; ; (2, 0)", "c02_rgba.tif; ; (4, 0)"});
+  const ImportFijiMontageFilter filter;
+  auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.5f, 0.25f}));
+  for(const bool gray : {false, true})
+  {
+    DataStructure dataStructure;
+    args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(gray));
+    auto pre = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+    if(gray)
+    {
+      auto result = scope.executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    }
+    else
+    {
+      auto result = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    }
+    for(const auto& [name, components, expected] : std::vector<std::tuple<std::string, usize, std::vector<uint8>>>{{"scalar", 1, {64}}, {"rgb", 3, {200, 100, 50}}, {"rgba", 4, {200, 100, 50, 3}}})
+    {
+      const DataPath path({"Zen DataGroup", "Mosaic-c02_" + name, "Tile Data", "Image"});
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(path));
+      const auto& arr = dataStructure.getDataRefAs<UInt8Array>(path);
+      REQUIRE(arr.getNumberOfTuples() == 4);
+      REQUIRE(arr.getNumberOfComponents() == (gray ? 1 : components));
+      for(usize i = 0; i < arr.getSize(); i++)
+      {
+        REQUIRE(arr[i] == (gray ? (components == 1 ? 64 : 113) : expected[i % components]));
+      }
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("ImageProcessing::C02 montage real OOC grayscale", "[ImageProcessing][ImportFijiMontageFilter][C02][.OocStoreContract]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, 1);
+  const fs::path dir = FijiOutputDir();
+  const std::vector<std::pair<std::string, std::vector<uint8>>> inputs = {{"scalar", {64}}, {"rgb", {200, 100, 50}}, {"rgba", {200, 100, 50, 3}}};
+  for(const auto& [name, pixel] : inputs)
+  {
+    const std::string file = "c02_ooc_" + name + ".tif";
+    writeC02Tile(dir / file, pixel);
+    const fs::path cfg = dir / ("c02_ooc_" + name + ".txt");
+    WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", file + "; ; (0, 0)"});
+    const ImportFijiMontageFilter filter;
+    auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+    args.insertOrAssign(ImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.5f, 0.25f}));
+    uint64 baseline = 0;
+    for(const bool gray : {false, true})
+    {
+      DataStructure dataStructure;
+      args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(gray));
+      ResetAlgorithmPathExecutionCounts();
+      auto result = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+      const auto count = GetAlgorithmPathExecutionCounts().OutOfCoreOnOutOfCoreStore;
+      if(!gray)
+      {
+        baseline = count;
+      }
+      else
+      {
+        REQUIRE(count == baseline + (pixel.size() == 1 ? 0 : 1));
+      }
+      const DataPath path({"Zen DataGroup", "Mosaic-c02_ooc_" + name, "Tile Data", "Image"});
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(path));
+      const auto& array = dataStructure.getDataRefAs<UInt8Array>(path);
+      REQUIRE(array.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+      REQUIRE(array.getNumberOfComponents() == (gray ? 1 : pixel.size()));
+      for(usize i = 0; i < array.getSize(); i++)
+      {
+        REQUIRE(array[i] == (gray ? (pixel.size() == 1 ? 64 : 113) : pixel[i % pixel.size()]));
+      }
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
+}
+
+TEST_CASE("ImageProcessing::C02 montage datatype conversion before grayscale", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Green]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  const fs::path dir = FijiOutputDir();
+  writeC02Tile(dir / "c02_type_scalar.tif", {64});
+  writeC02Tile(dir / "c02_type_rgb.tif", {200, 100, 50});
+  writeC02Tile(dir / "c02_type_rgba.tif", {200, 100, 50, 3});
+  const fs::path cfg = dir / "c02_type_mixed.txt";
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_type_scalar.tif; ; (0, 0)", "c02_type_rgb.tif; ; (2, 0)", "c02_type_rgba.tif; ; (4, 0)"});
+  const ImportFijiMontageFilter filter;
+  DataStructure dataStructure;
+  auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ImportFijiMontageFilter::k_ChangeDataType_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ImportFijiMontageFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == 2);
+  for(const auto& warning : result.result.warnings())
+  {
+    REQUIRE(warning.code == -35932);
+  }
+  for(const auto& [name, expected] : std::vector<std::pair<std::string, std::vector<uint16>>>{{"scalar", {16448}}, {"rgb", {51400, 25700, 12850}}, {"rgba", {51400, 25700, 12850, 771}}})
+  {
+    const DataPath path({"Zen DataGroup", "Mosaic-c02_type_" + name, "Tile Data", "Image"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt16Array>(path));
+    const auto& array = dataStructure.getDataRefAs<UInt16Array>(path);
+    REQUIRE(array.getNumberOfTuples() == 4);
+    REQUIRE(array.getNumberOfComponents() == expected.size());
+    for(usize i = 0; i < array.getSize(); i++)
+    {
+      REQUIRE(array[i] == expected[i % expected.size()]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ImageProcessing::C02 montage grayscale feeds scalar pipeline filter", "[ImageProcessing][ImportFijiMontageFilter][C02][C02Pipeline]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize components = GENERATE(usize{3}, usize{4});
+  CAPTURE(components);
+  const fs::path dir = FijiOutputDir();
+  const std::string file = fmt::format("c02_pipeline_{}.tif", components);
+  const fs::path imagePath = dir / file;
+  auto imageIO = CreateImageIO(imagePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+  ImageMetadata metadata;
+  metadata.width = 2;
+  metadata.height = 2;
+  metadata.numComponents = components;
+  metadata.dataType = DataType::uint8;
+  std::vector<uint8> pixels;
+  for(const uint8 intensity : {uint8{10}, uint8{20}, uint8{30}, uint8{40}})
+  {
+    pixels.insert(pixels.end(), {intensity, intensity, intensity});
+    if(components == 4)
+    {
+      pixels.push_back(3);
+    }
+  }
+  auto writeResult = imageIO.value()->writePixelData(imagePath, pixels, metadata);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const fs::path cfg = dir / fmt::format("c02_pipeline_{}.txt", components);
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", file + "; ; (0, 0)"});
+  auto montageArgs = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  montageArgs.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  montageArgs.insertOrAssign(ImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.5f, 0.25f}));
+  const DataPath geometryPath({"Zen DataGroup", fmt::format("Mosaic-c02_pipeline_{}", components)});
+  const DataPath inputPath = geometryPath.createChildPath("Tile Data").createChildPath("Image");
+  Arguments normalizeArgs;
+  normalizeArgs.insertOrAssign(NormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geometryPath));
+  normalizeArgs.insertOrAssign(NormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  normalizeArgs.insertOrAssign(NormalizeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Normalized"));
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::make_unique<ImportFijiMontageFilter>(), montageArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<NormalizeImageFilter>(), normalizeArgs));
+  const std::atomic_bool cancel = false;
+  DataStructure preflightData;
+  REQUIRE(pipeline.preflight(preflightData, cancel));
+  REQUIRE_NOTHROW(preflightData.getDataRefAs<UInt8Array>(inputPath));
+  const auto& placeholder = preflightData.getDataRefAs<UInt8Array>(inputPath);
+  REQUIRE(placeholder.getNumberOfComponents() == 1);
+  REQUIRE(placeholder.getComponentShape() == ShapeType{1});
+  DataStructure outputData;
+  scope.execute([&] { REQUIRE(pipeline.execute(outputData, cancel)); });
+  REQUIRE_NOTHROW(outputData.getDataRefAs<UInt8Array>(inputPath));
+  const auto& input = outputData.getDataRefAs<UInt8Array>(inputPath);
+  REQUIRE(input.getNumberOfComponents() == 1);
+  REQUIRE(input.getComponentShape() == ShapeType{1});
+  REQUIRE(input.getNumberOfTuples() == 4);
+  const std::vector<uint8> expected{10, 20, 30, 40};
+  for(usize i = 0; i < expected.size(); i++)
+  {
+    REQUIRE(input[i] == expected[i]);
+  }
+  REQUIRE_NOTHROW(outputData.getDataRefAs<Float64Array>(inputPath.replaceName("Normalized")));
+  const auto& output = outputData.getDataRefAs<Float64Array>(inputPath.replaceName("Normalized"));
+  REQUIRE(output.getNumberOfComponents() == 1);
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE(output.getNumberOfTuples() == 4);
+  REQUIRE(std::isfinite(output[0]));
+  UnitTest::CheckArraysInheritTupleDims(outputData);
+}
+
+TEST_CASE("ImageProcessing::C02 montage failed color tile retains scalar shape", "[ImageProcessing][ImportFijiMontageFilter][C02][C02PartialRead]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize components = GENERATE(usize{3}, usize{4});
+  CAPTURE(components);
+  const fs::path dir = FijiOutputDir();
+  writeC02Tile(dir / "c02_partial_good.tif", {64, 64, 64});
+  const std::string badName = fmt::format("c02_partial_bad_{}.tif", components);
+  const fs::path badPath = dir / badName;
+  writeC02Tile(badPath, std::vector<uint8>(components, 42));
+  const auto size = fs::file_size(badPath);
+  REQUIRE(size > 4 * components);
+  fs::resize_file(badPath, size - (4 * components));
+  auto imageIO = CreateImageIO(badPath);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+  auto metadata = imageIO.value()->readMetadata(badPath);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().numComponents == components);
+  std::vector<uint8> pixels(4 * components);
+  auto readResult = imageIO.value()->readPixelData(badPath, pixels);
+  SIMPLNX_RESULT_REQUIRE_INVALID(readResult);
+  const fs::path cfg = dir / fmt::format("c02_partial_{}.txt", components);
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_partial_good.tif; ; (0, 0)", badName + "; ; (2, 0)"});
+  const ImportFijiMontageFilter filter;
+  auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.5f, 0.25f}));
+  const DataPath badArrayPath({"Zen DataGroup", fmt::format("Mosaic-c02_partial_bad_{}", components), "Tile Data", "Image"});
+  const DataPath goodArrayPath({"Zen DataGroup", "Mosaic-c02_partial_good", "Tile Data", "Image"});
+  DataStructure preflightData;
+  auto preflight = filter.preflight(preflightData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto actionsResult = preflight.outputActions.value().applyAll(preflightData, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionsResult);
+  REQUIRE_NOTHROW(preflightData.getDataRefAs<UInt8Array>(badArrayPath));
+  REQUIRE(preflightData.getDataRefAs<UInt8Array>(badArrayPath).getComponentShape() == ShapeType{1});
+  DataStructure outputData;
+  auto result = scope.executeFilter(filter, outputData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == 1);
+  REQUIRE(result.result.warnings().front().code == -35940);
+  REQUIRE_NOTHROW(outputData.getDataRefAs<UInt8Array>(goodArrayPath));
+  const auto& good = outputData.getDataRefAs<UInt8Array>(goodArrayPath);
+  REQUIRE(good.getComponentShape() == ShapeType{1});
+  REQUIRE(good.getSize() == 4);
+  for(usize i = 0; i < good.getSize(); i++)
+  {
+    REQUIRE(good[i] == 64);
+  }
+  REQUIRE_NOTHROW(outputData.getDataRefAs<UInt8Array>(badArrayPath));
+  const auto& failed = outputData.getDataRefAs<UInt8Array>(badArrayPath);
+  REQUIRE(failed.getComponentShape() == ShapeType{1});
+  REQUIRE(failed.getNumberOfTuples() == 4);
+  for(usize i = 0; i < failed.getSize(); i++)
+  {
+    REQUIRE(failed[i] == 0);
+  }
+  UnitTest::CheckArraysInheritTupleDims(outputData);
+}
+
+TEST_CASE("ImageProcessing::C02 montage failed color tile real OOC zeros", "[ImageProcessing][ImportFijiMontageFilter][C02][.OocStoreContract]")
+{
+  const usize components = GENERATE(usize{3}, usize{4});
+  CAPTURE(components);
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, 1);
+  const fs::path dir = FijiOutputDir();
+  writeC02Tile(dir / "c02_ooc_partial_good.tif", {64, 64, 64});
+  const std::string badName = fmt::format("c02_ooc_partial_bad_{}.tif", components);
+  const fs::path badPath = dir / badName;
+  writeC02Tile(badPath, std::vector<uint8>(components, 42));
+  const auto size = fs::file_size(badPath);
+  REQUIRE(size > 4 * components);
+  fs::resize_file(badPath, size - (4 * components));
+  auto imageIO = CreateImageIO(badPath);
+  SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
+  auto metadata = imageIO.value()->readMetadata(badPath);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().numComponents == components);
+  std::vector<uint8> pixels(4 * components);
+  auto readResult = imageIO.value()->readPixelData(badPath, pixels);
+  SIMPLNX_RESULT_REQUIRE_INVALID(readResult);
+  const fs::path cfg = dir / fmt::format("c02_ooc_partial_{}.txt", components);
+  WriteConfig(cfg, {"dim = 2", "# Define the image coordinates", "c02_ooc_partial_good.tif; ; (0, 0)", badName + "; ; (2, 0)"});
+  const ImportFijiMontageFilter filter;
+  auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.5f, 0.25f}));
+  DataStructure outputData;
+  auto result = filter.execute(outputData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().size() == 1);
+  REQUIRE(result.result.warnings().front().code == -35940);
+  const DataPath badArrayPath({"Zen DataGroup", fmt::format("Mosaic-c02_ooc_partial_bad_{}", components), "Tile Data", "Image"});
+  REQUIRE_NOTHROW(outputData.getDataRefAs<UInt8Array>(badArrayPath));
+  const auto& failed = outputData.getDataRefAs<UInt8Array>(badArrayPath);
+  REQUIRE(failed.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(failed.getComponentShape() == ShapeType{1});
+  REQUIRE(failed.getNumberOfTuples() == 4);
+  for(usize i = 0; i < failed.getSize(); i++)
+  {
+    REQUIRE(failed[i] == 0);
+  }
+  const DataPath goodArrayPath({"Zen DataGroup", "Mosaic-c02_ooc_partial_good", "Tile Data", "Image"});
+  REQUIRE_NOTHROW(outputData.getDataRefAs<UInt8Array>(goodArrayPath));
+  const auto& good = outputData.getDataRefAs<UInt8Array>(goodArrayPath);
+  REQUIRE(good.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(good.getComponentShape() == ShapeType{1});
+  REQUIRE(good.getSize() == 4);
+  for(usize i = 0; i < good.getSize(); i++)
+  {
+    REQUIRE(good[i] == 64);
+  }
+  UnitTest::CheckArraysInheritTupleDims(outputData);
 }

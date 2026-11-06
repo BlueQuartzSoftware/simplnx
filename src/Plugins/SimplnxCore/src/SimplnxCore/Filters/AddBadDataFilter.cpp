@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/AddBadData.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -16,7 +17,9 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <memory>
 #include <random>
+#include <set>
 
 using namespace nx::core;
 
@@ -75,7 +78,7 @@ Parameters AddBadDataFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
-                                                          std::set<DataType>{DataType::int32}));
+                                                          std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);

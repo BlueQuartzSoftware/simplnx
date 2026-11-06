@@ -27,6 +27,14 @@ For every parsed tile the Filter:
    positioned at the parsed `(x, y)` origin, holding a **Cell Attribute Matrix**
    and an image **DataArray** filled with the tile's pixels.
 
+Each tile image must have 1, 3, or 4 components. Preflight rejects other
+component counts, even when grayscale conversion is off.
+
+Preflight fails if the filter cannot identify a tile image format or read its
+metadata. After metadata is read, if pixel data cannot be read, the filter
+reports a warning and continues with the other tiles. When grayscale conversion
+is enabled for a uint8 RGB or RGBA tile, a tile with a pixel-read failure has a
+single-component array filled with zeros. The filter fails if no tile can be read.
 There is **no stitching or blending** — the tiles are imported side by side as
 independent geometries positioned at their montage coordinates.
 
@@ -37,10 +45,11 @@ independent geometries positioned at their montage coordinates.
 - **Parent Imported Images Under a DataGroup**: when enabled, all tile
   geometries are created under a single parent **DataGroup**; otherwise they are
   created at the root of the data structure.
-- **Convert To GrayScale**: converts each RGB (`uint8`, 3-component) tile to a
-  single-channel grayscale image using the *Color to GrayScale* filter with the
-  supplied luminosity **Color Weighting**. Non-`uint8` tiles are skipped with a
-  warning.
+- **Convert To GrayScale**: converts `uint8` RGB and RGBA tiles to single-channel
+  grayscale using the supplied luminosity **Color Weighting**. RGBA conversion
+  ignores alpha. Single-component tiles skip grayscale conversion.
+  RGB and RGBA tiles with other data types are imported without grayscale
+  conversion, and the filter reports a warning.
 - **Set Image Data Type**: casts every imported tile array to `uint8`,
   `uint16`, or `uint32`.
 
@@ -52,7 +61,7 @@ independent geometries positioned at their montage coordinates.
 | Length Unit | Enum | Length unit set into every created Image Geometry |
 | Change Origin | bool | Rebase the montage's minimum corner to a user origin |
 | Origin | float (3) | New origin of the montage's minimum corner |
-| Convert To GrayScale | bool | Convert each RGB tile to single-channel grayscale |
+| Convert To GrayScale | bool | Convert eligible RGB and RGBA tiles to single-channel grayscale |
 | Color Weighting | float (3) | Luminosity R/G/B weights for grayscale conversion |
 | Set Image Data Type | bool | Cast every imported tile array to a chosen type |
 | Output Data Type | Enum | 0 = uint8, 1 = uint16, 2 = uint32 |
