@@ -125,7 +125,8 @@ TEST_CASE("P1 owned Application retains startup correction through clean reload"
   const auto validStructure = preferences->value(Preferences::k_LargeDataStructureSize_Key);
   REQUIRE(preferences->contains(Preferences::k_LargeDataStructureSize_Key));
   REQUIRE(validStructure.is_number_unsigned());
-  CHECK(validStructure.get<uint64>() == std::numeric_limits<uint64>::max());
+  // A legacy byte value loads as the nearest 0.01-GB step; UINT64_MAX becomes 17179869183.99 GB.
+  CHECK(validStructure.get<uint64>() == uint64{18446744073698814198ULL});
   CHECK(preferences->pluginValue("P1", "keep") == nlohmann::json(17));
 
   {
