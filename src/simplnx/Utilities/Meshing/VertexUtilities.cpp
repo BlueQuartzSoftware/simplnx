@@ -1,5 +1,7 @@
 #include "VertexUtilities.hpp"
 
+#include "TransferResult.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
@@ -17,6 +19,42 @@
 #include <nonstd/span.hpp>
 
 using namespace nx::core;
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+namespace nx::core::MeshingUtilities::detail
+{
+namespace
+{
+thread_local usize g_TransferFailureCountdown = 0;
+thread_local bool g_TransferFailureArmed = false;
+thread_local bool g_TransferFailureConsumed = false;
+} // namespace
+void SetTransferEnrichmentFailureCountdown(usize allocationsBeforeFailure)
+{
+  g_TransferFailureCountdown = allocationsBeforeFailure;
+  g_TransferFailureArmed = true;
+  g_TransferFailureConsumed = false;
+}
+bool TransferEnrichmentFailureConsumed()
+{
+  return g_TransferFailureConsumed;
+}
+void ResetTransferEnrichmentFailure()
+{
+  g_TransferFailureArmed = false;
+  g_TransferFailureConsumed = false;
+}
+void CheckTransferEnrichmentAllocation()
+{
+  if(g_TransferFailureArmed && g_TransferFailureCountdown-- == 0)
+  {
+    g_TransferFailureArmed = false;
+    g_TransferFailureConsumed = true;
+    throw std::bad_alloc{};
+  }
+}
+} // namespace nx::core::MeshingUtilities::detail
+#endif
 
 namespace
 {
@@ -76,11 +114,15 @@ Result<> gatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
     if(first != loadedPage)
     {
       const usize count = std::min(capacity, vertexCount - first);
-      result = MergeResults(std::move(result), readCoordinatePage(vertices, first, page.first(count * 3)));
-      if(result.invalid())
+      auto readResult = readCoordinatePage(vertices, first, page.first(count * 3));
+      if(readResult.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65904, fmt::format("Error reading vertex-coordinate page at vertex {} ({} vertices).", first, count)));
+        auto failure = MeshingUtilities::detail::PreserveTransferFailure(result, std::move(readResult));
+        MeshingUtilities::detail::AppendTransferFailureContext(failure,
+                                                               [&] { return MakeErrorResult(-65904, fmt::format("Error reading vertex-coordinate page at vertex {} ({} vertices).", first, count)); });
+        return failure;
       }
+      result = MergeResults(std::move(result), std::move(readResult));
       loadedPage = first;
     }
     const auto coordinates = page.subspan((vertex - first) * 3, 3);
