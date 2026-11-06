@@ -330,7 +330,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
 
       // The resample filter defers its final rename. Use the temporary path until
       // deferred actions complete.
-      destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});
+      destImageGeomPath = imageGeomPath.replaceName(imageGeomPath.getTargetName() + "_resampled");
     }
 
     DataPath srcImageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
