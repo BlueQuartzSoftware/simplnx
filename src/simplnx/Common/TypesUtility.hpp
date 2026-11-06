@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 #include <version>
@@ -18,9 +19,9 @@
 namespace nx::core
 {
 /**
- * @brief Returns the templated value for the byte pattern 0xAB based on the byte count of the template parameter
- * @tparam T
- * @return
+ * @brief Returns a diagnostic value with a valid representation for the value type.
+ * @tparam T Numeric value type.
+ * @return Canonical true for bool; the repeated 0xAB byte pattern for other numeric types.
  */
 template <typename T>
 constexpr T GetMudflap() noexcept
@@ -31,19 +32,23 @@ constexpr T GetMudflap() noexcept
   namespace bs = nx::core;
 #endif
 
-  if constexpr(sizeof(T) == 1)
+  if constexpr(std::is_same_v<T, bool>)
+  {
+    return true;
+  }
+  else if constexpr(sizeof(T) == 1)
   {
     return bs::bit_cast<T>(static_cast<uint8>(0xAB));
   }
-  if constexpr(sizeof(T) == 2)
+  else if constexpr(sizeof(T) == 2)
   {
     return bs::bit_cast<T>(static_cast<uint16>(0xABAB));
   }
-  if constexpr(sizeof(T) == 4)
+  else if constexpr(sizeof(T) == 4)
   {
     return bs::bit_cast<T>(static_cast<uint32>(0xABABABAB));
   }
-  if constexpr(sizeof(T) == 8)
+  else if constexpr(sizeof(T) == 8)
   {
     return bs::bit_cast<T>(static_cast<uint64>(0xABABABABABABABAB));
   }

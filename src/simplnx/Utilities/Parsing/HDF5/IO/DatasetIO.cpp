@@ -1,5 +1,6 @@
 #include "DatasetIO.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/ChunkIndex.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/ChunkShapePolicy.hpp"
@@ -12,6 +13,7 @@
 
 #include "H5Dpublic.h"
 #include "H5Fpublic.h"
+#include "H5Ipublic.h"
 #include "H5Spublic.h"
 #include "H5Tpublic.h"
 
@@ -22,6 +24,7 @@
 #include <limits>
 #include <numeric>
 #include <span>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -195,7 +198,7 @@ void DatasetIO::close()
   {
     const hid_t selfId = getId();
     {
-      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
       H5Dclose(selfId);
     }
     setId(0);
@@ -215,7 +218,7 @@ hid_t DatasetIO::open() const
   const std::string namePath = getNamePath();
   hid_t id = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     HDF_ERROR_HANDLER_OFF /* Does not matter what the 'id' is, we are accepting that value. */
         id = H5Dopen(parentId, namePath.c_str(), H5P_DEFAULT);
     HDF_ERROR_HANDLER_ON
@@ -237,7 +240,7 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
   const hid_t parentId = getParentId();
   const std::string namePath = getNamePath();
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     HDF_ERROR_HANDLER_OFF
     setId(H5Dopen(parentId, namePath.c_str(), H5P_DEFAULT));
     HDF_ERROR_HANDLER_ON
@@ -352,7 +355,7 @@ hid_t DatasetIO::getTypeId() const
   // getId() self-locks (it may lazily open the dataset); resolve it before the leaf-locked
   // bare H5Dget_type.
   auto identifier = getId();
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   return H5Dget_type(identifier);
 }
 
@@ -360,7 +363,7 @@ hid_t DatasetIO::getClassType() const
 {
   // getId() can open the dataset. Resolve it before the non-recursive HDF5 API lock.
   const hid_t identifier = getId();
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   const hid_t typeId = H5Dget_type(identifier);
   if(typeId < 0)
   {
@@ -376,7 +379,7 @@ size_t DatasetIO::getTypeSize() const
 {
   // getId() can open the dataset. Resolve it before the non-recursive HDF5 API lock.
   const hid_t identifier = getId();
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   const hid_t typeId = H5Dget_type(identifier);
   if(typeId < 0)
   {
@@ -448,7 +451,7 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
 
   hid_t typeId = -1;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     typeId = H5Dget_type(datasetId);
     const H5T_class_t classType = H5Tget_class(typeId);
     if(classType == H5T_COMPOUND)
@@ -459,7 +462,7 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
   }
   const Type type = getTypeFromId(typeId);
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     H5Tclose(typeId);
   }
   if(type == Type::unknown)
@@ -539,7 +542,7 @@ std::string DatasetIO::readAsString() const
   // only after releasing this nonrecursive lock.
   bool isVariableString = false;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     const hid_t typeID = H5Dget_type(datasetId);
     isVariableString = (H5Tis_variable_str(typeID) == 1);
     H5Tclose(typeID);
@@ -561,7 +564,7 @@ std::string DatasetIO::readAsString() const
   // Fixed-length string: read the raw bytes under one leaf lock.
   std::string data;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     const hid_t typeID = H5Dget_type(datasetId);
     const hsize_t size = H5Dget_storage_size(datasetId);
     std::vector<char> buffer(static_cast<size_t>(size + 1), 0x00); // Allocate and zero the array
@@ -592,7 +595,7 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
   // One leaf critical section spanning every bare H5 call below (type/space query,
   // memory-type build, vlen read, and reclaim). open()/isValid() were resolved
   // above and no other self-locking helper runs inside this scope.
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   hid_t typeID = H5Dget_type(datasetId);
 
   if(typeID >= 0)
@@ -733,7 +736,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
 
   hid_t dataType = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataType = HdfTypeForPrimitive<T>();
   }
   if(dataType == -1)
@@ -766,7 +769,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
     std::filesystem::path codecFilePath = getFilePath();
     if(codecFilePath.empty())
     {
-      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
       const ssize_t nameLen = H5Fget_name(datasetId, nullptr, 0);
       if(nameLen > 0)
       {
@@ -863,7 +866,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
 
   hid_t dataType = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataType = HdfTypeForPrimitive<T>();
   }
   if(dataType == -1)
@@ -877,7 +880,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
 
   int errorCode = 0;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     hid_t fileSpaceId = H5Dget_space(datasetId);
     if(fileSpaceId < 0)
     {
@@ -1127,7 +1130,7 @@ std::vector<nx::core::usize> DatasetIO::getChunkDimensions() const
   const hid_t selfId = open();
   const usize numDims = getDimensions().size();
 
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   auto propertyListId = H5Dget_create_plist(selfId);
   H5D_layout_t layout = H5Pget_layout(propertyListId);
   std::vector<usize> result;
@@ -1152,7 +1155,7 @@ std::vector<nx::core::usize> DatasetIO::getDimensions() const
 
   std::vector<hsize_t> dims;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     auto dataspaceId = H5Dget_space(selfId);
     if(dataspaceId >= 0)
     {
@@ -1193,7 +1196,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   int32_t rank = static_cast<int32_t>(dims.size());
   hid_t dataType = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataType = HdfTypeForPrimitive<T>();
   }
   if(dataType == -1)
@@ -1208,7 +1211,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   // another public wrapper call.
   hid_t dataspaceId = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
   }
 
@@ -1260,7 +1263,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
           // The serial fallback locks only H5Dwrite. Error formatting stays outside.
           const void* data = static_cast<const void*>(values.data());
           {
-            std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+            const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
             error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
           }
           if(error < 0)
@@ -1276,7 +1279,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
 
       if(dcpl != H5P_DEFAULT)
       {
-        std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+        const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
         H5Pclose(dcpl);
       }
     }
@@ -1318,7 +1321,7 @@ Result<> DatasetIO::createEmptyDataset(const DimsType& dims)
   std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
   hid_t dataspaceId = H5I_INVALID_HID;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataspaceId = H5Screate_simple(static_cast<int>(hDims.size()), hDims.data(), nullptr);
   }
   if(dataspaceId < 0)
@@ -1331,7 +1334,7 @@ Result<> DatasetIO::createEmptyDataset(const DimsType& dims)
   if(dcplResult.invalid())
   {
     {
-      std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+      const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
       H5Sclose(dataspaceId);
     }
     return MakeErrorResult(dcplResult.errors().front().code, fmt::format("createEmptyDataset error: unable to build dataset creation property list for dataset '{}' in file '{}': {}", getNamePath(),
@@ -1342,7 +1345,7 @@ Result<> DatasetIO::createEmptyDataset(const DimsType& dims)
   // createOrOpenDataset() locks itself. Close local properties in a later leaf scope.
   auto datasetId = createOrOpenDataset<T>(dataspaceId, dcpl);
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     H5Sclose(dataspaceId);
     if(dcpl != H5P_DEFAULT)
     {
@@ -1360,78 +1363,243 @@ Result<> DatasetIO::createEmptyDataset(const DimsType& dims)
 template <typename T>
 Result<> DatasetIO::writeSpanHyperslab(nonstd::span<const T> values, const std::vector<uint64>& start, const std::vector<uint64>& count)
 {
+  std::string datasetPath = getNamePath();
+  std::string filePathString = getFilePath().string();
   if(!isValid())
   {
-    return MakeErrorResult(-506, fmt::format("Cannot open HDF5 data at {} / {}", getFilePath().string(), getNamePath()));
+    return MakeErrorResult(-506, fmt::format("Cannot write dataset '{}' in '{}': the dataset wrapper is not open.", datasetPath, filePathString));
   }
 
-  hid_t dataType = HdfTypeForPrimitive<T>();
-  if(dataType == -1)
-  {
-    return MakeErrorResult(-1010, "writeSpanHyperslab error: Unsupported data type.");
-  }
-
-  // open() locks itself before the leaf hyperslab critical section.
+  // Wrapper operations can lock. Resolve the handle and diagnostic paths before the transfer lock.
   const hid_t datasetId = open();
-
-  int errorCode = 0;
-  herr_t writeError = 0;
+  // An open dataset can have no links. Keep its stored name when the native name is unavailable.
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-    hid_t fileSpaceId = H5Dget_space(datasetId);
-    if(fileSpaceId < 0)
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const ssize_t nameLength = H5Iget_name(datasetId, nullptr, 0);
+    if(nameLength > 0 && std::cmp_less(nameLength, std::numeric_limits<usize>::max()))
     {
-      errorCode = -1011;
-    }
-    else
-    {
-      // macOS uses a different hsize_t underlying type. Copy offsets to avoid pointer casts.
-#if defined(__APPLE__)
-      std::vector<unsigned long long> startVec(start.begin(), start.end());
-      std::vector<unsigned long long> countVec(count.begin(), count.end());
-      if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startVec.data(), NULL, countVec.data(), NULL) < 0)
-#else
-      if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start.data(), NULL, count.data(), NULL) < 0)
-#endif
+      std::string nameBuffer(static_cast<usize>(nameLength) + 1, '\0');
+      const ssize_t copiedLength = H5Iget_name(datasetId, nameBuffer.data(), nameBuffer.size());
+      if(copiedLength > 0 && copiedLength <= nameLength)
       {
-        errorCode = -1012;
+        nameBuffer.resize(static_cast<usize>(copiedLength));
+        datasetPath = std::move(nameBuffer);
       }
-      else
-      {
-        // Match the memory dataspace to the selected extent.
-        std::vector<hsize_t> memDims(count.begin(), count.end());
-        hid_t memSpaceId = H5Screate_simple(static_cast<int>(memDims.size()), memDims.data(), nullptr);
-        if(memSpaceId < 0)
-        {
-          errorCode = -1013;
-        }
-        else
-        {
-          writeError = H5Dwrite(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, values.data());
-          if(writeError < 0)
-          {
-            errorCode = -1014;
-          }
-          H5Sclose(memSpaceId);
-        }
-      }
-      H5Sclose(fileSpaceId);
     }
   }
-
-  switch(errorCode)
+  if(datasetPath.empty())
   {
-  case 0:
+    datasetPath = "<unavailable>";
+  }
+  // Group-created wrappers can lack a stored file path. Query the owning file in a separate leaf lock.
+  if(filePathString.empty())
+  {
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const ssize_t nameLength = H5Fget_name(datasetId, nullptr, 0);
+    if(nameLength > 0 && std::cmp_less(nameLength, std::numeric_limits<usize>::max()))
+    {
+      std::string nameBuffer(static_cast<usize>(nameLength) + 1, '\0');
+      const ssize_t copiedLength = H5Fget_name(datasetId, nameBuffer.data(), nameBuffer.size());
+      if(copiedLength > 0 && copiedLength <= nameLength)
+      {
+        nameBuffer.resize(static_cast<usize>(copiedLength));
+        filePathString = std::move(nameBuffer);
+      }
+    }
+  }
+  if(filePathString.empty())
+  {
+    filePathString = "<unavailable>";
+  }
+
+  enum class Failure
+  {
+    None,
+    Native,
+    UnsupportedType,
+    UnsupportedDataspace,
+    Rank,
+    CoordinateRange,
+    Bounds,
+    ElementOverflow,
+    ByteOverflow,
+    BufferSize,
+    NullBuffer
+  };
+
+  uint64 elementLimit = std::numeric_limits<uint64>::max();
+  if constexpr(std::cmp_less(std::numeric_limits<hsize_t>::digits, std::numeric_limits<uint64>::digits))
+  {
+    elementLimit = static_cast<uint64>(std::numeric_limits<hsize_t>::max());
+  }
+  if constexpr(std::cmp_less(std::numeric_limits<usize>::digits, std::numeric_limits<uint64>::digits))
+  {
+    elementLimit = std::min(elementLimit, static_cast<uint64>(std::numeric_limits<usize>::max()));
+  }
+
+  int32 nativeErrorCode = -1011;
+  const char* nativeOperationPtr = nullptr;
+  hid_t nativeStatus = 0;
+  H5S_class_t spaceType = H5S_NO_CLASS;
+  int rank = 0;
+  usize axisIdx = 0;
+  hsize_t axisDimension = 0;
+  uint64 selectedElements = 1;
+  Failure failure = Failure::None;
+  {
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    // Early returns close owned dataspaces before the nonrecursive lock is released.
+    failure = [&]() -> Failure {
+      const hid_t dataType = HdfTypeForPrimitive<T>();
+      if(dataType == -1)
+      {
+        return Failure::UnsupportedType;
+      }
+
+      nativeOperationPtr = "H5Dget_space";
+      nativeStatus = H5Dget_space(datasetId);
+      if(nativeStatus < 0)
+      {
+        return Failure::Native;
+      }
+      const hid_t fileSpaceId = nativeStatus;
+      auto fileSpaceGuard = MakeScopeGuard([fileSpaceId]() noexcept { H5Sclose(fileSpaceId); });
+
+      nativeOperationPtr = "H5Sget_simple_extent_type";
+      spaceType = H5Sget_simple_extent_type(fileSpaceId);
+      if(spaceType == H5S_NO_CLASS)
+      {
+        nativeStatus = static_cast<hid_t>(spaceType);
+        return Failure::Native;
+      }
+      if(spaceType != H5S_SIMPLE)
+      {
+        return Failure::UnsupportedDataspace;
+      }
+
+      nativeOperationPtr = "H5Sget_simple_extent_ndims";
+      rank = H5Sget_simple_extent_ndims(fileSpaceId);
+      if(rank < 0)
+      {
+        nativeStatus = rank;
+        return Failure::Native;
+      }
+      if(start.size() != static_cast<usize>(rank) || count.size() != static_cast<usize>(rank))
+      {
+        return Failure::Rank;
+      }
+
+      std::vector<hsize_t> dimensions(static_cast<usize>(rank));
+      nativeOperationPtr = "H5Sget_simple_extent_dims";
+      nativeStatus = H5Sget_simple_extent_dims(fileSpaceId, dimensions.data(), nullptr);
+      if(nativeStatus < 0)
+      {
+        return Failure::Native;
+      }
+      std::vector<hsize_t> nativeStart(start.size());
+      std::vector<hsize_t> nativeCount(count.size());
+      bool emptySelection = false;
+      for(axisIdx = 0; axisIdx < count.size(); ++axisIdx)
+      {
+        axisDimension = dimensions[axisIdx];
+        if(!std::in_range<hsize_t>(start[axisIdx]) || !std::in_range<hsize_t>(count[axisIdx]))
+        {
+          return Failure::CoordinateRange;
+        }
+        nativeStart[axisIdx] = static_cast<hsize_t>(start[axisIdx]);
+        nativeCount[axisIdx] = static_cast<hsize_t>(count[axisIdx]);
+        if(nativeStart[axisIdx] > axisDimension || nativeCount[axisIdx] > axisDimension - nativeStart[axisIdx])
+        {
+          return Failure::Bounds;
+        }
+        emptySelection = emptySelection || count[axisIdx] == 0;
+      }
+
+      // Validate every axis before empty success; an empty selection needs no buffer or product calculation.
+      if(emptySelection)
+      {
+        return Failure::None;
+      }
+      for(axisIdx = 0; axisIdx < count.size(); ++axisIdx)
+      {
+        if(selectedElements > elementLimit / count[axisIdx])
+        {
+          return Failure::ElementOverflow;
+        }
+        selectedElements *= count[axisIdx];
+      }
+      if(std::cmp_greater(selectedElements, std::numeric_limits<usize>::max() / sizeof(T)))
+      {
+        return Failure::ByteOverflow;
+      }
+      if(std::cmp_less(values.size(), selectedElements))
+      {
+        return Failure::BufferSize;
+      }
+      if(values.data() == nullptr)
+      {
+        return Failure::NullBuffer;
+      }
+
+      nativeErrorCode = -1012;
+      nativeOperationPtr = "H5Sselect_hyperslab";
+      nativeStatus = H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, nativeStart.data(), nullptr, nativeCount.data(), nullptr);
+      if(nativeStatus < 0)
+      {
+        return Failure::Native;
+      }
+
+      nativeErrorCode = -1013;
+      nativeOperationPtr = "H5Screate_simple";
+      nativeStatus = H5Screate_simple(rank, nativeCount.data(), nullptr);
+      if(nativeStatus < 0)
+      {
+        return Failure::Native;
+      }
+      const hid_t memSpaceId = nativeStatus;
+      auto memSpaceGuard = MakeScopeGuard([memSpaceId]() noexcept { H5Sclose(memSpaceId); });
+
+      nativeErrorCode = -1014;
+      nativeOperationPtr = "H5Dwrite";
+      nativeStatus = H5Dwrite(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, values.data());
+      return nativeStatus < 0 ? Failure::Native : Failure::None;
+    }();
+  }
+
+  // Error formatting stays outside the lock, after all owned dataspaces close.
+  switch(failure)
+  {
+  case Failure::None:
     return {};
-  case -1011:
-    return MakeErrorResult(-1011, "writeSpanHyperslab error: Unable to open the dataspace.");
-  case -1012:
-    return MakeErrorResult(-1012, "writeSpanHyperslab error: Unable to select hyperslab.");
-  case -1013:
-    return MakeErrorResult(-1013, "writeSpanHyperslab error: Unable to create memory dataspace.");
-  default:
-    return MakeErrorResult(-1014, fmt::format("writeSpanHyperslab error: H5Dwrite failed with error {}", writeError));
+  case Failure::Native:
+    return MakeErrorResult(nativeErrorCode, fmt::format("Cannot write dataset '{}' in '{}': {} failed with status {}.", datasetPath, filePathString, nativeOperationPtr, nativeStatus));
+  case Failure::UnsupportedType:
+    return MakeErrorResult(-1010, fmt::format("Cannot write dataset '{}' in '{}': the input scalar type is not supported by HDF5.", datasetPath, filePathString));
+  case Failure::UnsupportedDataspace:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': hyperslab writes do not support {} dataspaces. Use a full-dataset write for scalar values.", datasetPath,
+                                              filePathString, spaceType == H5S_SCALAR ? "scalar" : "null"));
+  case Failure::Rank:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': dataset rank {} requires matching start and count ranks, but received {} start offsets and {} counts.", datasetPath,
+                                              filePathString, rank, start.size(), count.size()));
+  case Failure::CoordinateRange:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': axis {} has start {}, count {}, and dimension {}. Start and count must fit the HDF5 coordinate limit {}.",
+                                              datasetPath, filePathString, axisIdx, start[axisIdx], count[axisIdx], axisDimension, std::numeric_limits<hsize_t>::max()));
+  case Failure::Bounds:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': axis {} has start {}, count {}, and dimension {}. The selection must stay within the dataset extent.", datasetPath,
+                                              filePathString, axisIdx, start[axisIdx], count[axisIdx], axisDimension));
+  case Failure::ElementOverflow:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': selected element count overflow at axis {}. Prefix {} multiplied by count {} exceeds the element limit {}.",
+                                              datasetPath, filePathString, axisIdx, selectedElements, count[axisIdx], elementLimit));
+  case Failure::ByteOverflow:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': selected byte count overflow. {} elements with {} bytes per value exceed the buffer byte limit {}.", datasetPath,
+                                              filePathString, selectedElements, sizeof(T), std::numeric_limits<usize>::max()));
+  case Failure::BufferSize:
+    return MakeErrorResult(
+        -1012, fmt::format("Cannot write dataset '{}' in '{}': the selection requires {} values, but the input span contains {}.", datasetPath, filePathString, selectedElements, values.size()));
+  case Failure::NullBuffer:
+    return MakeErrorResult(-1012, fmt::format("Cannot write dataset '{}' in '{}': the selection requires {} values, but the input buffer is null.", datasetPath, filePathString, selectedElements));
   }
+  return {};
 }
 
 template <typename T>
@@ -1442,7 +1610,7 @@ nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& 
 
   // Create the dataspace before the separately locked dataset open or create call.
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     dataInfo.dataspaceId = H5Screate_simple(h5Dims.size(), h5DimsVec.data(), nullptr);
   }
   if(dataInfo.dataspaceId < 0)
@@ -1478,7 +1646,7 @@ hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
 {
   std::vector<hsize_t> hDims(chunkDims.size());
   std::transform(chunkDims.begin(), chunkDims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
-  std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+  const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   auto cparms = H5Pcreate(H5P_DATASET_CREATE);
   auto status = H5Pset_chunk(cparms, hDims.size(), hDims.data());
   if(status < 0)
@@ -1512,7 +1680,7 @@ nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& dataset
   }*/
   herr_t error = 0;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     error = H5Sclose(datasetInfo.dataspaceId);
   }
   if(error < 0)
@@ -1561,7 +1729,7 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
         std::vector<hsize_t> chunkShapeVec(chunkShape.begin(), chunkShape.end());
         {
-          std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+          const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
           const hid_t plistId = H5Dget_create_plist(h5Id);
           if(plistId > 0)
           {
@@ -1655,7 +1823,7 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
 
       // Open chunk handles permit one leaf lock around selection, write, and cleanup.
       {
-        std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+        const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
         error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, trueChunkShapeVec.data(), NULL);
 
         // Create memory dataspace for the hyperslab
@@ -1716,7 +1884,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
   const hid_t parentId = getParentId();
   const std::string namePath = getNamePath();
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
     /* create a string data type */
     hid_t typeId;
@@ -1783,7 +1951,7 @@ nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string
 
   std::array<hsize_t, 1> dims = {text.size()};
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if((dataspaceID = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr)) >= 0)
     {
       dims[0] = 1;
@@ -1900,7 +2068,7 @@ std::string DatasetIO::getFilterName() const
   const hid_t selfId = getId();
   std::string filterNames;
   {
-    std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     const hid_t cpListId = H5Dget_create_plist(selfId);
     const int numFilters = H5Pget_nfilters(cpListId);
     for(int j = 0; j < numFilters; ++j)

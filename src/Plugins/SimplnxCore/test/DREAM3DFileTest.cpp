@@ -2138,6 +2138,13 @@ namespace
 class C8FilterResolver : public IDataStoreFormatResolver
 {
 public:
+  C8FilterResolver() = default;
+  ~C8FilterResolver() override = default;
+  C8FilterResolver(const C8FilterResolver&) = default;
+  C8FilterResolver(C8FilterResolver&&) = default;
+  C8FilterResolver& operator=(const C8FilterResolver&) = default;
+  C8FilterResolver& operator=(C8FilterResolver&&) = default;
+
   bool reject = false;
   bool requireContext = false;
   mutable std::vector<DataPath> paths;
