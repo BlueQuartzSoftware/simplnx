@@ -35,8 +35,8 @@ namespace nx::core
  * buffers may reserve cache headroom through WorkingMemoryReservation without
  * being reported as cache usage.
  *
- * Thread-safe: allocate/touch/release/reserveWorkingMemory can be called from
- * any thread.
+ * Thread-safe: Cache registrations and working-memory reservations can be made
+ * from any thread.
  *
  * Eviction callbacks and delegated handlers run under the manager mutex. They
  * can only update an atomic or a leaf mark queue. They must not re-enter this manager.
@@ -252,6 +252,20 @@ public:
    * usedBytes().
    */
   [[nodiscard]] WorkingMemoryReservation reserveWorkingMemory(uint64 requestedBytes);
+
+  /**
+   * @brief Reserves all requested working bytes when registered cache headroom is available.
+   * @param requestedBytes Number of bytes to reserve.
+   * @return Full token, or empty token on
+   * failure.
+   *
+   * The request must fit the one-quarter working limit and remaining registered
+   * cache headroom. This method does not request eviction.
+   *
+   * Direct eviction can defer
+   * physical release beyond accounting removal.
+   */
+  [[nodiscard]] WorkingMemoryReservation tryReserveWorkingMemoryWithoutEviction(uint64 requestedBytes);
 
   /**
    * @brief Sets the cache memory budget in bytes, clamped to maxBudgetBytes().
