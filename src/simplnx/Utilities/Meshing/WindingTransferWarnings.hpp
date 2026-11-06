@@ -78,7 +78,7 @@ public:
           MaybeFailWindingWarningForTesting();
         }
 #endif
-        const auto duplicate = std::find_if(m_Warnings.begin(), m_Warnings.end(), [&warning](const Warning& retained) { return retained.code == warning.code && retained.message == warning.message; });
+        const auto duplicate = std::ranges::find_if(m_Warnings, [&warning](const Warning& retained) { return retained.code == warning.code && retained.message == warning.message; });
         if(duplicate != m_Warnings.end())
         {
           m_Repeated = IncrementWindingWarningCount(m_Repeated);
