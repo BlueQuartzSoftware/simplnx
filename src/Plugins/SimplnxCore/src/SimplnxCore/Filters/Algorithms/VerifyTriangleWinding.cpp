@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <new>
@@ -83,14 +84,18 @@ void AccumulateGatheredTriangleVolume(const float32* coordinates, const int32* i
 
 bool MergeWindingTransfer(Result<>& result, WindingTransferWarnings& warnings, Result<> transfer, const std::string& geometryPath, const char* phasePtr, usize firstTuple, usize tupleCount)
 {
-  warnings.append(transfer.warnings());
   if(transfer.invalid())
   {
-    transfer = MergeResults(std::move(transfer), MakeErrorResult(-56325, fmt::format("Triangle winding for geometry '{}': {} failed at tuple {} ({} tuples). Check the preceding storage diagnostic.",
-                                                                                     geometryPath, phasePtr, firstTuple, tupleCount)));
+    result = std::move(transfer);
+    EnrichWindingError([&] { warnings.appendOnError(result.warnings()); });
+    EnrichWindingError([&] {
+      result.errors().push_back(
+          {-56325, fmt::format("Triangle winding for geometry '{}': {} failed at tuple {} ({} tuples). Check the preceding storage diagnostic.", geometryPath, phasePtr, firstTuple, tupleCount)});
+    });
+    return false;
   }
-  result = MergeResults(std::move(result), std::move(transfer));
-  return result.valid();
+  warnings.append(transfer.warnings());
+  return true;
 }
 
 /**
@@ -332,6 +337,11 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
 {
   WindingTransferWarnings warnings;
   auto result = ReverseNegativeVolumesBoundedImpl(warnings, triangles, vertices, idsStore, geometryPath, shouldCancel, messageHandler);
+  if(result.invalid())
+  {
+    EnrichWindingError([&] { warnings.attach(result); });
+    return result;
+  }
   try
   {
     warnings.attach(result);
@@ -507,8 +517,14 @@ Result<> VerifyTriangleWinding::operator()()
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   if(useOutOfCoreAlgorithm)
   {
-    windingResult =
-        MergeResults(std::move(windingResult), ReverseNegativeVolumesBounded(triangles, vertices, idsStore, m_InputValues->TargetGeometryPath.toString(), m_ShouldCancel, m_MessageHandler));
+    auto volumeResult = ReverseNegativeVolumesBounded(triangles, vertices, idsStore, m_InputValues->TargetGeometryPath.toString(), m_ShouldCancel, m_MessageHandler);
+    if(volumeResult.invalid())
+    {
+      EnrichWindingError(
+          [&] { volumeResult.warnings().insert(volumeResult.warnings().begin(), std::make_move_iterator(windingResult.warnings().begin()), std::make_move_iterator(windingResult.warnings().end())); });
+      return volumeResult;
+    }
+    windingResult = MergeResults(std::move(windingResult), std::move(volumeResult));
     if(windingResult.invalid() || m_ShouldCancel)
     {
       return windingResult;
