@@ -14,6 +14,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AppendImageGeometryTest.cpp
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
+  AvizoWriterTest.cpp
   ArrayCalculatorTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp

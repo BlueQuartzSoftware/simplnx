@@ -1,3 +1,4 @@
+#include "AvizoWriterFailureTestUtilities.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
@@ -24,6 +25,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel);
@@ -163,5 +166,18 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tup
     REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Source read failure preserves destination", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][AvizoWriter]")
+{
+  UnitTest::LoadPlugins();
+  const bool writeBinary = GENERATE(false, true);
+  const bool existingDestination = GENERATE(false, true);
+  const bool throwAllocation = GENERATE(false, true);
+  DYNAMIC_SECTION("binary=" << writeBinary << ", existing destination=" << existingDestination << ", allocation failure=" << throwAllocation)
+  {
+    auto store = std::make_shared<UnitTest::AvizoWriterFailure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
+    UnitTest::AvizoWriterFailure::CheckSecondBlockFailure<WriteAvizoRectilinearCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
   }
 }

@@ -2,10 +2,13 @@
 
 #include "ComputeKMeans.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <random>
 
@@ -304,6 +307,11 @@ const std::atomic_bool& ComputeKMeansDirect::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeKMeansDirect::operator()()
 {
+  if(m_InputValues->InitClusters == 0)
+  {
+    return MakeErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", m_InputValues->InitClusters, m_InputValues->ClusteringArrayPath.toString()));
+  }
+
   auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
