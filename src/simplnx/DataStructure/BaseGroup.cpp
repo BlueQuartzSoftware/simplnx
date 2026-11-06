@@ -153,6 +153,11 @@ bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
   return false;
 }
 
+bool BaseGroup::acceptsChild(const DataObject* object) const
+{
+  return canInsert(object);
+}
+
 bool BaseGroup::remove(DataObject* obj)
 {
   if(obj == nullptr)
