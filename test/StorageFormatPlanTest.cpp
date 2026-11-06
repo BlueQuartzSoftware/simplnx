@@ -669,6 +669,13 @@ void CheckImportPolicyMarker(const DataStructure& destination, const std::shared
 class RejectingImportProcessResolver : public IDataStoreFormatResolver
 {
 public:
+  RejectingImportProcessResolver() = default;
+  ~RejectingImportProcessResolver() override = default;
+  RejectingImportProcessResolver(const RejectingImportProcessResolver&) = default;
+  RejectingImportProcessResolver(RejectingImportProcessResolver&&) = default;
+  RejectingImportProcessResolver& operator=(const RejectingImportProcessResolver&) = default;
+  RejectingImportProcessResolver& operator=(RejectingImportProcessResolver&&) = default;
+
   mutable usize calls = 0;
 
   std::string resolveFormat(const DataStructure&, const DataPath&, DataType, uint64) const override
@@ -685,6 +692,13 @@ public:
 class CompleteImportContextResolver : public RecordingFormatResolver
 {
 public:
+  CompleteImportContextResolver() = default;
+  ~CompleteImportContextResolver() override = default;
+  CompleteImportContextResolver(const CompleteImportContextResolver&) = default;
+  CompleteImportContextResolver(CompleteImportContextResolver&&) = default;
+  CompleteImportContextResolver& operator=(const CompleteImportContextResolver&) = default;
+  CompleteImportContextResolver& operator=(CompleteImportContextResolver&&) = default;
+
   mutable usize completeContextCalls = 0;
   mutable usize placeholderContextCalls = 0;
 
@@ -886,6 +900,13 @@ std::shared_ptr<DataObject> CreateSelectedImportMarker(DataStructure& destinatio
 class LaterImportPlanFailure : public CompleteImportContextResolver
 {
 public:
+  LaterImportPlanFailure() = default;
+  ~LaterImportPlanFailure() override = default;
+  LaterImportPlanFailure(const LaterImportPlanFailure&) = default;
+  LaterImportPlanFailure(LaterImportPlanFailure&&) = default;
+  LaterImportPlanFailure& operator=(const LaterImportPlanFailure&) = default;
+  LaterImportPlanFailure& operator=(LaterImportPlanFailure&&) = default;
+
   bool allocation = false;
 
   std::string resolveFormat(const DataStructure& structure, const DataPath& path, DataType type, uint64 bytes) const override
@@ -1256,6 +1277,13 @@ const DataPath k_C8LegacySecond({"PlanContainer", "CellData", "Second"});
 class C8SingleImportFinalizer : public IDataIOManager
 {
 public:
+  C8SingleImportFinalizer() = default;
+  ~C8SingleImportFinalizer() override = default;
+  C8SingleImportFinalizer(const C8SingleImportFinalizer&) = default;
+  C8SingleImportFinalizer(C8SingleImportFinalizer&&) = default;
+  C8SingleImportFinalizer& operator=(const C8SingleImportFinalizer&) = default;
+  C8SingleImportFinalizer& operator=(C8SingleImportFinalizer&&) = default;
+
   bool active = false;
   bool failOnSecondLeaf = false;
   bool failureConsumed = false;
@@ -1463,6 +1491,13 @@ void WriteC8LegacyPlanWarningFile(const fs::path& path)
 class C8WarningPlanResolver : public RecordingFormatResolver
 {
 public:
+  C8WarningPlanResolver() = default;
+  ~C8WarningPlanResolver() override = default;
+  C8WarningPlanResolver(const C8WarningPlanResolver&) = default;
+  C8WarningPlanResolver(C8WarningPlanResolver&&) = default;
+  C8WarningPlanResolver& operator=(const C8WarningPlanResolver&) = default;
+  C8WarningPlanResolver& operator=(C8WarningPlanResolver&&) = default;
+
   bool failOnSecond = false;
   mutable usize completeEmptyCalls = 0;
 

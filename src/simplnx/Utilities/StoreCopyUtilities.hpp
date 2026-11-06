@@ -53,7 +53,7 @@ SIMPLNX_EXPORT uint64 CalculateStoreCopyBytes(const ShapeType& tupleShape, const
  * @brief Copies numeric values or placeholder metadata into a selected storage format.
  * @param source Store to copy without modification.
  * @param destinationFormat Resolved destination format; empty selects in-memory storage.
- * @return Independent owned store with the same value type and shapes.
+ * @return Independent owned store with the same value type, shapes and growth initializer.
  * @throws std::runtime_error If format selection, factory validation, or transfer fails.
  * @throws std::bad_alloc If an allocation fails.
  *
