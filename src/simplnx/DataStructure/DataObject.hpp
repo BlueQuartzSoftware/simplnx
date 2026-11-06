@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Metadata.hpp"
@@ -271,6 +272,14 @@ public:
    * In-memory DataObjects are not affected.
    */
   virtual void flush() const;
+
+  /**
+   * @brief Flushes the object through its legacy operation and reports failures.
+   * @return Success, error -272 for allocation failure, or -6070 for another exception.
+   *
+   * @note Diagnostic allocation can still throw std::bad_alloc.
+   */
+  [[nodiscard]] virtual Result<> flushChecked() const;
 
   /**
    * @brief Calculates and returns the memory usage of this DataObject in bytes.
