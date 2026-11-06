@@ -1,3 +1,4 @@
+#include "AvizoWriterFailureTestUtilities.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
@@ -164,5 +165,18 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Geometry cell tuple c
     REQUIRE(errorRef.message.find(expectedPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Source read failure preserves destination", "[SimplnxCore][WriteAvizoUniformCoordinateFilter][AvizoWriter]")
+{
+  UnitTest::LoadPlugins();
+  const bool writeBinary = GENERATE(false, true);
+  const bool existingDestination = GENERATE(false, true);
+  const bool throwAllocation = GENERATE(false, true);
+  DYNAMIC_SECTION("binary=" << writeBinary << ", existing destination=" << existingDestination << ", allocation failure=" << throwAllocation)
+  {
+    auto store = std::make_shared<UnitTest::AvizoWriterFailure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
+    UnitTest::AvizoWriterFailure::CheckSecondBlockFailure<WriteAvizoUniformCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
   }
 }
