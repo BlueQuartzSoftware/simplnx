@@ -339,7 +339,7 @@ TEST_CASE("SimplnxCore::C02 ApplyTransformationToGeometry matrix contract", "[Si
       createTriangle(dataStructure);
       createMatrix(dataStructure, count, 1);
       const auto result = filter.preflight(dataStructure, makeArgs());
-      REQUIRE(result.outputActions.invalid());
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
       REQUIRE(result.outputActions.errors().size() == 1);
       REQUIRE(result.outputActions.errors()[0].code == -82019);
     }
@@ -390,7 +390,7 @@ TEST_CASE("SimplnxCore::C02 ApplyTransformationToGeometry matrix contract", "[Si
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(geometryPath.createChildPath("Cell Data")));
     const auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
     REQUIRE(result.outputActions.errors()[0].code == -82019);
   }

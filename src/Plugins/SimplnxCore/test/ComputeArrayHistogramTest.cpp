@@ -746,7 +746,7 @@ TEST_CASE("SimplnxCore::C02 histogram all masked automatic range", "[SimplnxCore
   auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   auto result = filter.execute(dataStructure, args);
-  REQUIRE(result.result.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == -23766);
 }
 
@@ -837,7 +837,7 @@ TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[Simpl
   REQUIRE(inputStore->reads().empty());
   REQUIRE_FALSE(cancelled.load());
   auto result = filter.execute(dataStructure, args, nullptr, {}, cancelled);
-  REQUIRE(result.result.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == -1);
   REQUIRE(cancelled.load());
   REQUIRE(inputStore->reads().size() == 1);
@@ -859,6 +859,6 @@ TEST_CASE("SimplnxCore::C02 histogram empty automatic range", "[SimplnxCore][Com
   auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   auto result = filter.execute(dataStructure, args);
-  REQUIRE(result.result.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == -23766);
 }
