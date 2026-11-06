@@ -265,18 +265,16 @@ void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 t
 }
 } // namespace
 
-TEST_CASE("EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix", "[OrientationAnalysis][EBSDSegmentFeatures][C05]")
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix", "[OrientationAnalysis][EBSDSegmentFeatures][C05]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
   checkC05ExternalQuaternions(&scope);
 }
 
-TEST_CASE("EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix with real OOC stores", "[OrientationAnalysis][EBSDSegmentFeatures][C05][.OocStoreContract]")
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix with real OOC stores", "[OrientationAnalysis][EBSDSegmentFeatures][C05][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);

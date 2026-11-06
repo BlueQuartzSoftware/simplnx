@@ -178,7 +178,8 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
   args.insertOrAssign(ReadMhaFileFilter::k_SaveImageTransformation_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<ArrayCreationParameter::ValueType>(matrixPath));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.valid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   // MHA preflight declares the saved input matrix; transform actions stay internal to execute.
   bool declaresMatrix = false;
   for(const auto& action : preflight.outputActions.value().actions)
@@ -242,18 +243,16 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
 }
 } // namespace
 
-TEST_CASE("ReadMhaFileFilter: C05 preserve saved transform child path", "[ImageProcessing][ReadMhaFileFilter][C05]")
+TEST_CASE("ImageProcessing::ReadMhaFileFilter: C05 preserve saved transform child path", "[ImageProcessing][ReadMhaFileFilter][C05]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
   checkC05MhaSavedTransform(&algorithmTestScope);
 }
 
-TEST_CASE("ReadMhaFileFilter: C05 preserve saved transform child path with real OOC stores", "[ImageProcessing][ReadMhaFileFilter][C05][.OocStoreContract]")
+TEST_CASE("ImageProcessing::ReadMhaFileFilter: C05 preserve saved transform child path with real OOC stores", "[ImageProcessing][ReadMhaFileFilter][C05][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());

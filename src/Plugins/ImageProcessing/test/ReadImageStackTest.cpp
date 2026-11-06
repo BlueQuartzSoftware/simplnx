@@ -1398,9 +1398,9 @@ void checkC05NestedImageStack(C05ImageStackResampling resampling, const SizeVec3
 }
 } // namespace
 
-TEST_CASE("ReadImageStackFilter: C05 nested resampled output", "[ImageProcessing][ReadImageStackFilter][C05]")
+TEST_CASE("ImageProcessing::ReadImageStackFilter: C05 nested resampled output", "[ImageProcessing][ReadImageStackFilter][C05]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   SECTION("50 percent scaling")
   {
@@ -1416,9 +1416,8 @@ TEST_CASE("ReadImageStackFilter: C05 nested resampled output", "[ImageProcessing
   }
 }
 
-TEST_CASE("ReadImageStackFilter: C05 nested resampled output with real OOC stores", "[ImageProcessing][ReadImageStackFilter][C05][.OocStoreContract]")
+TEST_CASE("ImageProcessing::ReadImageStackFilter: C05 nested resampled output with real OOC stores", "[ImageProcessing][ReadImageStackFilter][C05][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   SECTION("50 percent scaling")

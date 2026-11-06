@@ -92,7 +92,8 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
   const DataPath valuesPath({"Grain Group", "Grain", "Grain Data", "Grain Details", "Grain Metrics", "Grain Values"});
   const DataPath directPath({"Grain Group", "Grain", "Grain Transform"});
   const auto createGeometryResult = CreateImageGeometryAction(geometryPath, {2, 2, 2}, {0, 0, 0}, {1, 1, 1}, "Grain Cells").apply(dataStructure, IDataAction::Mode::Execute);
-  REQUIRE(createGeometryResult.valid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(createGeometryResult);
   const auto& geometry = getRequiredC05TransformData<ImageGeom>(dataStructure, geometryPath);
   const auto& cells = getRequiredC05TransformData<AttributeMatrix>(dataStructure, DataPath({"Grain Group", "Grain", "Grain Cells"}));
   auto pixelStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath, {2, 2, 2}, {1});
@@ -139,7 +140,8 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
                       std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}));
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.valid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
 
   // Check declarations separately: deepCopy preserves real descendants even if their declared paths are wrong.
   const std::vector<DataPath> expectedGroupPaths = {DataPath({"Grain Group", ".Grain", "Grain Data"}), DataPath({"Grain Group", ".Grain", "Grain Data", "Grain Details"}),
@@ -223,18 +225,16 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
 
 } // namespace
 
-TEST_CASE("ApplyTransformationToGeometryFilter: C05 preserve descendant names", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: C05 preserve descendant names", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
   checkC05TransformDescendants(&algorithmTestScope);
 }
 
-TEST_CASE("ApplyTransformationToGeometryFilter: C05 preserve descendant names with real OOC stores", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05][.OocStoreContract]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: C05 preserve descendant names with real OOC stores", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());
