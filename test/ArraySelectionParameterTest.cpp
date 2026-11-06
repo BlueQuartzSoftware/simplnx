@@ -27,6 +27,12 @@ class ReportingOocStore final : public DataStore<int32>
 public:
   using DataStore<int32>::DataStore;
 
+  ~ReportingOocStore() override = default;
+  ReportingOocStore(const ReportingOocStore&) = default;
+  ReportingOocStore(ReportingOocStore&&) = default;
+  ReportingOocStore& operator=(const ReportingOocStore&) = delete;
+  ReportingOocStore& operator=(ReportingOocStore&&) = default;
+
   /**
    * @brief Reports OOC storage for location validation.
    * @return OutOfCore for this test store.

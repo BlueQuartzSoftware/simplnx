@@ -15,7 +15,9 @@
 #include <exception>
 #include <functional>
 #include <mutex>
+#include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace nx::core::HDF5
 {
@@ -100,9 +102,21 @@ void ParallelLoadChunks(nonstd::span<const uint64> chunkIndices, const std::func
   std::exception_ptr firstError = nullptr;
 
   const auto loadOne = [&](usize i) {
+#if SIMPLNX_BUILD_TESTS
+    LegacyPayloadTaskScopeForTesting ownershipTask;
+#endif
     try
     {
+#if SIMPLNX_BUILD_TESTS
+      LegacyPayloadTicketForTesting returnedObservation;
+#endif
       Result result = loader(chunkIndices[i]);
+#if SIMPLNX_BUILD_TESTS
+      if constexpr(std::is_same_v<Result, std::vector<std::byte>>)
+      {
+        returnedObservation.consumeReturn(result, true);
+      }
+#endif
       // A sink can write one pre-sized local slot without sharing that slot.
       sink(i, std::move(result));
     } catch(const UnallocatedChunkError&)
@@ -114,6 +128,9 @@ void ParallelLoadChunks(nonstd::span<const uint64> chunkIndices, const std::func
     {
       // Record the first observed failure. Other scheduled positions still run.
       std::lock_guard<std::mutex> lk(errMutex);
+#if SIMPLNX_BUILD_TESTS
+      ownershipTask.observeExceptionAggregation();
+#endif
       if(!firstError)
       {
         firstError = std::current_exception();

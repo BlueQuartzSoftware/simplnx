@@ -50,6 +50,12 @@ public:
     setValue(1, 13);
   }
 
+  ~CliCompletionStore() override = default;
+  CliCompletionStore(const CliCompletionStore&) = default;
+  CliCompletionStore(CliCompletionStore&&) = default;
+  CliCompletionStore& operator=(const CliCompletionStore&) = delete;
+  CliCompletionStore& operator=(CliCompletionStore&&) = default;
+
   /**
    * @brief Reports a checked-only completion fault while leaving legacy flush harmless.
    * @return The selected checked result with a distinct warning.

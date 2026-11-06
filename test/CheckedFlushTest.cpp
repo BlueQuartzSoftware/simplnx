@@ -72,6 +72,12 @@ public:
   {
   }
 
+  ~LegacyFlushStore() override = default;
+  LegacyFlushStore(const LegacyFlushStore&) = default;
+  LegacyFlushStore(LegacyFlushStore&&) = default;
+  LegacyFlushStore& operator=(const LegacyFlushStore&) = delete;
+  LegacyFlushStore& operator=(LegacyFlushStore&&) = default;
+
   /**
    * @brief Counts the legacy call and throws the selected exception.
    */
@@ -99,6 +105,12 @@ public:
   : DataStore<int32>(ShapeType{2}, ShapeType{1}, int32{0})
   {
   }
+
+  ~ReportingFlushStore() override = default;
+  ReportingFlushStore(const ReportingFlushStore&) = default;
+  ReportingFlushStore(ReportingFlushStore&&) = default;
+  ReportingFlushStore& operator=(const ReportingFlushStore&) = delete;
+  ReportingFlushStore& operator=(ReportingFlushStore&&) = default;
 
   /**
    * @brief Counts calls to the separate legacy operation.
@@ -138,6 +150,12 @@ public:
   {
   }
 
+  ~ReportingFlushListStore() override = default;
+  ReportingFlushListStore(const ReportingFlushListStore&) = default;
+  ReportingFlushListStore(ReportingFlushListStore&&) = default;
+  ReportingFlushListStore& operator=(const ReportingFlushListStore&) = delete;
+  ReportingFlushListStore& operator=(ReportingFlushListStore&&) = delete;
+
   /**
    * @brief Counts the checked call and returns the selected diagnostics.
    * @return The configured result, including warnings.
@@ -169,6 +187,12 @@ public:
   {
   }
 
+  ~LegacyFlushGroup() override = default;
+  LegacyFlushGroup(const LegacyFlushGroup&) = default;
+  LegacyFlushGroup(LegacyFlushGroup&&) = default;
+  LegacyFlushGroup& operator=(const LegacyFlushGroup&) = delete;
+  LegacyFlushGroup& operator=(LegacyFlushGroup&&) = delete;
+
   /**
    * @brief Counts the legacy call and throws the selected exception.
    */
@@ -198,6 +222,12 @@ public:
   : DataGroup(dataStructure, std::move(name))
   {
   }
+
+  ~ThrowingCheckedFlushGroup() override = default;
+  ThrowingCheckedFlushGroup(const ThrowingCheckedFlushGroup&) = default;
+  ThrowingCheckedFlushGroup(ThrowingCheckedFlushGroup&&) = default;
+  ThrowingCheckedFlushGroup& operator=(const ThrowingCheckedFlushGroup&) = delete;
+  ThrowingCheckedFlushGroup& operator=(ThrowingCheckedFlushGroup&&) = delete;
 
   /**
    * @brief Counts the checked call and throws the selected exception.
