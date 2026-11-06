@@ -104,6 +104,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   KeepRemoveRankedFeaturesTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  LaplacianSmoothingNumericalTest.cpp
+  LaplacianSmoothingTransferTest.cpp
   M3CSurfaceMeshingTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
@@ -158,6 +160,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
   UncertainRegularGridSampleSurfaceMeshTest.cpp
+  RepairTriangleWindingTransferTest.cpp
   VerifyTriangleWindingTest.cpp
   WriteAbaqusCrystalPlasticityTest.cpp
   WriteAbaqusHexahedronTest.cpp
@@ -184,6 +187,17 @@ if(DREAM3DNX_ENABLE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
   set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
+
+  # One process must retain the OOC resolver after the C8 test changes the default policy.
+  add_test(NAME SimplnxCoreC8ResolverIsolation
+    COMMAND ${PLUGIN_NAME}UnitTest
+      "C8 ReadDREAM3DFilter plans selected data in the destination context,SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle"
+      --order lex --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreC8ResolverIsolation PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
+
+  add_test(NAME SimplnxCoreLaplacianOocNumerical
+    COMMAND ${PLUGIN_NAME}UnitTest "[.LaplacianSmoothingOoc]" --reporter compact --warn NoTests)
+  set_tests_properties(SimplnxCoreLaplacianOocNumerical PROPERTIES RUN_SERIAL TRUE TIMEOUT 300)
 endif()
 
 # ------------------------------------------------------------------------------
