@@ -622,16 +622,16 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: rejects mismatched store s
 
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[ImageProcessing][ConnectedComponentEngine]")
 {
-  using ImageProcessing::detail::CcLine;
+  UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 11;
   constexpr usize k_MaximumRuns = (k_DimX + 1) / 2;
-  const usize labelFixedBytes =
-      ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int16>) + sizeof(std::vector<uint32>) + 2 * sizeof(CcLine) + 2 * k_MaximumRuns * sizeof(CcRun);
-  const usize countFixedBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int16>) + 2 * sizeof(CcLine) + 2 * k_MaximumRuns * sizeof(CcRun);
+  // Each of the two scanlines can contain four disjoint foreground runs.
+  const usize labelFixedBytes = 8 * sizeof(CcRun);
+  const usize countFixedBytes = labelFixedBytes;
   const usize labelTargetBytes = labelFixedBytes + 3 * k_DimX * (sizeof(int16) + sizeof(uint32));
   const usize countTargetBytes = countFixedBytes + 3 * k_DimX * sizeof(int16);
 
@@ -642,15 +642,35 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[
   REQUIRE(labelResult.value().coreColumns == k_DimX);
   REQUIRE(labelResult.value().maximumRunsPerLine == k_MaximumRuns);
   REQUIRE(labelResult.value().residentBytes == labelTargetBytes);
+  const auto labelShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, labelTargetBytes - 1);
+  REQUIRE(labelShortResult.valid());
+  REQUIRE_FALSE(labelShortResult.value().useTiles);
+  REQUIRE((labelShortResult.value().coreRows == 2));
+  REQUIRE((labelShortResult.value().residentBytes == labelFixedBytes + (2 * k_DimX * (sizeof(int16) + sizeof(uint32)))));
 
   const auto countResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, /*writesProvisional=*/false, countTargetBytes);
   REQUIRE(countResult.valid());
   REQUIRE_FALSE(countResult.value().useTiles);
   REQUIRE(countResult.value().coreRows == 3);
   REQUIRE(countResult.value().residentBytes == countTargetBytes);
+  const auto countShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, false, countTargetBytes - 1);
+  REQUIRE(countShortResult.valid());
+  REQUIRE_FALSE(countShortResult.value().useTiles);
+  REQUIRE((countShortResult.value().coreRows == 2));
+  REQUIRE((countShortResult.value().residentBytes == countFixedBytes + (2 * k_DimX * sizeof(int16))));
+
+  const usize oneLabelRowBytes = labelFixedBytes + (k_DimX * (sizeof(int16) + sizeof(uint32)));
+  const auto oneLabelRowResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, oneLabelRowBytes);
+  REQUIRE(oneLabelRowResult.valid());
+  REQUIRE_FALSE(oneLabelRowResult.value().useTiles);
+  REQUIRE((oneLabelRowResult.value().coreRows == 1));
+  REQUIRE((oneLabelRowResult.value().residentBytes == oneLabelRowBytes));
+  const auto oneLabelRowShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, oneLabelRowBytes - 1);
+  REQUIRE(oneLabelRowShortResult.valid());
+  REQUIRE(oneLabelRowShortResult.value().useTiles);
 
   constexpr usize k_TileDimX = 31;
-  const usize tileFixedBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + 2 * sizeof(std::vector<uint32>) + 2 * sizeof(uint32);
+  const usize tileFixedBytes = 2 * sizeof(uint32);
   const usize tileTargetBytes = tileFixedBytes + 5 * (sizeof(int32) + 2 * sizeof(uint32));
   const auto tileResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, /*dimY=*/4, /*writesProvisional=*/true, tileTargetBytes);
   REQUIRE(tileResult.valid());
@@ -658,14 +678,28 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[
   REQUIRE(tileResult.value().coreRows == 1);
   REQUIRE(tileResult.value().coreColumns == 5);
   REQUIRE(tileResult.value().residentBytes == tileTargetBytes);
+  const auto tileShortResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, 4, true, tileTargetBytes - 1);
+  REQUIRE(tileShortResult.valid());
+  REQUIRE(tileShortResult.value().useTiles);
+  REQUIRE((tileShortResult.value().coreColumns == 4));
+  REQUIRE((tileShortResult.value().residentBytes == tileFixedBytes + (4 * (sizeof(int32) + 2 * sizeof(uint32)))));
 
   const auto zeroWidthResult = CreateConnectedComponent2DPlan<int32>(/*dimX=*/0, /*dimY=*/4, true, tileTargetBytes);
   REQUIRE(zeroWidthResult.invalid());
   const auto zeroHeightResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, /*dimY=*/0, true, tileTargetBytes);
   REQUIRE(zeroHeightResult.invalid());
   const usize oneColumnTileBytes = tileFixedBytes + sizeof(int32) + 2 * sizeof(uint32);
+  const auto oneColumnResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, 4, true, oneColumnTileBytes);
+  REQUIRE(oneColumnResult.valid());
+  REQUIRE(oneColumnResult.value().useTiles);
+  REQUIRE((oneColumnResult.value().coreColumns == 1));
+  REQUIRE((oneColumnResult.value().residentBytes == oneColumnTileBytes));
   const auto insufficientResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, /*dimY=*/4, true, oneColumnTileBytes - 1);
   REQUIRE(insufficientResult.invalid());
+  REQUIRE((insufficientResult.errors()[0].code == -8374));
+  const auto zeroBudgetResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, 4, true, 0);
+  REQUIRE(zeroBudgetResult.invalid());
+  REQUIRE((zeroBudgetResult.errors()[0].code == -8374));
   const auto overflowResult = CreateConnectedComponent2DPlan<int32>(std::numeric_limits<usize>::max(), /*dimY=*/4, true, std::numeric_limits<usize>::max());
   REQUIRE(overflowResult.invalid());
 }
@@ -702,6 +736,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: provisional adapter suppor
 
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: true-2-D row blocks align to OOC chunk bands", "[ImageProcessing][ConnectedComponentEngine]")
 {
+  UnitTest::LoadPlugins();
   using ImageProcessing::detail::AlignConnectedComponent2DRows;
   using ImageProcessing::detail::CreateConnectedComponent2DFinalChunkValues;
 
@@ -717,18 +752,31 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: true-2-D row blocks align 
   const ShapeType overflowingSecondChunk = ShapeType{1, 3, 9};
   REQUIRE(AlignConnectedComponent2DRows(maximumRows, /*dimX=*/9, overflowingFirstChunk, overflowingSecondChunk) == maximumRows);
 
-  const usize finalTargetBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<uint32>) + 7 * 9 * sizeof(uint32);
+  const usize finalTargetBytes = 252; // Seven width-nine rows of uint32 labels.
   const auto finalChunkResult = CreateConnectedComponent2DFinalChunkValues(/*totalValues=*/9 * 11, /*dimX=*/9, finalTargetBytes, twoRowChunks, fourRowChunks);
   REQUIRE(finalChunkResult.valid());
   REQUIRE(finalChunkResult.value() == 4 * 9);
-  const auto insufficientResult = CreateConnectedComponent2DFinalChunkValues(
-      /*totalValues=*/9 * 11, /*dimX=*/9, ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<uint32>) + sizeof(uint32) - 1, twoRowChunks, fourRowChunks);
+  const auto alignedExactResult = CreateConnectedComponent2DFinalChunkValues(99, 9, 144, twoRowChunks, fourRowChunks);
+  REQUIRE(alignedExactResult.valid());
+  REQUIRE((alignedExactResult.value() == 36));
+  const auto alignedShortResult = CreateConnectedComponent2DFinalChunkValues(99, 9, 143, twoRowChunks, fourRowChunks);
+  REQUIRE(alignedShortResult.valid());
+  // Four-row alignment cannot fit three available rows, so retain those three rows.
+  REQUIRE((alignedShortResult.value() == 27));
+  const auto exactResult = CreateConnectedComponent2DFinalChunkValues(99, 9, sizeof(uint32), twoRowChunks, fourRowChunks);
+  REQUIRE(exactResult.valid());
+  REQUIRE((exactResult.value() == 1));
+  const auto insufficientResult = CreateConnectedComponent2DFinalChunkValues(99, 9, sizeof(uint32) - 1, twoRowChunks, fourRowChunks);
   REQUIRE(insufficientResult.invalid());
+  REQUIRE((insufficientResult.errors()[0].code == -8374));
+  REQUIRE(CreateConnectedComponent2DFinalChunkValues(99, 9, 0, twoRowChunks, fourRowChunks).invalid());
+  REQUIRE(CreateConnectedComponent2DFinalChunkValues(0, 9, finalTargetBytes, twoRowChunks, fourRowChunks).invalid());
+  REQUIRE(CreateConnectedComponent2DFinalChunkValues(99, 0, finalTargetBytes, twoRowChunks, fourRowChunks).invalid());
 }
 
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks preserve connectivity and transfer caps", "[ImageProcessing][ConnectedComponentEngine]")
 {
-  using ImageProcessing::detail::CcLine;
+  UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
@@ -749,8 +797,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks pr
   mask[5 * k_DimX + 5] = 1;
 
   constexpr usize k_MaximumRuns = (k_DimX + 1) / 2;
-  const usize labelFixedBytes =
-      ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + sizeof(std::vector<uint32>) + 2 * sizeof(CcLine) + 2 * k_MaximumRuns * sizeof(CcRun);
+  const usize labelFixedBytes = 2 * k_MaximumRuns * sizeof(CcRun);
   const usize labelTargetBytes = labelFixedBytes + 2 * k_DimX * (sizeof(int32) + sizeof(uint32));
   const auto labelPlanResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/true, labelTargetBytes);
   REQUIRE(labelPlanResult.valid());
@@ -761,7 +808,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks pr
   REQUIRE_FALSE(labelPass1PlanResult.value().useTiles);
   REQUIRE(labelPass1PlanResult.value().coreRows == 4);
 
-  const usize countFixedBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + 2 * sizeof(CcLine) + 2 * k_MaximumRuns * sizeof(CcRun);
+  const usize countFixedBytes = 2 * k_MaximumRuns * sizeof(CcRun);
   const usize countTargetBytes = countFixedBytes + 2 * k_DimX * sizeof(int32);
   const auto countPlanResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/false, countTargetBytes);
   REQUIRE(countPlanResult.valid());
@@ -805,6 +852,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks pr
 
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles preserve run and neighbor continuity", "[ImageProcessing][ConnectedComponentEngine]")
 {
+  UnitTest::LoadPlugins();
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
   constexpr usize k_DimX = 13;
@@ -823,7 +871,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles pre
   mask[2 * k_DimX + 10] = 1;
   mask[4 * k_DimX + 11] = 1;
 
-  const usize tileFixedBytes = ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + 2 * sizeof(std::vector<uint32>) + 2 * sizeof(uint32);
+  const usize tileFixedBytes = 2 * sizeof(uint32);
   const usize targetBytes = tileFixedBytes + k_CoreColumns * (sizeof(int32) + 2 * sizeof(uint32));
   const auto planResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/true, targetBytes);
   REQUIRE(planResult.valid());
@@ -862,17 +910,67 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles pre
   REQUIRE(countInputStore.maximumReadValues() <= k_CoreColumns);
 }
 
+TEST_CASE("ImageProcessing::ConnectedComponentEngine: minimum tile payload preserves hand-defined labels and counts", "[ImageProcessing][ConnectedComponentEngine]")
+{
+  UnitTest::LoadPlugins();
+  constexpr usize dimX = 5;
+  constexpr usize dimY = 3;
+  // One input, current label, previous label, and two previous-row halo values.
+  constexpr usize minimumTileBytes = sizeof(int32) + (4 * sizeof(uint32));
+  constexpr uint32 poison = 0xA5A5A5A5u;
+  const std::array<int32, 15> mask = {1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0};
+  const bool fullyConnected = GENERATE(false, true);
+  const std::array<uint32, 15> expected = fullyConnected ? std::array<uint32, 15>{1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0} : std::array<uint32, 15>{1, 1, 0, 0, 2, 0, 0, 3, 0, 2, 0, 0, 0, 4, 0};
+  TransferCountingDataStore<int32> inputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, 0);
+  REQUIRE(inputStore.copyFromBuffer(0, nonstd::span<const int32>(mask.data(), mask.size())).valid());
+  DataStore<uint32> outputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, poison);
+  const std::atomic_bool shouldCancel{false};
+  const auto predicate = [](int32 value) { return value != 0; };
+
+  SECTION("one byte short refuses before reading or writing")
+  {
+    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{dimX, dimY, 1}, predicate, fullyConnected, shouldCancel, {}, minimumTileBytes - 1);
+    REQUIRE(labelResult.invalid());
+    REQUIRE((labelResult.errors()[0].code == -8374));
+    REQUIRE((inputStore.readCount() == 0));
+    for(usize index = 0; index < mask.size(); ++index)
+    {
+      REQUIRE((outputStore.getValue(index) == poison));
+    }
+    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3{dimX, dimY, 1}, predicate, fullyConnected, 1, shouldCancel, minimumTileBytes - 1);
+    REQUIRE(countResult.invalid());
+    REQUIRE((countResult.errors()[0].code == -8374));
+    REQUIRE((inputStore.readCount() == 0));
+  }
+
+  SECTION("exact payload yields the raster labels and size-filtered counts")
+  {
+    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{dimX, dimY, 1}, predicate, fullyConnected, shouldCancel, {}, minimumTileBytes);
+    REQUIRE(labelResult.valid());
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      REQUIRE((outputStore.getValue(index) == expected.at(index)));
+    }
+    REQUIRE((inputStore.maximumReadValues() == 1));
+    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3{dimX, dimY, 1}, predicate, fullyConnected, 1, shouldCancel, minimumTileBytes);
+    REQUIRE(countResult.valid());
+    REQUIRE((countResult.value() == (fullyConnected ? 1 : 4)));
+    const auto filteredCountResult = CountConnectedComponents<int32>(inputStore, SizeVec3{dimX, dimY, 1}, predicate, fullyConnected, 2, shouldCancel, minimumTileBytes);
+    REQUIRE(filteredCountResult.valid());
+    REQUIRE((filteredCountResult.value() == (fullyConnected ? 1 : 2)));
+  }
+}
+
 TEST_CASE("ImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellation and input errors stop before final output", "[ImageProcessing][ConnectedComponentEngine]")
 {
-  using ImageProcessing::detail::CcLine;
+  UnitTest::LoadPlugins();
   using ImageProcessing::detail::CcRun;
 
   constexpr usize k_DimX = 9;
   constexpr usize k_DimY = 7;
   constexpr uint32 k_Poison = 0xA5A5A5A5u;
   constexpr usize k_MaximumRuns = (k_DimX + 1) / 2;
-  const usize fixedBytes =
-      ImageProcessing::detail::k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<int32>) + sizeof(std::vector<uint32>) + 2 * sizeof(CcLine) + 2 * k_MaximumRuns * sizeof(CcRun);
+  const usize fixedBytes = 2 * k_MaximumRuns * sizeof(CcRun);
   const usize targetBytes = fixedBytes + 2 * k_DimX * (sizeof(int32) + sizeof(uint32));
   const auto predicate = [](int32 value) { return value != 0; };
 
