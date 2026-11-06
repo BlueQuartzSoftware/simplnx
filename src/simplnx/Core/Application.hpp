@@ -130,6 +130,12 @@ public:
   Result<> loadPreferences(const std::filesystem::path& filepath);
 
   /**
+   * @brief Takes pending preference-load warnings once.
+   * @return Warnings from all loads since the previous take, in load order.
+   */
+  WarningCollection takePreferenceLoadWarnings();
+
+  /**
    * @brief Returns no JSON pipeline builder.
    * @return nullptr.
    */
@@ -202,7 +208,9 @@ protected:
 
   /**
    * @brief Initializes preferences, executable path, and type mappings.
-   * @return Preference-load warnings or an executable-path error.
+   * @return Preference-load or executable-path errors.
+   *
+   * Preference-load warnings remain pending for a later consumer.
    */
   Result<> initialize();
 
@@ -228,5 +236,6 @@ private:
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   name_type_map m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;
+  WarningCollection m_PendingPreferenceLoadWarnings;
 };
 } // namespace nx::core
