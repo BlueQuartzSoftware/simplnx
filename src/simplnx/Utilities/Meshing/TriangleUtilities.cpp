@@ -1,4 +1,8 @@
 #include "TriangleUtilities.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include <array>
+#include <utility>
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -36,10 +40,10 @@ using namespace nx::core;
 namespace
 {
 using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
-using WindingFace = std::array<IGeometry::MeshIndexType, 3>;
+using WindingFaceType = std::array<IGeometry::MeshIndexType, 3>;
 
-static_assert(std::is_trivially_copyable_v<WindingFace>);
-static_assert(sizeof(WindingFace) == 3 * sizeof(IGeometry::MeshIndexType));
+static_assert(std::is_trivially_copyable_v<WindingFaceType>);
+static_assert(sizeof(WindingFaceType) == 3 * sizeof(IGeometry::MeshIndexType));
 
 inline constexpr uint64 k_WindingBatchRecords = 4096;
 inline constexpr usize k_WindingCachePages = 8;
@@ -533,14 +537,14 @@ private:
  * @return Scratch flush/read or destination-write error, or success.
  * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
  */
-Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFace>& faceCache,
+Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
                            nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified)
 {
   if(!facesModified)
   {
     return {};
   }
-  // Like the previous face-cache flush, preserve completed flips even on cancellation.
+  // Preserve completed flips when traversal is cancelled.
   const std::atomic_bool neverCancel = false;
   auto flushResult = faceCache.flush(neverCancel);
   if(flushResult.invalid())
@@ -550,7 +554,7 @@ Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangle
   for(uint64 offset = 0; offset < faceStore.recordCount(); offset += k_WindingBatchRecords)
   {
     const uint64 count = std::min<uint64>(k_WindingBatchRecords, faceStore.recordCount() - offset);
-    auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(buffer.data()), static_cast<usize>(count * sizeof(WindingFace)));
+    auto bytes = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(buffer.data()), static_cast<usize>(count * sizeof(WindingFaceType)));
     auto readResult = faceStore.read(offset, count, bytes, neverCancel);
     if(readResult.invalid())
     {
@@ -1010,12 +1014,12 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   // Stage connectivity during the existing scan. Dirty page evictions then target
   // uncompressed scratch records, not HDF5 chunks that the next read must compress
   // and inflate again. Copy back only when traversal completes or is cancelled.
-  auto faceStoreResult = CreateWindingRecordStore<WindingFace>(triangleCount);
+  auto faceStoreResult = CreateWindingRecordStore<WindingFaceType>(triangleCount);
   if(faceStoreResult.invalid())
   {
     return ConvertResult(std::move(faceStoreResult));
   }
-  std::unique_ptr<ITemporaryRecordStore> faceStore = std::move(faceStoreResult.value());
+  const std::unique_ptr<ITemporaryRecordStore> faceStore = std::move(faceStoreResult.value());
 
   std::vector<IGeometry::MeshIndexType> faceBuffer;
   std::vector<int32> idBuffer;
@@ -1045,7 +1049,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
       return faceReadResult;
     }
     auto faceStageResult =
-        faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFace))), shouldCancel);
+        faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFaceType))), shouldCancel);
     if(faceStageResult.invalid())
     {
       return faceStageResult;
@@ -1317,7 +1321,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     neighborOffset = groupEnd;
   }
 
-  BoundedRecordPageCache<WindingFace> faceCache(*faceStore, k_WindingBatchRecords, k_WindingCachePages);
+  BoundedRecordPageCache<WindingFaceType> faceCache(*faceStore, k_WindingBatchRecords, k_WindingCachePages);
   // Keep face access non-cancelling, as before; traversal owns cancellation checks.
   const std::atomic_bool neverCancel = false;
   bool facesModified = false;
