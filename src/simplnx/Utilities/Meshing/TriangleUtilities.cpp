@@ -1675,6 +1675,72 @@ TriangleNormalWorkingPlan planNormalWorkingMemory(const AbstractDataStore<IGeome
   }
   return {.CacheVertices = cacheVertices, .FaceCapacity = faceCapacity, .PageVertices = pageVertices, .PayloadBytes = coordinateBytes + (faceCapacity * bytesPerFace)};
 }
+
+/**
+ * @brief Builds the error for a working grant that cannot fund one face.
+ * @param code Distinguishes the initial admission from the admission after the first-normal publication.
+ * @param requestedBytes Bytes requested from the working-memory budget.
+ * @param grantedBytes Bytes actually granted.
+ * @param vertexBytes Bytes needed to cache every vertex coordinate.
+ * @return Error result with the requested, granted, and minimum byte counts.
+ */
+Result<> MakeNormalAdmissionError(int32 code, uint64 requestedBytes, usize grantedBytes, usize vertexBytes)
+{
+  return MakeErrorResult(code, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached "
+                                           "vertices and one face. Retry after other operations finish.",
+                                           requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
+}
+
+/**
+ * @brief Calculates the normal of triangle 0 from its inputs and writes it before compute buffers are admitted.
+ * @param triangles Provides the three vertex indexes of triangle 0.
+ * @param verts Provides the XYZ coordinates of those vertices.
+ * @param normals Receives the normal of triangle 0.
+ * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.
+ * @return Transfer warnings, or error -65817 for an input read, -65813 for an invalid vertex index, or -65818 for the write.
+ *
+ * A store's first write can need its own working reservation, for example to create a writable copy of a
+ * read-only imported source. Running that write while the caller holds no reservation keeps it from competing
+ * with the compute buffers. The stored normals are never read, so an imported output chunk is never decoded here.
+ * The function reads only the inputs that the block loop reads again; that loop later writes the same value again.
+ */
+Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+                            MeshingUtilities::detail::TriangleNormalCalculator calculateNormal)
+{
+  const usize numVertices = verts.getNumberOfTuples();
+  std::array<IGeometry::MeshIndexType, 3> face{};
+  auto result = triangles.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(face.data(), face.size()));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65817, "Error reading the connectivity of triangle 0 before recalculating triangle normals."));
+  }
+  std::array<float32, 9> coordinates{};
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    const auto vertexIndex = face[corner];
+    if(vertexIndex >= numVertices)
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.", 0,
+                                                                                 vertexIndex, numVertices, numVertices)));
+    }
+  }
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    result = MergeResults(std::move(result), verts.copyIntoBuffer(face[corner] * 3, nonstd::span<float32>(coordinates.data() + (corner * 3), 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65817, "Error reading the vertex coordinates of triangle 0 before recalculating triangle normals."));
+    }
+  }
+  const auto normal = calculateNormal(coordinates.data(), coordinates.data() + 3, coordinates.data() + 6);
+  const std::array<float64, 3> values{normal[0], normal[1], normal[2]};
+  result = MergeResults(std::move(result), normals.copyFromBuffer(0, nonstd::span<const float64>(values.data(), values.size())));
+  if(result.invalid())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-65818, "Error writing the normal of triangle 0 before recalculating triangle normals."));
+  }
+  return result;
+}
 } // namespace
 
 Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
@@ -1705,20 +1771,47 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
   const uint64 requestedBytes = std::min<uint64>(observedPlan.FaceCapacity == 0 ? preferredBytes : observedPlan.PayloadBytes, budget.maximumWorkingMemoryBytes());
   // A snapshot avoids known excess admission; a racing reservation can still reduce the actual grant.
   auto reservation = budget.reserveWorkingMemory(requestedBytes);
-  const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
-  const auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+  auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  if(plan.FaceCapacity == 0)
+  {
+    return MakeNormalAdmissionError(-65815, requestedBytes, grantedBytes, vertexBytes);
+  }
+  Result<> result;
+  if(normals.getStoreType() == IDataStore::StoreType::OutOfCore)
+  {
+    // A store of type OutOfCore can reserve its own working memory on its first write. Release the admission
+    // while the normal of triangle 0 is calculated and written, then admit the checked plan again. No buffer
+    // exists yet, so the released bytes fund nothing. If the new admission fails, triangle 0 keeps its new
+    // normal and every later triangle keeps its old value.
+    const usize admittedBytes = plan.PayloadBytes;
+    reservation = {};
+    result = PublishFirstNormal(triangles, verts, normals, calculateNormal);
+    if(result.invalid())
+    {
+      return result;
+    }
+    // Cancellation during the publication stops before the second admission, buffer allocation, or any block transfer.
+    if(shouldCancel)
+    {
+      return result;
+    }
+    reservation = budget.reserveWorkingMemory(static_cast<uint64>(admittedBytes));
+    grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+    if(grantedBytes < admittedBytes)
+    {
+      plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+      if(plan.FaceCapacity == 0)
+      {
+        return MergeResults(std::move(result), MakeNormalAdmissionError(-65819, admittedBytes, grantedBytes, vertexBytes));
+      }
+    }
+  }
   const bool cacheVertices = plan.CacheVertices;
   const usize bufferTriangles = plan.FaceCapacity;
-  if(bufferTriangles == 0)
-  {
-    return MakeErrorResult(
-        -65815, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached vertices and one face.",
-                            requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
-  }
   const usize pageVertices = plan.PageVertices;
   // The checked plan fits the actual grant; release any remainder before allocations or I/O.
   reservation.shrinkTo(plan.PayloadBytes);
-  Result<> result;
   try
   {
     std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
