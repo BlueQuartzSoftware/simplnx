@@ -1,5 +1,7 @@
 #include "ExtractTripleLines.hpp"
 
+#include "simplnx/Utilities/Meshing/TransferResult.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
@@ -147,7 +149,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
           pageEnd = pageBegin + pageCount;
           // Keep accumulated diagnostics until both the transfer and its merge succeed.
           auto readResult = source.copyIntoBuffer(pageBegin * 3, {page->data(), pageCount * 3});
-          result = MergeResults(result, std::move(readResult));
+          result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(readResult));
           if(result.invalid() || shouldCancel)
           {
             return result;
@@ -155,7 +157,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
           if(copyNodes)
           {
             auto nodeReadResult = sourceNodes->copyIntoBuffer(pageBegin, {nodePage->data(), pageCount});
-            result = MergeResults(result, std::move(nodeReadResult));
+            result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(nodeReadResult));
             if(result.invalid() || shouldCancel)
             {
               return result;
@@ -177,7 +179,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
         return result;
       }
       auto writeResult = destination.copyFromBuffer(begin * 3, {output->data(), count * 3});
-      result = MergeResults(result, std::move(writeResult));
+      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -185,7 +187,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
       if(copyNodes)
       {
         auto nodeWriteResult = destinationNodes->copyFromBuffer(begin, {nodeOutput->data(), count});
-        result = MergeResults(result, std::move(nodeWriteResult));
+        result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(nodeWriteResult));
         if(result.invalid() || shouldCancel)
         {
           return result;
@@ -262,13 +264,13 @@ Result<> writeTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& desti
       }
       // Copy the accumulator so a throwing merge cannot consume its earlier diagnostics.
       auto writeResult = destination.copyFromBuffer(begin * 2, {endpoints->data(), count * 2});
-      result = MergeResults(result, std::move(writeResult));
+      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
       }
       auto countWriteResult = counts.copyFromBuffer(begin, {regionCounts->data(), count});
-      result = MergeResults(result, std::move(countWriteResult));
+      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(countWriteResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -514,8 +516,8 @@ Result<> ExtractTripleLines::operator()()
   auto& destEdgesRef = tripleLineGeom.getEdges()->getDataStoreRef();
   if(destEdgesRef.getStoreType() == IDataStore::StoreType::OutOfCore || numFeaturesRef.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
-    publicationResult =
-        MergeResults(std::move(publicationResult), writeTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
+    publicationResult = MeshingUtilities::detail::MergeTransferResult(
+        publicationResult, writeTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
     if(publicationResult.invalid() || m_ShouldCancel)
     {
       return publicationResult;
