@@ -33,6 +33,7 @@ set(SIMPLNX_TEST_SRCS
   ArraySelectionParameterTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
+  CheckedFlushTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   DataArrayTest.cpp
@@ -70,6 +71,7 @@ set(SIMPLNX_TEST_SRCS
   PluginTest.cpp
   ParametersTest.cpp
   PipelineFilterMessagingTest.cpp
+  PipelineFlushTest.cpp
   PipelineSaveTest.cpp
   PrebuiltPipelineTest.cpp
   UuidTest.cpp

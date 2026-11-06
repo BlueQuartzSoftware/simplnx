@@ -6,6 +6,8 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
+#include <utility>
+
 namespace nx::core
 {
 class BaseGroup;
@@ -19,6 +21,33 @@ class DataStructureWriter;
 
 class GroupIO;
 class ObjectIO;
+
+/**
+ * @brief Appends each new write diagnostic without copying the accumulated collections.
+ * @param accumulated Receives diagnostics and retains failure validity, including empty error collections.
+ * @param next Result from the next write operation.
+ */
+inline void AppendWriteResult(Result<>& accumulated, Result<> next)
+{
+  for(auto& warning : next.warnings())
+  {
+    accumulated.warnings().push_back(std::move(warning));
+  }
+  if(next.invalid())
+  {
+    if(accumulated.valid())
+    {
+      accumulated.m_Expected = nonstd::make_unexpected(std::move(next.errors()));
+    }
+    else
+    {
+      for(auto& error : next.errors())
+      {
+        accumulated.errors().push_back(std::move(error));
+      }
+    }
+  }
+}
 
 /**
  * @brief Attempts to write the DataObject attributes to HDF5.

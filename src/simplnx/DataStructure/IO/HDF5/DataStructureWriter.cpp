@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -153,7 +154,7 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
   // without copying data. An empty override uses the normal type factory.
   if(auto overrideResult = Application::GetOrCreateInstance()->getIOCollection().onRecoveryWrite(*this, dataObject, parentGroup); overrideResult.has_value())
   {
-    return overrideResult.value();
+    return std::move(overrideResult.value());
   }
 
   auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
@@ -163,27 +164,22 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
     return MakeErrorResult(-5, ss);
   }
 
-  auto result = factory->writeDataObject(*this, dataObject, parentGroup);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  return {};
+  return factory->writeDataObject(*this, dataObject, parentGroup);
 }
 
 Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF5::GroupIO& parentGroup)
 {
+  Result<> result;
   for(const auto& [key, object] : dataMap)
   {
-    Result<> result = writeDataObject(object.get(), parentGroup);
+    AppendWriteResult(result, writeDataObject(object.get(), parentGroup));
     if(result.invalid())
     {
       return result;
     }
   }
 
-  return {};
+  return result;
 }
 
 Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, nx::core::HDF5::GroupIO& groupIO)

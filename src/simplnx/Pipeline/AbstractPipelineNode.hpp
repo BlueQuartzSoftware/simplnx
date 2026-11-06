@@ -68,6 +68,12 @@ public:
   using FilterFaultDetailSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, WarningCollection, ErrorCollection)>;
   const FilterFaultDetailSignalType& getFilterFaultDetailSignal() const;
   FilterFaultDetailSignalType& getFilterFaultDetailSignal();
+  /**
+   * @brief Sends node diagnostics. Index -1 identifies pipeline completion without a filter row.
+   * @param filterIndex Filter row, or -1 for pipeline completion.
+   * @param warnings Warning details in execution order.
+   * @param errors Error details in execution order.
+   */
   void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors);
 
   using CancelledSignalType = nod::signal<void()>;
@@ -156,6 +162,13 @@ public:
    * @return bool
    */
   FaultState getFaultState() const;
+
+  /**
+   * @brief Reports completion failure from the last actual execution.
+   * @return True if checked persistence or snapshot publication failed.
+   * @note Preflight and rejected execution requests do not reset this outcome.
+   */
+  bool hasCompletionErrors() const;
 
   /**
    * @brief Returns true if the node has errors. Otherwise, this method returns
@@ -283,9 +296,9 @@ protected:
   AbstractPipelineNode(Pipeline* parent = nullptr);
 
   /**
-   * @brief Updates the stored DataStructure. This should only be called from
-   * within the execute(DataStructure&) method.
-   * @param dataStructure
+   * @brief Publishes a shallow snapshot after the complete copy succeeds.
+   * @param dataStructure Source whose stores remain shared with the snapshot.
+   * @note Copy failure preserves the previous snapshot.
    */
   void setDataStructure(const DataStructure& dataStructure);
 
@@ -304,11 +317,26 @@ protected:
   void setPreflightStructure(const DataStructure& dataStructure, bool success = true);
 
   /**
-   * @brief Called when ending pipeline node execution.
-   * Sets the DataStructure and clears the Executing flag.
-   * If there is a parent node, sets the Executed flag.
+   * @brief Flushes and snapshots data through the legacy completion interface.
+   * @param dataStructure Completed execution data.
+   * @note Checked pipeline execution calls endExecutionChecked instead of this method.
    */
   virtual void endExecution(DataStructure& dataStructure);
+
+  /**
+   * @brief Checks persistence and attempts a shallow snapshot even if persistence fails.
+   * @param dataStructure Completed execution data.
+   * @return Flush diagnostics followed by snapshot diagnostics, if any.
+   * @note Extensions that customize checked completion must override this method.
+   * @throws std::bad_alloc If diagnostic allocation fails.
+   */
+  [[nodiscard]] virtual Result<> endExecutionChecked(DataStructure& dataStructure);
+
+  /**
+   * @brief Records checked completion failure independently of execute-stage cancellation.
+   * @param value Completion outcome for the current actual execution.
+   */
+  void setHasCompletionErrors(bool value);
 
   /**
    * @brief Returns a Pipeline containing the parent pipeline up to the current
@@ -339,6 +367,7 @@ private:
   DataStructure m_DataStructure;
   DataStructure m_PreflightStructure;
   bool m_IsPreflighted = false;
+  bool m_HasCompletionErrors = false;
   SignalType m_Signal;
   FaultState m_FaultState = FaultState::None;
   bool m_IsDisabled = false;

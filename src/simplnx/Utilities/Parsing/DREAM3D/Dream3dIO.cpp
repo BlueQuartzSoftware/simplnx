@@ -2754,7 +2754,7 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
     WriteXdmf(xdmfFilePath, dataStructure, path.filename().string());
   }
 
-  return {};
+  return result;
 }
 
 Result<> DREAM3D::WriteRecoveryFile(const fs::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, std::optional<fs::path> userDataFilePath)
