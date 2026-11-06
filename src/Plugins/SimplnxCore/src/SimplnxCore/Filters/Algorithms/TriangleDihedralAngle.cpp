@@ -1,5 +1,7 @@
 #include "TriangleDihedralAngle.hpp"
 
+#include "simplnx/Utilities/Meshing/TransferResult.hpp"
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
@@ -202,10 +204,11 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
     std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
     if(cacheVertices)
     {
-      result = MergeResults(std::move(result), verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
+      result = MeshingUtilities::detail::MergeTransferResult(result, verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."));
+        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                    [&] { return MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."); });
       }
     }
     std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
@@ -220,10 +223,11 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
         return result;
       }
       const usize count = std::min(bufferTriangles, numTriangles - start);
-      result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+      result = MeshingUtilities::detail::MergeTransferResult(result, triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65821, fmt::format("Error reading connectivity for triangle dihedral angle calculation at triangle {} ({} triangles).", start, count)));
+        return MeshingUtilities::detail::WithTransferFailureContext(
+            std::move(result), [&] { return MakeErrorResult(-65821, fmt::format("Error reading connectivity for triangle dihedral angle calculation at triangle {} ({} triangles).", start, count)); });
       }
 
       for(usize triangleIndex = 0; triangleIndex < count; triangleIndex++)
@@ -241,12 +245,13 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       }
       if(!cacheVertices)
       {
-        result = MergeResults(std::move(result), MeshingUtilities::detail::GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9},
-                                                                                                   {page.data(), page.size()}));
+        result = MeshingUtilities::detail::MergeTransferResult(
+            result, MeshingUtilities::detail::GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
         if(result.invalid())
         {
-          return MergeResults(std::move(result),
-                              MakeErrorResult(-65820, fmt::format("Error reading vertex coordinates for triangle dihedral-angle calculation at triangle {} ({} triangles).", start, count)));
+          return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] {
+            return MakeErrorResult(-65820, fmt::format("Error reading vertex coordinates for triangle dihedral-angle calculation at triangle {} ({} triangles).", start, count));
+          });
         }
       }
       nx::core::Vec3<float64> vecAB = {0.0f, 0.0f, 0.0f};
@@ -289,10 +294,11 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
           angleBuffer[triangleIndex] = *std::ranges::min_element(dihedralAnglesVec);
         }
       }
-      result = MergeResults(std::move(result), dihedralAngles.copyFromBuffer(start, nonstd::span<const float64>(angleBuffer.data(), count)));
+      result = MeshingUtilities::detail::MergeTransferResult(result, dihedralAngles.copyFromBuffer(start, nonstd::span<const float64>(angleBuffer.data(), count)));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)));
+        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                    [&] { return MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)); });
       }
       start += count;
     }
