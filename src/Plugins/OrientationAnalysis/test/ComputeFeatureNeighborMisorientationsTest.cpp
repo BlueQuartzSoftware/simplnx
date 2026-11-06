@@ -22,6 +22,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -118,6 +119,30 @@ void SetAvgQuat(FixtureData& td, usize featureIdx, const std::array<float32, 4>&
   (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
   (*td.avgQuats)[featureIdx * 4 + 2] = q[2];
   (*td.avgQuats)[featureIdx * 4 + 3] = q[3];
+}
+
+void PopulateAveragesDisabledFixture(FixtureData& td)
+{
+  REQUIRE(td.featurePhases != nullptr);
+  REQUIRE(td.avgQuats != nullptr);
+  REQUIRE(td.neighborList != nullptr);
+  REQUIRE(td.crystalStructures != nullptr);
+  REQUIRE(td.featurePhases->getDataStore() != nullptr);
+  REQUIRE(td.avgQuats->getDataStore() != nullptr);
+  REQUIRE(td.neighborList->getIListStore() != nullptr);
+  REQUIRE(td.crystalStructures->getDataStore() != nullptr);
+
+  const std::array<int32, 5> featurePhases = {0, 1, 1, 1, 2};
+  const std::array<float32, 5> phi1Degrees = {0.0f, 0.0f, 5.0f, 10.0f, 99.0f};
+  for(usize featureIdx = 0; featureIdx < featurePhases.size(); featureIdx++)
+  {
+    (*td.featurePhases)[featureIdx] = featurePhases[featureIdx];
+    SetAvgQuat(td, featureIdx, QuatFromPhi1Deg(phi1Degrees[featureIdx]));
+    td.neighborList->setList(featureIdx, std::vector<int32>{});
+  }
+  (*td.crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  (*td.crystalStructures)[2] = ebsdlib::CrystalStructure::Hexagonal_High;
+  td.neighborList->setList(1, std::vector<int32>{2, 4, 3});
 }
 
 Arguments BuildArgs(bool computeAvgMisors)
@@ -405,6 +430,94 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
   REQUIRE(count > 0);
   const float32 expectedAvg = static_cast<float32>(sum / static_cast<float64>(count));
   REQUIRE(avg[1] == Approx(expectedAvg).margin(1e-4f));
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Averages Disabled - Resident Lists", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
+  AnalyticalFixtures::PopulateAveragesDisabledFixture(td);
+
+  REQUIRE(td.featurePhases->getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(td.avgQuats->getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE(td.crystalStructures->getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+  REQUIRE_FALSE(td.neighborList->getIListStore()->isOutOfCore());
+  const std::array<std::vector<int32>, 5> inputNeighborLists = {td.neighborList->at(0), td.neighborList->at(1), td.neighborList->at(2), td.neighborList->at(3), td.neighborList->at(4)};
+
+  ComputeFeatureNeighborMisorientationsFilter filter;
+  const Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/false);
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  REQUIRE(misoList.getIListStore() != nullptr);
+  REQUIRE_FALSE(misoList.getIListStore()->isOutOfCore());
+  REQUIRE(misoList.getNumberOfTuples() == 5);
+  const std::array<usize, 5> expectedListSizes = {0, 3, 0, 0, 0};
+  for(usize featureIdx = 0; featureIdx < expectedListSizes.size(); featureIdx++)
+  {
+    CAPTURE(featureIdx);
+    REQUIRE(misoList.at(featureIdx).size() == expectedListSizes[featureIdx]);
+    REQUIRE(td.neighborList->at(featureIdx) == inputNeighborLists[featureIdx]);
+  }
+  const auto feature1List = misoList.at(1);
+  REQUIRE(feature1List[0] == Approx(5.0f).margin(1e-3f));
+  REQUIRE(std::isnan(feature1List[1]));
+  REQUIRE(feature1List[2] == Approx(10.0f).margin(1e-3f));
+  REQUIRE(td.ds.getData(AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgMisorientationsOutName)) == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Averages Disabled - HDF5 Lists", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter][.OocStoreContract]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
+
+  // The scaffold creates a resident list. Replace its store before filling the fixture.
+  const DataPath neighborListPath = AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_NeighborListName);
+  const auto neighborListStore = DataStoreUtilities::CreateListStore<int32>(td.ds, neighborListPath, {5}, IDataAction::Mode::Execute, "HDF5-OOC");
+  REQUIRE(neighborListStore != nullptr);
+  REQUIRE(td.neighborList != nullptr);
+  td.neighborList->setStore(neighborListStore);
+  AnalyticalFixtures::PopulateAveragesDisabledFixture(td);
+
+  REQUIRE(td.featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(td.avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(td.crystalStructures->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(td.neighborList->getIListStore()->isOutOfCore());
+  const std::array<std::vector<int32>, 5> inputNeighborLists = {td.neighborList->at(0), td.neighborList->at(1), td.neighborList->at(2), td.neighborList->at(3), td.neighborList->at(4)};
+
+  ComputeFeatureNeighborMisorientationsFilter filter;
+  const Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/false);
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  REQUIRE(misoList.getIListStore() != nullptr);
+  REQUIRE(misoList.getIListStore()->isOutOfCore());
+  REQUIRE(misoList.getNumberOfTuples() == 5);
+  const std::array<usize, 5> expectedListSizes = {0, 3, 0, 0, 0};
+  for(usize featureIdx = 0; featureIdx < expectedListSizes.size(); featureIdx++)
+  {
+    CAPTURE(featureIdx);
+    REQUIRE(misoList.at(featureIdx).size() == expectedListSizes[featureIdx]);
+    REQUIRE(td.neighborList->at(featureIdx) == inputNeighborLists[featureIdx]);
+  }
+  const auto feature1List = misoList.at(1);
+  REQUIRE(feature1List[0] == Approx(5.0f).margin(1e-3f));
+  REQUIRE(std::isnan(feature1List[1]));
+  REQUIRE(feature1List[2] == Approx(10.0f).margin(1e-3f));
+  REQUIRE(td.ds.getData(AnalyticalFixtures::k_FeatureDataPath.createChildPath(AnalyticalFixtures::k_AvgMisorientationsOutName)) == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: genuine HDF5 1MiB-chunk tail oracle",
