@@ -90,7 +90,8 @@ bool MergeWindingTransfer(Result<>& result, WindingTransferWarnings& warnings, R
     EnrichWindingError([&] { warnings.appendOnError(result.warnings()); });
     EnrichWindingError([&] {
       result.errors().push_back(
-          {-56325, fmt::format("Triangle winding for geometry '{}': {} failed at tuple {} ({} tuples). Check the preceding storage diagnostic.", geometryPath, phasePtr, firstTuple, tupleCount)});
+          {.code = -56325,
+           .message = fmt::format("Triangle winding for geometry '{}': {} failed at tuple {} ({} tuples). Check the preceding storage diagnostic.", geometryPath, phasePtr, firstTuple, tupleCount)});
     });
     return false;
   }
