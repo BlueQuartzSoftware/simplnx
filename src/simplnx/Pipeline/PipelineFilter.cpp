@@ -1,4 +1,6 @@
 #include "PipelineFilter.hpp"
+#include <fmt/format.h>
+#include <utility>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/FilterList.hpp"
@@ -295,7 +297,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   {
     if(completionResult.errors().empty())
     {
-      completionResult.errors().push_back({-6071, fmt::format("Node '{}' checked completion failed without an error diagnostic.", getName())});
+      completionResult.errors().push_back({.code = -6071, .message = fmt::format("Node '{}' checked completion failed without an error diagnostic.", getName())});
     }
     for(auto& error : completionResult.errors())
     {
