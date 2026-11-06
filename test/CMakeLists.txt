@@ -30,6 +30,7 @@ set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
   ProfileIsolationContract.cpp
   AppTest.cpp
+  ArraySelectionParameterTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
   ChunkIndexTest.cpp

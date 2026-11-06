@@ -1,6 +1,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <catch2/catch.hpp>
@@ -374,5 +375,139 @@ TEST_CASE("IParallelAlgorithm: requireStoresInMemory with nullptr entries keeps 
   REQUIRE(algorithm.getParallelizationEnabled() == true);
 #else
   REQUIRE(algorithm.getParallelizationEnabled() == false);
+#endif
+}
+
+TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][IParallelAlgorithm]")
+{
+  DataStructure dataStructure;
+  auto inMemoryStore = std::make_shared<DataStore<float32>>(ShapeType{10}, ShapeType{1}, 0.0f);
+  auto oocStore = std::make_shared<MockOocDataStore<float32>>(ShapeType{10}, ShapeType{1});
+  auto* inMemoryArray = DataArray<float32>::Create(dataStructure, "InMemoryArray", inMemoryStore);
+  auto* oocArray = DataArray<float32>::Create(dataStructure, "OocArray", oocStore);
+  REQUIRE(inMemoryArray != nullptr);
+  REQUIRE(oocArray != nullptr);
+
+  SECTION("array requirements keep an earlier OOC restriction")
+  {
+    ParallelDataAlgorithm algorithm;
+    algorithm.requireArraysInMemory({oocArray});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireArraysInMemory({inMemoryArray});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireArraysInMemory({});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireArraysInMemory({nullptr});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("array requirements disable work when OOC follows resident storage")
+  {
+    ParallelDataAlgorithm algorithm;
+    algorithm.requireArraysInMemory({inMemoryArray});
+    algorithm.requireArraysInMemory({oocArray});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("store requirements keep an earlier OOC restriction")
+  {
+    DataStore<float32> residentStore(ShapeType{10}, ShapeType{1}, 0.0f);
+    MockOocDataStore<float32> localOocStore(ShapeType{10}, ShapeType{1});
+
+    ParallelDataAlgorithm algorithm;
+    algorithm.requireStoresInMemory({&localOocStore});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireStoresInMemory({&residentStore});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireStoresInMemory({});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+
+    algorithm.requireStoresInMemory({nullptr});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("store requirements disable work when OOC follows resident storage")
+  {
+    DataStore<float32> residentStore(ShapeType{10}, ShapeType{1}, 0.0f);
+    MockOocDataStore<float32> localOocStore(ShapeType{10}, ShapeType{1});
+
+    ParallelDataAlgorithm algorithm;
+    algorithm.requireStoresInMemory({&residentStore});
+    algorithm.requireStoresInMemory({&localOocStore});
+    REQUIRE(algorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("array and store requirements keep restrictions across helpers")
+  {
+    DataStore<float32> residentStore(ShapeType{10}, ShapeType{1}, 0.0f);
+    MockOocDataStore<float32> localOocStore(ShapeType{10}, ShapeType{1});
+
+    ParallelDataAlgorithm storeThenArray;
+    storeThenArray.requireStoresInMemory({&localOocStore});
+    storeThenArray.requireArraysInMemory({inMemoryArray});
+    REQUIRE(storeThenArray.getParallelizationEnabled() == false);
+
+    ParallelDataAlgorithm arrayThenStore;
+    arrayThenStore.requireArraysInMemory({oocArray});
+    arrayThenStore.requireStoresInMemory({&residentStore});
+    REQUIRE(arrayThenStore.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("explicit disable remains in effect for array and store requirements")
+  {
+    DataStore<float32> residentStore(ShapeType{10}, ShapeType{1}, 0.0f);
+
+    ParallelDataAlgorithm arrayAlgorithm;
+    arrayAlgorithm.setParallelizationEnabled(false);
+    arrayAlgorithm.requireArraysInMemory({inMemoryArray});
+    REQUIRE(arrayAlgorithm.getParallelizationEnabled() == false);
+    arrayAlgorithm.requireArraysInMemory({});
+    REQUIRE(arrayAlgorithm.getParallelizationEnabled() == false);
+    arrayAlgorithm.requireArraysInMemory({nullptr});
+    REQUIRE(arrayAlgorithm.getParallelizationEnabled() == false);
+
+    ParallelDataAlgorithm storeAlgorithm;
+    storeAlgorithm.setParallelizationEnabled(false);
+    storeAlgorithm.requireStoresInMemory({&residentStore});
+    REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
+    storeAlgorithm.requireStoresInMemory({});
+    REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
+    storeAlgorithm.requireStoresInMemory({nullptr});
+    REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  SECTION("explicit enable resets restrictions until another OOC requirement")
+  {
+    ParallelDataAlgorithm arrayAlgorithm;
+    arrayAlgorithm.requireArraysInMemory({oocArray});
+    arrayAlgorithm.setParallelizationEnabled(true);
+    arrayAlgorithm.requireArraysInMemory({inMemoryArray});
+    REQUIRE(arrayAlgorithm.getParallelizationEnabled() == true);
+    arrayAlgorithm.requireArraysInMemory({oocArray});
+    REQUIRE(arrayAlgorithm.getParallelizationEnabled() == false);
+
+    MockOocDataStore<float32> localOocStore(ShapeType{10}, ShapeType{1});
+    DataStore<float32> residentStore(ShapeType{10}, ShapeType{1}, 0.0f);
+    ParallelDataAlgorithm storeAlgorithm;
+    storeAlgorithm.requireStoresInMemory({&localOocStore});
+    storeAlgorithm.setParallelizationEnabled(true);
+    storeAlgorithm.requireStoresInMemory({&residentStore});
+    REQUIRE(storeAlgorithm.getParallelizationEnabled() == true);
+    storeAlgorithm.requireStoresInMemory({&localOocStore});
+    REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 #endif
 }
