@@ -156,7 +156,8 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Geometry cell tuple count", "[SimplnxC
 
 TEST_CASE("SimplnxCore::C02 AddBadData component contract", "[SimplnxCore][AddBadDataFilter][ComponentContract][C02]")
 {
-  UnitTest::LoadPlugins();
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
   const usize components = GENERATE(usize{1}, usize{3});
   CAPTURE(components);
 
