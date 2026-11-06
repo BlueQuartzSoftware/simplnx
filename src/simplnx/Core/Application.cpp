@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #if defined(__linux__)
@@ -206,6 +207,7 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
     m_Preferences = std::make_unique<Preferences>();
   }
   auto result = m_Preferences->loadFromFile(filepath);
+  m_PendingPreferenceLoadWarnings.insert(m_PendingPreferenceLoadWarnings.end(), result.warnings().begin(), result.warnings().end());
   if(result.invalid())
   {
     if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExist_Code)
@@ -217,6 +219,12 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
   }
   return result;
 }
+
+WarningCollection Application::takePreferenceLoadWarnings()
+{
+  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollection{});
+}
+
 Result<> Application::savePreferences()
 {
   if(m_Preferences == nullptr)
