@@ -1,4 +1,7 @@
 #include "ImageGeomIO.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
+#include <cstddef>
+#include <utility>
 
 #include "DataStructureReader.hpp"
 #include "simplnx/Common/Array.hpp"

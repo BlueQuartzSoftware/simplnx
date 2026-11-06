@@ -1,5 +1,7 @@
 #include "RectGridGeomIO.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
+#include <utility>
 
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
