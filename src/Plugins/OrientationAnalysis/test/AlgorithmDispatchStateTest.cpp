@@ -1,5 +1,6 @@
 #include "AlgorithmDispatchTestSupport.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -12,6 +13,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -239,29 +241,51 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin boundary", "[OrientationAnalysis][AlgorithmDispatch]")
 {
+  UnitTest::LoadPlugins();
   using Path = UnitTest::AlgorithmDispatchPath;
-
-  REQUIRE_FALSE(ForceInCoreAlgorithm());
-
+  struct SelectionCase
   {
-    const ForceOocAlgorithmGuard forceDirect(false);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Direct);
-  }
+    bool ForceInCore = false;
+    bool ForceOoc = false;
+    Path ExpectedPath = Path::Direct;
+    AlgorithmPathExecutionCounts ExpectedCounts{};
+  };
+  const std::array<SelectionCase, 4> cases = {{
+      {.ForceInCore = false,
+       .ForceOoc = false,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = false,
+       .ForceOoc = true,
+       .ExpectedPath = Path::Scanline,
+       .ExpectedCounts = {.InCore = 0, .OutOfCore = 1, .InCoreOnInMemoryStore = 0, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 1, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = true,
+       .ForceOoc = false,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+      {.ForceInCore = true,
+       .ForceOoc = true,
+       .ExpectedPath = Path::Direct,
+       .ExpectedCounts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+  }};
+  const bool originalInCore = ForceInCoreAlgorithm();
+  const bool originalOoc = ForceOocAlgorithm();
+  const auto originalCounts = GetAlgorithmPathExecutionCounts();
+  const auto restoreState = MakeScopeGuard([=]() noexcept {
+    ForceInCoreAlgorithm() = originalInCore;
+    ForceOocAlgorithm() = originalOoc;
+    SetAlgorithmPathExecutionCounts(originalCounts);
+  });
 
+  for(const auto& selection : cases)
   {
-    const ForceOocAlgorithmGuard forceScanline(true);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Scanline);
-
-    {
-      const ForceInCoreAlgorithmGuard forceDirect;
-      REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Direct);
-    }
-
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == Path::Scanline);
+    CAPTURE(selection.ForceInCore, selection.ForceOoc);
+    ForceInCoreAlgorithm() = selection.ForceInCore;
+    ForceOocAlgorithm() = selection.ForceOoc;
+    ResetAlgorithmPathExecutionCounts();
+    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.ExpectedPath);
+    checkDispatchCounts(selection.ExpectedCounts);
   }
-
-  REQUIRE_FALSE(ForceOocAlgorithm());
-  REQUIRE_FALSE(ForceInCoreAlgorithm());
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin path", "[OrientationAnalysis][AlgorithmDispatch]")

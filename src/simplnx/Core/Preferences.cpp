@@ -1,4 +1,8 @@
 #include "Preferences.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include <nlohmann/json.hpp>
+#include <string>
 
 #include "simplnx/Common/SimplnxConfig.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -38,9 +42,9 @@ constexpr StringLiteral k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 constexpr bool k_AutoRangeComputationDefault = false;
 
-constexpr int32 k_InvalidRoot_Code = -589;
-constexpr int32 k_InvalidOocSize_Code = -590;
-constexpr int32 k_RepairedOocSize_Warning = -591;
+constexpr int32 k_InvalidRootCode = -589;
+constexpr int32 k_InvalidOocSizeCode = -590;
+constexpr int32 k_RepairedOocSizeWarning = -591;
 
 constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
 constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
@@ -252,7 +256,7 @@ Result<uint64> Preferences::ValidateOocSizeValue(const std::string& name, const 
   const std::string_view label = oocSizeLabel(name);
   if(label.empty())
   {
-    return MakeErrorResult<uint64>(k_InvalidOocSize_Code, fmt::format("Preferences size key '{}' is not supported for value {} (JSON type {}).", name, boundedJsonValue(value), jsonTypeName(value)));
+    return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences size key '{}' is not supported for value {} (JSON type {}).", name, boundedJsonValue(value), jsonTypeName(value)));
   }
   if(value.is_number_unsigned())
   {
@@ -266,8 +270,8 @@ Result<uint64> Preferences::ValidateOocSizeValue(const std::string& name, const 
       return {static_cast<uint64>(signedValue)};
     }
   }
-  return MakeErrorResult<uint64>(k_InvalidOocSize_Code, fmt::format("Preferences {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes.", label, name, boundedJsonValue(value),
-                                                                    jsonTypeName(value), std::numeric_limits<uint64>::max()));
+  return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes.", label, name, boundedJsonValue(value),
+                                                                   jsonTypeName(value), std::numeric_limits<uint64>::max()));
 }
 
 Preferences::Preferences()
@@ -451,7 +455,7 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 
   if(!parsedResult.is_object())
   {
-    return MakeErrorResult(k_InvalidRoot_Code, fmt::format("Preferences file '{}' has a JSON {} root. Expected a JSON object.", filepath.string(), jsonTypeName(parsedResult)));
+    return MakeErrorResult(k_InvalidRootCode, fmt::format("Preferences file '{}' has a JSON {} root. Expected a JSON object.", filepath.string(), jsonTypeName(parsedResult)));
   }
 
   Result<> result;
@@ -469,10 +473,10 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
     }
     const uint64 replacementBytes = defaultValueAs<uint64>(key);
     result.warnings().push_back(
-        Warning{k_RepairedOocSize_Warning,
-                fmt::format("Preferences: saved {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes. Using the default: {} bytes. Review this value in "
-                            "Preferences > Out of Core.",
-                            oocSizeLabel(key), key, boundedJsonValue(parsedResult.at(key)), jsonTypeName(parsedResult.at(key)), std::numeric_limits<uint64>::max(), replacementBytes)});
+        Warning{.code = k_RepairedOocSizeWarning,
+                .message = fmt::format("Preferences: saved {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes. Using the default: {} bytes. Review this value in "
+                                       "Preferences > Out of Core.",
+                                       oocSizeLabel(key), key, boundedJsonValue(parsedResult.at(key)), jsonTypeName(parsedResult.at(key)), std::numeric_limits<uint64>::max(), replacementBytes)});
     parsedResult.erase(key);
   }
 

@@ -1,4 +1,5 @@
 #include "Pipeline.hpp"
+#include "simplnx/Common/Result.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
@@ -379,13 +380,13 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
     setDataStructure(dataStructure);
   } catch(const std::bad_alloc&)
   {
-    snapshotErrors.push_back({-272, fmt::format("Pipeline '{}' final completion snapshot failed because memory allocation failed.", getName())});
+    snapshotErrors.push_back({.code = -272, .message = fmt::format("Pipeline '{}' final completion snapshot failed because memory allocation failed.", getName())});
   } catch(const std::exception& exception)
   {
-    snapshotErrors.push_back({-6071, fmt::format("Pipeline '{}' final completion snapshot failed: {}", getName(), exception.what())});
+    snapshotErrors.push_back({.code = -6071, .message = fmt::format("Pipeline '{}' final completion snapshot failed: {}", getName(), exception.what())});
   } catch(...)
   {
-    snapshotErrors.push_back({-6071, fmt::format("Pipeline '{}' final completion snapshot failed with an unknown exception.", getName())});
+    snapshotErrors.push_back({.code = -6071, .message = fmt::format("Pipeline '{}' final completion snapshot failed with an unknown exception.", getName())});
   }
   if(!snapshotErrors.empty())
   {
