@@ -28,6 +28,7 @@ add_subdirectory(ConversionTest)
 
 set(SIMPLNX_TEST_SRCS
   simplnx_test_main.cpp
+  ProfileIsolationContract.cpp
   AppTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
@@ -136,6 +137,7 @@ target_compile_definitions(simplnx_test
 target_compile_options(simplnx_test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
+    # Test templates can exceed MSVC's default object section limit.
     $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
 
