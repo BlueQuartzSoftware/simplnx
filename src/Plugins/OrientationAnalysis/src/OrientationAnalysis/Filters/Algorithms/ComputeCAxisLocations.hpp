@@ -26,7 +26,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisLocationsInputValues
  * @brief Converts each cell quaternion to a sample-frame c axis.
  *
  * The executor maps crystal [001] through the transposed orientation matrix.
- * It normalizes the result and makes its Z component positive.
+ * It normalizes each defined result and makes its Z component positive.
+ * A direction with zero or non-finite length produces three NaN values.
  *
  * Hexagonal phases produce c axes. Other phases produce NaN values. The
  * executor reads and writes 65,536-tuple pages to bound OOC memory.
