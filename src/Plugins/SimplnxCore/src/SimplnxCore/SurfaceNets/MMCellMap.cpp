@@ -440,7 +440,7 @@ void MMCellMap::getEdgeLabels(int cellIndex[3], const MMCellFlag::Edge edge, int
     break;
   case MMCellFlag::Edge::BackTopEdge:
     firstCellLabels = {cellIndex[0], cellIndex[1], cellIndex[2] + 1};
-    secondCellLabels = {cellIndex[0] + 1, cellIndex[1] + 1, cellIndex[2] + 1};
+    secondCellLabels = {cellIndex[0] + 1, cellIndex[1], cellIndex[2] + 1};
     break;
   case MMCellFlag::Edge::FrontTopEdge:
     firstCellLabels = {cellIndex[0], cellIndex[1] + 1, cellIndex[2] + 1};
@@ -452,7 +452,7 @@ void MMCellMap::getEdgeLabels(int cellIndex[3], const MMCellFlag::Edge edge, int
     break;
   case MMCellFlag::Edge::RightBackEdge:
     firstCellLabels = {cellIndex[0] + 1, cellIndex[1], cellIndex[2]};
-    secondCellLabels = {cellIndex[0] + 1, cellIndex[1] + 1, cellIndex[2] + 1};
+    secondCellLabels = {cellIndex[0] + 1, cellIndex[1], cellIndex[2] + 1};
     break;
   case MMCellFlag::Edge::LeftFrontEdge:
     firstCellLabels = {cellIndex[0], cellIndex[1] + 1, cellIndex[2]};

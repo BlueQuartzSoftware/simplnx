@@ -87,7 +87,7 @@ SizeVec3 GridMontage::getGridSize() const
 void GridMontage::resizeTileDims(usize row, usize col, usize depth)
 {
   const CollectionType& oldCollection = getCollection();
-  DimensionsType newDims = {row, col, depth};
+  DimensionsType newDims = {col, row, depth};
 
   // Update collection
   CollectionType newCollection(row * col * depth);
@@ -232,9 +232,9 @@ SizeVec3 GridMontage::getTilePosFromOffset(usize offset) const
   // const usize numDeep = getDepth();
 
   const usize depth = offset / (numRows * numCols);
-  const usize xyOffset = offset % depth;
+  const usize xyOffset = offset % (numRows * numCols);
   const usize row = xyOffset / numCols;
-  const usize col = xyOffset % numRows;
+  const usize col = xyOffset % numCols;
   return {col, row, depth};
 }
 

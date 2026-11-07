@@ -6,8 +6,22 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <type_traits>
 
 using namespace nx::core;
+
+TEST_CASE("simplnx::Vec7: conversion preserves all seven components", "[simplnx][Vec7]")
+{
+  Vec7<int32> input{1, 2, 3, 4, 5, 6, 7};
+  const auto actual = input.convertType<float64>();
+  STATIC_REQUIRE(std::is_same_v<decltype(actual), const Vec7<float64>>);
+  const std::array<float64, 7> expected = {1., 2., 3., 4., 5., 6., 7.};
+  for(usize componentIdx = 0; componentIdx < expected.size(); componentIdx++)
+  {
+    CAPTURE(componentIdx);
+    CHECK(actual[componentIdx] == expected[componentIdx]);
+  }
+}
 
 TEST_CASE("Vec3 Constructors")
 {

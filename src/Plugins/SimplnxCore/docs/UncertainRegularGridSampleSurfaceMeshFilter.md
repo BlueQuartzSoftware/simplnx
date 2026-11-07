@@ -20,6 +20,8 @@ The user specifies the number of **Cells** along the X, Y, and Z directions, plu
 
 For the variant that samples onto a regular grid without positional uncertainty, see the sibling filter [Sample Triangle Geometry on Regular Grid](RegularGridSampleSurfaceMeshFilter.md), which shares the same grid (dimensions, origin, spacing) parameters.
 
+The output Image Geometry associates the selected Cell Attribute Matrix with its cells. That matrix contains the selected Feature Ids array. The matrix can have the same name as the output geometry. Geometry dimensions use `{X,Y,Z}` order. The matrix and Feature Ids tuple shapes use `{Z,Y,X}` order, with X varying fastest in the flat array.
+
 ### Required Input Sources
 
 - **Triangle Geometry** -- the surface mesh to sample, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).

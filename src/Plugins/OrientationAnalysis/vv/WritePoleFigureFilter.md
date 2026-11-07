@@ -16,11 +16,11 @@
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
 | Oracle (confirmed) | Class 5 expert-visual and Class 4 wiring invariants are retained; the new Class 1 HDF5 boundary oracle checks exact discrete pole counts and the entire <001> intensity image. |
 | Code paths enumerated | 10 of 14 listed paths exercised; layout selection and three defensive validation/warning rows remain unasserted. Empty-phase skipping is not separately proven. |
-| Tests today | 4 registered entries in the focused selection, plus one hidden HDF5 boundary case. Paired selections pass 4/4. |
+| Tests today | 5 visible cases and 2 hidden store-contract cases. In Release, the visible cases pass 5/5 in-core and out-of-core, and the hidden two-phase case passes with `HDF5-OOC` stores; historical paired selections passed 4/4. |
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
 | Legacy comparison      | Three-way expert-visual (6.5.171 / patched local legacy build / SIMPLNX) on hex **and** cubic. 6.5.171 matches the patched local legacy build (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
-| Bug flags              | **None.** All 4 deviations are cosmetic (axis/family labels, font) or an intentional rendering improvement (discrete vector markers). No correctness defect. |
-| V&V phase | Historical COMPLETE status and sign-off retained. Section 4.3 adds independent HDF5 boundary evidence and paired CTest checks. |
+| Bug flags              | No listed legacy deviation is a correctness defect. The later-phase tuple-shape defect is corrected; see "Bugs found and fixed". |
+| V&V phase | Historical COMPLETE status and sign-off retained. The later-phase tuple-shape correction and its synthetic tests pass in paired Release builds. |
 
 ## Summary
 
@@ -56,13 +56,15 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 ## Bugs found and fixed
 
-No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
+The later-phase intensity arrays used geometry-order tuple shape `{N,N,1}`, while their owning Cell Attribute Matrix used `{1,N,N}`. Later phases now take the tuple shape from that matrix for all three arrays. The flat value transfers, tuple counts, component counts, and intensity generation remain unchanged.
+
+Two synthetic regressions check both populated phases and whole-DataStructure tuple inheritance. One forces in-memory stores; the hidden companion requires `HDF5-OOC` stores for all three numeric inputs and all six intensity outputs. Both regressions fail before the correction (the phase-two arrays have shape `{32,32,1}`) and pass after it, in-core and out-of-core Release builds. The existing legacy deviations and exemplar archive remain unchanged.
 
 ## Code path coverage
 
 10 of 14 listed simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
 
-Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilter.cpp` preflight.
+Source: `Algorithms/WritePoleFigure.cpp` (536 lines), plus `WritePoleFigureFilter.cpp` preflight.
 
 | #  | Phase              | Path                                                                     | Test case                                                        |
 |----|--------------------|--------------------------------------------------------------------------|------------------------------------------------------------------|
@@ -72,7 +74,7 @@ Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilte
 | 4  | (b) Param→enum     | ImageLayout (Horizontal/Vertical/Square)                                | *Not directly asserted; Horizontal exercised in all runs. EbsdLib layout enum — low-value to sweep here.* |
 | 5  | (c) Mask filter    | UseMask off / on                                                        | `Mask filter changes the rendered pole figure`                   |
 | 6  | (c) Per-phase      | per-phase Euler extraction; empty phase → skip                          | Single-phase fixtures exercise extraction. *Empty-phase skip not directly tested — defensive guard.* |
-| 7  | (d) Intensity      | SaveIntensityDataArrays on + NormalizeToMRD                             | `HexConvention choice reaches algorithm` (SaveIntensity=true, MRD=true) |
+| 7  | (d) Intensity      | SaveIntensityDataArrays on + NormalizeToMRD; phase-one and later-phase array creation | `HexConvention choice reaches algorithm` (SaveIntensity=true, MRD=true); `two populated phases preserve count array tuple shape` and `real HDF5 two populated phases preserve count array tuple shape` check all six array shapes with MRD=false (pass in-core and out-of-core). |
 | 8  | (d) Intensity      | crystal-structure dispatch (Cubic_High, Hexagonal_High)                 | Hex: tests + A/B; Cubic: A/B. Other Laue classes owned by EbsdLib upstream. |
 | 9  | (d) Intensity      | unknown crystal structure → warning, skip                              | *Not directly tested — defensive warning branch.*                |
 | 10 | (e) Composite      | SaveAsImageGeometry / WriteImageToDisk; DiscreteMarkerRadius            | `Discrete mode and marker radius reach algorithm` (1 px vs 10 px composites differ); A/B renders (write-to-disk); Mask/HexConv tests (image geometry) |
@@ -90,6 +92,8 @@ Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilte
 | `Discrete mode and marker radius reach algorithm` | new-for-V&V | Class 4 invariant: Discrete vs Color composites differ; 1 px vs 10 px marker radii differ. Pins the GenerationAlgorithm and DiscreteMarkerRadius plumbing in CI (previously covered only by manual A/B renders). |
 | `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. The legacy `ImageFormat` key is intentionally not converted (D5). |
 | `real HDF5 65536-block discrete-count oracle` | new-for-V&V | 29 assertions; Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. |
+| `two populated phases preserve count array tuple shape` | new-for-V&V | Synthetic Class 4 structural invariant: two identity orientations in two cubic phases, discrete counts, image size 32, Lambert size 64. Checks in-memory inputs/outputs, matrix shape `{1,32,32}`, six Float64 array tuple shapes and scalar component shapes, and whole-DataStructure tuple inheritance. No archive or image file is used. Passes in in-core and out-of-core Release builds. |
+| `real HDF5 two populated phases preserve count array tuple shape` | new-for-V&V | Same synthetic structural oracle with forced out-of-core storage. Requires the registered `HDF5-OOC` manager and that format on all three numeric inputs and all six outputs. Runs through `OrientationAnalysisOocStoreContracts`; passes in the out-of-core Release build. |
 
 OOC recertification (2026-09-21): 4/4 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 65536-block discrete-count oracle` passes 29 assertions. Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
 

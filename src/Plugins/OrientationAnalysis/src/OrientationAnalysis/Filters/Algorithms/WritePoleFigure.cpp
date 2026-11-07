@@ -1,6 +1,7 @@
 #include "WritePoleFigure.hpp"
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -371,7 +372,7 @@ Result<> WritePoleFigure::operator()()
         // Preflight creates phase-one arrays. Later phases create their arrays here.
         if(phase > 1)
         {
-          const std::vector<size_t> intensityImageDims = {static_cast<usize>(config.imageDim), static_cast<usize>(config.imageDim), 1ULL};
+          const ShapeType intensityImageDims = m_DataStructure.getDataRefAs<AttributeMatrix>(amPath).getShape();
           DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
           Result<> creationResult = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
           if(creationResult.invalid())

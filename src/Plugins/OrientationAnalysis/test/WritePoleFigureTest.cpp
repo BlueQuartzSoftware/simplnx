@@ -2,6 +2,8 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -19,6 +21,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <numeric>
 namespace fs = std::filesystem;
 
@@ -406,6 +409,120 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+// Two populated phases exercise preflight-created arrays and runtime-created arrays with the same structural oracle.
+void CheckTwoPhaseIntensityTupleShapes(DataStorageMode storageMode)
+{
+  const auto app = Application::GetOrCreateInstance();
+  const bool isOutOfCore = storageMode == DataStorageMode::ForceOutOfCore;
+  if(isOutOfCore)
+  {
+    REQUIRE(app->getIOManager("HDF5-OOC") != nullptr);
+  }
+  const PreferencesSentinel preferencesSentinel(storageMode, 1);
+  constexpr usize k_ImageSize = 32;
+  DataStructure dataStructure;
+  const DataPath eulerPath({"Eulers"});
+  const DataPath phasePath({"Phases"});
+  const DataPath crystalPath({"CrystalStructures"});
+  const DataPath namesPath({"Materials"});
+  const DataPath intensityPath({"Counts"});
+  const DataPath cellDataPath = intensityPath.createChildPath("Cell Data");
+
+  auto eulerStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerPath, {2}, {3});
+  auto phaseStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasePath, {2}, {1});
+  auto crystalStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalPath, {3}, {1});
+  REQUIRE(eulerStore != nullptr);
+  REQUIRE(phaseStore != nullptr);
+  REQUIRE(crystalStore != nullptr);
+  auto* eulersPtr = Float32Array::Create(dataStructure, "Eulers", eulerStore);
+  auto* phasesPtr = Int32Array::Create(dataStructure, "Phases", phaseStore);
+  auto* crystalsPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStore);
+  REQUIRE(eulersPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(crystalsPtr != nullptr);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Materials", {3}, std::vector<std::string>{"Invalid", "Cubic One", "Cubic Two"}) != nullptr);
+  eulersPtr->fill(0.0F); // Each cubic phase contains one identity orientation.
+  (*phasesPtr)[0] = 1;
+  (*phasesPtr)[1] = 2;
+  (*crystalsPtr)[0] = 999;
+  (*crystalsPtr)[1] = 1; // Cubic_High.
+  (*crystalsPtr)[2] = 1;
+  const auto expectedStoreType = isOutOfCore ? IDataStore::StoreType::OutOfCore : IDataStore::StoreType::InMemory;
+  REQUIRE(eulerStore->getStoreType() == expectedStoreType);
+  REQUIRE(phaseStore->getStoreType() == expectedStoreType);
+  REQUIRE(crystalStore->getStoreType() == expectedStoreType);
+  if(isOutOfCore)
+  {
+    REQUIRE(eulerStore->getDataFormat() == "HDF5-OOC");
+    REQUIRE(phaseStore->getDataFormat() == "HDF5-OOC");
+    REQUIRE(crystalStore->getDataFormat() == "HDF5-OOC");
+  }
+
+  WritePoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(static_cast<int32>(k_ImageSize)));
+  args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
+  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1)); // Discrete counts.
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
+  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(intensityPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot1Name, std::make_any<std::string>("001"));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot2Name, std::make_any<std::string>("011"));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityPlot3Name, std::make_any<std::string>("111"));
+  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasePath));
+  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalPath));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(namesPath));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const AttributeMatrix* cellDataPtr = nullptr;
+  REQUIRE_NOTHROW(cellDataPtr = &dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath));
+  const ShapeType expectedShape = {1, k_ImageSize, k_ImageSize};
+  const ShapeType expectedComponentShape = {1};
+  REQUIRE(cellDataPtr->getShape() == expectedShape);
+  const std::array<std::string, 3> families = {"001", "011", "111"};
+  for(int32 phase : {1, 2})
+  {
+    for(const auto& family : families)
+    {
+      const DataPath arrayPath = cellDataPath.createChildPath("Phase_" + std::to_string(phase) + "_" + family);
+      CAPTURE(arrayPath.toString());
+      const Float64Array* arrayPtr = nullptr;
+      REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<Float64Array>(arrayPath));
+      REQUIRE(arrayPtr->getDataStoreRef().getStoreType() == expectedStoreType);
+      if(isOutOfCore)
+      {
+        REQUIRE(arrayPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+      }
+      CHECK(arrayPtr->getNumberOfTuples() == k_ImageSize * k_ImageSize);
+      CHECK(arrayPtr->getTupleShape() == cellDataPtr->getShape());
+      CHECK(arrayPtr->getComponentShape() == expectedComponentShape);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  std::cout << fmt::format("Pole figure two-phase tuple shape fixture store={} inputs=3 outputs=6 shape={{1,{},{}}}\n", isOutOfCore ? "HDF5-OOC" : "in-memory", k_ImageSize, k_ImageSize);
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: two populated phases preserve count array tuple shape", "[OrientationAnalysis][WritePoleFigureFilter][TupleShapeRegression]")
+{
+  CheckTwoPhaseIntensityTupleShapes(DataStorageMode::ForceInCore);
+}
+
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 two populated phases preserve count array tuple shape", "[OrientationAnalysis][WritePoleFigureFilter][.OocStoreContract]")
+{
+  CheckTwoPhaseIntensityTupleShapes(DataStorageMode::ForceOutOfCore);
 }
 
 // -----------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -32,7 +33,98 @@ const DataPath k_ExemplarFeatureIdsPath = k_ExemplarImageGeomPath.createChildPat
 
 const DataPath k_GeneratedImageGeomPath = DataPath({Constants::k_ImageGeometry});
 const DataPath k_GeneratedFeatureIdsPath = k_GeneratedImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
+
+DataStructure CreateSamplingFixtureInput()
+{
+  DataStructure dataStructure;
+  auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  REQUIRE(triangleGeomPtr != nullptr);
+  auto* verticesPtr =
+      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {3}, {3}), triangleGeomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {1}, {3}), triangleGeomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  const std::array<float32, 9> vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0};
+  const std::array<IGeometry::MeshIndexType, 3> faces = {0, 1, 2};
+  auto verticesResult = verticesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(vertices));
+  SIMPLNX_RESULT_REQUIRE_VALID(verticesResult);
+  auto facesResult = facesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(faces));
+  SIMPLNX_RESULT_REQUIRE_VALID(facesResult);
+  triangleGeomPtr->setVertices(*verticesPtr);
+  triangleGeomPtr->setFaceList(*facesPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, {1}, triangleGeomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {1}, {2}), faceDataPtr->getId());
+  REQUIRE(labelsPtr != nullptr);
+  const std::array<int32, 2> labels = {11, 0};
+  auto labelsResult = labelsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(labels));
+  SIMPLNX_RESULT_REQUIRE_VALID(labelsResult);
+  return dataStructure;
+}
+
+Arguments CreateSamplingFixtureArguments(const std::string& matrixName, const std::vector<uint64>& dimensions)
+{
+  auto args = UncertainRegularGridSampleSurfaceMeshFilter{}.getDefaultArguments();
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, k_TriGeomPath);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, k_FaceLabelsPath);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"SampleGrid"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, matrixName);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::string("IdsChosen"));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, dimensions);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 2, 5});
+  return args;
+}
 } // namespace
+
+TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: cell association", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter]")
+{
+  const std::string matrixName = GENERATE(std::string("CellsChosen"), std::string("SampleGrid"));
+  CAPTURE(matrixName);
+  const DataStructure input = CreateSamplingFixtureInput();
+  DataStructure output = input;
+  UncertainRegularGridSampleSurfaceMeshFilter filter;
+  auto preflightResult = filter.preflight(input, CreateSamplingFixtureArguments(matrixName, {1, 1, 1}));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto applyResult = preflightResult.outputActions.value().applyAll(output, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  const DataPath matrixPath({"SampleGrid", matrixName});
+  const auto* imageGeomPtr = output.getDataAs<ImageGeom>(DataPath({"SampleGrid"}));
+  const auto* matrixPtr = output.getDataAs<AttributeMatrix>(matrixPath);
+  const auto* labelsPtr = output.getDataAs<IDataArray>(matrixPath.createChildPath("IdsChosen"));
+  REQUIRE(imageGeomPtr != nullptr);
+  REQUIRE(matrixPtr != nullptr);
+  REQUIRE(labelsPtr != nullptr);
+  CHECK(imageGeomPtr->getSize() == 1);
+  CHECK(imageGeomPtr->getCellData() == matrixPtr);
+  CHECK(labelsPtr->getParentIds() == DataObject::ParentCollectionType{matrixPtr->getId()});
+  UnitTest::CheckArraysInheritTupleDims(output);
+}
+
+TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: tuple order", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter]")
+{
+  const DataStructure input = CreateSamplingFixtureInput();
+  DataStructure output = input;
+  UncertainRegularGridSampleSurfaceMeshFilter filter;
+  auto preflightResult = filter.preflight(input, CreateSamplingFixtureArguments("CellsChosen", {2, 3, 4}));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto applyResult = preflightResult.outputActions.value().applyAll(output, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  const auto* imageGeomPtr = output.getDataAs<ImageGeom>(DataPath({"SampleGrid"}));
+  const auto* matrixPtr = output.getDataAs<AttributeMatrix>(DataPath({"SampleGrid", "CellsChosen"}));
+  const auto* labelsPtr = output.getDataAs<IDataArray>(DataPath({"SampleGrid", "CellsChosen", "IdsChosen"}));
+  REQUIRE(imageGeomPtr != nullptr);
+  REQUIRE(matrixPtr != nullptr);
+  REQUIRE(labelsPtr != nullptr);
+  CHECK(imageGeomPtr->getDimensions() == SizeVec3{2, 3, 4});
+  CHECK(imageGeomPtr->getSpacing() == FloatVec3{1, 2, 5});
+  CHECK(matrixPtr->getShape() == ShapeType{4, 3, 2});
+  CHECK(labelsPtr->getTupleShape() == ShapeType{4, 3, 2});
+  CHECK(labelsPtr->getComponentShape() == ShapeType{1});
+  CHECK(labelsPtr->getNumberOfTuples() == 24);
+  UnitTest::CheckArraysInheritTupleDims(output);
+}
 
 TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Valid Filter Execution", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter]")
 {
