@@ -43,6 +43,7 @@ repository, but contains no code from one.
   - [Make the same decisions in preflight and execute](#make-the-same-decisions-in-preflight-and-execute)
   - [Check every final output path in preflight](#check-every-final-output-path-in-preflight)
   - [Compare a choice with its named value](#compare-a-choice-with-its-named-value)
+  - [Match image-cell tuple shapes to the Cell Attribute Matrix](#match-image-cell-tuple-shapes-to-the-cell-attribute-matrix)
 - [Algorithms and results](#algorithms-and-results)
   - [Give the same result from the in-core and out-of-core algorithms](#give-the-same-result-from-the-in-core-and-out-of-core-algorithms)
   - [Build DataPaths from DataPaths](#build-datapaths-from-datapaths)
@@ -53,6 +54,8 @@ repository, but contains no code from one.
   - [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast)
   - [Decide NaN and infinity handling by where the value comes from](#decide-nan-and-infinity-handling-by-where-the-value-comes-from)
   - [Copy every field that sets behavior when you clone an object](#copy-every-field-that-sets-behavior-when-you-clone-an-object)
+  - [Determine symmetry support from Crystal Structures, not phase numbers](#determine-symmetry-support-from-crystal-structures-not-phase-numbers)
+  - [Read histogram bin ranges as stored lower/upper pairs](#read-histogram-bin-ranges-as-stored-lowerupper-pairs)
 - [Feature data](#feature-data)
   - [Do not compute anything for feature 0, and give empty features a defined output](#do-not-compute-anything-for-feature-0-and-give-empty-features-a-defined-output)
   - [Treat Feature data as stale after a filter changes the cells it was computed from](#treat-feature-data-as-stale-after-a-filter-changes-the-cells-it-was-computed-from)
@@ -61,6 +64,7 @@ repository, but contains no code from one.
   - [Take Image Geometry cell centers from the geometry](#take-image-geometry-cell-centers-from-the-geometry)
   - [Set the length unit of every geometry you create](#set-the-length-unit-of-every-geometry-you-create)
   - [Apply the hexagonal axis correction to both hexagonal Laue classes](#apply-the-hexagonal-axis-correction-to-both-hexagonal-laue-classes)
+  - [Delete only geometry support data created by the current invocation](#delete-only-geometry-support-data-created-by-the-current-invocation)
 - [Concurrency and storage](#concurrency-and-storage)
   - [Lock one mutex around a filter's static header cache](#lock-one-mutex-around-a-filters-static-header-cache)
   - [Write out-of-core stores from one thread](#write-out-of-core-stores-from-one-thread)
@@ -479,10 +483,22 @@ until the replacement is ready (for example **Convert AttributeArray DataType** 
 (PR #1765). `WriteBinaryData` and `WriteNodesAndElementsFiles` still allow it; with equal node and element paths, the
 second write truncates the first (issue #1877).
 
+`UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl()` passed the geometry name as the cell-matrix name to
+`CreateImageGeometryAction`, then appended `CreateAttributeMatrixAction` for the selected cell matrix. Equal names
+caused duplicate creation; different names left the selected matrix outside the geometry's cell-data association.
+Evidence: #1800, #1861 (BUG: C01: Copy-paste index drift in 15 filters), and PR #1919 (BUG: Fix copy-paste index
+drift in 15 filters).
+
 **Why:** a later write silently replaces an earlier output, or a copy reads from the place it is writing.
 
 **What to look for:** output names built from base names and checked before the suffix is added; no comparison of
 outputs with inputs.
+
+- A composite creation action followed by another action for a child it already creates.
+  `CreateImageGeometryAction` creates and associates its named Cell Attribute Matrix: pass the selected matrix
+  name to that action and do not create that matrix again. Check children as well as top-level output paths. Apply
+  the actions in regression tests with equal and distinct geometry/matrix names; a valid action list alone does
+  not prove successful creation or the correct association.
 
 **Pattern to use:** the final file-name collision map in `WriteASCIIDataFilter`.
 
@@ -503,6 +519,29 @@ it is choice index 27, so the cast gives the wrong unit.
 
 **Pattern to use:** `to_underlying(...)` in `RemoveFlaggedFeaturesFilter`; an explicit lookup table for the length
 unit.
+
+### Match image-cell tuple shapes to the Cell Attribute Matrix
+
+**Rule:** Image Geometry dimensions are `{X,Y,Z}`. Its Cell Attribute Matrix and cell arrays use tuple shape
+`{Z,Y,X}`. Derive cell-array tuple shapes from that matrix's shape or, when declaring a new geometry, from the
+same reversed dimensions as its creation action. Matching tuple products alone is insufficient.
+
+**Example of the broken rule:** `UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl()` passed `{X,Y,Z}` to
+the label-array action although `CreateImageGeometryAction` created its cell matrix with `{Z,Y,X}`. Evidence:
+#1800, #1861 (BUG: C01: Copy-paste index drift in 15 filters), and PR #1919 (BUG: Fix copy-paste index drift in 15
+filters).
+
+**Why:** reversing dimensions preserves the tuple count, so a count check misses incompatible shape metadata even
+when the flat X-fastest values are unchanged.
+
+**What to look for:**
+
+- One dimension vector reused for both `CreateImageGeometryAction` and cell `CreateArrayAction`, without reversing
+  its tuple axes.
+
+**Pattern to use:** `RegularGridSampleSurfaceMeshFilter::preflightImpl()` uses XYZ for new geometry dimensions and
+ZYX for cell tuples; its existing-geometry branch takes the actual cell-matrix shape. Test unequal dimensions such
+as `{2,3,4}` and assert geometry `{2,3,4}` and matrix/array tuples `{4,3,2}`.
 
 ---
 
@@ -791,6 +830,51 @@ return std::make_unique<CreateImageGeometryAction>(getCreatedPath(), m_Dims, m_O
                                                    m_Units);
 ```
 
+### Determine symmetry support from Crystal Structures, not phase numbers
+
+**Rule:** use a validated phase index to read Crystal Structures, then compare that property with the named
+supported symmetry. Apply this distinction to computations and support warnings. Keep phase-zero and same-phase
+eligibility policies separate from symmetry support.
+
+**Example of the broken rule:** ComputeSlipTransmissionMetrics skipped cubic material at phase 2;
+ComputeBoundaryStrengths warned for cubic phase 2 but missed noncubic phase 1. Evidence: #1861 (BUG: C01:
+Copy-paste index drift in 15 filters), PR #1919 (BUG: Fix copy-paste index drift in 15 filters), and #1880 finding
+#3.
+
+**Why:** a phase number identifies an ensemble tuple; it does not encode that tuple's crystal structure.
+
+**What to look for:**
+
+- `phase == 1` or `phase != 1` deciding cubic support, including warning-only branches. Trace the operand: a
+  crystal-structure value and a phase index are different domains.
+
+**Pattern to use:** the Crystal Structures lookup and named `Cubic_High` comparisons in
+`ComputeSlipTransmissionMetrics::operator()()`. Test cubic material at phase 2 and noncubic material at phase 1;
+relabeling the same material must not change its symmetry eligibility.
+
+### Read histogram bin ranges as stored lower/upper pairs
+
+**Rule:** `FillBinRanges` stores two scalars per bin: lower and upper at offsets `2*b` and `2*b+1`. Do not
+interpret that buffer as `N+1` edges or reconstruct counting widths from stored, possibly truncated bounds. Modal
+lookup uses the original counting parameters and classification policy, then reads the selected stored pair.
+
+**Example of the broken rule:** ComputeArrayHistogramByFeature used an unscaled bin offset;
+ComputeArrayHistogram's Direct and Scanline lookups inferred an edge sequence. For ranges `{0,2,2,4}`, mode 2 must
+select `{2,4}`, not `{2,2}` or `{2,3}`. Evidence: #1861 (BUG: C01: Copy-paste index drift in 15 filters) and PR
+#1919 (BUG: Fix copy-paste index drift in 15 filters).
+
+**Why:** paired storage repeats interior boundaries, and integer bounds can truncate the counting width. An
+edge-based interpretation selects the wrong interval.
+
+**What to look for:**
+
+- A `FillBinRanges` consumer using `ranges[b]` / `ranges[b+1]`, `ranges.size()-1` as the bin count, or a width
+  reconstructed from stored bounds.
+
+**Pattern to use:** `StatisticsCalculations::findModalBinRange()` in `StatisticsCalculations.hpp`, with the
+caller's existing counting policy and eligibility. Test a nonzero modal bin and assert the stored pair
+independently, including integer ranges with fractional counting widths.
+
 ---
 
 ## Feature data
@@ -927,6 +1011,30 @@ an alignment option that the algorithm never reads.
 
 **Pattern to use:** `EbsdReaderUtilities::IsHexagonalCrystalStructure()` with `k_HexagonalAlignmentDegrees` or
 `k_HexagonalAlignmentRadiansD`, as `ReadChannel5Data`, `ReadCtfData` and `ReadH5OinaData` use them.
+
+### Delete only geometry support data created by the current invocation
+
+**Rule:** before a geometry `find*` call, record which support objects already exist. Cleanup removes only
+temporary objects created by this invocation, including on applicable error and cancellation exits. Reuse or
+recalculation does not transfer ownership. Explicit deletion and documented invalidation contracts remain
+separate.
+
+**Example of the broken rule:** LaplacianSmoothing deleted supplied edges; FeatureFaceCurvature deleted supplied
+vertex incidence; LabelTriangleGeometry and VerifyTriangleWinding deleted supplied incidence and element
+neighbors. Evidence: #1861 (BUG: C01: Copy-paste index drift in 15 filters), PR #1919 (BUG: Fix copy-paste index
+drift in 15 filters), and LabelTriangleGeometry's #1917 item M16 / #1908 item L41.
+
+**Why:** `findElementsContainingVert(false)` and `findElementNeighbors(false)` can reuse input objects.
+Unconditional cleanup then destroys data that existed before the filter ran.
+
+**What to look for:**
+
+- A geometry `find*` call followed by `delete*`, `removeData()`, or association clearing, without an entry-state
+  ownership check. Check each support object separately, including dependencies created by the helper.
+
+**Pattern to use:** the entry-state checks in `LaplacianSmoothing::operator()()`. Preserve supplied object IDs,
+associations, and contents; test supplied and absent support separately across success and applicable failure
+exits. Do not treat core recalculation-failure invalidation as temporary-object cleanup.
 
 ---
 
@@ -1137,11 +1245,22 @@ and spacings along X, Y and Z so that a swapped axis changes the result.
 Volume** (PR #1817, issues #1773 and #1780). `ComputeShapesFilterTest` has no valid YZ or XZ expected output, and issue
 #1861 lists copy-paste index drift between axis blocks in 15 filters.
 
+#1861 (BUG: C01: Copy-paste index drift in 15 filters) and PR #1919 (BUG: Fix copy-paste index drift in 15
+filters) also document wrong sibling operands outside axis branches:
+`RemoveFlaggedTrianglesFilter::preflightImpl()` selected the Edge Attribute Matrix instead of Face Data; `Ray.hpp`
+used the wrong ray origin; `GridMontage` confused row, column, and plane operands; `Vec7::convertType()`
+constructed a `Vec6`; and `MMCellMap::getEdgeLabels()` selected the wrong second endpoint.
+
 **Why:** code with one block per axis is usually written by copying one block; a block with a wrong index passes a test
 of the first axis.
 
 **What to look for:** separate axis or plane branches with correctness fixtures for only one of them; cubic dimensions
 or equal spacings in a test of an axis-dependent formula.
+
+- Homologous expressions whose indices, source objects, component counts, or endpoints do not match the branch
+  they serve. Apply this recognition check to components, populations, endpoints, and named objects as well as
+  axes. Give siblings distinct fixture values or names and check each affected result against an independent
+  oracle; equal values can hide the substitution.
 
 **Pattern to use:** the generated pair-axis cases with spacing `{2, 3, 5}` in `ComputeSurfaceAreaToVolumeTest.cpp`.
 
