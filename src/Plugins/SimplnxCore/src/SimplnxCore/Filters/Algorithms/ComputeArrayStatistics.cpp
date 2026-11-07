@@ -1174,7 +1174,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
    * @param algorithm Serializes progress and status messages.
    * @return Initialization or resident statistics result.
    *
-   * TBB runs only when every participating store is resident.
+   * When multicore support is enabled, TBB runs only when every participating store is resident.
    * Otherwise, the in-memory requirement gate runs this worker serially.
    */
   template <typename T>
@@ -1231,6 +1231,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
     // Weight tuple scans by the feature range so progress does not depend on TBB partitioning.
     const usize tuplePasses = inputValues->FindStdDeviation ? 2 : 1;
     algorithm.resetProgress(numFeatures * (data.getNumberOfTuples() * tuplePasses + 1));
+#ifdef SIMPLNX_ENABLE_MULTICORE
     if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
@@ -1239,6 +1240,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
       tbb::parallel_for(tbbRange, std::move(classToExecute), simplePartitioner);
     }
     else
+#endif
     {
       ParallelDataAlgorithm indexAlg;
       indexAlg.setRange(0, numFeatures);
