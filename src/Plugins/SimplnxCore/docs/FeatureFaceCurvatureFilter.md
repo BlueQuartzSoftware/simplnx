@@ -47,6 +47,18 @@ Principal curvatures and mean curvature are reported in **1/length** (the recipr
 - Compute_Feature_Face_Curvature
 - Compute_Feature_Face_Curvature_2
 
+## Connectivity lifetime and saving
+
+This filter reuses supplied connectivity without recalculating it. Supplied support objects keep their identity, geometry associations, parent paths, and contents. A named support child that exists without an association also remains caller-owned.
+
+The filter preserves supplied vertex incidence and leaves element neighbors unchanged. Cleanup also runs after the existing worker join when cancellation is set. A connectivity producer failure returns its original error before worker setup.
+
+Only support objects created by this invocation are temporary. The filter removes these objects on success and returned errors. Cleanup can throw if allocation or DataStructure removal fails. Cleanup during arbitrary exception unwinding is outside this guarantee. Existing output changes are not rolled back.
+
+Supplied connectivity uses `DynamicListArray`, which has no registered writer. A later save can return error `-5`: `Could not find IO factory for datatype: DynamicListArray`. A failed save can leave a partial destination. Do not use that destination as a valid saved result. If this invocation created all connectivity and no unrelated object prevents serialization, temporary cleanup permits saving.
+
+After every connectivity consumer finishes, the caller can explicitly choose to discard the recomputable lists. First verify each associated object's exact ID, parent paths, and users. A shared object requires agreement from every affected owner. Remove confirmed neighbors before incidence with checked `DataStructure::removeData(id)` calls. Clear the corresponding association with `setElementNeighborsId(std::nullopt)` or `setElementContainingVertId(std::nullopt)` only after successful removal. Stop if removal fails. Do not remove a child by name or clear an association while leaving its child. Save to a fresh destination and check the Result. If connectivity must remain, serialization support requires a separate change.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

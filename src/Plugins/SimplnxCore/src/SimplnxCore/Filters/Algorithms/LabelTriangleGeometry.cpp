@@ -4,7 +4,47 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
+#include <fmt/format.h>
+
+#include <array>
+#include <optional>
+#include <stdexcept>
+
 using namespace nx::core;
+
+namespace
+{
+// Index 0 is neighbors, index 1 is incidence: remove dependent temporary data first.
+void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry, const DataPath& geometryPath, const std::array<std::optional<DataObject::IdType>, 2>& entryIds,
+                           const std::array<bool, 2>& childExisted)
+{
+  const std::array supportPaths = {geometryPath.createChildPath(TriangleGeom::k_EltNeighbors), geometryPath.createChildPath(TriangleGeom::k_EltsContainingVert)};
+  for(usize index = 0; index < supportPaths.size(); ++index)
+  {
+    if(!childExisted[index])
+    {
+      // Look up the exact new ID even when a failed producer cleared its association.
+      const auto* child = dataStructure.getData(supportPaths[index]);
+      if(child != nullptr)
+      {
+        const auto createdId = child->getId();
+        if(!dataStructure.removeData(createdId))
+        {
+          throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
+        }
+      }
+    }
+    if(index == 0)
+    {
+      geometry.setElementNeighborsId(entryIds[index]);
+    }
+    else
+    {
+      geometry.setElementContainingVertId(entryIds[index]);
+    }
+  }
+}
+} // namespace
 
 // -----------------------------------------------------------------------------
 LabelTriangleGeometry::LabelTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -31,6 +71,9 @@ Result<> LabelTriangleGeometry::operator()()
   // Scope other values since underlying arrays will be changed by the time they are need again
   std::vector<uint32> triangleCounts = {0, 0};
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
+  const std::array entryIds = {triangle.getElementNeighborsId(), triangle.getElementContainingVertId()};
+  const std::array childExisted = {m_DataStructure.getData(m_InputValues->TriangleGeomPath.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
+                                   m_DataStructure.getData(m_InputValues->TriangleGeomPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
 
   {
     usize numTris = triangle.getNumberOfFaces();
@@ -38,6 +81,7 @@ Result<> LabelTriangleGeometry::operator()()
     Result<> result = triangle.findElementNeighbors(false); // use auto since return time is a class declared typename
     if(result.invalid())
     {
+      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
       return result;
     }
 
@@ -95,14 +139,12 @@ Result<> LabelTriangleGeometry::operator()()
     Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
     if(resizeResult.invalid())
     {
+      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
       return resizeResult;
     }
   }
 
-  // Clear ElementDynamicLists so write out is possible
-  triangle.deleteElementNeighbors();
-  // Remove elements containing vertices, because Element neighbors created it quietly under the covers
-  triangle.deleteElementsContainingVert();
+  CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
   auto& numTrianglesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->NumTrianglesPath)->getDataStoreRef();

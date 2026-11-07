@@ -10,11 +10,35 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <optional>
+#include <stdexcept>
 
 using namespace nx::core;
 
 using FaceIds_t = std::vector<int64_t>;
 using SharedFeatureFaces_t = std::map<int32_t, FaceIds_t>;
+
+namespace
+{
+// Finalize explicitly after the producer or after all workers join. Removal can throw.
+void CleanupCreatedIncidence(DataStructure& dataStructure, TriangleGeom& geometry, const DataPath& geometryPath, const std::optional<DataObject::IdType>& entryId, bool childExisted)
+{
+  if(!childExisted)
+  {
+    // A failed producer can leave this new child after clearing its association.
+    const auto* child = dataStructure.getData(geometryPath.createChildPath(TriangleGeom::k_EltsContainingVert));
+    if(child != nullptr)
+    {
+      const auto createdId = child->getId();
+      if(!dataStructure.removeData(createdId))
+      {
+        throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
+      }
+    }
+  }
+  geometry.setElementContainingVertId(entryId);
+}
+} // namespace
 
 // -----------------------------------------------------------------------------
 FeatureFaceCurvature::FeatureFaceCurvature(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FeatureFaceCurvatureInputValues* inputValues)
@@ -72,9 +96,15 @@ Result<> FeatureFaceCurvature::operator()()
   // Just to double-check we have everything.
   auto numTriangles = static_cast<int64>(triangleGeomPtr->getNumberOfFaces());
 
-  // Make sure the Face Connectivity is created because the FindNRing algorithm needs this and will
-  // assert if the data is NOT in the SurfaceMesh Data Container
-  triangleGeomPtr->findElementsContainingVert(false);
+  // FindNRingNeighbors requires vertex incidence before its workers start.
+  const auto entryIncidenceId = triangleGeomPtr->getElementContainingVertId();
+  const bool incidenceChildExisted = m_DataStructure.getData(m_InputValues->triangleGeomPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr;
+  const auto incidenceResult = triangleGeomPtr->findElementsContainingVert(false);
+  if(incidenceResult.invalid())
+  {
+    CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangleGeomPath, entryIncidenceId, incidenceChildExisted);
+    return incidenceResult;
+  }
 
   int32_t maxFaceId = 0;
   for(int64_t t = 0; t < numTriangles; ++t)
@@ -155,7 +185,6 @@ Result<> FeatureFaceCurvature::operator()()
   // All workers have joined, so the throttle can send its final value before the cleanup step.
   m_Throttle.flush();
 
-  // Remove elements containing vertices, because Element neighbors created it quietly under the covers
-  triangleGeomPtr->deleteElementsContainingVert();
+  CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangleGeomPath, entryIncidenceId, incidenceChildExisted);
   return {};
 }

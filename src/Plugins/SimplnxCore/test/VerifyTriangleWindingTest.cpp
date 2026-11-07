@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/Algorithms/VerifyTriangleWinding.hpp"
 #include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/Filters/VerifyTriangleWindingFilter.hpp"
@@ -16,11 +17,15 @@
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -817,4 +822,428 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
   CHECK(actualFaces == expectedFaces);
   CHECK(dataStructure.getData(normalsPath) == nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+using MeshIndexType = IGeometry::MeshIndexType;
+using SupportListType = TriangleGeom::ElementDynamicList;
+constexpr int32 k_InjectedFaceReadError = -56992;
+constexpr int32 k_InjectedFaceWriteError = -56993;
+const DataPath k_SupportGeometryPath({"SupportMesh"});
+const DataPath k_SupportVerticesPath = k_SupportGeometryPath.createChildPath("Vertices");
+const DataPath k_SupportFacesPath = k_SupportGeometryPath.createChildPath("Faces");
+const DataPath k_SupportLabelsPath = k_SupportGeometryPath.createChildPath("FaceData").createChildPath("Labels");
+const std::array<MeshIndexType, 12> k_InputFaces = {1, 2, 0, 3, 1, 0, 3, 2, 1, 3, 0, 2};
+// These memberships follow the four input faces. They do not specify winding or list order.
+const std::vector<std::vector<MeshIndexType>> k_ExpectedIncidence = {{0, 1, 3}, {0, 1, 2}, {0, 2, 3}, {1, 2, 3}};
+const std::vector<std::vector<MeshIndexType>> k_ExpectedNeighbors = {{1, 2, 3}, {0, 2, 3}, {0, 1, 3}, {0, 1, 2}};
+
+// Faults use resident stores and existing virtual methods. They make no disk-failure claim.
+class FailingFaceStore : public DataStore<MeshIndexType>
+{
+public:
+  using DataStore<MeshIndexType>::DataStore;
+  ~FailingFaceStore() noexcept override = default;
+  FailingFaceStore(const FailingFaceStore&) = delete;
+  FailingFaceStore(FailingFaceStore&&) = delete;
+  FailingFaceStore& operator=(const FailingFaceStore&) = delete;
+  FailingFaceStore& operator=(FailingFaceStore&&) = delete;
+
+  usize FailingRead = 0;
+  bool RejectWrite = false;
+  mutable std::vector<std::pair<usize, usize>> Reads;
+  std::vector<std::pair<usize, usize>> Writes;
+
+  Result<> copyIntoBuffer(usize start, nonstd::span<MeshIndexType> buffer) const override
+  {
+    Reads.emplace_back(start, buffer.size());
+    return Reads.size() == FailingRead ? MakeErrorResult(k_InjectedFaceReadError, "Injected face read failure") : DataStore<MeshIndexType>::copyIntoBuffer(start, buffer);
+  }
+
+  Result<> copyFromBuffer(usize start, nonstd::span<const MeshIndexType> buffer) override
+  {
+    Writes.emplace_back(start, buffer.size());
+    return RejectWrite ? MakeErrorResult(k_InjectedFaceWriteError, "Injected face write failure") : DataStore<MeshIndexType>::copyFromBuffer(start, buffer);
+  }
+};
+
+struct SupportSnapshot
+{
+  SupportSnapshot() = default;
+  ~SupportSnapshot() noexcept = default;
+  SupportSnapshot(const SupportSnapshot&) = default;
+  SupportSnapshot(SupportSnapshot&&) noexcept = default;
+  SupportSnapshot& operator=(const SupportSnapshot&) = default;
+  SupportSnapshot& operator=(SupportSnapshot&&) noexcept = default;
+
+  std::optional<DataObject::IdType> Id;
+  std::optional<DataObject::IdType> Association;
+  const SupportListType* Object = nullptr;
+  std::vector<DataPath> Paths;
+};
+
+DataPath SupportPath(bool neighbors)
+{
+  return k_SupportGeometryPath.createChildPath(neighbors ? TriangleGeom::k_EltNeighbors : TriangleGeom::k_EltsContainingVert);
+}
+
+TriangleGeom& GetSupportGeometry(DataStructure& dataStructure)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SupportGeometryPath));
+  return dataStructure.getDataRefAs<TriangleGeom>(k_SupportGeometryPath);
+}
+
+SupportSnapshot SnapshotSupport(DataStructure& dataStructure, bool neighbors)
+{
+  const auto& triGeom = GetSupportGeometry(dataStructure);
+  SupportSnapshot snapshot;
+  snapshot.Association = neighbors ? triGeom.getElementNeighborsId() : triGeom.getElementContainingVertId();
+  snapshot.Object = dataStructure.getDataAs<SupportListType>(SupportPath(neighbors));
+  if(snapshot.Object != nullptr)
+  {
+    snapshot.Id = snapshot.Object->getId();
+    snapshot.Paths = snapshot.Object->getDataPaths();
+  }
+  return snapshot;
+}
+
+void RequireSupport(DataStructure& dataStructure, bool neighbors, const SupportSnapshot& expected)
+{
+  const auto actual = SnapshotSupport(dataStructure, neighbors);
+  CHECK(actual.Association == expected.Association);
+  REQUIRE(actual.Id == expected.Id);
+  CHECK(actual.Object == expected.Object);
+  CHECK(actual.Paths == expected.Paths);
+  if(expected.Id.has_value())
+  {
+    CHECK(dataStructure.getData(expected.Id.value()) == expected.Object);
+  }
+}
+
+void RequireSupportMemberships(DataStructure& dataStructure, bool neighbors)
+{
+  const auto* supportPtr = dataStructure.getDataAs<SupportListType>(SupportPath(neighbors));
+  REQUIRE(supportPtr != nullptr);
+  const auto& expected = neighbors ? k_ExpectedNeighbors : k_ExpectedIncidence;
+  REQUIRE(supportPtr->size() == expected.size());
+  for(usize tupleIdx = 0; tupleIdx < expected.size(); ++tupleIdx)
+  {
+    std::vector<MeshIndexType> members;
+    for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
+    {
+      members.push_back(supportPtr->getElementListPointer(tupleIdx)[memberIdx]);
+    }
+    std::sort(members.begin(), members.end());
+    CHECK(members == expected[tupleIdx]);
+  }
+}
+
+template <typename T>
+DataArray<T>& CreateMeshArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, DataObject::IdType parent)
+{
+  auto storePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
+  REQUIRE(storePtr != nullptr);
+  storePtr->fill(T{});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), std::move(storePtr), parent);
+  REQUIRE(arrayPtr != nullptr);
+  return *arrayPtr;
+}
+
+Arguments CreateSupportFixture(DataStructure& dataStructure, bool incidence, bool neighbors, usize labelComponents)
+{
+  auto* triGeomPtr = TriangleGeom::Create(dataStructure, k_SupportGeometryPath.getTargetName());
+  REQUIRE(triGeomPtr != nullptr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "FaceData", {4}, triGeomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  triGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto& verticesRef = CreateMeshArray<float32>(dataStructure, k_SupportVerticesPath, 4, 3, triGeomPtr->getId());
+  const std::array<float32, 12> coordinates = {0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4};
+  for(usize valueIdx = 0; valueIdx < coordinates.size(); ++valueIdx)
+  {
+    verticesRef[valueIdx] = coordinates[valueIdx];
+  }
+  auto& facesRef = CreateMeshArray<MeshIndexType>(dataStructure, k_SupportFacesPath, 4, 3, triGeomPtr->getId());
+  for(usize valueIdx = 0; valueIdx < k_InputFaces.size(); ++valueIdx)
+  {
+    facesRef[valueIdx] = k_InputFaces[valueIdx];
+  }
+  triGeomPtr->setVertices(verticesRef);
+  triGeomPtr->setFaceList(facesRef);
+  auto& labelsRef = CreateMeshArray<int32>(dataStructure, k_SupportLabelsPath, 4, labelComponents, faceDataPtr->getId());
+  for(usize tupleIdx = 0; tupleIdx < 4; ++tupleIdx)
+  {
+    labelsRef[tupleIdx * labelComponents] = 1;
+  }
+  if(neighbors)
+  {
+    const auto result = triGeomPtr->findElementNeighbors(false);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else if(incidence)
+  {
+    const auto result = triGeomPtr->findElementsContainingVert(false);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  if(neighbors && !incidence)
+  {
+    const auto id = triGeomPtr->getElementContainingVertId();
+    REQUIRE(id.has_value());
+    REQUIRE(dataStructure.removeData(id.value()));
+    triGeomPtr->setElementContainingVertId(std::nullopt);
+  }
+  if(incidence)
+  {
+    RequireSupportMemberships(dataStructure, false);
+  }
+  if(neighbors)
+  {
+    RequireSupportMemberships(dataStructure, true);
+  }
+  Arguments args;
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(k_SupportLabelsPath));
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(false));
+  return args;
+}
+
+void ApplyWindingActions(DataStructure& dataStructure, const Arguments& args)
+{
+  auto preflight = VerifyTriangleWindingFilter{}.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto applied = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+}
+
+Result<> RunVerifyTriangleWinding(DataStructure& dataStructure)
+{
+  VerifyTriangleWindingInputValues inputs{k_SupportGeometryPath, k_SupportLabelsPath, false, {}};
+  const std::atomic_bool cancelled = false;
+  return VerifyTriangleWinding(dataStructure, {}, cancelled, &inputs)();
+}
+
+std::shared_ptr<FailingFaceStore> ArmFaceTransferFailure(DataStructure& dataStructure, usize failingRead, bool rejectWrite)
+{
+  auto storePtr = std::make_shared<FailingFaceStore>(ShapeType{4}, ShapeType{3}, 0);
+  for(usize valueIdx = 0; valueIdx < k_InputFaces.size(); ++valueIdx)
+  {
+    (*storePtr)[valueIdx] = k_InputFaces[valueIdx];
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
+  const auto replaced = dataStructure.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath).setDataStore(storePtr);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaced);
+  storePtr->Reads.clear();
+  storePtr->Writes.clear();
+  storePtr->FailingRead = failingRead;
+  storePtr->RejectWrite = rejectWrite;
+  return storePtr;
+}
+
+void RequireError(const Result<>& result, int32 code, const std::string& message)
+{
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == code);
+  CHECK(result.errors()[0].message == message);
+}
+
+void RequireSameMesh(const DataStructure& actual, const DataStructure& baseline)
+{
+  REQUIRE_NOTHROW(actual.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
+  REQUIRE_NOTHROW(baseline.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
+  UnitTest::CompareDataArrays<MeshIndexType>(actual.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath), baseline.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
+  REQUIRE_NOTHROW(actual.getDataRefAs<Int32Array>(k_SupportLabelsPath));
+  REQUIRE_NOTHROW(baseline.getDataRefAs<Int32Array>(k_SupportLabelsPath));
+  UnitTest::CompareDataArrays<int32>(actual.getDataRefAs<Int32Array>(k_SupportLabelsPath), baseline.getDataRefAs<Int32Array>(k_SupportLabelsPath));
+  REQUIRE_NOTHROW(actual.getDataRefAs<Float32Array>(k_SupportVerticesPath));
+  REQUIRE_NOTHROW(baseline.getDataRefAs<Float32Array>(k_SupportVerticesPath));
+  UnitTest::CompareDataArrays<float32>(actual.getDataRefAs<Float32Array>(k_SupportVerticesPath), baseline.getDataRefAs<Float32Array>(k_SupportVerticesPath));
+}
+
+void RequireDiskBackedMesh(const DataStructure& dataStructure)
+{
+  for(const auto& path : {k_SupportVerticesPath, k_SupportFacesPath, k_SupportLabelsPath})
+  {
+    CAPTURE(path);
+    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
+    REQUIRE(arrayPtr != nullptr);
+    REQUIRE(arrayPtr->getDataFormat() == "HDF5-OOC");
+    REQUIRE(arrayPtr->getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  }
+}
+
+void CheckSupportOwnership(bool incidence, bool neighbors, usize labelComponents, bool ooc)
+{
+  DataStructure baseline;
+  const auto baselineArgs = CreateSupportFixture(baseline, false, false, labelComponents);
+  const auto baselineResult = VerifyTriangleWindingFilter{}.execute(baseline, baselineArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(baselineResult.result);
+  RequireSupport(baseline, false, {});
+  RequireSupport(baseline, true, {});
+
+  DataStructure dataStructure;
+  const auto args = CreateSupportFixture(dataStructure, incidence, neighbors, labelComponents);
+  const auto incidenceBefore = SnapshotSupport(dataStructure, false);
+  const auto neighborsBefore = SnapshotSupport(dataStructure, true);
+  if(ooc)
+  {
+    RequireDiskBackedMesh(baseline);
+    RequireDiskBackedMesh(dataStructure);
+  }
+  const auto result = VerifyTriangleWindingFilter{}.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  RequireSameMesh(dataStructure, baseline);
+  RequireSupport(dataStructure, false, incidenceBefore);
+  RequireSupport(dataStructure, true, neighborsBefore);
+  if(incidence)
+  {
+    RequireSupportMemberships(dataStructure, false);
+  }
+  if(neighbors)
+  {
+    RequireSupportMemberships(dataStructure, true);
+  }
+  if(ooc)
+  {
+    RequireDiskBackedMesh(dataStructure);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(baseline);
+}
+
+void CheckFailureCleanup(bool incidence, bool neighbors, usize failingRead, bool rejectWrite)
+{
+  DataStructure baseline;
+  const auto baselineArgs = CreateSupportFixture(baseline, false, false, 2);
+  ApplyWindingActions(baseline, baselineArgs);
+  const auto baselineStorePtr = ArmFaceTransferFailure(baseline, failingRead, rejectWrite);
+  const auto baselineResult = RunVerifyTriangleWinding(baseline);
+
+  DataStructure dataStructure;
+  const auto args = CreateSupportFixture(dataStructure, incidence, neighbors, 2);
+  auto incidenceBefore = SnapshotSupport(dataStructure, false);
+  auto neighborsBefore = SnapshotSupport(dataStructure, true);
+  ApplyWindingActions(dataStructure, args);
+  const auto storePtr = ArmFaceTransferFailure(dataStructure, failingRead, rejectWrite);
+  const auto result = RunVerifyTriangleWinding(dataStructure);
+  const bool producerFailure = failingRead > 0 && failingRead <= 3;
+  const int32 code = producerFailure ? -56321 : (rejectWrite ? k_InjectedFaceWriteError : k_InjectedFaceReadError);
+  const std::string message = producerFailure ? "Unable to generate the connectivity list for SupportMesh geometry." : (rejectWrite ? "Injected face write failure" : "Injected face read failure");
+  RequireError(result, code, message);
+  RequireError(baselineResult, code, message);
+  // Recalculation invalidates both IDs on incidence failure, and only the neighbor ID on neighbor failure.
+  if(producerFailure)
+  {
+    neighborsBefore.Association.reset();
+    if(failingRead <= 2)
+    {
+      incidenceBefore.Association.reset();
+    }
+  }
+  RequireSupport(dataStructure, false, incidenceBefore);
+  RequireSupport(dataStructure, true, neighborsBefore);
+  if(incidence && (!producerFailure || failingRead == 3))
+  {
+    RequireSupportMemberships(dataStructure, false);
+  }
+  if(neighbors && !producerFailure)
+  {
+    RequireSupportMemberships(dataStructure, true);
+  }
+  const std::vector<std::pair<usize, usize>> expectedReads(rejectWrite ? 4 : failingRead, {0, 12});
+  const std::vector<std::pair<usize, usize>> expectedWrites = rejectWrite ? std::vector<std::pair<usize, usize>>{{0, 12}} : std::vector<std::pair<usize, usize>>{};
+  CHECK(storePtr->Reads == expectedReads);
+  CHECK(storePtr->Writes == expectedWrites);
+  CHECK(baselineStorePtr->Reads == expectedReads);
+  CHECK(baselineStorePtr->Writes == expectedWrites);
+  RequireSameMesh(dataStructure, baseline);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(baseline);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Supplied support ownership", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  const bool neighbors = GENERATE(false, true);
+  const usize labelComponents = GENERATE(1, 2);
+  CAPTURE(incidence, neighbors, labelComponents);
+  CheckSupportOwnership(incidence, neighbors, labelComponents, false);
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Producer failure cleanup", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  const bool neighbors = GENERATE(false, true);
+  const usize failingRead = GENERATE(1, 2, 3);
+  CAPTURE(incidence, neighbors, failingRead);
+  CheckFailureCleanup(incidence, neighbors, failingRead, false);
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Repair failure cleanup", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  const bool neighbors = GENERATE(false, true);
+  const bool rejectWrite = GENERATE(false, true);
+  CAPTURE(incidence, neighbors, rejectWrite);
+  CheckFailureCleanup(incidence, neighbors, rejectWrite ? 0 : 4, rejectWrite);
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Real store support ownership", "[SimplnxCore][VerifyTriangleWindingFilter][.OocStoreContract]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  REQUIRE(Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const bool incidence = GENERATE(false, true);
+  const bool neighbors = GENERATE(false, true);
+  const usize labelComponents = GENERATE(1, 2);
+  CAPTURE(incidence, neighbors, labelComponents);
+  CheckSupportOwnership(incidence, neighbors, labelComponents, true);
+  std::cout << fmt::format("VerifyTriangleWinding support ownership complete incidence={} neighbors={} components={} vertices=HDF5-OOC faces=HDF5-OOC labels=HDF5-OOC\n", incidence, neighbors,
+                           labelComponents);
+}
+
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Unassociated named child", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool neighbors = GENERATE(false, true);
+  CAPTURE(neighbors);
+  DataStructure dataStructure;
+  const auto args = CreateSupportFixture(dataStructure, false, false, 2);
+  auto* supportPtr = SupportListType::Create(dataStructure, SupportPath(neighbors).getTargetName(), GetSupportGeometry(dataStructure).getId());
+  REQUIRE(supportPtr != nullptr);
+  supportPtr->allocateLists(std::vector<uint16>{2});
+  std::array<MeshIndexType, 2> marker = {42, 7};
+  REQUIRE(supportPtr->setElementList(0, 2, marker.data()));
+  const auto incidenceBefore = SnapshotSupport(dataStructure, false);
+  const auto neighborsBefore = SnapshotSupport(dataStructure, true);
+  ApplyWindingActions(dataStructure, args);
+  const auto result = RunVerifyTriangleWinding(dataStructure);
+  RequireError(result, -56321, "Unable to generate the connectivity list for SupportMesh geometry.");
+  RequireSupport(dataStructure, false, incidenceBefore);
+  RequireSupport(dataStructure, true, neighborsBefore);
+  REQUIRE(supportPtr->size() == 1);
+  REQUIRE(supportPtr->getNumberOfElements(0) == marker.size());
+  for(usize memberIdx = 0; memberIdx < marker.size(); ++memberIdx)
+  {
+    CHECK(supportPtr->getElementListPointer(0)[memberIdx] == marker[memberIdx]);
+  }
+
+  DataStructure baseline;
+  const auto baselineArgs = CreateSupportFixture(baseline, false, false, 2);
+  ApplyWindingActions(baseline, baselineArgs);
+  const auto storePtr = ArmFaceTransferFailure(baseline, neighbors ? 3 : 1, false);
+  const auto baselineResult = RunVerifyTriangleWinding(baseline);
+  RequireError(baselineResult, -56321, "Unable to generate the connectivity list for SupportMesh geometry.");
+  const std::vector<std::pair<usize, usize>> expectedReads(neighbors ? 3 : 1, {0, 12});
+  CHECK(storePtr->Reads == expectedReads);
+  RequireSameMesh(dataStructure, baseline);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(baseline);
 }

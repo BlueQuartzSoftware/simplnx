@@ -66,6 +66,16 @@ The pipeline for multi-object meshes should look something like this:
 
 % Auto generated parameter table will be inserted here
 
+## Connectivity lifetime and saving
+
+This filter recalculates supplied element neighbors and vertex incidence in place. After successful recalculation, supplied objects keep their IDs, parent paths, and geometry associations. Their memberships remain valid when winding changes the vertex order within each face. A failed recalculation can alter supplied contents and clear their associations. Cleanup preserves that invalidation. A named support child without an association also remains caller-owned.
+
+The filter removes only support objects created by this invocation, including partial children on returned errors. Temporary neighbors are removed before temporary incidence. Cleanup can throw if allocation or DataStructure removal fails. Cleanup during arbitrary exception unwinding is outside this guarantee. Existing output changes are not rolled back.
+
+Retained connectivity uses `DynamicListArray`, which has no registered writer. A later save can return error `-5`: `Could not find IO factory for datatype: DynamicListArray`. A failed save can leave a partial destination. Do not use that destination as a valid saved result.
+
+After every connectivity consumer finishes, the caller can explicitly choose to discard the recomputable lists. Verify each object's exact ID, parent paths, and users. Shared objects require agreement from every affected owner. Remove confirmed neighbors before incidence with checked `DataStructure::removeData(id)` calls. Clear the corresponding association only after successful removal. Stop if removal fails. Do not delete by name or clear an association while leaving its child. Save to a fresh destination and check the Result. If connectivity must remain, serialization support requires a separate change.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
