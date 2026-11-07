@@ -18,7 +18,7 @@ In hexagonal crystal structures (such as titanium, magnesium, and zinc), the *C-
 
 Each **Cell** has a measured crystal orientation stored as a quaternion. This filter uses that orientation to rotate the crystal [001] direction into the physical sample coordinate system, producing a 3D unit vector that describes where the C-axis points.
 
-The output vectors are normalized to unit length and constrained to the upper hemisphere (positive Z component) to provide a unique, unambiguous representation.
+The defined output vectors are normalized to unit length and constrained to the upper hemisphere (positive Z component) to provide a unique, unambiguous representation. An all-zero quaternion or a quaternion with a NaN or infinite component has no defined C-axis direction. If the computed direction has zero or non-finite length, the filter writes NaN in all three output components.
 
 ### Hexagonal Materials Only
 
@@ -38,7 +38,7 @@ This filter computes the C-axis direction for each individual **Cell**. If you n
 
 ## Algorithm
 
-For each element, the quaternion is converted to an orientation matrix. The matrix is transposed (converting the passive rotation to an active rotation) and multiplied by the crystallographic c-axis <001> to produce the c-axis direction in the sample reference frame. The result is normalized, and if the z-component is negative the vector is flipped to ensure consistent hemisphere placement. Non-hexagonal phases produce NaN output values.
+For each element, the quaternion is converted to an orientation matrix. The matrix is transposed (converting the passive rotation to an active rotation) and multiplied by the crystallographic c-axis <001> to produce the c-axis direction in the sample reference frame. If the computed direction has zero or non-finite length, all three output components are NaN. Otherwise, the result is normalized, and if the z-component is negative the vector is flipped to ensure consistent hemisphere placement. Non-hexagonal phases produce NaN output values.
 
 ### In-Core Path
 

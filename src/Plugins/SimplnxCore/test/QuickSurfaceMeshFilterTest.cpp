@@ -2,8 +2,13 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include "SurfaceMeshingTestUtils.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -19,6 +24,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
+#include <any>
 #include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -30,6 +36,76 @@ using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
 namespace fs = std::filesystem;
+
+namespace
+{
+template <class GeometryT>
+void requirePreflightWithoutCellAttributeMatrix()
+{
+  DataStructure dataStructure;
+  auto* gridGeomPtr = GeometryT::Create(dataStructure, "Grid Geometry");
+  REQUIRE((gridGeomPtr != nullptr));
+  gridGeomPtr->setDimensions({4, 1, 1});
+  REQUIRE((gridGeomPtr->getCellData() == nullptr));
+  REQUIRE((gridGeomPtr->getNumberOfCells() == 4));
+  auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
+  REQUIRE((elsewherePtr != nullptr));
+
+  usize tupleCount = 4;
+  bool fixProblemVoxels = false;
+  int32 expectedCode = 0;
+  SECTION("Matching Feature Id count with correction off")
+  {
+  }
+  SECTION("Mismatched Feature Id count")
+  {
+    tupleCount = 3;
+    expectedCode = -76533;
+  }
+  SECTION("Correction requires the geometry Cell Attribute Matrix")
+  {
+    fixProblemVoxels = true;
+    expectedCode = -76532;
+  }
+
+  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {tupleCount}, {1}, elsewherePtr->getId());
+  REQUIRE((featureIdsPtr != nullptr));
+  const std::array<int32, 4> featureIds{1, 1, 2, 2};
+  for(usize index = 0; index < tupleCount; index++)
+  {
+    (*featureIdsPtr)[index] = featureIds.at(index);
+  }
+
+  const QuickSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Grid Geometry"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere", "Feature Ids"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(fixProblemVoxels));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE((result.outputActions.errors().size() == 1));
+    CHECK((result.outputActions.errors().front().code == expectedCode));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Image Geometry without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  requirePreflightWithoutCellAttributeMatrix<ImageGeom>();
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Rectilinear Grid without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  requirePreflightWithoutCellAttributeMatrix<RectGridGeom>();
+}
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning warnings", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
