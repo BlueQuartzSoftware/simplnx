@@ -1,5 +1,7 @@
 # V&V Report: ComputeCAxisLocationsFilter
 
+The status, counts, and sign-off below describe the historical verification scope. The [issue #1891 addendum](#issue-1891-undefined-c-axis-directions) records the new undefined-direction behavior separately.
+
 |           |                          |
 |-----------|--------------------------|
 | Plugin    | OrientationAnalysis      |
@@ -116,3 +118,18 @@ The CSV fixture, shared input, legacy and NX pipelines, output DREAM3D files, an
 - D1 - non-hexagonal cells: NaN (NX) vs meaningless-but-finite computed value (6.5.171). NX intentional improvement; no legacy fix warranted.
 - D2 - no hexagonal phases present: hard error -3522 (NX) vs silent full execution (6.5.171).
 - D3 - added warnings -3521 (preflight, unconditional) and -3523 (execute, mixed phases); legacy emits none.
+
+## Issue #1891: Undefined C-axis directions
+
+An all-zero quaternion defines no rotation. A quaternion with a NaN or infinite component also has no defined C-axis direction. If the computed direction has zero or non-finite length, the filter writes NaN in all three components. It does not normalize that direction. Defined directions retain the existing normalization and hemisphere rule.
+
+The independent expectations are `[0, 0, 1]` for the identity quaternion and three NaNs for an undefined direction. Each fixture runs with both Hexagonal_High and Hexagonal_Low phases.
+
+| Test case | New path or contract |
+|-----------|----------------------|
+| `OrientationAnalysis::ComputeCAxisLocationsFilter: Undefined quaternion directions` | Inline identity, all-zero, NaN-x, positive-infinity-y, and negative-infinity-w quaternions. Checks all three components of each output tuple. |
+| `OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 undefined quaternion directions` | Reuses the same fixture and expectations. Hidden `[.OocStoreContract]` case asserts actual out-of-core store types and HDF5-OOC formats for all inputs and the output. Registered through `OrientationAnalysisOocStoreContracts`. |
+
+The new execute branch checks the direction length before normalization. The existing unconditional preflight warning `-3521` still applies. Undefined directions do not add a warning or error code.
+
+Before the fix, both new cases failed on the all-zero quaternion because the first component was zero instead of NaN. The regression coverage is limited to undefined directions and the identity control. This addendum does not recertify the historical results or other code paths above.
