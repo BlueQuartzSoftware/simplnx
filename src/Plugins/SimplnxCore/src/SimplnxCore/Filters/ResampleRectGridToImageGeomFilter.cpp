@@ -124,6 +124,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   }
 
   const std::vector<usize> dims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
+  const ShapeType cellTupleShape = {dims[2], dims[1], dims[0]};
 
   // Create the re-sampled image geometry - origin & spacing values will be calculated & updated in execute
   {
@@ -166,18 +167,18 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     if(arrayType == IArray::ArrayType::DataArray)
     {
       const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(path);
-      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), dims, srcDataArray->getComponentShape(), destPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), cellTupleShape, srcDataArray->getComponentShape(), destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::NeighborListArray)
     {
       const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), dims, destPath);
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::StringArray)
     {
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(dims, destPath);
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(cellTupleShape, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else
