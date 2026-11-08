@@ -43,7 +43,7 @@ repository, but contains no code from one.
   - [Make the same decisions in preflight and execute](#make-the-same-decisions-in-preflight-and-execute)
   - [Check every final output path in preflight](#check-every-final-output-path-in-preflight)
   - [Compare a choice with its named value](#compare-a-choice-with-its-named-value)
-  - [Match image-cell tuple shapes to the Cell Attribute Matrix](#match-image-cell-tuple-shapes-to-the-cell-attribute-matrix)
+  - [Match every array's tuple shape to its Attribute Matrix](#match-every-arrays-tuple-shape-to-its-attribute-matrix)
 - [Algorithms and results](#algorithms-and-results)
   - [Give the same result from the in-core and out-of-core algorithms](#give-the-same-result-from-the-in-core-and-out-of-core-algorithms)
   - [Build DataPaths from DataPaths](#build-datapaths-from-datapaths)
@@ -520,28 +520,44 @@ it is choice index 27, so the cast gives the wrong unit.
 **Pattern to use:** `to_underlying(...)` in `RemoveFlaggedFeaturesFilter`; an explicit lookup table for the length
 unit.
 
-### Match image-cell tuple shapes to the Cell Attribute Matrix
+### Match every array's tuple shape to its Attribute Matrix
 
-**Rule:** Image Geometry dimensions are `{X,Y,Z}`. Its Cell Attribute Matrix and cell arrays use tuple shape
-`{Z,Y,X}`. Derive cell-array tuple shapes from that matrix's shape or, when declaring a new geometry, from the
-same reversed dimensions as its creation action. Matching tuple products alone is insufficient.
+**Rule:** every array in an Attribute Matrix has exactly that matrix's tuple shape: cell, vertex, edge, face,
+feature and ensemble matrices alike. Take an array's tuple shape from its owning matrix (`AttributeMatrix::getShape()`)
+when the matrix exists. When the same action list creates the matrix, use the shape that action gives it. Grid
+geometries need the most care: Image Geometry and Rectilinear Grid Geometry dimensions are `{X,Y,Z}`, but their Cell
+Attribute Matrix and cell arrays use `{Z,Y,X}`, as `CreateImageGeometryAction` and `CreateRectGridGeometryAction`
+create them. Matching tuple counts is not enough.
 
-**Example of the broken rule:** `UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl()` passed `{X,Y,Z}` to
-the label-array action although `CreateImageGeometryAction` created its cell matrix with `{Z,Y,X}`. Evidence:
-#1800, #1861 (BUG: C01: Copy-paste index drift in 15 filters), and PR #1919 (BUG: Fix copy-paste index drift in 15
-filters).
+**Examples of the broken rule:**
 
-**Why:** reversing dimensions preserves the tuple count, so a count check misses incompatible shape metadata even
-when the flat X-fastest values are unchanged.
+- `UncertainRegularGridSampleSurfaceMeshFilter::preflightImpl()` passed `{X,Y,Z}` to the label-array action although
+  `CreateImageGeometryAction` created its cell matrix with `{Z,Y,X}` (#1800).
+- `WritePoleFigure` created the intensity arrays of later phases with `{N,N,1}` in execute, while preflight created the
+  matrix and the phase-one arrays with `{1,N,N}` (#1894).
+- `ResampleRectGridToImageGeomFilter::preflightImpl()` passed the `{X,Y,Z}` output dimensions both to
+  `CreateImageGeometryAction` and to every copied cell array.
+
+Evidence: #1861 and PR #1919.
+
+**Why:** reversing or reordering dimensions keeps the tuple count, so a count check misses the error even when the flat
+values are unchanged. Tuple-shape checks such as `UnitTest::CheckArraysInheritTupleDims()` then fail, and code that
+reads an array's tuple shape sees its axes in the wrong order.
 
 **What to look for:**
 
-- One dimension vector reused for both `CreateImageGeometryAction` and cell `CreateArrayAction`, without reversing
-  its tuple axes.
+- One dimension vector reused for both `CreateImageGeometryAction` or `CreateRectGridGeometryAction` and a cell
+  `CreateArrayAction`, without reversing its tuple axes.
+- A tuple shape built from literals or geometry dimensions (for example `{dim, dim, 1}`) for an array created in an
+  existing Attribute Matrix, often in a later loop pass or in execute.
+- An array created in a feature or ensemble matrix with a shape built separately instead of the matrix's shape.
 
-**Pattern to use:** `RegularGridSampleSurfaceMeshFilter::preflightImpl()` uses XYZ for new geometry dimensions and
-ZYX for cell tuples; its existing-geometry branch takes the actual cell-matrix shape. Test unequal dimensions such
-as `{2,3,4}` and assert geometry `{2,3,4}` and matrix/array tuples `{4,3,2}`.
+**Pattern to use:** `RegularGridSampleSurfaceMeshFilter::preflightImpl()` uses XYZ for new geometry dimensions and ZYX
+for cell tuples; its existing-geometry branch takes the actual cell-matrix shape. `WritePoleFigure` creates later-phase
+arrays with `getDataRefAs<AttributeMatrix>(amPath).getShape()`. `CreateRectGridGeometryAction` reverses the grid
+dimensions for its Cell Attribute Matrix. Test unequal dimensions such as `{2,3,4}`, assert
+geometry `{2,3,4}` and matrix/array tuples `{4,3,2}`, and call `UnitTest::CheckArraysInheritTupleDims()` on the output
+DataStructure.
 
 ---
 
