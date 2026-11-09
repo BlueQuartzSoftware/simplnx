@@ -83,13 +83,13 @@ inline Result<> ValidateKernelRadius(nonstd::span<const uint32> radius)
   {
     if(radius[axis] > k_MaxKernelRadius)
     {
-      return MakeErrorResult(k_KernelRadiusRangeError, fmt::format("Kernel Radius {}={} exceeds the maximum {} cells. Reduce this radius.", axes[axis], radius[axis], k_MaxKernelRadius));
+      return MakeErrorResult(k_KernelRadiusRangeError, fmt::format("Kernel Radius {}={} exceeds the maximum {} cells. Reduce this radius.", axes.at(axis), radius[axis], k_MaxKernelRadius));
     }
   }
   uint64 count = 1;
   for(const uint32 value : radius)
   {
-    const uint64 extent = 2 * static_cast<uint64>(value) + 1;
+    const uint64 extent = (2 * static_cast<uint64>(value)) + 1;
     if(count > std::numeric_limits<uint64>::max() / extent)
     {
       return MakeErrorResult(k_KernelRadiusCountOverflowError,
@@ -186,7 +186,7 @@ inline StructuringElement MakeStructuringElement(KernelType type, const std::arr
   bool boundFits = true;
   for(const int32 value : radius)
   {
-    const uint64 extent = 2 * static_cast<uint64>(value) + 1;
+    const uint64 extent = (2 * static_cast<uint64>(value)) + 1;
     if(extent > std::numeric_limits<usize>::max() || bound > std::numeric_limits<usize>::max() / extent)
     {
       boundFits = false;

@@ -692,7 +692,8 @@ error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `C
     tuple and says that **Warn and Continue** handles these values instead.
   - **Warn and Continue** computes ranges and bounds from finite values only, gives each nonfinite element the result
     that the filter documentation states (for example "first bin" or "Outside Value"), and reports one warning with
-    the number of nonfinite values.
+    the number of nonfinite values. For reductions and neighborhood operations, exclude nonfinite values from the
+    contributing samples and counts.
   - The in-core and out-of-core algorithms use one shared test and rule. The parameter has no effect on integer arrays.
 - **Element-wise floating-point math**, where one element in gives the same element out and no other element changes,
   lets the IEEE result pass through. The filter documentation lists what NaN, infinity, zero and out-of-domain inputs
@@ -701,6 +702,9 @@ error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `C
   [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast).
 - **A result that is undefined for degenerate input** (a zero-length vector, an all-zero quaternion) is NaN in a
   floating-point output, and the documentation says so. It is not reported as bad input data.
+
+These rules apply to new filters and to filters a change already fixes; changing an existing filter's output type or
+failure behavior to meet them is a breaking change that its pull request names.
 
 **Example of the broken rule:** **Compute Bounding Box Stats** gives two different wrong answers for Float32 values
 {NaN, 1, 2}: the in-core algorithm treats NaN as equal to every value (`Equivalent()` in

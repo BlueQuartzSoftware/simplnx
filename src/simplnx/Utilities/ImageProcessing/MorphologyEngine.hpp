@@ -88,36 +88,36 @@ inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<cons
     {
       return MakeErrorResult(k_MorphologyPaddedExtentError,
                              fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) overflow padded extent dims[{}]+2*pad. Reduce the dimensions or radii.",
-                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], axes[axis]));
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], axes.at(axis)));
     }
     paddedDims[axis] += 2 * pad;
   }
-  constexpr uint64 k_SignedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
+  constexpr uint64 signedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
   for(usize axis = 0; axis < 3; ++axis)
   {
     // Padded extents are at least the original extents, so this also bounds original coordinates.
-    if(paddedDims[axis] > k_SignedMax - static_cast<uint64>(radius[axis]) - 1)
+    if(paddedDims[axis] > signedMax - static_cast<uint64>(radius[axis]) - 1)
     {
       return MakeErrorResult(k_MorphologyCoordinateError,
                              fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed coordinate limit: padded extent {} + radius {} + 1 on axis {} must be at "
                                          "most {}. Reduce the dimensions or radii.",
-                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[axis], radius[axis], axes[axis], k_SignedMax));
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[axis], radius[axis], axes.at(axis), signedMax));
     }
   }
-  if(paddedDims[0] != 0 && paddedDims[1] > k_SignedMax / paddedDims[0])
+  if(paddedDims[0] != 0 && paddedDims[1] > signedMax / paddedDims[0])
   {
     return MakeErrorResult(
         k_MorphologyPlaneError,
         fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed plane count limit: padded X*Y = {}*{} must be at most {}. Reduce the dimensions or radii.",
-                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], k_SignedMax));
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], signedMax));
   }
   const uint64 plane = static_cast<uint64>(paddedDims[0]) * paddedDims[1];
-  if(plane != 0 && paddedDims[2] > k_SignedMax / plane)
+  if(plane != 0 && paddedDims[2] > signedMax / plane)
   {
     return MakeErrorResult(
         k_MorphologyVolumeError,
         fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed volume count limit: padded X*Y*Z = {}*{}*{} must be at most {}. Reduce the dimensions or radii.",
-                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], paddedDims[2], k_SignedMax));
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], paddedDims[2], signedMax));
   }
   const uint64 volume = plane * paddedDims[2];
   if(elementBytes != 0 && volume > std::numeric_limits<uint64>::max() / elementBytes)
@@ -133,15 +133,15 @@ inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<cons
 /**
  * @brief Checks the layout of a rasterized kernel before an engine allocates scratch.
  * @param dims Original image extents in cells.
- * @param se Rasterized kernel. Negative legacy radii describe an empty range.
+ * @param kernel Rasterized kernel. Negative legacy radii describe an empty range.
  * @param safeBorder Includes the effective Safe Border padding.
  * @param elementBytes Size of one scalar value in bytes.
  * @return Shared radius or layout error.
  */
-inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, const StructuringElement& se, bool safeBorder, usize elementBytes)
+inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, const StructuringElement& kernel, bool safeBorder, usize elementBytes)
 {
-  const std::array<uint32, 3> radius = {static_cast<uint32>(std::max<int32>(0, se.radius[0])), static_cast<uint32>(std::max<int32>(0, se.radius[1])),
-                                        static_cast<uint32>(std::max<int32>(0, se.radius[2]))};
+  const std::array<uint32, 3> radius = {static_cast<uint32>(std::max<int32>(0, kernel.radius[0])), static_cast<uint32>(std::max<int32>(0, kernel.radius[1])),
+                                        static_cast<uint32>(std::max<int32>(0, kernel.radius[2]))};
   return ValidateMorphologyLayout(dims, radius, safeBorder, elementBytes);
 }
 
@@ -207,23 +207,23 @@ constexpr T MorphologyGradientDifference(T maximum, T minimum) noexcept
 /**
  * @brief Checks signed flat-delta and staged-index arithmetic for an optional flat fold.
  * @param dims Complete image or padded bounds.
- * @param se Rasterized offsets.
+ * @param kernel Rasterized offsets.
  * @return True if every computed delta and its sum with a volume-sized base fit int64.
  */
-inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const StructuringElement& se)
+inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const StructuringElement& kernel)
 {
-  constexpr uint64 k_Max = static_cast<uint64>(std::numeric_limits<int64>::max());
-  if(dims[0] > k_Max || dims[1] > k_Max || dims[2] > k_Max || (dims[0] != 0 && dims[1] > k_Max / dims[0]))
+  constexpr uint64 signedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
+  if(dims[0] > signedMax || dims[1] > signedMax || dims[2] > signedMax || (dims[0] != 0 && dims[1] > signedMax / dims[0]))
   {
     return false;
   }
   const uint64 slice = static_cast<uint64>(dims[0]) * dims[1];
-  if(slice != 0 && dims[2] > k_Max / slice)
+  if(slice != 0 && dims[2] > signedMax / slice)
   {
     return false;
   }
   const uint64 volume = slice * dims[2];
-  for(const SEOffset& offset : se.offsets)
+  for(const SEOffset& offset : kernel.offsets)
   {
     const std::array<int64, 3> values = {offset.dx, offset.dy, offset.dz};
     const std::array<uint64, 3> strides = {1, dims[0], slice};
@@ -231,12 +231,12 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
     for(usize step = 0; step < 3; ++step)
     {
       const usize axis = 2 - step;
-      const uint64 magnitude = static_cast<uint64>(values[axis] < 0 ? -values[axis] : values[axis]);
-      if(magnitude != 0 && strides[axis] > k_Max / magnitude)
+      const uint64 magnitude = static_cast<uint64>(values.at(axis) < 0 ? -values.at(axis) : values.at(axis));
+      if(magnitude != 0 && strides.at(axis) > signedMax / magnitude)
       {
         return false;
       }
-      const int64 product = values[axis] < 0 ? -static_cast<int64>(magnitude * strides[axis]) : static_cast<int64>(magnitude * strides[axis]);
+      const int64 product = values.at(axis) < 0 ? -static_cast<int64>(magnitude * strides.at(axis)) : static_cast<int64>(magnitude * strides.at(axis));
       if((product > 0 && delta > std::numeric_limits<int64>::max() - product) || (product < 0 && delta < std::numeric_limits<int64>::min() - product))
       {
         return false;
@@ -244,7 +244,7 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
       delta += product;
     }
     const uint64 magnitude = delta < 0 ? static_cast<uint64>(-(delta + 1)) + 1 : static_cast<uint64>(delta);
-    if(magnitude > k_Max - volume)
+    if(magnitude > signedMax - volume)
     {
       return false;
     }
@@ -1401,7 +1401,7 @@ inline std::vector<MorphologyFlatFoldOffset> MakeMorphologyFlatFoldOffsets(const
 {
   assert(MorphologyFlatFoldIsRepresentable(dims, se));
   const int64 dimX = static_cast<int64>(dims[0]);
-  const int64 sliceValues = static_cast<int64>(dims[0] * dims[1]);
+  const int64 sliceValues = static_cast<int64>(dims[0]) * static_cast<int64>(dims[1]);
   std::vector<MorphologyFlatFoldOffset> flatOffsets;
   flatOffsets.reserve(se.offsets.size());
   for(const SEOffset& offset : se.offsets)
@@ -2052,8 +2052,8 @@ bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWord* pac
  */
 inline int64 MorphologyPackedWordEnd(int64 xStart, int64 rowEnd)
 {
-  constexpr int64 k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
-  return xStart > std::numeric_limits<int64>::max() - k_WordBits ? rowEnd : std::min(rowEnd, xStart + k_WordBits);
+  constexpr int64 wordBits = std::numeric_limits<BinaryMorphWord>::digits;
+  return xStart > std::numeric_limits<int64>::max() - wordBits ? rowEnd : std::min(rowEnd, xStart + wordBits);
 }
 
 /**
