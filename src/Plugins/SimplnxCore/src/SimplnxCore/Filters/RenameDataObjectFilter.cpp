@@ -1,6 +1,7 @@
 #include "RenameDataObjectFilter.hpp"
 
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -12,13 +13,15 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/core.h>
+
 #include <stdexcept>
 
 using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_EmptyParameterError = -520;
+constexpr int32 k_InvalidNewName = -27350;
 } // namespace
 
 namespace nx::core
@@ -61,7 +64,8 @@ Parameters RenameDataObjectFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_AllowOverwrite_Key, "Allow Overwrite",
-                                                "If true existing object with `New Name` and all of its nested objects will be removed to free up the name for the target DataObject", false));
+                                                "Replace the object at New Name under the selected parent. Other placements and their children are kept. Objects left with no placement are deleted.",
+                                                false));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_SourceDataObjectPath_Key, "DataObject to Rename", "DataPath pointing to the target DataObject", DataPath()));
   params.insert(std::make_unique<StringParameter>(k_NewName_Key, "New Name", "Target DataObject name", ""));
   return params;
@@ -86,6 +90,10 @@ IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructu
   auto allowOverwrite = filterArgs.value<bool>(k_AllowOverwrite_Key);
   auto dataGroupPath = filterArgs.value<DataPath>(k_SourceDataObjectPath_Key);
   auto newName = filterArgs.value<std::string>(k_NewName_Key);
+  if(!DataObject::IsValidName(newName))
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidNewName, fmt::format("New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", newName, dataGroupPath.toString()))};
+  }
 
   auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName, allowOverwrite);
 
