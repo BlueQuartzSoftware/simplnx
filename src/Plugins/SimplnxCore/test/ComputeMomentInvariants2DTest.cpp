@@ -1,7 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-#ifdef SIMPLNX_ENABLE_MULTICORE
 #include <algorithm>
-#endif
 #include <any>
 #include <array>
 #include <atomic>

@@ -29,6 +29,7 @@ using namespace nx::core;
 
 namespace
 {
+#ifdef SIMPLNX_ENABLE_MULTICORE
 /**
  * @brief Checks whether supplied arrays avoid out-of-core storage.
  * @param arrays Arrays used by one parallel operation.
@@ -59,6 +60,7 @@ bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& ar
 
   return true;
 }
+#endif
 
 /**
  * @class StatisticsByFeatureImpl
