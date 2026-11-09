@@ -1,5 +1,7 @@
 #include "ConditionalSetValue.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -9,7 +11,11 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <istream>
+#include <locale>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <type_traits>
 
 using namespace nx::core;
@@ -22,6 +28,35 @@ constexpr usize k_TargetChunkValues = 65536;
 
 template <typename T>
 inline constexpr bool k_IsConditionalType = std::is_same_v<T, bool> || std::is_same_v<T, uint8> || std::is_same_v<T, int8>;
+
+/**
+ * @brief Applies numeric nonzero semantics to Boolean values without integer truncation.
+ * @tparam T Specifies the selected array's element type.
+ * @param input Supplies numeric text or an existing Boolean spelling.
+ * @return True for a complete nonzero Boolean numeric input, or the existing conversion result.
+ */
+template <typename T>
+Result<T> convertConditionalValue(const std::string& input)
+{
+  if constexpr(std::is_same_v<T, bool>)
+  {
+    std::istringstream numberStream(input);
+    numberStream.imbue(std::locale::classic());
+    float64 numericValue = 0.0;
+    if(numberStream >> numericValue)
+    {
+      numberStream >> std::ws;
+      if(numberStream.eof() && numericValue != 0.0)
+      {
+        return {true};
+      }
+    }
+  }
+
+  // Preserve Boolean spellings, nonnumeric fallback and all other scalar conversions.
+  // Parsed zero also uses the fallback to preserve numeric-prefix behavior after underflow.
+  return StringInterpretationUtilities::Convert<T>(input);
+}
 
 /**
  * @brief Creates an unsupported conditional-array type error.
@@ -43,8 +78,8 @@ struct ReplaceValueInArrayDirectFunctor
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
-    const ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
-    const ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
+    const ScalarType removeVal = convertConditionalValue<ScalarType>(removeValue).value();
+    const ScalarType replaceVal = convertConditionalValue<ScalarType>(replaceValue).value();
     const usize size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
 
     if(auto* contiguousStore = dynamic_cast<DataStore<ScalarType>*>(&dataStore); contiguousStore != nullptr)
@@ -193,7 +228,7 @@ struct ConditionalReplaceValueDirectTargetFunctor
   template <typename TargetType>
   Result<> operator()(IDataArray& targetArray, const IDataArray& conditionalArray, const std::string& replaceValue, bool invertMask, const std::atomic_bool& shouldCancel) const
   {
-    Result<TargetType> conversionResult = StringInterpretationUtilities::Convert<TargetType>(replaceValue);
+    Result<TargetType> conversionResult = convertConditionalValue<TargetType>(replaceValue);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
@@ -213,8 +248,8 @@ struct ReplaceValueInArrayScanlineFunctor
   Result<> operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue, const std::atomic_bool& shouldCancel) const
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    const ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
-    const ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
+    const ScalarType removeVal = convertConditionalValue<ScalarType>(removeValue).value();
+    const ScalarType replaceVal = convertConditionalValue<ScalarType>(replaceValue).value();
     const usize numTuples = dataStore.getNumberOfTuples();
     const usize numComps = dataStore.getNumberOfComponents();
     const usize chunkTuples = std::max<usize>(1, k_TargetChunkValues / numComps);
@@ -343,7 +378,7 @@ struct ConditionalReplaceValueScanlineTargetFunctor
   template <typename TargetType>
   Result<> operator()(IDataArray& targetArray, const IDataArray& conditionalArray, const std::string& replaceValue, bool invertMask, const std::atomic_bool& shouldCancel) const
   {
-    Result<TargetType> conversionResult = StringInterpretationUtilities::Convert<TargetType>(replaceValue);
+    Result<TargetType> conversionResult = convertConditionalValue<TargetType>(replaceValue);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");

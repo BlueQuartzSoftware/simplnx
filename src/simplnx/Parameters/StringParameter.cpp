@@ -2,9 +2,16 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
+#include "simplnx/Common/Types.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+
+#include <algorithm>
+#include <limits>
+#include <string>
+#include <type_traits>
+#include <utility>
 
 namespace nx::core
 {
@@ -81,7 +88,25 @@ Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToSt
 
   auto value = json.get<T>();
 
-  return {std::to_string(value)};
+  if constexpr(std::is_floating_point_v<T>)
+  {
+    auto text = fmt::format("{}", value);
+    const auto exponentPosition = text.find_first_of("eE");
+    if(exponentPosition != std::string::npos)
+    {
+      // Legacy integer consumers read decimal prefixes and cannot interpret an exponent.
+      const int32 exponent = std::stoi(text.substr(exponentPosition + 1));
+      // One extra significant digit covers a shortest exponent that rounds across a power of ten.
+      const int32 precision = std::max<int32>(0, std::numeric_limits<T>::max_digits10 - exponent);
+      // Fixed formatting of the original value preserves exact large integers and enough fractional digits to round-trip.
+      text = fmt::format("{:.{}f}", value, precision);
+    }
+    return {std::move(text)};
+  }
+  else
+  {
+    return {std::to_string(value)};
+  }
 }
 
 template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<int8>;
