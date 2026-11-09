@@ -180,7 +180,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
 
 IDataAction::UniquePointer RenameDataAction::clone() const
 {
-  return std::make_unique<RenameDataAction>(m_Path, m_NewName);
+  return std::make_unique<RenameDataAction>(m_Path, m_NewName, m_Overwrite);
 }
 
 std::string RenameDataAction::newName() const
