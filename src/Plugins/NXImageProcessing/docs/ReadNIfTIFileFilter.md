@@ -60,7 +60,13 @@ non-trivial rotation, only the spacing (column magnitudes) and origin are
 extracted and a warning is emitted. The voxel data itself is loaded in its
 native storage order.
 
-simplnx Image Geometries always use positive spacing. If the used sform has a negative diagonal term, or (without an sform) qfac is -1 or a `pixdim[1..3]` value is negative, the filter ignores that direction and gives a warning. The voxels stay in their stored order, so the loaded image can be mirrored or rotated compared with the source orientation.
+This reader uses positive spacing. When **Use Stored Affine Transform** is on, the filter ignores a negative axis direction and gives a warning in these cases:
+
+- the sform is used (`sform_code` > 0) and one of its diagonal terms is negative;
+- the qform is used (`sform_code` <= 0 and `qform_code` > 0) and qfac is negative;
+- the sform is not used and a `pixdim[1..3]` value is negative.
+
+The voxels stay in their stored order, so the loaded image can be mirrored or rotated compared with the source orientation. When **Use Stored Affine Transform** is off, the filter does not check the axis directions and gives no warning.
 
 ### Data scaling
 
