@@ -1,11 +1,19 @@
 #include "SimplnxCore/Filters/ResampleImageGeomFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -16,10 +24,12 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
+#include <any>
 #include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <fstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -40,6 +50,94 @@ struct CompareDataArrayFunctor
     UnitTest::CompareDataArrays<T>(left, right, start);
   }
 };
+
+TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", "[SimplnxCore][ResampleImageGeom]")
+{
+  auto app = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool removeOriginal = GENERATE(false, true);
+  const auto units = GENERATE(IGeometry::LengthUnit::Millimeter, IGeometry::LengthUnit::Meter, IGeometry::LengthUnit::Unspecified);
+  CAPTURE(removeOriginal, units);
+
+  DataStructure dataStructure;
+  const DataPath srcGeomPath({"Input Geometry"});
+  const DataPath destGeomPath({"Resampled Geometry"});
+  const DataPath inputDataPath = srcGeomPath.createChildPath("Cell Data").createChildPath("Values");
+  const FloatVec3 origin = {1.0F, -2.0F, 3.0F};
+  const CreateImageGeometryAction inputGeometryAction(srcGeomPath, {2, 2, 2}, {1.0F, -2.0F, 3.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data", units);
+  auto inputGeometryResult = inputGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(inputGeometryResult);
+  const auto* inputGeomPtr = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+  REQUIRE((inputGeomPtr != nullptr));
+  REQUIRE((inputGeomPtr->getUnits() == units));
+  const auto inputGeomId = inputGeomPtr->getId();
+  const auto* inputCellDataPtr = inputGeomPtr->getCellData();
+  REQUIRE((inputCellDataPtr != nullptr));
+  auto* inputValuesPtr = Int32Array::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputDataPath, {2, 2, 2}, {1}), inputCellDataPtr->getId());
+  REQUIRE((inputValuesPtr != nullptr));
+  inputValuesPtr->fill(7);
+
+  const ResampleImageGeomFilter filter;
+  Arguments args;
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.5F, 0.5F, 0.5F}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(removeOriginal));
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(srcGeomPath));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(destGeomPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const CreateImageGeometryAction* plannedGeometryPtr = nullptr;
+  for(const auto& action : preflightResult.outputActions.value().actions)
+  {
+    if(const auto* candidatePtr = dynamic_cast<const CreateImageGeometryAction*>(action.get()); candidatePtr != nullptr)
+    {
+      plannedGeometryPtr = candidatePtr;
+      break;
+    }
+  }
+  REQUIRE((plannedGeometryPtr != nullptr));
+  CHECK((plannedGeometryPtr->units() == units));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputGeomPath = removeOriginal ? srcGeomPath : destGeomPath;
+  const auto* outputGeomPtr = dataStructure.getDataAs<ImageGeom>(outputGeomPath);
+  REQUIRE((outputGeomPtr != nullptr));
+  CHECK((outputGeomPtr->getUnits() == units));
+  CHECK((outputGeomPtr->getDimensions() == SizeVec3{4, 4, 4}));
+  CHECK((outputGeomPtr->getSpacing() == FloatVec3{0.5F, 0.5F, 0.5F}));
+  CHECK((outputGeomPtr->getOrigin() == origin));
+  const auto* outputValuesPtr = dataStructure.getDataAs<Int32Array>(outputGeomPath.createChildPath("Cell Data").createChildPath("Values"));
+  REQUIRE((outputValuesPtr != nullptr));
+  REQUIRE((outputValuesPtr->getNumberOfTuples() == 64));
+  REQUIRE((outputValuesPtr->getNumberOfComponents() == 1));
+  for(usize index = 0; index < outputValuesPtr->getSize(); ++index)
+  {
+    CHECK(((*outputValuesPtr)[index] == 7));
+  }
+
+  if(!removeOriginal)
+  {
+    const auto* retainedGeomPtr = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+    REQUIRE((retainedGeomPtr != nullptr));
+    CHECK((retainedGeomPtr->getId() == inputGeomId));
+    CHECK((retainedGeomPtr->getUnits() == units));
+    CHECK((retainedGeomPtr->getDimensions() == SizeVec3{2, 2, 2}));
+    CHECK((retainedGeomPtr->getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F}));
+    CHECK((retainedGeomPtr->getOrigin() == origin));
+    const auto* retainedValuesPtr = dataStructure.getDataAs<Int32Array>(inputDataPath);
+    REQUIRE((retainedValuesPtr != nullptr));
+    REQUIRE((retainedValuesPtr->getNumberOfTuples() == 8));
+    REQUIRE((retainedValuesPtr->getNumberOfComponents() == 1));
+    for(usize index = 0; index < retainedValuesPtr->getSize(); ++index)
+    {
+      CHECK(((*retainedValuesPtr)[index] == 7));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][ResampleImageGeom]")
 {

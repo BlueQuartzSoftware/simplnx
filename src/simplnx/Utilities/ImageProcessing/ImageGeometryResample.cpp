@@ -312,7 +312,8 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
-      destImagePath, geometryDimensions, srcOrigin, CreateImageGeometryAction::OriginType{resolvedValues.Spacing[0], resolvedValues.Spacing[1], resolvedValues.Spacing[2]}, cellDataName));
+      destImagePath, geometryDimensions, srcOrigin, CreateImageGeometryAction::OriginType{resolvedValues.Spacing[0], resolvedValues.Spacing[1], resolvedValues.Spacing[2]}, cellDataName,
+      srcImageGeom.getUnits()));
 
   const DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
   for(const auto& [identifier, object] : *selectedCellData)

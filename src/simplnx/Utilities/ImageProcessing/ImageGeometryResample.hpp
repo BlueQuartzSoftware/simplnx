@@ -107,6 +107,8 @@ private:
  * @param dataStructure Contains the source Image Geometry and child objects.
  * @param inputValues Contains the resampling settings and data paths.
  * @return Output actions, display values, or a validation error.
+ *
+ * The created Image Geometry retains the source length unit.
  */
 SIMPLNX_EXPORT IFilter::PreflightResult PreflightImageGeometryResample(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues);
 
