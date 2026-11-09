@@ -83,7 +83,7 @@ bool ContainsCode(const std::vector<T>& vec, int32 code)
   return std::find_if(vec.cbegin(), vec.cend(), [code](const T& item) { return item.code == code; }) != vec.cend();
 }
 
-void checkUndefinedCAxisDirections(bool requireOutOfCore)
+void CheckUndefinedCAxisDirections(bool requireOutOfCore)
 {
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
   const float32 infinity = std::numeric_limits<float32>::infinity();
@@ -587,12 +587,12 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Undefined quaternio
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
-  checkUndefinedCAxisDirections(false);
+  CheckUndefinedCAxisDirections(false);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 undefined quaternion directions", "[OrientationAnalysis][ComputeCAxisLocationsFilter][.OocStoreContract]")
 {
   REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
   const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  checkUndefinedCAxisDirections(true);
+  CheckUndefinedCAxisDirections(true);
 }

@@ -1,4 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <algorithm>
 #include <any>
 #include <array>
 #include <atomic>
@@ -149,7 +150,7 @@ const DataPath k_FeatureIdsPath({k_ImageGeometry, k_CellData, k_FeatureIds});
 const DataPath k_RectCoordsPath = k_FeatureDataPath.createChildPath(k_RectCoords);
 const DataPath k_CentralMomentsPath = k_FeatureDataPath.createChildPath(k_CentralMoments);
 
-DataStructure createUnusedFeatureTestData(int32 liveId)
+DataStructure CreateUnusedFeatureTestData(int32 liveId)
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
@@ -199,7 +200,7 @@ DataStructure createUnusedFeatureTestData(int32 liveId)
   return dataStructure;
 }
 
-Arguments createUnusedFeatureArguments(bool saveCentralMoments)
+Arguments CreateUnusedFeatureArguments(bool saveCentralMoments)
 {
   const ComputeMomentInvariants2DFilter filter;
   auto args = filter.getDefaultArguments();
@@ -236,11 +237,19 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
   for(const int32 liveId : liveIds)
   {
     CAPTURE(liveId);
-    DataStructure dataStructure = createUnusedFeatureTestData(liveId);
+    DataStructure dataStructure = CreateUnusedFeatureTestData(liveId);
     const ComputeMomentInvariants2DFilter filter;
-    const auto args = createUnusedFeatureArguments(saveCentralMoments);
-    const auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    const auto args = CreateUnusedFeatureArguments(saveCentralMoments);
+    std::atomic_bool reportedNonXY = false;
+    const IFilter::MessageHandler messageHandler{[&reportedNonXY](const IFilter::Message& message) {
+      if(message.message.find("NOT strictly 2D") != std::string::npos)
+      {
+        reportedNonXY = true;
+      }
+    }};
+    const auto executeResult = scope.execute([&] { return filter.execute(dataStructure, args, nullptr, messageHandler); });
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    CHECK_FALSE(reportedNonXY.load());
 
     const auto* omega1Ptr = dataStructure.getDataAs<Float32Array>(k_Omega1Path);
     const auto* omega2Ptr = dataStructure.getDataAs<Float32Array>(k_Omega2Path);
@@ -298,18 +307,36 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
   }
 }
 
-#ifndef SIMPLNX_ENABLE_MULTICORE
-TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after unused feature", "[SimplnxCore][ComputeMomentInvariants2DFilter][Issue1775]")
+TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rectangle", "[SimplnxCore][ComputeMomentInvariants2DFilter][Issue1775]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE((appPtr != nullptr));
   const bool saveCentralMoments = GENERATE(false, true);
+#ifndef SIMPLNX_ENABLE_MULTICORE
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+#else
+  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scanlineIter = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  if(scanlineIter == scenarios.cend())
+  {
+    SUCCEED("The Scanline cancellation case requires the Scanline test scenario.");
+    return;
+  }
+  const auto scenario = *scanlineIter;
+#endif
   CAPTURE(saveCentralMoments, scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure dataStructure = createUnusedFeatureTestData(2);
+  DataStructure dataStructure = CreateUnusedFeatureTestData(2);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath));
+  auto& rectRef = dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath);
+  // A supplied nonempty rectangle with two Z cells exercises the skip branch in an XY geometry.
+  constexpr std::array<uint32, 6> nonXYRect = {0, 0, 0, 0, 0, 1};
+  for(usize component = 0; component < nonXYRect.size(); ++component)
+  {
+    rectRef[6 + component] = nonXYRect.at(component);
+  }
   const ComputeMomentInvariants2DFilter filter;
-  const auto args = createUnusedFeatureArguments(saveCentralMoments);
+  const auto args = CreateUnusedFeatureArguments(saveCentralMoments);
   std::atomic_bool shouldCancel = false;
   const IFilter::MessageHandler messageHandler{[&shouldCancel](const IFilter::Message& message) {
     if(message.message == "Feature 1 is NOT strictly 2D in the XY plane. Skipping this feature.")
@@ -343,7 +370,6 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after unused fea
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
-#endif
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {

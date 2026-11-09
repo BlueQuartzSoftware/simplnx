@@ -31,6 +31,7 @@
 #include <fstream>
 #include <memory>
 #include <optional>
+#include <type_traits>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -40,12 +41,17 @@ namespace fs = std::filesystem;
 namespace
 {
 template <class GeometryT>
-void requirePreflightWithoutCellAttributeMatrix()
+void RequirePreflightWithoutCellAttributeMatrix(UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
 {
   DataStructure dataStructure;
   auto* gridGeomPtr = GeometryT::Create(dataStructure, "Grid Geometry");
   REQUIRE((gridGeomPtr != nullptr));
   gridGeomPtr->setDimensions({4, 1, 1});
+  if constexpr(std::is_same_v<GeometryT, ImageGeom>)
+  {
+    gridGeomPtr->setOrigin({0, 0, 0});
+    gridGeomPtr->setSpacing({1, 1, 1});
+  }
   REQUIRE((gridGeomPtr->getCellData() == nullptr));
   REQUIRE((gridGeomPtr->getNumberOfCells() == 4));
   auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
@@ -86,6 +92,18 @@ void requirePreflightWithoutCellAttributeMatrix()
   if(expectedCode == 0)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    if(algorithmScope != nullptr)
+    {
+      const auto executeResult = algorithmScope->executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+      const auto triangleGeomPath = args.value<DataPath>(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath));
+      const auto& triangleGeomRef = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
+      // The 18 exterior quads and one interface quad each give two triangles.
+      // All 5 x 2 x 2 lattice vertices lie on the strip boundary.
+      CHECK((triangleGeomRef.getNumberOfFaces() == 38));
+      CHECK((triangleGeomRef.getNumberOfVertices() == 20));
+    }
   }
   else
   {
@@ -99,12 +117,15 @@ void requirePreflightWithoutCellAttributeMatrix()
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Image Geometry without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
-  requirePreflightWithoutCellAttributeMatrix<ImageGeom>();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  RequirePreflightWithoutCellAttributeMatrix<ImageGeom>(&scope);
 }
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Rectilinear Grid without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
-  requirePreflightWithoutCellAttributeMatrix<RectGridGeom>();
+  RequirePreflightWithoutCellAttributeMatrix<RectGridGeom>();
 }
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning warnings", "[SimplnxCore][QuickSurfaceMeshFilter]")

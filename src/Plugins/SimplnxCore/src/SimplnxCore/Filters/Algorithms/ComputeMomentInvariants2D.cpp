@@ -263,7 +263,7 @@ public:
    * @param end Specifies the exclusive feature index.
    * @param centralMoments Receives nine values per feature.
    *
-   * A non-XY feature gets zero Omega values, and the worker continues with the next feature.
+   * Empty and non-XY features keep zero moment outputs. The worker continues with the next feature.
    */
   void convert(usize start, usize end, Float32AbstractDataStore& centralMoments) const
   {
@@ -279,6 +279,13 @@ public:
       std::array<uint32, 6> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2],
                                       m_FeatureRect[featureIdRectIndex + 3], m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5]};
       constexpr usize maxOrder = 2;
+
+      if(corner[0] > corner[3])
+      {
+        m_Omega1[featureId] = 0.0f;
+        m_Omega2[featureId] = 0.0f;
+        continue;
+      }
 
       // The larger XY extent makes a square image for the moment basis.
       const uint32 xDim = corner[3] - corner[0] + 1;
@@ -339,11 +346,6 @@ public:
       }
 
       m_ReportProgress(1);
-
-      if(m_ShouldCancel)
-      {
-        return;
-      }
     }
   }
 
@@ -352,7 +354,7 @@ public:
    * @param start Specifies the first feature index.
    * @param end Specifies the exclusive feature index.
    *
-   * A non-XY feature gets zero Omega values, and the worker continues with the next feature.
+   * Empty and non-XY features keep zero moment outputs. The worker continues with the next feature.
    */
   void convert(usize start, usize end) const
   {
@@ -368,6 +370,13 @@ public:
       std::array<uint32, 6> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2],
                                       m_FeatureRect[featureIdRectIndex + 3], m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5]};
       constexpr usize maxOrder = 2;
+
+      if(corner[0] > corner[3])
+      {
+        m_Omega1[featureId] = 0.0f;
+        m_Omega2[featureId] = 0.0f;
+        continue;
+      }
 
       // The larger XY extent makes a square image for the moment basis.
       const uint32 xDim = corner[3] - corner[0] + 1;
@@ -422,11 +431,6 @@ public:
       m_Omega2[featureId] = static_cast<float32>(omega2);
 
       m_ReportProgress(1);
-
-      if(m_ShouldCancel)
-      {
-        return;
-      }
     }
   }
 
@@ -567,6 +571,10 @@ public:
 
         const usize featureId = static_cast<usize>(featureIdValue);
         const auto* rect = featureRects.get() + featureId * numRectComponents;
+        if(rect[0] > rect[3])
+        {
+          continue;
+        }
         const uint32 xDim = rect[3] - rect[0] + 1;
         const uint32 yDim = rect[4] - rect[1] + 1;
         if(rect[5] - rect[2] + 1 != 1)
@@ -616,6 +624,10 @@ public:
       }
 
       const auto* rect = featureRects.get() + featureId * numRectComponents;
+      if(rect[0] > rect[3])
+      {
+        continue;
+      }
       if(rect[5] - rect[2] + 1 != 1)
       {
         m_ReportSkipped(featureId);
