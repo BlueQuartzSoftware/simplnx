@@ -754,8 +754,23 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 
 ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 
+Result<> ComputeArrayHistogram::ValidateNumberOfBins(int32 numberOfBins)
+{
+  if(numberOfBins < 1)
+  {
+    return MakeErrorResult(k_InvalidNumberOfBins, fmt::format("Number of Bins must be at least 1, but was {}.", numberOfBins));
+  }
+  return {};
+}
+
 Result<> ComputeArrayHistogram::operator()()
 {
+  const Result<> binCountResult = ValidateNumberOfBins(m_InputValues->NumberOfBins);
+  if(binCountResult.invalid())
+  {
+    return binCountResult;
+  }
+
   const IDataArray* maskArray = nullptr;
   if(m_InputValues->MaskPath.has_value())
   {

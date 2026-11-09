@@ -111,6 +111,11 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
+  Result<> binCountResult = ComputeFeatureClustering::ValidateNumberOfBins(pNumberOfBinsValue);
+  if(binCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+  }
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pCentroidsArrayPathValue = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);

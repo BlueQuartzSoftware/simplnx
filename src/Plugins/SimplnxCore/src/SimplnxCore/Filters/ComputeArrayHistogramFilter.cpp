@@ -115,6 +115,11 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
+  Result<> binCountResult = ComputeArrayHistogram::ValidateNumberOfBins(pNumberOfBinsValue);
+  if(binCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+  }
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
   auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
   auto pSelectedArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);

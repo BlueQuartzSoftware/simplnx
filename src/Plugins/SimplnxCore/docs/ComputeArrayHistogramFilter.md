@@ -13,6 +13,10 @@ The created histogram arrays are written into the target **DataGroup**. For each
 - **Most Populated Bin DataArray**: Reports the index of the bin that has the most values.
 - **Modal Bin Ranges NeighborList** (optional): Specifies the inclusive lower and exclusive upper bound bin indices containing the input data's *mode(s)*. The *mode* is the value (or values) that occurs most frequently in the data. Because there can be multiple modes, this list may include more than two entries.
 
+### Bin Count
+
+**Number of Bins** is a dimensionless count and must be at least 1. Preflight rejects zero and negative counts.
+
 ### Required Input Sources
 
 None -- this filter operates on any generic numeric **DataArray** regardless of how it was produced.

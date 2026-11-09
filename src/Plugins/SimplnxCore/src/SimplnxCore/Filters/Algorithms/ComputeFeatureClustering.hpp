@@ -49,6 +49,26 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureClusteringInputValues
 class SIMPLNXCORE_EXPORT ComputeFeatureClustering
 {
 public:
+  static constexpr int32 k_InvalidNumberOfBins = -54099;
+
+  /**
+   * @brief Rejects a bin count less than 1 before shape construction or data access.
+   * @param numberOfBins Specifies the requested bin count.
+   * @return Success, or k_InvalidNumberOfBins with the rejected count.
+   */
+  static Result<> ValidateNumberOfBins(int32 numberOfBins);
+
+  /**
+   * @brief Computes an RDF cache offset without signed intermediate arithmetic.
+   * @param numberOfBins Specifies the number of components per ensemble.
+   * @param ensemble Identifies the ensemble tuple in the RDF cache.
+   * @param bin Identifies the component within the ensemble.
+   * @return Element index in the RDF cache.
+   * @pre The cache contains numberOfBins components per ensemble and bin is less than numberOfBins.
+   * @pre The requested ensemble exists in the cache.
+   */
+  static usize RdfCacheIndex(usize numberOfBins, usize ensemble, usize bin);
+
   /**
    * @brief Initializes the feature-clustering algorithm.
    * @param dataStructure Contains the ImageGeom, feature arrays, and outputs.
@@ -71,7 +91,7 @@ public:
 
   /**
    * @brief Computes the selected phase RDF and neighbor lists.
-   * @return Success, or a biased-feature mask error.
+   * @return Success, or a bin-count or biased-feature mask error.
    *
    * Cancellation returns success between outer feature iterations. Minimum and maximum values can
    * be written before cancellation prevents RDF or neighbor-list output.

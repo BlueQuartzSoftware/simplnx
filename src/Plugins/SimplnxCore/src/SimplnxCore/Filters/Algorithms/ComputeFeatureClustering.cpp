@@ -132,8 +132,28 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
   return m_ShouldCancel;
 }
 
+Result<> ComputeFeatureClustering::ValidateNumberOfBins(int32 numberOfBins)
+{
+  if(numberOfBins < 1)
+  {
+    return MakeErrorResult(k_InvalidNumberOfBins, fmt::format("Number of Bins for RDF must be at least 1, but was {}.", numberOfBins));
+  }
+  return {};
+}
+
+usize ComputeFeatureClustering::RdfCacheIndex(usize numberOfBins, usize ensemble, usize bin)
+{
+  return numberOfBins * ensemble + bin;
+}
+
 Result<> ComputeFeatureClustering::operator()()
 {
+  const Result<> binCountResult = ValidateNumberOfBins(m_InputValues->NumberOfBins);
+  if(binCountResult.invalid())
+  {
+    return binCountResult;
+  }
+
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
@@ -296,7 +316,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -319,7 +339,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -337,8 +357,9 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 0; i < m_InputValues->NumberOfBins; i++)
   {
-    oldCount[i] = rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
-    rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
+    const usize cacheIndex = RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(m_InputValues->PhaseNumber), i);
+    oldCount[i] = rdfCache[cacheIndex];
+    rdfCache[cacheIndex] = oldCount[i] / randomRDF[i + 1];
   }
 
   // Publish the RDF after all bins are normalized.
