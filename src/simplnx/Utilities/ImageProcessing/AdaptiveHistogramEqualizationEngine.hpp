@@ -104,31 +104,27 @@ struct AdaptiveHistogramEqualizationPlaneBody
       const float betaU = beta * u;
       const float betaHalf = beta * 0.5f;
 
+      // Intersect the radius window with the image bounds. Preserve increasing Z/Y/X accumulation order.
+      const int64 dzLo = std::max(-rzi, -zi);
+      const int64 dzHi = std::min(rzi, dimZi - 1 - zi);
+      const int64 dyLo = std::max(-ryi, -yi);
+      const int64 dyHi = std::min(ryi, dimYi - 1 - yi);
+      const int64 dxLo = std::max(-rxi, -xi);
+      const int64 dxHi = std::min(rxi, dimXi - 1 - xi);
+
       float64 localSum = 0.0;
       usize inBounds = 0;
-      for(int64 dz = -rzi; dz <= rzi; ++dz)
+      for(int64 dz = dzLo; dz <= dzHi; ++dz)
       {
         const int64 nz = zi + dz;
-        if(nz < 0 || nz >= dimZi)
-        {
-          continue; // OOB neighbor ignored (over-weight the valid part; see struct docs)
-        }
         const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
-        for(int64 dy = -ryi; dy <= ryi; ++dy)
+        for(int64 dy = dyLo; dy <= dyHi; ++dy)
         {
           const int64 ny = yi + dy;
-          if(ny < 0 || ny >= dimYi)
-          {
-            continue;
-          }
           const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
-          for(int64 dx = -rxi; dx <= rxi; ++dx)
+          for(int64 dx = dxLo; dx <= dxHi; ++dx)
           {
             const int64 nx = xi + dx;
-            if(nx < 0 || nx >= dimXi)
-            {
-              continue;
-            }
             const float v = static_cast<float>((static_cast<float64>(slab[rowBase + static_cast<usize>(nx)]) - minValue) / iscale - 0.5);
             const float sF = static_cast<float>(AdaptiveEqualizationSgn(u - v));
             const float ad = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
@@ -146,7 +142,7 @@ struct AdaptiveHistogramEqualizationPlaneBody
 
 /**
  * @brief Integer bounded-range fast path for @ref AdaptiveHistogramEqualizationPlaneBody. This body is a
- *        near-duplicate of that one: the slab indexing, out-of-bounds skip, in-bounds count, deliberate
+ *        near-duplicate of that one: the slab indexing, clipped neighbor bounds, in-bounds count, deliberate
  *        center double-count, and the final rescale are kept BYTE-IDENTICAL and the two MUST stay in sync
  *        (any change to the boundary rule in one has to be mirrored in the other). The ONLY difference is the
  *        inner cumulative-function term: instead of recomputing @c std::pow per neighbor, the neighbor term
@@ -205,31 +201,27 @@ struct AdaptiveHistogramEqualizationLutPlaneBody
       // neighbor contribution below, exactly as the sibling body's per-voxel betaU.
       const float betaU = beta * u;
 
+      // Intersect the radius window with the image bounds. Preserve increasing Z/Y/X accumulation order.
+      const int64 dzLo = std::max(-rzi, -zi);
+      const int64 dzHi = std::min(rzi, dimZi - 1 - zi);
+      const int64 dyLo = std::max(-ryi, -yi);
+      const int64 dyHi = std::min(ryi, dimYi - 1 - yi);
+      const int64 dxLo = std::max(-rxi, -xi);
+      const int64 dxHi = std::min(rxi, dimXi - 1 - xi);
+
       float64 localSum = 0.0;
       usize inBounds = 0;
-      for(int64 dz = -rzi; dz <= rzi; ++dz)
+      for(int64 dz = dzLo; dz <= dzHi; ++dz)
       {
         const int64 nz = zi + dz;
-        if(nz < 0 || nz >= dimZi)
-        {
-          continue; // OOB neighbor ignored (over-weight the valid part; see struct docs)
-        }
         const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
-        for(int64 dy = -ryi; dy <= ryi; ++dy)
+        for(int64 dy = dyLo; dy <= dyHi; ++dy)
         {
           const int64 ny = yi + dy;
-          if(ny < 0 || ny >= dimYi)
-          {
-            continue;
-          }
           const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
-          for(int64 dx = -rxi; dx <= rxi; ++dx)
+          for(int64 dx = dxLo; dx <= dxHi; ++dx)
           {
             const int64 nx = xi + dx;
-            if(nx < 0 || nx >= dimXi)
-            {
-              continue;
-            }
             // Promote to int64 BEFORE subtracting: for unsigned T a T - T subtraction would underflow. The
             // gate in ApplyAdaptiveHistogramEqualization guarantees this difference does not overflow int64.
             const int64 d = static_cast<int64>(centerValue) - static_cast<int64>(slab[rowBase + static_cast<usize>(nx)]);
@@ -709,27 +701,25 @@ struct AdaptiveHistogramEqualization2DBlockBody
       const usize localY = tuple / outputWidth;
       const usize x = outputXBegin + localX;
       const usize y = outputYBegin + localY;
+      const int64 xi = static_cast<int64>(x);
+      const int64 yi = static_cast<int64>(y);
+      const int64 dyLo = std::max(-radiusYi, -yi);
+      const int64 dyHi = std::min(radiusYi, dimYi - 1 - yi);
+      const int64 dxLo = std::max(-radiusXi, -xi);
+      const int64 dxHi = std::min(radiusXi, dimXi - 1 - xi);
       const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
       const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
       const float betaU = beta * u;
       const float betaHalf = beta * 0.5f;
       float64 localSum = 0.0;
       usize inBounds = 0;
-      for(int64 dy = -radiusYi; dy <= radiusYi; ++dy)
+      for(int64 dy = dyLo; dy <= dyHi; ++dy)
       {
         const int64 neighborY = static_cast<int64>(y) + dy;
-        if(neighborY < 0 || neighborY >= dimYi)
-        {
-          continue;
-        }
         const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
-        for(int64 dx = -radiusXi; dx <= radiusXi; ++dx)
+        for(int64 dx = dxLo; dx <= dxHi; ++dx)
         {
           const int64 neighborX = static_cast<int64>(x) + dx;
-          if(neighborX < 0 || neighborX >= dimXi)
-          {
-            continue;
-          }
           const float v = static_cast<float>((static_cast<float64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]) - minValue) / iscale - 0.5);
           const float sign = static_cast<float>(AdaptiveEqualizationSgn(u - v));
           const float absoluteDifference = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
@@ -783,26 +773,24 @@ struct AdaptiveHistogramEqualizationLut2DBlockBody
       const usize localY = tuple / outputWidth;
       const usize x = outputXBegin + localX;
       const usize y = outputYBegin + localY;
+      const int64 xi = static_cast<int64>(x);
+      const int64 yi = static_cast<int64>(y);
+      const int64 dyLo = std::max(-radiusYi, -yi);
+      const int64 dyHi = std::min(radiusYi, dimYi - 1 - yi);
+      const int64 dxLo = std::max(-radiusXi, -xi);
+      const int64 dxHi = std::min(radiusXi, dimXi - 1 - xi);
       const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
       const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
       const float betaU = beta * u;
       float64 localSum = 0.0;
       usize inBounds = 0;
-      for(int64 dy = -radiusYi; dy <= radiusYi; ++dy)
+      for(int64 dy = dyLo; dy <= dyHi; ++dy)
       {
         const int64 neighborY = static_cast<int64>(y) + dy;
-        if(neighborY < 0 || neighborY >= dimYi)
-        {
-          continue;
-        }
         const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
-        for(int64 dx = -radiusXi; dx <= radiusXi; ++dx)
+        for(int64 dx = dxLo; dx <= dxHi; ++dx)
         {
           const int64 neighborX = static_cast<int64>(x) + dx;
-          if(neighborX < 0 || neighborX >= dimXi)
-          {
-            continue;
-          }
           const int64 difference = static_cast<int64>(centerValue) - static_cast<int64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]);
           const usize lookupIndex = static_cast<usize>(difference - differenceMinimum);
           assert(lookupIndex < lookupTableSize);

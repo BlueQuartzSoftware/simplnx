@@ -538,3 +538,224 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: validates dim
     REQUIRE(result.errors().front().code == -8544);
   }
 }
+
+namespace
+{
+// Both traversals use the same LUT to isolate traversal differences.
+template <class T>
+std::vector<float32> MakeTraversalLut(const std::vector<T>& input, float64 iscale)
+{
+  const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
+  const int64 span = static_cast<int64>(*maximum) - static_cast<int64>(*minimum);
+  std::vector<float32> lookupTable(static_cast<usize>(2 * span + 1));
+  for(usize index = 0; index < lookupTable.size(); ++index)
+  {
+    const int64 difference = static_cast<int64>(index) - span;
+    const float64 normalizedDifference = static_cast<float64>(difference) / iscale;
+    const float32 sign = static_cast<float32>(ImageProcessing::detail::AdaptiveEqualizationSgn(static_cast<float32>(normalizedDifference)));
+    const float32 absoluteDifference = static_cast<float32>(std::fabs(2.0 * normalizedDifference));
+    lookupTable[index] = 0.5f * sign * std::pow(absoluteDifference, 0.37f) - (0.21f * 0.5f) * sign * absoluteDifference;
+  }
+  return lookupTable;
+}
+
+template <class T>
+void CheckPlaneTraversalIdentity()
+{
+  constexpr usize dimX = 7;
+  constexpr usize dimY = 6;
+  constexpr usize dimZ = 7;
+  constexpr usize sliceValues = dimX * dimY;
+  const std::vector<T> input = MakeAhePattern<T>(dimX, dimY, dimZ);
+  const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
+  const float64 minValue = static_cast<float64>(*minimum);
+  const float64 iscale = static_cast<float64>(*maximum) - minValue;
+  const std::array<std::array<usize, 3>, 2> radii = {{{2, 1, 1}, {1, 3, 0}}};
+  for(const auto& radius : radii)
+  {
+    for(usize z = 0; z < dimZ; ++z)
+    {
+      const usize zLo = z > radius[2] ? z - radius[2] : 0;
+      const usize zHi = std::min(dimZ - 1, z + radius[2]);
+      CAPTURE(radius, z, zLo);
+      const std::vector<T> slab(input.begin() + zLo * sliceValues, input.begin() + (zHi + 1) * sliceValues);
+      std::vector<T> actual(sliceValues, T{73});
+      std::vector<T> expected(sliceValues, T{91});
+      if constexpr(std::is_integral_v<T>)
+      {
+        const std::vector<float32> lookupTable = MakeTraversalLut(input, iscale);
+        ImageProcessing::detail::AdaptiveHistogramEqualizationLutPlaneBody<T> body{
+            slab.data(), actual.data(), dimX, dimY, dimZ, radius[0], radius[1], radius[2], zLo, z, minValue, iscale, 0.21f, lookupTable.data(), -static_cast<int64>(iscale), lookupTable.size()};
+        auto referenceBody = body;
+        referenceBody.outPlane = expected.data();
+        ahe_test::unclipped::AdaptiveHistogramEqualizationLutPlaneBody(referenceBody, Range{0, sliceValues});
+        body(Range{0, sliceValues});
+      }
+      else
+      {
+        ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T> body{slab.data(), actual.data(), dimX, dimY, dimZ, radius[0], radius[1], radius[2], zLo, z, minValue, iscale, 0.37f, 0.21f};
+        auto referenceBody = body;
+        referenceBody.outPlane = expected.data();
+        ahe_test::unclipped::AdaptiveHistogramEqualizationPlaneBody(referenceBody, Range{0, sliceValues});
+        body(Range{0, sliceValues});
+      }
+      REQUIRE(actual == expected);
+    }
+  }
+}
+
+template <class T>
+void CheckBlockTraversalIdentity()
+{
+  constexpr usize dimX = 9;
+  constexpr usize dimY = 8;
+  const std::vector<T> input = MakeAhePattern<T>(dimX, dimY, 1);
+  const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
+  const float64 minValue = static_cast<float64>(*minimum);
+  const float64 iscale = static_cast<float64>(*maximum) - minValue;
+  const std::atomic_bool shouldCancel{false};
+  const std::array<std::array<usize, 2>, 2> radii = {{{2, 1}, {1, 3}}};
+  const std::array<std::array<usize, 2>, 2> outputOrigins = {{{0, 0}, {6, 5}}};
+  for(const auto& radius : radii)
+  {
+    for(const auto& origin : outputOrigins)
+    {
+      constexpr usize outputWidth = 3;
+      constexpr usize outputRows = 3;
+      const usize inputXBegin = origin[0] > radius[0] ? origin[0] - radius[0] : 0;
+      const usize inputYBegin = origin[1] > radius[1] ? origin[1] - radius[1] : 0;
+      const usize inputXEnd = std::min(dimX, origin[0] + outputWidth + radius[0]);
+      const usize inputYEnd = std::min(dimY, origin[1] + outputRows + radius[1]);
+      const usize inputWidth = inputXEnd - inputXBegin;
+      CAPTURE(radius, origin, inputXBegin, inputYBegin);
+      std::vector<T> block;
+      for(usize y = inputYBegin; y < inputYEnd; ++y)
+      {
+        block.insert(block.end(), input.begin() + y * dimX + inputXBegin, input.begin() + y * dimX + inputXEnd);
+      }
+      std::vector<T> actual(outputWidth * outputRows, T{73});
+      std::vector<T> expected(outputWidth * outputRows, T{91});
+      if constexpr(std::is_integral_v<T>)
+      {
+        const std::vector<float32> lookupTable = MakeTraversalLut(input, iscale);
+        ImageProcessing::detail::AdaptiveHistogramEqualizationLut2DBlockBody<T> body{block.data(),
+                                                                                     actual.data(),
+                                                                                     dimX,
+                                                                                     dimY,
+                                                                                     radius[0],
+                                                                                     radius[1],
+                                                                                     inputXBegin,
+                                                                                     inputYBegin,
+                                                                                     inputWidth,
+                                                                                     origin[0],
+                                                                                     origin[1],
+                                                                                     outputWidth,
+                                                                                     minValue,
+                                                                                     iscale,
+                                                                                     0.21f,
+                                                                                     lookupTable.data(),
+                                                                                     -static_cast<int64>(iscale),
+                                                                                     lookupTable.size(),
+                                                                                     shouldCancel};
+        auto referenceBody = body;
+        referenceBody.output = expected.data();
+        ahe_test::unclipped::AdaptiveHistogramEqualizationLut2DBlockBody(referenceBody, Range{0, actual.size()});
+        body(Range{0, actual.size()});
+      }
+      else
+      {
+        ImageProcessing::detail::AdaptiveHistogramEqualization2DBlockBody<T> body{block.data(), actual.data(), dimX,        dimY,     radius[0], radius[1], inputXBegin, inputYBegin, inputWidth,
+                                                                                  origin[0],    origin[1],     outputWidth, minValue, iscale,    0.37f,     0.21f,       shouldCancel};
+        auto referenceBody = body;
+        referenceBody.output = expected.data();
+        ahe_test::unclipped::AdaptiveHistogramEqualization2DBlockBody(referenceBody, Range{0, actual.size()});
+        body(Range{0, actual.size()});
+      }
+      REQUIRE(actual == expected);
+    }
+  }
+}
+
+template <class T>
+void CheckBoundedTraversalIdentity()
+{
+  constexpr usize dimX = 9;
+  constexpr usize dimY = 7;
+  const std::vector<T> input = MakeAhePattern<T>(dimX, dimY, 1);
+  const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
+  const float64 minValue = static_cast<float64>(*minimum);
+  const float64 iscale = static_cast<float64>(*maximum) - minValue;
+  std::vector<T> expected(input.size(), T{91});
+  usize lookupBytes = 0;
+  if constexpr(std::is_integral_v<T>)
+  {
+    const std::vector<float32> lookupTable = MakeTraversalLut(input, iscale);
+    lookupBytes = lookupTable.size() * sizeof(float32);
+    const ImageProcessing::detail::AdaptiveHistogramEqualizationLutPlaneBody<T> body{
+        input.data(), expected.data(), dimX, dimY, 1, 2, 1, 3, 0, 0, minValue, iscale, 0.21f, lookupTable.data(), -static_cast<int64>(iscale), lookupTable.size()};
+    ahe_test::unclipped::AdaptiveHistogramEqualizationLutPlaneBody(body, Range{0, input.size()});
+  }
+  else
+  {
+    const ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T> body{input.data(), expected.data(), dimX, dimY, 1, 2, 1, 3, 0, 0, minValue, iscale, 0.37f, 0.21f};
+    ahe_test::unclipped::AdaptiveHistogramEqualizationPlaneBody(body, Range{0, input.size()});
+  }
+  // This test store advertises OutOfCore to select useBounded2D. It is resident, not a real disk-backed store.
+  // Twenty values of scratch force 2-column tiles, including nonzero input and output origins.
+  const std::vector<T> actual = RunBoundedAhe(input, dimX, dimY, {2, 1, 3}, 0.37f, 0.21f, 20 * sizeof(T) + lookupBytes,
+                                              /*maximumReadValues=*/6, /*maximumWriteValues=*/2, /*expectedWriteCount=*/35);
+  REQUIRE(actual == expected);
+}
+} // namespace
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: generic plane operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  CheckPlaneTraversalIdentity<float32>();
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: LUT plane operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  CheckPlaneTraversalIdentity<uint16>();
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: generic 2D block operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  CheckBlockTraversalIdentity<float32>();
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: LUT 2D block operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  CheckBlockTraversalIdentity<uint16>();
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded-store operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  SECTION("generic tiled route")
+  {
+    CheckBoundedTraversalIdentity<float32>();
+  }
+  SECTION("LUT tiled route")
+  {
+    CheckBoundedTraversalIdentity<uint16>();
+  }
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: linear uint8 huge-radius positive control", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+{
+  constexpr usize huge = std::numeric_limits<uint32>::max();
+  SECTION("3D ring")
+  {
+    const auto input = MakeAhePattern<uint8>(3, 3, 2);
+    REQUIRE(RunApplyAhe(input, 3, 3, 2, {huge, huge, huge}, 1.0f, 0.25f) == RunApplyAhe(input, 3, 3, 2, {2, 2, 1}, 1.0f, 0.25f));
+  }
+  SECTION("bounded 2D")
+  {
+    const auto input = MakeAhePattern<uint8>(9, 7, 1);
+    const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
+    const usize lookupBytes = (2 * static_cast<usize>(*maximum - *minimum) + 1) * sizeof(float32);
+    const auto expected = RunApplyAhe(input, 9, 7, 1, {8, 6, 0}, 1.0f, 0.25f);
+    const auto actual = RunBoundedAhe(input, 9, 7, {huge, huge, huge}, 1.0f, 0.25f, 4096 + lookupBytes,
+                                      /*maximumReadValues=*/63, /*maximumWriteValues=*/63, /*expectedWriteCount=*/1);
+    REQUIRE(actual == expected);
+  }
+}

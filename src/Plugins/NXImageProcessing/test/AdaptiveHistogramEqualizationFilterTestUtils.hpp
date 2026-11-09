@@ -312,4 +312,244 @@ inline void RunAheFilter(IFilter& filter, DataStructure& ds, const DataPath& inp
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
+// Frozen pre-clipping traversals from 3321af983. These preserve operation order for exact regression
+// comparisons, separate from the independent correctness oracle above. Do not clip these reference loops.
+namespace unclipped
+{
+using nx::core::ImageProcessing::detail::AdaptiveEqualizationSgn;
+template <class T>
+void AdaptiveHistogramEqualizationPlaneBody(const nx::core::ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T>& body, const Range& range)
+{
+  const auto& [slab, outPlane, dimX, dimY, dimZ, rx, ry, rz, zLo, z, minValue, iscale, alpha, beta] = body;
+  const usize sliceValues = dimX * dimY;
+  const int64 dimXi = static_cast<int64>(dimX);
+  const int64 dimYi = static_cast<int64>(dimY);
+  const int64 dimZi = static_cast<int64>(dimZ);
+  const int64 rxi = static_cast<int64>(rx);
+  const int64 ryi = static_cast<int64>(ry);
+  const int64 rzi = static_cast<int64>(rz);
+
+  for(usize tuple = range.min(); tuple < range.max(); ++tuple)
+  {
+    const usize x = tuple % dimX;
+    const usize y = tuple / dimX;
+    const int64 xi = static_cast<int64>(x);
+    const int64 yi = static_cast<int64>(y);
+    const int64 zi = static_cast<int64>(z);
+
+    const usize centerSlab = (z - zLo) * sliceValues + y * dimX + x;
+    const float u = static_cast<float>((static_cast<float64>(slab[centerSlab]) - minValue) / iscale - 0.5);
+    // Keep these center-only terms and their expression order fixed for exact traversal comparisons.
+    const float betaU = beta * u;
+    const float betaHalf = beta * 0.5f;
+
+    float64 localSum = 0.0;
+    usize inBounds = 0;
+    for(int64 dz = -rzi; dz <= rzi; ++dz)
+    {
+      const int64 nz = zi + dz;
+      if(nz < 0 || nz >= dimZi)
+      {
+        continue; // OOB neighbor ignored (over-weight the valid part; see struct docs)
+      }
+      const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
+      for(int64 dy = -ryi; dy <= ryi; ++dy)
+      {
+        const int64 ny = yi + dy;
+        if(ny < 0 || ny >= dimYi)
+        {
+          continue;
+        }
+        const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
+        for(int64 dx = -rxi; dx <= rxi; ++dx)
+        {
+          const int64 nx = xi + dx;
+          if(nx < 0 || nx >= dimXi)
+          {
+            continue;
+          }
+          const float v = static_cast<float>((static_cast<float64>(slab[rowBase + static_cast<usize>(nx)]) - minValue) / iscale - 0.5);
+          const float sF = static_cast<float>(AdaptiveEqualizationSgn(u - v));
+          const float ad = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
+          const float cf = 0.5f * sF * std::pow(ad, alpha) - betaHalf * sF * ad + betaU;
+          localSum += static_cast<float64>(cf);
+          ++inBounds;
+        }
+      }
+    }
+    const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+    outPlane[tuple] = static_cast<T>(result);
+  }
+}
+
+template <class T>
+void AdaptiveHistogramEqualizationLutPlaneBody(const nx::core::ImageProcessing::detail::AdaptiveHistogramEqualizationLutPlaneBody<T>& body, const Range& range)
+{
+  const auto& [slab, outPlane, dimX, dimY, dimZ, rx, ry, rz, zLo, z, minValue, iscale, beta, gLut, dMin, lutSize] = body;
+  const usize sliceValues = dimX * dimY;
+  const int64 dimXi = static_cast<int64>(dimX);
+  const int64 dimYi = static_cast<int64>(dimY);
+  const int64 dimZi = static_cast<int64>(dimZ);
+  const int64 rxi = static_cast<int64>(rx);
+  const int64 ryi = static_cast<int64>(ry);
+  const int64 rzi = static_cast<int64>(rz);
+
+  for(usize tuple = range.min(); tuple < range.max(); ++tuple)
+  {
+    const usize x = tuple % dimX;
+    const usize y = tuple / dimX;
+    const int64 xi = static_cast<int64>(x);
+    const int64 yi = static_cast<int64>(y);
+    const int64 zi = static_cast<int64>(z);
+
+    const usize centerSlab = (z - zLo) * sliceValues + y * dimX + x;
+    const T centerValue = slab[centerSlab];
+    const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+    // Center-only cumulative-function term (independent of the neighbor difference); folded into every
+    // neighbor contribution below, exactly as the sibling body's per-voxel betaU.
+    const float betaU = beta * u;
+
+    float64 localSum = 0.0;
+    usize inBounds = 0;
+    for(int64 dz = -rzi; dz <= rzi; ++dz)
+    {
+      const int64 nz = zi + dz;
+      if(nz < 0 || nz >= dimZi)
+      {
+        continue; // OOB neighbor ignored (over-weight the valid part; see struct docs)
+      }
+      const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
+      for(int64 dy = -ryi; dy <= ryi; ++dy)
+      {
+        const int64 ny = yi + dy;
+        if(ny < 0 || ny >= dimYi)
+        {
+          continue;
+        }
+        const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
+        for(int64 dx = -rxi; dx <= rxi; ++dx)
+        {
+          const int64 nx = xi + dx;
+          if(nx < 0 || nx >= dimXi)
+          {
+            continue;
+          }
+          // Promote to int64 BEFORE subtracting: for unsigned T a T - T subtraction would underflow. The
+          // gate in ApplyAdaptiveHistogramEqualization guarantees this difference does not overflow int64.
+          const int64 d = static_cast<int64>(centerValue) - static_cast<int64>(slab[rowBase + static_cast<usize>(nx)]);
+          const usize lutIndex = static_cast<usize>(d - dMin); // in [0, 2*span] by construction
+          assert(lutIndex < lutSize);
+          localSum += static_cast<float64>(gLut[lutIndex] + betaU);
+          ++inBounds;
+        }
+      }
+    }
+    const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+    outPlane[tuple] = static_cast<T>(result);
+  }
+}
+
+template <class T>
+void AdaptiveHistogramEqualization2DBlockBody(const nx::core::ImageProcessing::detail::AdaptiveHistogramEqualization2DBlockBody<T>& body, const Range& range)
+{
+  const auto& [input, output, dimX, dimY, radiusX, radiusY, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputWidth, minValue, iscale, alpha, beta, shouldCancel] = body;
+  const int64 dimXi = static_cast<int64>(dimX);
+  const int64 dimYi = static_cast<int64>(dimY);
+  const int64 radiusXi = static_cast<int64>(radiusX);
+  const int64 radiusYi = static_cast<int64>(radiusY);
+  for(usize tuple = range.min(); tuple < range.max(); ++tuple)
+  {
+    if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+    {
+      return;
+    }
+    const usize localX = tuple % outputWidth;
+    const usize localY = tuple / outputWidth;
+    const usize x = outputXBegin + localX;
+    const usize y = outputYBegin + localY;
+    const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
+    const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+    const float betaU = beta * u;
+    const float betaHalf = beta * 0.5f;
+    float64 localSum = 0.0;
+    usize inBounds = 0;
+    for(int64 dy = -radiusYi; dy <= radiusYi; ++dy)
+    {
+      const int64 neighborY = static_cast<int64>(y) + dy;
+      if(neighborY < 0 || neighborY >= dimYi)
+      {
+        continue;
+      }
+      const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
+      for(int64 dx = -radiusXi; dx <= radiusXi; ++dx)
+      {
+        const int64 neighborX = static_cast<int64>(x) + dx;
+        if(neighborX < 0 || neighborX >= dimXi)
+        {
+          continue;
+        }
+        const float v = static_cast<float>((static_cast<float64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]) - minValue) / iscale - 0.5);
+        const float sign = static_cast<float>(AdaptiveEqualizationSgn(u - v));
+        const float absoluteDifference = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
+        const float cumulative = 0.5f * sign * std::pow(absoluteDifference, alpha) - betaHalf * sign * absoluteDifference + betaU;
+        localSum += static_cast<float64>(cumulative);
+        ++inBounds;
+      }
+    }
+    const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+    output[tuple] = static_cast<T>(result);
+  }
+}
+
+template <class T>
+void AdaptiveHistogramEqualizationLut2DBlockBody(const nx::core::ImageProcessing::detail::AdaptiveHistogramEqualizationLut2DBlockBody<T>& body, const Range& range)
+{
+  const auto& [input, output, dimX, dimY, radiusX, radiusY, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputWidth, minValue, iscale, beta, lookupTable, differenceMinimum,
+               lookupTableSize, shouldCancel] = body;
+  const int64 dimXi = static_cast<int64>(dimX);
+  const int64 dimYi = static_cast<int64>(dimY);
+  const int64 radiusXi = static_cast<int64>(radiusX);
+  const int64 radiusYi = static_cast<int64>(radiusY);
+  for(usize tuple = range.min(); tuple < range.max(); ++tuple)
+  {
+    if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+    {
+      return;
+    }
+    const usize localX = tuple % outputWidth;
+    const usize localY = tuple / outputWidth;
+    const usize x = outputXBegin + localX;
+    const usize y = outputYBegin + localY;
+    const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
+    const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+    const float betaU = beta * u;
+    float64 localSum = 0.0;
+    usize inBounds = 0;
+    for(int64 dy = -radiusYi; dy <= radiusYi; ++dy)
+    {
+      const int64 neighborY = static_cast<int64>(y) + dy;
+      if(neighborY < 0 || neighborY >= dimYi)
+      {
+        continue;
+      }
+      const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
+      for(int64 dx = -radiusXi; dx <= radiusXi; ++dx)
+      {
+        const int64 neighborX = static_cast<int64>(x) + dx;
+        if(neighborX < 0 || neighborX >= dimXi)
+        {
+          continue;
+        }
+        const int64 difference = static_cast<int64>(centerValue) - static_cast<int64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]);
+        const usize lookupIndex = static_cast<usize>(difference - differenceMinimum);
+        assert(lookupIndex < lookupTableSize);
+        localSum += static_cast<float64>(lookupTable[lookupIndex] + betaU);
+        ++inBounds;
+      }
+    }
+    const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+    output[tuple] = static_cast<T>(result);
+  }
+}
+} // namespace unclipped
 } // namespace ahe_test

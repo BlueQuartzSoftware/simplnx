@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -246,4 +247,49 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: ITK real-image golden (histo)", "[NXImageProcessing][ItkGolden][AdaptiveHistogramEqualizationImageFilter]")
 {
   RunAheItkGolden("BasicFilters/ITKAdaptiveHistogramEqualizationFilterTest2.png", /*alpha=*/1.0f, /*beta=*/0.25f, /*radius=*/{10, 10, 10}, /*aMaxDiffFraction=*/0.005);
+}
+
+namespace
+{
+template <class T>
+void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector<uint32>& hugeRadius, const std::vector<uint32>& coveringRadius)
+{
+  const auto application = Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 0);
+  std::array<std::vector<T>, 2> outputs;
+  const std::array<std::vector<uint32>, 2> radii = {coveringRadius, hugeRadius};
+  for(usize run = 0; run < radii.size(); ++run)
+  {
+    DataStructure dataStructure;
+    const DataPath inputPath = aht::BuildAheImage<T>(dataStructure, dimX, dimY, dimZ);
+    AdaptiveHistogramEqualizationImageFilter filter;
+    aht::RunAheFilter<AdaptiveHistogramEqualizationImageFilter>(filter, dataStructure, inputPath, 0.37f, 0.21f, radii[run]);
+    const DataPath outputPath = inputPath.getParent().createChildPath("Output");
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(outputPath));
+    const auto& outputStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+    REQUIRE(outputStore.getStoreType() == IDataStore::StoreType::InMemory);
+    outputs[run].resize(outputStore.getSize());
+    const Result<> copyResult = outputStore.copyIntoBuffer(0, nonstd::span<T>(outputs[run].data(), outputs[run].size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+  REQUIRE(outputs[0] == outputs[1]);
+}
+} // namespace
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic huge-radius clipped neighborhood", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+{
+  // One unfixed X-only traversal can finish within the 60-second RED timeout on a fast machine.
+  // Repeat the same approved fixture so that skipped-radius work reliably exceeds that process limit.
+  for(usize repetition = 0; repetition < 32; ++repetition)
+  {
+    CAPTURE(repetition);
+    CheckHugeRadiusFilter<float32>(3, 2, 1, {std::numeric_limits<uint32>::max(), 0, 0}, {2, 0, 0});
+  }
+}
+
+TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: LUT huge-radius clipped neighborhood", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+{
+  constexpr uint32 huge = std::numeric_limits<uint32>::max();
+  CheckHugeRadiusFilter<uint16>(3, 3, 2, {huge, huge, huge}, {2, 2, 1});
 }
