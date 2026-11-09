@@ -50,7 +50,7 @@ repository, but contains no code from one.
   - [Check the file close and the stream state before you report a successful write](#check-the-file-close-and-the-stream-state-before-you-report-a-successful-write)
   - [Check for cancel in every long loop](#check-for-cancel-in-every-long-loop)
   - [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast)
-  - [Let the user choose whether a NaN input value is an error or is skipped](#let-the-user-choose-whether-a-nan-input-value-is-an-error-or-is-skipped)
+  - [Decide NaN and infinity handling by where the value comes from](#decide-nan-and-infinity-handling-by-where-the-value-comes-from)
   - [Copy every field that sets behavior when you clone an object](#copy-every-field-that-sets-behavior-when-you-clone-an-object)
 - [Feature data](#feature-data)
   - [Do not compute anything for feature 0, and give empty features a defined output](#do-not-compute-anything-for-feature-0-and-give-empty-features-a-defined-output)
@@ -327,20 +327,42 @@ cannot use, before any cast:
 - related values: legal combinations; accept `min <= max` when the operation defines equal bounds.
 - values cast to an array element type: inside the range of that type.
 
-Write each comparison so that NaN fails it. Validate a value only when the algorithm uses it (follow the parameter
-linking), and always validate a value that it always reads. A direction or axis parameter does not default to
-`{0, 0, 0}`, and preflight rejects a zero-length or non-finite vector. Every parameter reaches the algorithm's input
-values and changes its behavior, or it is removed. When a filter stores the random seed it used, the algorithm uses that
-same seed, so the stored seed reproduces the output.
+Write each comparison so that NaN fails it. Reject NaN, and reject infinity unless the filter documentation gives it a
+meaning; a value the user asks the filter to store in a floating-point array may be NaN or infinity
+([Decide NaN and infinity handling by where the value comes from](#decide-nan-and-infinity-handling-by-where-the-value-comes-from)).
+Validate a value only when the algorithm uses it (follow the parameter linking), and always validate a value that it
+always reads. A direction or axis parameter does not default to `{0, 0, 0}`, and preflight rejects a zero-length or
+non-finite vector. Every parameter reaches the algorithm's input values and changes its behavior, or it is removed. When
+a filter stores the random seed it used, the algorithm uses that same seed, so the stored seed reproduces the output.
+
+Validate the derived representation as well as the parameter value. For radii and dimensions, check derived widths,
+signed coordinate and loop limits, padded extents, element counts and byte counts before the affected arithmetic or
+allocation. An index must fit every array or axis it selects; use `index < count`, without subtracting one from the
+count. For integer destinations, do not use a rounded floating-point representation of the maximum as an inclusive upper
+bound. When fractional conversion is supported, validate the effective value and check related values in the type the
+consumer uses. Preserve supported equality. Validate and normalize direction parameters with arithmetic that remains
+safe for finite nonzero directions, then use that normalized value.
 
 **Example of the broken rule:** `CreateDataArrayAdvanced` converted negative or fractional tuple dimensions to `usize`;
 `InitializeData` accepted a reversed random range; `SliceTriangleGeometry` accepted an invalid slice spacing (all
-PR #1763); SurfaceNets accepted a negative smoothing distance and iteration count (PR #1765).
+PR #1763); SurfaceNets accepted a negative smoothing distance and iteration count (PR #1765). `WhiteTopHatImageFilter`
+and `BinaryDilateImageFilter` narrowed unsigned radii before constructing kernels, and the constructor also used
+unchecked derived sizes; `BinaryProjectionImageFilter` checked against rounded Float64 integer maxima;
+`WriteGBCDGMTFileFilter` checked a phase against GBCD tuples but also used it to index Crystal Structures;
+`ComputeGBCDPoleFigureDirect` normalized Float32 axes through a squared magnitude that can overflow for finite
+components (issue #1873).
 
-**Why:** a cast of an out-of-range or NaN value is undefined behavior, and `value < 0` alone lets NaN through.
+**Why:** a cast of an out-of-range or NaN value is undefined behavior, and `value < 0` alone lets NaN through. A value
+can also fit its declared type while its derived size, converted value or contextual index is invalid, and a finite
+vector can overflow during normalization; checking only the original value leaves these failures reachable.
 
 **What to look for:** a `static_cast` of a parameter before a domain check; `if(value < 0)` on a floating-point value; a
-zero step; an unchecked `min`/`max` pair.
+zero step; an unchecked `min`/`max` pair. Also:
+
+- radius-derived widths, padding, products or signed loop endpoints computed before validation;
+- one selector used with several arrays but checked against only one count; an upper bound written as `count - 1`;
+- integer-range guards using floating-point `max()` values; relations checked only before conversion;
+- a direction check followed by normalization that squares components in a narrow type.
 
 **Pattern to use:**
 
@@ -353,6 +375,12 @@ if(!std::isfinite(dim) || !(dim >= 1.0) || !(dim < upperExclusive) || std::floor
 }
 tupleDims.push_back(static_cast<usize>(dim));
 ```
+
+`ValidateKernelRadius()` in `simplnx/Utilities/ImageProcessing/StructuringElement.hpp` and `ValidateMorphologyLayout()`
+in `MorphologyEngine.hpp` validate derived sizes without constructing the kernel or allocating image values. Check each
+contextual count before access and each relation after safe conversion. For a direction, first reject nonfinite
+components and the zero vector, scale by the largest absolute component, and normalize the scaled vector with
+sufficiently wide arithmetic.
 
 ### Never throw in preflight
 
@@ -601,25 +629,36 @@ guarantee: it counts real changes, caps the iterations or applies a timeout. Che
 before the loop, and again after a step that can take a long time (a write, a complete read). A filter that modifies its
 input in place may finish once its first in-place write has happened, when its documentation says so.
 
+When a neighborhood traversal discards positions outside a finite contributing domain, intersect its loop bounds with
+that domain before iteration, and keep the contributing positions, their order and their weights. A valid large radius
+is not invalid merely because the traversal spends time on discarded positions. Cancellation checks remain required.
+
 **Example of the broken rule:** PR #1582 added missing cancel checks to 28 algorithms, among them ComputeAvgCAxes,
 ComputeBoundaryStrengths, ComputeGBCDMetricBased, ComputeSchmids, MergeTwins, AlignGeometries, ComputeFeatureClustering,
 MultiThresholdObjects and RobustAutomaticThreshold. `PointSampleTriangleGeometry` still has a masked rejection loop with
-no cancel check or progress bound (issue #1876).
+no cancel check or progress bound (issue #1876). `AdaptiveHistogramEqualizationEngine.hpp` enumerated the full radius
+around each voxel and then discarded out-of-image coordinates (issue #1873); `ComputeNeighborhoods.cpp` similarly
+enumerates radius-derived bins and discards absent bins (issue #1908).
 
-**Why:** the user cannot stop a long filter, and a loop without a progress guarantee can run forever on bad input.
+**Why:** the user cannot stop a long filter, and a loop without a progress guarantee can run forever on bad input. Work
+can also keep growing with a valid parameter after the useful neighborhood already covers the data.
 
 **What to look for:** an inner rejection or convergence loop whose outer cancel check is never reached; an expensive
-phase with no check between its steps.
+phase with no check between its steps; a radius-driven coordinate or bin loop followed by an out-of-domain `continue` or
+an unsuccessful lookup.
 
 **Pattern to use:** a check at each interruptible work boundary, as PR #1582 added them; the
-`bluequartz-skills:progress-messaging` skill.
+`bluequartz-skills:progress-messaging` skill. For an image axis, intersect `[-radius, radius]` with
+`[-position, dimension - 1 - position]` using signed arithmetic before iteration. Apply this only when omitted positions
+contribute nothing; clipping a neighborhood that repeats clamped boundary samples changes its result.
 
 ### Write floating-point output through a saturating cast
 
 **Rule:** a filter whose output type can be an integer type (for example an output type that follows the input type)
-writes each computed floating-point value through `ImageProcessing::detail::SaturateCastFromDouble<U>()`. For an
-integral `U` it maps NaN to 0 and clamps to the range of `U`. The general rule is in the numeric-correctness reference
-of `cpp-best-practices`.
+writes each computed finite floating-point value through `ImageProcessing::detail::SaturateCastFromDouble<U>()`, which
+clamps it to the range of `U`, and reports one warning with the number of clipped values. A NaN or an infinity computed
+for an integer output is an error that names the value's index and the output type; it is never written as 0. The
+general rule is in the numeric-correctness reference of `cpp-best-practices`.
 
 **Example of the broken rule:** `ExpImageFilter` casts `exp(double(value))` straight to the integer output, and
 `LogImageFilter`, `SquareImageFilter` and `TanImageFilter` do the same: `log(0)`, the `uint8` square of 16 and the
@@ -630,53 +669,64 @@ of `cpp-best-practices`.
 **What to look for:** `static_cast<U>(floatingExpression)` where `U` can be integral.
 
 **Pattern to use:** `SaturateCastFromDouble<U>()` in
-`simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp`.
+`simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp` for finite values; the nonfinite integer-output
+error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `CurvatureFlowImageFilter` (PR #1888).
 
-### Let the user choose whether a NaN input value is an error or is skipped
+### Decide NaN and infinity handling by where the value comes from
 
-**Rule:** a calculation in which a NaN input value would change a result other than its own element's output, or would
-reach a comparison, an ordering, an index or an integer conversion, lets the user choose how NaN is handled. This covers
-reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and unique-value
-counts, per feature or per region), neighborhood operations on floating-point data (smoothing, median and gradient
-filters, morphology) and decisions made from a value (thresholds, segmentation tolerances, bin and index selection,
-conversion to an integer).
+**Rule:** NaN and positive and negative infinity (nonfinite values) are handled by where the value comes from:
 
-- The filter has a choice parameter **NaN Value Handling** with two choices: **Error** (the default) and **Warning**.
-- **Error:** the algorithm stops at the first NaN value with a filter-specific error. The message names the array and
-  the tuple, and says that setting **NaN Value Handling** to **Warning** skips NaN values instead.
-- **Warning:** the algorithm skips every NaN value and reports one warning with the number of values it skipped. A
-  reduction or a neighborhood leaves the value out; a decision gives the NaN element a defined output that the filter
-  documentation states (for example "not selected" or "no bin").
-- The check reads array values, so it runs in execute. The parameter has no effect on integer arrays.
-- The in-core and out-of-core algorithms use one shared NaN test and skip rule.
-
-Element-wise math, where NaN in gives NaN out at the same element and no other element changes (Array Calculator, an
-orientation conversion of one tuple), may let NaN pass through. A NaN that the algorithm itself produces from degenerate
-input (a zero-length vector, a singular matrix) is a degenerate-input problem, not this rule.
+- **Parameter values:** preflight rejects NaN. It also rejects positive and negative infinity unless the filter
+  documentation gives infinity a meaning, such as an unbounded side of a range. A value that the user asks the filter
+  to store in a floating-point array (a fill value or a replacement value) may be NaN or infinity.
+- **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
+  error that names the file and the field.
+- **Input array values** that would change a result other than their own element's output, or would reach a
+  comparison, an ordering, a range, a histogram, a threshold, a color map, a search, an index or an integer conversion.
+  This covers reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and
+  unique-value counts, per feature or per region), neighborhood operations on floating-point data (smoothing, median and
+  gradient filters, morphology) and decisions made from a value (thresholds, segmentation tolerances, bin and index
+  selection). The filter has a choice parameter **Nonfinite Input Handling** (key
+  `nonfinite_input_handling_index`) with two choices, **Error** (the default) and **Warn and Continue**.
+  - **Error** stops at the first nonfinite value, before any output is written. The message names the array and the
+    tuple and says that **Warn and Continue** handles these values instead.
+  - **Warn and Continue** computes ranges and bounds from finite values only, gives each nonfinite element the result
+    that the filter documentation states (for example "first bin" or "Outside Value"), and reports one warning with
+    the number of nonfinite values.
+  - The in-core and out-of-core algorithms use one shared test and rule. The parameter has no effect on integer arrays.
+- **Element-wise floating-point math**, where one element in gives the same element out and no other element changes,
+  lets the IEEE result pass through. The filter documentation lists what NaN, infinity, zero and out-of-domain inputs
+  produce. When integer input can produce a fraction or NaN, the output type is floating point.
+- **A computed value written to an integer output:** see
+  [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast).
+- **A result that is undefined for degenerate input** (a zero-length vector, an all-zero quaternion) is NaN in a
+  floating-point output, and the documentation says so. It is not reported as bad input data.
 
 **Example of the broken rule:** **Compute Bounding Box Stats** gives two different wrong answers for Float32 values
 {NaN, 1, 2}: the in-core algorithm treats NaN as equal to every value (`Equivalent()` in
 `ComputeBoundingBoxStatsDirect`) and reports one unique value and a NaN median, and the out-of-core algorithm sorts with
-`operator<`, which is undefined when a value is NaN (issue #1867, `ComputeBoundingBoxStatsFilter#9`). **Compute Array
+`operator<`, which is undefined when a value is NaN (issue #1867). **Compute Array
 Histogram** groups values with the same equality test, and the shared statistics helpers in `StatisticsCalculations.hpp`
 and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
-(issue #1874).
+(issue #1874). **Invert Intensity Image** accepts a NaN **Maximum** and writes 0 to every integer pixel (issue #1873).
 
 **Why:** every comparison with NaN is false. `operator<` is then not a strict weak ordering, so `std::sort`,
 `std::stable_sort` and `std::map` keys are undefined; a threshold or a bin search puts NaN on one side without saying
-so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN to an
-integer is undefined behavior. Whether NaN means "bad data" or "no measurement" depends on the user's data, so the
-code cannot pick one answer for everyone.
+so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN or an
+infinity to an integer is undefined behavior. Whether a nonfinite input value means "bad data" or "no measurement"
+depends on the user's data, so input array values get a choice; parameters and file values do not.
 
 **What to look for:**
 
 - `std::sort`, `std::stable_sort`, `std::map`, `std::set` or `std::unique` over floating-point input values;
 - an equivalence written as `!(a < b) && !(b < a)` on floating-point values;
-- a running minimum, maximum or sum over input values with no NaN test;
-- a threshold, tolerance or bin index computed from an input value with no NaN test.
+- a running minimum, maximum or sum over input values with no finiteness test;
+- a threshold, tolerance or bin index computed from an input value with no finiteness test;
+- a parameter check written as `value < 0` or `value <= 0`, which NaN passes.
 
-**Pattern to use:** the **NaN Value Handling** parameter and the shared NaN skip rule of **Compute Bounding Box Stats**
-(the fix for `ComputeBoundingBoxStatsFilter#9` of issue #1867).
+**Pattern to use:** **Nonfinite Input Handling** in `ThresholdMaximumConnectedComponentsImageFilter` and
+`WriteImageFilter` (PR #1888); the Upper Boundary of `ThresholdMaximumConnectedComponentsImageFilter` for a documented
+meaning of infinity (PR #1888).
 
 ### Copy every field that sets behavior when you clone an object
 
