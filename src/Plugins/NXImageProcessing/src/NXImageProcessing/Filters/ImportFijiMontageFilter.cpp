@@ -39,8 +39,13 @@ using namespace nx::core;
 
 namespace
 {
-// The reader needs the file components during execution. Later pipeline filters
-// must see the scalar result that grayscale conversion leaves behind.
+/**
+ * @class CreateMontageGrayscaleArrayAction
+ * @brief Plans the final scalar shape and creates the temporary color array for the reader.
+ *
+ * componentDims() reports the final shape after grayscale conversion. Execute mode
+ * temporarily creates the file component count so the reader can import every channel.
+ */
 class CreateMontageGrayscaleArrayAction : public CreateArrayAction
 {
 public:
@@ -74,6 +79,12 @@ public:
 private:
   usize m_FileComponentCount;
 };
+
+bool IsGrayscaleConvertible(DataType type, usize components)
+{
+  return type == DataType::uint8 && (components == 3 || components == 4);
+}
+
 // Resolves a single tile's geometry + array DataPaths given the montage naming options.
 struct TilePaths
 {
@@ -288,9 +299,12 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   {
     const fiji::FijiTile& tile = tiles[i];
     const ImageMetadata& md = m_Cache.metadata[i];
-    if(md.numComponents != 1 && md.numComponents != 3 && md.numComponents != 4)
+    if(convertToGrayScale && md.numComponents != 1 && md.numComponents != 3 && md.numComponents != 4)
     {
-      return MakePreflightErrorResult(-35927, fmt::format("Tile '{}' has {} components. Supported images have 1, 3, or 4 components.", tile.filePath.string(), md.numComponents));
+      return MakePreflightErrorResult(
+          -35927,
+          fmt::format("Tile '{}' has {} components. Grayscale conversion supports images with 1, 3, or 4 components. Turn off 'Convert To GrayScale' or convert the tile to grayscale, RGB, or RGBA.",
+                      tile.filePath.string(), md.numComponents));
     }
 
     const TilePaths paths = MakeTilePaths(tile, parentDataGroup, dataGroupName, cellAmName, imageArrayName);
@@ -304,7 +318,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(paths.geomPath, geomDims, originVec, spacingVec, cellAmName, lengthUnit));
 
     const DataType arrayType = changeDataType ? destType : md.dataType;
-    if(convertToGrayScale && arrayType == DataType::uint8 && md.numComponents > 1)
+    if(convertToGrayScale && IsGrayscaleConvertible(arrayType, md.numComponents))
     {
       resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.numComponents, paths.arrayPath));
     }
@@ -390,7 +404,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       }
       result.warnings().emplace_back(Warning{-35940, fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
       const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
-      if(convertToGrayScale && failedArray.getDataType() == DataType::uint8 && failedArray.getNumberOfComponents() > 1)
+      if(convertToGrayScale && IsGrayscaleConvertible(failedArray.getDataType(), failedArray.getNumberOfComponents()))
       {
         const ShapeType tupleShape = failedArray.getIDataStoreRef().getTupleShape();
         const DeleteDataAction deleteAction(paths.arrayPath);
@@ -419,7 +433,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       {
         continue;
       }
-      if(imageArray.getDataType() != DataType::uint8)
+      if(!IsGrayscaleConvertible(imageArray.getDataType(), imageArray.getNumberOfComponents()))
       {
         result.warnings().emplace_back(Warning{-35932, fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.arrayPath.getTargetName())});
         continue;

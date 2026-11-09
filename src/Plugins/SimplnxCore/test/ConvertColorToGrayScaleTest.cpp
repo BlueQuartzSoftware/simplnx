@@ -530,7 +530,7 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScaleFilter: SIMPL Backwards Compatibi
   }
 }
 
-TEST_CASE("SimplnxCore::C02 grayscale helper rejects invalid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter][C02][C02Red]")
+TEST_CASE("SimplnxCore::PreflightColorToGrayScale: rejects invalid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
   struct RejectionCase
   {
@@ -550,7 +550,7 @@ TEST_CASE("SimplnxCore::C02 grayscale helper rejects invalid component relations
                                                                        {3, 2, -1, -10711},
                                                                        {3, 2, 2, -10711},
                                                                        {3, 3, 3, -10711},
-                                                                       {3, 4, 4, -10701}}));
+                                                                       {3, 4, 4, -10711}}));
   DataStructure dataStructure;
   auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {testCase.Components});
   REQUIRE(inputPtr != nullptr);
@@ -566,7 +566,7 @@ TEST_CASE("SimplnxCore::C02 grayscale helper rejects invalid component relations
   REQUIRE(result.outputActions.errors().front().code == testCase.Error);
 }
 
-TEST_CASE("SimplnxCore::C02 grayscale helper accepts valid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter][C02][C02Green]")
+TEST_CASE("SimplnxCore::PreflightColorToGrayScale: accepts valid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -603,7 +603,7 @@ TEST_CASE("SimplnxCore::C02 grayscale helper accepts valid component relationshi
   REQUIRE(output[0] == expected[algorithm]);
 }
 
-TEST_CASE("SimplnxCore::C02 single channel accepts scalar and two component input", "[SimplnxCore][ConvertColorToGrayScaleFilter][C02][C02Green]")
+TEST_CASE("SimplnxCore::ConvertColorToGrayScale: single channel accepts scalar and two component input", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

@@ -12,7 +12,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <memory>
 
@@ -20,7 +19,21 @@ using namespace nx::core;
 namespace
 {
 const std::string k_VertexNormals = "VertexNormals";
+
+FlyingEdges3DInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  FlyingEdges3DInputValues inputValues;
+
+  inputValues.imageGeomPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key);
+  inputValues.contouringArrayPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key);
+  inputValues.triangleGeomPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_CreatedTriangleGeometryPath_Key);
+  inputValues.isoVal = filterArgs.value<float64>(FlyingEdges3DFilter::k_IsoVal_Key);
+  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
+
+  return inputValues;
 }
+
+} // namespace
 
 namespace nx::core
 {
@@ -94,11 +107,11 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
 
-  if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, -10510); result.invalid())
+  const auto inputValues = CreateInputValues(filterArgs);
+  if(auto validation = FlyingEdges3D::ValidateInputs(dataStructure, inputValues); validation.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -122,13 +135,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  FlyingEdges3DInputValues inputValues;
-
-  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
-  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
+  auto inputValues = CreateInputValues(filterArgs);
 
   return FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/FlyingEdges3D.hpp"
 #include "SimplnxCore/Filters/FlyingEdges3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -162,7 +163,7 @@ TEST_CASE("SimplnxCore::Image Contouring FlyingEdges3D: Geometry cell tuple coun
   }
 }
 
-TEST_CASE("SimplnxCore::C02 FlyingEdges3D component contract", "[SimplnxCore][FlyingEdges3D][ComponentContract][C02]")
+TEST_CASE("SimplnxCore::FlyingEdges3D component contract", "[SimplnxCore][FlyingEdges3D][ComponentContract]")
 {
   const usize components = GENERATE(usize{1}, usize{3});
   CAPTURE(components);
@@ -203,4 +204,38 @@ TEST_CASE("SimplnxCore::C02 FlyingEdges3D component contract", "[SimplnxCore][Fl
     REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FlyingEdges3D: direct call rejects non-scalar component shapes", "[SimplnxCore][FlyingEdges3D]")
+{
+  const auto shape = GENERATE(ShapeType{3}, ShapeType{1, 1});
+  CAPTURE(shape);
+  DataStructure dataStructure;
+  auto* input = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Input", {2}, shape);
+  REQUIRE(input != nullptr);
+  FlyingEdges3DInputValues inputValues{};
+  inputValues.contouringArrayPath = DataPath({"Input"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -10511);
+  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::FlyingEdges3D: direct call rejects tuple counts that differ from image cells", "[SimplnxCore][FlyingEdges3D]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({3, 1, 1});
+  REQUIRE(Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Input", {2}, {1}) != nullptr);
+  FlyingEdges3DInputValues inputValues{};
+  inputValues.contouringArrayPath = DataPath({"Input"});
+  inputValues.imageGeomPath = DataPath({"Image"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -10510);
 }

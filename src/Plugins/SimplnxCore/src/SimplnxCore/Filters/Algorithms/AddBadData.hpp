@@ -60,7 +60,7 @@ public:
 
   /**
    * @brief Zeros selected tuples in all numeric cell arrays.
-   * @return Source and destination transfer errors.
+   * @return Component-shape, tuple-count, or source and destination transfer errors.
    * @pre Noise fractions are in the range [0, 1].
    * @pre The distance array and all child arrays match the image cell count.
    * @pre Direct-path in-memory stores have concrete DataStore dynamic types.
@@ -69,6 +69,14 @@ public:
    * child list and returns success.
    */
   Result<> operator()();
+
+  /**
+   * @brief Checks the scalar input shape and image cell count without reading values.
+   * @param dataStructure Contains the input array and image geometry.
+   * @param inputValues Identifies the input array and geometry.
+   * @return A component-shape or tuple-count error, or success.
+   */
+  static Result<> ValidateInputs(const DataStructure& dataStructure, const AddBadDataInputValues& inputValues);
 
   const std::atomic_bool& getCancel();
 

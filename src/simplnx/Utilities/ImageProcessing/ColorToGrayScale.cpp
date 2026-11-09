@@ -2,12 +2,12 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -25,12 +25,7 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
 
-  if(inputValues.ConversionAlgorithm == 3 && inputValues.ColorChannel > 3)
-  {
-    return {MakeErrorResult<OutputActions>(-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", inputValues.ColorChannel))};
-  }
-
-  if(inputValues.ConversionAlgorithm == 0)
+  if(inputValues.ConversionAlgorithm == to_underlying(ConvertColorToGrayScale::ConversionType::Luminosity))
   {
     if(inputValues.ColorWeights[0] < 0.0F || inputValues.ColorWeights[1] < 0.0F || inputValues.ColorWeights[2] < 0.0F)
     {
@@ -53,15 +48,15 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
   {
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
     const usize numComponents = inputArray.getNumberOfComponents();
-    if(inputValues.ConversionAlgorithm == static_cast<ChoicesParameter::ValueType>(ConvertColorToGrayScale::ConversionType::SingleChannel))
+    if(inputValues.ConversionAlgorithm == to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel))
     {
       if(inputValues.ColorChannel < 0 || std::cmp_greater_equal(inputValues.ColorChannel, numComponents))
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel within the array component count.",
-                                                                                    inputValues.ColorChannel, inputDataArrayPath.toString(), numComponents))};
+        return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel from 0 to {}.",
+                                                                                    inputValues.ColorChannel, inputDataArrayPath.toString(), numComponents, numComponents - 1))};
       }
     }
-    else if(inputValues.ConversionAlgorithm <= static_cast<ChoicesParameter::ValueType>(ConvertColorToGrayScale::ConversionType::Lightness) && numComponents < 3)
+    else if(inputValues.ConversionAlgorithm <= to_underlying(ConvertColorToGrayScale::ConversionType::Lightness) && numComponents < 3)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-10710, fmt::format("Grayscale conversion requires at least 3 components. Array '{}' has {} components. Select an RGB or RGBA array.",
                                                                                   inputDataArrayPath.toString(), numComponents))};

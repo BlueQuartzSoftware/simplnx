@@ -27,14 +27,14 @@ For every parsed tile the Filter:
    positioned at the parsed `(x, y)` origin, holding a **Cell Attribute Matrix**
    and an image **DataArray** filled with the tile's pixels.
 
-Each tile image must have 1, 3, or 4 components. Preflight rejects other
-component counts, even when grayscale conversion is off.
+When **Convert To GrayScale** is on, each tile image must have 1, 3, or 4
+components. When this option is off, any component count is accepted.
 
 Preflight fails if the filter cannot identify a tile image format or read its
-metadata. After metadata is read, if pixel data cannot be read, the filter
-reports a warning and continues with the other tiles. When grayscale conversion
-is enabled for a uint8 RGB or RGBA tile, a tile with a pixel-read failure has a
-single-component array filled with zeros. The filter fails if no tile can be read.
+metadata. If the filter cannot read the pixels of a tile, it reports a warning and continues.
+When grayscale conversion applies to that tile, its array has one component and contains zeros.
+The filter fails if no tile can be read.
+
 There is **no stitching or blending** — the tiles are imported side by side as
 independent geometries positioned at their montage coordinates.
 
@@ -47,7 +47,9 @@ independent geometries positioned at their montage coordinates.
   created at the root of the data structure.
 - **Convert To GrayScale**: converts `uint8` RGB and RGBA tiles to single-channel
   grayscale using the supplied luminosity **Color Weighting**. RGBA conversion
-  ignores alpha. Single-component tiles skip grayscale conversion.
+  ignores alpha. The `uint8` check uses the type after **Set Image Data Type**.
+  A `uint16` RGB tile cast to `uint8` is converted.
+  Single-component tiles skip grayscale conversion.
   RGB and RGBA tiles with other data types are imported without grayscale
   conversion, and the filter reports a warning.
 - **Set Image Data Type**: casts every imported tile array to `uint8`,

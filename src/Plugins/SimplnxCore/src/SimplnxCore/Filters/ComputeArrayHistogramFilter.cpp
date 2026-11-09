@@ -31,6 +31,23 @@ Result<> ValidateNumberOfBins(int32 numberOfBins)
   }
   return {};
 }
+
+ComputeArrayHistogramInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  ComputeArrayHistogramInputValues inputValues;
+
+  inputValues.NumberOfBins = filterArgs.value<int32>(ComputeArrayHistogramFilter::k_NumberOfBins_Key);
+  inputValues.UserDefinedRange = filterArgs.value<bool>(ComputeArrayHistogramFilter::k_UserDefinedRange_Key);
+  inputValues.MinRange = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MinRange_Key);
+  inputValues.MaxRange = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MaxRange_Key);
+  inputValues.SelectedArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key);
+
+  if(filterArgs.value<bool>(ComputeArrayHistogramFilter::k_UseMask_Key))
+  {
+    inputValues.MaskPath = filterArgs.value<DataPath>(ComputeArrayHistogramFilter::k_MaskArrayPath_Key);
+  }
+  return inputValues;
+}
 } // namespace
 
 namespace nx::core
@@ -143,8 +160,11 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   auto pBinMostPopulatedName = filterArgs.value<std::string>(k_HistoMostPopulatedBinName_Key);
   auto pCalculateModalBinRanges = filterArgs.value<bool>(k_CalculateModalBinRanges_Key);
   auto pBinModalBinRangesName = filterArgs.value<std::string>(k_HistoModalBinRangesName_Key);
-  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
-  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  const auto inputValues = CreateInputValues(filterArgs);
+  if(auto validation = ComputeArrayHistogram::ValidateInputs(dataStructure, inputValues); validation.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -164,22 +184,9 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     parentPath = pDataGroupNameValue;
   }
 
-  const IDataArray* maskArray = nullptr;
-  if(useMask)
-  {
-    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
-  }
-
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
-    if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
-    {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}.  These tuple counts MUST match.", maskArray->getName(),
-                                                                 maskArray->getNumberOfTuples(), dataArray->getName(), dataArray->getNumberOfTuples())),
-              {}};
-    }
-
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 
@@ -213,13 +220,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
 Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  ComputeArrayHistogramInputValues inputValues;
-
-  inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
-  inputValues.UserDefinedRange = filterArgs.value<bool>(k_UserDefinedRange_Key);
-  inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
-  inputValues.MaxRange = filterArgs.value<float64>(k_MaxRange_Key);
-  inputValues.SelectedArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);
+  auto inputValues = CreateInputValues(filterArgs);
 
   auto binCountName = filterArgs.value<std::string>(k_HistoBinCountName_Key);
   auto binRangeName = filterArgs.value<std::string>(k_HistoBinRangeName_Key);
@@ -264,12 +265,6 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
   if(calculateModalRanges)
   {
     inputValues.CreatedBinModalRangesDataPaths = createdModalRangesDataPaths;
-  }
-
-  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
-  if(useMask)
-  {
-    inputValues.MaskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   }
 
   return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();

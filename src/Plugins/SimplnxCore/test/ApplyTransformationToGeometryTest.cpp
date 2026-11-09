@@ -293,7 +293,7 @@ void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom&
 
 } // namespace apply_transformation_to_geometry
 
-TEST_CASE("SimplnxCore::C02 ApplyTransformationToGeometry matrix contract", "[SimplnxCore][ApplyTransformationToGeometryFilter][C02]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry matrix contract", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);

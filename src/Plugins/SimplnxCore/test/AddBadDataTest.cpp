@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/AddBadData.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
@@ -154,7 +155,7 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Geometry cell tuple count", "[SimplnxC
   }
 }
 
-TEST_CASE("SimplnxCore::C02 AddBadData component contract", "[SimplnxCore][AddBadDataFilter][ComponentContract][C02]")
+TEST_CASE("SimplnxCore::AddBadData component contract", "[SimplnxCore][AddBadDataFilter][ComponentContract]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -203,4 +204,38 @@ TEST_CASE("SimplnxCore::C02 AddBadData component contract", "[SimplnxCore][AddBa
     REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AddBadData: direct call rejects non-scalar component shapes", "[SimplnxCore][AddBadDataFilter]")
+{
+  const auto shape = GENERATE(ShapeType{3}, ShapeType{1, 1});
+  CAPTURE(shape);
+  DataStructure dataStructure;
+  auto* input = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {2}, shape);
+  REQUIRE(input != nullptr);
+  AddBadDataInputValues inputValues{};
+  inputValues.GBEuclideanDistancesArrayPath = DataPath({"Input"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -76239);
+  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::AddBadData: direct call rejects tuple counts that differ from image cells", "[SimplnxCore][AddBadDataFilter]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({3, 1, 1});
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {2}, {1}) != nullptr);
+  AddBadDataInputValues inputValues{};
+  inputValues.GBEuclideanDistancesArrayPath = DataPath({"Input"});
+  inputValues.ImageGeometryPath = DataPath({"Image"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -76238);
 }

@@ -10,6 +10,9 @@
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -24,6 +27,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_MaskComponentShapeError = -57220;
+constexpr int32 k_MaskTupleCountError = -57221;
 constexpr usize k_ChunkSize = 65536;
 
 /**
@@ -265,6 +270,8 @@ public:
         usize index = 0;
         usize maskIndex = 0;
         usize tupleRemaining = components - (offset % components);
+        // A page can start or end inside a tuple. Each span covers the part of one tuple in this page,
+        // and one mask value selects or skips the whole span.
         while(index < count)
         {
           const usize spanCount = std::min(tupleRemaining, count - index);
@@ -753,8 +760,36 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 
 ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 
+Result<> ComputeArrayHistogram::ValidateInputs(const DataStructure& dataStructure, const ComputeArrayHistogramInputValues& inputValues)
+{
+  if(!inputValues.MaskPath.has_value())
+  {
+    return {};
+  }
+  const auto& mask = dataStructure.getDataRefAs<IDataArray>(*inputValues.MaskPath);
+  if(mask.getComponentShape() != ShapeType{1})
+  {
+    return MakeErrorResult(k_MaskComponentShapeError, fmt::format("Mask array '{}' has component shape {{{}}}, but requires {{1}}. Select a mask with exactly one component dimension of size 1.",
+                                                                  inputValues.MaskPath->toString(), fmt::join(mask.getComponentShape(), ", ")));
+  }
+  for(const auto& path : inputValues.SelectedArrayPaths)
+  {
+    const auto& input = dataStructure.getDataRefAs<IDataArray>(path);
+    if(mask.getNumberOfTuples() != input.getNumberOfTuples())
+    {
+      return MakeErrorResult(k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
+                                                                inputValues.MaskPath->toString(), mask.getNumberOfTuples(), path.toString(), input.getNumberOfTuples()));
+    }
+  }
+  return {};
+}
+
 Result<> ComputeArrayHistogram::operator()()
 {
+  if(auto validation = ValidateInputs(m_DataStructure, *m_InputValues); validation.invalid())
+  {
+    return validation;
+  }
   const IDataArray* maskArray = nullptr;
   if(m_InputValues->MaskPath.has_value())
   {

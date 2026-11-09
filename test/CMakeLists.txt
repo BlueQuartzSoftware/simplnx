@@ -58,6 +58,7 @@ set(SIMPLNX_TEST_SRCS
   FilterTest.cpp
   FloatArrayComparisonTest.cpp
   GeometryTest.cpp
+  PreflightUtilitiesTest.cpp
   GeometryBulkContractsTest.cpp
   GeometryTestUtilities.hpp
   H5Test.cpp

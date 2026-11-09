@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/FilterList.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -688,12 +689,11 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
 }
 } // namespace
 
-TEST_CASE("NXImageProcessing::C02 montage rejects unsupported components", "[NXImageProcessing][ImportFijiMontageFilter][C02][C02Red]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale rejects unsupported components", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
   const auto count = GENERATE(2, 5);
-  const bool gray = GENERATE(false, true);
   const fs::path dir = FijiOutputDir();
   const std::string name = fmt::format("c02_bad_{}.tif", count);
   writeC02Tile(dir / name, std::vector<uint8>(count, 42));
@@ -703,17 +703,14 @@ TEST_CASE("NXImageProcessing::C02 montage rejects unsupported components", "[NXI
   const ImportFijiMontageFilter filter;
   const DataStructure dataStructure;
   auto args = MakeFijiArgs(cfg, true, false, {0, 0, 0});
-  for(const bool option : {gray, !gray})
-  {
-    args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(option));
-    auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE_FALSE(result.outputActions.errors().empty());
-    REQUIRE(result.outputActions.errors().front().code == -35927);
-  }
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE_FALSE(result.outputActions.errors().empty());
+  REQUIRE(result.outputActions.errors().front().code == -35927);
 }
 
-TEST_CASE("NXImageProcessing::C02 montage accepted components and grayscale", "[NXImageProcessing][ImportFijiMontageFilter][C02][C02Green]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: accepted components and grayscale", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -759,7 +756,7 @@ TEST_CASE("NXImageProcessing::C02 montage accepted components and grayscale", "[
   }
 }
 
-TEST_CASE("NXImageProcessing::C02 montage real OOC grayscale", "[NXImageProcessing][ImportFijiMontageFilter][C02][.OocStoreContract]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: real OOC grayscale", "[NXImageProcessing][ImportFijiMontageFilter][.OocStoreContract]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -807,7 +804,7 @@ TEST_CASE("NXImageProcessing::C02 montage real OOC grayscale", "[NXImageProcessi
   }
 }
 
-TEST_CASE("NXImageProcessing::C02 montage datatype conversion before grayscale", "[NXImageProcessing][ImportFijiMontageFilter][C02][C02Green]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: datatype conversion before grayscale", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -845,7 +842,7 @@ TEST_CASE("NXImageProcessing::C02 montage datatype conversion before grayscale",
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::C02 montage grayscale feeds scalar pipeline filter", "[NXImageProcessing][ImportFijiMontageFilter][C02][C02Pipeline]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale feeds scalar pipeline filter", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -911,11 +908,16 @@ TEST_CASE("NXImageProcessing::C02 montage grayscale feeds scalar pipeline filter
   REQUIRE(output.getNumberOfComponents() == 1);
   REQUIRE(output.getComponentShape() == ShapeType{1});
   REQUIRE(output.getNumberOfTuples() == 4);
-  REQUIRE(std::isfinite(output[0]));
+  // Mean = 25, sample variance = 500/3. Each result is (intensity - 25) / sqrt(500/3).
+  const std::vector<float64> normalized{-1.161895, -0.387298, 0.387298, 1.161895};
+  for(usize i = 0; i < normalized.size(); i++)
+  {
+    REQUIRE(output[i] == Approx(normalized[i]).margin(1.0e-6));
+  }
   UnitTest::CheckArraysInheritTupleDims(outputData);
 }
 
-TEST_CASE("NXImageProcessing::C02 montage failed color tile retains scalar shape", "[NXImageProcessing][ImportFijiMontageFilter][C02][C02PartialRead]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: failed color tile retains scalar shape", "[NXImageProcessing][ImportFijiMontageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -977,7 +979,7 @@ TEST_CASE("NXImageProcessing::C02 montage failed color tile retains scalar shape
   UnitTest::CheckArraysInheritTupleDims(outputData);
 }
 
-TEST_CASE("NXImageProcessing::C02 montage failed color tile real OOC zeros", "[NXImageProcessing][ImportFijiMontageFilter][C02][.OocStoreContract]")
+TEST_CASE("NXImageProcessing::ImportFijiMontage: failed color tile real OOC zeros", "[NXImageProcessing][ImportFijiMontageFilter][.OocStoreContract]")
 {
   const usize components = GENERATE(usize{3}, usize{4});
   CAPTURE(components);
@@ -1033,4 +1035,72 @@ TEST_CASE("NXImageProcessing::C02 montage failed color tile real OOC zeros", "[N
     REQUIRE(good[i] == 64);
   }
   UnitTest::CheckArraysInheritTupleDims(outputData);
+}
+
+TEST_CASE("NXImageProcessing::ImportFijiMontage: imports arbitrary components when grayscale is off", "[NXImageProcessing][ImportFijiMontageFilter]")
+{
+  const usize components = GENERATE(usize{2}, usize{5});
+  CAPTURE(components);
+  const fs::path dir = FijiOutputDir();
+  const std::string filename = fmt::format("unconverted_{}.tif", components);
+  writeC02Tile(dir / filename, std::vector<uint8>(components, 42));
+  const fs::path config = dir / fmt::format("unconverted_{}.txt", components);
+  WriteConfig(config, {"dim = 2", "# Define the image coordinates", filename + "; ; (0, 0)"});
+  const ImportFijiMontageFilter filter;
+  auto args = MakeFijiArgs(config, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
+  DataStructure dataStructure;
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath path({"Zen DataGroup", fmt::format("Mosaic-unconverted_{}", components), "Tile Data", "Image"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(path));
+  const auto& output = dataStructure.getDataRefAs<UInt8Array>(path);
+  REQUIRE(output.getComponentShape() == ShapeType{components});
+  REQUIRE(output.getNumberOfTuples() == 4);
+  for(usize i = 0; i < output.getSize(); i++)
+  {
+    REQUIRE(output[i] == 42);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale action clone preserves file components", "[NXImageProcessing][ImportFijiMontageFilter]")
+{
+  const fs::path dir = FijiOutputDir();
+  writeC02Tile(dir / "clone_rgb.tif", {200, 100, 50});
+  const fs::path config = dir / "clone_rgb.txt";
+  WriteConfig(config, {"dim = 2", "# Define the image coordinates", "clone_rgb.tif; ; (0, 0)"});
+  const ImportFijiMontageFilter filter;
+  auto args = MakeFijiArgs(config, true, false, {0, 0, 0});
+  args.insertOrAssign(ImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
+  DataStructure originalData;
+  DataStructure clonedData;
+  auto preflight = filter.preflight(originalData, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const DataPath path({"Zen DataGroup", "Mosaic-clone_rgb", "Tile Data", "Image"});
+  bool foundArrayAction = false;
+  for(const auto& action : preflight.outputActions.value().actions)
+  {
+    const auto* arrayAction = dynamic_cast<const CreateArrayAction*>(action.get());
+    if(arrayAction != nullptr && arrayAction->path() == path)
+    {
+      foundArrayAction = true;
+      REQUIRE(arrayAction->componentDims() == ShapeType{1});
+    }
+    auto clone = action->clone();
+    REQUIRE(clone != nullptr);
+    auto originalResult = action->apply(originalData, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(originalResult);
+    auto cloneResult = clone->apply(clonedData, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(cloneResult);
+  }
+  REQUIRE(foundArrayAction);
+  for(const auto* data : {&originalData, &clonedData})
+  {
+    REQUIRE_NOTHROW(data->getDataRefAs<UInt8Array>(path));
+    const auto& array = data->getDataRefAs<UInt8Array>(path);
+    REQUIRE(array.getComponentShape() == ShapeType{3});
+    REQUIRE(array.getNumberOfTuples() == 4);
+    UnitTest::CheckArraysInheritTupleDims(*data);
+  }
 }

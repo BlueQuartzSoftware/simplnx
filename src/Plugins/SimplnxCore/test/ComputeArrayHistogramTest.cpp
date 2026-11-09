@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/ComputeArrayHistogram.hpp"
 #include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -553,7 +554,7 @@ void c02CheckCounts(const DataStructure& dataStructure, const std::array<uint64,
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::C02 histogram tuple mask safe RED", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: mask selects whole tuples", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -577,7 +578,7 @@ TEST_CASE("SimplnxCore::C02 histogram tuple mask safe RED", "[SimplnxCore][Compu
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram tuple masks full outputs", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: tuple masks full outputs", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -637,7 +638,7 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks full outputs", "[SimplnxCore][
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram real OOC tuple masks", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: real OOC tuple masks", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -683,7 +684,7 @@ TEST_CASE("SimplnxCore::C02 histogram real OOC tuple masks", "[SimplnxCore][Comp
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram tuple masks cross value pages", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: tuple masks cross value pages", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -730,7 +731,7 @@ TEST_CASE("SimplnxCore::C02 histogram tuple masks cross value pages", "[SimplnxC
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram all masked automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: all masked automatic range", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -750,7 +751,7 @@ TEST_CASE("SimplnxCore::C02 histogram all masked automatic range", "[SimplnxCore
   REQUIRE(result.result.errors().front().code == -23766);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram mixed component arrays", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: mixed component arrays", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -783,7 +784,7 @@ TEST_CASE("SimplnxCore::C02 histogram mixed component arrays", "[SimplnxCore][Co
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram HDF5 tuple straddles page", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: HDF5 tuple straddles page", "[SimplnxCore][ComputeArrayHistogram][.OocStoreContract]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -818,7 +819,7 @@ TEST_CASE("SimplnxCore::C02 histogram HDF5 tuple straddles page", "[SimplnxCore]
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: cancellation between value pages", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -845,7 +846,7 @@ TEST_CASE("SimplnxCore::C02 histogram cancellation between value pages", "[Simpl
   REQUIRE(inputStore->reads().front().second == 65536);
 }
 
-TEST_CASE("SimplnxCore::C02 histogram empty automatic range", "[SimplnxCore][ComputeArrayHistogram][C02]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: empty automatic range", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -861,4 +862,38 @@ TEST_CASE("SimplnxCore::C02 histogram empty automatic range", "[SimplnxCore][Com
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == -23766);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: direct call rejects non-scalar masks", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto shape = GENERATE(ShapeType{2}, ShapeType{1, 1});
+  CAPTURE(shape);
+  DataStructure dataStructure;
+  auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {2}, shape);
+  REQUIRE(mask != nullptr);
+  ComputeArrayHistogramInputValues inputValues{};
+  inputValues.MaskPath = DataPath({"Mask"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -57220);
+  REQUIRE(result.errors().front().message.find("Mask") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: direct call checks mask tuples against every input", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  DataStructure dataStructure;
+  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {2}, {1}) != nullptr);
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "First", {2}, {3}) != nullptr);
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Second", {3}, {3}) != nullptr);
+  ComputeArrayHistogramInputValues inputValues{};
+  inputValues.MaskPath = DataPath({"Mask"});
+  inputValues.SelectedArrayPaths = {DataPath({"First"}), DataPath({"Second"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -57221);
+  REQUIRE(result.errors().front().message.find("Second") != std::string::npos);
 }

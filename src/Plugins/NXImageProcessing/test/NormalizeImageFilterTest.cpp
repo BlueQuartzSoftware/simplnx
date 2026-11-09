@@ -1,4 +1,5 @@
 #include "NXImageProcessing/Filters/NormalizeImageFilter.hpp"
+#include "NXImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
 #include "ItkGoldenTestUtils.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
@@ -19,7 +20,7 @@
 
 using namespace nx::core;
 
-TEST_CASE("ImageProcessing::C02 NormalizeImage component contract", "[ImageProcessing][NormalizeImageFilter][ComponentContract][C02]")
+TEST_CASE("NXImageProcessing::NormalizeImage component contract", "[NXImageProcessing][NormalizeImageFilter][ComponentContract]")
 {
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE(appPtr != nullptr);
@@ -116,4 +117,20 @@ TEST_CASE("NXImageProcessing::NormalizeImageFilter: ITK real-image golden (defau
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("NXImageProcessing::NormalizeImage: direct call rejects non-scalar component shapes", "[NXImageProcessing][NormalizeImageFilter]")
+{
+  const auto shape = GENERATE(ShapeType{3}, ShapeType{1, 1});
+  CAPTURE(shape);
+  DataStructure dataStructure;
+  auto* input = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Input", {2}, shape);
+  REQUIRE(input != nullptr);
+  const NormalizeImageInputValues inputValues{DataPath({"Input"}), DataPath({"Output"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  auto result = NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -94001);
+  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
 }
