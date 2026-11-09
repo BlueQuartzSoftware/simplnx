@@ -160,3 +160,13 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Preflight rejects non-
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleDilateImageFilter, float32>(-8370, morph_test::DefaultKernelParamSetter<GrayscaleDilateImageFilter>());
 }
+
+TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Kernel Radius representability", "[ImageProcessing][GrayscaleDilateImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<GrayscaleDilateImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::GrayscaleDilateImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][GrayscaleDilateImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<GrayscaleDilateImageFilter>({5, 5, 5});
+}

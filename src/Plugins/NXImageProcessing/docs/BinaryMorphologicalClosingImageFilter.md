@@ -49,6 +49,8 @@ Other cases retain the raw-ring fallback. If the ring reservation is unavailable
 
 ![Binary closing example.](Images/BinaryClosing.png)
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

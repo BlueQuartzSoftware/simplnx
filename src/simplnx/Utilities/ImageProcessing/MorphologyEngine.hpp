@@ -57,6 +57,94 @@ enum class MorphOp
   Erode
 };
 
+inline constexpr int32 k_MorphologyPaddedExtentError = -88005;
+inline constexpr int32 k_MorphologyCoordinateError = -88006;
+inline constexpr int32 k_MorphologyPlaneError = -88007;
+inline constexpr int32 k_MorphologyVolumeError = -88008;
+inline constexpr int32 k_MorphologyByteCountError = -88009;
+
+/**
+ * @brief Checks image and Safe Border layout arithmetic without allocating image values.
+ * @param dims Original X, Y and Z image extents in cells.
+ * @param radius X, Y and Z kernel radii in cells.
+ * @param safeBorder Includes radius padding, except on Z for a single-plane image.
+ * @param elementBytes Size of one scalar image value in bytes.
+ * @return Radius or layout error if counts, coordinates or typed byte counts are unrepresentable.
+ * @note Flat-offset optimization limits do not restrict this layout contract.
+ */
+inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<const uint32> radius, bool safeBorder, usize elementBytes)
+{
+  auto radiusResult = ValidateKernelRadius(radius);
+  if(radiusResult.invalid())
+  {
+    return radiusResult;
+  }
+  SizeVec3 paddedDims = dims;
+  constexpr std::array<const char*, 3> axes = {"X", "Y", "Z"};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    const usize pad = safeBorder && (axis != 2 || dims[2] != 1) ? static_cast<usize>(radius[axis]) : 0;
+    if(pad > (std::numeric_limits<usize>::max() - dims[axis]) / 2)
+    {
+      return MakeErrorResult(k_MorphologyPaddedExtentError,
+                             fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) overflow padded extent dims[{}]+2*pad. Reduce the dimensions or radii.",
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], axes[axis]));
+    }
+    paddedDims[axis] += 2 * pad;
+  }
+  constexpr uint64 k_SignedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    // Padded extents are at least the original extents, so this also bounds original coordinates.
+    if(paddedDims[axis] > k_SignedMax - static_cast<uint64>(radius[axis]) - 1)
+    {
+      return MakeErrorResult(k_MorphologyCoordinateError,
+                             fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed coordinate limit: padded extent {} + radius {} + 1 on axis {} must be at "
+                                         "most {}. Reduce the dimensions or radii.",
+                                         StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[axis], radius[axis], axes[axis], k_SignedMax));
+    }
+  }
+  if(paddedDims[0] != 0 && paddedDims[1] > k_SignedMax / paddedDims[0])
+  {
+    return MakeErrorResult(
+        k_MorphologyPlaneError,
+        fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed plane count limit: padded X*Y = {}*{} must be at most {}. Reduce the dimensions or radii.",
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], k_SignedMax));
+  }
+  const uint64 plane = static_cast<uint64>(paddedDims[0]) * paddedDims[1];
+  if(plane != 0 && paddedDims[2] > k_SignedMax / plane)
+  {
+    return MakeErrorResult(
+        k_MorphologyVolumeError,
+        fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) exceed the signed volume count limit: padded X*Y*Z = {}*{}*{} must be at most {}. Reduce the dimensions or radii.",
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], paddedDims[0], paddedDims[1], paddedDims[2], k_SignedMax));
+  }
+  const uint64 volume = plane * paddedDims[2];
+  if(elementBytes != 0 && volume > std::numeric_limits<uint64>::max() / elementBytes)
+  {
+    return MakeErrorResult(
+        k_MorphologyByteCountError,
+        fmt::format("Morphology dimensions ({}) and Kernel Radius (X={}, Y={}, Z={}) overflow the typed byte count: padded volume {} * element bytes {}. Reduce the dimensions or radii.",
+                    StringUtilities::formatDimensions3D(dims), radius[0], radius[1], radius[2], volume, elementBytes));
+  }
+  return {};
+}
+
+/**
+ * @brief Checks the layout of a rasterized kernel before an engine allocates scratch.
+ * @param dims Original image extents in cells.
+ * @param se Rasterized kernel. Negative legacy radii describe an empty range.
+ * @param safeBorder Includes the effective Safe Border padding.
+ * @param elementBytes Size of one scalar value in bytes.
+ * @return Shared radius or layout error.
+ */
+inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, const StructuringElement& se, bool safeBorder, usize elementBytes)
+{
+  const std::array<uint32, 3> radius = {static_cast<uint32>(std::max<int32>(0, se.radius[0])), static_cast<uint32>(std::max<int32>(0, se.radius[1])),
+                                        static_cast<uint32>(std::max<int32>(0, se.radius[2]))};
+  return ValidateMorphologyLayout(dims, radius, safeBorder, elementBytes);
+}
+
 namespace detail
 {
 enum class MorphologyCompositeOutputMode
@@ -116,11 +204,58 @@ constexpr T MorphologyGradientDifference(T maximum, T minimum) noexcept
   }
 }
 
+/**
+ * @brief Checks signed flat-delta and staged-index arithmetic for an optional flat fold.
+ * @param dims Complete image or padded bounds.
+ * @param se Rasterized offsets.
+ * @return True if every computed delta and its sum with a volume-sized base fit int64.
+ */
+inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const StructuringElement& se)
+{
+  constexpr uint64 k_Max = static_cast<uint64>(std::numeric_limits<int64>::max());
+  if(dims[0] > k_Max || dims[1] > k_Max || dims[2] > k_Max || (dims[0] != 0 && dims[1] > k_Max / dims[0]))
+  {
+    return false;
+  }
+  const uint64 slice = static_cast<uint64>(dims[0]) * dims[1];
+  if(slice != 0 && dims[2] > k_Max / slice)
+  {
+    return false;
+  }
+  const uint64 volume = slice * dims[2];
+  for(const SEOffset& offset : se.offsets)
+  {
+    const std::array<int64, 3> values = {offset.dx, offset.dy, offset.dz};
+    const std::array<uint64, 3> strides = {1, dims[0], slice};
+    int64 delta = 0;
+    for(usize step = 0; step < 3; ++step)
+    {
+      const usize axis = 2 - step;
+      const uint64 magnitude = static_cast<uint64>(values[axis] < 0 ? -values[axis] : values[axis]);
+      if(magnitude != 0 && strides[axis] > k_Max / magnitude)
+      {
+        return false;
+      }
+      const int64 product = values[axis] < 0 ? -static_cast<int64>(magnitude * strides[axis]) : static_cast<int64>(magnitude * strides[axis]);
+      if((product > 0 && delta > std::numeric_limits<int64>::max() - product) || (product < 0 && delta < std::numeric_limits<int64>::min() - product))
+      {
+        return false;
+      }
+      delta += product;
+    }
+    const uint64 magnitude = delta < 0 ? static_cast<uint64>(-(delta + 1)) + 1 : static_cast<uint64>(delta);
+    if(magnitude > k_Max - volume)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 inline bool ShouldUseMorphologyResidentFlatFold(const SizeVec3& dims, const StructuringElement& se)
 {
-  // The flat fold is faster for moderate neighborhoods, but its work grows with the full offset count.
-  // Keep larger kernels on the moving-histogram path, whose work grows with the entering/leaving boundary.
-  return dims[2] > 1 && !se.offsets.empty() && se.offsets.size() <= k_MaxMorphologyResidentFlatFoldOffsets;
+  // Larger kernels use the moving histogram, whose work scales with the entering and leaving boundary.
+  return dims[2] > 1 && !se.offsets.empty() && se.offsets.size() <= k_MaxMorphologyResidentFlatFoldOffsets && MorphologyFlatFoldIsRepresentable(dims, se);
 }
 
 inline std::array<usize, 3> MorphologySafeBorderPadRadius(const StructuringElement& se, const SizeVec3& dims)
@@ -1255,9 +1390,18 @@ struct MorphologyFlatFoldOffset
   int64 flatDelta = 0;
 };
 
-inline std::vector<MorphologyFlatFoldOffset> MakeMorphologyFlatFoldOffsets(const StructuringElement& se, usize dimX, usize dimY)
+/**
+ * @brief Flattens offsets for a representable optional morphology fold.
+ * @param se Rasterized kernel offsets.
+ * @param dims Complete image or padded bounds.
+ * @pre MorphologyFlatFoldIsRepresentable(dims, se) is true.
+ * @return Offsets with signed flat deltas for these bounds.
+ */
+inline std::vector<MorphologyFlatFoldOffset> MakeMorphologyFlatFoldOffsets(const StructuringElement& se, const SizeVec3& dims)
 {
-  const int64 sliceValues = static_cast<int64>(dimX * dimY);
+  assert(MorphologyFlatFoldIsRepresentable(dims, se));
+  const int64 dimX = static_cast<int64>(dims[0]);
+  const int64 sliceValues = static_cast<int64>(dims[0] * dims[1]);
   std::vector<MorphologyFlatFoldOffset> flatOffsets;
   flatOffsets.reserve(se.offsets.size());
   for(const SEOffset& offset : se.offsets)
@@ -1420,7 +1564,7 @@ template <class T, bool Dilate>
 void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin, const StructuringElement& se,
                                 const std::atomic_bool& shouldCancel)
 {
-  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims[0], boundDims[1]);
+  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunMorphologyFlatFoldBlock<T, Dilate>(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, offsets, shouldCancel);
 }
 
@@ -1574,7 +1718,7 @@ template <class T>
 void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
                                         const StructuringElement& se, const std::atomic_bool& shouldCancel)
 {
-  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims[0], boundDims[1]);
+  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunMorphologyGradientFlatFoldBlock(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, offsets, shouldCancel);
 }
 
@@ -1707,7 +1851,7 @@ template <class T, bool Dilate>
 void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
                                       const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
-  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims[0], boundDims[1]);
+  const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunBinaryMorphologyFlatFoldBlock<T, Dilate>(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, boundaryToForeground, offsets, shouldCancel);
 }
 
@@ -1901,6 +2045,18 @@ bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWord* pac
 }
 
 /**
+ * @brief Clamps a packed word endpoint to the row without overflowing signed coordinates.
+ * @param xStart First bit coordinate, which can lie outside the row.
+ * @param rowEnd Exclusive end of the row.
+ * @return The smaller of xStart+64 and rowEnd.
+ */
+inline int64 MorphologyPackedWordEnd(int64 xStart, int64 rowEnd)
+{
+  constexpr int64 k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
+  return xStart > std::numeric_limits<int64>::max() - k_WordBits ? rowEnd : std::min(rowEnd, xStart + k_WordBits);
+}
+
+/**
  * @brief Extracts 64 membership bits from one logical packed X/Y/Z row.
  *
  * The returned bit @c i maps to global X @p xStart plus @c i. Image-boundary bits use
@@ -1961,7 +2117,7 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& vie
     return boundaryWord;
   }
 
-  const int64 xEnd = xStart + static_cast<int64>(k_WordBits);
+  const int64 xEnd = MorphologyPackedWordEnd(xStart, static_cast<int64>(boundDims[0]));
   const int64 inBoundsBegin = std::max<int64>(0, xStart);
   const int64 inBoundsEnd = std::min<int64>(static_cast<int64>(boundDims[0]), xEnd);
   if(inBoundsBegin >= inBoundsEnd)
@@ -3117,6 +3273,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -3198,7 +3359,7 @@ public:
 
     // The flat fold uses only its precomputed offsets. The moving-window fallback needs axis sets.
     const bool useFlatFold = detail::k_UseVectorHistogram<T> && detail::ShouldUseMorphologyResidentFlatFold(m_Dims, m_SE);
-    const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets = useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(m_SE, dimX, dimY) : std::vector<detail::MorphologyFlatFoldOffset>{};
+    const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets = useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(m_SE, m_Dims) : std::vector<detail::MorphologyFlatFoldOffset>{};
     std::optional<detail::AxisAddRemoveSets> axisSets;
     if(!useFlatFold)
     {
@@ -3357,6 +3518,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     // Dispatch the runtime op to a compile-time bool so the histogram's comparator/extremum are fixed at
     // compile time (matching ITK's distinct Dilate/Erode filter classes).
     return (m_Op == MorphOp::Dilate) ? runImpl<true>() : runImpl<false>();
@@ -3647,6 +3813,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     auto allocationResult = detail::ReserveMorphologyResidentWorkingMemory<T>(m_Dims);
     if(allocationResult.invalid())
     {
@@ -3712,6 +3883,11 @@ template <class T>
 Result<> ApplyMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const IDataArray& inArray,
                          const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   return DispatchAlgorithm<MorphDirect<T>, MorphWorkingMemory<T>>({&inArray, &outArray}, in, out, dims, se, op, shouldCancel, messageHandler);
 }
 
@@ -3760,6 +3936,11 @@ template <class T>
 Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
                                           bool safeBorder, detail::MorphologyCompositeOutputMode outputMode, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   if(shouldCancel)
   {
     return {};
@@ -3853,8 +4034,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
   const bool secondDilate = secondOp == MorphOp::Dilate;
   // The flat fold uses only its precomputed offsets. The moving-window fallback needs axis sets.
   const bool useFlatFold = detail::k_UseVectorHistogram<T> && detail::ShouldUseMorphologyResidentFlatFold(paddedDims, se);
-  const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets =
-      useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(se, paddedDims[0], paddedDims[1]) : std::vector<detail::MorphologyFlatFoldOffset>{};
+  const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets = useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(se, paddedDims) : std::vector<detail::MorphologyFlatFoldOffset>{};
   std::optional<detail::AxisAddRemoveSets> axisSets;
   if(!useFlatFold)
   {
@@ -4189,6 +4369,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -4288,7 +4473,7 @@ public:
 
     // The flat fold uses only its precomputed offsets. The moving-window fallback needs axis sets.
     const bool useFlatFold = detail::k_UseVectorHistogram<T> && detail::ShouldUseMorphologyResidentFlatFold(m_Dims, m_SE);
-    const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets = useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(m_SE, dimX, dimY) : std::vector<detail::MorphologyFlatFoldOffset>{};
+    const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets = useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(m_SE, m_Dims) : std::vector<detail::MorphologyFlatFoldOffset>{};
     std::optional<detail::AxisAddRemoveSets> axisSets;
     if(!useFlatFold)
     {
@@ -4422,6 +4607,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -4690,6 +4880,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     auto allocationResult = detail::ReserveMorphologyResidentWorkingMemory<T>(m_Dims);
     if(allocationResult.invalid())
     {
@@ -4756,6 +4951,11 @@ template <class T>
 Result<> ApplyMorphologyGradient(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const IDataArray& inArray, const IDataArray& outArray,
                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   return DispatchAlgorithm<MorphGradientDirect<T>, MorphGradientWorkingMemory<T>>({&inArray, &outArray}, in, out, dims, se, shouldCancel, messageHandler);
 }
 
@@ -4819,6 +5019,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -5096,6 +5301,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     // Dispatch the runtime op to a compile-time bool so the accumulator's any/all formula is fixed at compile
     // time (matching ITK's distinct Dilate/Erode filter classes).
     return (m_Op == MorphOp::Dilate) ? runImpl<true>() : runImpl<false>();
@@ -5415,6 +5625,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     if constexpr(detail::k_UseVectorHistogram<T>)
     {
       if(detail::ShouldUseMorphologyResidentFlatFold(m_Dims, m_SE))
@@ -5466,6 +5681,11 @@ template <class T>
 Result<> ApplyBinaryMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background,
                                bool boundaryToForeground, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   return DispatchAlgorithm<BinaryMorphDirect<T>, BinaryMorphWorkingMemory<T>>({&inArray, &outArray}, in, out, dims, se, op, foreground, background, boundaryToForeground, shouldCancel, messageHandler);
 }
 
@@ -5552,6 +5772,11 @@ template <class T>
 Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
                                                 bool safeBorder, T foreground, T background, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   if(shouldCancel)
   {
     return {};
@@ -5661,7 +5886,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   const bool secondBoundaryToForeground = secondOp == MorphOp::Erode;
   // The flat fold uses only its precomputed offsets. The moving-window fallback needs axis sets.
   const std::vector<detail::MorphologyFlatFoldOffset> flatOffsets =
-      !usePackedComposite && useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(se, paddedDims[0], paddedDims[1]) : std::vector<detail::MorphologyFlatFoldOffset>{};
+      !usePackedComposite && useFlatFold ? detail::MakeMorphologyFlatFoldOffsets(se, paddedDims) : std::vector<detail::MorphologyFlatFoldOffset>{};
   std::optional<detail::AxisAddRemoveSets> axisSets;
   if(!useFlatFold)
   {

@@ -171,3 +171,18 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Prefligh
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleMorphologicalClosingImageFilter, float32>(
       -8400, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/true));
 }
+
+TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius representability", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<GrayscaleMorphologicalClosingImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<GrayscaleMorphologicalClosingImageFilter>({5, 5, 5});
+}
+
+TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius layout preflight", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireKernelRadiusLayoutPreflight<GrayscaleMorphologicalClosingImageFilter>();
+}

@@ -1,3 +1,5 @@
+#include "MorphologyFilterTestUtils.hpp"
+
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/OpeningByReconstructionImageFilter.hpp"
@@ -152,4 +154,14 @@ TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: ITK real-image
     args.insertOrAssign(OpeningByReconstructionImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball)));
     args.insertOrAssign(OpeningByReconstructionImageFilter::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(std::vector<uint32>{1, 1, 1}));
   });
+}
+
+TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: Kernel Radius representability", "[ImageProcessing][OpeningByReconstructionImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<OpeningByReconstructionImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::OpeningByReconstructionImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][OpeningByReconstructionImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<OpeningByReconstructionImageFilter>({0, 0, 0});
 }

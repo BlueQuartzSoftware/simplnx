@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
@@ -741,6 +742,172 @@ inline void RunMorphologyMd5ItkGolden(const std::string& inputFile, const std::s
   INFO(fmt::format("{} md5: ours='{}' committed='{}'", inputFile, ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+} // namespace morph_test
+
+namespace morph_test
+{
+/**
+ * @brief Sets common morphology parameters on a scalar image for radius validation tests.
+ * @tparam FilterT Filter with kernel parameters.
+ * @param inputPath Scalar input array path.
+ * @param radius X, Y and Z radii in cells.
+ * @param safeBorder Enables padding when the filter supports it.
+ * @return Complete arguments with fixed foreground, background and object values where applicable.
+ */
+template <class FilterT>
+Arguments KernelRadiusTestArguments(const DataPath& inputPath, const std::vector<uint32>& radius, bool safeBorder = false)
+{
+  Arguments args = FilterT().getDefaultArguments();
+  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<uint64>(static_cast<uint64>(KernelType::Box)));
+  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<std::vector<uint32>>(radius));
+  if constexpr(requires { FilterT::k_SafeBorder_Key; })
+  {
+    args.insertOrAssign(FilterT::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
+  }
+  if constexpr(requires { FilterT::k_ForegroundValue_Key; })
+  {
+    args.insertOrAssign(FilterT::k_ForegroundValue_Key, std::make_any<float64>(5));
+  }
+  if constexpr(requires { FilterT::k_BackgroundValue_Key; })
+  {
+    args.insertOrAssign(FilterT::k_BackgroundValue_Key, std::make_any<float64>(0));
+  }
+  if constexpr(requires { FilterT::k_ObjectValue_Key; })
+  {
+    args.insertOrAssign(FilterT::k_ObjectValue_Key, std::make_any<float64>(5));
+  }
+  return args;
+}
+
+/**
+ * @brief Checks the shared radius boundary without constructing a large kernel.
+ * @tparam FilterT Filter with kernel parameters.
+ */
+template <class FilterT>
+void RequireKernelRadiusPreflight()
+{
+  const auto application = Application::GetOrCreateInstance();
+  REQUIRE(application != nullptr);
+  const UnitTest::PreferencesSentinel prefs(DataStorageMode::ForceInCore, 0);
+  DataStructure ds;
+  const DataPath inputPath = BuildMorphologyImage<uint8>(ds, 3, 1, 1);
+  const std::array<std::vector<uint32>, 2> invalidRadii = {{{std::numeric_limits<uint32>::max(), 0, 0}, {0, 2147483647u, 0}}};
+  FilterT filter;
+  for(usize i = 0; i < invalidRadii.size(); ++i)
+  {
+    DYNAMIC_SECTION("Invalid radius axis " << i)
+    {
+      auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+      REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_KernelRadiusRangeError);
+      const auto& message = result.outputActions.errors().front().message;
+      REQUIRE(message.find(i == 0 ? "X" : "Y") != std::string::npos);
+      REQUIRE(message.find(std::to_string(invalidRadii[i][i])) != std::string::npos);
+      REQUIRE(message.find("2147483646") != std::string::npos);
+    }
+  }
+  SECTION("Last representable Z radius")
+  {
+    auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, {0, 0, 2147483646u}));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+/**
+ * @brief Checks a hand-calculated one-dimensional morphology result for both algorithm paths.
+ * @tparam FilterT Filter with kernel parameters.
+ * @param expected Hand-calculated output for input values {5, 0, 5}.
+ */
+template <class FilterT>
+void RequireOrdinaryKernelRadius(const std::array<uint8, 3>& expected)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  const DataPath inputPath = BuildMorphologyImage<uint8>(ds, 3, 1, 1);
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(inputPath));
+  auto& input = ds.getDataRefAs<UInt8Array>(inputPath);
+  const std::array<uint8, 3> values = {5, 0, 5};
+  auto writeResult = input.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(values));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  FilterT filter;
+  auto args = KernelRadiusTestArguments<FilterT>(inputPath, {1, 0, 0});
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(outputPath));
+  const auto& output = ds.getDataRefAs<UInt8Array>(outputPath);
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    REQUIRE(output[i] == expected[i]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+} // namespace morph_test
+
+namespace morph_test
+{
+/**
+ * @brief Creates scalar input metadata without allocating image values.
+ * @param ds Receives the geometry, cell matrix and input placeholder.
+ * @param dims X, Y and Z image extents in cells.
+ * @return Input array path.
+ */
+inline DataPath BuildKernelRadiusMetadata(DataStructure& ds, const SizeVec3& dims)
+{
+  const ShapeType shape = {dims[2], dims[1], dims[0]};
+  auto* geom = ImageGeom::Create(ds, "Image Geometry");
+  geom->setDimensions(dims);
+  auto* cells = AttributeMatrix::Create(ds, "CellData", shape, geom->getId());
+  geom->setCellData(*cells);
+  auto store = EmptyDataStore<uint8>::Create(shape, {1}, "");
+  SIMPLNX_RESULT_REQUIRE_VALID(store);
+  DataArray<uint8>::Create(ds, "Input", std::move(store.value()), cells->getId());
+  return DataPath({"Image Geometry", "CellData", "Input"});
+}
+
+/**
+ * @brief Requires exactly one quoted geometry-path suffix in a diagnostic.
+ * @param message Error message to inspect.
+ * @param geometryPath Selected Image Geometry path.
+ */
+inline void RequireSingleGeometryContext(const std::string& message, const DataPath& geometryPath)
+{
+  const auto context = "Image Geometry: '" + geometryPath.toString() + "'";
+  const auto first = message.find(context);
+  REQUIRE(first != std::string::npos);
+  REQUIRE(message.find(context, first + context.size()) == std::string::npos);
+}
+
+/**
+ * @brief Checks that preflight rejects an unrepresentable Safe Border volume.
+ * @tparam FilterT Filter with Safe Border support.
+ */
+template <class FilterT>
+void RequireKernelRadiusLayoutPreflight()
+{
+  DataStructure ds;
+  const auto inputPath = BuildKernelRadiusMetadata(ds, {3, 3, 1024});
+  FilterT filter;
+  auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
+  REQUIRE(result.outputActions.errors().front().message.find("volume") != std::string::npos);
+  const auto geometryPath = inputPath.getParent().getParent();
+  RequireSingleGeometryContext(result.outputActions.errors().front().message, geometryPath);
+  // Public execute repeats preflight and must preserve one copy of the geometry context.
+  auto executeResult = filter.execute(ds, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
+  RequireSingleGeometryContext(executeResult.result.errors().front().message, geometryPath);
+  REQUIRE_FALSE(ds.containsData(inputPath.replaceName("Output")));
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 } // namespace morph_test

@@ -234,3 +234,13 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight r
 {
   morph_test::RequirePreflightRejectsNonScalar<OpeningFilter, uint8>(-8480, OpeningKernelParamSetter(1.0, 0.0));
 }
+
+TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Kernel Radius representability", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<BinaryMorphologicalOpeningImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::BinaryMorphologicalOpeningImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][BinaryMorphologicalOpeningImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<BinaryMorphologicalOpeningImageFilter>({0, 0, 0});
+}

@@ -37,6 +37,8 @@ The `MorphScanline` out-of-core path bulk-reads bounded slabs with a shared Z ha
 
 ![Grayscale dilation example.](Images/GrayscaleDilation.png)
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -1,3 +1,5 @@
+#include "MorphologyFilterTestUtils.hpp"
+
 #include "ObjectMorphologyFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/ErodeObjectMorphologyImageFilter.hpp"
@@ -385,4 +387,14 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image g
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   omt::RequirePreflightRejectsNonScalar<ErodeObjectMorphologyImageFilter, uint8>(-8530, omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0));
+}
+
+TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Kernel Radius representability", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<ErodeObjectMorphologyImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<ErodeObjectMorphologyImageFilter>({0, 0, 0});
 }

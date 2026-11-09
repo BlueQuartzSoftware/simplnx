@@ -168,3 +168,13 @@ TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Preflight rejects non-scal
 {
   morph_test::RequirePreflightRejectsNonScalar<BlackTopHatImageFilter, float32>(-8420, morph_test::CompositeKernelParamSetter<BlackTopHatImageFilter>(/*safeBorder=*/true));
 }
+
+TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Kernel Radius representability", "[ImageProcessing][BlackTopHatImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<BlackTopHatImageFilter>();
+}
+
+TEST_CASE("ImageProcessing::BlackTopHatImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][BlackTopHatImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<BlackTopHatImageFilter>({0, 5, 0});
+}

@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -854,6 +855,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -967,6 +973,11 @@ public:
 
   Result<> operator()()
   {
+    if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
+    {
+      return layout;
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -1232,6 +1243,11 @@ Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore
                                T objectValue, T backgroundValue, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                const IFilter::MessageHandler& messageHandler)
 {
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
+  {
+    return layout;
+  }
+
   const bool usesOutOfCoreStore = in.getStoreType() == IDataStore::StoreType::OutOfCore || out.getStoreType() == IDataStore::StoreType::OutOfCore;
   if(usesOutOfCoreStore && !ForceInCoreAlgorithm() && detail::ShouldUseObjectMorphologyResidentState(dims))
   {
