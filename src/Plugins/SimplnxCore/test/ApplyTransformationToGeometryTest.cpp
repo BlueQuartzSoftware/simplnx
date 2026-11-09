@@ -12,7 +12,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -49,35 +48,14 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-template <typename T>
-const T& getRequiredC05TransformData(const DataStructure& dataStructure, const DataPath& path)
-{
-  const T* valuePtr = nullptr;
-  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
-  REQUIRE((valuePtr != nullptr));
-  return *valuePtr;
-}
-
-void requireC05TransformDiskStore(const IDataArray& array)
-{
-  const auto& store = array.getIDataStoreRef();
-  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
-  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
-  const auto metadata = store.getRecoveryMetadata();
-  const auto backingPath = metadata.find("OocBackingFilePath");
-  REQUIRE((backingPath != metadata.cend()));
-  REQUIRE_FALSE(backingPath->second.empty());
-  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
-}
-
-void executeC05Transform(const ApplyTransformationToGeometryFilter& filter, DataStructure& dataStructure, const Arguments& args)
+void executeIdentityTransform(const ApplyTransformationToGeometryFilter& filter, DataStructure& dataStructure, const Arguments& args)
 {
   auto result = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
+void checkTransformDescendantPaths(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
 {
   DataStructure dataStructure;
   REQUIRE((DataGroup::Create(dataStructure, "Grain Group") != nullptr));
@@ -94,8 +72,8 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
   const auto createGeometryResult = CreateImageGeometryAction(geometryPath, {2, 2, 2}, {0, 0, 0}, {1, 1, 1}, "Grain Cells").apply(dataStructure, IDataAction::Mode::Execute);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(createGeometryResult);
-  const auto& geometry = getRequiredC05TransformData<ImageGeom>(dataStructure, geometryPath);
-  const auto& cells = getRequiredC05TransformData<AttributeMatrix>(dataStructure, DataPath({"Grain Group", "Grain", "Grain Cells"}));
+  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  const auto& cells = UnitTest::GetRequiredData<AttributeMatrix>(dataStructure, DataPath({"Grain Group", "Grain", "Grain Cells"}));
   auto pixelStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath, {2, 2, 2}, {1});
   REQUIRE((pixelStore != nullptr));
   auto* pixelsPtr = Int32Array::Create(dataStructure, "Grain Pixels", pixelStore, cells.getId());
@@ -125,9 +103,9 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
   (*directPtr)[1] = -29.0F;
   if(algorithmTestScopePtr == nullptr)
   {
-    requireC05TransformDiskStore(*pixelsPtr);
-    requireC05TransformDiskStore(*valuesPtr);
-    requireC05TransformDiskStore(*directPtr);
+    UnitTest::RequireDiskBackedStore(*pixelsPtr);
+    UnitTest::RequireDiskBackedStore(*valuesPtr);
+    UnitTest::RequireDiskBackedStore(*directPtr);
   }
 
   const ApplyTransformationToGeometryFilter filter;
@@ -173,11 +151,11 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
   const auto before = GetAlgorithmPathExecutionCounts();
   if(algorithmTestScopePtr != nullptr)
   {
-    algorithmTestScopePtr->execute([&] { executeC05Transform(filter, dataStructure, args); });
+    algorithmTestScopePtr->execute([&] { executeIdentityTransform(filter, dataStructure, args); });
   }
   else
   {
-    executeC05Transform(filter, dataStructure, args);
+    executeIdentityTransform(filter, dataStructure, args);
   }
   if(algorithmTestScopePtr == nullptr)
   {
@@ -186,13 +164,13 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
     CHECK((after.InCore == before.InCore));
     CHECK((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
   }
-  const auto& outputGeometry = getRequiredC05TransformData<ImageGeom>(dataStructure, geometryPath);
+  const auto& outputGeometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
   CHECK((outputGeometry.getDimensions() == SizeVec3{2, 2, 2}));
   CHECK((outputGeometry.getOrigin() == FloatVec3{0, 0, 0}));
   CHECK((outputGeometry.getSpacing() == FloatVec3{1, 1, 1}));
-  const auto& outputPixels = getRequiredC05TransformData<Int32Array>(dataStructure, cellPath);
-  const auto& outputValues = getRequiredC05TransformData<Float32Array>(dataStructure, valuesPath);
-  const auto& outputDirect = getRequiredC05TransformData<Float32Array>(dataStructure, directPath);
+  const auto& outputPixels = UnitTest::GetRequiredData<Int32Array>(dataStructure, cellPath);
+  const auto& outputValues = UnitTest::GetRequiredData<Float32Array>(dataStructure, valuesPath);
+  const auto& outputDirect = UnitTest::GetRequiredData<Float32Array>(dataStructure, directPath);
   REQUIRE((outputPixels.getTupleShape() == ShapeType{2, 2, 2}));
   REQUIRE((outputPixels.getNumberOfComponents() == 1));
   REQUIRE((outputValues.getNumberOfTuples() == 2));
@@ -209,13 +187,13 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
   CHECK((outputDirect[1] == -29.0F));
   if(algorithmTestScopePtr == nullptr)
   {
-    requireC05TransformDiskStore(outputPixels);
-    requireC05TransformDiskStore(outputValues);
-    requireC05TransformDiskStore(outputDirect);
+    UnitTest::RequireDiskBackedStore(outputPixels);
+    UnitTest::RequireDiskBackedStore(outputValues);
+    UnitTest::RequireDiskBackedStore(outputDirect);
   }
   CHECK((dataStructure.getTopLevelData().size() == 2));
-  CHECK((getRequiredC05TransformData<DataGroup>(dataStructure, DataPath({"Grain"})).getId() == decoyId));
-  CHECK((getRequiredC05TransformData<DataGroup>(dataStructure, DataPath({"Grain", "Keep Me"})).getId() == decoyChildId));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Grain"})).getId() == decoyId));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Grain", "Keep Me"})).getId() == decoyChildId));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Grain Group", ".Grain"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Grain Group"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Grain"})));
@@ -225,21 +203,22 @@ void checkC05TransformDescendants(UnitTest::AlgorithmTestScope* algorithmTestSco
 
 } // namespace
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: C05 preserve descendant names", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: nested geometry preserves descendant names", "[SimplnxCore][ApplyTransformationToGeometryFilter][NestedPaths]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  checkC05TransformDescendants(&algorithmTestScope);
+  checkTransformDescendantPaths(&algorithmTestScope);
 }
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: C05 preserve descendant names with real OOC stores", "[SimplnxCore][ApplyTransformationToGeometryFilter][C05][.OocStoreContract]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: nested geometry preserves descendant names with real OOC stores",
+          "[SimplnxCore][ApplyTransformationToGeometryFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   REQUIRE_FALSE(ForceOocAlgorithm());
-  checkC05TransformDescendants(nullptr);
+  checkTransformDescendantPaths(nullptr);
 }
 
 namespace apply_transformation_to_geometry

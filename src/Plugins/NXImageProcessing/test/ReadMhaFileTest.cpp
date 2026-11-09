@@ -18,7 +18,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
@@ -121,37 +120,16 @@ void RequireMhaArrayEquals(const DataStructure& ds, const DataPath& arrPath, con
 
 namespace
 {
-template <typename T>
-const T& getRequiredC05MhaData(const DataStructure& dataStructure, const DataPath& path)
-{
-  const T* valuePtr = nullptr;
-  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
-  REQUIRE((valuePtr != nullptr));
-  return *valuePtr;
-}
-
-void requireC05MhaDiskStore(const IDataArray& array)
-{
-  const auto& store = array.getIDataStoreRef();
-  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
-  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
-  const auto metadata = store.getRecoveryMetadata();
-  const auto backingPath = metadata.find("OocBackingFilePath");
-  REQUIRE((backingPath != metadata.cend()));
-  REQUIRE_FALSE(backingPath->second.empty());
-  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
-}
-
-void executeC05Mha(const ReadMhaFileFilter& filter, DataStructure& dataStructure, const Arguments& args)
+void executeMhaWithSavedTransform(const ReadMhaFileFilter& filter, DataStructure& dataStructure, const Arguments& args)
 {
   auto result = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
+void checkMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
 {
-  const fs::path inputPath = MhaOutputDir() / ("C05-saved-transform-" + Uuid::GenerateV4().str() + ".mha");
+  const fs::path inputPath = MhaOutputDir() / ("nested-saved-transform-" + Uuid::GenerateV4().str() + ".mha");
   const auto removeInput = MakeScopeGuard([&inputPath]() noexcept {
     std::error_code error;
     fs::remove(inputPath, error);
@@ -194,11 +172,11 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
   const auto before = GetAlgorithmPathExecutionCounts();
   if(algorithmTestScopePtr != nullptr)
   {
-    algorithmTestScopePtr->execute([&] { executeC05Mha(filter, dataStructure, args); });
+    algorithmTestScopePtr->execute([&] { executeMhaWithSavedTransform(filter, dataStructure, args); });
   }
   else
   {
-    executeC05Mha(filter, dataStructure, args);
+    executeMhaWithSavedTransform(filter, dataStructure, args);
   }
   if(algorithmTestScopePtr == nullptr)
   {
@@ -208,11 +186,11 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
     CHECK((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
   }
 
-  const auto& geometry = getRequiredC05MhaData<ImageGeom>(dataStructure, geometryPath);
+  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
   CHECK((geometry.getDimensions() == SizeVec3{2, 2, 2}));
   CHECK((geometry.getOrigin() == FloatVec3{0, 0, 0}));
   CHECK((geometry.getSpacing() == FloatVec3{1, 1, 1}));
-  const auto& matrix = getRequiredC05MhaData<Float32Array>(dataStructure, matrixPath);
+  const auto& matrix = UnitTest::GetRequiredData<Float32Array>(dataStructure, matrixPath);
   REQUIRE((matrix.getNumberOfTuples() == 1));
   REQUIRE((matrix.getNumberOfComponents() == 16));
   constexpr std::array<float32, 16> expectedMatrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
@@ -220,7 +198,7 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
   {
     CHECK((matrix[index] == expectedMatrix.at(index)));
   }
-  const auto& pixels = getRequiredC05MhaData<UInt8Array>(dataStructure, pixelsPath);
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, pixelsPath);
   REQUIRE((pixels.getTupleShape() == ShapeType{2, 2, 2}));
   REQUIRE((pixels.getNumberOfComponents() == 1));
   for(usize index = 0; index < expectedPixels.size(); ++index)
@@ -229,12 +207,12 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
   }
   if(algorithmTestScopePtr == nullptr)
   {
-    requireC05MhaDiskStore(pixels);
-    requireC05MhaDiskStore(matrix);
+    UnitTest::RequireDiskBackedStore(pixels);
+    UnitTest::RequireDiskBackedStore(matrix);
   }
   CHECK((dataStructure.getTopLevelData().size() == 2));
-  CHECK((getRequiredC05MhaData<DataGroup>(dataStructure, DataPath({"Image"})).getId() == decoyId));
-  CHECK((getRequiredC05MhaData<DataGroup>(dataStructure, DataPath({"Image", "Keep Me"})).getId() == decoyChildId));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image"})).getId() == decoyId));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image", "Keep Me"})).getId() == decoyChildId));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Image Group", ".Image"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Image Group"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Image"})));
@@ -243,21 +221,21 @@ void checkC05MhaSavedTransform(UnitTest::AlgorithmTestScope* algorithmTestScopeP
 }
 } // namespace
 
-TEST_CASE("NXImageProcessing::ReadMhaFileFilter: C05 preserve saved transform child path", "[NXImageProcessing][ReadMhaFileFilter][C05]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved transform child path", "[NXImageProcessing][ReadMhaFileFilter][NestedPaths]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  checkC05MhaSavedTransform(&algorithmTestScope);
+  checkMhaSavedTransformPath(&algorithmTestScope);
 }
 
-TEST_CASE("NXImageProcessing::ReadMhaFileFilter: C05 preserve saved transform child path with real OOC stores", "[NXImageProcessing][ReadMhaFileFilter][C05][.OocStoreContract]")
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved transform child path with real OOC stores", "[NXImageProcessing][ReadMhaFileFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   REQUIRE_FALSE(ForceOocAlgorithm());
-  checkC05MhaSavedTransform(nullptr);
+  checkMhaSavedTransformPath(nullptr);
 }
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: ElementType string -> DataType map", "[NXImageProcessing][ReadMhaFileFilter]")

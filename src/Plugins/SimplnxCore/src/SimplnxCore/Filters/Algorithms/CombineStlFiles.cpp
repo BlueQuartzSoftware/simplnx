@@ -184,6 +184,8 @@ Result<> CombineStlFiles::operator()()
   INodeGeometry2D::SharedFaceList& triangles = combinedGeom.getFacesRef();
   INodeGeometry0D::SharedVertexList& vertices = combinedGeom.getVerticesRef();
   ParallelTaskAlgorithm taskRunner;
+  // Concurrent writes to one out-of-core store are not safe.
+  taskRunner.requireArraysInMemory({&triangles, &vertices, &combinedFaceNormals});
   int32 fileIndex = 1;
   usize faceLabelOffset = 0;
   usize vertexLabelOffset = 0;

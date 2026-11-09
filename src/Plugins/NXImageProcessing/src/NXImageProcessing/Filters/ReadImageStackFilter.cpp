@@ -294,7 +294,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     ResampleImageGeomInputValues resampleInputValues{};
     resampleInputValues.SelectedImageGeometryPath = currentImageGeomPath;
     resampleInputValues.RemoveOriginalImageGeom = false;
-    resampleInputValues.CreatedImageGeometryPath = imageGeomPath.replaceName(imageGeomPath.getTargetName() + "_resampled");
+    resampleInputValues.CreatedImageGeometryPath = ResampledTemporaryGeometryPath(imageGeomPath);
     resampleInputValues.ResamplingMode = resampleImagesChoice;
     resampleInputValues.Spacing = {1.0F, 1.0F, 1.0F};
     resampleInputValues.Scaling = {scalingValue, scalingValue, 100.0F};
@@ -340,7 +340,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     }
 
     pathsToDelete.push_back(currentImageGeomPath);
-    currentImageGeomPath = imageGeomPath.replaceName(imageGeomPath.getTargetName() + "_resampled");
+    currentImageGeomPath = resampleInputValues.CreatedImageGeometryPath;
   }
 
   const DataPath imageDataPath = currentImageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);

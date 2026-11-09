@@ -10,8 +10,6 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -28,7 +26,6 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
-#include <map>
 #include <string>
 #include <system_error>
 namespace fs = std::filesystem;
@@ -41,16 +38,7 @@ namespace
 const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContainer"});
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 
-template <typename T>
-const T& getRequiredCombineStlData(const DataStructure& dataStructure, const DataPath& path)
-{
-  const T* valuePtr = nullptr;
-  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
-  REQUIRE((valuePtr != nullptr));
-  return *valuePtr;
-}
-
-void writeC05StlTriangle(const fs::path& path, float32 base)
+void writeStlTriangle(const fs::path& path, float32 base)
 {
   std::ofstream output(path, std::ios::binary | std::ios::trunc);
   REQUIRE(output.is_open());
@@ -69,21 +57,9 @@ void writeC05StlTriangle(const fs::path& path, float32 base)
   REQUIRE(output.good());
 }
 
-void requireC05DiskStore(const IDataArray& array)
+void checkNestedVertexLabels(bool requireDiskStores)
 {
-  const auto& store = array.getIDataStoreRef();
-  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
-  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
-  const auto metadata = store.getRecoveryMetadata();
-  const auto backingPath = metadata.find("OocBackingFilePath");
-  REQUIRE((backingPath != metadata.cend()));
-  REQUIRE_FALSE(backingPath->second.empty());
-  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
-}
-
-void checkC05NestedVertexLabels(bool requireDiskStores)
-{
-  const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("C05CombineStlFiles-" + Uuid::GenerateV4().str());
+  const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedCombineStlFiles-" + Uuid::GenerateV4().str());
   const fs::path firstFile = inputDir / "A.stl";
   const fs::path secondFile = inputDir / "B.stl";
   REQUIRE(fs::create_directories(inputDir));
@@ -93,8 +69,8 @@ void checkC05NestedVertexLabels(bool requireDiskStores)
     fs::remove(secondFile, error);
     fs::remove(inputDir, error);
   });
-  writeC05StlTriangle(firstFile, 0.0F);
-  writeC05StlTriangle(secondFile, 10.0F);
+  writeStlTriangle(firstFile, 0.0F);
+  writeStlTriangle(secondFile, 10.0F);
 
   const DataPath geometryPath({"Group", "TriGeom"});
   const std::string vertexDataName = "TriGeom Vertex Data";
@@ -127,8 +103,8 @@ void checkC05NestedVertexLabels(bool requireDiskStores)
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geometry = getRequiredCombineStlData<TriangleGeom>(dataStructure, geometryPath);
-  const auto& labels = getRequiredCombineStlData<Int32Array>(dataStructure, labelsPath);
+  const auto& geometry = UnitTest::GetRequiredData<TriangleGeom>(dataStructure, geometryPath);
+  const auto& labels = UnitTest::GetRequiredData<Int32Array>(dataStructure, labelsPath);
   REQUIRE((geometry.getNumberOfFaces() == 2));
   REQUIRE((geometry.getNumberOfVertices() == 6));
   REQUIRE((labels.getNumberOfTuples() == 6));
@@ -138,10 +114,10 @@ void checkC05NestedVertexLabels(bool requireDiskStores)
   const auto& faces = *geometry.getFaces();
   if(requireDiskStores)
   {
-    requireC05DiskStore(labels);
-    requireC05DiskStore(vertices);
-    requireC05DiskStore(faces);
-    requireC05DiskStore(*decoyLabelsPtr);
+    UnitTest::RequireDiskBackedStore(labels);
+    UnitTest::RequireDiskBackedStore(vertices);
+    UnitTest::RequireDiskBackedStore(faces);
+    UnitTest::RequireDiskBackedStore(*decoyLabelsPtr);
   }
 
   // The root object is an intentional decoy group; no root triangle geometry is created.
@@ -174,18 +150,18 @@ void checkC05NestedVertexLabels(bool requireDiskStores)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::CombineStlFilesFilter: C05 nested vertex label path", "[SimplnxCore][CombineStlFilesFilter][C05]")
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex label path", "[SimplnxCore][CombineStlFilesFilter][NestedPaths]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
-  checkC05NestedVertexLabels(false);
+  checkNestedVertexLabels(false);
 }
 
-TEST_CASE("SimplnxCore::CombineStlFilesFilter: C05 nested vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][C05][.OocStoreContract]")
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  checkC05NestedVertexLabels(true);
+  checkNestedVertexLabels(true);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[SimplnxCore][CombineStlFilesFilter]")

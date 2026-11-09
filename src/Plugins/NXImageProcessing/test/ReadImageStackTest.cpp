@@ -1270,41 +1270,20 @@ void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, c
   TIFFClose(tif);
 }
 
-template <typename T>
-const T& getRequiredC05ImageStackData(const DataStructure& dataStructure, const DataPath& path)
-{
-  const T* valuePtr = nullptr;
-  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
-  REQUIRE((valuePtr != nullptr));
-  return *valuePtr;
-}
-
-void requireC05ImageStackDiskStore(const IDataArray& array)
-{
-  const auto& store = array.getIDataStoreRef();
-  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
-  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
-  const auto metadata = store.getRecoveryMetadata();
-  const auto backingPath = metadata.find("OocBackingFilePath");
-  REQUIRE((backingPath != metadata.cend()));
-  REQUIRE_FALSE(backingPath->second.empty());
-  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
-}
-
-enum class C05ImageStackResampling : nx::core::uint8
+enum class NestedImageStackResampling : nx::core::uint8
 {
   Scale50,
   ExactDimensions,
   Scale100
 };
 
-void checkC05NestedImageStack(C05ImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
+void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
 {
   constexpr nx::core::uint32 width = 4;
   constexpr nx::core::uint32 height = 6;
   constexpr usize inputSliceSize = static_cast<usize>(width) * height;
   constexpr std::array<nx::core::uint8, 2> sliceValues = {17, 203};
-  const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("C05ReadImageStack-" + Uuid::GenerateV4().str());
+  const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedReadImageStack-" + Uuid::GenerateV4().str());
   REQUIRE(fs::create_directories(inputDir));
   const std::array<fs::path, 2> inputFiles = {inputDir / "slice_0.tif", inputDir / "slice_1.tif"};
   const auto removeInputs = MakeScopeGuard([&inputDir, &inputFiles]() noexcept {
@@ -1346,8 +1325,8 @@ void checkC05NestedImageStack(C05ImageStackResampling resampling, const SizeVec3
   fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
   const ReadImageStackFilter filter;
-  const ChoicesParameter::ValueType resampleMode = resampling == C05ImageStackResampling::ExactDimensions ? 2 : 1;
-  const float32 scaling = resampling == C05ImageStackResampling::Scale50 ? 50.0F : 100.0F;
+  const ChoicesParameter::ValueType resampleMode = resampling == NestedImageStackResampling::ExactDimensions ? 2 : 1;
+  const float32 scaling = resampling == NestedImageStackResampling::Scale50 ? 50.0F : 100.0F;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
   args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
@@ -1363,14 +1342,14 @@ void checkC05NestedImageStack(C05ImageStackResampling resampling, const SizeVec3
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geometry = getRequiredC05ImageStackData<ImageGeom>(dataStructure, geometryPath);
-  const auto& image = getRequiredC05ImageStackData<UInt8Array>(dataStructure, imagePath);
+  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  const auto& image = UnitTest::GetRequiredData<UInt8Array>(dataStructure, imagePath);
   REQUIRE((geometry.getDimensions() == expectedDimensions));
   REQUIRE((image.getTupleShape() == ShapeType{2, expectedDimensions[1], expectedDimensions[0]}));
   REQUIRE((image.getNumberOfComponents() == 1));
   if(requireDiskStore)
   {
-    requireC05ImageStackDiskStore(image);
+    UnitTest::RequireDiskBackedStore(image);
   }
   else
   {
@@ -1390,47 +1369,47 @@ void checkC05NestedImageStack(C05ImageStackResampling resampling, const SizeVec3
   CHECK((dataStructure.getDataAs<ImageGeom>(rootDecoyPath) == nullptr));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Stack_resampled"})));
   CHECK_FALSE(dataStructure.containsData(geometryPath.replaceName("Stack_resampled")));
-  const auto& decoy = getRequiredC05ImageStackData<DataGroup>(dataStructure, rootDecoyPath);
-  const auto& decoyChild = getRequiredC05ImageStackData<DataGroup>(dataStructure, rootDecoyPath.createChildPath("Keep Me"));
+  const auto& decoy = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath);
+  const auto& decoyChild = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath.createChildPath("Keep Me"));
   CHECK((decoy.getId() == decoyId));
   CHECK((decoyChild.getId() == decoyChildId));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: C05 nested resampled output", "[ImageProcessing][ReadImageStackFilter][C05]")
+TEST_CASE("ImageProcessing::ReadImageStackFilter: nested resampling preserves output path", "[ImageProcessing][ReadImageStackFilter][NestedPaths]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   SECTION("50 percent scaling")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::Scale50, {2, 3, 2}, false);
+    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, false);
   }
   SECTION("Exact dimensions")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::ExactDimensions, {3, 2, 2}, false);
+    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, false);
   }
   SECTION("100 percent scaling")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::Scale100, {4, 6, 2}, false);
+    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, false);
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: C05 nested resampled output with real OOC stores", "[ImageProcessing][ReadImageStackFilter][C05][.OocStoreContract]")
+TEST_CASE("ImageProcessing::ReadImageStackFilter: nested resampling preserves output path with real OOC stores", "[ImageProcessing][ReadImageStackFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   SECTION("50 percent scaling")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::Scale50, {2, 3, 2}, true);
+    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, true);
   }
   SECTION("Exact dimensions")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::ExactDimensions, {3, 2, 2}, true);
+    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, true);
   }
   SECTION("100 percent scaling")
   {
-    checkC05NestedImageStack(C05ImageStackResampling::Scale100, {4, 6, 2}, true);
+    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, true);
   }
 }
 

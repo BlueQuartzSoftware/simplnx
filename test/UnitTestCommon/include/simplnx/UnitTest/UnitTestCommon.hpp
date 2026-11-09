@@ -18,6 +18,7 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/Montage/AbstractMontage.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -278,6 +279,28 @@ const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
  */
 namespace UnitTest
 {
+/**
+ * @brief Gets a required object and reports lookup exceptions as test failures.
+ * @tparam T Specifies the required DataObject type.
+ * @param dataStructure Owns the required object.
+ * @param path Identifies the required object.
+ * @return Reference that remains valid while the object exists in dataStructure.
+ */
+template <typename T>
+const T& GetRequiredData(const DataStructure& dataStructure, const DataPath& path)
+{
+  const T* valuePtr = nullptr;
+  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
+  REQUIRE((valuePtr != nullptr));
+  return *valuePtr;
+}
+
+/**
+ * @brief Requires an HDF5-OOC array with an existing backing file.
+ * @param array Supplies the store and recovery metadata to verify.
+ */
+void RequireDiskBackedStore(const IDataArray& array);
+
 /**
  * @brief Creates a message handler that appends every message to a vector.
  * The handler is not thread-safe. The filter must serialize its messages.

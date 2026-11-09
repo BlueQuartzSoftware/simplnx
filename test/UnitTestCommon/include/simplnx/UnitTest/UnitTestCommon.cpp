@@ -1,14 +1,29 @@
 #include "UnitTestCommon.hpp"
 
+#include "simplnx/DataStructure/IDataStore.hpp"
+
 #include <zlib.h>
 
 #include <array>
 #include <cstring>
 #include <fstream>
+#include <map>
 #include <stdexcept>
 
 namespace nx::core::UnitTest
 {
+void RequireDiskBackedStore(const IDataArray& array)
+{
+  const auto& store = array.getIDataStoreRef();
+  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
+  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
+  const auto metadata = store.getRecoveryMetadata();
+  const auto backingPath = metadata.find("OocBackingFilePath");
+  REQUIRE((backingPath != metadata.cend()));
+  REQUIRE_FALSE(backingPath->second.empty());
+  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
+}
+
 DataStructure LoadDataStructure(const fs::path& filepath)
 {
   LoadPlugins();

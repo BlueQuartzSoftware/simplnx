@@ -17,7 +17,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -40,7 +39,6 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -77,16 +75,7 @@ constexpr usize k_LargeDim = 200;
 constexpr usize k_LargeBlockSize = 25;
 
 template <typename T>
-const T& getRequiredC05EbsdData(const DataStructure& dataStructure, const DataPath& path)
-{
-  const T* valuePtr = nullptr;
-  REQUIRE_NOTHROW(valuePtr = &dataStructure.getDataRefAs<T>(path));
-  REQUIRE((valuePtr != nullptr));
-  return *valuePtr;
-}
-
-template <typename T>
-DataArray<T>& createC05EbsdArray(DataStructure& dataStructure, const DataPath& path, const AttributeMatrix& parent, usize componentCount)
+DataArray<T>& createEbsdInputArray(DataStructure& dataStructure, const DataPath& path, const AttributeMatrix& parent, usize componentCount)
 {
   auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, parent.getShape(), {componentCount});
   REQUIRE((store != nullptr));
@@ -95,19 +84,7 @@ DataArray<T>& createC05EbsdArray(DataStructure& dataStructure, const DataPath& p
   return *arrayPtr;
 }
 
-void requireC05EbsdDiskStore(const IDataArray& array)
-{
-  const auto& store = array.getIDataStoreRef();
-  REQUIRE((store.getStoreType() == IDataStore::StoreType::OutOfCore));
-  REQUIRE((store.getDataFormat() == "HDF5-OOC"));
-  const auto metadata = store.getRecoveryMetadata();
-  const auto backingPath = metadata.find("OocBackingFilePath");
-  REQUIRE((backingPath != metadata.cend()));
-  REQUIRE_FALSE(backingPath->second.empty());
-  REQUIRE(fs::is_regular_file(fs::path(backingPath->second)));
-}
-
-void checkC05ExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
+void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
 {
   const DataPath geometryPath({"Group", "Geometry"});
   const DataPath cellDataPath = geometryPath.createChildPath("Geometry Cell Data");
@@ -140,10 +117,10 @@ void checkC05ExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
   REQUIRE((ensemblesPtr != nullptr));
   geometryPtr->setCellData(*cellsPtr);
 
-  auto& quats = createC05EbsdArray<float32>(dataStructure, quatsPath, *externalPtr, 4);
-  auto& phases = createC05EbsdArray<int32>(dataStructure, phasesPath, *externalPtr, 1);
-  auto& decoy = createC05EbsdArray<int32>(dataStructure, decoyPath, *externalPtr, 1);
-  auto& crystals = createC05EbsdArray<uint32>(dataStructure, crystalsPath, *ensemblesPtr, 1);
+  auto& quats = createEbsdInputArray<float32>(dataStructure, quatsPath, *externalPtr, 4);
+  auto& phases = createEbsdInputArray<int32>(dataStructure, phasesPath, *externalPtr, 1);
+  auto& decoy = createEbsdInputArray<int32>(dataStructure, decoyPath, *externalPtr, 1);
+  auto& crystals = createEbsdInputArray<uint32>(dataStructure, crystalsPath, *ensemblesPtr, 1);
   quats.fill(0.0F);
   for(usize cell = 0; cell < inputPhases.size(); ++cell)
   {
@@ -163,7 +140,7 @@ void checkC05ExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
     }
     else
     {
-      requireC05EbsdDiskStore(*arrayPtr);
+      UnitTest::RequireDiskBackedStore(*arrayPtr);
     }
   }
 
@@ -201,8 +178,8 @@ void checkC05ExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
     REQUIRE((after.InCoreOnOutOfCoreStore == before.InCoreOnOutOfCoreStore));
   }
 
-  const auto& featureIds = getRequiredC05EbsdData<Int32Array>(dataStructure, featureIdsPath);
-  const auto& active = getRequiredC05EbsdData<UInt8Array>(dataStructure, activePath);
+  const auto& featureIds = UnitTest::GetRequiredData<Int32Array>(dataStructure, featureIdsPath);
+  const auto& active = UnitTest::GetRequiredData<UInt8Array>(dataStructure, activePath);
   REQUIRE((geometryPtr->getCellDataPath() == cellDataPath));
   REQUIRE((featureIds.getTupleShape() == ShapeType{1, 1, 5}));
   REQUIRE((featureIds.getNumberOfComponents() == 1));
@@ -215,8 +192,8 @@ void checkC05ExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
   }
   else
   {
-    requireC05EbsdDiskStore(featureIds);
-    requireC05EbsdDiskStore(active);
+    UnitTest::RequireDiskBackedStore(featureIds);
+    UnitTest::RequireDiskBackedStore(active);
   }
 
   // Identity quaternions have zero misorientation. Phase zero separates two
@@ -265,20 +242,21 @@ void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 t
 }
 } // namespace
 
-TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix", "[OrientationAnalysis][EBSDSegmentFeatures][C05]")
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions keep Feature Ids in geometry cell data", "[OrientationAnalysis][EBSDSegmentFeatures][NestedPaths]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  checkC05ExternalQuaternions(&scope);
+  checkExternalQuaternions(&scope);
 }
 
-TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: C05 external quaternion Attribute Matrix with real OOC stores", "[OrientationAnalysis][EBSDSegmentFeatures][C05][.OocStoreContract]")
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions keep Feature Ids in geometry cell data with real OOC stores",
+          "[OrientationAnalysis][EBSDSegmentFeatures][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  checkC05ExternalQuaternions(nullptr);
+  checkExternalQuaternions(nullptr);
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: No Valid Voxels Returns Error", "[OrientationAnalysis][EBSDSegmentFeatures]")
