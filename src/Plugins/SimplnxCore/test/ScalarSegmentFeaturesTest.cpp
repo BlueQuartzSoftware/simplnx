@@ -506,7 +506,6 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Boundary Wrap", "[Simpln
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Cross Slice Diagonals", "[SimplnxCore][ScalarSegmentFeatures]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
@@ -521,6 +520,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Cross Slice Diagonals", 
   // Two Z slices exercise partner reuse; three and four exercise successive buffer swaps.
   // Four Z slices prevent a Z-boundary wrap from hiding the original missing link.
   auto runFilter = [scenario, dimZ, source, target](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
+    CAPTURE(isPeriodic, neighborScheme);
     UnitTest::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
@@ -577,6 +577,16 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Periodic Cross Slice Diagonals", 
     CHECK(featureIds[i] == expected);
   }
   CHECK(*std::max_element(featureIds.begin(), featureIds.end()) == static_cast<int32>(9 * dimZ - 1));
+
+  for(const auto& controlIds : {runFilter(false, 1), runFilter(true, 0)})
+  {
+    REQUIRE(controlIds.size() == 9 * dimZ);
+    for(usize i = 0; i < controlIds.size(); i++)
+    {
+      CHECK(controlIds[i] == static_cast<int32>(i + 1));
+    }
+    CHECK(*std::max_element(controlIds.begin(), controlIds.end()) == static_cast<int32>(9 * dimZ));
+  }
 }
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Execute Error - All Cells Masked (-87000)", "[SimplnxCore][ScalarSegmentFeatures]")

@@ -60,7 +60,7 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode mode) c
 
 IDataAction::UniquePointer UpdateImageGeomAction::clone() const
 {
-  return std::make_unique<UpdateImageGeomAction>(m_Origin, m_Spacing, m_Path);
+  return std::make_unique<UpdateImageGeomAction>(m_Origin, m_Spacing, m_Path, m_CenterOrigin);
 }
 
 bool UpdateImageGeomAction::shouldUpdateOrigin() const

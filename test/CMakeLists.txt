@@ -83,6 +83,7 @@ set(SIMPLNX_TEST_SRCS
   PipelineSaveTest.cpp
   PrebuiltPipelineTest.cpp
   UuidTest.cpp
+  UpdateImageGeomActionTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
   StbImageIOTest.cpp

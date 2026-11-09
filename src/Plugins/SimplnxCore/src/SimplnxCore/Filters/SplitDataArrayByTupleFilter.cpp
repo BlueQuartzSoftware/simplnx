@@ -95,10 +95,6 @@ Result<usize> commonMultiplier(const std::vector<usize>& dividend, const std::ve
   {
     return MakeErrorResult<usize>(-1000, fmt::format("The input array tuple shape ({}) or the selected tuple shape ({}) is empty.", valuesToString(dividend), valuesToString(divisor)));
   }
-  if(divisor.empty())
-  {
-    return MakeErrorResult<usize>(-1001, "Divisor vector is empty.");
-  }
   if(dividend.size() != divisor.size())
   {
     return MakeErrorResult<usize>(-1002, fmt::format("The selected tuple shape and the input array tuple shape must have the same number of dimensions. "
@@ -425,10 +421,12 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
 
   if(pSplitDimension >= inputArray.getTupleShape().size())
   {
-    return {
-        MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
-                                       fmt::format("The chosen split dimension ({}) must be less than the input array's tuple shape rank ({}).", pSplitDimension, inputArray.getTupleShape().size())),
-        preflightUpdatedValues};
+    return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
+                                           fmt::format("The chosen Split Dimension ({}) is not a dimension of the input array '{}', which has tuple shape ({}). {}", pSplitDimension,
+                                                       pInputArrayPath.toString(), valuesToString(inputArray.getTupleShape()),
+                                                       inputArray.getTupleShape().empty() ? "Select an input array with at least one tuple dimension." :
+                                                                                            fmt::format("Enter a Split Dimension from 0 to {}.", inputArray.getTupleShape().size() - 1))),
+            preflightUpdatedValues};
   }
 
   auto splitDimension = static_cast<usize>(pSplitDimension);

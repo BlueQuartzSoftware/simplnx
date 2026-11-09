@@ -200,7 +200,7 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   int16 qformCode{0};                                  ///< NIFTI_XFORM_* code for the qform; 0 = not set.
   int16 sformCode{0};                                  ///< NIFTI_XFORM_* code for the sform; 0 = not set.
   std::array<std::array<float32, 4>, 3> sformMatrix{}; ///< 3x4 affine `[srow_x; srow_y; srow_z]` when sformCode > 0.
-  bool affineHasFlip{false};                           ///< True if a selected axis sign is discarded.
+  bool affineHasFlip{false};                           ///< True when the used sform, qfac or pixdim[1..3] has a negative axis direction that the reader ignores.
   bool affineHasRotation{false};                       ///< True if the selected transform has non-trivial rotation.
   /** @} */
 
@@ -242,6 +242,8 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
  * 6. Records whether the selected affine has a non-trivial rotation
  *    so the caller can warn the user that simplnx's axis-aligned
  *    `ImageGeom` cannot represent it.
+ * 7. Records whether the used sform, qfac or pixdim has a negative axis direction.
+ *    The caller can warn that positive spacing ignores this direction.
  *
  * ### Errors
  * Returned as `Result<NiftiMetadata>` invalid values. Error codes are

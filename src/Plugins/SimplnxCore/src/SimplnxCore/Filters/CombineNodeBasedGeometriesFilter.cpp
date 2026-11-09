@@ -862,9 +862,17 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   if(!missingListName.empty())
   {
+    const auto typeName = GeometryTypeToString(geometryTypeOpt.value());
+    std::vector<std::string> geometryPaths;
+    geometryPaths.reserve(inputGeometryPaths.size());
+    for(const auto& path : inputGeometryPaths)
+    {
+      geometryPaths.push_back(fmt::format("'{}'", path.toString()));
+    }
     return {MakeErrorResult<OutputActions>(
         to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoElements),
-        fmt::format("None of the chosen geometries has the required array '{}'.  Every {} geometry MUST have this array.", missingListName, GeometryTypeToString(geometryTypeOpt.value())))};
+        fmt::format("None of the selected {} geometries ({}) has an element list (the array that defines its elements, usually '{}'). Select {} geometries that have an element list.", typeName,
+                    fmt::join(geometryPaths, ", "), missingListName, typeName))};
   }
 
   // Create the output geometry with all its vertex, edge, face, and polyhedra attribute matrices and arrays

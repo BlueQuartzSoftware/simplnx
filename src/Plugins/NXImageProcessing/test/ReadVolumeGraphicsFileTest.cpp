@@ -128,11 +128,12 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
 
 TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported voxel types", "[ImageProcessing][ReadVolumeGraphicsFileFilter]")
 {
-  const int bits = GENERATE(16, 32);
-  CAPTURE(bits);
+  const int32 bits = GENERATE(16, 32, 64);
+  const std::string datatype = bits == 64 ? "float" : "unsigned integer";
+  CAPTURE(bits, datatype);
   const fs::path outputDir(nx::core::unit_test::k_BinaryTestOutputDir.str());
-  const fs::path volFile = outputDir / ("L61_uint" + std::to_string(bits) + ".vol");
-  const fs::path vgiFile = outputDir / ("L61_uint" + std::to_string(bits) + ".vgi");
+  const fs::path volFile = outputDir / ("unsupported_voxel_" + std::to_string(bits) + ".vol");
+  const fs::path vgiFile = outputDir / ("unsupported_voxel_" + std::to_string(bits) + ".vgi");
   auto cleanup = MakeScopeGuard([&vgiFile, &volFile]() noexcept {
     std::error_code error;
     fs::remove(vgiFile, error);
@@ -148,6 +149,11 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported vox
       const std::array<uint16, 4> values = {0, 1, 32768, 65535};
       vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
     }
+    else if(bits == 64)
+    {
+      const std::array<float64, 4> values = {0.0, -1.5, 2.25, 1024.0};
+      vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    }
     else
     {
       const std::array<uint32, 4> values = {0, 1, 2147483648U, 4294967295U};
@@ -158,7 +164,7 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported vox
   {
     std::ofstream vgi(vgiFile);
     REQUIRE(vgi.is_open());
-    vgi << "[file1]\nSize = 4 1 1\nName = " << volFile.filename().string() << "\nDatatype = unsigned integer\nBitsPerElement = " << bits << "\n[geometry]\nresolution = 1 1 1\n[ end ]\n";
+    vgi << "[file1]\nSize = 4 1 1\nName = " << volFile.filename().string() << "\nDatatype = " << datatype << "\nBitsPerElement = " << bits << "\n[geometry]\nresolution = 1 1 1\n[ end ]\n";
     REQUIRE(vgi.good());
   }
 
@@ -167,10 +173,10 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported vox
   Arguments args;
   args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   CHECK(preflightResult.outputActions.errors()[0].code == -91505);
-  CHECK(preflightResult.outputActions.errors()[0].message.find("unsigned") != std::string::npos);
+  CHECK(preflightResult.outputActions.errors()[0].message.find("Datatype '" + (bits == 64 ? std::string("float") : std::string("unsigned")) + "'") != std::string::npos);
   CHECK(preflightResult.outputActions.errors()[0].message.find("BitsPerElement " + std::to_string(bits)) != std::string::npos);
 }
 
@@ -179,8 +185,8 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defau
   const bool declareType = GENERATE(false, true);
   CAPTURE(declareType);
   const fs::path outputDir(nx::core::unit_test::k_BinaryTestOutputDir.str());
-  const fs::path volFile = outputDir / "L61_float.vol";
-  const fs::path vgiFile = outputDir / "L61_float.vgi";
+  const fs::path volFile = outputDir / "float32_voxel.vol";
+  const fs::path vgiFile = outputDir / "float32_voxel.vgi";
   auto cleanup = MakeScopeGuard([&vgiFile, &volFile]() noexcept {
     std::error_code error;
     fs::remove(vgiFile, error);
@@ -211,6 +217,7 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defau
   args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"})));
   const auto& density = dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"}));
   REQUIRE(density.getSize() == values.size());
   for(usize index = 0; index < values.size(); index++)

@@ -995,7 +995,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Boundary Wra
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice Diagonals", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -1008,7 +1007,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice 
 
   // Only source and target match: 36 cells minus one merge gives 35 Features.
   // Four Z slices prevent a Z-boundary wrap from hiding the missing link.
-  auto runFilter = [&scope, source, target](bool isPeriodic) -> std::vector<int32> {
+  auto runFilter = [&scope, source, target](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
+    CAPTURE(isPeriodic, neighborScheme);
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
     imageGeom->setDimensions({3, 3, 4});
@@ -1040,7 +1040,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice 
     EBSDSegmentFeaturesFilter filter;
     Arguments args;
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(0.1F));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Mask"})));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Geometry"})));
@@ -1069,7 +1069,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice 
     return featureIds;
   };
 
-  const auto featureIds = runFilter(true);
+  const auto featureIds = runFilter(true, 1);
   CHECK(featureIds[source] == featureIds[target]);
   for(usize i = 0; i < featureIds.size(); i++)
   {
@@ -1077,6 +1077,16 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice 
     CHECK(featureIds[i] == expected);
   }
   CHECK(*std::max_element(featureIds.begin(), featureIds.end()) == 35);
+
+  for(const auto& controlIds : {runFilter(false, 1), runFilter(true, 0)})
+  {
+    REQUIRE(controlIds.size() == 36);
+    for(usize i = 0; i < controlIds.size(); i++)
+    {
+      CHECK(controlIds[i] == static_cast<int32>(i + 1));
+    }
+    CHECK(*std::max_element(controlIds.begin(), controlIds.end()) == static_cast<int32>(36));
+  }
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Execute Error - All Cells Masked (-87000)", "[OrientationAnalysis][EBSDSegmentFeatures]")

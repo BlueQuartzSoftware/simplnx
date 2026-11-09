@@ -17,6 +17,8 @@ The filter reads the `.vgi` header to learn the geometry, then reads the raw vox
 
 The filter creates an **Image Geometry** (a regular grid of equally-sized voxels) whose dimensions and spacing come from the `.vgi` header. Under that geometry it creates a **Cell Attribute Matrix** containing a single `float32` density array (one value per voxel), the per-voxel value read from the `.vol` file. The geometry origin is set to (0, 0, 0).
 
+The `.vol` file must hold 32-bit float values. If the `.vgi` header gives a different `Datatype` or `BitsPerElement`, preflight fails with error -91505. A header that does not give a type is read as 32-bit float.
+
 This filter reads the full volume described by the `.vgi` file. It does not currently extract an arbitrary sub-volume, even though the `.vgi` header may describe a region of interest.
 
 ### Dimensions, Spacing, and Units

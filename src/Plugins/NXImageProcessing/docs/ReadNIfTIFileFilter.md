@@ -60,6 +60,8 @@ non-trivial rotation, only the spacing (column magnitudes) and origin are
 extracted and a warning is emitted. The voxel data itself is loaded in its
 native storage order.
 
+simplnx Image Geometries always use positive spacing. If the used sform has a negative diagonal term, or (without an sform) qfac is -1 or a `pixdim[1..3]` value is negative, the filter ignores that direction and gives a warning. The voxels stay in their stored order, so the loaded image can be mirrored or rotated compared with the source orientation.
+
 ### Data scaling
 
 NIfTI can store a linear intensity rescaling defined by two header fields:

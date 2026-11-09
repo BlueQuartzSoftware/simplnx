@@ -734,9 +734,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTuple: Dimension inactive tables and exa
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - L03 tuple rank validation", "[SimplnxCore][SplitDataArrayByTupleFilter][L03]")
+TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - tuple rank validation", "[SimplnxCore][SplitDataArrayByTupleFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto container = GENERATE(SplitDataArrayByTuple::OutputContainer::NewDataGroup, SplitDataArrayByTuple::OutputContainer::ExistingDataGroup,
                                   SplitDataArrayByTuple::OutputContainer::NewAttrMatrix, SplitDataArrayByTuple::OutputContainer::ExistingAttrMatrix);
   CAPTURE(container);
@@ -761,11 +760,28 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - L03 tuple rank validation"
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     CHECK(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange));
+    CHECK(preflight.outputActions.errors()[0].message ==
+          fmt::format("The chosen Split Dimension (1) is not a dimension of the input array '{}', which has tuple shape (1). Enter a Split Dimension from 0 to 0.", k_InputArrayPath.toString()));
     CHECK(std::any_of(preflight.outputValues.cbegin(), preflight.outputValues.cend(), [](const IFilter::PreflightValue& value) { return value.name == "Input Array"; }));
     auto execution = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
     REQUIRE(execution.result.errors().size() == 1);
     CHECK(execution.result.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange));
+  }
+
+  SECTION("Input has no tuple dimensions")
+  {
+    auto ds = createDataStructure<uint8>({}, {1});
+    DataGroup::Create(ds, k_ExistingDGName);
+    AttributeMatrix::Create(ds, k_ExistingAMName, {1});
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimension_Key, std::make_any<NumberParameter<uint64>::ValueType>(0));
+    const auto preflight = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange));
+    CHECK(preflight.outputActions.errors()[0].message ==
+          fmt::format("The chosen Split Dimension (0) is not a dimension of the input array '{}', which has tuple shape (). Select an input array with at least one tuple dimension.",
+                      k_InputArrayPath.toString()));
   }
 
   SECTION("Output rank is smaller than the valid input split dimension")

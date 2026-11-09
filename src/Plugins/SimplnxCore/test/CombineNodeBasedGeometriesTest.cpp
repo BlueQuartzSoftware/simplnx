@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -1013,9 +1014,8 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("Combine Node Geometries: Missing Required Lists", "[SimplnxCore][CombineNodeBasedGeometries][L01]")
+TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  UnitTest::LoadPlugins();
   // Every input has one vertex but none has the element list that defines its geometry type.
   const auto geometryType = GENERATE(IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral);
   CAPTURE(geometryType);
@@ -1054,9 +1054,20 @@ TEST_CASE("Combine Node Geometries: Missing Required Lists", "[SimplnxCore][Comb
   args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_InputGeometries_Key, std::vector<DataPath>{k_InputGeometry1Path, k_InputGeometry2Path});
   args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_OutputGeometryPath_Key, k_OutputGeometryPath1);
   auto preflight = filter.preflight(dataStructure, args);
-  // CHECK (not REQUIRE) so that execute always runs: before the fix, execute dereferenced the missing list.
+  // CHECK (not REQUIRE) so that execute also runs; execute must return the same error and not crash.
   CHECK(preflight.outputActions.invalid());
-  CHECK((preflight.outputActions.errors().size() == 1 && preflight.outputActions.errors()[0].code == expectedCode));
+  if(preflight.outputActions.invalid())
+  {
+    CHECK((preflight.outputActions.errors().size() == 1 && preflight.outputActions.errors()[0].code == expectedCode));
+    if(!preflight.outputActions.errors().empty())
+    {
+      const auto& message = preflight.outputActions.errors()[0].message;
+      CHECK(message.find(k_InputGeometry1Path.toString()) != std::string::npos);
+      CHECK(message.find(k_InputGeometry2Path.toString()) != std::string::npos);
+      CHECK(message.find("has an element list (the array that defines its elements, usually '") != std::string::npos);
+      CHECK(message.find(fmt::format("Select {} geometries that have an element list.", GeometryTypeToString(geometryType))) != std::string::npos);
+    }
+  }
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors()[0].code == expectedCode);

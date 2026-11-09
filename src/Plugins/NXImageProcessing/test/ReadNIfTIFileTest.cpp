@@ -1489,15 +1489,22 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[N
   UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[ImageProcessing][ReadNIfTIFileFilter][L59]")
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[ImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
-
-  // The reader keeps positive spacing, the stored translation, and storage order.
-  // Reflection support is intentionally absent; each discarded sign must warn.
-  // 0: LPS sform (X, Y negative), 1: qfac = -1, 2: negative pixdim Y (qform), 3: positive qform control,
-  // 4: sform Y only, 5: sform Z only, 6: no transform with negative pixdim X, 7: positive sform control.
-  const auto kind = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+  enum class OrientationCase
+  {
+    LpsSform,
+    NegativeQfac,
+    NegativeQformPixdimY,
+    PositiveQform,
+    NegativeSformY,
+    NegativeSformZ,
+    NegativeFallbackPixdimX,
+    PositiveSform,
+    RotatedFlippedSform
+  };
+  const auto kind = GENERATE(OrientationCase::LpsSform, OrientationCase::NegativeQfac, OrientationCase::NegativeQformPixdimY, OrientationCase::PositiveQform, OrientationCase::NegativeSformY,
+                             OrientationCase::NegativeSformZ, OrientationCase::NegativeFallbackPixdimX, OrientationCase::PositiveSform, OrientationCase::RotatedFlippedSform);
   const bool useAffine = GENERATE(true, false);
   CAPTURE(kind, useAffine);
   SyntheticNiftiParams params;
@@ -1505,7 +1512,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[Ima
   params.spacing = {2.0f, 3.0f, 4.0f};
   params.origin = {10.0f, 20.0f, 30.0f};
   auto hdr = MakeHeader(params);
-  if(kind == 0)
+  if(kind == OrientationCase::LpsSform)
   {
     hdr.sform_code = 1;
     hdr.srow_x[0] = -2.0f;
@@ -1515,37 +1522,45 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[Ima
     hdr.srow_y[3] = 20.0f;
     hdr.srow_z[3] = 30.0f;
   }
-  else if(kind == 1)
+  else if(kind == OrientationCase::NegativeQfac)
   {
     hdr.pixdim[0] = -1.0f;
   }
-  else if(kind == 2)
+  else if(kind == OrientationCase::NegativeQformPixdimY)
   {
     hdr.pixdim[2] = -3.0f;
   }
-  else if(kind == 4 || kind == 5 || kind == 7)
+  else if(kind == OrientationCase::NegativeSformY || kind == OrientationCase::NegativeSformZ || kind == OrientationCase::PositiveSform || kind == OrientationCase::RotatedFlippedSform)
   {
-    // Axis-aligned sform with spacing (2, 3, 4) and translation (10, 20, 30).
+    // The sform stores spacing (2, 3, 4) and translation (10, 20, 30).
     hdr.sform_code = 1;
     hdr.srow_x[0] = 2.0f;
-    hdr.srow_y[1] = kind == 4 ? -3.0f : 3.0f;
-    hdr.srow_z[2] = kind == 5 ? -4.0f : 4.0f;
+    hdr.srow_y[1] = kind == OrientationCase::NegativeSformY ? -3.0f : 3.0f;
+    hdr.srow_z[2] = kind == OrientationCase::NegativeSformZ ? -4.0f : 4.0f;
     hdr.srow_x[3] = 10.0f;
     hdr.srow_y[3] = 20.0f;
     hdr.srow_z[3] = 30.0f;
-    if(kind == 7)
+    if(kind == OrientationCase::RotatedFlippedSform)
+    {
+      // A 90-degree Z rotation and a negative Z direction retain column lengths (2, 3, 4).
+      hdr.srow_x[0] = 0.0f;
+      hdr.srow_x[1] = -3.0f;
+      hdr.srow_y[0] = 2.0f;
+      hdr.srow_y[1] = 0.0f;
+      hdr.srow_z[2] = -4.0f;
+    }
+    if(kind == OrientationCase::PositiveSform)
     {
       // The selected sform wins; unused qform and pixdim signs must not warn.
       hdr.pixdim[0] = -1.0f;
       hdr.pixdim[3] = -4.0f;
     }
   }
-  else if(kind == 6)
+  else if(kind == OrientationCase::NegativeFallbackPixdimX)
   {
     hdr.qform_code = 0;
     hdr.pixdim[1] = -2.0f;
   }
-  // kind 3 is the positive qform control.
   const std::vector<uint8> voxels{0, 1, 2, 3, 4, 5, 6, 7};
   const fs::path filePath = OutputDir() / "ignored_axis_flip.nii";
   WriteNiftiFile(filePath, hdr, voxels, false);
@@ -1556,28 +1571,34 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[Ima
   const auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   bool warned = false;
+  bool rotationWarned = false;
   for(const auto& warning : preflight.outputActions.warnings())
   {
-    if(warning.code == -34750)
+    if(warning.code == -34753)
     {
       warned = true;
-      // Kind 0 is a 180-degree Z rotation, not a single-axis reflection.
-      // Describe the lost directions without promising a particular mirror.
       CHECK(warning.message.find("does not preserve these directions") != std::string::npos);
-      CHECK(warning.message.find("mirrored along that axis") == std::string::npos);
+    }
+    if(warning.code == -34750)
+    {
+      rotationWarned = true;
     }
   }
-  CHECK(warned == (useAffine && kind != 3 && kind != 7));
+  CHECK(rotationWarned == (useAffine && kind == OrientationCase::RotatedFlippedSform));
+  CHECK(preflight.outputActions.warnings().size() == static_cast<usize>(warned) + static_cast<usize>(rotationWarned));
+  CHECK(warned == (useAffine && kind != OrientationCase::PositiveQform && kind != OrientationCase::PositiveSform));
   const auto execute = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
   const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions() == SizeVec3(2, 2, 2));
   REQUIRE(geom.getSpacing() == FloatVec3(2.0f, 3.0f, 4.0f));
-  REQUIRE(geom.getOrigin() == (useAffine && kind != 6 ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
+  REQUIRE(geom.getOrigin() == (useAffine && kind != OrientationCase::NegativeFallbackPixdimX ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
   RequireArrayEquals<uint8>(ds, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[ImageProcessing][ReadNIfTIFileFilter][L60]")
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[ImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1666,7 +1687,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite c
   UnitTest::CheckArraysInheritTupleDims(executeData);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[ImageProcessing][ReadNIfTIFileFilter][L60]")
+TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[ImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 

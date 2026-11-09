@@ -28,6 +28,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_IgnoredAxisDirectionWarning = -34753;
+
 ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, const DataPath& outputGeometryPath, const CropGeometryParameter::ValueType& croppingOptions)
 {
   ImageGeometryCropOptions options;
@@ -279,8 +281,9 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   if(md.affineHasFlip)
   {
-    resultOutputActions.warnings().push_back(Warning{
-        -34750, fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
+    resultOutputActions.warnings().push_back(
+        Warning{k_IgnoredAxisDirectionWarning,
+                fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
                             "orientation. Voxels are loaded in their stored order.",
                             md.filePath)});
   }
