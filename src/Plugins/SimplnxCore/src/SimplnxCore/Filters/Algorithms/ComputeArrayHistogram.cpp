@@ -9,9 +9,9 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
-#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <cmath>
@@ -27,8 +27,10 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidMaskArrayError = -57222;
+constexpr int32 k_InvalidInputArrayError = -57223;
 constexpr int32 k_MaskComponentShapeError = -57220;
-constexpr int32 k_MaskTupleCountError = -57221;
+constexpr int32 k_MaskTupleCountError = -57207;
 constexpr usize k_ChunkSize = 65536;
 
 /**
@@ -762,23 +764,32 @@ ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 
 Result<> ComputeArrayHistogram::ValidateInputs(const DataStructure& dataStructure, const ComputeArrayHistogramInputValues& inputValues)
 {
-  if(!inputValues.MaskPath.has_value())
+  const IDataArray* mask = nullptr;
+  if(inputValues.MaskPath.has_value())
   {
-    return {};
-  }
-  const auto& mask = dataStructure.getDataRefAs<IDataArray>(*inputValues.MaskPath);
-  if(mask.getComponentShape() != ShapeType{1})
-  {
-    return MakeErrorResult(k_MaskComponentShapeError, fmt::format("Mask array '{}' has component shape {{{}}}, but requires {{1}}. Select a mask with exactly one component dimension of size 1.",
-                                                                  inputValues.MaskPath->toString(), fmt::join(mask.getComponentShape(), ", ")));
+    mask = dataStructure.getDataAs<IDataArray>(*inputValues.MaskPath);
+    if(mask == nullptr)
+    {
+      return MakeErrorResult(k_InvalidMaskArrayError,
+                             fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", inputValues.MaskPath->toString()));
+    }
+    if(mask->getComponentShape() != ShapeType{1})
+    {
+      return MakeErrorResult(k_MaskComponentShapeError, fmt::format("Mask array '{}' has component shape ({}), but requires {{1}}. Select a mask with exactly one component dimension of size 1.",
+                                                                    inputValues.MaskPath->toString(), StringUtilities::formatDimensions(mask->getComponentShape())));
+    }
   }
   for(const auto& path : inputValues.SelectedArrayPaths)
   {
-    const auto& input = dataStructure.getDataRefAs<IDataArray>(path);
-    if(mask.getNumberOfTuples() != input.getNumberOfTuples())
+    const auto* input = dataStructure.getDataAs<IDataArray>(path);
+    if(input == nullptr)
+    {
+      return MakeErrorResult(k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", path.toString()));
+    }
+    if(mask != nullptr && mask->getNumberOfTuples() != input->getNumberOfTuples())
     {
       return MakeErrorResult(k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
-                                                                inputValues.MaskPath->toString(), mask.getNumberOfTuples(), path.toString(), input.getNumberOfTuples()));
+                                                                inputValues.MaskPath->toString(), mask->getNumberOfTuples(), path.toString(), input->getNumberOfTuples()));
     }
   }
   return {};

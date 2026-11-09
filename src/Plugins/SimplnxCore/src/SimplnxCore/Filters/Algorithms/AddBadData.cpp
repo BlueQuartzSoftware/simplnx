@@ -7,9 +7,10 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
-#include <fmt/ranges.h>
+
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -22,6 +23,7 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidInputArrayError = -76240;
 constexpr int32 k_ComponentShapeError = -76239;
 constexpr int32 k_CellTupleCountError = -76238;
 constexpr usize k_ChunkTuples = 65536;
@@ -297,11 +299,16 @@ const std::atomic_bool& AddBadData::getCancel()
 
 Result<> AddBadData::ValidateInputs(const DataStructure& dataStructure, const AddBadDataInputValues& inputValues)
 {
-  const auto& array = dataStructure.getDataRefAs<IDataArray>(inputValues.GBEuclideanDistancesArrayPath);
-  if(array.getComponentShape() != ShapeType{1})
+  const auto* array = dataStructure.getDataAs<IDataArray>(inputValues.GBEuclideanDistancesArrayPath);
+  if(array == nullptr)
   {
-    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape {{{}}}, but requires {{1}}. Select an array with exactly one component dimension of size 1.",
-                                                              inputValues.GBEuclideanDistancesArrayPath.toString(), fmt::join(array.getComponentShape(), ", ")));
+    return MakeErrorResult(k_InvalidInputArrayError,
+                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.GBEuclideanDistancesArrayPath.toString()));
+  }
+  if(array->getComponentShape() != ShapeType{1})
+  {
+    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape ({}), but requires {{1}}. Select an array with exactly one component dimension of size 1.",
+                                                              inputValues.GBEuclideanDistancesArrayPath.toString(), StringUtilities::formatDimensions(array->getComponentShape())));
   }
   return ValidateCellTupleCount(dataStructure, inputValues.ImageGeometryPath, {inputValues.GBEuclideanDistancesArrayPath}, k_CellTupleCountError);
 }

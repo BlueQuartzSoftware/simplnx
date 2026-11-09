@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -220,6 +221,7 @@ TEST_CASE("SimplnxCore::FlyingEdges3D: direct call rejects non-scalar component 
   auto result = FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -10511);
+  REQUIRE(result.errors().front().message.find(shape.size() == 1 ? "X=3" : "Y=1, X=1") != std::string::npos);
   REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
 }
 
@@ -238,4 +240,43 @@ TEST_CASE("SimplnxCore::FlyingEdges3D: direct call rejects tuple counts that dif
   auto result = FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -10510);
+}
+
+TEST_CASE("SimplnxCore::FlyingEdges3D: rejects missing or nonnumeric input arrays", "[SimplnxCore][FlyingEdges3D]")
+{
+  const bool missing = GENERATE(false, true);
+  CAPTURE(missing);
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  if(!missing)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+  }
+  FlyingEdges3DInputValues inputValues{};
+  inputValues.contouringArrayPath = DataPath({"Input"});
+  inputValues.imageGeomPath = DataPath({"Image"});
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  Result<> result;
+  REQUIRE_NOTHROW(result = FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -10512);
+  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
+  if(!missing)
+  {
+    const FlyingEdges3DFilter filter;
+    auto args = filter.getDefaultArguments();
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+    args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+    IFilter::PreflightResult preflight;
+    REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().front().code == -10512);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

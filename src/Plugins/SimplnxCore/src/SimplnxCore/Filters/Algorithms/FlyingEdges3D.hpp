@@ -52,7 +52,7 @@ public:
 
   /**
    * @brief Runs the four Flying Edges passes.
-   * @return A component-shape, tuple-count, or source bulk-read error, or success.
+   * @return An array-kind, component-shape, tuple-count, or source bulk-read error, or success.
    * @pre Image dimensions are nonzero.
    * @pre The contour array is scalar and matches the ImageGeom dimensions.
    *
@@ -66,10 +66,10 @@ public:
   Result<> operator()();
 
   /**
-   * @brief Checks the scalar input shape and image cell count without reading values.
+   * @brief Checks numeric input kind, scalar shape, and image cell count without reading values.
    * @param dataStructure Contains the input array and image geometry.
    * @param inputValues Identifies the input array and geometry.
-   * @return A component-shape or tuple-count error, or success.
+   * @return An array-kind, component-shape, or tuple-count error, or success.
    */
   static Result<> ValidateInputs(const DataStructure& dataStructure, const FlyingEdges3DInputValues& inputValues);
 

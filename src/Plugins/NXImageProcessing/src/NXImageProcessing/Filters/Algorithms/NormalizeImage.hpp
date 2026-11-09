@@ -39,10 +39,10 @@ public:
   NormalizeImage& operator=(NormalizeImage&&) noexcept = delete;
 
   /**
-   * @brief Checks the exact scalar component shape without reading values.
+   * @brief Checks numeric input kind and the exact scalar component shape without reading values.
    * @param dataStructure Contains the input array.
    * @param inputValues Identifies the input array.
-   * @return A component-shape error, or success.
+   * @return An array-kind or component-shape error, or success.
    */
   static Result<> ValidateInputs(const DataStructure& dataStructure, const NormalizeImageInputValues& inputValues);
 

@@ -2,14 +2,15 @@
 
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
-#include <fmt/ranges.h>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidInputArrayError = -94002;
 constexpr int32 k_ComponentShapeError = -94001;
 struct NormalizeOperation
 {
@@ -49,11 +50,16 @@ NormalizeImage::~NormalizeImage() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> NormalizeImage::ValidateInputs(const DataStructure& dataStructure, const NormalizeImageInputValues& inputValues)
 {
-  const auto& input = dataStructure.getDataRefAs<IDataArray>(inputValues.InputArrayPath);
-  if(input.getComponentShape() != ShapeType{1})
+  const auto* input = dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath);
+  if(input == nullptr)
   {
-    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape {{{}}}, but requires {{1}}. Select an array with exactly one component dimension of size 1.",
-                                                              inputValues.InputArrayPath.toString(), fmt::join(input.getComponentShape(), ", ")));
+    return MakeErrorResult(k_InvalidInputArrayError,
+                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()));
+  }
+  if(input->getComponentShape() != ShapeType{1})
+  {
+    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape ({}), but requires {{1}}. Select an array with exactly one component dimension of size 1.",
+                                                              inputValues.InputArrayPath.toString(), StringUtilities::formatDimensions(input->getComponentShape())));
   }
   return {};
 }

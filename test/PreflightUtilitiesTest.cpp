@@ -64,3 +64,21 @@ TEST_CASE("simplnx::PreflightGeometryTransformation: rejects node matrices witho
   REQUIRE(result.outputActions.errors().front().code == -82019);
   REQUIRE(result.outputActions.errors().front().message.find("Matrix") != std::string::npos);
 }
+
+TEST_CASE("simplnx::PreflightColorToGrayScale: rejects arrays with no components", "[simplnx][PreflightColorToGrayScale]")
+{
+  DataStructure dataStructure;
+  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {0}) != nullptr);
+  ConvertColorToGrayScaleInputValues inputValues{};
+  inputValues.ConversionAlgorithm = to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel);
+  inputValues.ColorChannel = 0;
+  inputValues.InputDataArrayPaths = {DataPath({"Input"})};
+  auto result = PreflightColorToGrayScale(dataStructure, inputValues);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().front().code == -10711);
+  const auto& message = result.outputActions.errors().front().message;
+  REQUIRE(message.find("Input") != std::string::npos);
+  REQUIRE(message.find("has no components") != std::string::npos);
+  REQUIRE(message.find("Select an array with at least one component.") != std::string::npos);
+  REQUIRE(message.find("from 0 to") == std::string::npos);
+}

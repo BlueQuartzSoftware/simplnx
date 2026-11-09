@@ -50,6 +50,11 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
     const usize numComponents = inputArray.getNumberOfComponents();
     if(inputValues.ConversionAlgorithm == to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel))
     {
+      if(numComponents == 0)
+      {
+        return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}', which has no components. Select an array with at least one component.",
+                                                                                    inputValues.ColorChannel, inputDataArrayPath.toString()))};
+      }
       if(inputValues.ColorChannel < 0 || std::cmp_greater_equal(inputValues.ColorChannel, numComponents))
       {
         return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel from 0 to {}.",

@@ -7,6 +7,7 @@
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -878,6 +879,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: direct call rejects non-scalar ma
   auto result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -57220);
+  REQUIRE(result.errors().front().message.find(shape.size() == 1 ? "X=2" : "Y=1, X=1") != std::string::npos);
   REQUIRE(result.errors().front().message.find("Mask") != std::string::npos);
 }
 
@@ -894,6 +896,76 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: direct call checks mask tuples ag
   const IFilter::MessageHandler messageHandler;
   auto result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -57221);
+  REQUIRE(result.errors().front().code == -57207);
   REQUIRE(result.errors().front().message.find("Second") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: rejects missing or nonnumeric masks", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const bool missing = GENERATE(false, true);
+  CAPTURE(missing);
+  DataStructure dataStructure;
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {2}, {1}) != nullptr);
+  if(!missing)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", {2}, {"one", "two"}) != nullptr);
+  }
+  ComputeArrayHistogramInputValues inputValues{};
+  inputValues.MaskPath = DataPath({"Mask"});
+  inputValues.SelectedArrayPaths = {DataPath({"Input"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  Result<> result;
+  REQUIRE_NOTHROW(result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -57222);
+  REQUIRE(result.errors().front().message.find("Mask") != std::string::npos);
+  if(!missing)
+  {
+    const ComputeArrayHistogramFilter filter;
+    const auto args = c02HistogramArgs();
+    IFilter::PreflightResult preflight;
+    REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().front().code == -57222);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: rejects missing or nonnumeric histogram inputs", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const bool missing = GENERATE(false, true);
+  const bool useMask = GENERATE(false, true);
+  CAPTURE(missing, useMask);
+  DataStructure dataStructure;
+  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {2}, {1}) != nullptr);
+  if(!missing)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+  }
+  ComputeArrayHistogramInputValues inputValues{};
+  if(useMask)
+  {
+    inputValues.MaskPath = DataPath({"Mask"});
+  }
+  inputValues.SelectedArrayPaths = {DataPath({"Input"})};
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler;
+  Result<> result;
+  REQUIRE_NOTHROW(result = ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -57223);
+  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: preflight preserves mask tuple mismatch error", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  DataStructure dataStructure;
+  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {2}, {1}) != nullptr);
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {3}, {3}) != nullptr);
+  const ComputeArrayHistogramFilter filter;
+  const auto args = c02HistogramArgs();
+  IFilter::PreflightResult result;
+  REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().front().code == -57207);
 }

@@ -71,10 +71,10 @@ public:
   Result<> operator()();
 
   /**
-   * @brief Checks the optional mask shape and its tuple count against every input.
+   * @brief Checks numeric input kinds and the optional mask shape and tuple count.
    * @param dataStructure Contains the input arrays and optional mask.
    * @param inputValues Selects the arrays and mask.
-   * @return A mask-shape or tuple-count error, or success.
+   * @return An array-kind, mask-shape, or tuple-count error, or success.
    */
   static Result<> ValidateInputs(const DataStructure& dataStructure, const ComputeArrayHistogramInputValues& inputValues);
 
