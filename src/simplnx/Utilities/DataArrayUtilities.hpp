@@ -52,6 +52,69 @@ namespace nx::core
 {
 class IGridGeometry;
 
+/** @brief Selects whether an explicit dimension can be zero. */
+enum class ZeroDimensionPolicy : uint8
+{
+  Reject,
+  Allow
+};
+
+/** @brief Preserves the error code of an existing table-value check. */
+enum class LegacyDimensionCheck : uint8
+{
+  None,
+  Zero,
+  PositiveWhole,
+  NonPositive
+};
+
+namespace DimensionConversion
+{
+inline constexpr int32 k_InvalidValue = -79000;
+inline constexpr int32 k_ProductOverflow = -79001;
+inline constexpr int32 k_InvalidToken = -79002;
+inline constexpr int32 k_ZeroComponents = -79003;
+inline constexpr int32 k_ElementCountOverflow = -79004;
+inline constexpr int32 k_SplitSumOverflow = -79005;
+inline constexpr int32 k_ComponentCapacity = -79006;
+inline constexpr int32 k_StringTupleOverflow = -79007;
+inline constexpr int32 k_StringCapacity = -79008;
+inline constexpr int32 k_ZeroDimension = -79009;
+} // namespace DimensionConversion
+
+/**
+ * @brief Checks a shape product before multiplication. A zero factor gives zero in every order.
+ * @param dimensions Validated integer dimensions. An empty shape has product one.
+ * @param name Identifies the shape in diagnostics.
+ * @param errorCode Reports an unrepresentable product.
+ * @return The product, or a contextual error. No element storage is allocated.
+ */
+SIMPLNX_EXPORT Result<usize> ComputeDimensionProduct(nonstd::span<const usize> dimensions, const std::string& name, int32 errorCode = DimensionConversion::k_ProductOverflow);
+
+/**
+ * @brief Converts finite whole table values below 2^usize::digits without truncation.
+ * @param dimensions Table row to convert. Every scalar is checked before the product.
+ * @param name Identifies the dimensions in diagnostics.
+ * @param zeroPolicy Selects the minimum value, zero or one.
+ * @param legacyCheck Selects an existing rejection predicate whose code must be preserved.
+ * @param legacyErrorCode Reports values rejected by legacyCheck.
+ * @return Validated shape with a representable product, or the first scalar or product error.
+ * Invalid input returns an error without a throwing numeric conversion or an element allocation.
+ */
+SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(nonstd::span<const float64> dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy,
+                                                   LegacyDimensionCheck legacyCheck = LegacyDimensionCheck::None, int32 legacyErrorCode = DimensionConversion::k_InvalidValue);
+
+/**
+ * @brief Parses comma-separated unsigned decimal dimensions, with ASCII whitespace around tokens.
+ * @param dimensions Text to parse. Empty tokens, signs and trailing characters are errors.
+ * @param name Identifies the dimensions in diagnostics.
+ * @param zeroPolicy Selects the minimum value, zero or one.
+ * @param parseErrorCode Reports malformed or out-of-range tokens.
+ * @return Validated shape with a representable product, or the first token or product error.
+ * Parsing uses uint64 directly and consumes each complete token without throwing numeric conversions.
+ */
+SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(const std::string& dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy, int32 parseErrorCode = DimensionConversion::k_InvalidToken);
+
 /**
  * @brief Checks that data has one tuple per geometry cell.
  * @param geometry Supplies the cell count.

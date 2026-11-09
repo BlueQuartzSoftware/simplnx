@@ -19,6 +19,9 @@
 #include <memory>
 #include <nonstd/span.hpp>
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace
@@ -639,4 +642,93 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
 
     UnitTest::CheckArraysInheritTupleDims(ds);
   }
+}
+
+TEST_CASE("SimplnxCore::SplitDataArrayByTuple: Dimension RED fractional tables", "[SimplnxCore][SplitDataArrayByTuple][DimensionRed]")
+{
+  const bool matrix = GENERATE(false, true);
+  SplitDataArrayByTupleFilter filter;
+  auto ds = createDataStructure<int32>({matrix ? usize{4} : usize{2}}, {1});
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<uint64>(matrix ? 2 : 0));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({"Split"})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({"Split"})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}, {1.5}}));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2.5}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79000);
+}
+
+TEST_CASE("SimplnxCore::SplitDataArrayByTuple: Dimension fixed-only boundaries and sum overflow", "[SimplnxCore][SplitDataArrayByTuple]")
+{
+  SplitDataArrayByTupleFilter filter;
+  auto ds = createDataStructure<int32>({4}, {1});
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({"Split"})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({"Split"})));
+  SECTION("Scalar validation")
+  {
+    const bool matrix = GENERATE(false, true);
+    const float64 value = GENERATE(-1.0, 0.0, -std::numeric_limits<float64>::infinity(), 1.5, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64));
+    CAPTURE(matrix, value);
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<uint64>(matrix ? 2 : 0));
+    args.insertOrAssign(matrix ? SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key : SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key,
+                        std::make_any<DynamicTableParameter::ValueType>(matrix ? DynamicTableParameter::ValueType{{value}} : DynamicTableParameter::ValueType{{value}, {1}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == (value <= 0 ? (matrix ? -65405 : -65403) : -79000));
+    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
+  }
+  SECTION("Sum, not product, overflows")
+  {
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<uint64>(0));
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key,
+                        std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{std::ldexp(1.0, 63)}, {std::ldexp(1.0, 63)}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == -79005);
+    REQUIRE(result.outputActions.errors()[0].message.find("plus preceding count") != std::string::npos);
+  }
+  SECTION("Attribute matrix product")
+  {
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<uint64>(2));
+    args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == -79001);
+  }
+}
+
+TEST_CASE("SimplnxCore::SplitDataArrayByTuple: Dimension inactive tables and exact output", "[SimplnxCore][SplitDataArrayByTuple]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool matrix = GENERATE(false, true);
+  SplitDataArrayByTupleFilter filter;
+  auto ds = createDataStructure<int32>({4}, {1});
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer, std::make_any<uint64>(matrix ? 2 : 0));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewDataGroupPath, std::make_any<DataPath>(DataPath({"Split"})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_NewAttributeMatrixPath, std::make_any<DataPath>(DataPath({"Split"})));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_SplitDimensionCounts_Key,
+                      std::make_any<DynamicTableParameter::ValueType>(matrix ? DynamicTableParameter::ValueType{{-1}} : DynamicTableParameter::ValueType{{2}, {2}}));
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_AttrMatrixTupleShape_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{matrix ? 2.0 : -1.0}}));
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(usize outputIndex = 0; outputIndex < 2; ++outputIndex)
+  {
+    const DataPath path({"Split", makeArrayName(k_DataArrayName, static_cast<int32>(outputIndex + 1), 2)});
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(path));
+    const auto& array = ds.getDataRefAs<Int32Array>(path);
+    REQUIRE(array.getTupleShape() == ShapeType{2});
+    REQUIRE(array[0] == static_cast<int32>(outputIndex * 2));
+    REQUIRE(array[1] == static_cast<int32>(outputIndex * 2 + 1));
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

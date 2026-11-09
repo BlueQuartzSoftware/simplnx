@@ -30,6 +30,12 @@ For a 3D volume with axes X=3, Y=4, Z=5, the *Tuple Dimensions* are (3, 4, 5). F
 
 - **Parent Data Object Path** -- an existing **DataGroup** or **Geometry** under which the new Attribute Matrix will be created. Typically the output of [Create Image Geometry](CreateImageGeometryFilter.md), [Create Geometry](CreateGeometryFilter.md), or [Create Data Group](CreateDataGroupFilter.md).
 
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Tuple dimensions can be 0. A shape with any zero dimension defines an empty matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

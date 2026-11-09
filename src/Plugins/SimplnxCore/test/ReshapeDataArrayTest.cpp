@@ -7,6 +7,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace
@@ -411,4 +414,46 @@ TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid Tuple Dimensions", "[Si
   REQUIRE(result.result.errors()[0].code == to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReshapeDataArray: Dimension RED fractional", "[SimplnxCore][ReshapeDataArray][DimensionRed]")
+{
+  ReshapeDataArrayFilter filter;
+  DataStructure ds;
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(ds, "Input", ShapeType{2}, ShapeType{1}) != nullptr);
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79000);
+}
+
+TEST_CASE("SimplnxCore::ReshapeDataArray: Dimension fixed-only boundaries", "[SimplnxCore][ReshapeDataArray]")
+{
+  const float64 value = GENERATE(-1.0, 0.0, 1.5, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64));
+  ReshapeDataArrayFilter filter;
+  DataStructure ds;
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(ds, "Input", ShapeType{2}, ShapeType{1}) != nullptr);
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue) : -79000));
+  REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ReshapeDataArray: Dimension product overflow", "[SimplnxCore][ReshapeDataArray]")
+{
+  ReshapeDataArrayFilter filter;
+  DataStructure ds;
+  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(ds, "Input", ShapeType{2}, ShapeType{1}) != nullptr);
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79001);
+  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
 }

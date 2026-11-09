@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <stdexcept>
@@ -116,6 +117,11 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
 
+  if(numComponents == 0)
+  {
+    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+  }
+
   ShapeType compDims = std::vector<usize>{numComponents};
   ShapeType tupleDims = {};
 
@@ -130,16 +136,12 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     }
     else
     {
-      const std::vector<double>& rowData = tableData.at(0);
-      tupleDims.reserve(rowData.size());
-      for(size_t idx = 0; idx < rowData.size(); idx++)
+      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+      if(dimensions.invalid())
       {
-        if(rowData[idx] == 0)
-        {
-          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} cannot be 0", idx));
-        }
-        tupleDims.push_back(static_cast<usize>(rowData[idx]));
+        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
+      tupleDims = std::move(dimensions.value());
     }
   }
   else

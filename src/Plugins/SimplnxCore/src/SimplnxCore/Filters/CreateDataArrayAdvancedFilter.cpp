@@ -16,7 +16,8 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
+#include <algorithm>
+#include <numeric>
 #include <stdexcept>
 
 using namespace nx::core;
@@ -166,24 +167,19 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  for(size_t idx = 0; idx < compDimsData[0].size(); idx++)
+  auto componentDimensions = ConvertDimensions(compDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78605);
+  if(componentDimensions.invalid())
   {
-    const double dim = compDimsData[0][idx];
-    if(!(dim >= 1.0) || std::floor(dim) != dim)
-    {
-      return MakePreflightErrorResult(-78605, fmt::format("Component dimension at index {} must be a positive whole number, but was {}", idx, dim));
-    }
+    return {ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
-
-  ShapeType compDims(compDimsData[0].size());
-  std::transform(compDimsData[0].begin(), compDimsData[0].end(), compDims.begin(), [](double val) { return static_cast<usize>(val); });
-  usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
-  if(numComponents <= 0)
+  ShapeType compDims = std::move(componentDimensions.value());
+  // Conversion has already checked the product.
+  const usize numComponents = std::accumulate(compDims.begin(), compDims.end(), usize{1}, std::multiplies<>());
+  const usize previewCapacity = std::min(std::vector<float64>().max_size(), std::vector<std::string>().max_size());
+  if(numComponents > previewCapacity)
   {
-    std::string compDimsStr = std::accumulate(compDims.begin() + 1ULL, compDims.end(), std::to_string(compDims[0]), [](const std::string& a, usize b) { return a + " x " + std::to_string(b); });
-    return MakePreflightErrorResult(
-        -78601,
-        fmt::format("The chosen component dimensions ({}) results in 0 total components.  Please choose component dimensions that result in a positive number of total components.", compDimsStr));
+    return MakePreflightErrorResult(DimensionConversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.", numComponents,
+                                                                                          dataArrayPath.toString(), previewCapacity));
   }
 
   ShapeType tupleDims = {};
@@ -199,17 +195,12 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     }
     else
     {
-      const std::vector<double>& rowData = tableData.at(0);
-      tupleDims.reserve(rowData.size());
-      for(size_t idx = 0; idx < rowData.size(); idx++)
+      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78603);
+      if(dimensions.invalid())
       {
-        const double dim = rowData[idx];
-        if(!(dim >= 1.0) || std::floor(dim) != dim)
-        {
-          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} must be a positive whole number, but was {}", idx, dim));
-        }
-        tupleDims.push_back(static_cast<usize>(dim));
+        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
+      tupleDims = std::move(dimensions.value());
     }
   }
   else
@@ -223,7 +214,12 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     }
   }
 
-  usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+  auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
+  if(tupleCount.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+  }
+  const usize numTuples = tupleCount.value();
 
   auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 

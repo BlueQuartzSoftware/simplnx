@@ -34,6 +34,12 @@ Neighbor Lists and String Arrays do not support multi-dimensional tuple shapes. 
 
 - **Array to Reshape** -- any **Data Array**, **Neighbor List**, or **String Array** in the Data Structure.
 
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Explicit tuple dimensions must be at least 1.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

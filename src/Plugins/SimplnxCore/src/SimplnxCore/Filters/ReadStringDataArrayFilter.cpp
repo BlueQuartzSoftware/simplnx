@@ -115,16 +115,12 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
     }
     else
     {
-      const std::vector<double>& rowData = tableData.at(0);
-      tupleDims.reserve(rowData.size());
-      for(size_t idx = 0; idx < rowData.size(); idx++)
+      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+      if(dimensions.invalid())
       {
-        if(rowData[idx] == 0)
-        {
-          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} cannot be 0", idx));
-        }
-        tupleDims.push_back(static_cast<usize>(rowData[idx]));
+        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
+      tupleDims = std::move(dimensions.value());
     }
   }
   else

@@ -101,6 +101,11 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
   nx::core::Result<OutputActions> resultOutputActions;
 
+  if(nComp == 0)
+  {
+    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+  }
+
   ShapeType tupleDims = {};
 
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
@@ -114,16 +119,12 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
     }
     else
     {
-      const std::vector<double>& rowData = tableData.at(0);
-      tupleDims.reserve(rowData.size());
-      for(size_t idx = 0; idx < rowData.size(); idx++)
+      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+      if(dimensions.invalid())
       {
-        if(rowData[idx] == 0)
-        {
-          return MakePreflightErrorResult(-78603, fmt::format("Tuple dimension at index {} cannot be 0", idx));
-        }
-        tupleDims.push_back(static_cast<usize>(rowData[idx]));
+        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
       }
+      tupleDims = std::move(dimensions.value());
     }
   }
   else

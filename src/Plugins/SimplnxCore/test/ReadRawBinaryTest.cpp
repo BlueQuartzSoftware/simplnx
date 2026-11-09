@@ -30,6 +30,9 @@
 #include <fstream>
 
 namespace fs = std::filesystem;
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace
@@ -617,5 +620,125 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter: SIMPL Backwards Compatibility", "[S
       CHECK(args.value<uint64>(ReadRawBinaryFilter::k_SkipHeaderBytes_Key) == 5);
       // Successful pipeline loading verifies the DataArrayCreationFilterParameterConverter value.
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadRawBinary: Dimension RED fractional tables", "[SimplnxCore][ReadRawBinary][DimensionRed]")
+{
+  REQUIRE(CreateTestDataFile<int8>({1, 2, 3, 4}));
+  ReadRawBinaryFilter filter;
+  DataStructure ds;
+  auto args = CreateFilterArguments(NumericType::int8, 1, 1, 0);
+  const bool components = GENERATE(true, false);
+  args.insertOrAssign(components ? ReadRawBinaryFilter::k_CompDims_Key : ReadRawBinaryFilter::k_TupleDims_Key,
+                      std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79000);
+}
+
+TEST_CASE("SimplnxCore::ReadRawBinary: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][ReadRawBinary]")
+{
+  ReadRawBinaryFilter filter;
+  SECTION("Consumed explicit dimensions")
+  {
+    const float64 value = GENERATE(-1.0, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64), 0.0, 1.5);
+    CAPTURE(value);
+    DataStructure ds;
+    auto args = filter.getDefaultArguments();
+    const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadRawBinaryDimensionsBoundary.txt";
+    {
+      std::ofstream stream(input, std::ios::binary);
+      stream << "1\n2\n";
+    }
+    args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<fs::path>(input));
+    args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
+    args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78704 : -79000));
+    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+  }
+  SECTION("Invalid ignored table, including an inherited empty matrix")
+  {
+    const usize count = GENERATE(usize{0}, usize{2});
+    const bool useDimensions = GENERATE(false, true);
+    DataStructure ds;
+    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    auto args = filter.getDefaultArguments();
+    const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadRawBinaryDimensionsBoundary.txt";
+    {
+      std::ofstream stream(input, std::ios::binary);
+      stream << "1\n2\n";
+    }
+    args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<fs::path>(input));
+    args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(true));
+    const DataPath path({"Parent", "Dimensions"});
+    args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(useDimensions));
+    args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(path));
+    args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(applied);
+    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
+    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadRawBinary: Dimension tuple product overflow", "[SimplnxCore][ReadRawBinary]")
+{
+  ReadRawBinaryFilter filter;
+  DataStructure ds;
+  auto args = filter.getDefaultArguments();
+  const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadRawBinaryDimensionsBoundary.txt";
+  {
+    std::ofstream stream(input, std::ios::binary);
+    stream << "1\n2\n";
+  }
+  args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<fs::path>(input));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
+  args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79001);
+  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ReadRawBinary: Dimension components and combined overflow", "[SimplnxCore][ReadRawBinary]")
+{
+  REQUIRE(CreateTestDataFile<int8>({1, 2, 3, 4}));
+  ReadRawBinaryFilter filter;
+  DataStructure ds;
+  auto args = CreateFilterArguments(NumericType::int8, 1, 1, 0);
+  SECTION("Component values")
+  {
+    const float64 value = GENERATE(-1.0, 0.0, 1.5, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64));
+    args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78701 : -79000));
+    REQUIRE(result.outputActions.errors()[0].message.find("Component dimension at index 0") != std::string::npos);
+  }
+  SECTION("Component product")
+  {
+    args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == -79001);
+  }
+  SECTION("Combined count")
+  {
+    args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0}}));
+    args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{8589934592.0}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == -79004);
+    REQUIRE(result.outputActions.errors()[0].message.find("8589934592 times component count 4294967296") != std::string::npos);
   }
 }

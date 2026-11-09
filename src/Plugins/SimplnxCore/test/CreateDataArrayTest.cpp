@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
@@ -10,6 +11,9 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+
+#include <cmath>
+#include <limits>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -190,4 +194,89 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter: SIMPL Backwards Compatibility", "
       // Complex type (DataArrayCreationFilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED fractional", "[SimplnxCore][CreateDataArray][DimensionRed]")
+{
+  CreateDataArrayFilter filter;
+  DataStructure ds;
+  auto args = filter.getDefaultArguments();
+
+  args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
+  args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79000);
+}
+
+TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED zero components", "[SimplnxCore][CreateDataArray][DimensionRed]")
+{
+  CreateDataArrayFilter filter;
+  DataStructure ds;
+  auto args = filter.getDefaultArguments();
+
+  args.insertOrAssign(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"ZeroComponents"})));
+  args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79003);
+}
+
+TEST_CASE("SimplnxCore::CreateDataArray: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][CreateDataArray]")
+{
+  CreateDataArrayFilter filter;
+  SECTION("Consumed explicit dimensions")
+  {
+    const float64 value = GENERATE(-1.0, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64), 0.0, 1.5);
+    CAPTURE(value);
+    DataStructure ds;
+    auto args = filter.getDefaultArguments();
+
+    args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+    args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
+    args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
+    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+  }
+  SECTION("Invalid ignored table, including an inherited empty matrix")
+  {
+    const usize count = GENERATE(usize{0}, usize{2});
+    const bool useDimensions = GENERATE(false, true);
+    DataStructure ds;
+    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    auto args = filter.getDefaultArguments();
+
+    const DataPath path({"Parent", "Dimensions"});
+    args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(useDimensions));
+    args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(path));
+    args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(applied);
+    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
+    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateDataArray: Dimension tuple product overflow", "[SimplnxCore][CreateDataArray]")
+{
+  CreateDataArrayFilter filter;
+  DataStructure ds;
+  auto args = filter.getDefaultArguments();
+
+  args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
+  args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == -79001);
+  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
 }

@@ -59,6 +59,15 @@ The component dimensions are entered as a comma-separated list. For example:
 
 None — this filter reads directly from an external `.h5`/`.hdf5` file on disk. The imported array may optionally be placed into an existing **Data Group** or **Attribute Matrix** if one is selected as the parent.
 
+### Dimension values
+
+Tuple and component dimensions are dimensionless counts entered as comma-separated unsigned decimal integers.
+Whitespace around each integer is allowed. Signs, empty entries, fractions, exponents, and trailing characters are not allowed.
+Each integer and each shape product must fit the platform's unsigned size count (up to 18,446,744,073,709,551,615 on 64-bit platforms).
+Component dimensions must be at least 1. Tuple dimensions can be 0 when the dataset has no elements.
+The tuple count multiplied by the component count must also fit that count type and match the dataset element count.
+When the parent is an **Attribute Matrix**, its tuple shape overrides the tuple text. The ignored text is not validated.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -13,7 +13,14 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
+
+#include <algorithm>
+#include <charconv>
+#include <cmath>
+#include <limits>
+#include <string_view>
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -527,3 +534,131 @@ void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeM
 }
 } // namespace TransferGeometryElementData
 } // namespace nx::core
+
+// -----------------------------------------------------------------------------
+Result<usize> nx::core::ComputeDimensionProduct(nonstd::span<const usize> dimensions, const std::string& name, int32 errorCode)
+{
+  if(std::find(dimensions.begin(), dimensions.end(), usize{0}) != dimensions.end())
+  {
+    return {usize{0}};
+  }
+  usize product = 1;
+  for(const usize dimension : dimensions)
+  {
+    if(dimension > std::numeric_limits<usize>::max() / product)
+    {
+      return MakeErrorResult<usize>(errorCode, fmt::format("{} dimensions [{}] have a product that exceeds {}. Use a shape with a representable count.", name,
+                                                           StringUtilities::formatDimensions(dimensions), std::numeric_limits<usize>::max()));
+    }
+    product *= dimension;
+  }
+  return {product};
+}
+
+// -----------------------------------------------------------------------------
+Result<ShapeType> nx::core::ConvertDimensions(nonstd::span<const float64> dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy, LegacyDimensionCheck legacyCheck, int32 legacyErrorCode)
+{
+  const float64 minimum = zeroPolicy == ZeroDimensionPolicy::Allow ? 0.0 : 1.0;
+  const float64 upperExclusive = std::ldexp(1.0, std::numeric_limits<usize>::digits);
+  ShapeType shape;
+  shape.reserve(dimensions.size());
+  for(usize index = 0; index < dimensions.size(); ++index)
+  {
+    const float64 value = dimensions[index];
+    if(!std::isfinite(value) || value < minimum || !(value < upperExclusive) || std::floor(value) != value)
+    {
+      const bool legacyFailure = (legacyCheck == LegacyDimensionCheck::Zero && value == 0.0) ||
+                                 (legacyCheck == LegacyDimensionCheck::PositiveWhole && (!(value >= 1.0) || std::floor(value) != value)) ||
+                                 (legacyCheck == LegacyDimensionCheck::NonPositive && value <= 0.0);
+      std::string reason;
+      if(legacyFailure && legacyCheck == LegacyDimensionCheck::Zero)
+      {
+        reason = "cannot be 0";
+      }
+      else if(legacyFailure && legacyCheck == LegacyDimensionCheck::PositiveWhole)
+      {
+        reason = "must be a positive whole number";
+      }
+      else if(!std::isfinite(value))
+      {
+        reason = "is not finite";
+      }
+      else if(value < minimum)
+      {
+        reason = "is below the minimum";
+      }
+      else if(!(value < upperExclusive))
+      {
+        reason = "is at or above the exclusive upper bound";
+      }
+      else
+      {
+        reason = "is not a whole number";
+      }
+      return MakeErrorResult<ShapeType>(legacyFailure ? legacyErrorCode : DimensionConversion::k_InvalidValue,
+                                        fmt::format("{} dimension at index {} {} (value {}). Use finite whole numbers in [{}, {}).", name, index, reason, value, minimum, upperExclusive));
+    }
+    shape.push_back(static_cast<usize>(value));
+  }
+  auto product = ComputeDimensionProduct(shape, name);
+  if(product.invalid())
+  {
+    return ConvertInvalidResult<ShapeType>(std::move(product));
+  }
+  return {std::move(shape)};
+}
+
+// -----------------------------------------------------------------------------
+Result<ShapeType> nx::core::ConvertDimensions(const std::string& dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy, int32 parseErrorCode)
+{
+  const usize minimum = zeroPolicy == ZeroDimensionPolicy::Allow ? 0 : 1;
+  ShapeType shape;
+  usize start = 0;
+  usize index = 0;
+  while(true)
+  {
+    const usize comma = dimensions.find(',', start);
+    const usize end = comma == std::string::npos ? dimensions.size() : comma;
+    std::string_view token(dimensions.data() + start, end - start);
+    const usize first = token.find_first_not_of(" \t\r\n\f\v");
+    if(first == std::string_view::npos)
+    {
+      token = {};
+    }
+    else
+    {
+      token = token.substr(first, token.find_last_not_of(" \t\r\n\f\v") - first + 1);
+    }
+    uint64 value = 0;
+    bool parsed = false;
+    if(!token.empty() && token.front() >= '0' && token.front() <= '9')
+    {
+      const auto conversion = std::from_chars(token.data(), token.data() + token.size(), value, 10);
+      parsed = conversion.ec == std::errc{} && conversion.ptr == token.data() + token.size() && value <= std::numeric_limits<usize>::max();
+    }
+    if(!parsed)
+    {
+      return MakeErrorResult<ShapeType>(parseErrorCode,
+                                        fmt::format("{} dimension token '{}' at index {} is invalid. Use comma-separated unsigned decimal integers in [{}, {}], without signs or trailing characters.",
+                                                    name, token, index, minimum, std::numeric_limits<usize>::max()));
+    }
+    if(value == 0 && zeroPolicy == ZeroDimensionPolicy::Reject)
+    {
+      return MakeErrorResult<ShapeType>(DimensionConversion::k_ZeroDimension, fmt::format("{} dimension token '{}' at index {} cannot be 0. Use unsigned decimal integers in [1, {}].", name, token,
+                                                                                          index, std::numeric_limits<usize>::max()));
+    }
+    shape.push_back(static_cast<usize>(value));
+    if(comma == std::string::npos)
+    {
+      break;
+    }
+    start = comma + 1;
+    ++index;
+  }
+  auto product = ComputeDimensionProduct(shape, name);
+  if(product.invalid())
+  {
+    return ConvertInvalidResult<ShapeType>(std::move(product));
+  }
+  return {std::move(shape)};
+}

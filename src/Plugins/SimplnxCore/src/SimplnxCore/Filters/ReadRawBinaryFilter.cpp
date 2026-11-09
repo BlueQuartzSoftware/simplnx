@@ -13,10 +13,12 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
+#include <limits>
 #include <numeric>
 
 namespace fs = std::filesystem;
@@ -145,19 +147,13 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
   }
 
-  // ---- Check 7: Component dimensions contain zero ----
-  const std::vector<double>& compDimsRow = pCompDimsData.at(0);
-  ShapeType compDims;
-  compDims.reserve(compDimsRow.size());
-  for(size_t idx = 0; idx < compDimsRow.size(); idx++)
+  auto componentDimensions = ConvertDimensions(pCompDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78701);
+  if(componentDimensions.invalid())
   {
-    if(compDimsRow[idx] == 0)
-    {
-      return {MakeErrorResult<OutputActions>(-78701, fmt::format("Component dimension at index {} cannot be 0", idx))};
-    }
-    compDims.push_back(static_cast<usize>(compDimsRow[idx]));
+    return {ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
-  usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
+  ShapeType compDims = std::move(componentDimensions.value());
+  const usize numComponents = std::accumulate(compDims.begin(), compDims.end(), usize{1}, std::multiplies<>());
 
   // ---- Check 8/9/10: Resolve tuple dimensions (AttributeMatrix-aware) ----
   ShapeType tupleDims;
@@ -183,20 +179,20 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
                                                                  "Check Set Tuple Dimensions to set the dimensions.",
                                                                  pCreatedAttributeArrayPathValue.toString()))};
     }
-    // Check 8: Tuple dimensions contain zero
-    const std::vector<double>& tupleDimsRow = pTupleDimsData.at(0);
-    tupleDims.reserve(tupleDimsRow.size());
-    for(size_t idx = 0; idx < tupleDimsRow.size(); idx++)
+    auto dimensions = ConvertDimensions(pTupleDimsData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78704);
+    if(dimensions.invalid())
     {
-      if(tupleDimsRow[idx] == 0)
-      {
-        return {MakeErrorResult<OutputActions>(-78704, fmt::format("Tuple dimension at index {} cannot be 0", idx))};
-      }
-      tupleDims.push_back(static_cast<usize>(tupleDimsRow[idx]));
+      return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
+    tupleDims = std::move(dimensions.value());
   }
 
-  usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+  auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
+  if(tupleCount.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+  }
+  const usize numTuples = tupleCount.value();
 
   // ---- Check 2: Skip header bytes >= file size ----
   if(pSkipHeaderBytesValue >= inputFileSize)
@@ -209,7 +205,12 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   usize availableBytes = inputFileSize - pSkipHeaderBytesValue;
   usize availableElements = availableBytes / typeSize;
   usize remainderBytes = availableBytes % typeSize;
-  usize requiredElements = numTuples * numComponents;
+  if(numTuples != 0 && numComponents > std::numeric_limits<usize>::max() / numTuples)
+  {
+    return MakePreflightErrorResult(DimensionConversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for array '{}' exceeds {} elements. Use smaller dimensions.",
+                                                                                             numTuples, numComponents, pCreatedAttributeArrayPathValue.toString(), std::numeric_limits<usize>::max()));
+  }
+  const usize requiredElements = numTuples * numComponents;
 
   // Check 11: Remainder bytes warning (available bytes not evenly divisible by type size)
   if(remainderBytes != 0)
@@ -275,15 +276,8 @@ Result<> ReadRawBinaryFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.scalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
-  auto compDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
-  const std::vector<double>& compDimsRow = compDimsData.at(0);
-  ShapeType compDims;
-  compDims.reserve(compDimsRow.size());
-  for(size_t idx = 0; idx < compDimsRow.size(); idx++)
-  {
-    compDims.push_back(static_cast<usize>(compDimsRow[idx]));
-  }
-  inputValues.componentDimsValue = compDims;
+  const auto outputPath = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
+  inputValues.componentDimsValue = dataStructure.getDataRefAs<IDataArray>(outputPath).getComponentShape();
   inputValues.endianValue = filterArgs.value<ChoicesParameter::ValueType>(k_Endian_Key);
   inputValues.skipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   inputValues.createdAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);

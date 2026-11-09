@@ -1,6 +1,7 @@
 #include "SplitDataArrayByTupleFilter.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <optional>
 #include <ranges>
 
@@ -22,6 +23,7 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -165,16 +167,26 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
           fmt::format("Split Array {} contains a multi-dimensional split dimension count ({}).  The split dimension count should be a single dimension.", i, valuesToString(row, "x")));
     }
 
-    const auto& splitDimensionCount = splitDimensionCounts[i][0];
-    if(splitDimensionCount <= 0)
+    auto dimensions = ConvertDimensions(row, fmt::format("Split Array {} tuple", i), ZeroDimensionPolicy::Reject, LegacyDimensionCheck::NonPositive,
+                                        to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero));
+    if(dimensions.invalid())
     {
-      return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero),
-                             fmt::format("Split Array {} contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", i, splitDimensionCount, splitDimension));
+      return ConvertResult(std::move(dimensions));
     }
-    auto splitCount = static_cast<usize>(splitDimensionCount);
+    const usize splitCount = dimensions.value()[0];
     splitArrayTupleShapes[i][splitDimension] = splitCount;
-    splitCountsTotal += splitCount;
     splitDimensionCountsUSize.push_back(splitCount);
+  }
+
+  for(usize index = 0; index < splitDimensionCountsUSize.size(); ++index)
+  {
+    const usize splitCount = splitDimensionCountsUSize[index];
+    if(splitCount > std::numeric_limits<usize>::max() - splitCountsTotal)
+    {
+      return MakeErrorResult(DimensionConversion::k_SplitSumOverflow, fmt::format("Split count {} at row {} plus preceding count {} exceeds {}. Use split counts whose sum equals the input extent {}.",
+                                                                                  splitCount, index, splitCountsTotal, std::numeric_limits<usize>::max(), inputArrayTupleShape[splitDimension]));
+    }
+    splitCountsTotal += splitCount;
   }
 
   if(splitCountsTotal != inputArrayTupleShape[splitDimension])
@@ -221,19 +233,13 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
   ShapeType tupleShape;
   if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
   {
-    for(usize j = 0; j < newAttrMatrixTupleShape.size(); ++j)
+    auto dimensions = ConvertDimensions(newAttrMatrixTupleShape, "Attribute matrix tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::NonPositive,
+                                        to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
+    if(dimensions.invalid())
     {
-      if(newAttrMatrixTupleShape[j] <= 0)
-      {
-        return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative),
-                               fmt::format("Attribute matrix tuple shape contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", newAttrMatrixTupleShape[j], j));
-      }
+      return ConvertResult(std::move(dimensions));
     }
-    tupleShape.resize(newAttrMatrixTupleShape.size());
-    for(size_t i = 0; i < newAttrMatrixTupleShape.size(); i++)
-    {
-      tupleShape[i] = static_cast<usize>(newAttrMatrixTupleShape[i]);
-    }
+    tupleShape = std::move(dimensions.value());
   }
   else
   {

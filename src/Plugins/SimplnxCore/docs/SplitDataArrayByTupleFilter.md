@@ -58,6 +58,14 @@ The per-output *tuple counts* are integers. The sum of all requested output coun
 
 - **Input Data Array** -- the array to split.
 
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Each active split count and each new Attribute Matrix tuple dimension must be at least 1.
+For a Data Group output, the sum of the split counts must fit the size count and equal the selected input extent.
+For a new Attribute Matrix output, its shape product must fit the size count. Inactive tables are not validated.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

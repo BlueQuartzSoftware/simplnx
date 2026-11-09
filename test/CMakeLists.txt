@@ -36,6 +36,7 @@ set(SIMPLNX_TEST_SRCS
   CheckedFlushTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
+  DimensionConversionTest.cpp
   DataArrayTest.cpp
   DataStoreBulkTest.cpp
   DataIOCollectionExternalSortCompileTest.cpp

@@ -5,6 +5,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
@@ -67,13 +68,12 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   auto dataObjectPath = filterArgs.value<DataPath>(k_DataObjectPath);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
-  const auto& rowData = tableData.at(0);
-  ShapeType tupleDims;
-  tupleDims.reserve(rowData.size());
-  for(auto floatValue : rowData)
+  auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Allow);
+  if(dimensions.invalid())
   {
-    tupleDims.push_back(static_cast<usize>(floatValue));
+    return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
+  ShapeType tupleDims = std::move(dimensions.value());
 
   auto action = std::make_unique<CreateAttributeMatrixAction>(dataObjectPath, tupleDims);
 
