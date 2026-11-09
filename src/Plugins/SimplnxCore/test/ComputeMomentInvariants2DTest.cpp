@@ -1,5 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#ifdef SIMPLNX_ENABLE_MULTICORE
 #include <algorithm>
+#endif
 #include <any>
 #include <array>
 #include <atomic>
@@ -316,7 +318,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
 #else
   const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scanlineIter = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  const auto scanlineIter = std::ranges::find(scenarios, UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   if(scanlineIter == scenarios.cend())
   {
     SUCCEED("The Scanline cancellation case requires the Scanline test scenario.");
