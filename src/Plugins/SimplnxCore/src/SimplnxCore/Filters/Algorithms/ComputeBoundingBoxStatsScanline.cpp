@@ -729,7 +729,7 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
       // Average only when the lower middle rank is in an earlier group. One shared value is used as is, so it cannot overflow.
       if(stats.count % 2 == 0 && cumulativeFrequency - frequency >= stats.count / 2)
       {
-        stats.medianValue = (static_cast<float32>(lowerMiddleValue.value()) + static_cast<float32>(value)) / 2.0f;
+        stats.medianValue = static_cast<float32>((static_cast<float64>(lowerMiddleValue.value()) + static_cast<float64>(value)) / 2.0);
       }
       else
       {

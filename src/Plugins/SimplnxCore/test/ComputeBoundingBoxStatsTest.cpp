@@ -1187,9 +1187,8 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
   }
 }
 
-TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median ranks", "[SimplnxCore][ComputeBoundingBoxStatsFilter][L10]")
+TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median ranks", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -1235,20 +1234,24 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median ranks", "[Simp
   ComputeBoundingBoxStatsFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median)));
   const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
   // Independent oracle: middle ranks of the listed inputs; (m + (m+1))/2 for 1..2m.
   CHECK(medians[0] == expected[caseIndex]);
   CHECK(medians[1] == static_cast<float32>(values[0]));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median of one large repeated value", "[SimplnxCore][ComputeBoundingBoxStatsFilter][L10]")
+TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median of large values", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
-  // Both middle ranks hold 2e38. Adding the value to itself in float32 would overflow to infinity.
-  const std::vector<float32> values = {1.0f, 2.0e38f, 2.0e38f, 3.0e38f};
+  const bool distinctMiddleValues = GENERATE(false, true);
+  CAPTURE(distinctMiddleValues);
+  const std::vector<float32> values = distinctMiddleValues ? std::vector<float32>{2.0e38f, 3.0e38f} : std::vector<float32>{1.0f, 2.0e38f, 2.0e38f, 3.0e38f};
+  // The middle pairs are {2e38, 3e38} and {2e38, 2e38}; their medians are 2.5e38 and 2e38.
+  const float32 expectedMedian = distinctMiddleValues ? 2.5e38f : 2.0e38f;
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
   geom->setDimensions({values.size(), 1, 1});
@@ -1263,8 +1266,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median of one large r
   }
   auto* features = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2}, geom->getId());
   auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, features->getId());
-  // Box 0: all four values. Box 1: the two values 2e38 only.
-  const std::array<float32, 12> boxValues = {0, 0, 0, 4, 1, 1, 1, 0, 0, 3, 1, 1};
+  // Box 0 contains all values; box 1 contains the middle pair.
+  const float32 boxEnd = static_cast<float32>(values.size());
+  const std::array<float32, 12> boxValues = {0, 0, 0, boxEnd, 1, 1, distinctMiddleValues ? 0.0f : 1.0f, 0, 0, distinctMiddleValues ? 2.0f : 3.0f, 1, 1};
   for(usize i = 0; i < boxValues.size(); i++)
   {
     (*bounds)[i] = boxValues[i];
@@ -1274,7 +1278,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: L10 median of one large r
   ComputeBoundingBoxStatsFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median)));
   const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
-  CHECK(medians[0] == 2.0e38f);
-  CHECK(medians[1] == 2.0e38f);
+  CHECK(medians[0] == Approx(expectedMedian));
+  CHECK(medians[1] == Approx(expectedMedian));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

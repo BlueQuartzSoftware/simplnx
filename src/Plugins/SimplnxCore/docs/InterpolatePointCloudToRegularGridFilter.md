@@ -44,9 +44,9 @@ For each voxel that received at least one contribution:
 
 Both options transfer data from the **Vertex Geometry** onto the **Image Geometry**, but they differ in how the kernel is applied:
 
-- **Arrays to Interpolate** use the selected kernel (Uniform or Gaussian). The kernel weight multiplies each vertex's value before being accumulated into surrounding voxels. The final output is a kernel-weighted average. Optional statistics (length, min, max, mean, standard deviation, summation) can be computed on the weighted contributions. The output array type is always *float64* because the weighted average produces floating-point values regardless of the input type.
+- **Attribute Arrays to Interpolate** use the selected kernel (Uniform or Gaussian). The kernel weight multiplies each vertex's value before being accumulated into surrounding voxels. The final output is a kernel-weighted average. Optional statistics (length, min, max, mean, standard deviation, summation) can be computed on the weighted contributions. The output array type is always *float64* because the weighted average produces floating-point values regardless of the input type.
 
-- **Arrays to Copy** always use a uniform kernel (weight = 1.0), even when Gaussian interpolation is selected. The final output is a simple arithmetic average of all values that fell within the kernel radius. No statistics are computed for copied arrays. The output array type matches the source array type; integer results are truncated toward zero.
+- **Attribute Arrays to Copy** always use a uniform kernel (weight = 1.0), even when Gaussian interpolation is selected. The final output is a simple arithmetic average of all values that fell within the kernel radius. No statistics are computed for copied arrays. The output array type matches the source array type; integer results are truncated toward zero.
 
 Use *Attribute Arrays to Interpolate* for data values that should be smoothed or blended by the kernel (e.g., measured scalar fields). Use *Attribute Arrays to Copy* when an arithmetic average is appropriate and the output must keep the source array type.
 

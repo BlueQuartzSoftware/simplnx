@@ -63,8 +63,10 @@ Parameters CreatePythonSkeletonFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_PluginInputDirectory_Key, "Existing Plugin Location", "The location of the existing plugin's top level directory on the file system.",
                                                           fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
 
-  params.insert(
-      std::make_unique<StringParameter>(k_PluginFilterNames, "Filter Names (comma-separated)", "The names of filters that will be created, separated by commas (,).", "FirstFilter,SecondFilter"));
+  params.insert(std::make_unique<StringParameter>(k_PluginFilterNames, "Filter Names (comma-separated)",
+                                                  "Comma-separated ASCII Python identifiers. Start with a letter or underscore, followed by letters, digits or underscores. Keywords and __debug__ are "
+                                                  "not allowed. Surrounding white space and one trailing empty entry are ignored. Empty entries elsewhere are rejected.",
+                                                  "FirstFilter,SecondFilter"));
 
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginName_Key, false);
   params.linkParameters(k_UseExistingPlugin_Key, k_PluginHumanName_Key, false);

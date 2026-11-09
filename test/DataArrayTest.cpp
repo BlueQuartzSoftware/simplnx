@@ -2808,7 +2808,7 @@ public:
   BufferedCopyTestStore(const BufferedCopyTestStore&) = default;
   BufferedCopyTestStore(BufferedCopyTestStore&&) = default;
   BufferedCopyTestStore& operator=(const BufferedCopyTestStore&) = delete;
-  BufferedCopyTestStore& operator=(BufferedCopyTestStore&&) = default;
+  BufferedCopyTestStore& operator=(BufferedCopyTestStore&&) = delete;
   ~BufferedCopyTestStore() override = default;
   IDataStore::StoreType getStoreType() const override
   {

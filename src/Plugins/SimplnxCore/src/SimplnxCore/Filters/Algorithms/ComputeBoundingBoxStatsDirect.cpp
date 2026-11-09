@@ -425,7 +425,7 @@ void AccumulateFrequencyBatch(const FixedFrequencyTable<T>& frequencies, Complet
       // Average only when the lower middle rank is in an earlier entry. One shared value is used as is, so it cannot overflow.
       if(stats.count % 2 == 0 && state.cumulativeFrequency - entry.count >= stats.count / 2)
       {
-        stats.medianValue = (static_cast<float32>(state.lowerMiddleValue.value()) + static_cast<float32>(entry.value)) / 2.0f;
+        stats.medianValue = static_cast<float32>((static_cast<float64>(state.lowerMiddleValue.value()) + static_cast<float64>(entry.value)) / 2.0);
       }
       else
       {

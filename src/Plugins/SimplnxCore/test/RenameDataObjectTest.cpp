@@ -230,7 +230,6 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: SIMPL Backwards Compatibility", 
 
 TEST_CASE("SimplnxCore::RenameDataAction sibling overwrite regression", "[SimplnxCore][RenameDataAction]")
 {
-  UnitTest::LoadPlugins();
   const bool topLevel = GENERATE(false, true);
   const bool hasSibling = GENERATE(false, true);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
@@ -290,19 +289,22 @@ TEST_CASE("SimplnxCore::RenameDataAction sibling overwrite regression", "[Simpln
   }
   REQUIRE(dataStructure.getDataAs<ScalarData<int32>>(unrelatedId) != nullptr);
   CHECK(dataStructure.getDataAs<ScalarData<int32>>(unrelatedId)->getValue() == 11);
+  REQUIRE(dataStructure.getData(DataPath({"GroupA", "Target"})) != nullptr);
   CHECK(dataStructure.getData(DataPath({"GroupA", "Target"}))->getId() == unrelatedId);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RenameDataAction other parent clash", "[SimplnxCore][RenameDataAction]")
 {
-  UnitTest::LoadPlugins();
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const bool hasSibling = GENERATE(false, true);
   CAPTURE(mode, hasSibling);
   auto dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   const DataPath sourcePath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupEName, Constants::k_ArrayJName});
   const DataPath clashPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sourcePath));
   auto& source = dataStructure.getDataRefAs<Float32Array>(sourcePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(clashPath));
   auto& clash = dataStructure.getDataRefAs<UInt8Array>(clashPath);
   source[0] = 22.0f;
   clash[0] = 11;
@@ -312,7 +314,9 @@ TEST_CASE("SimplnxCore::RenameDataAction other parent clash", "[SimplnxCore][Ren
   std::optional<DataObject::IdType> siblingId;
   if(hasSibling)
   {
-    auto* sibling = ScalarData<int32>::Create(dataStructure, Constants::k_ArrayIName, 33, dataStructure.getData(sourcePath.getParent())->getId());
+    const auto* parent = dataStructure.getData(sourcePath.getParent());
+    REQUIRE(parent != nullptr);
+    auto* sibling = ScalarData<int32>::Create(dataStructure, Constants::k_ArrayIName, 33, parent->getId());
     REQUIRE(sibling != nullptr);
     siblingId = sibling->getId();
   }
@@ -323,8 +327,8 @@ TEST_CASE("SimplnxCore::RenameDataAction other parent clash", "[SimplnxCore][Ren
   if(result.invalid())
   {
     REQUIRE(result.errors().size() == 1);
-    CHECK(result.errors()[0].code == -6604);
-    CHECK(result.errors()[0].message.find("Could not rename") != std::string::npos);
+    CHECK(result.errors()[0].code == -6605);
+    CHECK(result.errors()[0].message.find("Choose a different name or remove") != std::string::npos);
     CHECK(result.errors()[0].message.find(clashPath.toString()) != std::string::npos);
   }
   CHECK(dataStructure.getAllDataObjectIds() == objectIds);
@@ -341,4 +345,154 @@ TEST_CASE("SimplnxCore::RenameDataAction other parent clash", "[SimplnxCore][Ren
     REQUIRE(dataStructure.getDataAs<ScalarData<int32>>(*siblingId) != nullptr);
     CHECK(dataStructure.getDataAs<ScalarData<int32>>(*siblingId)->getValue() == 33);
   }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RenameDataAction preserves overwrite target in another parent", "[SimplnxCore][RenameDataAction]")
+{
+  const bool groupTarget = GENERATE(false, true);
+  const usize placement = GENERATE(usize{0}, usize{1}, usize{2});
+  const bool topLevel = placement == 1;
+  const bool sharedAtRoot = placement == 2;
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  CAPTURE(groupTarget, placement, mode);
+  DataStructure dataStructure;
+  auto* selectedParent = DataGroup::Create(dataStructure, "Selected");
+  auto* otherParent = DataGroup::Create(dataStructure, "Other");
+  REQUIRE(selectedParent != nullptr);
+  REQUIRE(otherParent != nullptr);
+  const std::optional<DataObject::IdType> parentId = topLevel ? std::nullopt : std::make_optional(selectedParent->getId());
+  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22, parentId);
+  REQUIRE(source != nullptr);
+  const auto sourceId = source->getId();
+  const std::optional<DataObject::IdType> targetParentId = sharedAtRoot ? std::nullopt : parentId;
+  DataObject* target = nullptr;
+  std::optional<DataObject::IdType> childId;
+  if(groupTarget)
+  {
+    target = DataGroup::Create(dataStructure, "Target", targetParentId);
+    REQUIRE(target != nullptr);
+    auto* child = ScalarData<int32>::Create(dataStructure, "Child", 37, target->getId());
+    REQUIRE(child != nullptr);
+    childId = child->getId();
+  }
+  else
+  {
+    target = ScalarData<int32>::Create(dataStructure, "Target", 33, targetParentId);
+    REQUIRE(target != nullptr);
+  }
+  const auto targetId = target->getId();
+  REQUIRE(dataStructure.setAdditionalParent(targetId, sharedAtRoot ? selectedParent->getId() : otherParent->getId()));
+  const DataPath sourcePath = topLevel ? DataPath({"Source"}) : DataPath({"Selected", "Source"});
+  const DataPath targetPath = sourcePath.replaceName("Target");
+  const DataPath otherPath = sharedAtRoot ? DataPath({"Target"}) : DataPath({"Other", "Target"});
+  RenameDataAction action(sourcePath, "Target", true);
+  auto result = action.apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(dataStructure.getData(otherPath) != nullptr);
+  CHECK(dataStructure.getData(otherPath)->getId() == targetId);
+  REQUIRE(dataStructure.getData(targetPath) != nullptr);
+  if(mode == IDataAction::Mode::Preflight)
+  {
+    REQUIRE(result.warnings().size() == 1);
+    CHECK(result.warnings()[0].code == -6602);
+    CHECK(dataStructure.getData(targetPath)->getId() == targetId);
+    REQUIRE(dataStructure.getData(sourcePath) != nullptr);
+    CHECK(dataStructure.getData(sourcePath)->getId() == sourceId);
+    CHECK(target->getParentIds().size() == (topLevel || sharedAtRoot ? 1 : 2));
+  }
+  else
+  {
+    CHECK(dataStructure.getData(targetPath)->getId() == sourceId);
+    CHECK(dataStructure.getData(sourcePath) == nullptr);
+    CHECK(source->getValue() == 22);
+    if(sharedAtRoot)
+    {
+      CHECK(target->getParentIds().empty());
+    }
+    else
+    {
+      REQUIRE(target->getParentIds().size() == 1);
+      CHECK(target->getParentIds().front() == otherParent->getId());
+    }
+  }
+  if(childId.has_value())
+  {
+    const auto* child = dataStructure.getDataAs<ScalarData<int32>>(*childId);
+    REQUIRE(child != nullptr);
+    CHECK(child->getValue() == 37);
+    REQUIRE(dataStructure.getData(otherPath.createChildPath("Child")) != nullptr);
+    CHECK(dataStructure.getData(otherPath.createChildPath("Child"))->getId() == *childId);
+  }
+  else
+  {
+    const auto* scalar = dataStructure.getDataAs<ScalarData<int32>>(targetId);
+    REQUIRE(scalar != nullptr);
+    CHECK(scalar->getValue() == 33);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RenameDataAction reports failed overwrite rename", "[SimplnxCore][RenameDataAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure dataStructure;
+  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22);
+  REQUIRE(source != nullptr);
+  RenameDataAction action(DataPath({"Source"}), "", true);
+  const auto result = action.apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -6606);
+  CHECK(result.errors()[0].message.find("Choose a valid name") != std::string::npos);
+  CHECK(source->getName() == "Source");
+  CHECK(source->getValue() == 22);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RenameDataAction rejects a clash at the source root placement", "[SimplnxCore][RenameDataAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool hasSibling = GENERATE(false, true);
+  CAPTURE(mode, hasSibling);
+  DataStructure dataStructure;
+  auto* selectedParent = DataGroup::Create(dataStructure, "Selected");
+  REQUIRE(selectedParent != nullptr);
+  auto* source = ScalarData<int32>::Create(dataStructure, "Source", 22);
+  auto* clash = ScalarData<int32>::Create(dataStructure, "Target", 11);
+  REQUIRE(source != nullptr);
+  REQUIRE(clash != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(source->getId(), selectedParent->getId()));
+  const auto sourceId = source->getId();
+  const auto clashId = clash->getId();
+  std::optional<DataObject::IdType> siblingId;
+  if(hasSibling)
+  {
+    auto* sibling = ScalarData<int32>::Create(dataStructure, "Target", 33, selectedParent->getId());
+    REQUIRE(sibling != nullptr);
+    siblingId = sibling->getId();
+  }
+  const auto objectIds = dataStructure.getAllDataObjectIds();
+  RenameDataAction action(DataPath({"Selected", "Source"}), "Target", true);
+  const auto result = action.apply(dataStructure, mode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -6605);
+  CHECK(result.errors()[0].message.find("child at 'Target'") != std::string::npos);
+  CHECK(dataStructure.getAllDataObjectIds() == objectIds);
+  CHECK(dataStructure.getData(DataPath({"Source"})) == source);
+  CHECK(dataStructure.getData(DataPath({"Selected", "Source"})) == source);
+  CHECK(dataStructure.getData(DataPath({"Target"})) == clash);
+  CHECK(source->getId() == sourceId);
+  CHECK(clash->getId() == clashId);
+  CHECK(source->getName() == "Source");
+  CHECK(source->getValue() == 22);
+  CHECK(clash->getValue() == 11);
+  if(siblingId.has_value())
+  {
+    const auto* sibling = dataStructure.getDataAs<ScalarData<int32>>(*siblingId);
+    REQUIRE(sibling != nullptr);
+    CHECK(sibling->getValue() == 33);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

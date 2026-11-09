@@ -20,7 +20,9 @@ If any filter later in the pipeline references the renamed object by its old nam
 
 ### Name Constraints
 
-The new name must be non-empty and must not collide with another object at the same parent. The filter validates this at preflight.
+The new name must be non-empty. When **Allow Overwrite** is disabled, the new name must not collide with another object under the same parent.
+
+When **Allow Overwrite** is enabled, the filter replaces only the sibling with the new name under the selected parent. If that sibling has other parents, the filter removes only its link to the selected parent. Its other placements and children remain available. A name clash under another parent of the source object is an error. Choose a different name or remove that conflicting object first.
 
 ### Required Input Sources
 

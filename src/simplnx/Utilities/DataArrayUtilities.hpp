@@ -1010,12 +1010,11 @@ template <class K>
   }
 
   const usize numElements = totalSrcTuples * sourceNumComponents;
-  bool copyBackward = &inputArray == &destArray && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
   if constexpr(requires { inputArray.getDataStoreRef(); })
   {
     const auto& srcStore = inputArray.getDataStoreRef();
     auto& dstStore = destArray.getDataStoreRef();
-    copyBackward = &srcStore == &dstStore && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
+    const bool copyBackward = &srcStore == &dstStore && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
     if(srcStore.getStoreType() == IDataStore::StoreType::OutOfCore || dstStore.getStoreType() == IDataStore::StoreType::OutOfCore)
     {
       using ValueType = typename std::remove_reference_t<decltype(srcStore)>::value_type;
@@ -1058,6 +1057,7 @@ template <class K>
   }
   else
   {
+    const bool copyBackward = &inputArray == &destArray && destTupleOffset > srcTupleOffset && destTupleOffset - srcTupleOffset < totalSrcTuples;
     auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
     auto srcEnd = srcBegin + numElements;
     auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);

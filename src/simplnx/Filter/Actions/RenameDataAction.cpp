@@ -5,10 +5,16 @@
 
 #include <fmt/core.h>
 
+#include <optional>
+
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_OtherParentNameClash = -6605;
+constexpr int32 k_RenameFailed = -6606;
+constexpr int32 k_DetachTargetFailed = -6607;
+
 Result<> TerminateNodesRecursively(DataStructure& dataStructure, DataObject::IdType id, IDataAction::Mode mode, const bool checkDependence)
 {
   Result<> result = {};
@@ -83,6 +89,12 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
     }
 
     const auto* selectedParent = dataStructure.getData(m_Path.getParent());
+    std::optional<DataPath> clashPath;
+    const DataPath rootTargetPath({m_NewName});
+    if(selectedParent != nullptr && dataStructure.getData(DataPath({dataObject->getName()})) == dataObject && dataStructure.getData(rootTargetPath) != nullptr)
+    {
+      clashPath = rootTargetPath;
+    }
     for(const auto parentId : dataObject->getParentIds())
     {
       if(selectedParent != nullptr && parentId == selectedParent->getId())
@@ -92,9 +104,15 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       const auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
       if(parent != nullptr && parent->contains(m_NewName))
       {
-        const auto clashPath = parent->getDataPaths().front().createChildPath(m_NewName);
-        return MakeErrorResult(-6604, fmt::format("{}Could not rename DataObject at '{}' to '{}': another parent has a child at '{}'", prefix, m_Path.toString(), m_NewName, clashPath.toString()));
+        clashPath = parent->getDataPaths().front().createChildPath(m_NewName);
+        break;
       }
+    }
+
+    if(clashPath.has_value())
+    {
+      return MakeErrorResult(k_OtherParentNameClash, fmt::format("{}Could not rename DataObject at '{}' to '{}': another parent has a child at '{}'. Choose a different name or remove '{}' first.",
+                                                                 prefix, m_Path.toString(), m_NewName, clashPath->toString(), clashPath->toString()));
     }
 
     auto* target = dataStructure.getData(m_Path.replaceName(m_NewName));
@@ -105,18 +123,26 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       {
         std::string ss = fmt::format("{}Another object exists with that name, will overwrite destroying other DataObject at '{}' and replacing it with '{}'", prefix, m_NewName, m_Path.toString());
         result.warnings().emplace_back(Warning{-6602, ss});
+        return result;
+      }
+      // The root placement is not included in the object's parent IDs.
+      const bool hasOtherParents = target->getParentIds().size() > (selectedParent == nullptr ? 0 : 1) || (selectedParent != nullptr && dataStructure.getData(DataPath({m_NewName})) == target);
+      if(hasOtherParents)
+      {
+        if(!dataStructure.removeParent(targetId, selectedParent == nullptr ? 0 : selectedParent->getId()))
+        {
+          return MakeErrorResult(k_DetachTargetFailed,
+                                 fmt::format("{}Could not detach overwrite target at '{}'. Choose a different name or remove the target first.", prefix, m_Path.replaceName(m_NewName).toString()));
+        }
+      }
+      else if(dataStructure.getDataAs<BaseGroup>(targetId) != nullptr)
+      {
+        // Shared descendants remain in their other parents.
+        result = MergeResults(result, ::TerminateNodesRecursively(dataStructure, targetId, mode, true));
       }
       else
       {
-        if(dataStructure.getDataAs<BaseGroup>(targetId) != nullptr)
-        {
-          // Recursive removal of overwritten object
-          result = MergeResults(result, ::TerminateNodesRecursively(dataStructure, targetId, mode, true));
-        }
-        else
-        {
-          dataStructure.removeData(targetId);
-        }
+        dataStructure.removeData(targetId);
       }
     }
   }
@@ -144,7 +170,10 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
     }
   }
 
-  dataObject->rename(m_NewName);
+  if(!dataObject->rename(m_NewName))
+  {
+    return MakeErrorResult(k_RenameFailed, fmt::format("{}Could not rename DataObject at '{}' to '{}'. Choose a valid name that is unique under every parent.", prefix, m_Path.toString(), m_NewName));
+  }
   return result;
 }
 

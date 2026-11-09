@@ -10,6 +10,8 @@ This **Filter** overlays a coarse **partition grid** onto an existing geometry a
 
 If the **Filter** determines that any voxel/node of the original geometry is out-of-bounds compared to the generated partition grid, the **Out-Of-Bounds Cell ID** will be used as the partition ID in the output partition IDs array.
 
+**Starting Feature ID** must be greater than or equal to 0 in every mode. A negative value produces error -3046. The **Partition Attribute Matrix** has *partition count + Starting Feature ID* tuples. The partition count is the product of the partition grid dimensions.
+
 ### Partitioning Mode
 
 The *Partitioning Mode* parameter provides the following choices:
@@ -105,7 +107,7 @@ In **Figure 4A** above, the SmallIN100 dataset is shown.  In **Figure 4B** above
 
 ### **Existing Partition Grid**
 
-This partitioning mode is chosen when the user already has a partition grid from a previous run of the Partition Geometry filter.  Just select an existing **Partition Grid Geometry** and pick the **Out-of-Bounds Feature ID**, and then partition IDs will be assigned to the input dataset when the filter is executed.
+This partitioning mode is chosen when the user already has a partition grid from a previous run of the Partition Geometry filter.  Select an existing **Partition Grid Geometry**, **Starting Feature ID**, and **Out-of-Bounds Feature ID**. The filter assigns each in-bounds element its zero-based partition cell index plus **Starting Feature ID**. The feature Attribute Matrix has the existing grid's partition count plus **Starting Feature ID** tuples.
 
 ## Using A Vertex Mask
 

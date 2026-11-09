@@ -21,11 +21,11 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 /**
- * @brief Splits the comma-separated filter names, trims white space from each name and checks
- * that each name can be used as a Python module and class name.
- * @param filterNames The comma-separated filter names. An empty value means no filters.
- * @return The trimmed names, or error -105150 that names the first entry that is empty, is a
- * reserved Python name (a keyword or __debug__) or is not a valid ASCII Python identifier.
+ * @brief Splits and checks comma-separated Python module and class names.
+ * White space around each name and one trailing empty entry are ignored.
+ * @param filterNames The comma-separated filter names. An empty value means no filters. One trailing empty entry is ignored.
+ * @return The trimmed names, or error -105150 for the first invalid entry.
+ * Entries must be ASCII Python identifiers and cannot be keywords or __debug__. Empty entries elsewhere are rejected.
  */
 inline Result<std::vector<std::string>> ParsePythonFilterNames(const std::string& filterNames)
 {
@@ -41,16 +41,26 @@ inline Result<std::vector<std::string>> ParsePythonFilterNames(const std::string
   }
   constexpr std::array<char, 1> k_NameDelimiters = {','};
   auto names = StringUtilities::split(filterNames, k_NameDelimiters, true);
+  if(!names.empty() && StringUtilities::trimmed(names.back()).empty())
+  {
+    names.pop_back();
+  }
   for(auto& name : names)
   {
     const std::string original = name;
     name = StringUtilities::trimmed(name);
-    if(name.empty() || !isIdentifierStart(name.front()) || !std::all_of(name.begin(), name.end(), isIdentifierChar) ||
-       std::find(k_ReservedNames.begin(), k_ReservedNames.end(), name) != k_ReservedNames.end())
+    if(name.empty())
     {
-      return MakeErrorResult<std::vector<std::string>>(-105150, fmt::format("Filter Names entry '{}' is empty, is a reserved Python name or is not a valid Python identifier. Use a letter or '_' "
-                                                                            "first, followed by letters, digits or '_'.",
-                                                                            original));
+      return MakeErrorResult<std::vector<std::string>>(-105150, fmt::format("Filter Names entry '{}' is empty. Remove the extra comma.", original));
+    }
+    if(std::find(k_ReservedNames.begin(), k_ReservedNames.end(), name) != k_ReservedNames.end())
+    {
+      return MakeErrorResult<std::vector<std::string>>(-105150, fmt::format("Filter Names entry '{}' is a reserved Python name. Choose another name.", original));
+    }
+    if(!isIdentifierStart(name.front()) || !std::all_of(name.begin(), name.end(), isIdentifierChar))
+    {
+      return MakeErrorResult<std::vector<std::string>>(
+          -105150, fmt::format("Filter Names entry '{}' is not a valid Python identifier. Use an ASCII letter or '_' first, followed by ASCII letters, digits or '_'.", original));
     }
   }
   return {std::move(names)};
@@ -366,13 +376,12 @@ inline std::string EscapePythonSingleQuotedString(std::string_view text)
 }
 
 /**
- *
- * @param pluginName
- * @param pluginUUID
- * @param pluginShortName
- * @param pluginDescription
- * @param filterList
- * @return
+ * @brief Generates the plugin registration module from checked filter names.
+ * @param pluginName The plugin's Python module name.
+ * @param pluginShortName The plugin's human-readable name.
+ * @param pluginDescription The plugin description.
+ * @param filterList The checked filter names, from ParsePythonFilterNames().
+ * @return The text of the generated Plugin.py file.
  */
 inline std::string GeneratePythonPlugin(const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription, const std::vector<std::string>& filterList)
 {

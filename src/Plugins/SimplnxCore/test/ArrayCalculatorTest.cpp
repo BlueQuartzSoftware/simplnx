@@ -1636,9 +1636,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
   }
 }
 
-TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[SimplnxCore][ArrayCalculatorFilter][L07]")
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[SimplnxCore][ArrayCalculatorFilter]")
 {
-  UnitTest::LoadPlugins();
   DataStructure ds;
   auto* matrix = AttributeMatrix::Create(ds, k_AttributeMatrix, {2});
   REQUIRE(matrix != nullptr);
@@ -1711,6 +1710,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
+    UnitTest::CheckArraysInheritTupleDims(ds);
     return;
   }
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1718,11 +1718,13 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   auto actions = preflight.outputActions.value();
   const auto applied = actions.applyAll(preview, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  REQUIRE_NOTHROW(preview.getDataRefAs<Float64Array>(outputPath));
   const auto& planned = preview.getDataRefAs<Float64Array>(outputPath);
   REQUIRE(planned.getTupleShape() == ShapeType{expected.size()});
   REQUIRE(planned.getComponentShape() == ShapeType{1});
   const auto executed = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
   const auto& output = ds.getDataRefAs<Float64Array>(outputPath);
   REQUIRE(output.getTupleShape() == planned.getTupleShape());
   REQUIRE(output.getComponentShape() == planned.getComponentShape());
@@ -1730,4 +1732,6 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[Simp
   {
     REQUIRE(output[i] == expected[i]);
   }
+  UnitTest::CheckArraysInheritTupleDims(preview);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

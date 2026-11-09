@@ -356,8 +356,8 @@ public:
                   const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
                   if((modalBin >= 0) && (modalBin < m_NumBins))
                   {
-                    m_ModalBinRangesList->addEntry(j, ranges[modalBin]);
-                    m_ModalBinRangesList->addEntry(j, ranges[modalBin + 1]);
+                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin]);
+                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin + 1]);
                   }
                 }
               }
@@ -608,8 +608,8 @@ int32 calculateSafeBin(const T& value, const T& minimum, float32 increment)
  * @param maximum Exclusive histogram upper bound.
  * @param increment Bin width.
  *
- * Values outside the histogram range are omitted. The Direct-compatible layout
- * indexes the feature's flat range buffer by bin.
+ * Values outside the histogram range are omitted. Each bin has a lower and upper bound
+ * in the feature's flat range buffer.
  */
 template <typename T>
 void appendModalRange(NeighborList<T>& modalBinRanges, usize feature, const T& value, const T* ranges, usize bins, const T& minimum, const T& maximum, float32 increment)
@@ -621,7 +621,7 @@ void appendModalRange(NeighborList<T>& modalBinRanges, usize feature, const T& v
   const int32 bin = calculateSafeBin(value, minimum, increment);
   if(bin >= 0 && static_cast<usize>(bin) < bins)
   {
-    const usize rangeOffset = feature * bins * 2 + static_cast<usize>(bin);
+    const usize rangeOffset = feature * bins * 2 + 2 * static_cast<usize>(bin);
     modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset]);
     modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset + 1]);
   }

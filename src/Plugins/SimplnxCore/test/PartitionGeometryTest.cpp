@@ -382,9 +382,8 @@ Arguments createVertexTupleValidationArguments(ChoicesParameter::ValueType mode)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count", "[Plugins][PartitionGeometryFilter][L22]")
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count", "[SimplnxCore][PartitionGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const auto mode = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2}, ChoicesParameter::ValueType{3});
@@ -420,6 +419,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count"
     args.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{7, 8, 9});
   }
 
+  CHECK(PartitionGeometryFilter().parameters().isParameterActive(PartitionGeometryFilter::k_StartingFeatureID_Key, args));
+
   // Four partitions have IDs start through start + 3; the feature shape is {start + 4}.
   const ShapeType expectedShape = {static_cast<usize>(start + 4)};
   auto preflight = PartitionGeometryFilter().preflight(dataStructure, args);
@@ -428,18 +429,22 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count"
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     CHECK(preflight.outputActions.errors()[0].code == -3046);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
     return;
   }
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   DataStructure preflightData(dataStructure);
   const auto applyResult = preflight.outputActions.value().applyRegular(preflightData, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
+  REQUIRE_NOTHROW(preflightData.getDataRefAs<AttributeMatrix>(featurePath));
   CHECK(preflightData.getDataRefAs<AttributeMatrix>(featurePath).getShape() == expectedShape);
 
   const auto execute = scope.executeFilter(PartitionGeometryFilter(), dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
   const auto& features = dataStructure.getDataRefAs<AttributeMatrix>(featurePath);
   CHECK(features.getShape() == expectedShape);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(cellPath.createChildPath("Ids")));
   const auto& ids = dataStructure.getDataRefAs<Int32Array>(cellPath.createChildPath("Ids"));
   REQUIRE(ids.getNumberOfTuples() == 4);
   for(usize index = 0; index < 4; index++)
@@ -448,6 +453,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Feature matrix partition count"
     CHECK(ids[index] >= 0);
     CHECK(static_cast<usize>(ids[index]) < features.getNumberOfTuples());
   }
+  UnitTest::CheckArraysInheritTupleDims(preflightData);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic RectGrid bounds", "[Plugins][PartitionGeometryFilter]")

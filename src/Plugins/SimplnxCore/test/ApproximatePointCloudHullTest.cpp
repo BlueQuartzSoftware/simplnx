@@ -258,7 +258,6 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: One voxel border on vox
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global indices", "[SimplnxCore][ApproximatePointCloudHullFilter]")
 {
-  UnitTest::LoadPlugins();
   for(float32 coordinate : {16777218.0F, 33554432.0F, -16777218.0F, -33554432.0F})
   {
     CAPTURE(coordinate);
@@ -268,6 +267,8 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global 
     CreateVertexGeometryAction action(inputPath, 1, INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
     auto createResult = action.apply(dataStructure, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(createResult);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(inputPath));
+    REQUIRE(dataStructure.getDataRefAs<VertexGeom>(inputPath).getVertices() != nullptr);
     auto& points = *dataStructure.getDataRefAs<VertexGeom>(inputPath).getVertices();
     // Each axis has a large global index, but the padded grid is only 3x3x3.
     for(usize component = 0; component < 3; component++)
@@ -282,6 +283,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global 
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, std::make_any<DataPath>(outputPath));
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(outputPath));
     const auto& hull = dataStructure.getDataRefAs<VertexGeom>(outputPath);
     // A singleton has 26 empty neighbors; the strict >25 threshold must retain it.
     REQUIRE(hull.getNumberOfVertices() == 1);

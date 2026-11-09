@@ -330,6 +330,7 @@ Parameters PartitionGeometryFilter::parameters() const
   params.linkParameters(k_PartitioningMode_Key, k_StartingFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
   params.linkParameters(k_PartitioningMode_Key, k_StartingFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
   params.linkParameters(k_PartitioningMode_Key, k_StartingFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_StartingFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_ExistingSchemeModeIndex));
   params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
   params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
   params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsFeatureID_Key, std::make_any<ChoicesParameter::ValueType>(k_ExistingSchemeModeIndex));
