@@ -16,8 +16,9 @@ class SIMPLNX_EXPORT PlaceholderFilter : public AbstractPipelineFilter
 {
 public:
   /**
-   * @brief
-   * @return std::unique_ptr<PlaceholderFilter>
+   * @brief Creates a placeholder with the saved JSON and its disabled state.
+   * @param json Supplies the unavailable filter settings. A missing or non-Boolean disabled flag means enabled.
+   * @return New placeholder without a parent pipeline.
    */
   static std::unique_ptr<PlaceholderFilter> Create(nlohmann::json json);
 
@@ -27,7 +28,8 @@ public:
   PlaceholderFilter();
 
   /**
-   * @brief
+   * @brief Constructs a placeholder with the saved JSON and its disabled state.
+   * @param json Supplies the unavailable filter settings. A missing or non-Boolean disabled flag means enabled.
    */
   PlaceholderFilter(nlohmann::json json);
 
@@ -66,8 +68,9 @@ public:
   bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
-   * @brief Creates and returns a unique pointer to a copy of the node.
-   * @return std::unique_ptr<AbstractPipelineNode>
+   * @brief Copies the saved JSON and current disabled state into an independent placeholder.
+   * The current disabled state can differ from the original JSON. The copy starts with fresh execution state and signals.
+   * @return Independent placeholder without a parent pipeline.
    */
   std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 

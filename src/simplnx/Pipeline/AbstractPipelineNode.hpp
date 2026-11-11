@@ -152,8 +152,9 @@ public:
   virtual bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
 
   /**
-   * @brief Creates and returns a unique pointer to a copy of the node.
-   * @return std::unique_ptr<AbstractPipelineNode>
+   * @brief Copies the node's persistent settings and disabled state into an independent node.
+   * The copy starts without a parent pipeline, cached execution results or connected observers.
+   * @return Independent node with the same persistent settings.
    */
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 

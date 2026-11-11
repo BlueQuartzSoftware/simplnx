@@ -1,5 +1,7 @@
 #include "PlaceholderFilter.hpp"
 
+#include <memory>
+
 using namespace nx::core;
 
 std::unique_ptr<PlaceholderFilter> PlaceholderFilter::Create(nlohmann::json json)
@@ -13,6 +15,12 @@ PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
 : AbstractPipelineFilter()
 , m_Json(std::move(json))
 {
+  // Raw fallback JSON can contain an invalid flag; keep that payload without rejecting the placeholder.
+  const auto disabledIter = m_Json.find("isDisabled");
+  if(disabledIter != m_Json.end() && disabledIter->is_boolean())
+  {
+    setDisabled(ReadDisabledState(m_Json));
+  }
 }
 
 PlaceholderFilter::~PlaceholderFilter() noexcept = default;
@@ -34,7 +42,9 @@ bool PlaceholderFilter::execute(DataStructure& dataStructure, const std::atomic_
 
 std::unique_ptr<AbstractPipelineNode> PlaceholderFilter::deepCopy() const
 {
-  return std::make_unique<PlaceholderFilter>(m_Json);
+  auto placeholderFilterPtr = std::make_unique<PlaceholderFilter>(m_Json);
+  placeholderFilterPtr->setDisabled(isDisabled());
+  return placeholderFilterPtr;
 }
 
 nlohmann::json PlaceholderFilter::toJsonImpl() const

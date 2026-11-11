@@ -114,14 +114,14 @@ public:
   Pipeline(const std::string& name = "Untitled Pipeline", FilterList* filterList = nullptr);
 
   /**
-   * @brief Creates a copy of the specified Pipeline.
-   * @param other
+   * @brief Copies the pipeline name, disabled state and configuration, and shares its child nodes.
+   * @param other Supplies the pipeline values. Shared children use this pipeline as their parent.
    */
   Pipeline(const Pipeline& other);
 
   /**
-   * @brief Creates a new Pipeline and moves values from the specified Pipeline.
-   * @param other
+   * @brief Moves the pipeline values and child nodes, and preserves its disabled state.
+   * @param other Supplies the pipeline values. Transferred children use this pipeline as their parent.
    */
   Pipeline(Pipeline&& other) noexcept;
 
@@ -529,24 +529,27 @@ public:
   const_iterator find(const AbstractPipelineNode* node) const;
 
   /**
-   * @brief Creates and returns a copy of the Pipeline.
-   * @return std::unique_ptr<AbstractPipelineNode>
+   * @brief Copies the pipeline name, disabled state and child nodes into an independent pipeline.
+   * Each child keeps its persistent settings. The copy starts with fresh execution state and signals.
+   * @return Independent pipeline without a parent pipeline.
    */
   std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 
   /**
-   * @brief Creates and returns a pipeline copying the nodes between two iterators.
-   * @param start
-   * @param end
-   * @return std::unique_ptr<Pipeline>
+   * @brief Copies a half-open node range into an independent pipeline with the same name and disabled state.
+   * Each child keeps its persistent settings. The copy starts with fresh execution state and signals.
+   * @param start Specifies the first node to copy.
+   * @param end Specifies the first node to exclude. The end sentinel is valid.
+   * @return Independent pipeline without a parent pipeline. Equal iterators give an empty pipeline.
    */
   std::unique_ptr<Pipeline> copySegment(const iterator& start, const iterator& end);
 
   /**
-   * @brief Creates and returns a pipeline copying the nodes between two iterators.
-   * @param start
-   * @param end
-   * @return std::unique_ptr<Pipeline>
+   * @brief Copies a node range into an independent pipeline with the same name and disabled state.
+   * Each child keeps its persistent settings. The copy starts with fresh execution state and signals.
+   * @param start Specifies the first node to copy.
+   * @param end Specifies the last node to include. The end sentinel copies through the last node.
+   * @return Independent pipeline without a parent pipeline. Equal valid iterators copy one node; equal end sentinels copy none.
    */
   std::unique_ptr<Pipeline> copySegment(const const_iterator& start, const const_iterator& end) const;
 
@@ -575,16 +578,16 @@ public:
   const_iterator end() const;
 
   /**
-   * @brief Copies the target Pipeline.
-   * @param rhs
-   * @return Pipeline&
+   * @brief Copies the pipeline name and disabled state, and shares its child nodes and filter list.
+   * @param rhs Supplies the pipeline values. Shared children use this pipeline as their parent.
+   * @return This pipeline.
    */
   Pipeline& operator=(const Pipeline& rhs) noexcept;
 
   /**
-   * @brief Moves values from the target Pipeline.
-   * @param rhs
-   * @return Pipeline&
+   * @brief Moves the pipeline name and child nodes, and preserves its disabled state and filter list.
+   * @param rhs Supplies the pipeline values. Transferred children use this pipeline as their parent.
+   * @return This pipeline.
    */
   Pipeline& operator=(Pipeline&& rhs) noexcept;
 

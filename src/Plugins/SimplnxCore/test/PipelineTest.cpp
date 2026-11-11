@@ -1,23 +1,35 @@
+#include "SimplnxCore/Filters/ExtractPipelineToFileFilter.hpp"
+#include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
+#include "SimplnxCore/Filters/WriteDREAM3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <nlohmann/json.hpp>
 
+#include <any>
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <string>
+#include <system_error>
 #include <typeinfo>
 
 namespace fs = std::filesystem;
@@ -386,4 +398,98 @@ TEST_CASE("PipelineTest:PipelineDeferredActionTest")
   // after execute the object will be deleted
   DataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
   REQUIRE(executeObject == nullptr);
+}
+
+TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[SimplnxCore][PipelineCopyState]")
+{
+  const fs::path outputDirectory = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("pipeline-state-" + Uuid::GenerateV4().str());
+  REQUIRE(fs::create_directories(outputDirectory));
+  const auto cleanup = MakeScopeGuard([&outputDirectory]() noexcept {
+    std::error_code errorCode;
+    fs::remove_all(outputDirectory, errorCode);
+  });
+  const fs::path missingInput = outputDirectory / "missing-input.dream3d";
+  const fs::path writtenFile = outputDirectory / "written.dream3d";
+  const fs::path extractedFile = outputDirectory / "extracted.d3dpipeline";
+  const fs::path replayFile = outputDirectory / "replayed.dream3d";
+  REQUIRE_FALSE(fs::exists(missingInput));
+
+  const ReadDREAM3DFilter reader;
+  Arguments readerArgs = reader.getDefaultArguments();
+  readerArgs.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, std::make_any<Dream3dImportParameter::ValueType>(missingInput));
+  auto readerPtr = std::make_shared<PipelineFilter>(std::make_unique<ReadDREAM3DFilter>(), readerArgs);
+  readerPtr->setDisabled(true);
+  readerPtr->setComments("Skip the missing reader during replay.");
+
+  const WriteDREAM3DFilter writer;
+  Arguments writerArgs = writer.getDefaultArguments();
+  writerArgs.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, writtenFile);
+  writerArgs.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  auto writerPtr = std::make_shared<PipelineFilter>(std::make_unique<WriteDREAM3DFilter>(), writerArgs);
+  writerPtr->setComments("Keep the writer comment in the embedded pipeline.");
+
+  Pipeline pipeline("Persistent state write extract replay");
+  REQUIRE(pipeline.push_back(readerPtr));
+  REQUIRE(pipeline.push_back(writerPtr));
+  DataStructure dataStructure;
+  REQUIRE(pipeline.preflight(dataStructure, false));
+  REQUIRE(pipeline.execute(dataStructure, false));
+  REQUIRE(fs::exists(writtenFile));
+  REQUIRE_FALSE(fs::exists(missingInput));
+  CHECK(dataStructure.getAllDataPaths().empty());
+
+  auto embeddedResult = DREAM3D::ImportPipelineJsonFromFile(writtenFile);
+  SIMPLNX_RESULT_REQUIRE_VALID(embeddedResult);
+  const auto& embeddedRef = embeddedResult.value();
+  REQUIRE(embeddedRef.at("pipeline").size() == 2);
+  CHECK(embeddedRef.at("pipeline").at(0).at("isDisabled") == true);
+  CHECK(embeddedRef.at("pipeline").at(0).at("comments") == "Skip the missing reader during replay.");
+  CHECK(embeddedRef.at("pipeline").at(1).at("isDisabled") == false);
+  CHECK(embeddedRef.at("pipeline").at(1).at("comments") == "Keep the writer comment in the embedded pipeline.");
+
+  const ExtractPipelineToFileFilter extractor;
+  Arguments extractorArgs = extractor.getDefaultArguments();
+  extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, writtenFile);
+  extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, extractedFile);
+  auto extractPreflightResult = extractor.preflight(dataStructure, extractorArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflightResult.outputActions);
+  auto extractResult = extractor.execute(dataStructure, extractorArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractResult.result);
+  REQUIRE(fs::exists(extractedFile));
+
+  // Loading the extracted pipeline resolves filter UUIDs through the plugin registry.
+  UnitTest::LoadPlugins();
+  auto replayResult = Pipeline::FromFile(extractedFile);
+  SIMPLNX_RESULT_REQUIRE_VALID(replayResult);
+  auto& replayRef = replayResult.value();
+  REQUIRE(replayRef.size() == 2);
+  auto* replayReaderPtr = dynamic_cast<PipelineFilter*>(replayRef.at(0));
+  auto* replayWriterPtr = dynamic_cast<PipelineFilter*>(replayRef.at(1));
+  REQUIRE(replayReaderPtr != nullptr);
+  REQUIRE(replayWriterPtr != nullptr);
+  REQUIRE(replayReaderPtr->getFilter() != nullptr);
+  REQUIRE(replayWriterPtr->getFilter() != nullptr);
+  CHECK(replayReaderPtr->getFilter()->uuid() == reader.uuid());
+  CHECK(replayWriterPtr->getFilter()->uuid() == writer.uuid());
+  CHECK(replayReaderPtr->isDisabled());
+  CHECK(replayReaderPtr->getComments() == "Skip the missing reader during replay.");
+  CHECK_FALSE(replayWriterPtr->isDisabled());
+  CHECK(replayWriterPtr->getComments() == "Keep the writer comment in the embedded pipeline.");
+  CHECK(replayRef.toJson() == embeddedRef);
+
+  Arguments replayWriterArgs = replayWriterPtr->getArguments();
+  replayWriterArgs.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, replayFile);
+  replayWriterPtr->setArguments(replayWriterArgs);
+  DataStructure replayDataStructure;
+  REQUIRE(replayRef.preflight(replayDataStructure, false));
+  REQUIRE(replayRef.execute(replayDataStructure, false));
+  CHECK(fs::exists(replayFile));
+  CHECK_FALSE(fs::exists(missingInput));
+  CHECK(replayDataStructure.getAllDataPaths().empty());
+  CHECK(readerPtr->isDisabled());
+  CHECK(readerPtr->getComments() == "Skip the missing reader during replay.");
+  CHECK(writerPtr->getComments() == "Keep the writer comment in the embedded pipeline.");
+  CHECK(writerPtr->getArguments().value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == writtenFile);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(replayDataStructure);
 }
