@@ -45,15 +45,6 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
 class SIMPLNXCORE_EXPORT ComputeArrayHistogram
 {
 public:
-  static constexpr int32 k_InvalidNumberOfBins = -57299;
-
-  /**
-   * @brief Rejects a bin count less than 1 before shape construction or data access.
-   * @param numberOfBins Specifies the requested bin count.
-   * @return Success, or k_InvalidNumberOfBins with the rejected count.
-   */
-  static Result<> ValidateNumberOfBins(int32 numberOfBins);
-
   /**
    * @brief Initializes histogram calculation.
    * @param dataStructure Provides source, mask, and output arrays.
@@ -72,7 +63,8 @@ public:
 
   /**
    * @brief Computes each selected array in input order.
-   * @return Bin-count, range, mask, bulk-I/O, temporary-file, or modal-sort errors.
+   * @return Range, mask, bulk-I/O, temporary-file, or modal-sort errors.
+   * @pre NumberOfBins is at least one.
    * @pre Input arrays are scalar and output-path collections match input count.
    * @pre Mask type is Bool or UInt8.
    * @pre An automatic integral range can increment its maximum without overflow.

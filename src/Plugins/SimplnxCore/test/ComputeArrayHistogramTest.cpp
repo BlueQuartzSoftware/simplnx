@@ -1,4 +1,3 @@
-#include "SimplnxCore/Filters/Algorithms/ComputeArrayHistogram.hpp"
 #include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -16,6 +15,7 @@
 #include <fstream>
 #include <limits>
 #include <memory>
+#include <vector>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -432,35 +432,36 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: negative bins preflight", "[Simpl
   const auto result = ComputeArrayHistogramFilter{}.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == ComputeArrayHistogram::k_InvalidNumberOfBins);
+  CHECK(result.outputActions.errors().front().code == -57299);
   CHECK(result.outputActions.errors().front().message == "Number of Bins must be at least 1, but was -1.");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ComputeArrayHistogram: direct bin count guard", "[SimplnxCore][ComputeArrayHistogram]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: invalid bins execute leaves data unchanged", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const int32 numberOfBins = GENERATE(0, -1);
   CAPTURE(numberOfBins);
   DataStructure dataStructure;
-  ComputeArrayHistogramInputValues inputValues{};
-  inputValues.NumberOfBins = numberOfBins;
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler{};
-  ComputeArrayHistogram algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
-  Result<> result;
-  REQUIRE_NOTHROW(result = algorithm());
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors().front().code == ComputeArrayHistogram::k_InvalidNumberOfBins);
-  CHECK(result.errors().front().message == fmt::format("Number of Bins must be at least 1, but was {}.", numberOfBins));
-  CHECK(dataStructure.getAllDataPaths().empty());
+  const Arguments args = CreateBinCountHistogramFixture(dataStructure, numberOfBins);
+  const auto originalPaths = dataStructure.getAllDataPaths();
+  const DataPath inputPath({"BinCountInput"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(inputPath));
+  const auto& input = dataStructure.getDataRefAs<Float32Array>(inputPath);
+  const std::vector<float32> originalValues(input.begin(), input.end());
+  IFilter::ExecuteResult result;
+  REQUIRE_NOTHROW(result = ComputeArrayHistogramFilter{}.execute(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == -57299);
+  CHECK(result.result.errors().front().message == fmt::format("Number of Bins must be at least 1, but was {}.", numberOfBins));
+  CHECK(dataStructure.getAllDataPaths() == originalPaths);
+  CHECK(std::vector<float32>(input.begin(), input.end()) == originalValues);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: positive bin count domain", "[SimplnxCore][ComputeArrayHistogram]")
 {
   const int32 numberOfBins = GENERATE(1, std::numeric_limits<int32>::max());
-  const auto result = ComputeArrayHistogram::ValidateNumberOfBins(numberOfBins);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
   DataStructure dataStructure;
   const Arguments args = CreateBinCountHistogramFixture(dataStructure, numberOfBins);
   const auto preflight = ComputeArrayHistogramFilter{}.preflight(dataStructure, args);

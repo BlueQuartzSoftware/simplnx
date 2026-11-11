@@ -132,15 +132,6 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
   return m_ShouldCancel;
 }
 
-Result<> ComputeFeatureClustering::ValidateNumberOfBins(int32 numberOfBins)
-{
-  if(numberOfBins < 1)
-  {
-    return MakeErrorResult(k_InvalidNumberOfBins, fmt::format("Number of Bins for RDF must be at least 1, but was {}.", numberOfBins));
-  }
-  return {};
-}
-
 usize ComputeFeatureClustering::RdfCacheIndex(usize numberOfBins, usize ensemble, usize bin)
 {
   return numberOfBins * ensemble + bin;
@@ -148,12 +139,6 @@ usize ComputeFeatureClustering::RdfCacheIndex(usize numberOfBins, usize ensemble
 
 Result<> ComputeFeatureClustering::operator()()
 {
-  const Result<> binCountResult = ValidateNumberOfBins(m_InputValues->NumberOfBins);
-  if(binCountResult.invalid())
-  {
-    return binCountResult;
-  }
-
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <vector>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -265,28 +266,39 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: negative bins preflight", "[Si
   const auto result = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == ComputeFeatureClustering::k_InvalidNumberOfBins);
+  CHECK(result.outputActions.errors().front().code == -54099);
   CHECK(result.outputActions.errors().front().message == "Number of Bins for RDF must be at least 1, but was -1.");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ComputeFeatureClustering: direct bin count guard", "[SimplnxCore][ComputeFeatureClustering]")
+TEST_CASE("SimplnxCore::ComputeFeatureClustering: invalid bins execute leaves data unchanged", "[SimplnxCore][ComputeFeatureClustering]")
 {
   const int32 numberOfBins = GENERATE(0, -1);
   CAPTURE(numberOfBins);
   DataStructure dataStructure;
-  ComputeFeatureClusteringInputValues inputValues{};
-  inputValues.NumberOfBins = numberOfBins;
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler{};
-  ComputeFeatureClustering algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
-  Result<> result;
-  REQUIRE_NOTHROW(result = algorithm());
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors().front().code == ComputeFeatureClustering::k_InvalidNumberOfBins);
-  CHECK(result.errors().front().message == fmt::format("Number of Bins for RDF must be at least 1, but was {}.", numberOfBins));
-  CHECK(dataStructure.getAllDataPaths().empty());
+  const Arguments args = CreateBinCountClusteringFixture(dataStructure, numberOfBins);
+  const auto originalPaths = dataStructure.getAllDataPaths();
+  const DataPath featuresPath({"BinCountGeometry", "Features"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featuresPath.createChildPath("Phases")));
+  const auto& phases = dataStructure.getDataRefAs<Int32Array>(featuresPath.createChildPath("Phases"));
+  const std::vector<int32> originalPhases(phases.begin(), phases.end());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(featuresPath.createChildPath("Centroids")));
+  const auto& centroids = dataStructure.getDataRefAs<Float32Array>(featuresPath.createChildPath("Centroids"));
+  const std::vector<float32> originalCentroids(centroids.begin(), centroids.end());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(featuresPath.createChildPath("Biased")));
+  const auto& biased = dataStructure.getDataRefAs<BoolArray>(featuresPath.createChildPath("Biased"));
+  const std::vector<bool> originalBiased(biased.begin(), biased.end());
+  IFilter::ExecuteResult result;
+  REQUIRE_NOTHROW(result = ComputeFeatureClusteringFilter{}.execute(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == -54099);
+  CHECK(result.result.errors().front().message == fmt::format("Number of Bins for RDF must be at least 1, but was {}.", numberOfBins));
+  CHECK(dataStructure.getAllDataPaths() == originalPaths);
+  CHECK(std::vector<int32>(phases.begin(), phases.end()) == originalPhases);
+  CHECK(std::vector<float32>(centroids.begin(), centroids.end()) == originalCentroids);
+  CHECK(std::vector<bool>(biased.begin(), biased.end()) == originalBiased);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: RDF cache indices", "[SimplnxCore][ComputeFeatureClustering]")
@@ -299,8 +311,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: RDF cache indices", "[SimplnxC
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: positive bin count domain", "[SimplnxCore][ComputeFeatureClustering]")
 {
   const int32 numberOfBins = GENERATE(1, std::numeric_limits<int32>::max());
-  const auto result = ComputeFeatureClustering::ValidateNumberOfBins(numberOfBins);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
   DataStructure dataStructure;
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, numberOfBins);
   const auto preflight = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);

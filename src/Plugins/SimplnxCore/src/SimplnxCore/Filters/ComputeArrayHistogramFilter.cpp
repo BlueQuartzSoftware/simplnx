@@ -19,6 +19,20 @@
 
 using namespace nx::core;
 
+namespace
+{
+constexpr int32 k_InvalidNumberOfBins = -57299;
+
+Result<> ValidateNumberOfBins(int32 numberOfBins)
+{
+  if(numberOfBins < 1)
+  {
+    return MakeErrorResult(k_InvalidNumberOfBins, fmt::format("Number of Bins must be at least 1, but was {}.", numberOfBins));
+  }
+  return {};
+}
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -115,7 +129,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
-  Result<> binCountResult = ComputeArrayHistogram::ValidateNumberOfBins(pNumberOfBinsValue);
+  Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
