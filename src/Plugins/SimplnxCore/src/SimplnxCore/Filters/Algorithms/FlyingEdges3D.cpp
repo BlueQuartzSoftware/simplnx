@@ -1,20 +1,13 @@
 #include "FlyingEdges3D.hpp"
 
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/FlyingEdges.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
-
-#include <fmt/format.h>
 
 using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_InvalidInputArrayError = -10512;
-constexpr int32 k_ComponentShapeError = -10511;
-constexpr int32 k_CellTupleCountError = -10510;
 /**
  * @struct ExecuteFlyingEdgesFunctor
  * @brief Dispatches and validates the four Flying Edges passes.
@@ -87,29 +80,8 @@ const std::atomic_bool& FlyingEdges3D::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-Result<> FlyingEdges3D::ValidateInputs(const DataStructure& dataStructure, const FlyingEdges3DInputValues& inputValues)
-{
-  const auto* array = dataStructure.getDataAs<IDataArray>(inputValues.contouringArrayPath);
-  if(array == nullptr)
-  {
-    return MakeErrorResult(k_InvalidInputArrayError,
-                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.contouringArrayPath.toString()));
-  }
-  if(array->getComponentShape() != ShapeType{1})
-  {
-    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape ({}), but requires {{1}}. Select an array with exactly one component dimension of size 1.",
-                                                              inputValues.contouringArrayPath.toString(), StringUtilities::formatDimensions(array->getComponentShape())));
-  }
-  return ValidateCellTupleCount(dataStructure, inputValues.imageGeomPath, {inputValues.contouringArrayPath}, k_CellTupleCountError);
-}
-
-// -----------------------------------------------------------------------------
 Result<> FlyingEdges3D::operator()()
 {
-  if(auto validation = ValidateInputs(m_DataStructure, *m_InputValues); validation.invalid())
-  {
-    return validation;
-  }
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
   const auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);

@@ -5,6 +5,7 @@
 #include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -12,6 +13,9 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <memory>
 
@@ -19,6 +23,8 @@ using namespace nx::core;
 namespace
 {
 const std::string k_VertexNormals = "VertexNormals";
+constexpr int32 k_CellTupleCountError = -10510;
+constexpr int32 k_InvalidInputArrayError = -10512;
 
 FlyingEdges3DInputValues CreateInputValues(const Arguments& filterArgs)
 {
@@ -107,11 +113,18 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 {
   auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
 
-  const auto inputValues = CreateInputValues(filterArgs);
-  if(auto validation = FlyingEdges3D::ValidateInputs(dataStructure, inputValues); validation.invalid())
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(pContouringArrayPath) == nullptr)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
+                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
+  }
+
+  if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, k_CellTupleCountError); result.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;

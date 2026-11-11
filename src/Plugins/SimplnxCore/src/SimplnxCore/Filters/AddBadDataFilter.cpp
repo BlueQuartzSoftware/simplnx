@@ -5,6 +5,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -13,8 +14,11 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <fmt/format.h>
 
 #include <memory>
 #include <random>
@@ -24,6 +28,9 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidInputArrayError = -76240;
+constexpr int32 k_CellTupleCountError = -76238;
+
 AddBadDataInputValues CreateInputValues(const Arguments& filterArgs)
 {
   AddBadDataInputValues inputValues;
@@ -125,13 +132,21 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pPoissonVolFractionValue = filterArgs.value<float32>(k_PoissonVolFraction_Key);
   auto pBoundaryNoiseValue = filterArgs.value<bool>(k_BoundaryNoise_Key);
   auto pBoundaryVolFractionValue = filterArgs.value<float32>(k_BoundaryVolFraction_Key);
+  auto pGBEuclideanDistancesArrayPathValue = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
-  const auto inputValues = CreateInputValues(filterArgs);
-  if(auto validation = AddBadData::ValidateInputs(dataStructure, inputValues); validation.invalid())
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    return {MakeErrorResult<OutputActions>(
+        k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pGBEuclideanDistancesArrayPathValue.toString()))};
+  }
+
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
+  if(tupleCountResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   PreflightResult preflightResult;

@@ -1,4 +1,3 @@
-#include "SimplnxCore/Filters/Algorithms/AddBadData.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
@@ -207,45 +206,8 @@ TEST_CASE("SimplnxCore::AddBadData component contract", "[SimplnxCore][AddBadDat
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::AddBadData: direct call rejects non-scalar component shapes", "[SimplnxCore][AddBadDataFilter]")
+TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxCore][AddBadDataFilter]")
 {
-  const auto shape = GENERATE(ShapeType{3}, ShapeType{1, 1});
-  CAPTURE(shape);
-  DataStructure dataStructure;
-  auto* input = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {2}, shape);
-  REQUIRE(input != nullptr);
-  AddBadDataInputValues inputValues{};
-  inputValues.GBEuclideanDistancesArrayPath = DataPath({"Input"});
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler;
-  auto result = AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -76239);
-  REQUIRE(result.errors().front().message.find(shape.size() == 1 ? "X=3" : "Y=1, X=1") != std::string::npos);
-  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
-}
-
-TEST_CASE("SimplnxCore::AddBadData: direct call rejects tuple counts that differ from image cells", "[SimplnxCore][AddBadDataFilter]")
-{
-  DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
-  image->setDimensions({3, 1, 1});
-  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Input", {2}, {1}) != nullptr);
-  AddBadDataInputValues inputValues{};
-  inputValues.GBEuclideanDistancesArrayPath = DataPath({"Input"});
-  inputValues.ImageGeometryPath = DataPath({"Image"});
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler;
-  auto result = AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -76238);
-}
-
-TEST_CASE("SimplnxCore::AddBadData: rejects missing or nonnumeric input arrays", "[SimplnxCore][AddBadDataFilter]")
-{
-  const bool missing = GENERATE(false, true);
-  CAPTURE(missing);
   DataStructure dataStructure;
   auto* image = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(image != nullptr);
@@ -253,31 +215,17 @@ TEST_CASE("SimplnxCore::AddBadData: rejects missing or nonnumeric input arrays",
   auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
   REQUIRE(cells != nullptr);
   image->setCellData(*cells);
-  if(!missing)
-  {
-    REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
-  }
-  AddBadDataInputValues inputValues{};
-  inputValues.GBEuclideanDistancesArrayPath = DataPath({"Input"});
-  inputValues.ImageGeometryPath = DataPath({"Image"});
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler;
-  Result<> result;
-  REQUIRE_NOTHROW(result = AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)());
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -76240);
-  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
-  if(!missing)
-  {
-    const AddBadDataFilter filter;
-    auto args = filter.getDefaultArguments();
-    args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-    args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
-    args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
-    IFilter::PreflightResult preflight;
-    REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().front().code == -76240);
-  }
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+
+  const AddBadDataFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -76240);
+  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

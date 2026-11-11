@@ -32,6 +32,9 @@ Result<> ValidateNumberOfBins(int32 numberOfBins)
   return {};
 }
 
+constexpr int32 k_MaskTupleCountError = -57207;
+constexpr int32 k_InvalidMaskArrayError = -57222;
+
 ComputeArrayHistogramInputValues CreateInputValues(const Arguments& filterArgs)
 {
   ComputeArrayHistogramInputValues inputValues;
@@ -160,10 +163,19 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   auto pBinMostPopulatedName = filterArgs.value<std::string>(k_HistoMostPopulatedBinName_Key);
   auto pCalculateModalBinRanges = filterArgs.value<bool>(k_CalculateModalBinRanges_Key);
   auto pBinModalBinRangesName = filterArgs.value<std::string>(k_HistoModalBinRangesName_Key);
-  const auto inputValues = CreateInputValues(filterArgs);
-  if(auto validation = ComputeArrayHistogram::ValidateInputs(dataStructure, inputValues); validation.invalid())
+  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+
+  const IDataArray* maskArray = nullptr;
+  if(useMask)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+    if(maskArray == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(k_InvalidMaskArrayError,
+                                             fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
+    }
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -187,6 +199,13 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(maskArray != nullptr && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    {
+      return {
+          MakeErrorResult<OutputActions>(k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.",
+                                                                            maskArrayPath.toString(), maskArray->getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples()))};
+    }
+
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 

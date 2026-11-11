@@ -4,12 +4,8 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
-
-#include <fmt/format.h>
 
 #include <nonstd/span.hpp>
 
@@ -23,9 +19,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_InvalidInputArrayError = -76240;
-constexpr int32 k_ComponentShapeError = -76239;
-constexpr int32 k_CellTupleCountError = -76238;
 constexpr usize k_ChunkTuples = 65536;
 
 /**
@@ -297,28 +290,8 @@ const std::atomic_bool& AddBadData::getCancel()
   return m_ShouldCancel;
 }
 
-Result<> AddBadData::ValidateInputs(const DataStructure& dataStructure, const AddBadDataInputValues& inputValues)
-{
-  const auto* array = dataStructure.getDataAs<IDataArray>(inputValues.GBEuclideanDistancesArrayPath);
-  if(array == nullptr)
-  {
-    return MakeErrorResult(k_InvalidInputArrayError,
-                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.GBEuclideanDistancesArrayPath.toString()));
-  }
-  if(array->getComponentShape() != ShapeType{1})
-  {
-    return MakeErrorResult(k_ComponentShapeError, fmt::format("Input array '{}' has component shape ({}), but requires {{1}}. Select an array with exactly one component dimension of size 1.",
-                                                              inputValues.GBEuclideanDistancesArrayPath.toString(), StringUtilities::formatDimensions(array->getComponentShape())));
-  }
-  return ValidateCellTupleCount(dataStructure, inputValues.ImageGeometryPath, {inputValues.GBEuclideanDistancesArrayPath}, k_CellTupleCountError);
-}
-
 Result<> AddBadData::operator()()
 {
-  if(auto validation = ValidateInputs(m_DataStructure, *m_InputValues); validation.invalid())
-  {
-    return validation;
-  }
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto childArrayPaths = GetAllChildArrayDataPaths(m_DataStructure, imageGeom.getCellDataPath());
   const std::vector<DataPath> voxelArrayPaths = childArrayPaths.has_value() ? std::move(childArrayPaths.value()) : std::vector<DataPath>{};

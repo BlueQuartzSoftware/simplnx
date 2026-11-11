@@ -39,16 +39,9 @@ public:
   NormalizeImage& operator=(NormalizeImage&&) noexcept = delete;
 
   /**
-   * @brief Checks numeric input kind and the exact scalar component shape without reading values.
-   * @param dataStructure Contains the input array.
-   * @param inputValues Identifies the input array.
-   * @return An array-kind or component-shape error, or success.
-   */
-  static Result<> ValidateInputs(const DataStructure& dataStructure, const NormalizeImageInputValues& inputValues);
-
-  /**
    * @brief Computes statistics and writes normalized float64 values.
-   * @return An input validation or array transfer error, or success.
+   * @return An array transfer error, or success.
+   * @pre The input is a numeric DataArray with component shape {1}.
    * @pre The output array exists and matches the input tuple shape.
    */
   Result<> operator()();

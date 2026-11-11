@@ -66,17 +66,10 @@ public:
    * @return Range, mask, bulk-I/O, temporary-file, or modal-sort errors.
    * @pre Output-path collections match input count.
    * @pre NumberOfBins is at least one and mask type is Bool or UInt8.
+   * @pre The mask has component shape {1} and one tuple per tuple of each input array.
    * @pre An automatic integral range can increment its maximum without overflow.
    */
   Result<> operator()();
-
-  /**
-   * @brief Checks numeric input kinds and the optional mask shape and tuple count.
-   * @param dataStructure Contains the input arrays and optional mask.
-   * @param inputValues Selects the arrays and mask.
-   * @return An array-kind, mask-shape, or tuple-count error, or success.
-   */
-  static Result<> ValidateInputs(const DataStructure& dataStructure, const ComputeArrayHistogramInputValues& inputValues);
 
 private:
   DataStructure& m_DataStructure;

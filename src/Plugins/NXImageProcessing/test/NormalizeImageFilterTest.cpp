@@ -1,5 +1,4 @@
 #include "NXImageProcessing/Filters/NormalizeImageFilter.hpp"
-#include "NXImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
 #include "ItkGoldenTestUtils.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
@@ -120,27 +119,8 @@ TEST_CASE("NXImageProcessing::NormalizeImageFilter: ITK real-image golden (defau
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("NXImageProcessing::NormalizeImage: direct call rejects non-scalar component shapes", "[NXImageProcessing][NormalizeImageFilter]")
+TEST_CASE("NXImageProcessing::NormalizeImage: rejects nonnumeric input arrays", "[NXImageProcessing][NormalizeImageFilter]")
 {
-  const auto shape = GENERATE(ShapeType{3}, ShapeType{1, 1});
-  CAPTURE(shape);
-  DataStructure dataStructure;
-  auto* input = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Input", {2}, shape);
-  REQUIRE(input != nullptr);
-  const NormalizeImageInputValues inputValues{DataPath({"Input"}), DataPath({"Output"})};
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler;
-  auto result = NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -94001);
-  REQUIRE(result.errors().front().message.find(shape.size() == 1 ? "X=3" : "Y=1, X=1") != std::string::npos);
-  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
-}
-
-TEST_CASE("ImageProcessing::NormalizeImage: rejects missing or nonnumeric input arrays", "[ImageProcessing][NormalizeImageFilter]")
-{
-  const bool missing = GENERATE(false, true);
-  CAPTURE(missing);
   DataStructure dataStructure;
   auto* image = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(image != nullptr);
@@ -148,29 +128,16 @@ TEST_CASE("ImageProcessing::NormalizeImage: rejects missing or nonnumeric input 
   auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
   REQUIRE(cells != nullptr);
   image->setCellData(*cells);
-  if(!missing)
-  {
-    REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
-  }
-  NormalizeImageInputValues inputValues{};
-  inputValues.InputArrayPath = DataPath({"Input"});
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler;
-  Result<> result;
-  REQUIRE_NOTHROW(result = NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)());
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -94002);
-  REQUIRE(result.errors().front().message.find("Input") != std::string::npos);
-  if(!missing)
-  {
-    const NormalizeImageFilter filter;
-    auto args = filter.getDefaultArguments();
-    args.insertOrAssign(NormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
-    args.insertOrAssign(NormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
-    IFilter::PreflightResult preflight;
-    REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().front().code == -94002);
-  }
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+
+  const NormalizeImageFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -94002);
+  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

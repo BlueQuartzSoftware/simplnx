@@ -2,6 +2,7 @@
 
 #include "ImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
 
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -11,10 +12,14 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/format.h>
+
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InvalidInputArrayError = -94002;
+
 NormalizeImageInputValues CreateInputValues(const Arguments& filterArgs)
 {
   const auto inputPath = filterArgs.value<DataPath>(NormalizeImageFilter::k_InputImageDataPath_Key);
@@ -71,9 +76,11 @@ IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   const auto inputValues = CreateInputValues(filterArgs);
-  if(auto validation = NormalizeImage::ValidateInputs(dataStructure, inputValues); validation.invalid())
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath) == nullptr)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
+                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()))};
   }
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
