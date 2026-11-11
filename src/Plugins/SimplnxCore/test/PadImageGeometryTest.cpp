@@ -1,4 +1,3 @@
-#include "SimplnxCore/Filters/Algorithms/PadImageGeometry.hpp"
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
@@ -648,7 +647,7 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Representability and inactive padding"
     CHECK(applied.errors()[0].message.find(row == 1 ? "byte" : "value") != std::string::npos);
   }
 }
-TEST_CASE("SimplnxCore::PadImageGeometry: Direct active vector validation", "[SimplnxCore][PadImageGeometry]")
+TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[SimplnxCore][PadImageGeometry]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4);
   DataStructure ds;
@@ -671,23 +670,20 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Direct active vector validation", "[Si
   auto* dest = ds.getDataAs<Int32Array>(DataPath({"Padded", "Cells", "Marker"}));
   REQUIRE(dest != nullptr);
   dest->fill(99);
-  PadImageGeometryInputValues input{};
-  input.SelectedImageGeometryPath = DataPath({"ValidationImage"});
-  input.CreatedOutputPath = DataPath({"Padded"});
-  input.PadInX = true;
-  input.XMinMax = row == 0 ? VectorInt32Parameter::ValueType{-1, 0} : row == 1 ? VectorInt32Parameter::ValueType{1} : VectorInt32Parameter::ValueType{1, 1};
+  args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, row == 0 ? VectorInt32Parameter::ValueType{-1, 0} : row == 1 ? VectorInt32Parameter::ValueType{1} : VectorInt32Parameter::ValueType{1, 1});
   if(row >= 3)
   {
-    input.PadInY = row == 3;
-    input.PadInZ = row == 4;
+    args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, row == 3);
+    args.insertOrAssign(PadImageGeometryFilter::k_PadZDim_Key, row == 4);
+    args.insertOrAssign(row == 3 ? PadImageGeometryFilter::k_YMinMax_Key : PadImageGeometryFilter::k_ZMinMax_Key, VectorInt32Parameter::ValueType{});
   }
-  const std::atomic_bool cancel = false;
-  const IFilter::MessageHandler handler;
-  auto result = PadImageGeometry(ds, handler, cancel, &input)();
+  args.insertOrAssign(PadImageGeometryFilter::k_CreatedImageGeometryPath_Key, DataPath({"FilteredPadded"}));
+  auto result = filter.execute(ds, args);
   if(row != 2)
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == (row == 0 ? -86019 : row == 1 ? -86016 : row == 3 ? -86017 : -86018));
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    CHECK(result.result.errors()[0].code == (row == 0 ? -86019 : -1));
+    CHECK_FALSE(ds.containsData(DataPath({"FilteredPadded"})));
     for(usize idx = 0; idx < 8; ++idx)
     {
       CHECK((*dest)[idx] == 99);
@@ -695,7 +691,9 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Direct active vector validation", "[Si
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    dest = ds.getDataAs<Int32Array>(DataPath({"FilteredPadded", "Cells", "Marker"}));
+    REQUIRE(dest != nullptr);
     const std::array<int32, 8> expected = {0, 1, 2, 0, 0, 3, 4, 0};
     for(usize idx = 0; idx < 8; ++idx)
     {

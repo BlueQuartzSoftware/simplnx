@@ -878,7 +878,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Large axis regression", "[SimplnxC
   CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{4, 1, 5, 2, 6, 3});
 }
 
-TEST_CASE("SimplnxCore::RotateSampleRefFrame: Direct invalid axis preserves arrays", "[SimplnxCore][RotateSampleRefFrameFilter]")
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Execute invalid axis preserves arrays", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
   DataStructure ds;
   CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
@@ -891,16 +891,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Direct invalid axis preserves arra
   auto* dest = ds.getDataAs<Int32Array>(DataPath({"Output", "CellData", "Values"}));
   REQUIRE(dest != nullptr);
   dest->fill(99);
-  RotateSampleRefFrameInputValues input{};
-  input.SourceGeometryPath = k_InputPath;
-  input.DestGeometryPath = k_OutputPath;
-  input.RotationRepresentationIndex = 0;
-  input.RotationAxisAngle = {0, 0, 0, 90};
-  const std::atomic_bool cancel = false;
-  const IFilter::MessageHandler handler;
-  auto result = RotateSampleRefFrame(ds, handler, cancel, &input)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  CHECK(result.errors()[0].code == -86052);
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, DataPath({"RejectedOutput"}));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  CHECK(result.result.errors()[0].code == -86052);
+  CHECK_FALSE(ds.containsData(DataPath({"RejectedOutput"})));
   CHECK(ReadOutputValues(ds, k_InputPath) == std::vector<int32>{1, 2, 3, 4, 5, 6});
   CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{99, 99, 99, 99, 99, 99});
 }

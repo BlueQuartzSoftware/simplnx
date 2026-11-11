@@ -84,6 +84,7 @@ public:
    * @return Merged worker storage errors and warnings.
    * @pre Every source cell child is an IDataArray with a matching destination array.
    * @pre The selected rotation is invertible.
+   * @pre An Axis-Angle rotation has four values: a finite nonzero XYZ axis and a finite angle in degrees.
    * @pre SliceBySlice is false or the rotation preserves the Z axis.
    *
    * Cancellation returns success after active workers stop. Completed slices
