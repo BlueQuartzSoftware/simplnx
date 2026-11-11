@@ -70,15 +70,6 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
 };
 
 /**
- * @brief Validates only the selected transformation parameter vector.
- * @param dataStructure Supplies the selected geometry type for the scale domain.
- * @param inputValues Supplies the active vector and geometry path.
- * @return A vector length, finite-value, positive-image-scale, or axis-angle error.
- * @note Retained geometry metadata is not validated.
- */
-SIMPLNX_EXPORT Result<> ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues);
-
-/**
  * @class ApplyTransformationToGeometry
  * @brief Applies a matrix, rotation, translation, or scale to a supported geometry.
  *
@@ -121,6 +112,8 @@ public:
    * @pre Image cell children selected for interpolation are numeric IDataArray objects.
    * @pre Image transforms use nearest-neighbor or linear interpolation.
    * @pre Precomputed and saved transformation arrays contain 16 Float32 values.
+   * @pre The selected Translation or Scale has three finite values; Image Geometry scale values are greater than 0.
+   * @pre A selected Rotation has a finite nonzero XYZ axis and a finite angle in degrees.
    */
   Result<> operator()();
 

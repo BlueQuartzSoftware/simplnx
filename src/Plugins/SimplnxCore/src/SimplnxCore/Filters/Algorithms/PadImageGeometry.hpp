@@ -2,7 +2,6 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -17,8 +16,6 @@ const std::string k_TempGeometryName = ".cropped_image_geometry";
 
 namespace nx::core
 {
-class ImageGeom;
-
 struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
 {
   DataPath SelectedImageGeometryPath;
@@ -51,15 +48,12 @@ public:
   PadImageGeometry& operator=(const PadImageGeometry&) = delete;
   PadImageGeometry& operator=(PadImageGeometry&&) noexcept = delete;
 
-  Result<> operator()();
-
   /**
-   * @brief Validates active padding vectors and computes representable dimensions.
-   * @param srcGeom Supplies the current source dimensions.
-   * @param inputValues Supplies active axes and nonnegative padding in cells.
-   * @return Padded dimensions, or the first length, sign, or extent/product error.
+   * @brief Copies the source cell data into the padded destination geometry.
+   * @return An error when the padded dimensions or origin computed from the final geometry cannot be represented.
+   * @pre Each enabled axis has two padding values, and both are at least 0.
    */
-  static Result<SizeVec3> ValidateInputs(const ImageGeom& srcGeom, const PadImageGeometryInputValues& inputValues);
+  Result<> operator()();
 
   const std::atomic_bool& getCancel();
 

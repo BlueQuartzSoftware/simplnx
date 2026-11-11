@@ -31,8 +31,35 @@ using namespace nx::core;
 
 namespace
 {
+constexpr std::array<std::array<int32, 2>, 3> k_NegativePadding = {{{-86019, -86020}, {-86021, -86022}, {-86023, -86024}}};
 constexpr int32 k_PaddedDimensionsWarning = -86031;
 constexpr int32 k_PaddedOriginWarning = -86032;
+
+Result<SizeVec3> ValidatePaddingParameters(const ImageGeom& srcGeom, const PadImageGeometryInputValues& inputValues)
+{
+  const std::array<bool, 3> active = {inputValues.PadInX, inputValues.PadInY, inputValues.PadInZ};
+  const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(inputValues.XMinMax), std::cref(inputValues.YMinMax), std::cref(inputValues.ZMinMax)};
+  std::array<std::array<int32, 2>, 3> padding{};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(!active[axis])
+    {
+      continue;
+    }
+    const auto& values = vectors[axis].get();
+    for(usize side = 0; side < 2; ++side)
+    {
+      if(values[side] < 0)
+      {
+        return MakeErrorResult<SizeVec3>(k_NegativePadding[axis][side],
+                                         fmt::format("Parameter '{} Min & Max Padding' {} value {} must be nonnegative.", "XYZ"[axis], side == 0 ? "Min" : "Max", values[side]));
+      }
+      padding[axis][side] = values[side];
+    }
+  }
+  return GeometryUtilities::ComputePaddedDimensions(srcGeom.getDimensions(), padding, active);
+}
+
 } // namespace
 
 namespace nx::core
@@ -162,7 +189,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   validationInput.PadInX = pPadXDim;
   validationInput.PadInY = pPadYDim;
   validationInput.PadInZ = pPadZDim;
-  auto dimensions = PadImageGeometry::ValidateInputs(srcImageGeom, validationInput);
+  auto dimensions = ValidatePaddingParameters(srcImageGeom, validationInput);
   SizeVec3 destGeomDims = srcDims;
   FloatVec3 targetOrigin = srcOrigin;
   bool usePlaceholders = false;

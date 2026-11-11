@@ -43,10 +43,8 @@ constexpr int32 k_ImageScalePositive = -86004;
 constexpr int32 k_TranslationResultWarning = -86005;
 constexpr int32 k_ScaleResultWarning = -86006;
 const std::string k_UnknownPrecomputedMatrixDescription = "Precomputed transformation matrix unknown during preflight.";
-} // namespace
 
-// -----------------------------------------------------------------------------
-Result<> nx::core::ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
+Result<> ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
 {
   if(inputValues.TransformationSelection == detail::k_RotationIdx)
   {
@@ -74,6 +72,8 @@ Result<> nx::core::ValidateTransformationParameters(const DataStructure& dataStr
   }
   return {};
 }
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
@@ -600,11 +600,6 @@ Result<> ApplyTransformationToGeometry::operator()()
   if(!m_InputValues->RemoveOriginalGeometry)
   {
     return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));
-  }
-  auto validation = ValidateTransformationParameters(m_DataStructure, *m_InputValues);
-  if(validation.invalid())
-  {
-    return validation;
   }
 
   switch(m_InputValues->TransformationSelection)

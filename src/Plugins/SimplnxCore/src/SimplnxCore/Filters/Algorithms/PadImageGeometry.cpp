@@ -14,8 +14,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr std::array<int32, 3> k_PaddingLength = {-86016, -86017, -86018};
-constexpr std::array<std::array<int32, 2>, 3> k_NegativePadding = {{{-86019, -86020}, {-86021, -86022}, {-86023, -86024}}};
 constexpr int32 k_PaddedOrigin = -86027;
 
 template <typename T>
@@ -107,41 +105,22 @@ const std::atomic_bool& PadImageGeometry::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-Result<SizeVec3> PadImageGeometry::ValidateInputs(const ImageGeom& srcGeom, const PadImageGeometryInputValues& inputValues)
-{
-  const std::array<bool, 3> active = {inputValues.PadInX, inputValues.PadInY, inputValues.PadInZ};
-  const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(inputValues.XMinMax), std::cref(inputValues.YMinMax), std::cref(inputValues.ZMinMax)};
-  std::array<std::array<int32, 2>, 3> padding{};
-  for(usize axis = 0; axis < 3; ++axis)
-  {
-    if(!active[axis])
-    {
-      continue;
-    }
-    const auto& values = vectors[axis].get();
-    if(values.size() != 2)
-    {
-      return MakeErrorResult<SizeVec3>(k_PaddingLength[axis], fmt::format("Parameter '{} Min & Max Padding' must contain 2 values, but contains {}.", "XYZ"[axis], values.size()));
-    }
-    for(usize side = 0; side < 2; ++side)
-    {
-      if(values[side] < 0)
-      {
-        return MakeErrorResult<SizeVec3>(k_NegativePadding[axis][side],
-                                         fmt::format("Parameter '{} Min & Max Padding' {} value {} must be nonnegative.", "XYZ"[axis], side == 0 ? "Min" : "Max", values[side]));
-      }
-      padding[axis][side] = values[side];
-    }
-  }
-  return GeometryUtilities::ComputePaddedDimensions(srcGeom.getDimensions(), padding, active);
-}
-
-// -----------------------------------------------------------------------------
 Result<> PadImageGeometry::operator()()
 {
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
-  auto dimensions = ValidateInputs(srcImageGeom, *m_InputValues);
+  const std::array<bool, 3> active = {m_InputValues->PadInX, m_InputValues->PadInY, m_InputValues->PadInZ};
+  const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(m_InputValues->XMinMax), std::cref(m_InputValues->YMinMax),
+                                                                                                std::cref(m_InputValues->ZMinMax)};
+  std::array<std::array<int32, 2>, 3> padding{};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(active[axis])
+    {
+      padding[axis] = {vectors[axis].get()[0], vectors[axis].get()[1]};
+    }
+  }
+  auto dimensions = GeometryUtilities::ComputePaddedDimensions(srcImageGeom.getDimensions(), padding, active);
   if(dimensions.invalid())
   {
     return ConvertResult(std::move(dimensions));
@@ -149,9 +128,6 @@ Result<> PadImageGeometry::operator()()
   if(m_InputValues->UpdateOrigin)
   {
     const auto origin = srcImageGeom.getOrigin(), spacing = srcImageGeom.getSpacing();
-    const std::array<bool, 3> active = {m_InputValues->PadInX, m_InputValues->PadInY, m_InputValues->PadInZ};
-    const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(m_InputValues->XMinMax), std::cref(m_InputValues->YMinMax),
-                                                                                                  std::cref(m_InputValues->ZMinMax)};
     for(usize axis = 0; axis < 3; ++axis)
     {
       if(!active[axis])
