@@ -27,6 +27,7 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cmath>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -44,6 +45,48 @@ const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingM
 const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
+
+constexpr int32 k_MinimumScalingError = -23508;
+
+/**
+ * @brief Checks active stack resampling parameters before file metadata or output actions.
+ * @param mode Selects native, scaling or exact dimensions.
+ * @param scaling Gives the active scaling percentage.
+ * @param exactXYDimensions Gives requested X/Y pixel counts when Exact Dimensions is active.
+ * @pre mode is supported; exactXYDimensions has two components when Exact Dimensions is active.
+ * @return The first active parameter error, with the stack UI parameter context.
+ */
+Result<> ValidateStackResamplingParameters(usize mode, float32 scaling, nonstd::span<const nx::core::uint64> exactXYDimensions)
+{
+  if(mode == k_NoResampleModeIndex)
+  {
+    return {};
+  }
+  ResampleImageGeomInputValues input{};
+  input.ResamplingMode = mode;
+  if(mode == k_ScalingModeIndex)
+  {
+    if(std::isfinite(scaling) && scaling < 1.0F)
+    {
+      return MakeErrorResult(k_MinimumScalingError, fmt::format("Scaling (%) value {} must be greater than or equal to 1.", scaling));
+    }
+    input.Scaling = {scaling, scaling, 100.0F};
+  }
+  else
+  {
+    input.ExactDimensions = {exactXYDimensions[0], exactXYDimensions[1], 1};
+  }
+  auto result = ValidateResamplingParameters(input);
+  if(result.invalid())
+  {
+    const std::string parameterName = mode == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
+    for(auto& error : result.errors())
+    {
+      error.message = fmt::format("{}: {}", parameterName, error.message);
+    }
+  }
+  return result;
+}
 
 // Walks the action list returned by a sub-filter's preflight and returns the first action of
 // the requested concrete type, or nullptr if none match. Replaces brittle index-based lookups
@@ -191,6 +234,12 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
   auto scalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
 
+  auto resamplingValidation = ValidateStackResamplingParameters(resampleImagesChoice, scalingValue, exactXYDims);
+  if(resamplingValidation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(resamplingValidation))};
+  }
+
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto imageDataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
   auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
@@ -286,19 +335,19 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   if(resampleImagesChoice != k_NoResampleModeIndex)
   {
-    if(resampleImagesChoice == k_ScalingModeIndex && scalingValue < 1.0f)
-    {
-      return MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", scalingValue));
-    }
-
     ResampleImageGeomInputValues resampleInputValues{};
     resampleInputValues.SelectedImageGeometryPath = currentImageGeomPath;
     resampleInputValues.RemoveOriginalImageGeom = false;
     resampleInputValues.CreatedImageGeometryPath = ResampledTemporaryGeometryPath(imageGeomPath);
     resampleInputValues.ResamplingMode = resampleImagesChoice;
-    resampleInputValues.Spacing = {1.0F, 1.0F, 1.0F};
-    resampleInputValues.Scaling = {scalingValue, scalingValue, 100.0F};
-    resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
+    if(resampleImagesChoice == k_ScalingModeIndex)
+    {
+      resampleInputValues.Scaling = {scalingValue, scalingValue, 100.0F};
+    }
+    else if(resampleImagesChoice == k_ExactDimensionsModeIndex)
+    {
+      resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
+    }
     PreflightResult resampleImageResult = PreflightImageGeometryResample(tmpDs, resampleInputValues);
     if(resampleImageResult.outputActions.invalid())
     {
