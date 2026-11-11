@@ -1,16 +1,21 @@
 #include "PointSampleEdgeGeometry.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include <cmath>
+#include <limits>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr nx::core::int32 k_SampleSizeRepresentation = -86125;
+constexpr nx::core::int32 k_SampleCountRepresentation = -86124;
 
 template <typename T>
 class CopyEdgeDataToVertexData
@@ -68,9 +73,24 @@ Result<std::tuple<float32, float32, float32, float32>> computeEdgeVector(const F
   return {std::make_tuple(dx, dy, dz, dist)};
 }
 
-usize computeNumSamplePoints(float32 dist, float32 samplingRes)
+Result<usize> ComputeCheckedSampleCount(float32 distance, float32 spacing)
 {
-  return static_cast<usize>(dist / samplingRes) + 1;
+  const float32 quotient = distance / spacing;
+  const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
+  if(!std::isfinite(quotient) || quotient < 0 || static_cast<float64>(quotient) >= exclusiveBound)
+  {
+    return MakeErrorResult<usize>(k_SampleCountRepresentation,
+                                  fmt::format("Sampling Spacing (mm) {} and final edge length {} produce sample quotient {} outside the finite nonnegative conversion range [0, {}).", spacing,
+                                              distance, quotient, exclusiveBound));
+  }
+  const usize truncated = static_cast<usize>(quotient);
+  if(truncated >= static_cast<usize>(std::numeric_limits<int32>::max()))
+  {
+    return MakeErrorResult<usize>(k_SampleCountRepresentation,
+                                  fmt::format("Sampling Spacing (mm) {} and final edge length {} produce truncated sample quotient {}. The sample count after adding 1 must fit int32 limit {}.",
+                                              spacing, distance, truncated, std::numeric_limits<int32>::max()));
+  }
+  return {truncated + 1};
 }
 
 Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex, float32 samplingRes)
@@ -81,7 +101,7 @@ Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64
     return ConvertResultTo<usize>(std::move(ConvertResult(std::move(result))), {});
   }
   auto [dx, dy, dz, dist] = result.value();
-  return {computeNumSamplePoints(dist, samplingRes)};
+  return ComputeCheckedSampleCount(dist, samplingRes);
 }
 
 [[nodiscard]] Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
@@ -93,7 +113,12 @@ Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64
     return ConvertResult(std::move(result));
   }
   auto [dx, dy, dz, dist] = result.value();
-  auto sampleCount = static_cast<int32>(computeNumSamplePoints(dist, samplingRes));
+  auto countResult = ComputeCheckedSampleCount(dist, samplingRes);
+  if(countResult.invalid())
+  {
+    return ConvertResult(std::move(countResult));
+  }
+  const auto sampleCount = static_cast<int32>(countResult.value());
   const float32 step = dist / static_cast<float32>(sampleCount);
 
   const float32 delX = step * dx / dist;
@@ -179,10 +204,48 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return ConvertResult(std::move(result));
     }
-    numVertices += result.value();
+    auto addition = detail::AddSampleCounts(numVertices, result.value());
+    if(addition.invalid())
+    {
+      return ConvertResult(std::move(addition));
+    }
+    numVertices = addition.value();
   }
 
   m_MessageHandler.sendInfoMessage(fmt::format("Total sampling points: {}", numVertices));
+
+  auto indexResult = detail::CheckSampleIndexCount(numVertices);
+  if(indexResult.invalid())
+  {
+    return indexResult;
+  }
+  auto sizeResult = detail::CheckSampleArraySize(numVertices, 3, sizeof(float32), vertexGeom.getVerticesRef().getName());
+  if(sizeResult.invalid())
+  {
+    return sizeResult;
+  }
+  sizeResult = detail::CheckSampleArraySize(numVertices, 1, sizeof(uint64), m_InputValues->EdgeIdsArrayName);
+  if(sizeResult.invalid())
+  {
+    return sizeResult;
+  }
+  if(m_InputValues->CalculateCumulativeSampleDistance)
+  {
+    sizeResult = detail::CheckSampleArraySize(numVertices, 1, sizeof(float32), m_InputValues->CumulativeSampleDistanceArrayName);
+    if(sizeResult.invalid())
+    {
+      return sizeResult;
+    }
+  }
+  for(const auto& path : m_InputValues->pSelectedDataArrayPaths)
+  {
+    const auto& array = m_DataStructure.getDataRefAs<IDataArray>(path);
+    sizeResult = detail::CheckSampleArraySize(numVertices, array.getNumberOfComponents(), GetDataTypeSize(array.getDataType()), path.toString());
+    if(sizeResult.invalid())
+    {
+      return sizeResult;
+    }
+  }
 
   // Resize the vertex geometry and the vertex attribute matrix
   auto& vertices = vertexGeom.getVerticesRef();
@@ -236,5 +299,40 @@ Result<> PointSampleEdgeGeometry::operator()()
     ExecuteParallelFunction<::CopyEdgeDataToVertexData>(selectedEdgeArray->getDataType(), dataAlg, selectedEdgeArray, createdVertexArray, vertexEdgeIdsDataStore, m_ShouldCancel);
   }
 
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<usize> nx::core::detail::AddSampleCounts(usize total, usize increment)
+{
+  if(increment > std::numeric_limits<usize>::max() - total)
+  {
+    return MakeErrorResult<usize>(k_SampleSizeRepresentation, fmt::format("The aggregate sample count overflows usize: total={}, increment={}.", total, increment));
+  }
+  return {total + increment};
+}
+
+// -----------------------------------------------------------------------------
+Result<> nx::core::detail::CheckSampleIndexCount(usize count)
+{
+  if(count > static_cast<uint64>(std::numeric_limits<int64>::max()))
+  {
+    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("The sample index count {} exceeds int64 limit {}.", count, std::numeric_limits<int64>::max()));
+  }
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> nx::core::detail::CheckSampleArraySize(usize tuples, usize components, usize elementBytes, std::string_view arrayName)
+{
+  if(components != 0 && tuples > std::numeric_limits<usize>::max() / components)
+  {
+    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("Array '{}' sample value count overflows usize: tuples={}, components={}.", arrayName, tuples, components));
+  }
+  const usize values = tuples * components;
+  if(elementBytes != 0 && values > std::numeric_limits<usize>::max() / elementBytes)
+  {
+    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("Array '{}' sample byte count overflows usize: values={}, element bytes={}.", arrayName, values, elementBytes));
+  }
   return {};
 }

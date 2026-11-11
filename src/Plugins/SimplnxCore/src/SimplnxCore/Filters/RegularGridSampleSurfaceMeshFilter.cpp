@@ -21,6 +21,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -30,6 +31,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_CreationOriginFinite = -86112;
+
 RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(RegularGridSampleSurfaceMeshFilter::GeometryOption value)
 {
   switch(value)
@@ -41,6 +44,16 @@ RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(
     return RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting;
   }
   throw std::runtime_error(fmt::format("RegularGridSampleSurfaceMeshFilter: Invalid value '{}' for GeometryOption", to_underlying(value)));
+}
+/**
+ * @brief Checks the active spatial parameter domains before output actions.
+ * @param origin Gives creation coordinates in XYZ order.
+ * @pre origin has three components.
+ * @return The first active parameter error, otherwise success.
+ */
+Result<> ValidateCreationOrigin(nonstd::span<const float32> origin)
+{
+  return GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_CreationOriginFinite);
 }
 } // namespace
 
@@ -186,6 +199,11 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   if(geometryOptionIndex == GeometryOption::Create)
   {
+    if(auto validation = ValidateCreationOrigin(pOriginValue); validation.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    }
+
     if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
     {
       return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "

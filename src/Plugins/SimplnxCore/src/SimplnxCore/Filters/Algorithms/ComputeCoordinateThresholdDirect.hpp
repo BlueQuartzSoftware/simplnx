@@ -53,6 +53,11 @@ public:
    * Data written before that checkpoint remains in the mask. Later cells are not written.
    * A fallback bulk-I/O error can leave completed mask chunks.
    */
+  /**
+   * @brief Computes the coordinate-selection mask.
+   * @pre Active Sphere Information has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
+   * @return Mask-output errors, otherwise success.
+   */
   Result<> operator()();
 
 private:

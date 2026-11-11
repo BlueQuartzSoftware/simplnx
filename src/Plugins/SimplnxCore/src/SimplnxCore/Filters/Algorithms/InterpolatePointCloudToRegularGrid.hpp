@@ -80,6 +80,11 @@ public:
    *
    * Cancellation can retain outputs written before the current output page.
    */
+  /**
+   * @brief Accumulates point values in image cells.
+   * @pre Kernel Size has three nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
+   * @return Temporary-storage or output-write errors, otherwise success.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

@@ -70,6 +70,11 @@ public:
    *
    * Cancellation stops new worker scheduling. Scheduled workers finish unless another worker reports an error.
    */
+  /**
+   * @brief Samples face labels at image cell centers.
+   * @pre Prepared Image Geometry metadata and face-label selections are valid.
+   * @return Classification or output errors, otherwise success.
+   */
   Result<> operator()();
 
   /**

@@ -14,7 +14,65 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <cmath>
+
+using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_SigmaSquareOverflow = -86135;
+constexpr int32 k_SigmaSquareUnderflow = -86134;
+constexpr int32 k_SigmaFinite = -86108;
+
+/**
+ * @brief Checks the active spatial parameter domains before output actions.
+ * @param technique Selects uniform or Gaussian interpolation.
+ * @param kernelSize Gives physical kernel extents in XYZ order.
+ * @param sigmas Gives Gaussian standard deviations in cell offsets.
+ * @pre kernelSize has three components; sigmas has three components when Gaussian interpolation is active.
+ * @return The first active parameter error, otherwise success.
+ */
+Result<> ValidateInterpolationParameters(uint64 technique, nonstd::span<const float32> kernelSize, nonstd::span<const float32> sigmas)
+{
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(kernelSize[axis] < 0)
+    {
+      return MakeErrorResult(-11000, fmt::format("Kernel Size {} value {} must be nonnegative.", "XYZ"[axis], kernelSize[axis]));
+    }
+  }
+  if(technique != InterpolatePointCloudToRegularGrid::k_Gaussian)
+  {
+    return {};
+  }
+  auto result = GeometryUtilities::ValidateFiniteVector(sigmas, "Gaussian Sigmas", k_SigmaFinite);
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = GeometryUtilities::ValidatePositiveFiniteVector(sigmas, "Gaussian Sigmas", -11000);
+  if(result.invalid())
+  {
+    return result;
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    const float32 square = sigmas[axis] * sigmas[axis];
+    if(square == 0)
+    {
+      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas {} value {} has square {}. Its float32 square must be greater than 0.", "XYZ"[axis], sigmas[axis], square));
+    }
+    if(!std::isfinite(square))
+    {
+      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas {} value {} has nonfinite square {}. Its float32 square must be finite.", "XYZ"[axis], sigmas[axis], square));
+    }
+  }
+  return {};
+}
+} // namespace
 
 namespace nx::core
 {
@@ -162,18 +220,9 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   OutputActions actions;
 
-  if(kernelSize[0] < 0 || kernelSize[1] < 0 || kernelSize[2] < 0)
+  if(auto validation = ValidateInterpolationParameters(interpolationTechnique, kernelSize, sigmas); validation.invalid())
   {
-    return MakePreflightErrorResult(-11000, fmt::format("All kernel dimensions must be positive.\n "
-                                                        "Current kernel dimensions:\n x = {}\n y = {}\n z = {}\n",
-                                                        kernelSize[0], kernelSize[1], kernelSize[2]));
-  }
-
-  if(sigmas[0] <= 0 || sigmas[1] <= 0 || sigmas[2] <= 0)
-  {
-    return MakePreflightErrorResult(-11000, fmt::format("All sigmas must be positive.\n "
-                                                        "Current sigmas:\n x = {}\n y = {}\n z = {}\n",
-                                                        sigmas[0], sigmas[1], sigmas[2]));
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

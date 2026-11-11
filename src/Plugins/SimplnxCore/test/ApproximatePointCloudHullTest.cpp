@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/ApproximatePointCloudHull.hpp"
 #include "SimplnxCore/Filters/ApproximatePointCloudHullFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -16,7 +17,9 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <cmath>
 #include <filesystem>
+#include <limits>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -292,5 +295,182 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global 
       REQUIRE((*hull.getVertices())[component] == coordinate);
     }
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+namespace
+{
+void CreateSamplingVertices(DataStructure& ds, usize count = 1)
+{
+  auto result = CreateVertexGeometryAction(DataPath({"Points"}), count, "Vertex Data", "Vertices").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  const std::array<float32, 6> coords = {0, 0, 0, 2, 0, 0};
+  auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords.data(), count * 3));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Spatial parameter domains", "[SimplnxCore][ApproximatePointCloudHullFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  ApproximatePointCloudHullFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, DataPath({"Hull"}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{1, 1, 1});
+  int32 expectedCode;
+  std::string parameter;
+  std::string actual;
+  std::string component;
+  SECTION("Grid Resolution")
+  {
+    const auto axis = GENERATE(0, 1, 2);
+    const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
+    CAPTURE(axis, value);
+    actual = fmt::format("{}", value);
+    component = std::string(1, "XYZ"[axis]);
+    std::vector<float32> values = {1, 1, 1};
+    values[axis] = value;
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, values);
+    expectedCode = -86103;
+    parameter = "Grid Resolution";
+  }
+  SECTION("Minimum Number of Empty Neighbors")
+  {
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{27});
+    expectedCode = -86104;
+    actual = "27";
+    parameter = "Minimum Number of Empty Neighbors";
+  }
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(actual) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(component) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Final grid representation", "[SimplnxCore][ApproximatePointCloudHullFilter][SpatialSamplingControls]")
+{
+  SECTION("Ordinary layout")
+  {
+    // Occupied widths 3, 5 and 7 plus an empty voxel on each side.
+    auto result = ApproximatePointCloudHull::ValidateGridRepresentation({-1, -2, -3}, {1, 2, 3});
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.value() == SizeVec3{5, 7, 9});
+  }
+  SECTION("Final bounds")
+  {
+    DataStructure ds;
+    CreateSamplingVertices(ds, 2);
+    REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+    auto& vertices = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+    ApproximatePointCloudHullFilter filter;
+    auto args = filter.getDefaultArguments();
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, DataPath({"Points"}));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, DataPath({"Hull"}));
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{0});
+    args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{1, 1, 1});
+    const auto row = GENERATE(0, 1, 2, 3, 4);
+    CAPTURE(row);
+    if(row == 4)
+    {
+      // The lowest int64 voxel index leaves no room for the empty border below it.
+      vertices[0] = -std::ldexp(1.0F, 63);
+      vertices[3] = vertices[0];
+    }
+    if(row == 0)
+    {
+      vertices[0] = std::ldexp(1.0F, 63);
+      vertices[3] = vertices[0];
+    }
+    if(row == 1)
+    {
+      vertices[0] = -std::ldexp(1.0F, 62);
+      vertices[3] = std::ldexp(1.0F, 62);
+    }
+    if(row == 2)
+    {
+      vertices[3] = std::ldexp(1.0F, 22);
+      vertices[4] = vertices[3];
+      vertices[5] = vertices[3];
+    }
+    if(row == 3)
+    {
+      vertices[3] = 0;
+      args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{std::numeric_limits<float32>::denorm_min(), 1, 1});
+    }
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    CHECK(result.result.errors()[0].code == ((row == 0 || row == 3 || row == 4) ? -86132 : -86133));
+    CHECK(result.result.errors()[0].message.find(row == 1 ? "inclusive width" : row == 2 ? "product" : row == 4 ? "one-voxel border below the minimum" : "bounds") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border beyond float64 integer precision", "[SimplnxCore][ApproximatePointCloudHullFilter][SpatialSamplingControls]")
+{
+  // At 2^54, float64 cannot represent the neighboring integers, so the border must be added in integer arithmetic. A singleton keeps
+  // all 26 neighbors empty only when the padded grid is 3x3x3; the strict threshold of 25 then retains it.
+  const float32 coordinate = GENERATE(std::ldexp(1.0F, 54), -std::ldexp(1.0F, 54));
+  CAPTURE(coordinate);
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  for(usize component = 0; component < 3; component++)
+  {
+    vertices[component] = coordinate;
+  }
+  ApproximatePointCloudHullFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, DataPath({"Hull"}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{25});
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Hull"})));
+  const auto& hull = ds.getDataRefAs<VertexGeom>(DataPath({"Hull"}));
+  REQUIRE(hull.getNumberOfVertices() == 1);
+  for(usize component = 0; component < 3; component++)
+  {
+    CHECK((*hull.getVertices())[component] == coordinate);
+  }
+}
+
+TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Parameter boundaries", "[SimplnxCore][ApproximatePointCloudHullFilter][SpatialSamplingControls]")
+{
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  ApproximatePointCloudHullFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, DataPath({"Hull"}));
+  const auto row = GENERATE(0, 1, 2, 3, 4);
+  CAPTURE(row);
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, row == 4 ? std::vector<float32>{1, 1} : std::vector<float32>{row == 2 ? 0.0F : row == 3 ? -1.0F : 1.0F, 1, 1});
+  args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{row == 1 ? 26ULL : 0ULL});
+  auto result = filter.preflight(ds, args);
+  if(row < 2)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == (row == 4 ? -1 : -11001));
+    if(row == 4)
+    {
+      CHECK(filter.parameters().at(ApproximatePointCloudHullFilter::k_GridResolution_Key)->humanName() == "Grid Resolution");
+      CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+    }
   }
 }

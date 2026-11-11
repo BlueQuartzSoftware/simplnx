@@ -89,6 +89,10 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 
 The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
 
+### Spatial Parameter Limits
+
+With Gaussian interpolation, every **Gaussian Sigmas** component must be finite and greater than zero. Its square in float32 must be finite and nonzero. A nonzero subnormal square is valid. The sigmas measure the kernel offsets in cells. Uniform interpolation ignores Gaussian Sigmas, including empty or invalid inactive values.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright
