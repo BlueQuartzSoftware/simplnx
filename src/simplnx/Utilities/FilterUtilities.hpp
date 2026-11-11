@@ -300,8 +300,8 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
 
 /**
  * @brief Creates all intermediate directories for a given path.
- * @param outputPath The path that gets created
- * @return
+ * @param outputPath The path that gets created.
+ * @return Valid result when the path exists or creation succeeds, or an error if inspection or creation fails.
  */
 SIMPLNX_EXPORT Result<> CreateOutputDirectories(const std::filesystem::path& outputPath);
 

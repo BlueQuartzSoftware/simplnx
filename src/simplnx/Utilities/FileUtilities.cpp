@@ -1,5 +1,6 @@
 #include "FileUtilities.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
@@ -7,6 +8,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <system_error>
 
 #ifdef _WIN32
 #include <io.h>
@@ -198,12 +200,25 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     }
   }
 
-  auto rootPath = checkedPath.root_path();
+  constexpr int32 pathStatusError = -4092;
+  const auto rootPath = checkedPath.root_path();
+  bool checkedPathExists = false;
 
   // Check the deepest existing ancestor. A POSIX path reaches its root. A Windows
   // path with a nonexistent drive reaches a root that also does not exist.
-  while(!std::filesystem::exists(checkedPath) && checkedPath != rootPath)
+  while(true)
   {
+    std::error_code statusError;
+    checkedPathExists = fs::exists(checkedPath, statusError);
+    if(statusError)
+    {
+      return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
+                                                          checkedPath.string(), path.string(), statusError.value(), statusError.message()));
+    }
+    if(checkedPathExists || checkedPath == rootPath)
+    {
+      break;
+    }
     checkedPath = checkedPath.parent_path();
   }
 
@@ -212,7 +227,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     return MakeErrorResult(-19, fmt::format("ValidateDirectoryWritePermission() Error: Input path '{}' resolved to an empty path", path.string()));
   }
 
-  if(!std::filesystem::exists(checkedPath))
+  if(!checkedPathExists)
   {
     return MakeErrorResult(-11,
                            fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' resolved to '{}'. The drive does not exist on this system.", path.string(), checkedPath.string()));

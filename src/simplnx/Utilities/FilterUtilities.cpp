@@ -1,14 +1,18 @@
 #include "FilterUtilities.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
+#include <filesystem>
 #include <string>
+#include <system_error>
 
 namespace fs = std::filesystem;
 
@@ -18,17 +22,35 @@ namespace nx::core
 // -----------------------------------------------------------------------------
 Result<> CreateOutputDirectories(const fs::path& outputPath)
 {
-  if(!fs::exists(outputPath))
+  constexpr int32 pathStatusError = -4090;
+  constexpr int32 createDirectoryError = -4010;
+  std::error_code statusError;
+  const bool outputExists = fs::exists(outputPath, statusError);
+  if(statusError)
   {
-    std::error_code errorCode;
-    // Another process or a symlink can create the directory between the checks.
-    // Verify existence again before reporting an error.
-    if(!fs::create_directories(outputPath, errorCode) && !fs::exists(outputPath))
-    {
-      return MakeErrorResult(-4010, fmt::format("Unable to create output directory {}. Error code from operating system is {}", outputPath.string(), errorCode.value(), errorCode.message()));
-    }
+    return MakeErrorResult(pathStatusError,
+                           fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}", outputPath.string(), statusError.value(), statusError.message()));
   }
-  return {};
+  if(outputExists)
+  {
+    return {};
+  }
+
+  std::error_code creationError;
+  if(fs::create_directories(outputPath, creationError))
+  {
+    return {};
+  }
+
+  // Another process or a symlink can create the directory between the checks.
+  // Keep the creation error if the follow-up check cannot confirm existence.
+  const bool outputExistsAfterCreation = fs::exists(outputPath, statusError);
+  if(!statusError && outputExistsAfterCreation)
+  {
+    return {};
+  }
+  return MakeErrorResult(createDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}", outputPath.string(),
+                                                           creationError.value(), creationError.message()));
 }
 
 // -----------------------------------------------------------------------------
