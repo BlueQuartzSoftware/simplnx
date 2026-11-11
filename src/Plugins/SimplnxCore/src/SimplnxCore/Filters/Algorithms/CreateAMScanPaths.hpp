@@ -42,6 +42,11 @@ public:
   CreateAMScanPaths& operator=(const CreateAMScanPaths&) = delete;
   CreateAMScanPaths& operator=(CreateAMScanPaths&&) noexcept = delete;
 
+  /**
+   * @brief Generates hatch paths from closed slice edges.
+   * @pre Hatch Spacing is finite and positive; consumed rotation radians are finite.
+   * @return Output resize errors or success.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

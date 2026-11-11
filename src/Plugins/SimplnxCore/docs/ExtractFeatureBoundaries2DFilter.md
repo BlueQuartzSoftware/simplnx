@@ -45,6 +45,10 @@ After edge creation, duplicate vertices are eliminated to ensure a clean, connec
 
 **Feature Ids** must have one tuple per cell of the selected geometry. It can be in any Attribute Matrix.
 
+### Spatial Parameter Limits
+
+When **Z Value Source** uses the custom value, **Custom Z Value** must be finite in the geometry coordinate units. Zero and negative custom coordinates are valid. Other Z sources ignore Custom Z Value.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

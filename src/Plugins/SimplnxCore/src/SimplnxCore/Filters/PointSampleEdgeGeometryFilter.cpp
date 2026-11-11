@@ -12,10 +12,22 @@
 
 #include "SimplnxCore/Filters/Algorithms/PointSampleEdgeGeometry.hpp"
 
+#include <cmath>
+
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_SamplingSpacingDomain = -86102;
+
+Result<> ValidateSamplingSpacing(float32 spacing)
+{
+  if(!std::isfinite(spacing) || spacing <= 0)
+  {
+    return MakeErrorResult(k_SamplingSpacingDomain, fmt::format("Sampling Spacing (mm) value {} must be finite and greater than 0.", spacing));
+  }
+  return {};
+}
 } // namespace
 
 namespace nx::core
@@ -110,6 +122,11 @@ IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const Data
   auto cumulativeSampleDistArrayName = filterArgs.value<std::string>(k_CumulativeSampleDistanceArrayName_Key);
   auto edgeIdsArrayName = filterArgs.value<std::string>(k_EdgeIdsArrayName_Key);
   auto calculateCumulativeSampleDist = filterArgs.value<bool>(k_CalculateCumulativeSampleDistance_Key);
+
+  if(auto validation = ValidateSamplingSpacing(filterArgs.value<float32>(k_ScanVectorSamplingRes_Key)); validation.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions = {};
 

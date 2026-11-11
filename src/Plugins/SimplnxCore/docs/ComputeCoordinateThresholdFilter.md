@@ -41,6 +41,10 @@ The center `c` (first 3 values of *Sphere Info*) and radius `r` (4th value) are 
 
 This is primarily a convenience option provided to the user. If toggled on the values will be true (`1`) by default and values withing the bounds will be marked false (`0`). This doesn't modify anything other than switching what value is set for bounds that fall inside or outside respectively.
 
+### Spatial Parameter Limits
+
+When Sphere is selected, **Sphere Information** requires finite X, Y and Z center coordinates and a finite radius greater than zero. All four values use the geometry coordinate units. Rectangle ignores Sphere Information.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

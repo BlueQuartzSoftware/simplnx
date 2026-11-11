@@ -4,6 +4,9 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -746,4 +749,112 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlap
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedFeatureIdsPath);
   const std::vector<int32> actual(featureIds.begin(), featureIds.end());
   REQUIRE(actual == expected);
+}
+
+namespace
+{
+void CreateSamplingTetrahedron(DataStructure& ds)
+{
+  auto result = CreateTriangleGeometryAction(DataPath({"Mesh"}), 4, 4, "Vertex Data", "Face Data", "Vertices", "Faces").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<TriangleGeom>(DataPath({"Mesh"})));
+  auto& geom = ds.getDataRefAs<TriangleGeom>(DataPath({"Mesh"}));
+  const std::array<float32, 12> coords = {0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4};
+  const std::array<uint64, 12> faces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+  auto write = geom.getVerticesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  auto faceWrite = geom.getFacesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint64>(faces));
+  SIMPLNX_RESULT_REQUIRE_VALID(faceWrite);
+  auto labels = CreateArrayAction(DataType::int32, {4}, {2}, DataPath({"Mesh", "Face Data", "Labels"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(labels);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Face Data", "Labels"})));
+  auto& array = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Face Data", "Labels"}));
+  for(usize i = 0; i < 4; ++i)
+  {
+    array[2 * i] = 1;
+    array[2 * i + 1] = 0;
+  }
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Spatial parameter domains", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  int32 expectedCode;
+  std::string parameter;
+  const auto axis = GENERATE(0, 1, 2);
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  std::vector<float32> values = {0, 0, 0};
+  values[axis] = value;
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, values);
+  expectedCode = -86112;
+  parameter = "Origin";
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Sampling boundary controls", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  auto geometry = CreateImageGeometryAction(DataPath({"Existing"}), {1, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(geometry);
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, uint64{1});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ExistingImageGeomPath_Key, DataPath({"Existing"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{});
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Existing", "Cell Data", "Feature Ids"})));
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Existing", "Cell Data", "Feature Ids"}))[0] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Origin vector length", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  RegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -1);
+  CHECK(filter.parameters().at(RegularGridSampleSurfaceMeshFilter::k_Origin_Key)->humanName() == "Origin");
+  CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
 }

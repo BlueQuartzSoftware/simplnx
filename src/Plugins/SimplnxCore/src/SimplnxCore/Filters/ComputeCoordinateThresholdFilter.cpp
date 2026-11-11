@@ -13,9 +13,47 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
 
+#include <cmath>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_SphereRadiusFinite = -86110;
+constexpr int32 k_SphereCenterFinite = -86109;
+
+/**
+ * @brief Checks the active spatial parameter domains before output actions.
+ * @param shape Selects the active bounding shape.
+ * @param sphereInfo Gives center XYZ coordinates followed by the radius.
+ * @pre sphereInfo has four components when Sphere is active.
+ * @return The first active parameter error, otherwise success.
+ */
+Result<> ValidateSphereParameters(ChoicesParameter::ValueType shape, nonstd::span<const float32> sphereInfo)
+{
+  if(shape != ComputeCoordinateThreshold::Sphere)
+  {
+    return {};
+  }
+  auto result = GeometryUtilities::ValidateFiniteVector(sphereInfo.first(3), "Sphere Information center", k_SphereCenterFinite);
+  if(result.invalid())
+  {
+    return result;
+  }
+  if(!std::isfinite(sphereInfo[3]))
+  {
+    return MakeErrorResult(k_SphereRadiusFinite, fmt::format("Sphere Information radius value {} must be finite.", sphereInfo[3]));
+  }
+  if(sphereInfo[3] <= 0)
+  {
+    return MakeErrorResult(-24713, fmt::format("Sphere Information radius value {} must be greater than 0.", sphereInfo[3]));
+  }
+  return {};
+}
+} // namespace
 
 namespace nx::core
 {
@@ -106,6 +144,11 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   auto pSelectedGeomPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
   auto pCreatedMaskPathValue = filterArgs.value<ArrayCreationParameter::ValueType>(k_CreatedMaskPath_Key);
 
+  if(auto validation = ValidateSphereParameters(pContainerShapeTypeValue, filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key)); validation.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+  }
+
   const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -161,11 +204,6 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   }
   case ComputeCoordinateThreshold::Sphere: {
     auto pSphereInfo = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key);
-
-    if(pSphereInfo[3] <= 0)
-    {
-      return MakePreflightErrorResult(-24713, fmt::format("The spheres radius must be greater than 0. Supplied radius: {}", pSphereInfo[3]));
-    }
 
     if(geom.getGeomType() == IGeometry::Type::Image)
     {

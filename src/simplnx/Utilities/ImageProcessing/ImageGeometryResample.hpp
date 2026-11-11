@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
@@ -36,6 +37,34 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
 };
 
 /**
+ * @struct ResampledImageLayout
+ * @brief Stores representable resampling dimensions and spacing.
+ * @note Defaults provide unit dimensions and spacing for provisional preflight layouts.
+ */
+struct ResampledImageLayout
+{
+  SizeVec3 Dimensions = {1, 1, 1};
+  FloatVec3 Spacing = {1, 1, 1};
+};
+
+/**
+ * @brief Checks active Spacing or Scaling Factor parameters during filter preflight.
+ * @param inputValues Selects the mode and its active parameter vector.
+ * @return An error for an invalid active value, otherwise success.
+ * @pre Active vectors have three components. Inactive vectors are not read.
+ */
+SIMPLNX_EXPORT Result<> ValidateResamplingParameters(const ResampleImageGeomInputValues& inputValues);
+
+/**
+ * @brief Computes a layout from source metadata without allocating cell arrays.
+ * @param source Provides geometry dimensions and spacing, which can be provisional during preflight.
+ * @param inputValues Selects the active resampling formula and parameters.
+ * @pre Active parameter vectors have three components and valid domains.
+ * @return The layout or an error for an unrepresentable derived result.
+ */
+SIMPLNX_EXPORT Result<ResampledImageLayout> ComputeResampledImageLayout(const ImageGeom& source, const ResampleImageGeomInputValues& inputValues);
+
+/**
  * @class ResampleImageGeom
  * @brief Copies Image Geometry cell data to a preflight-created regular grid.
  *
@@ -43,7 +72,7 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
  * Axis lookup tables avoid repeated coordinate division. Each array uses one source-row buffer and one destination-row buffer.
  *
  * Cell arrays run as independent parallel tasks. Each task checks cancellation between destination Z slices.
- * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O results are discarded.
+ * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O failures stop the affected task.
  *
  * Optional feature renumbering starts after all cell tasks finish. The algorithm deep-copies feature arrays before compaction can resize them.
  */
@@ -72,11 +101,34 @@ public:
 
   /**
    * @brief Resamples cell arrays and optionally renumbers feature data.
-   * @return Feature validation, deep-copy, or renumber result.
+   * @return Final geometry, cell-copy, feature validation, deep-copy or renumber result.
    *
-   * The method cannot report cell-array bulk-I/O failures. Cancellation can leave partial destination arrays.
+   * @pre Source and destination paths identify prepared geometries with matching cell arrays.
+   * Cancellation can leave partial destination arrays.
    */
   Result<> operator()();
+
+  /**
+   * @brief Checks final coordinate metadata and consumed array sizes before copy.
+   * @param dataStructure Contains the prepared source and destination geometries.
+   * @param inputValues Identifies the source and destination paths.
+   * @pre The paths identify geometries with cell Attribute Matrices and matching arrays.
+   * @return An error for unrepresentable metadata or sizes, otherwise success.
+   */
+  static Result<> ValidatePreparedGeometry(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues);
+
+  /**
+   * @brief Maps final coordinates to source indices, retaining an unmapped sentinel outside coverage.
+   * @param destDim Gives the destination axis length.
+   * @param destOrigin Gives the destination axis origin in geometry length units.
+   * @param destSpacing Gives the destination cell spacing in geometry length units.
+   * @param srcDim Gives the source axis length.
+   * @param srcOrigin Gives the source axis origin in geometry length units.
+   * @param srcSpacing Gives the source cell spacing in geometry length units.
+   * @pre The destination length fits its index-vector container. Origins are finite and spacings are finite and positive.
+   * @return Source indices or an error before an invalid integer conversion.
+   */
+  static Result<std::vector<usize>> ComputeAxisSourceIndices(usize destDim, float64 destOrigin, float64 destSpacing, usize srcDim, float64 srcOrigin, float64 srcSpacing);
 
   const std::atomic_bool& getCancel();
 
@@ -106,7 +158,8 @@ private:
  * @brief Plans Image Geometry resampling without a plugin dependency.
  * @param dataStructure Contains the source Image Geometry and child objects.
  * @param inputValues Contains the resampling settings and data paths.
- * @return Output actions, display values, or a validation error.
+ * @pre Active resampling parameters have valid domains and three components.
+ * @return Output actions and warnings with safe stand-ins when metadata cannot yet determine a layout.
  *
  * The created Image Geometry retains the source length unit.
  */
@@ -118,7 +171,8 @@ SIMPLNX_EXPORT IFilter::PreflightResult PreflightImageGeometryResample(const Dat
  * @param inputValues Contains the resampling settings and data paths.
  * @param messageHandler Receives algorithm messages.
  * @param shouldCancel Stops resampling when the value is true.
- * @return An error if data copying or feature renumbering fails.
+ * @pre Active resampling parameters have valid domains and three components.
+ * @return An error if final layout computation, data copying or feature renumbering fails.
  */
 SIMPLNX_EXPORT Result<> ResampleImageGeometry(DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues, const IFilter::MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel);

@@ -103,6 +103,10 @@ All in all, it is best practice to try to fit the bounding box as closely to the
 - **Triangle Geometry** -- the surface mesh to sample, typically read from a CAD mesh via [Read STL File](ReadStlFileFilter.md) or produced by a surface-meshing filter such as [Quick Surface Mesh](QuickSurfaceMeshFilter.md).
 - **Face Labels / Part Numbers** -- a per-face integer array identifying the **Features** (2-component) or part number (1-component) bordering each triangle.
 
+### Spatial Parameter Limits
+
+When creating a geometry, every **Origin** component must be finite in the geometry coordinate units. Zero and negative coordinates are valid. The existing-geometry option ignores the creation origin and uses the selected Image Geometry metadata.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

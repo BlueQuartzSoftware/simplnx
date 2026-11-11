@@ -84,6 +84,11 @@ public:
    * before that checkpoint remains in the mask. Later cells are not written. Non-image paths do not
    * inspect the cancellation flag.
    */
+  /**
+   * @brief Computes the coordinate-selection mask.
+   * @pre Active Sphere Information has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
+   * @return Dispatch or mask-output errors, otherwise success.
+   */
   Result<> operator()();
 
 private:

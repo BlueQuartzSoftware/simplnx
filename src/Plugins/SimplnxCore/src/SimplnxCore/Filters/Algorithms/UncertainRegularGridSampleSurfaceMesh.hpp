@@ -82,6 +82,11 @@ public:
    * Cancellation returns success. A slice is written only after its generation
    * and point tests complete. Prior slices remain in output.
    */
+  /**
+   * @brief Samples face labels at perturbed grid positions.
+   * @pre Spacing has three finite positive components; Origin and Uncertainty have three finite signed components.
+   * @return Classification or output errors, otherwise success.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

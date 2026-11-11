@@ -76,6 +76,11 @@ public:
    * geometry. Perimeter creation and vertex deduplication do not check
    * cancellation.
    */
+  /**
+   * @brief Extracts boundaries into a prepared edge geometry.
+   * @pre CustomZValue is finite when UseCustomZValue is active; source and destination selections are valid.
+   * @return Boundary traversal, allocation or output errors, otherwise success.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel() const;

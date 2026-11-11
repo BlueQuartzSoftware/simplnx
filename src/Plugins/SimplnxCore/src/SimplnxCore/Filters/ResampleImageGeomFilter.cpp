@@ -134,6 +134,11 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto validation = ValidateResamplingParameters(inputValues);
+  if(validation.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+  }
   return PreflightImageGeometryResample(dataStructure, inputValues);
 }
 

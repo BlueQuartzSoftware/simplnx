@@ -26,6 +26,10 @@ Any additional **Edge Data Arrays** the user selects are also copied onto the ma
 
 - **Input Edge Geometry** -- an **Edge Geometry**, typically produced by [Slice Triangle Geometry](SliceTriangleGeometryFilter.md) or [Create AM Scan Paths](CreateAMScanPathsFilter.md).
 
+### Spatial Parameter Limits
+
+**Sampling Spacing (mm)** must be finite and greater than zero. The final sample count for each edge must fit the signed 32-bit count used by the sampler. Execution rejects unrepresentable sample counts, array value counts or byte counts before output resize. These checks do not impose a workload limit.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright
