@@ -21,6 +21,7 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <cmath>
 #include <random>
 
 using namespace nx::core;
@@ -138,9 +139,9 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   const auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   const auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
 
-  if(pEpsilonValue <= 0.0f)
+  if(!std::isfinite(pEpsilonValue) || pEpsilonValue <= 0.0f)
   {
-    return MakePreflightErrorResult(-7584, fmt::format("Epsilon value {} must be greater than 0.0.", pEpsilonValue));
+    return MakePreflightErrorResult(-7584, fmt::format("Epsilon value {} must be a finite number greater than 0.", pEpsilonValue));
   }
   if(pMinPointsValue <= 0)
   {

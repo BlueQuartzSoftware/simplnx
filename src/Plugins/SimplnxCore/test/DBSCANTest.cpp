@@ -26,6 +26,7 @@
 #include <array>
 #include <atomic>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -1035,4 +1036,78 @@ TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxC
       CHECK(args.value<std::string>(DBSCANFilter::k_FeatureIdsArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[SimplnxCore][DBSCAN]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
+  REQUIRE(points != nullptr);
+  points->fill(0.0f);
+
+  DBSCANFilter filter;
+  Arguments args;
+  args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(1.0f));
+  args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(1));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"points"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("cluster_ids"));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"cluster_am"})));
+
+  SECTION("Epsilon must be finite and positive")
+  {
+    const float32 epsilon = GENERATE(0.0f, -1.0f, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
+    CAPTURE(epsilon);
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilon));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == -7584);
+  }
+  SECTION("Minimum Points must be positive")
+  {
+    const int32 minPoints = GENERATE(0, -1);
+    CAPTURE(minPoints);
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(minPoints));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == -7585);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject nonpositive Minimum Points before dispatch", "[SimplnxCore][DBSCAN]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const int32 minPoints = GENERATE(0, -1);
+  CAPTURE(minPoints);
+
+  DataStructure dataStructure;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
+  REQUIRE(points != nullptr);
+  points->fill(0.0f);
+  auto* clusterIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "cluster_ids", {4}, {1});
+  REQUIRE(clusterIds != nullptr);
+  REQUIRE(AttributeMatrix::Create(dataStructure, "cluster_am", {1}) != nullptr);
+
+  DBSCANInputValues inputs{};
+  inputs.ClusteringArrayPath = DataPath({"points"});
+  inputs.FeatureIdsArrayPath = DataPath({"cluster_ids"});
+  inputs.FeatureAM = DataPath({"cluster_am"});
+  inputs.Epsilon = 1.0f;
+  inputs.MinPoints = minPoints;
+  inputs.ParseOrder = to_underlying(DBSCAN::ParseOrder::LowDensityFirst);
+  const std::atomic_bool shouldCancel = false;
+  // Rejection precedes dispatch, so no algorithm-path execution witness is expected.
+  auto result = DBSCAN(dataStructure, {}, shouldCancel, &inputs)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  REQUIRE(result.errors()[0].code == -54063);
+  REQUIRE_THAT(result.errors()[0].message, Catch::Matchers::Contains(std::to_string(minPoints)));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

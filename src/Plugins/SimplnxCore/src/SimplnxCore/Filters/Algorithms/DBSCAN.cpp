@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
+#include <fmt/format.h>
+
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -22,6 +24,11 @@ DBSCAN::~DBSCAN() noexcept = default;
 
 Result<> DBSCAN::operator()()
 {
+  if(m_InputValues->MinPoints <= 0)
+  {
+    return MakeErrorResult(-54063, fmt::format("Minimum Points value {} must be greater than 0.", m_InputValues->MinPoints));
+  }
+
   // Include every scanline input and output in storage-path selection.
   auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

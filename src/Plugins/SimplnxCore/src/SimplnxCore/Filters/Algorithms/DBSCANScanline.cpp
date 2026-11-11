@@ -337,11 +337,6 @@ public:
                              fmt::format("The DBSCAN mask must have 1 component and the same number of tuples as the clustering array ({} tuples), but it has {} tuples and a component count of {}.",
                                          tupleCount, m_MaskStore->getNumberOfTuples(), m_MaskStore->getNumberOfComponents()));
     }
-    if(m_InputValues.MinPoints < 0)
-    {
-      return MakeErrorResult(-54063, "DBSCAN Minimum Points cannot be negative.");
-    }
-
     std::array<float32, 3> minimum = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
     auto values = std::make_unique<T[]>(k_ExternalBatchRecords * m_Dimensions);
     auto masks = m_MaskStore == nullptr ? nullptr : std::make_unique<MaskT[]>(k_ExternalBatchRecords);
