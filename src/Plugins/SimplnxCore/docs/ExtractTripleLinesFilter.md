@@ -143,6 +143,25 @@ vertices. The label sets are limited to one batch. The edge tables scale with ca
 edges, which can still be numerous in a complex mesh. Smaller batches use less memory but read the
 input more times.
 
+When a source or destination coordinate array, or a copied Node Types array, uses out-of-core
+storage, vertex copying uses a source read page and a contiguous output block. Selected source
+indices are visited in order. A read page is kept until the next selected index falls outside it.
+When the edge list or Number of Features array uses out-of-core storage, endpoints and counts are
+written in contiguous blocks. Each phase keeps the original direct loops when all of its arrays
+are resident in memory.
+
+The copy buffers use a working-memory grant from the cache memory budget. For a block of `C`
+vertices, the buffer payload is `24*C` bytes, or `26*C` bytes when Node Types are copied. For a block
+of `C` edges, it is `17*C` bytes. The two phases use separate grants and release their buffers before
+the next phase. Block sizes follow the actual grants. If a grant cannot hold one vertex or edge,
+the filter returns an error. Increase the cache memory budget or finish other processing before
+retrying. Output resizing has its own memory requirements before these copy phases.
+
+These grants bound the additional copy-buffer payload. They do not bound the candidate bits,
+classification batches, edge tables, or compact source-index vector described above. Cancellation
+can leave resized output with only some blocks written. A failed bulk transfer stops copying and
+returns the store error.
+
 If no triple lines are found, the **Filter** creates an empty Edge Geometry and returns a warning.
 The warning reports the **Include Exterior Triple Lines** setting. No edge borders three or more
 Features with that setting. If the mesh should contain triple lines, check that its triangles share

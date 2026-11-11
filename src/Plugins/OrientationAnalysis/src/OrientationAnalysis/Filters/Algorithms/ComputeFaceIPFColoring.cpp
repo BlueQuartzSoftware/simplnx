@@ -1,8 +1,12 @@
 #include "ComputeFaceIPFColoring.hpp"
+#include "OrientationTupleLookup.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/RgbColor.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -18,10 +22,14 @@
 #include <EbsdLib/LaueOps/TriclinicOps.h>
 #include <EbsdLib/LaueOps/TrigonalLowOps.h>
 #include <EbsdLib/LaueOps/TrigonalOps.h>
+#include <fmt/format.h>
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
+#include <atomic>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -157,20 +165,20 @@ public:
           dEuler[1] = m_FeatureEulerAngles[3 * firstFeatureIdx + 1];
           dEuler[2] = m_FeatureEulerAngles[3 * firstFeatureIdx + 2];
           refDir[0] = m_FaceNormals[3 * faceIdx];
-          refDir[1] = m_FaceNormals[3 * faceIdx + 1];
-          refDir[2] = m_FaceNormals[3 * faceIdx + 2];
+          refDir[1] = m_FaceNormals[(3 * faceIdx) + 1];
+          refDir[2] = m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_FirstColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_FirstColors[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          m_FirstColors[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          m_FirstColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          m_FirstColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else // A face side without a positive Phase receives black.
       {
         m_FirstColors[3 * faceIdx] = 0;
-        m_FirstColors[3 * faceIdx + 1] = 0;
-        m_FirstColors[3 * faceIdx + 2] = 0;
+        m_FirstColors[(3 * faceIdx) + 1] = 0;
+        m_FirstColors[(3 * faceIdx) + 2] = 0;
       }
 
       // The second face side uses the opposite normal direction.
@@ -183,20 +191,20 @@ public:
           dEuler[1] = m_FeatureEulerAngles[3 * secondFeatureIdx + 1];
           dEuler[2] = m_FeatureEulerAngles[3 * secondFeatureIdx + 2];
           refDir[0] = -m_FaceNormals[3 * faceIdx];
-          refDir[1] = -m_FaceNormals[3 * faceIdx + 1];
-          refDir[2] = -m_FaceNormals[3 * faceIdx + 2];
+          refDir[1] = -m_FaceNormals[(3 * faceIdx) + 1];
+          refDir[2] = -m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_SecondColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_SecondColors[3 * faceIdx + 1] = RgbColor::dGreen(argb);
-          m_SecondColors[3 * faceIdx + 2] = RgbColor::dBlue(argb);
+          m_SecondColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          m_SecondColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
         }
       }
       else
       {
         m_SecondColors[3 * faceIdx] = 0;
-        m_SecondColors[3 * faceIdx + 1] = 0;
-        m_SecondColors[3 * faceIdx + 2] = 0;
+        m_SecondColors[(3 * faceIdx) + 1] = 0;
+        m_SecondColors[(3 * faceIdx) + 2] = 0;
       }
     }
   }
@@ -210,6 +218,213 @@ public:
     generate(range.min(), range.max());
   }
 };
+
+namespace
+{
+Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int32Array& phases, const Float64Array& faceNormals, const Float32Array& eulerAngles, const UInt32Array& structures,
+                                        UInt8Array& firstColors, UInt8Array& secondColors, const ComputeFaceIPFColoringInputValues& inputValues, const std::atomic_bool& shouldCancel)
+{
+  const usize numTriangles = faceLabels.getNumberOfTuples();
+  if(shouldCancel || numTriangles == 0)
+  {
+    return {};
+  }
+  using namespace orientation::detail;
+  constexpr usize faceBytes = (2 * sizeof(int32)) + (3 * sizeof(float64)) + (6 * sizeof(uint8));
+  auto planResult =
+      PlanLookups({.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 3, .FaceBytes = faceBytes}, -24359);
+  if(planResult.invalid())
+  {
+    return ConvertResult(std::move(planResult));
+  }
+  // This owner precedes every buffer, so the reservation outlives their payloads.
+  auto plan = std::move(planResult.value());
+  const usize bufferTriangles = plan.FaceCapacity;
+  const bool wholeTables = plan.CacheWholeTables;
+  Result<> result;
+  std::vector<int32> featurePhases(wholeTables ? phases.getSize() : bufferTriangles * 2);
+  std::vector<float32> featureEulerAngles(wholeTables ? eulerAngles.getSize() : bufferTriangles * 6);
+  std::vector<uint32> crystalStructures(wholeTables ? structures.getSize() : bufferTriangles * 2);
+  std::vector<usize> lookupOrder(wholeTables ? 0 : bufferTriangles * 2);
+  std::vector<int32> phasePage(plan.PageCapacity);
+  std::vector<float32> eulerPage(plan.PageCapacity * 3);
+  std::vector<uint32> structurePage(plan.PageCapacity);
+  if(wholeTables)
+  {
+    result = MergeResults(std::move(result), ReadLookupTable<int32>(phases.getDataStoreRef(), featurePhases, -24350, inputValues.FeaturePhasesArrayPath));
+    if(result.invalid())
+    {
+      return result;
+    }
+    result = MergeResults(std::move(result), ReadLookupTable<float32>(eulerAngles.getDataStoreRef(), featureEulerAngles, -24351, inputValues.FeatureEulerAnglesArrayPath));
+    if(result.invalid())
+    {
+      return result;
+    }
+    result = MergeResults(std::move(result), ReadLookupTable<uint32>(structures.getDataStoreRef(), crystalStructures, -24352, inputValues.CrystalStructuresArrayPath));
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
+  std::vector<float64> faceNormalsBuffer(bufferTriangles * 3);
+  std::vector<uint8> firstColorsBuffer(bufferTriangles * 3);
+  std::vector<uint8> secondColorsBuffer(bufferTriangles * 3);
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  for(usize start = 0; start < numTriangles;)
+  {
+    if(shouldCancel)
+    {
+      return result;
+    }
+    const usize count = std::min(bufferTriangles, numTriangles - start);
+    result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24353, fmt::format("Error reading face labels for face IPF coloring at triangle {} ({} triangles).", start, count)));
+    }
+    result = MergeResults(std::move(result), faceNormals.getDataStoreRef().copyIntoBuffer(start * 3, nonstd::span<float64>(faceNormalsBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24354, fmt::format("Error reading face normals for face IPF coloring at triangle {} ({} triangles).", start, count)));
+    }
+    // Unsupported Laue indices leave the existing output unchanged in the in-core path.
+    result = MergeResults(std::move(result), firstColors.getDataStoreRef().copyIntoBuffer(start * 3, nonstd::span<uint8>(firstColorsBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24355, fmt::format("Error reading first face IPF colors at triangle {} ({} triangles).", start, count)));
+    }
+    result = MergeResults(std::move(result), secondColors.getDataStoreRef().copyIntoBuffer(start * 3, nonstd::span<uint8>(secondColorsBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24356, fmt::format("Error reading second face IPF colors at triangle {} ({} triangles).", start, count)));
+    }
+
+    if(!wholeTables)
+    {
+      const nonstd::span<const int32> labels(faceLabelsBuffer.data(), count * 2);
+      result = MergeResults(std::move(result),
+                            GatherLookupTuples<int32, 1>(phases.getDataStoreRef(), labels, lookupOrder, featurePhases, phasePage, shouldCancel, -24350, inputValues.FeaturePhasesArrayPath));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+      result = MergeResults(std::move(result), GatherLookupTuples<float32, 3>(eulerAngles.getDataStoreRef(), labels, lookupOrder, featureEulerAngles, eulerPage, shouldCancel, -24351,
+                                                                              inputValues.FeatureEulerAnglesArrayPath, true));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+      result = MergeResults(std::move(result), GatherLookupTuples<uint32, 1>(structures.getDataStoreRef(), {featurePhases.data(), count * 2}, lookupOrder, crystalStructures, structurePage,
+                                                                             shouldCancel, -24352, inputValues.CrystalStructuresArrayPath));
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+    }
+
+    // Preserve the in-core color calculations, including the opposite second-side normal.
+
+    std::array<double, 3> refDir{};
+    std::array<double, 3> dEuler{};
+    Rgba argb = 0x00000000;
+
+    int32 firstFeatureIdx = 0;
+    int32 secondFeatureIdx = 0;
+    int32 firstFeaturePhaseIdx = 0;
+    int32 secondFeaturePhaseIdx = 0;
+    for(usize faceIdx = 0; faceIdx < count; faceIdx++)
+    {
+      firstFeatureIdx = faceLabelsBuffer[2 * faceIdx];
+      secondFeatureIdx = faceLabelsBuffer[(2 * faceIdx) + 1];
+      if(firstFeatureIdx > 0)
+      {
+        firstFeaturePhaseIdx = featurePhases[wholeTables ? static_cast<usize>(firstFeatureIdx) : 2 * faceIdx];
+      }
+      else
+      {
+        firstFeaturePhaseIdx = 0;
+      }
+
+      if(secondFeatureIdx > 0)
+      {
+        secondFeaturePhaseIdx = featurePhases[wholeTables ? static_cast<usize>(secondFeatureIdx) : (2 * faceIdx) + 1];
+      }
+      else
+      {
+        secondFeaturePhaseIdx = 0;
+      }
+
+      if(firstFeaturePhaseIdx > 0)
+      {
+        const uint32 currentLaueIndex = crystalStructures[wholeTables ? static_cast<usize>(firstFeaturePhaseIdx) : 2 * faceIdx];
+        if(currentLaueIndex < orientationOps.size())
+        {
+          const usize firstEuler = 3 * (wholeTables ? static_cast<usize>(firstFeatureIdx) : 2 * faceIdx);
+          dEuler[0] = featureEulerAngles[firstEuler];
+          dEuler[1] = featureEulerAngles[firstEuler + 1];
+          dEuler[2] = featureEulerAngles[firstEuler + 2];
+          refDir[0] = faceNormalsBuffer[3 * faceIdx];
+          refDir[1] = faceNormalsBuffer[(3 * faceIdx) + 1];
+          refDir[2] = faceNormalsBuffer[(3 * faceIdx) + 2];
+
+          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
+          firstColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
+          firstColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          firstColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+        }
+      }
+      else // A face side without a positive Phase receives black.
+      {
+        firstColorsBuffer[3 * faceIdx] = 0;
+        firstColorsBuffer[(3 * faceIdx) + 1] = 0;
+        firstColorsBuffer[(3 * faceIdx) + 2] = 0;
+      }
+
+      // The second face side uses the opposite normal direction.
+      if(secondFeaturePhaseIdx > 0)
+      {
+        const uint32 currentLaueIndex = crystalStructures[wholeTables ? static_cast<usize>(secondFeaturePhaseIdx) : (2 * faceIdx) + 1];
+        if(currentLaueIndex < orientationOps.size())
+        {
+          const usize secondEuler = 3 * (wholeTables ? static_cast<usize>(secondFeatureIdx) : (2 * faceIdx) + 1);
+          dEuler[0] = featureEulerAngles[secondEuler];
+          dEuler[1] = featureEulerAngles[secondEuler + 1];
+          dEuler[2] = featureEulerAngles[secondEuler + 2];
+          refDir[0] = -faceNormalsBuffer[3 * faceIdx];
+          refDir[1] = -faceNormalsBuffer[(3 * faceIdx) + 1];
+          refDir[2] = -faceNormalsBuffer[(3 * faceIdx) + 2];
+
+          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
+          secondColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
+          secondColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
+          secondColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+        }
+      }
+      else
+      {
+        secondColorsBuffer[3 * faceIdx] = 0;
+        secondColorsBuffer[(3 * faceIdx) + 1] = 0;
+        secondColorsBuffer[(3 * faceIdx) + 2] = 0;
+      }
+    }
+    result = MergeResults(std::move(result), firstColors.getDataStoreRef().copyFromBuffer(start * 3, nonstd::span<const uint8>(firstColorsBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24357, fmt::format("Error writing first face IPF colors at triangle {} ({} triangles).", start, count)));
+    }
+    result = MergeResults(std::move(result), secondColors.getDataStoreRef().copyFromBuffer(start * 3, nonstd::span<const uint8>(secondColorsBuffer.data(), count * 3)));
+    if(result.invalid())
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-24358, fmt::format("Error writing second face IPF colors at triangle {} ({} triangles).", start, count)));
+    }
+    start += count;
+  }
+  return result;
+}
+} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeFaceIPFColoring::ComputeFaceIPFColoring(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -241,6 +456,16 @@ Result<> ComputeFaceIPFColoring::operator()()
   if(Result<> validationResult = ValidateReferencedFeaturePhases(faceLabelsArrayRef, featurePhasesArrayRef, crystalStructuresArrayRef, *m_InputValues); validationResult.invalid())
   {
     return validationResult;
+  }
+
+  const bool usesOutOfCoreStore =
+      AnyOutOfCore({&faceLabelsArrayRef, &faceNormalsArrayRef, &featureEulerAnglesArrayRef, &featurePhasesArrayRef, &crystalStructuresArrayRef, &firstIpfColorsArrayRef, &secondIpfColorsArrayRef});
+  const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
+  RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
+  if(useOutOfCoreAlgorithm)
+  {
+    return CalculateFaceIPFColorsInBlocks(faceLabelsArrayRef, featurePhasesArrayRef, faceNormalsArrayRef, featureEulerAnglesArrayRef, crystalStructuresArrayRef, firstIpfColorsArrayRef,
+                                          secondIpfColorsArrayRef, *m_InputValues, m_ShouldCancel);
   }
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;

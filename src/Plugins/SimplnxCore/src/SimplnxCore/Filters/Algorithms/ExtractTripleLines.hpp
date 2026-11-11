@@ -39,6 +39,8 @@ struct SIMPLNXCORE_EXPORT ExtractTripleLinesInputValues
  * Vertex classification uses one candidate bit per mesh vertex and three labels per vertex
  * in one bounded batch. Each batch scans all triangles. Edge sets store at most four labels.
  * Output vertices ascend by source index. Edges ascend by (lower, higher) source vertex index.
+ * Output transfers use admitted bulk buffers when a participating store is out of core.
+ * Existing candidate and edge-selection containers can still scale with the mesh.
  */
 class SIMPLNXCORE_EXPORT ExtractTripleLines
 {
@@ -62,8 +64,9 @@ public:
 
   /**
    * @brief Selects edges, compacts vertices, and resizes both output attribute matrices.
-   * @return A warning when no edges qualify; errors for zero batch size, excessive source vertices,
-   * unpaired Node Types stores, or resize failures.
+   * @return A warning when no edges qualify. Errors report zero batch size, excessive source vertices, unpaired Node Types stores, or resize failures.
+   * Errors also report insufficient working memory, unaddressable buffer sizes, allocation failures, or the first bulk I/O failure.
+   * Bulk I/O warnings are retained on success, failure, and cancellation.
    * Cancellation returns a valid result and can leave resized, partially written output.
    */
   Result<> operator()();
