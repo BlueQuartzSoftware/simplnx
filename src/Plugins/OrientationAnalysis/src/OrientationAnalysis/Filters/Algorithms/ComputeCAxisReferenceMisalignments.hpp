@@ -41,14 +41,6 @@ class ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignments
 {
 public:
   /**
-   * @brief The reference direction has a non-finite component or a near-zero length.
-   */
-  static constexpr int32 k_InvalidReferenceDirectionError = -98710;
-  /**
-   * @brief The Phases array or the enabled mask has a different tuple count than the quaternion array.
-   */
-  static constexpr int32 k_TupleCountMismatchError = -98711;
-  /**
    * @brief An unmasked phase value is not an index into the Crystal Structures array.
    */
   static constexpr int32 k_PhaseOutOfRangeError = -98712;
@@ -56,63 +48,6 @@ public:
    * @brief Warning: some unmasked tuples have a known non-hexagonal crystal structure.
    */
   static constexpr int32 k_NonHexagonalPhasesWarning = -98713;
-  /**
-   * @brief The reference direction does not have exactly three components.
-   */
-  static constexpr int32 k_ReferenceDirectionSizeError = -98714;
-  /**
-   * @brief The quaternion path does not resolve to a float32 array.
-   */
-  static constexpr int32 k_InvalidQuatsArrayError = -98715;
-  /**
-   * @brief The quaternion array does not have component shape {4}.
-   */
-  static constexpr int32 k_QuatsComponentShapeError = -98716;
-  /**
-   * @brief The Phases path does not resolve to an int32 array.
-   */
-  static constexpr int32 k_InvalidPhasesArrayError = -98717;
-  /**
-   * @brief The Phases array does not have component shape {1}.
-   */
-  static constexpr int32 k_PhasesComponentShapeError = -98718;
-  /**
-   * @brief The enabled mask path does not resolve to a bool or uint8 array.
-   */
-  static constexpr int32 k_InvalidMaskArrayError = -98719;
-  /**
-   * @brief The enabled mask array does not have component shape {1}.
-   */
-  static constexpr int32 k_MaskComponentShapeError = -98720;
-  /**
-   * @brief The Crystal Structures path does not resolve to a uint32 array.
-   */
-  static constexpr int32 k_InvalidCrystalStructuresArrayError = -98721;
-  /**
-   * @brief The Crystal Structures array does not have component shape {1}.
-   */
-  static constexpr int32 k_CrystalStructuresComponentShapeError = -98722;
-  /**
-   * @brief The output path does not resolve to a float32 array.
-   */
-  static constexpr int32 k_InvalidOutputArrayError = -98723;
-  /**
-   * @brief The output array does not have component shape {1}.
-   */
-  static constexpr int32 k_OutputComponentShapeError = -98724;
-  /**
-   * @brief The output array has a different tuple count than the quaternion array.
-   */
-  static constexpr int32 k_OutputTupleCountMismatchError = -98725;
-  /**
-   * @brief Preflight: the output path equals the path of an input array.
-   */
-  static constexpr int32 k_OutputPathCollisionError = -98726;
-
-  /**
-   * @brief Reference directions at or below this dimensionless norm are treated as zero.
-   */
-  static constexpr float64 k_MinReferenceDirectionNorm = 1.0e-12;
 
   /**
    * @brief Initializes the executor. All arguments must outlive this instance.
@@ -134,32 +69,15 @@ public:
   ComputeCAxisReferenceMisalignments& operator=(ComputeCAxisReferenceMisalignments&&) noexcept = delete;
 
   /**
-   * @brief Validates the reference direction. ValidateInputs() calls it.
-   * @param referenceDirection Three finite sample-frame components.
-   * @return k_ReferenceDirectionSizeError for a size other than three, or
-   * k_InvalidReferenceDirectionError for a non-finite component or a near-zero norm.
-   */
-  static Result<> ValidateReferenceDirection(const std::vector<float32>& referenceDirection);
-
-  /**
-   * @brief Makes every input check that preflight data can answer. preflightImpl() and operator()() both call it.
-   *
-   * Checks the reference direction, and the types and component shapes of the quaternion, Phases,
-   * and Crystal Structures arrays. Checks the mask only when UseMask is set. Phases and the enabled
-   * mask must have one tuple per quaternion. The output is not checked because preflight has not
-   * created it yet. Array lookups do not throw.
-   * @param dataStructure Holds the selected arrays.
-   * @param inputValues Identifies the arrays and the reference direction. OutputArrayPath is not read.
-   * @return The error of the first failed check, or a valid result.
-   */
-  static Result<> ValidateInputs(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues);
-
-  /**
    * @brief Writes one angle per quaternion tuple using checked bulk I/O.
    *
-   * Validates the reference direction, the input arrays and the output array (float32,
-   * component shape {1}, one tuple per quaternion tuple) before any read.
-   * @return Errors for invalid references or arrays, phase indices, or I/O.
+   * @pre ReferenceDirection has three finite components and a length greater than 1.0e-12.
+   * @pre QuatsArrayPath names a float32 array with component shape {4}; PhasesArrayPath an int32 array
+   * with component shape {1}; CrystalStructuresArrayPath a uint32 array with component shape {1}; and,
+   * when UseMask is set, MaskArrayPath a bool or uint8 array with component shape {1}.
+   * @pre OutputArrayPath names a float32 array with component shape {1}. Phases, the enabled mask and
+   * the output have one tuple per quaternion tuple.
+   * @return Errors for phase indices outside Crystal Structures, or for I/O.
    * A warning counts only unmasked tuples with known non-hexagonal structures.
    * UnknownCrystalStructure does not contribute to the count.
    * Cancellation leaves only completed chunks written.
