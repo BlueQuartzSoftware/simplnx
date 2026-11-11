@@ -19,13 +19,13 @@
 #include <vector>
 
 /**
- * @def H5SUPPORT_MUTEX_LOCK
+ * @def SIMPLNX_H5SUPPORT_MUTEX_LOCK
  * @brief Locks the process HDF5 mutex for the current scope when mutex support is enabled.
  */
-#ifdef H5Support_USE_MUTEX
-#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
+#ifdef SIMPLNX_H5Support_USE_MUTEX
+#define SIMPLNX_H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
 #else
-#define H5SUPPORT_MUTEX_LOCK()
+#define SIMPLNX_H5SUPPORT_MUTEX_LOCK()
 #endif
 
 // Defined in CMake
@@ -357,7 +357,7 @@ std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
  * The configured HDF5 library is not thread-safe. Threads serialize HDF5 C API
  * calls with this single lock. A second lock would not protect the same library state.
  *
- * H5SUPPORT_MUTEX_LOCK() uses this mutex when mutex support is enabled. Direct
+ * SIMPLNX_H5SUPPORT_MUTEX_LOCK() uses this mutex when mutex support is enabled. Direct
  * HDF5 call sites must explicitly acquire the same mutex.
  *
  * The mutex is non-recursive. Hold it only around leaf HDF5 calls. Do not call a
