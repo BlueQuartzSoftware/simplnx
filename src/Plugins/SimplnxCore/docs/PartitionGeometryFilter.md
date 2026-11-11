@@ -125,6 +125,10 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 
 **Input Geometry Cell Attribute Matrix** must have one tuple per cell of **Input Geometry to Partition**. This requirement applies to Image and Rectilinear Grid geometries in every partitioning mode.
 
+### Numeric input constraints
+
+In *Advanced* mode, each **Cell Length** must be finite and greater than 0 for every geometry type. **Partition Grid Origin** must contain finite values. Other modes do not use these parameters.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
