@@ -639,6 +639,17 @@ public:
    */
   void flush() const;
 
+  /**
+   * @brief Flushes live objects once each in identifier order and stops at the first failed object.
+   * @return Warnings from the objects flushed so far, plus the failed object's errors, each with its name, identifier, and paths.
+   *
+   * @pre The caller excludes concurrent mutations.
+   *
+   * @note Objects after the first failure are not flushed by this call. Their unwritten data stays in memory
+   * for a later flush; nothing is discarded. A failure without error diagnostics receives error -6070.
+   */
+  [[nodiscard]] Result<> flushChecked() const;
+
   uint64 memoryUsage() const;
 
   /**

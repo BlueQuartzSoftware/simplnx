@@ -6,6 +6,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -14,6 +15,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <vector>
 
@@ -1209,6 +1211,30 @@ public:
    */
   virtual void flush() const
   {
+  }
+
+  /**
+   * @brief Flushes storage through the legacy operation and reports failures.
+   * @return Success, error -272 for allocation failure, or -6070 for another exception.
+   *
+   * @note Diagnostic allocation can still throw std::bad_alloc.
+   */
+  [[nodiscard]] virtual Result<> flushChecked() const
+  {
+    try
+    {
+      flush();
+      return {};
+    } catch(const std::bad_alloc& error)
+    {
+      return MakeErrorResult(-272, fmt::format("Cannot flush numeric storage: memory allocation failed: {}", error.what()));
+    } catch(const std::exception& error)
+    {
+      return MakeErrorResult(-6070, fmt::format("Cannot flush numeric storage: {}", error.what()));
+    } catch(...)
+    {
+      return MakeErrorResult(-6070, "Cannot flush numeric storage: unknown storage failure.");
+    }
   }
 
   /**
