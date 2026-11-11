@@ -1,4 +1,5 @@
 #include "DataObject.hpp"
+#include "simplnx/Common/Result.hpp"
 
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
