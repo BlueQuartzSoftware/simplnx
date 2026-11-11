@@ -63,8 +63,12 @@ When **Postprocessed** is selected, the processing order becomes:
 The user can optionally resample each image as it is read in. The *Resample Images* parameter provides the following choices:
 
 - **Do Not Resample (0)**: Images are used at their native pixel dimensions.
-- **Scaling (1)**: A percentage value scales the X and Y pixel counts. A value of 100 means no scaling, 50 means half the pixels, and 200 means double the pixels. The value must be greater than or equal to 1.0.
-- **Exact X/Y Dimensions (2)**: The X and Y dimensions of the resampled output are set to the user-supplied values. The Z dimension is left equal to the number of images in the stack.
+- **Scaling (1)**: A percentage value scales the X and Y pixel counts. A value of 100 means no scaling, 50 means half the pixels, and 200 means double the pixels. The percentage must be finite and greater than or equal to 1.0.
+- **Exact X/Y Dimensions (2)**: The requested **Exact 2D Dimensions (Pixels)** X and Y counts must each be at least 1. Their values and product must fit the geometry size type. The Z dimension stays equal to the generated file count after Z cropping.
+
+Do Not Resample ignores Scaling and Exact 2D Dimensions. Scaling ignores Exact 2D Dimensions, including an empty vector or zero inactive counts. Exact Dimensions ignores Scaling. There is no workload limit on representable requested dimensions.
+
+Preflight checks active resampling parameters before reading slice metadata or creating output actions. A geometry-derived spacing, dimension or tuple-product failure uses the shared resampling warning and unit-size placeholder rules during preflight. Execution recomputes the layout from final per-slice metadata and returns an error before the affected slice copy if the layout remains unrepresentable. Earlier copied slices and regular output objects can remain after a later failure.
 
 ### Grayscale Conversion
 
