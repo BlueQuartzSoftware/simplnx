@@ -160,7 +160,12 @@ metadata assertions. The integration case also failed replay preflight because t
 An additional core recovery case, `Pipeline persistent state: placeholder keeps malformed disabled payload`, checks
 string and null disabled flags in incomplete filter JSON. Placeholders retain that raw payload and remain enabled.
 The controller confirmed all four direct/fallback combinations failed before the local Boolean type guard.
-Validation after the fixes is pending. This addendum does not change the historical results or sign-offs above.
+
+Validation after the fixes (2026-11-11): all seven regression cases for persistent pipeline state passed without
+failures or skips on Windows in-core Release/Debug and Release with OOC enabled. The integration case uses an empty
+`DataStructure` and verifies metadata preservation and replay. It does not verify disk backing for real arrays.
+These regression results do not constitute formal V&V recertification. This addendum does not change the historical
+results or sign-offs above.
 
 ## Exemplar archive
 
