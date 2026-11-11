@@ -31,6 +31,20 @@ namespace ComputeShapesTriangleGeomDetail
  */
 struct AxialLengths
 {
+  AxialLengths() = default;
+  AxialLengths(float64 x, float64 y, float64 z)
+  : xLength(x)
+  , yLength(y)
+  , zLength(z)
+  {
+  }
+  ~AxialLengths() noexcept = default;
+
+  AxialLengths(const AxialLengths&) = default;
+  AxialLengths(AxialLengths&&) noexcept = default;
+  AxialLengths& operator=(const AxialLengths&) = default;
+  AxialLengths& operator=(AxialLengths&&) noexcept = default;
+
   float64 xLength = 0.0;
   float64 yLength = 0.0;
   float64 zLength = 0.0;

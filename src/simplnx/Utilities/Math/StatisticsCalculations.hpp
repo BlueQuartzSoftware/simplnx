@@ -18,15 +18,41 @@
 
 namespace StatisticsCalculations
 {
+/**
+ * @enum HistogramBinPolicy
+ * @brief Selects the arithmetic and conversion sequence that CalculateBin uses to classify a value.
+ *
+ * Histogram counting and modal-range lookup must use the same policy. Otherwise a mode can be read from
+ * a different bin than the one that counted it.
+ */
 enum class HistogramBinPolicy
 {
+  /// Computes value - minimum with the usual arithmetic conversions, so types narrower than int are promoted.
+  /// Converts the difference to float32, divides by the increment, floors, and converts to T (uint8 for bool).
   Raw,
+  /// Uses the Raw sequence and converts its result to int32.
+  /// For a signed integer T with value > 0, minimum < 0 and value > max(T) + minimum, the difference is computed in
+  /// float32 instead.
   LegacyInt32
 };
 
 /**
- * @brief Classifies a value with the selected legacy arithmetic and conversion sequence.
- * @tparam Policy Raw returns uint8 for bool and T otherwise. LegacyInt32 returns int32.
+ * @brief Classifies a value into a histogram bin with the selected arithmetic and conversion sequence.
+ *
+ * The result is not clamped. Callers must satisfy the arithmetic and conversion preconditions before
+ * checking the returned index against their bin count.
+ * @tparam Policy Classification policy; see HistogramBinPolicy.
+ * @tparam T Value type of the classified array.
+ * @param value Value to classify.
+ * @param minimum Histogram minimum, the lower bound of bin 0.
+ * @param increment Bin width.
+ * @pre increment is finite and nonzero.
+ * @pre Raw: value - minimum is representable in its promoted type. The floored quotient is representable
+ * in T, or in uint8 for bool.
+ * @pre LegacyInt32: the Raw preconditions hold, and the Raw result is representable in int32. The one
+ * exception is a signed integer T with value > 0, minimum < 0 and value > max(T) + minimum. LegacyInt32
+ * computes that difference in float32, and the floored quotient must be representable in int32.
+ * @return The bin index: uint8 for bool and T otherwise with Raw, int32 with LegacyInt32.
  */
 template <HistogramBinPolicy Policy = HistogramBinPolicy::Raw, typename T>
 auto CalculateBin(T value, T minimum, nx::core::float32 increment)

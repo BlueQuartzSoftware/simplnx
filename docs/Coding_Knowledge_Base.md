@@ -1258,14 +1258,15 @@ own indexing.
 and spacings along X, Y and Z so that a swapped axis changes the result.
 
 **Example of the broken rule:** symmetric fixtures missed swapped X and Y face weights in **Compute Surface Area to
-Volume** (PR #1817, issues #1773 and #1780). `ComputeShapesFilterTest` has no valid YZ or XZ expected output, and issue
-#1861 lists copy-paste index drift between axis blocks in 15 filters.
+Volume** (PR #1817, issues #1773 and #1780). Before PR #1919, `ComputeShapesFilterTest` had no valid YZ or XZ
+expected output, and issue #1861 lists copy-paste index drift between axis blocks in 15 filters.
 
 #1861 (BUG: C01: Copy-paste index drift in 15 filters) and PR #1919 (BUG: Fix copy-paste index drift in 15
 filters) also document wrong sibling operands outside axis branches:
 `RemoveFlaggedTrianglesFilter::preflightImpl()` selected the Edge Attribute Matrix instead of Face Data; `Ray.hpp`
-used the wrong ray origin; `GridMontage` confused row, column, and plane operands; `Vec7::convertType()`
-constructed a `Vec6`; and `MMCellMap::getEdgeLabels()` selected the wrong second endpoint.
+used cos(phi3) instead of sin(phi3) in the local Y rotation basis; `GridMontage` confused row, column, and plane
+operands; `Vec7::convertType()` constructed a `Vec6`; and `MMCellMap::getEdgeLabels()` selected the wrong second
+endpoint.
 
 **Why:** code with one block per axis is usually written by copying one block; a block with a wrong index passes a test
 of the first axis.

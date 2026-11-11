@@ -14,6 +14,7 @@
 #include <cmath>
 #include <numeric>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -26,6 +27,19 @@ using Face = std::array<IGeometry::MeshIndexType, 3>;
 
 struct ShapeMesh
 {
+  ShapeMesh() = default;
+  ShapeMesh(std::vector<Point> meshVertices, std::vector<Face> meshFaces)
+  : vertices(std::move(meshVertices))
+  , faces(std::move(meshFaces))
+  {
+  }
+  ~ShapeMesh() noexcept = default;
+
+  ShapeMesh(const ShapeMesh&) = default;
+  ShapeMesh(ShapeMesh&&) noexcept = default;
+  ShapeMesh& operator=(const ShapeMesh&) = default;
+  ShapeMesh& operator=(ShapeMesh&&) noexcept = default;
+
   std::vector<Point> vertices;
   std::vector<Face> faces;
 };
