@@ -1,5 +1,7 @@
 #include "MorphologicalWatershedFromMarkersImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"

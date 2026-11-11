@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionOffsets.hpp" // detail::ReconOffset(s) + MakeReconstructionOffsets
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -25,17 +26,6 @@
 
 namespace nx::core::ImageProcessing
 {
-/**
- * @brief Regional-extrema direction. Maxima keeps regional maxima (flat zones with no strictly-greater neighbor);
- *        Minima keeps regional minima. The non-extrema are set to the marker value (type lowest for maxima, type
- *        max for minima).
- */
-enum class RegionalExtremaOp
-{
-  Maxima,
-  Minima
-};
-
 namespace detail
 {
 struct RegionalExtremaWorkingMemoryPlan

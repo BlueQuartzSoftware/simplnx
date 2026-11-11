@@ -1,4 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
+
+#include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/RelabelComponentImageFilter.hpp"

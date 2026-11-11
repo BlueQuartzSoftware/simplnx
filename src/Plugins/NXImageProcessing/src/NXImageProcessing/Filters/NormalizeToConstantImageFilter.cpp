@@ -1,5 +1,7 @@
 #include "NormalizeToConstantImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"

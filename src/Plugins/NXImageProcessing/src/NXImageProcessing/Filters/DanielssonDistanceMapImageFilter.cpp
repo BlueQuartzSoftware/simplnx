@@ -1,5 +1,7 @@
 #include "DanielssonDistanceMapImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"

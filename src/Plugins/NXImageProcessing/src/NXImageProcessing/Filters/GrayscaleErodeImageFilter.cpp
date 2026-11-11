@@ -1,5 +1,7 @@
 #include "GrayscaleErodeImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"

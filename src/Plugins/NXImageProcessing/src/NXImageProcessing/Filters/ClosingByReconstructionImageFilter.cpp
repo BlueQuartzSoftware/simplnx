@@ -1,5 +1,7 @@
 #include "ClosingByReconstructionImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"

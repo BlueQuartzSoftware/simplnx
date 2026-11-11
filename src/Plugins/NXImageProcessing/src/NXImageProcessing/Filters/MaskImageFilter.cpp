@@ -1,5 +1,7 @@
 #include "MaskImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"

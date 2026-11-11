@@ -1,5 +1,7 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
+
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 

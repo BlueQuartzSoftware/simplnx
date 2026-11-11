@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"

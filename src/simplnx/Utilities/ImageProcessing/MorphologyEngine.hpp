@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -41,22 +42,6 @@
 
 namespace nx::core::ImageProcessing
 {
-/**
- * @brief The grayscale morphology operation to apply through a flat structuring element.
- *
- * Dilate folds neighbors by max; Erode folds by min. The boundary is handled by SKIPPING
- * out-of-bounds structuring-element neighbors, which is bit-identical to ITK 5.4.4's grayscale
- * morphology substituting a constant type extremum for out-of-range voxels (Dilate ->
- * std::numeric_limits<T>::lowest(), Erode -> std::numeric_limits<T>::max()): because the fold is
- * seeded with that same extremum, an out-of-range neighbor filled with the extremum can never win
- * the max/min and so is equivalent to dropping it.
- */
-enum class MorphOp
-{
-  Dilate,
-  Erode
-};
-
 inline constexpr int32 k_MorphologyPaddedExtentError = -88005;
 inline constexpr int32 k_MorphologyCoordinateError = -88006;
 inline constexpr int32 k_MorphologyPlaneError = -88007;

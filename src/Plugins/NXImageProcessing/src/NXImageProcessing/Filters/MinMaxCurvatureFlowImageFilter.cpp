@@ -1,5 +1,7 @@
 #include "MinMaxCurvatureFlowImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"

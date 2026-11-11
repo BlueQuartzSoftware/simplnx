@@ -1,5 +1,7 @@
 #include "MinimumProjectionImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"

@@ -1,5 +1,7 @@
 #include "NormalizeImage.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 
 using namespace nx::core;
