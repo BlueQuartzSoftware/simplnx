@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>
@@ -15,6 +16,12 @@
 using namespace std::string_literals;
 
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_SpacingDomain = -86009;
+constexpr int32 k_OriginDomain = -86010;
+} // namespace
 
 namespace nx::core
 {
@@ -92,6 +99,17 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
+  if(spacingValidation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+  }
+  auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
+  if(originValidation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+  }
+
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
 
   // These variables should be updated with the latest data generated for each variable during preflight.

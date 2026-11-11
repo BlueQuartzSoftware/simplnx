@@ -70,6 +70,15 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
 };
 
 /**
+ * @brief Validates only the selected transformation parameter vector.
+ * @param dataStructure Supplies the selected geometry type for the scale domain.
+ * @param inputValues Supplies the active vector and geometry path.
+ * @return A vector length, finite-value, positive-image-scale, or axis-angle error.
+ * @note Retained geometry metadata is not validated.
+ */
+SIMPLNX_EXPORT Result<> ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues);
+
+/**
  * @class ApplyTransformationToGeometry
  * @brief Applies a matrix, rotation, translation, or scale to a supported geometry.
  *

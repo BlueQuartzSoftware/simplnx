@@ -21,10 +21,19 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
 
+#include <functional>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_PaddedDimensionsWarning = -86031;
+constexpr int32 k_PaddedOriginWarning = -86032;
+} // namespace
 
 namespace nx::core
 {
@@ -146,37 +155,58 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   auto srcOrigin = srcImageGeom.getOrigin();
   auto srcSpacing = srcImageGeom.getSpacing();
 
-  SizeVec3 destGeomDims = srcImageGeom.getDimensions();
-  if(pPadXDim)
+  PadImageGeometryInputValues validationInput{};
+  validationInput.XMinMax = pXMinMaxValue;
+  validationInput.YMinMax = pYMinMaxValue;
+  validationInput.ZMinMax = pZMinMaxValue;
+  validationInput.PadInX = pPadXDim;
+  validationInput.PadInY = pPadYDim;
+  validationInput.PadInZ = pPadZDim;
+  auto dimensions = PadImageGeometry::ValidateInputs(srcImageGeom, validationInput);
+  SizeVec3 destGeomDims = srcDims;
+  FloatVec3 targetOrigin = srcOrigin;
+  bool usePlaceholders = false;
+  if(dimensions.invalid())
   {
-    destGeomDims[0] += (pXMinMaxValue[0] + pXMinMaxValue[1]);
+    // Parameter diagnostics precede the shared dimension-overflow diagnostics.
+    const auto& error = dimensions.errors().front();
+    if(error.code != GeometryUtilities::k_PaddedExtentOverflowError && error.code != GeometryUtilities::k_PaddedTupleOverflowError)
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    }
+    resultOutputActions.warnings().push_back({k_PaddedDimensionsWarning, error.message + " Execution checks final dimensions; preflight uses source dimensions and origin."});
+    usePlaceholders = true;
   }
-  if(pPadYDim)
+  else
   {
-    destGeomDims[1] += (pYMinMaxValue[0] + pYMinMaxValue[1]);
+    destGeomDims = dimensions.value();
   }
-  if(pPadZDim)
-  {
-    destGeomDims[2] += (pZMinMaxValue[0] + pZMinMaxValue[1]);
-  }
-
-  FloatVec3 targetOrigin = srcImageGeom.getOrigin();
   if(pUpdateOriginValue)
   {
-    if(pPadXDim)
+    const std::array<bool, 3> active = {pPadXDim, pPadYDim, pPadZDim};
+    const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(pXMinMaxValue), std::cref(pYMinMaxValue), std::cref(pZMinMaxValue)};
+    for(usize axis = 0; axis < 3; ++axis)
     {
-      targetOrigin[0] -= pXMinMaxValue[0] * srcSpacing[0];
+      if(!active[axis])
+      {
+        continue;
+      }
+      const auto minimum = (vectors[axis].get())[0];
+      targetOrigin[axis] -= minimum * srcSpacing[axis];
+      if(!std::isfinite(targetOrigin[axis]))
+      {
+        resultOutputActions.warnings().push_back({k_PaddedOriginWarning, fmt::format("Parameter '{} Min & Max Padding' Min value {} with origin {} and spacing {} produces origin result {}. Execution "
+                                                                                     "checks the final result; preflight uses source dimensions and origin.",
+                                                                                     "XYZ"[axis], minimum, srcOrigin[axis], srcSpacing[axis], targetOrigin[axis])});
+        usePlaceholders = true;
+        break;
+      }
     }
-
-    if(pPadYDim)
-    {
-      targetOrigin[1] -= pYMinMaxValue[0] * srcSpacing[1];
-    }
-
-    if(pPadZDim)
-    {
-      targetOrigin[2] -= pZMinMaxValue[0] * srcSpacing[2];
-    }
+  }
+  if(usePlaceholders)
+  {
+    destGeomDims = srcDims;
+    targetOrigin = srcOrigin;
   }
 
   // The ImageGeometryDimensions go from Fastest to Slowest, XYZ.
