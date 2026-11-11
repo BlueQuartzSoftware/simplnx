@@ -19,6 +19,7 @@ include(Catch)
 add_executable(conversion_test
   ${SIMPLNX_TEST_DIRS_HEADER}
   conversion_test_main.cpp
+  ../ProfileIsolationContract.cpp
   SIMPLMapInventoryTest.cpp
 )
 
@@ -58,3 +59,11 @@ target_include_directories(conversion_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 catch_discover_tests(conversion_test)
 
+
+add_test(NAME "conversion_test_profile_isolation"
+  COMMAND ${CMAKE_COMMAND}
+    "-DPROFILE_TEST_EXECUTABLE=$<TARGET_FILE:conversion_test>"
+    "-DPROFILE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/ProfileIsolation"
+    -DPROFILE_RUNNER_ONLY=TRUE
+    -P "${simplnx_SOURCE_DIR}/test/VerifyTestProfileLifecycle.cmake")
+set_tests_properties("conversion_test_profile_isolation" PROPERTIES RUN_SERIAL TRUE TIMEOUT 60)
