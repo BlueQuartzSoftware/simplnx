@@ -18,8 +18,29 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-namespace fs = std::filesystem;
+#include <string>
+#include <string_view>
 using namespace nx::core;
+namespace fs = std::filesystem;
+
+namespace
+{
+/**
+ * @brief Counts the non-overlapping occurrences of a marker in a text.
+ * @param text Text to search.
+ * @param marker Non-empty marker to count.
+ * @return Number of occurrences.
+ */
+usize CountOccurrences(std::string_view text, std::string_view marker)
+{
+  usize count = 0;
+  for(usize position = text.find(marker); position != std::string_view::npos; position = text.find(marker, position + marker.size()))
+  {
+    ++count;
+  }
+  return count;
+}
+} // namespace
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 {
@@ -190,8 +211,10 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Execution captures standard error"
   REQUIRE(log.is_open());
   std::stringstream content;
   content << log.rdbuf();
-  // The deterministic child writes these fixed markers to separate streams and returns zero.
-  CHECK(content.str().find("C01_STDOUT") != std::string::npos);
-  CHECK(content.str().find("C01_STDERR") != std::string::npos);
+  const std::string logText = content.str();
+  // The deterministic child writes each fixed marker once to its own stream and returns zero.
+  // The log must therefore hold each marker exactly once.
+  CHECK(CountOccurrences(logText, "C01_STDOUT") == 1);
+  CHECK(CountOccurrences(logText, "C01_STDERR") == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
