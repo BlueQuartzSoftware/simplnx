@@ -75,13 +75,13 @@ Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const E
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
   if(result.invalid())
   {
     return result;

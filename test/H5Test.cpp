@@ -5,12 +5,15 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/DynamicListArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
@@ -41,8 +44,10 @@
 
 #include <hdf5.h>
 
+#include <algorithm>
 #include <mutex>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -1500,4 +1505,438 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
 #else
   SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
 #endif
+}
+
+namespace
+{
+using ConnectivityListsType = std::vector<std::vector<IGeometry::MeshIndexType>>;
+
+const std::string k_ConnectivityTriangleName = "ConnectivityTriangles";
+const std::string k_ConnectivityEdgeName = "ConnectivityEdges";
+// Two triangles sharing the diagonal 0-2 of a unit square, and a two-edge path 0-1-2.
+const ConnectivityListsType k_TriangleIncidence = {{0, 1}, {0}, {0, 1}, {1}};
+const ConnectivityListsType k_TriangleNeighbors = {{1}, {0}};
+const ConnectivityListsType k_EdgeIncidence = {{0}, {0, 1}, {1}};
+const ConnectivityListsType k_EdgeNeighbors = {{1}, {0}};
+
+template <typename T>
+DataArray<T>& CreateConnectivityFixtureArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, const std::vector<T>& values)
+{
+  const auto created = ArrayCreationUtilities::CreateArray<T>(dataStructure, {tuples}, {components}, path, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  auto* arrayPtr = dataStructure.getDataAs<DataArray<T>>(path);
+  REQUIRE(arrayPtr != nullptr);
+  REQUIRE(arrayPtr->getSize() == values.size());
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    (*arrayPtr)[index] = values[index];
+  }
+  return *arrayPtr;
+}
+
+TriangleGeom& CreateConnectivityTriangles(DataStructure& dataStructure)
+{
+  auto* geometryPtr = TriangleGeom::Create(dataStructure, k_ConnectivityTriangleName);
+  REQUIRE(geometryPtr != nullptr);
+  const DataPath geometryPath({k_ConnectivityTriangleName});
+  geometryPtr->setVertices(CreateConnectivityFixtureArray<float32>(dataStructure, geometryPath.createChildPath("Vertices"), 4, 3, {0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0}));
+  geometryPtr->setFaceList(CreateConnectivityFixtureArray<IGeometry::MeshIndexType>(dataStructure, geometryPath.createChildPath("Faces"), 2, 3, {0, 1, 2, 0, 2, 3}));
+  return *geometryPtr;
+}
+
+EdgeGeom& CreateConnectivityEdges(DataStructure& dataStructure)
+{
+  auto* geometryPtr = EdgeGeom::Create(dataStructure, k_ConnectivityEdgeName);
+  REQUIRE(geometryPtr != nullptr);
+  const DataPath geometryPath({k_ConnectivityEdgeName});
+  geometryPtr->setVertices(CreateConnectivityFixtureArray<float32>(dataStructure, geometryPath.createChildPath("Vertices"), 3, 3, {0, 0, 0, 1, 0, 0, 2, 0, 0}));
+  geometryPtr->setEdgeList(CreateConnectivityFixtureArray<IGeometry::MeshIndexType>(dataStructure, geometryPath.createChildPath("Edges"), 2, 2, {0, 1, 1, 2}));
+  return *geometryPtr;
+}
+
+ConnectivityListsType ReadConnectivity(const DataStructure& dataStructure, const std::optional<DataObject::IdType>& id)
+{
+  REQUIRE(id.has_value());
+  const auto* listPtr = dataStructure.getDataAs<IGeometry::ElementDynamicList>(id.value());
+  REQUIRE(listPtr != nullptr);
+  ConnectivityListsType lists(listPtr->size());
+  for(usize index = 0; index < listPtr->size(); ++index)
+  {
+    const auto* membersPtr = listPtr->getElementListPointer(index);
+    lists[index].assign(membersPtr, membersPtr + listPtr->getNumberOfElements(index));
+    std::sort(lists[index].begin(), lists[index].end());
+  }
+  return lists;
+}
+
+/**
+ * @brief Requires that a DataStructure read from a file holds no connectivity cache anywhere.
+ * @param dataStructure Reloaded structure to inspect.
+ * @param geometryPath Geometry whose connectivity associations must be unset.
+ */
+void RequireNoConnectivity(const DataStructure& dataStructure, const DataPath& geometryPath)
+{
+  const auto* geometryPtr = dataStructure.getDataAs<INodeGeometry1D>(geometryPath);
+  REQUIRE(geometryPtr != nullptr);
+  CHECK_FALSE(geometryPtr->getElementContainingVertId().has_value());
+  CHECK_FALSE(geometryPtr->getElementNeighborsId().has_value());
+  for(const DataObject::IdType id : dataStructure.getAllDataObjectIds())
+  {
+    const DataObject* objectPtr = dataStructure.getData(id);
+    REQUIRE(objectPtr != nullptr);
+    CAPTURE(objectPtr->getName());
+    CHECK(objectPtr->getDataObjectType() != DataObject::Type::DynamicListArray);
+  }
+}
+
+/**
+ * @struct LiveConnectivity
+ * @brief Captures the identity and contents of a geometry's live connectivity.
+ */
+struct LiveConnectivity
+{
+  LiveConnectivity() = default;
+  /**
+   * @brief Captures both connectivity lists of a geometry.
+   * @param dataStructure Structure that owns the geometry and its lists.
+   * @param geometry Geometry to capture.
+   * @pre Both of the geometry's connectivity associations name existing ElementDynamicList objects.
+   */
+  LiveConnectivity(const DataStructure& dataStructure, const INodeGeometry1D& geometry)
+  : IncidenceId(geometry.getElementContainingVertId())
+  , NeighborsId(geometry.getElementNeighborsId())
+  , IncidenceObject(dataStructure.getData(IncidenceId.value()))
+  , NeighborsObject(dataStructure.getData(NeighborsId.value()))
+  , Incidence(ReadConnectivity(dataStructure, IncidenceId))
+  , Neighbors(ReadConnectivity(dataStructure, NeighborsId))
+  {
+  }
+  ~LiveConnectivity() noexcept = default;
+
+  LiveConnectivity(const LiveConnectivity&) = default;
+  LiveConnectivity(LiveConnectivity&&) noexcept = default;
+  LiveConnectivity& operator=(const LiveConnectivity&) = default;
+  LiveConnectivity& operator=(LiveConnectivity&&) noexcept = default;
+
+  std::optional<DataObject::IdType> IncidenceId;
+  std::optional<DataObject::IdType> NeighborsId;
+  const DataObject* IncidenceObject = nullptr;
+  const DataObject* NeighborsObject = nullptr;
+  ConnectivityListsType Incidence;
+  ConnectivityListsType Neighbors;
+};
+
+void RequireLiveConnectivity(const DataStructure& dataStructure, const INodeGeometry1D& geometry, const LiveConnectivity& expected)
+{
+  REQUIRE(geometry.getElementContainingVertId() == expected.IncidenceId);
+  REQUIRE(geometry.getElementNeighborsId() == expected.NeighborsId);
+  CHECK(dataStructure.getData(expected.IncidenceId.value()) == expected.IncidenceObject);
+  CHECK(dataStructure.getData(expected.NeighborsId.value()) == expected.NeighborsObject);
+  CHECK(ReadConnectivity(dataStructure, expected.IncidenceId) == expected.Incidence);
+  CHECK(ReadConnectivity(dataStructure, expected.NeighborsId) == expected.Neighbors);
+}
+
+std::vector<std::string> TopLevelNamesInFile(const fs::path& filePath, DataObject::IdType& nextId)
+{
+  auto file = HDF5::FileIO::ReadFile(filePath);
+  REQUIRE(file.isValid());
+  auto group = file.openGroup(nx::core::Constants::k_DataStructureTag);
+  REQUIRE(group.isValid());
+  auto nextIdResult = group.readScalarAttribute<DataObject::IdType>(nx::core::Constants::k_NextIdTag);
+  SIMPLNX_RESULT_REQUIRE_VALID(nextIdResult);
+  nextId = nextIdResult.value();
+  auto names = group.getChildNames();
+  std::sort(names.begin(), names.end());
+  return names;
+}
+} // namespace
+
+TEST_CASE("DataStructureWriter: geometry connectivity is omitted and rebuilt after reload", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityRoundTrip.dream3d";
+  DataStructure dataStructure;
+  auto& triangles = CreateConnectivityTriangles(dataStructure);
+  auto& edges = CreateConnectivityEdges(dataStructure);
+  const auto triangleSupport = triangles.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(triangleSupport);
+  const auto edgeSupport = edges.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(edgeSupport);
+  const LiveConnectivity triangleBefore(dataStructure, triangles);
+  const LiveConnectivity edgeBefore(dataStructure, edges);
+  REQUIRE(triangleBefore.Incidence == k_TriangleIncidence);
+  REQUIRE(triangleBefore.Neighbors == k_TriangleNeighbors);
+  REQUIRE(edgeBefore.Incidence == k_EdgeIncidence);
+  REQUIRE(edgeBefore.Neighbors == k_EdgeNeighbors);
+
+  const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
+  RequireLiveConnectivity(dataStructure, triangles, triangleBefore);
+  RequireLiveConnectivity(dataStructure, edges, edgeBefore);
+
+  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  DataStructure& reloaded = readResult.value();
+  RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
+  RequireNoConnectivity(reloaded, DataPath({k_ConnectivityEdgeName}));
+  for(const auto& path : {DataPath({k_ConnectivityTriangleName, "Vertices"}), DataPath({k_ConnectivityTriangleName, "Faces"}), DataPath({k_ConnectivityEdgeName, "Vertices"}),
+                          DataPath({k_ConnectivityEdgeName, "Edges"})})
+  {
+    CAPTURE(path.toString());
+    REQUIRE(UnitTest::Comparison::CompareDataObject(dataStructure.getDataRef(path), reloaded.getDataRef(path)));
+  }
+
+  auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
+  auto& reloadedEdges = reloaded.getDataRefAs<EdgeGeom>(DataPath({k_ConnectivityEdgeName}));
+  const auto reloadedTriangleSupport = reloadedTriangles.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(reloadedTriangleSupport);
+  const auto reloadedEdgeSupport = reloadedEdges.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(reloadedEdgeSupport);
+  CHECK(ReadConnectivity(reloaded, reloadedTriangles.getElementContainingVertId()) == k_TriangleIncidence);
+  CHECK(ReadConnectivity(reloaded, reloadedTriangles.getElementNeighborsId()) == k_TriangleNeighbors);
+  CHECK(ReadConnectivity(reloaded, reloadedEdges.getElementContainingVertId()) == k_EdgeIncidence);
+  CHECK(ReadConnectivity(reloaded, reloadedEdges.getElementNeighborsId()) == k_EdgeNeighbors);
+  UnitTest::CheckArraysInheritTupleDims(reloaded);
+}
+
+TEST_CASE("DataStructureWriter: shared connectivity is omitted at every parent", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityShared.dream3d";
+  DataStructure dataStructure;
+  auto& triangles = CreateConnectivityTriangles(dataStructure);
+  const auto triangleSupport = triangles.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(triangleSupport);
+  auto* groupPtr = DataGroup::Create(dataStructure, "SharedGroup");
+  REQUIRE(groupPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(triangles.getElementNeighborsId().value(), groupPtr->getId()));
+  const LiveConnectivity before(dataStructure, triangles);
+
+  const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
+  RequireLiveConnectivity(dataStructure, triangles, before);
+
+  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  RequireNoConnectivity(readResult.value(), DataPath({k_ConnectivityTriangleName}));
+  const auto* reloadedGroupPtr = readResult.value().getDataAs<DataGroup>(DataPath({"SharedGroup"}));
+  REQUIRE(reloadedGroupPtr != nullptr);
+  CHECK(reloadedGroupPtr->getSize() == 0);
+}
+
+TEST_CASE("DataStructureWriter: appended geometry drops its connectivity", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityAppend.dream3d";
+  DataStructure baseDataStructure;
+  CreateConnectivityFixtureArray<int32>(baseDataStructure, DataPath({"foo"}), 2, 1, {7, 8});
+  const auto baseSaveResult = HDF5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(baseSaveResult);
+
+  DataStructure dataStructure;
+  auto& triangles = CreateConnectivityTriangles(dataStructure);
+  const auto triangleSupport = triangles.findElementNeighbors(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(triangleSupport);
+  const LiveConnectivity before(dataStructure, triangles);
+
+  const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
+  SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
+  RequireLiveConnectivity(dataStructure, triangles, before);
+
+  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  const DataStructure& reloaded = readResult.value();
+  RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
+  const auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
+  CHECK(reloadedTriangles.getVertices() == reloaded.getDataAs<Float32Array>(DataPath({k_ConnectivityTriangleName, "Vertices"})));
+  CHECK(reloadedTriangles.getFaces() == reloaded.getDataAs<IGeometry::SharedFaceList>(DataPath({k_ConnectivityTriangleName, "Faces"})));
+  REQUIRE(UnitTest::Comparison::CompareDataObject(dataStructure.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"})), reloaded.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"}))));
+  REQUIRE(reloaded.containsData(DataPath({"foo"})));
+}
+
+TEST_CASE("DataStructureWriter: appended geometry drops an external connectivity cache", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityAppendExternal.dream3d";
+  DataStructure baseDataStructure;
+  CreateConnectivityFixtureArray<int32>(baseDataStructure, DataPath({"foo"}), 2, 1, {7, 8});
+  const auto baseSaveResult = HDF5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(baseSaveResult);
+
+  // The geometry, its two arrays and then the external cache take consecutive IDs. Renumbering the appended
+  // geometry from the file's next ID then assigns the cache's old ID to a retained array.
+  DataStructure dataStructure;
+  auto& triangles = CreateConnectivityTriangles(dataStructure);
+  auto* externalCachePtr = IGeometry::ElementDynamicList::Create(dataStructure, "ExternalIncidence", std::nullopt);
+  REQUIRE(externalCachePtr != nullptr);
+  triangles.setElementContainingVertId(externalCachePtr->getId());
+  const auto incidenceResult = triangles.findElementsContainingVert(false);
+  SIMPLNX_RESULT_REQUIRE_VALID(incidenceResult);
+  REQUIRE(triangles.getElementContainingVertId() == externalCachePtr->getId());
+  const DataObject::IdType cacheId = externalCachePtr->getId();
+  DataObject::IdType nextIdBefore = 0;
+  const auto namesBefore = TopLevelNamesInFile(filePath, nextIdBefore);
+  REQUIRE(nextIdBefore <= cacheId);
+  REQUIRE(cacheId < nextIdBefore + 3);
+
+  SECTION("Appending the geometry")
+  {
+    const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
+    SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
+    CHECK(triangles.getElementContainingVertId() == cacheId);
+    CHECK(dataStructure.getData(cacheId) == externalCachePtr);
+
+    auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    RequireNoConnectivity(readResult.value(), DataPath({k_ConnectivityTriangleName}));
+  }
+  SECTION("Appending the cache itself")
+  {
+    const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({"ExternalIncidence"}));
+    SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
+    DataObject::IdType nextIdAfter = 0;
+    CHECK(TopLevelNamesInFile(filePath, nextIdAfter) == namesBefore);
+    CHECK(nextIdAfter == nextIdBefore);
+  }
+}
+
+TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[simplnx][HDF5][Connectivity]")
+{
+  const bool incidence = GENERATE(false, true);
+  const bool neighbors = GENERATE(false, true);
+  const bool plainArray = GENERATE(false, true);
+  if(plainArray && (incidence || neighbors))
+  {
+    return;
+  }
+  CAPTURE(incidence, neighbors, plainArray);
+  const fs::path filePath = GetDataDir() / "ConnectivityStaleAttributes.dream3d";
+  constexpr DataObject::IdType k_StaleId = 9999;
+
+  DataStructure dataStructure;
+  auto& triangles = CreateConnectivityTriangles(dataStructure);
+  if(neighbors)
+  {
+    const auto neighborsResult = triangles.findElementNeighbors(false);
+    SIMPLNX_RESULT_REQUIRE_VALID(neighborsResult);
+    if(!incidence)
+    {
+      REQUIRE(dataStructure.removeData(triangles.getElementContainingVertId().value()));
+      triangles.setElementContainingVertId(std::nullopt);
+    }
+  }
+  else if(incidence)
+  {
+    const auto incidenceResult = triangles.findElementsContainingVert(false);
+    SIMPLNX_RESULT_REQUIRE_VALID(incidenceResult);
+  }
+  std::optional<DataObject::IdType> plainId;
+  if(plainArray)
+  {
+    // An ordinary array in the neighbors field is not a cache, so its ID is still written.
+    plainId = CreateConnectivityFixtureArray<uint64>(dataStructure, DataPath({k_ConnectivityTriangleName, "PlainNeighbors"}), 2, 1, {1, 0}).getId();
+    triangles.setElementNeighborsId(plainId);
+  }
+
+  {
+    auto file = HDF5::FileIO::WriteFile(filePath);
+    REQUIRE(file.isValid());
+    {
+      auto dataStructureGroup = file.createGroup(nx::core::Constants::k_DataStructureTag);
+      auto geometryGroup = dataStructureGroup.createGroup(k_ConnectivityTriangleName);
+      const auto staleIncidenceResult = geometryGroup.writeScalarAttribute(IOConstants::k_ElementContainingVertTag, k_StaleId);
+      SIMPLNX_RESULT_REQUIRE_VALID(staleIncidenceResult);
+      const auto staleNeighborsResult = geometryGroup.writeScalarAttribute(IOConstants::k_ElementNeighborsTag, k_StaleId);
+      SIMPLNX_RESULT_REQUIRE_VALID(staleNeighborsResult);
+    }
+    const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, file);
+    SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
+  }
+
+  {
+    auto file = HDF5::FileIO::ReadFile(filePath);
+    REQUIRE(file.isValid());
+    auto geometryGroup = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup(k_ConnectivityTriangleName);
+    REQUIRE(geometryGroup.isValid());
+    CHECK_FALSE(geometryGroup.hasAttribute(IOConstants::k_ElementContainingVertTag));
+    CHECK(geometryGroup.hasAttribute(IOConstants::k_ElementNeighborsTag) == plainArray);
+  }
+
+  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  const DataStructure& reloaded = readResult.value();
+  const auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
+  CHECK_FALSE(reloadedTriangles.getElementContainingVertId().has_value());
+  if(plainArray)
+  {
+    const auto* plainPtr = reloaded.getData(DataPath({k_ConnectivityTriangleName, "PlainNeighbors"}));
+    REQUIRE(plainPtr != nullptr);
+    CHECK(reloadedTriangles.getElementNeighborsId() == plainPtr->getId());
+  }
+  else
+  {
+    RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
+  }
+}
+
+TEST_CASE("GroupIO: removeAttribute reports every HDF5 failure", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "GroupIORemoveAttribute.dream3d";
+  {
+    auto file = HDF5::FileIO::WriteFile(filePath);
+    REQUIRE(file.isValid());
+    auto group = file.createGroup("Group");
+    const auto removedWrite = group.writeScalarAttribute("Removed", int32{1});
+    SIMPLNX_RESULT_REQUIRE_VALID(removedWrite);
+    const auto keptWrite = group.writeScalarAttribute("Kept", int32{2});
+    SIMPLNX_RESULT_REQUIRE_VALID(keptWrite);
+    const auto missingRemoval = group.removeAttribute("Missing");
+    SIMPLNX_RESULT_REQUIRE_VALID(missingRemoval);
+    const auto removal = group.removeAttribute("Removed");
+    SIMPLNX_RESULT_REQUIRE_VALID(removal);
+    CHECK_FALSE(group.hasAttribute("Removed"));
+    CHECK(group.hasAttribute("Kept"));
+  }
+  {
+    auto file = HDF5::FileIO::ReadFile(filePath);
+    REQUIRE(file.isValid());
+    auto group = file.openGroup("Group");
+    REQUIRE(group.isValid());
+    const auto result = group.removeAttribute("Kept");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == -18802);
+    CHECK(result.errors()[0].message == "Cannot remove attribute 'Kept' from HDF5 object '/Group'.");
+    CHECK(group.hasAttribute("Kept"));
+  }
+  {
+    HDF5::GroupIO invalidGroup;
+    const auto result = invalidGroup.removeAttribute("Kept");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == -18801);
+    CHECK(result.errors()[0].message.starts_with("Cannot check whether attribute 'Kept' exists on HDF5 object '"));
+  }
+}
+
+TEST_CASE("DataStructureWriter: a dynamic list that is not geometry connectivity still fails", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityStandalone.dream3d";
+  DataStructure dataStructure;
+  REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Standalone", std::nullopt) != nullptr);
+  const auto result = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -5);
+  CHECK(result.errors()[0].message == "Could not find IO factory for datatype: DynamicListArray");
+}
+
+TEST_CASE("DataStructureWriter: an edge geometry reports a failed base write", "[simplnx][HDF5][Connectivity]")
+{
+  const fs::path filePath = GetDataDir() / "ConnectivityEdgeBaseFailure.dream3d";
+  DataStructure dataStructure;
+  auto& edges = CreateConnectivityEdges(dataStructure);
+  // A child that no geometry association names is not a cache, so writing the geometry's children fails.
+  REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Unassociated", edges.getId()) != nullptr);
+  const auto result = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -5);
+  CHECK(result.errors()[0].message == "Could not find IO factory for datatype: DynamicListArray");
 }

@@ -38,9 +38,7 @@ The filter tracks element neighbors and vertex incidence independently. Neighbor
 
 Only support objects created by this invocation are temporary. The filter removes these objects on success and returned errors. Cleanup can throw if allocation or DataStructure removal fails. Cleanup during arbitrary exception unwinding is outside this guarantee. Existing output changes are not rolled back.
 
-Supplied connectivity uses `DynamicListArray`, which has no registered writer. A later save can return error `-5`: `Could not find IO factory for datatype: DynamicListArray`. A failed save can leave a partial destination. Do not use that destination as a valid saved result. If this invocation created all connectivity and no unrelated object prevents serialization, temporary cleanup permits saving.
-
-After every connectivity consumer finishes, the caller can explicitly choose to discard the recomputable lists. First verify each associated object's exact ID, parent paths, and users. A shared object requires agreement from every affected owner. Remove confirmed neighbors before incidence with checked `DataStructure::removeData(id)` calls. Clear the corresponding association with `setElementNeighborsId(std::nullopt)` or `setElementContainingVertId(std::nullopt)` only after successful removal. Stop if removal fails. Do not remove a child by name or clear an association while leaving its child. Save to a fresh destination and check the Result. If connectivity must remain, serialization support requires a separate change.
+Saving to a `.dream3d` file omits the connectivity lists and their geometry associations. Saving leaves the lists in memory unchanged. A geometry read back from the file has no connectivity. Filters that need it rebuild it from the vertex and face lists.
 
 ## License & Copyright
 

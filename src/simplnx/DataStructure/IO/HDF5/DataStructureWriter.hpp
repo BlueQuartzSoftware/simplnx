@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <map>
+#include <set>
 #include <string>
 
 namespace nx::core
@@ -27,6 +28,17 @@ class ObjectIO;
  *
  * The writer maps object identifiers to HDF5 paths. It uses hard links for
  * repeated objects and lets registered I/O managers override recovery writes.
+ *
+ * Geometry connectivity caches are not written. A cache is a DynamicListArray that an INodeGeometry1D references
+ * as its vertex incidence (getElementContainingVertId()) or element neighbors (getElementNeighborsId()). Edge,
+ * Triangle, Quad, Tetrahedral and Hexahedral geometries are INodeGeometry1D. findElementsContainingVert() and
+ * findElementNeighbors() rebuild both caches from the geometry's vertex and element lists. Those index arrays are
+ * written as usual.
+ *
+ * The file holds no cache and no hard link to one. It also holds no ID attribute for an omitted or unset
+ * association. Each omitted or unset association reloads as std::nullopt. Associations to other object types remain
+ * serialized. The caller's DataStructure is not changed. A DynamicListArray that no geometry references this way
+ * still fails with error -5, because it has no IO factory.
  */
 class SIMPLNX_EXPORT DataStructureWriter
 {
@@ -104,8 +116,12 @@ public:
    * @return Validation or write errors.
    * @pre dataPath has exactly one component.
    *
-   * The method copies only dataPath, renumbers it from the file's next object
-   * identifier, and advances the file attribute before writing.
+   * The method copies the DataStructure and removes its connectivity caches
+   * (see the class description) and the geometry associations that reference
+   * them. It then retains only dataPath and renumbers it from the file's next
+   * object identifier. It advances the file attribute before writing.
+   * Appending a top-level cache returns a valid result and leaves the file
+   * unchanged. Returns -18803 if a cache cannot be removed from the copy.
    */
   static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options);
 
@@ -116,7 +132,11 @@ public:
    * @return Write or recovery-override errors.
    * @pre dataObject is non-null.
    *
-   * A repeated object becomes an HDF5 hard link. Recovery writers can replace
+   * The method first skips a connectivity cache that the last
+   * writeDataStructure() call identified (see the class description). It
+   * returns a valid result, and neither a hard link nor a recovery override
+   * sees the cache. A repeated
+   * object becomes an HDF5 hard link. Recovery writers can replace
    * disk-backed arrays with placeholder datasets and backing metadata. The
    * normal type factory writes objects that no override handles.
    */
@@ -130,9 +150,19 @@ public:
    * @param parentGroup Destination HDF5 group.
    * @return Group validation or write errors.
    *
-   * The writer stores the next object identifier before writing the root map.
+   * The writer stores the next object identifier and identifies the
+   * connectivity caches of dataMap before writing the root map.
    */
   Result<> writeDataStructure(const DataStructure& dataMap, GroupIO& parentGroup);
+
+  /**
+   * @brief Tests whether an object is a connectivity cache that this writer omits.
+   * @param objectId Object identifier in the DataStructure being written.
+   * @return True for a cache identified by the last writeDataStructure() call.
+   *
+   * Geometry writers use this to leave out the ID attribute of an omitted cache.
+   */
+  bool isOmittedConnectivity(DataObject::IdType objectId) const;
 
 protected:
   /**
@@ -171,6 +201,7 @@ private:
   WriteOptions m_WriteOptions;
   DataStructure m_DataStructure;
   DataMapType m_IdMap;
+  std::set<DataObject::IdType> m_OmittedConnectivityIds;
   std::shared_ptr<DataIOManager> m_IOManager;
 };
 

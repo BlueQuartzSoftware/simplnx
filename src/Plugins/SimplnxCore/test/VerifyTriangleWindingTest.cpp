@@ -11,6 +11,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -22,9 +24,11 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -1071,6 +1075,45 @@ void RequireDiskBackedMesh(const DataStructure& dataStructure)
   }
 }
 
+std::vector<std::vector<MeshIndexType>> ReadSupportLists(const DataStructure& dataStructure, bool neighbors)
+{
+  std::vector<std::vector<MeshIndexType>> lists;
+  const auto* supportPtr = dataStructure.getDataAs<SupportListType>(SupportPath(neighbors));
+  if(supportPtr == nullptr)
+  {
+    return lists;
+  }
+  for(usize tupleIdx = 0; tupleIdx < supportPtr->size(); ++tupleIdx)
+  {
+    const auto* membersPtr = supportPtr->getElementListPointer(tupleIdx);
+    lists.emplace_back(membersPtr, membersPtr + supportPtr->getNumberOfElements(tupleIdx));
+  }
+  return lists;
+}
+
+// Saving omits connectivity from the file and leaves the caller's objects and their contents in place.
+void CheckSupportSave(DataStructure& dataStructure, const DataStructure& baseline, const SupportSnapshot& incidence, const SupportSnapshot& neighbors, const std::string& label)
+{
+  const auto incidenceLists = ReadSupportLists(dataStructure, false);
+  const auto neighborLists = ReadSupportLists(dataStructure, true);
+  const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("VerifyTriangleWindingSupportSave-{}.dream3d", label);
+  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  RequireSupport(dataStructure, false, incidence);
+  RequireSupport(dataStructure, true, neighbors);
+  CHECK(ReadSupportLists(dataStructure, false) == incidenceLists);
+  CHECK(ReadSupportLists(dataStructure, true) == neighborLists);
+
+  auto read = HDF5::DataStructureReader::ReadFile(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(read);
+  RequireSameMesh(read.value(), baseline);
+  RequireSupport(read.value(), false, {});
+  RequireSupport(read.value(), true, {});
+  UnitTest::CheckArraysInheritTupleDims(read.value());
+  std::error_code removeError;
+  fs::remove(filePath, removeError);
+}
+
 void CheckSupportOwnership(bool incidence, bool neighbors, usize labelComponents, bool ooc)
 {
   DataStructure baseline;
@@ -1106,6 +1149,7 @@ void CheckSupportOwnership(bool incidence, bool neighbors, usize labelComponents
   {
     RequireDiskBackedMesh(dataStructure);
   }
+  CheckSupportSave(dataStructure, baseline, incidenceBefore, neighborsBefore, fmt::format("{}-{}-{}-{}", incidence, neighbors, labelComponents, ooc));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
   UnitTest::CheckArraysInheritTupleDims(baseline);
 }

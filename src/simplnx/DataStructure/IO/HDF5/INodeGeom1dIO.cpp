@@ -62,13 +62,13 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
   if(result.invalid())
   {
     return result;
@@ -81,5 +81,14 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
   }
 
   return result;
+}
+
+Result<> INodeGeom1dIO::WriteConnectivityId(const DataStructureWriter& dataStructureWriter, group_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag)
+{
+  if(objectId.has_value() && !dataStructureWriter.isOmittedConnectivity(objectId.value()))
+  {
+    return WriteDataId(groupWriter, objectId, tag);
+  }
+  return groupWriter.removeAttribute(tag);
 }
 } // namespace nx::core::HDF5

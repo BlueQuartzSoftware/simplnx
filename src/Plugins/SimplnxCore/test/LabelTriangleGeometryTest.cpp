@@ -282,7 +282,7 @@ void RequireSupportFixtureOocStores(const DataStructure& dataStructure, const st
   }
 }
 
-// Fresh destinations stay separate from backing stores and partial failed saves.
+// A fresh destination stays separate from the backing stores.
 class SupportSaveFiles
 {
 public:
@@ -307,29 +307,9 @@ public:
   SupportSaveFiles(SupportSaveFiles&&) = delete;
   SupportSaveFiles& operator=(const SupportSaveFiles&) = delete;
   SupportSaveFiles& operator=(SupportSaveFiles&&) = delete;
-  std::array<fs::path, 2> Paths;
+  std::array<fs::path, 1> Paths;
 };
 
-void DiscardSuppliedSupport(DataStructure& dataStructure, bool neighbors, const SupportSnapshot& snapshot)
-{
-  if(snapshot.Id.has_value())
-  {
-    RequireSupportSnapshot(dataStructure, neighbors, snapshot);
-    REQUIRE(dataStructure.removeData(*snapshot.Id));
-    REQUIRE(dataStructure.getData(*snapshot.Id) == nullptr);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath));
-    auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath);
-    if(neighbors)
-    {
-      geometry.setElementNeighborsId(std::nullopt);
-    }
-    else
-    {
-      geometry.setElementContainingVertId(std::nullopt);
-    }
-  }
-  RequireSupportSnapshot(dataStructure, neighbors, {});
-}
 } // namespace
 
 namespace
@@ -420,28 +400,14 @@ void CheckLabelOutputs(const DataStructure& dataStructure)
 void CheckLabelSave(DataStructure& dataStructure, const SupportSnapshot& incidence, const SupportSnapshot& neighbors)
 {
   SupportSaveFiles files("label");
+  // The writer omits supplied connectivity and leaves the caller's objects in place.
   const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
-  if(incidence.Id.has_value() || neighbors.Id.has_value())
-  {
-    SIMPLNX_RESULT_REQUIRE_INVALID(save);
-    REQUIRE(save.errors().size() == 1);
-    CHECK(save.errors()[0].code == -5);
-    CHECK(save.errors()[0].message == "Could not find IO factory for datatype: DynamicListArray");
-    RequireSupportSnapshot(dataStructure, false, incidence);
-    RequireSupportSnapshot(dataStructure, true, neighbors);
-    CheckLabelInputs(dataStructure);
-    CheckLabelOutputs(dataStructure);
-    // Explicit caller recovery, after every preservation assertion. All owners here are this fixture.
-    DiscardSuppliedSupport(dataStructure, true, neighbors);
-    DiscardSuppliedSupport(dataStructure, false, incidence);
-    const auto recovery = HDF5::DataStructureWriter::WriteFile(dataStructure, files.Paths[1]);
-    SIMPLNX_RESULT_REQUIRE_VALID(recovery);
-  }
-  else
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(save);
-  }
-  const auto read = HDF5::DataStructureReader::ReadFile(files.Paths[(incidence.Id.has_value() || neighbors.Id.has_value()) ? 1 : 0]);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  RequireSupportSnapshot(dataStructure, false, incidence);
+  RequireSupportSnapshot(dataStructure, true, neighbors);
+  CheckLabelInputs(dataStructure);
+  CheckLabelOutputs(dataStructure);
+  const auto read = HDF5::DataStructureReader::ReadFile(files.Paths[0]);
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   CheckLabelInputs(read.value());
   CheckLabelOutputs(read.value());

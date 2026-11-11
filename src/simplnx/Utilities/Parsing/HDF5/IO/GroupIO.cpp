@@ -4,9 +4,11 @@
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
+#include <H5Apublic.h>
 #include <H5Dpublic.h>
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
+#include <H5public.h>
 
 #include <fmt/format.h>
 
@@ -53,6 +55,12 @@ void ResetGroupConstructionFailureForTesting() noexcept
   s_GroupConstructionFailureName.reset();
 }
 #endif
+
+namespace
+{
+constexpr int32 k_AttributeExistenceError = -18801;
+constexpr int32 k_AttributeRemovalError = -18802;
+} // namespace
 
 /**
  * @brief Opens an existing group or creates a missing group.
@@ -408,6 +416,32 @@ Result<> GroupIO::createLink(const std::string& objectPath)
   if(errorCode < 0)
   {
     return MakeErrorResult(errorCode, fmt::format("Error creating link to path: {}", objectPath));
+  }
+  return {};
+}
+
+Result<> GroupIO::removeAttribute(const std::string& name)
+{
+  // getId() and getObjectPath() can lock lazily. Resolve them before the leaf calls.
+  const hid_t selfId = getId();
+  const std::string objectPath = getObjectPath();
+  htri_t exists = 0;
+  herr_t deleteStatus = 0;
+  {
+    const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
+    exists = H5Aexists(selfId, name.c_str());
+    if(exists > 0)
+    {
+      deleteStatus = H5Adelete(selfId, name.c_str());
+    }
+  }
+  if(exists < 0)
+  {
+    return MakeErrorResult(k_AttributeExistenceError, fmt::format("Cannot check whether attribute '{}' exists on HDF5 object '{}'.", name, objectPath));
+  }
+  if(deleteStatus < 0)
+  {
+    return MakeErrorResult(k_AttributeRemovalError, fmt::format("Cannot remove attribute '{}' from HDF5 object '{}'.", name, objectPath));
   }
   return {};
 }

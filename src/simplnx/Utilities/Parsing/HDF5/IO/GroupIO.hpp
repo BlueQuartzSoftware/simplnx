@@ -142,6 +142,18 @@ public:
   Result<> createLink(const std::string& objectPath);
 
   /**
+   * @brief Removes one attribute from this group when it exists.
+   * @param name Identifies the attribute.
+   * @return Valid when the attribute was absent or was removed. Returns -18801 when HDF5 cannot report whether the
+   * attribute exists, for example on an invalid wrapper. Returns -18802 when HDF5 cannot remove it, for example in a
+   * file opened read-only. Both messages name the attribute and this group's HDF5 path.
+   *
+   * Unlike ObjectIO::deleteAttribute(), this method reports every HDF5 failure. After a valid result, the attribute
+   * is absent.
+   */
+  Result<> removeAttribute(const std::string& name);
+
+  /**
    * @brief Gets the number of child objects.
    * @return Child count, or zero when this wrapper is invalid.
    */

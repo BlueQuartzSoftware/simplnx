@@ -2,6 +2,7 @@
 #include <utility>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
@@ -12,8 +13,52 @@
 
 #include <fmt/format.h>
 
+#include <array>
+#include <optional>
+#include <set>
+
 namespace nx::core::HDF5
 {
+namespace
+{
+constexpr int32 k_ConnectivityRemovalError = -18803;
+
+/**
+ * @brief Finds the connectivity caches of a DataStructure.
+ * @param dataStructure DataStructure to search.
+ * @return IDs of the DynamicListArray objects that some INodeGeometry1D references as its vertex incidence or element
+ * neighbors.
+ *
+ * Identification uses the geometry associations, never the object name or type alone: a DynamicListArray that no
+ * geometry references this way is not a cache.
+ */
+std::set<DataObject::IdType> FindConnectivityCaches(const DataStructure& dataStructure)
+{
+  std::set<DataObject::IdType> cacheIds;
+  for(const DataObject::IdType id : dataStructure.getAllDataObjectIds())
+  {
+    const auto* geometryPtr = dynamic_cast<const INodeGeometry1D*>(dataStructure.getData(id));
+    if(geometryPtr == nullptr)
+    {
+      continue;
+    }
+    for(const auto& associatedId : std::array{geometryPtr->getElementContainingVertId(), geometryPtr->getElementNeighborsId()})
+    {
+      if(!associatedId.has_value())
+      {
+        continue;
+      }
+      const DataObject* targetPtr = dataStructure.getData(associatedId.value());
+      if(targetPtr != nullptr && targetPtr->getDataObjectType() == DataObject::Type::DynamicListArray)
+      {
+        cacheIds.insert(associatedId.value());
+      }
+    }
+  }
+  return cacheIds;
+}
+} // namespace
+
 DataStructureWriter::DataStructureWriter()
 {
   auto instance = Application::GetOrCreateInstance();
@@ -82,6 +127,15 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return MakeErrorResult(-3, fmt::format("Object doesn't exist at path '{}'", dataPath.toString()));
   }
 
+  // Classify caches before pruning and renumbering. Otherwise, an external cache ID can identify an unrelated
+  // retained object.
+  const std::set<DataObject::IdType> cacheIds = FindConnectivityCaches(dataStructure);
+  if(cacheIds.contains(dataStructure.getId(dataPath).value()))
+  {
+    // A connectivity cache is never written, so appending one leaves the file unchanged.
+    return {};
+  }
+
   GroupIO dataStructureGroup = file.openGroup(Constants::k_DataStructureTag);
   if(!dataStructureGroup.isValid())
   {
@@ -103,6 +157,32 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
   DataObject::IdType nextObjectId = idResult.value();
 
   DataStructure dataStructureShallowCopy = dataStructure;
+
+  // The copy holds its own object instances. Removing caches here leaves the caller's DataStructure unchanged.
+  for(const DataObject::IdType id : dataStructureShallowCopy.getAllDataObjectIds())
+  {
+    auto* geometryPtr = dynamic_cast<INodeGeometry1D*>(dataStructureShallowCopy.getData(id));
+    if(geometryPtr == nullptr)
+    {
+      continue;
+    }
+    if(const auto incidenceId = geometryPtr->getElementContainingVertId(); incidenceId.has_value() && cacheIds.contains(incidenceId.value()))
+    {
+      geometryPtr->setElementContainingVertId(std::nullopt);
+    }
+    if(const auto neighborsId = geometryPtr->getElementNeighborsId(); neighborsId.has_value() && cacheIds.contains(neighborsId.value()))
+    {
+      geometryPtr->setElementNeighborsId(std::nullopt);
+    }
+  }
+  for(const DataObject::IdType cacheId : cacheIds)
+  {
+    if(!dataStructureShallowCopy.removeData(cacheId))
+    {
+      return MakeErrorResult(k_ConnectivityRemovalError,
+                             fmt::format("Cannot drop geometry connectivity object {} before appending '{}' to file '{}'.", cacheId, dataPath.toString(), file.getFilePath().string()));
+    }
+  }
 
   for(DataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
   {
@@ -144,6 +224,12 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
 
 Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
+  // Connectivity caches are rebuilt from the geometry on demand and have no file representation.
+  if(isOmittedConnectivity(dataObject->getId()))
+  {
+    return {};
+  }
+
   if(hasDataBeenWritten(dataObject))
   {
     // Reuse the existing object through an HDF5 hard link.
@@ -191,7 +277,13 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
     return MakeErrorResult(-700, ss);
   }
   groupIO.writeScalarAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
+  m_OmittedConnectivityIds = FindConnectivityCaches(dataStructure);
   return writeDataMap(dataStructure.getDataMap(), groupIO);
+}
+
+bool DataStructureWriter::isOmittedConnectivity(DataObject::IdType objectId) const
+{
+  return m_OmittedConnectivityIds.contains(objectId);
 }
 
 Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
