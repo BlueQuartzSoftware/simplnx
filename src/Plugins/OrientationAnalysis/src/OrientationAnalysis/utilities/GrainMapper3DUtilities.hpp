@@ -62,8 +62,6 @@ inline bool IsIpfColorDataset(const std::string& dataSetName)
   return dataSetName == Constants::k_IPF001Name || dataSetName == Constants::k_IPF010Name || dataSetName == Constants::k_IPF100Name;
 }
 
-int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
-
 /**
  * @brief
  */
@@ -99,6 +97,11 @@ public:
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
   std::map<std::string, size_t> getNameToCompDimMap() const;
   std::vector<GrainMapperPhase> getPhaseVector() const;
+  /**
+   * @brief Gets the detailed UnitCell error after readPhaseInfo returns -38609.
+   * @return File, phase, value count, and corrective action for the failed read.
+   */
+  const std::string& getErrorMessage() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);
 
