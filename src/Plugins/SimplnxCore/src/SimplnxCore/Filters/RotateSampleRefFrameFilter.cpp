@@ -194,6 +194,12 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   {
   case static_cast<uint64>(RotationRepresentationType::AxisAngle): {
     auto pRotationValue = filterArgs.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
+    auto validation = ImageRotationUtilities::ValidateRotationAxisAngle(pRotationValue, "Rotation Axis-Angle");
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+
     rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
     break;
   }

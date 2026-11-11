@@ -114,3 +114,7 @@ Test sensitivity verification: before the fix, both paths returned dimensions (7
 To repeat the L28 check, run the `SimplnxCore::RotateSampleRefFrame` CTest entries serially. The historical A/B results above are unchanged and apply only to their four fixtures.
 
 The R5 helper regression and Apply Transformation to Geometry regression check uneven scaling with a small shear. For (x,y,z) to (x+5y,100000y,z), a 2×2×2 image with spacing (2,3,5) has transformed extents (34,600000,10). The analytical spacing is (2,3*sqrt(100000^2+5^2),5), or (2,300000,5) in float32. The expected dimensions are (17,2,2). Both regressions failed before R5 and pass after it; the filter test covers Direct and Scanline on in-memory stores. This is shared-helper evidence, not a new DREAM3D 6.5.171 comparison.
+
+## Validation change record
+
+2026-11-11: Axis-Angle input is validated before the lossless-rotation check. Large finite axes now normalize correctly. Valid principal rotations retain their verified behavior.
