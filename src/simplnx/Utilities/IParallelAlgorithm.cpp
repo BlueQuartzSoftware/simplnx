@@ -81,12 +81,12 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
 // -----------------------------------------------------------------------------
 void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
 {
-  setParallelizationEnabled(CheckArraysInMemory(arrays));
+  setParallelizationEnabled(getParallelizationEnabled() && CheckArraysInMemory(arrays));
 }
 
 // -----------------------------------------------------------------------------
 void IParallelAlgorithm::requireStoresInMemory(const AlgorithmStores& stores)
 {
-  setParallelizationEnabled(::CheckStoresInMemory(stores));
+  setParallelizationEnabled(getParallelizationEnabled() && ::CheckStoresInMemory(stores));
 }
 } // namespace nx::core
