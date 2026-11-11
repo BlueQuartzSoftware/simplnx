@@ -55,6 +55,7 @@ set(SIMPLNX_TEST_SRCS
   ExtentTest.cpp
   ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
+  FileUtilitiesTest.cpp
   FilterTest.cpp
   FloatArrayComparisonTest.cpp
   GeometryTest.cpp
@@ -160,7 +161,7 @@ target_compile_options(simplnx_test
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 # Two discoveries register every visible test case once; cases tagged [OOC] also get the ctest label "ooc".
-catch_discover_tests(simplnx_test TEST_SPEC "~[OOC]~[.]")
+catch_discover_tests(simplnx_test TEST_SPEC "~[OOC]~[.]" PROPERTIES SKIP_REGULAR_EXPRESSION "SIMPLNX_POSIX_PATH_STATUS_SKIPPED")
 catch_discover_tests(simplnx_test TEST_SPEC "[OOC]~[.]" TEST_LIST simplnx_test_OOC_TESTS PROPERTIES LABELS "ooc")
 
 add_test(NAME "simplnx_test_profile_isolation"
