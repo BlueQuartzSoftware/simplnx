@@ -719,19 +719,25 @@ meaning of infinity (PR #1888).
 
 ### Copy every field that sets behavior when you clone an object
 
-**Rule:** the `clone()` of an action or a parameter keeps all of its configuration. When a constructor gets a new
-argument, update `clone()` in the same change, and test the clone with a value that is not the default: apply the
-original and the clone to separate `DataStructure`s and compare.
+**Rule:** the `clone()` of an action or a parameter keeps all of its configuration. Pipeline node `deepCopy()` and
+`copySegment()` keep persistent settings, including comments and disabled state. Pipeline value operations also keep
+the pipeline's disabled state. When a constructor gets a new argument, update the copy paths in the same change.
+Test copies with values that are not the defaults. For actions, apply the original and copy to separate
+`DataStructure`s and compare. For pipeline nodes, check the copied settings and serialized JSON, then change the
+copy's metadata and verify that the source keeps its values. Keep the API's existing child-sharing contract.
 
 **Example of the broken rule:** five geometry-creation actions (`CreateGeometry1DAction`, `CreateGeometry2DAction`,
 `CreateGeometry3DAction`, `CreateRectGridGeometryAction`, `CreateVertexGeometryAction`) lost their created geometry path
 when cloned (PR #802). PR #1838 added length units to geometry creation, and a cloned `CreateImageGeometryAction`
-reverted to Micrometer.
+reverted to Micrometer. Pipeline filter copies lost comments and disabled state; Pipeline copies, segments and value
+operations lost disabled state. Placeholder filters also lost their current disabled state when copied (issue #1807).
 
 **Why:** the framework copies actions and parameters through `clone()` (see `AnyCloneable`) with no visible call at
-the filter. A field that the copy loses changes the output without an error.
+the filter. The DREAM3D writer uses pipeline copy paths to embed the pipeline. A field that a copy loses can change
+the output or replay behavior without an error.
 
-**What to look for:** a constructor that gets a new argument while `clone()` is not part of the change.
+**What to look for:** a constructor that gets a new argument while its copy paths are not part of the change; a
+pipeline copy that copies only the wrapped filter and arguments; a placeholder copy that restores stale JSON state.
 
 **Pattern to use:**
 
@@ -739,6 +745,11 @@ the filter. A field that the copy loses changes the output without an error.
 return std::make_unique<CreateImageGeometryAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing, m_CellDataName,
                                                    m_Units);
 ```
+
+For pipeline nodes, copy persistent metadata explicitly through the existing accessors. Read a placeholder's current
+disabled flag from the node, because it can differ from the saved JSON. Do not copy the complete
+`AbstractPipelineNode` base: parent pointers, observers and cached execution results belong to the current node.
+`test/PipelineSaveTest.cpp` covers independent node copies and the existing shared-child Pipeline value operations.
 
 ---
 

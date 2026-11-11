@@ -85,6 +85,7 @@ Pipeline::Pipeline(const Pipeline& other)
 , m_FilterList(other.m_FilterList)
 , m_ExecutionContext(other.m_ExecutionContext)
 {
+  setDisabled(other.isDisabled());
   resetCollectionParent();
 }
 
@@ -95,6 +96,7 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
 , m_FilterList(std::move(other.m_FilterList))
 , m_ExecutionContext(std::move(other.m_ExecutionContext))
 {
+  setDisabled(other.isDisabled());
   resetCollectionParent();
 }
 
@@ -111,6 +113,7 @@ Pipeline& Pipeline::operator=(const Pipeline& rhs) noexcept
   m_Name = rhs.m_Name;
   m_Collection = rhs.m_Collection;
   m_FilterList = rhs.m_FilterList;
+  setDisabled(rhs.isDisabled());
   resetCollectionParent();
   return *this;
 }
@@ -120,6 +123,7 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
   m_FilterList = std::move(rhs.m_FilterList);
+  setDisabled(rhs.isDisabled());
   resetCollectionParent();
   return *this;
 }
@@ -754,6 +758,7 @@ Pipeline::const_iterator Pipeline::find(const AbstractPipelineNode* targetNode) 
 std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  pipelineCopy->setDisabled(isDisabled());
   for(auto childNode : *this)
   {
     pipelineCopy->push_back(childNode->deepCopy());
@@ -764,6 +769,7 @@ std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const iterator& endIter)
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  pipelineCopy->setDisabled(isDisabled());
   for(auto iter = startIter; iter != endIter; iter++)
   {
     pipelineCopy->push_back(iter->get()->deepCopy());
@@ -774,6 +780,7 @@ std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const
 std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter, const const_iterator& endIter) const
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
+  pipelineCopy->setDisabled(isDisabled());
   for(auto iter = startIter; iter != endIter; iter++)
   {
     pipelineCopy->push_back(iter->get()->deepCopy());
