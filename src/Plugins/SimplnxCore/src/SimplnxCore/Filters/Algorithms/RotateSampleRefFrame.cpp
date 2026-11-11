@@ -39,6 +39,15 @@ const std::atomic_bool& RotateSampleRefFrame::getCancel()
 
 Result<> RotateSampleRefFrame::operator()()
 {
+  if(static_cast<RotationRepresentationType>(m_InputValues->RotationRepresentationIndex) == RotationRepresentationType::AxisAngle)
+  {
+    auto validation = ImageRotationUtilities::ValidateRotationAxisAngle(m_InputValues->RotationAxisAngle, "Rotation Axis-Angle");
+    if(validation.invalid())
+    {
+      return validation;
+    }
+  }
+
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SourceGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestGeometryPath);
 

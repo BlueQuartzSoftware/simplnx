@@ -56,6 +56,10 @@ When importing EBSD data from EDAX, the user typically rotates the sample refere
 
 - **Selected Image Geometry** -- an **Image Geometry** and all of its **Cell** arrays; produced by any image or EBSD reader, for example [Read H5EBSD File](../OrientationAnalysis/ReadH5EbsdFilter.md), [Import EDAX OIM Data (.h5)](../OrientationAnalysis/ReadH5OimDataFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md).
 
+### Numeric input constraints
+
+For *Axis-Angle* representation, **Rotation Axis-Angle** must contain a finite nonzero XYZ axis and a finite angle in degrees. Large and small finite axes are normalized safely. These checks run before the lossless-rotation check. *Rotation Matrix* representation ignores the axis-angle values.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

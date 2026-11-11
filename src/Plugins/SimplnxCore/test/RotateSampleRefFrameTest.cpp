@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -847,4 +848,75 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves 
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[SimplnxCore][RotateSampleRefFrameFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1);
+  CAPTURE(row);
+  DataStructure ds;
+  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  auto args =
+      MakeAxisAngleArgs(k_InputPath, k_OutputPath, row == 0 ? VectorFloat32Parameter::ValueType{0, 0, 0, 90} : VectorFloat32Parameter::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
+  RotateSampleRefFrameFilter filter;
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
+  REQUIRE(pre.outputActions.errors()[0].code == (row == 0 ? -86052 : -86053));
+}
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Large axis regression", "[SimplnxCore][RotateSampleRefFrameFilter][NumericDomainRed]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1e20f, 90});
+  RotateSampleRefFrameFilter filter;
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{4, 1, 5, 2, 6, 3});
+}
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Direct invalid axis preserves arrays", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  DataStructure ds;
+  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1, 90});
+  RotateSampleRefFrameFilter filter;
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  auto* dest = ds.getDataAs<Int32Array>(DataPath({"Output", "CellData", "Values"}));
+  REQUIRE(dest != nullptr);
+  dest->fill(99);
+  RotateSampleRefFrameInputValues input{};
+  input.SourceGeometryPath = k_InputPath;
+  input.DestGeometryPath = k_OutputPath;
+  input.RotationRepresentationIndex = 0;
+  input.RotationAxisAngle = {0, 0, 0, 90};
+  const std::atomic_bool cancel = false;
+  const IFilter::MessageHandler handler;
+  auto result = RotateSampleRefFrame(ds, handler, cancel, &input)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors()[0].code == -86052);
+  CHECK(ReadOutputValues(ds, k_InputPath) == std::vector<int32>{1, 2, 3, 4, 5, 6});
+  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{99, 99, 99, 99, 99, 99});
+}
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Inactive axis-angle values", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  CreateSequentialImageGeom(ds, "Input", {3, 2, 1});
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 0, std::numeric_limits<float32>::quiet_NaN()});
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, ChoicesParameter::ValueType{1});
+  Eigen::Matrix3f matrix;
+  matrix << -1, 0, 0, 0, -1, 0, 0, 0, 1;
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, ConvertMatrixToTable(matrix));
+  RotateSampleRefFrameFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CHECK(ReadOutputValues(ds, k_OutputPath) == std::vector<int32>{6, 5, 4, 3, 2, 1});
 }
