@@ -809,6 +809,16 @@ void RequireKernelRadiusPreflight()
       REQUIRE(message.find(i == 0 ? "X" : "Y") != std::string::npos);
       REQUIRE(message.find(std::to_string(invalidRadii[i][i])) != std::string::npos);
       REQUIRE(message.find("2147483646") != std::string::npos);
+      auto executeResult = filter.execute(ds, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
+      SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+      REQUIRE(executeResult.result.errors().front().code == ImageProcessing::k_KernelRadiusRangeError);
+      REQUIRE_FALSE(ds.containsData(inputPath.replaceName("Output")));
+      REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(inputPath));
+      const auto& input = ds.getDataRefAs<UInt8Array>(inputPath);
+      for(usize x = 0; x < 3; ++x)
+      {
+        REQUIRE(input[x] == (x + ((x * 131) % 37)) % 200);
+      }
     }
   }
   SECTION("Last representable Z radius")

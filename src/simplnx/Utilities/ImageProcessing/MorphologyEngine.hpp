@@ -69,16 +69,12 @@ inline constexpr int32 k_MorphologyByteCountError = -88009;
  * @param radius X, Y and Z kernel radii in cells.
  * @param safeBorder Includes radius padding, except on Z for a single-plane image.
  * @param elementBytes Size of one scalar image value in bytes.
- * @return Radius or layout error if counts, coordinates or typed byte counts are unrepresentable.
+ * @pre radius has exactly three components and satisfies ValidateKernelRadius().
+ * @return Layout error if counts, coordinates or typed byte counts are unrepresentable.
  * @note Flat-offset optimization limits do not restrict this layout contract.
  */
 inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<const uint32> radius, bool safeBorder, usize elementBytes)
 {
-  auto radiusResult = ValidateKernelRadius(radius);
-  if(radiusResult.invalid())
-  {
-    return radiusResult;
-  }
   SizeVec3 paddedDims = dims;
   constexpr std::array<const char*, 3> axes = {"X", "Y", "Z"};
   for(usize axis = 0; axis < 3; ++axis)
@@ -136,7 +132,8 @@ inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, nonstd::span<cons
  * @param kernel Rasterized kernel. Negative legacy radii describe an empty range.
  * @param safeBorder Includes the effective Safe Border padding.
  * @param elementBytes Size of one scalar value in bytes.
- * @return Shared radius or layout error.
+ * @pre Kernel radii satisfy ValidateKernelRadius() after negative legacy radii are clamped to zero.
+ * @return Layout error.
  */
 inline Result<> ValidateMorphologyLayout(const SizeVec3& dims, const StructuringElement& kernel, bool safeBorder, usize elementBytes)
 {

@@ -250,16 +250,12 @@ namespace detail
  * @param type Kernel shape passed to build.
  * @param radius User-supplied radii in cells.
  * @param build Construction callable. Tests can inject allocation exceptions here.
- * @return Constructed element, radius error or construction error.
+ * @pre radius has exactly three components and satisfies ValidateKernelRadius().
+ * @return Constructed element or construction error.
  */
 template <class Build>
 Result<StructuringElement> MakeCheckedStructuringElementWith(KernelType type, nonstd::span<const uint32> radius, Build&& build)
 {
-  auto validation = ValidateKernelRadius(radius);
-  if(validation.invalid())
-  {
-    return ConvertInvalidResult<StructuringElement>(std::move(validation));
-  }
   try
   {
     return {std::forward<Build>(build)(type, radius)};
@@ -277,10 +273,11 @@ Result<StructuringElement> MakeCheckedStructuringElementWith(KernelType type, no
 } // namespace detail
 
 /**
- * @brief Validates user radii and constructs a structuring element with checked allocation failure handling.
+ * @brief Constructs a structuring element with checked allocation failure handling.
  * @param type Kernel shape.
  * @param radius X, Y and Z radii in cells.
- * @return Constructed element, radius error or construction error.
+ * @pre radius has exactly three components and satisfies ValidateKernelRadius().
+ * @return Constructed element or construction error.
  */
 inline Result<StructuringElement> MakeCheckedStructuringElement(KernelType type, nonstd::span<const uint32> radius)
 {

@@ -118,21 +118,6 @@ TEST_CASE("simplnx::StructuringElement: Checked construction failures", "[simpln
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == k_KernelConstructionError);
   }
-  SECTION("Invalid radius returns before invoking build")
-  {
-    bool invoked = false;
-    const std::array<uint32, 3> invalid = {std::numeric_limits<uint32>::max(), 0, 0};
-    auto result = ImageProcessing::detail::MakeCheckedStructuringElementWith(KernelType::Box, invalid, [&invoked](KernelType, nonstd::span<const uint32>) {
-      invoked = true;
-      return StructuringElement{};
-    });
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == k_KernelRadiusRangeError);
-    REQUIRE_FALSE(invoked);
-    auto publicResult = MakeCheckedStructuringElement(KernelType::Box, invalid);
-    SIMPLNX_RESULT_REQUIRE_INVALID(publicResult);
-    REQUIRE(publicResult.errors().front().code == k_KernelRadiusRangeError);
-  }
 }
 
 TEST_CASE("simplnx::StructuringElement: Ordered offset oracles", "[simplnx][StructuringElement]")
