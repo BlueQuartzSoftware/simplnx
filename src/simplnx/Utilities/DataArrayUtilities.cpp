@@ -21,6 +21,7 @@
 #include <cmath>
 #include <limits>
 #include <string_view>
+#include <system_error>
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>

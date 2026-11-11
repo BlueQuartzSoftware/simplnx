@@ -52,20 +52,26 @@ namespace nx::core
 {
 class IGridGeometry;
 
-/** @brief Selects whether an explicit dimension can be zero. */
+/**
+ * @enum ZeroDimensionPolicy
+ * @brief Selects whether an explicit dimension can be zero.
+ */
 enum class ZeroDimensionPolicy : uint8
 {
-  Reject,
-  Allow
+  Reject, ///< Requires dimensions of at least one.
+  Allow   ///< Permits zero dimensions.
 };
 
-/** @brief Preserves the error code of an existing table-value check. */
+/**
+ * @enum LegacyDimensionCheck
+ * @brief Selects the predicate that uses the legacy error code for an invalid table value.
+ */
 enum class LegacyDimensionCheck : uint8
 {
-  None,
-  Zero,
-  PositiveWhole,
-  NonPositive
+  None,          ///< Uses the standard dimension error code for every invalid value.
+  Zero,          ///< Uses the legacy error code for values equal to zero.
+  PositiveWhole, ///< Uses the legacy error code for NaN, values below one, or fractional values.
+  NonPositive    ///< Uses the legacy error code for values less than or equal to zero.
 };
 
 namespace DimensionConversion
