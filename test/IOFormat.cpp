@@ -41,7 +41,7 @@ TEST_CASE("Memory Check", "IOTest")
 TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory", "[IOTest][DataFormat]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, app->getPreferences()->valueAs<int64>(Preferences::k_LargeDataSize_Key));
+  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
 
   // ForceInCore is the only mode for which OOC is "not in use".
   REQUIRE_FALSE(app->getPreferences()->useOocData());
@@ -57,7 +57,7 @@ TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory"
 TEST_CASE("Data Format: Adaptive and ForceOutOfCore report useOocData true", "[IOTest][DataFormat]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::Adaptive, app->getPreferences()->valueAs<int64>(Preferences::k_LargeDataSize_Key));
+  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::Adaptive, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
 
   // OOC is "in use" for both size-driven and always-out-of-core intents.
   REQUIRE(app->getPreferences()->useOocData());
