@@ -671,6 +671,30 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
 }
 
 // -----------------------------------------------------------------------------
+Result<SizeVec3> GeometryUtilities::ValidateImageDimensions(nonstd::span<const uint64> dimensions, std::string_view name, int32 code)
+{
+  SizeVec3 result;
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(dimensions[axis] == 0 || dimensions[axis] > std::numeric_limits<usize>::max())
+    {
+      return MakeErrorResult<SizeVec3>(code, fmt::format("{} {} value {} must be a positive dimension no greater than {}.", name, "XYZ"[axis], dimensions[axis], std::numeric_limits<usize>::max()));
+    }
+    result[axis] = static_cast<usize>(dimensions[axis]);
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(result[axis] > std::numeric_limits<usize>::max() / product)
+    {
+      return MakeErrorResult<SizeVec3>(code, fmt::format("{} tuple product cannot fit usize: X={}, Y={}, Z={}.", name, dimensions[0], dimensions[1], dimensions[2]));
+    }
+    product *= result[axis];
+  }
+  return {result};
+}
+
+// -----------------------------------------------------------------------------
 Result<> GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
 {
   for(usize axis = 0; axis < values.size(); ++axis)

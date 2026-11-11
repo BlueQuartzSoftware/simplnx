@@ -184,3 +184,123 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: SIMPL Backwards Compa
     }
   }
 }
+
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
+
+namespace
+{
+void CreateCountRectGrid(DataStructure& ds)
+{
+  auto result = CreateRectGridGeometryAction(DataPath({"Rect"}), 2, 2, 2, "Cell Data", "X", "Y", "Z").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<RectGridGeom>(DataPath({"Rect"})));
+  auto& geom = ds.getDataRefAs<RectGridGeom>(DataPath({"Rect"}));
+  geom.getXBounds()->setValue(0, 0);
+  geom.getXBounds()->setValue(1, 2);
+  geom.getYBounds()->setValue(0, 0);
+  geom.getYBounds()->setValue(1, 3);
+  geom.getZBounds()->setValue(0, 0);
+  geom.getZBounds()->setValue(1, 4);
+  result = CreateArrayAction(DataType::int32, {1, 1, 1}, {1}, DataPath({"Rect", "Cell Data", "Marker"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Rect", "Cell Data", "Marker"})));
+  ds.getDataRefAs<Int32Array>(DataPath({"Rect", "Cell Data", "Marker"}))[0] = 7;
+}
+Arguments CountRectGridArguments()
+{
+  ResampleRectGridToImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key, DataPath({"Rect"}));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{DataPath({"Rect", "Cell Data", "Marker"})});
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Requested dimension domains", "[SimplnxCore][ResampleRectGridToImageGeomFilter][CountParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateCountRectGrid(ds);
+  ResampleRectGridToImageGeomFilter filter;
+  auto args = CountRectGridArguments();
+  int32 expectedCode = 0;
+  std::string component;
+  SECTION("Zero component")
+  {
+    const auto axis = GENERATE(0, 1, 2);
+    CAPTURE(axis);
+    component = std::string(1, "XYZ"[axis]);
+    std::vector<int32> dims = {1, 1, 1};
+    dims[axis] = 0;
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, dims);
+    expectedCode = -86156 - axis;
+  }
+  SECTION("Product overflow")
+  {
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::vector<int32>(3, 1 << 22));
+    expectedCode = -86174;
+  }
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  const auto& diagnostic = result.outputActions.errors()[0].message;
+  CHECK(diagnostic.find("Dimensions") != std::string::npos);
+  if(!component.empty())
+  {
+    CHECK(diagnostic.find(component) != std::string::npos);
+    CHECK(diagnostic.find("value 0") != std::string::npos);
+  }
+  else
+  {
+    CHECK(diagnostic.find("product") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Rectilinear count boundaries", "[SimplnxCore][GeometryCountControls]")
+{
+
+  DataStructure ds;
+  CreateCountRectGrid(ds);
+  ResampleRectGridToImageGeomFilter filter;
+  auto args = CountRectGridArguments();
+  SECTION("Negative components")
+  {
+    const auto axis = GENERATE(0, 1, 2);
+    CAPTURE(axis);
+    std::vector<int32> dims = {1, 1, 1};
+    dims[axis] = -1;
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, dims);
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    CHECK(result.outputActions.errors()[0].code == -7362 - axis);
+  }
+  SECTION("Active vector length")
+  {
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::vector<int32>{1, 1});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -1);
+    CHECK(filter.parameters().at(ResampleRectGridToImageGeomFilter::k_Dimensions_Key)->humanName() == "Dimensions (Voxels)");
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+  SECTION("Ordinary sampling")
+  {
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::vector<int32>{1, 1, 1});
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+    const auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
+    CHECK(geom.getDimensions() == SizeVec3{1, 1, 1});
+    CHECK(geom.getSpacing() == FloatVec3{2, 3, 4});
+    CHECK(geom.getOrigin() == FloatVec3{0, 0, 0});
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"})));
+    CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"}))[0] == 7);
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}

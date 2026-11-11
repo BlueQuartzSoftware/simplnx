@@ -39,6 +39,34 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
   std::string FeatureAttrMatrixName;
 };
 
+namespace detail
+{
+/**
+ * @brief Checks the consumed int32 partition-index cast and identifier addition.
+ * @param partitionCount Gives the final or parameter-derived partition count.
+ * @param startingFeatureId Gives the signed starting identifier.
+ * @return An error if a consumed index or resulting identifier cannot fit int32.
+ */
+SIMPLNXCORE_EXPORT Result<> CheckPartitionIdRange(usize partitionCount, int32 startingFeatureId);
+} // namespace detail
+
+/**
+ * @brief Converts a final coordinate to a partition index with float64 arithmetic.
+ * @param grid Defines the final partition geometry.
+ * @param coordinate Gives the consumed data coordinate.
+ * @pre The grid tuple product fits usize and its spacing is positive and finite.
+ * @return An index, no index outside coverage, or a conversion error.
+ */
+SIMPLNXCORE_EXPORT Result<std::optional<usize>> ComputeCheckedPartitionIndex(const ImageGeom& grid, const Point3D<float64>& coordinate);
+/**
+ * @brief Converts a final coordinate with the existing float32 arithmetic.
+ * @param grid Defines the final partition geometry.
+ * @param coordinate Gives the consumed data coordinate.
+ * @pre The grid tuple product fits usize and its spacing is positive and finite.
+ * @return An index, no index outside coverage, or a conversion error.
+ */
+SIMPLNXCORE_EXPORT Result<std::optional<usize>> ComputeCheckedPartitionIndex(const ImageGeom& grid, const Point3Df& coordinate);
+
 /**
  * @class PartitionGeometry
  * @brief Dispatches geometry partitioning from selected array storage.
@@ -91,6 +119,8 @@ public:
    *
    * Cancellation or an I/O error can retain partial partition IDs. Created
    * partition-grid Feature IDs can also remain partial.
+   * @pre Active created-grid counts are positive with representable products and IDs. Geometry, output and mask selections are valid.
+   * @pre In Advanced mode, Partition Grid Origin is finite and Cell Length has finite positive components.
    */
   Result<> operator()();
 

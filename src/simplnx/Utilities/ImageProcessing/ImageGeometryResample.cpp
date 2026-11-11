@@ -18,6 +18,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -32,6 +33,7 @@ using namespace nx::core;
 
 namespace
 {
+constexpr nx::core::int32 k_ExactDimensionsDomain = -86153;
 constexpr nx::core::int32 k_AxisConversionRepresentation = -86137;
 constexpr nx::core::int32 k_PreparedGeometryRepresentation = -86136;
 constexpr nx::core::int32 k_ProvisionalProductWarning = -86131;
@@ -221,7 +223,7 @@ Result<> nx::core::ValidateResamplingParameters(const ResampleImageGeomInputValu
 {
   if(inputValues.ResamplingMode == k_ExactDimensionsModeIndex)
   {
-    return {};
+    return ConvertResult(GeometryUtilities::ValidateImageDimensions(inputValues.ExactDimensions, "Exact Dimensions", k_ExactDimensionsDomain));
   }
   const bool scaling = inputValues.ResamplingMode == k_ScalingModeIndex;
   const auto& values = scaling ? inputValues.Scaling : inputValues.Spacing;

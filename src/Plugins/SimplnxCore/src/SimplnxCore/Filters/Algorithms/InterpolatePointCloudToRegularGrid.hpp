@@ -4,7 +4,10 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+
+#include <array>
 
 namespace nx::core
 {
@@ -38,6 +41,17 @@ struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
   std::string meanSuffix;
   std::string stdDeviationSuffix;
   std::string summationSuffix;
+};
+
+/**
+ * @struct InterpolationKernelLayout
+ * @brief Stores checked kernel radii, dimensions and element count without allocating weights.
+ */
+struct InterpolationKernelLayout
+{
+  std::array<int64, 3> Radii = {0, 0, 0};
+  SizeVec3 Dimensions = {1, 1, 1};
+  usize ElementCount = 1;
 };
 
 /**
@@ -82,10 +96,39 @@ public:
    */
   /**
    * @brief Accumulates point values in image cells.
-   * @pre Kernel Size has three nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
+   * @pre Kernel Size has three finite nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
    * @return Temporary-storage or output-write errors, otherwise success.
    */
   Result<> operator()();
+
+  /**
+   * @brief Identifies an unrepresentable kernel radius, width or consumed spacing.
+   */
+  static constexpr int32 k_KernelRadiusRepresentation = -86165;
+  /**
+   * @brief Identifies overflow in the kernel element product.
+   */
+  static constexpr int32 k_KernelProductRepresentation = -86166;
+  /**
+   * @brief Identifies an unrepresentable kernel byte count or container size.
+   */
+  static constexpr int32 k_KernelStorageRepresentation = -86167;
+
+  /**
+   * @brief Computes representable kernel extents from final image spacing.
+   * @param image Provides physical cell spacing, possibly provisional during preflight.
+   * @param inputValues Provides finite nonnegative physical kernel extents and the image path.
+   * @pre kernelSize has three finite nonnegative components.
+   * @return The layout, or a radius, product, byte-count or container-size error.
+   */
+  static Result<InterpolationKernelLayout> ComputeKernelLayout(const ImageGeom& image, const InterpolatePointCloudToRegularGridInputValues& inputValues);
+
+  /**
+   * @brief Squares a signed kernel offset without signed integer overflow.
+   * @param offset Gives a displacement in cells.
+   * @return The squared displacement in the existing float32 numerator representation.
+   */
+  static float32 ComputeSquaredKernelOffset(int64 offset);
 
   const std::atomic_bool& getCancel();
 

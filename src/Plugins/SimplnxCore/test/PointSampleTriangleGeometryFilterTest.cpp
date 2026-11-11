@@ -451,3 +451,122 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete fea
   CHECK((*featureIds)[1] == 1);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+
+namespace
+{
+void CreateCountTriangle(DataStructure& ds)
+{
+  auto result = CreateTriangleGeometryAction(DataPath({"Triangle"}), 1, 3, "Vertex Data", "Face Data", "Vertices", "Faces").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<TriangleGeom>(DataPath({"Triangle"})));
+  auto& geom = ds.getDataRefAs<TriangleGeom>(DataPath({"Triangle"}));
+  const std::array<float32, 9> coords = {0, 0, 0, 1, 0, 0, 0, 1, 0};
+  auto write = geom.getVerticesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  geom.getFacesRef()[0] = 0;
+  geom.getFacesRef()[1] = 1;
+  geom.getFacesRef()[2] = 2;
+  for(const auto& name : {"Area", "Value"})
+  {
+    result = CreateArrayAction(DataType::float64, {1}, {1}, DataPath({"Triangle", "Face Data", name})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(DataPath({"Triangle", "Face Data", name})));
+    ds.getDataRefAs<Float64Array>(DataPath({"Triangle", "Face Data", name}))[0] = std::string(name) == "Area" ? 0.5 : 7;
+  }
+}
+Arguments CountTriangleArguments()
+{
+  PointSampleTriangleGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleGeometry_Key, DataPath({"Triangle"}));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_TriangleAreasArrayPath_Key, DataPath({"Triangle", "Face Data", "Area"}));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, DataPath({"Samples"}));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupName_Key, std::string("Vertex Data"));
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseMask_Key, false);
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_UseSeed_Key, true);
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SeedValue_Key, uint64{5489});
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{});
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Nonnegative sample count", "[SimplnxCore][PointSampleTriangleGeometryFilter][CountParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateCountTriangle(ds);
+  PointSampleTriangleGeometryFilter filter;
+  auto args = CountTriangleArguments();
+  args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, int32{-1});
+  const int32 expectedCode = -86162;
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find("Number of Sample Points value -1") != std::string::npos);
+}
+
+#include <cmath>
+TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Sample count boundaries", "[SimplnxCore][GeometryCountControls]")
+{
+
+  const auto count = GENERATE(0, 3);
+  const bool transfer = GENERATE(false, true);
+  CAPTURE(count, transfer);
+  std::vector<float32> previous;
+  for(usize run = 0; run < 2; ++run)
+  {
+    DataStructure ds;
+    CreateCountTriangle(ds);
+    PointSampleTriangleGeometryFilter filter;
+    auto args = CountTriangleArguments();
+    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, static_cast<int32>(count));
+    if(transfer)
+    {
+      args.insertOrAssign(PointSampleTriangleGeometryFilter::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{DataPath({"Triangle", "Face Data", "Value"})});
+    }
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Samples"})));
+    const auto& geom = ds.getDataRefAs<VertexGeom>(DataPath({"Samples"}));
+    CHECK(geom.getNumberOfVertices() == static_cast<usize>(count));
+    CHECK(geom.getVertexAttributeMatrixRef().getNumberOfTuples() == static_cast<usize>(count));
+    std::vector<float32> coordinates;
+    for(usize index = 0; index < geom.getNumberOfVertices(); ++index)
+    {
+      const auto point = geom.getVertexCoordinate(index);
+      for(usize axis = 0; axis < 3; ++axis)
+      {
+        CHECK(std::isfinite(point[axis]));
+        coordinates.push_back(point[axis]);
+      }
+      CHECK(point[2] == 0);
+      CHECK(point[0] >= 0);
+      CHECK(point[1] >= 0);
+      CHECK(point[0] + point[1] <= 1.0F + 1e-6F);
+    }
+    if(transfer)
+    {
+      REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(DataPath({"Samples", "Vertex Data", "Value"})));
+      const auto& values = ds.getDataRefAs<Float64Array>(DataPath({"Samples", "Vertex Data", "Value"}));
+      CHECK(values.getNumberOfTuples() == static_cast<usize>(count));
+      for(usize index = 0; index < values.getNumberOfTuples(); ++index)
+      {
+        CHECK(values[index] == 7);
+      }
+    }
+    if(run == 0)
+    {
+      previous = coordinates;
+    }
+    else
+    {
+      CHECK(coordinates == previous);
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}

@@ -19,6 +19,7 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_DimensionsDomain = -86155;
 constexpr int32 k_SpacingDomain = -86009;
 constexpr int32 k_OriginDomain = -86010;
 } // namespace
@@ -99,6 +100,11 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  auto dimensionValidation = GeometryUtilities::ValidateImageDimensions(pDimensionsValue, "Dimensions", k_DimensionsDomain);
+  if(dimensionValidation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(dimensionValidation))};
+  }
   auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
   if(spacingValidation.invalid())
   {

@@ -18,6 +18,20 @@
 
 using namespace nx::core;
 
+namespace
+{
+using namespace nx::core;
+constexpr int32 k_SampleCountDomain = -86162;
+Result<> ValidateSampleCount(int32 count)
+{
+  if(count < 0)
+  {
+    return MakeErrorResult(k_SampleCountDomain, fmt::format("Number of Sample Points value {} must be nonnegative.", count));
+  }
+  return {};
+}
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -112,6 +126,11 @@ IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  if(auto validation = ValidateSampleCount(filterArgs.value<int32>(k_NumberOfSamples_Key)); validation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+  }
+
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
   auto pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);

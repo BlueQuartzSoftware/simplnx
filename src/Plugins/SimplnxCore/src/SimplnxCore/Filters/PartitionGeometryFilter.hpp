@@ -158,48 +158,43 @@ protected:
   Result<> dataCheckPartitioningMode(const DataStructure& dataStructure, const Arguments& filterArgs, const GeomType& geometryToPartition) const;
 
   /**
-   * @brief Checks partition counts before the geometry data count.
+   * @brief Checks the selected geometry data count.
    * @tparam GeomType Image, rectilinear, or node geometry type.
-   * @param numOfPartitionsPerAxis Partition count on each axis; each count must exceed zero.
    * @param geometryToPartition Geometry that supplies the cell or vertex count.
    * @param attrMatrix Selected matrix whose tuple count must match the geometry data count.
    * @param geometryToPartitionPath Actual selected geometry path for geometry diagnostics, including linked selections.
    * @param attrMatrixPath Actual selected matrix path for geometry diagnostics, including linked selections.
-   * @return First partition-count or geometry-data error, or a valid empty result.
+   * @return A geometry-data count error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
-                              const DataPath& attrMatrixPath) const;
+  Result<> dataCheckBasicMode(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
 
   /**
-   * @brief Checks partition counts before the geometry data count.
+   * @brief Checks the selected geometry data count.
    * @tparam GeomType Image, rectilinear, or node geometry type.
-   * @param numOfPartitionsPerAxis Partition count on each axis; each count must exceed zero.
    * @param geometryToPartition Geometry that supplies the cell or vertex count.
    * @param attrMatrix Selected matrix whose tuple count must match the geometry data count.
    * @param geometryToPartitionPath Actual selected geometry path for geometry diagnostics, including linked selections.
    * @param attrMatrixPath Actual selected matrix path for geometry diagnostics, including linked selections.
-   * @return First partition-count or geometry-data error, or a valid empty result.
+   * @return A geometry-data count error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
-                                 const DataPath& attrMatrixPath) const;
+  Result<> dataCheckAdvancedMode(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
 
   /**
-   * @brief Checks partition counts and bounds before the geometry data count.
+   * @brief Checks bounds before the geometry data count.
    * @tparam GeomType Image, rectilinear, or node geometry type.
-   * @param numOfPartitionsPerAxis Partition count on each axis; each count must exceed zero.
    * @param llCoord Lower corner; each coordinate must not exceed the corresponding upper corner coordinate.
    * @param urCoord Upper corner of the partition grid.
    * @param geometryToPartition Geometry that supplies the cell or vertex count.
    * @param attrMatrix Selected matrix whose tuple count must match the geometry data count.
    * @param geometryToPartitionPath Actual selected geometry path for geometry diagnostics, including linked selections.
    * @param attrMatrixPath Actual selected matrix path for geometry diagnostics, including linked selections.
-   * @return First partition-count, bounds, or geometry-data error, or a valid empty result.
+   * @return A bounds or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
-                                    const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
+  Result<> dataCheckBoundingBoxMode(const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+                                    const DataPath& attrMatrixPath) const;
 
   static Result<> DataCheckExistingGeometryMode();
 
@@ -216,11 +211,6 @@ protected:
    */
   template <typename GeomType>
   Result<> dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
-
-  /**
-   * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
-   */
-  static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
 
   static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 

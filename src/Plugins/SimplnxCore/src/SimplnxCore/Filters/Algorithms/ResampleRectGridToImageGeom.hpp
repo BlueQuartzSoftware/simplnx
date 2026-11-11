@@ -37,6 +37,11 @@ public:
   ResampleRectGridToImageGeom& operator=(const ResampleRectGridToImageGeom&) = delete;
   ResampleRectGridToImageGeom& operator=(ResampleRectGridToImageGeom&&) noexcept = delete;
 
+  /**
+   * @brief Executes the operation with prepared selections.
+   * @pre Prepared destination dimensions are positive with a representable tuple product; source and destination selections are valid.
+   * @return The execution result, including output errors.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

@@ -48,7 +48,7 @@ struct ResampledImageLayout
 };
 
 /**
- * @brief Checks active Spacing or Scaling Factor parameters during filter preflight.
+ * @brief Checks active resampling parameters during filter preflight.
  * @param inputValues Selects the mode and its active parameter vector.
  * @return An error for an invalid active value, otherwise success.
  * @pre Active vectors have three components. Inactive vectors are not read.

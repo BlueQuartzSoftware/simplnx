@@ -286,3 +286,31 @@ TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps t
   CHECK(plannedGeometryPtr->units() == units);
   CHECK(plannedGeometryPtr->path() == inputValues.CreatedImageGeometryPath);
 }
+
+TEST_CASE("simplnx::ImageGeometryResample: Exact parameter propagation", "[simplnx][ImageGeometryResample]")
+{
+  const bool product = GENERATE(false, true);
+  CAPTURE(product);
+  ResampleImageGeomInputValues input{};
+  input.ResamplingMode = 2;
+  input.ExactDimensions = product ? std::vector<uint64>{uint64{1} << 63, 2, 1} : std::vector<uint64>{1, 0, 1};
+  auto result = ValidateResamplingParameters(input);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -86153);
+  const auto& message = result.errors()[0].message;
+  CHECK(message.find("Exact Dimensions") != std::string::npos);
+  if(product)
+  {
+    CHECK(message.find("tuple product") != std::string::npos);
+    for(auto value : input.ExactDimensions)
+    {
+      CHECK(message.find(std::to_string(value)) != std::string::npos);
+    }
+  }
+  else
+  {
+    CHECK(message.find("Y value 0") != std::string::npos);
+    CHECK(message.find("positive dimension") != std::string::npos);
+  }
+}

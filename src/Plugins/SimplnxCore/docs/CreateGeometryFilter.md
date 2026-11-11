@@ -62,6 +62,10 @@ The filter validates that the supplied arrays "make sense" for the chosen geomet
 
 For *Image Geometry*, **Spacing** must contain finite values greater than 0. **Origin** must contain finite values. Other geometry types do not use these values.
 
+### Count Parameter Limits
+
+When creating an Image Geometry, every **Dimensions** component must be an integer of at least 1. Each dimension and the XYZ tuple product must fit the geometry size type. Preflight rejects invalid dimensions before output actions or extent previews. Other geometry types ignore Image dimensions, spacing and origin.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
