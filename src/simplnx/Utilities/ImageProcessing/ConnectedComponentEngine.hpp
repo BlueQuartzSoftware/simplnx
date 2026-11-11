@@ -82,7 +82,6 @@ struct CcRun
 using CcLine = std::vector<CcRun>;
 
 inline constexpr usize k_ConnectedComponent2DTargetBytes = 64ULL * 1024ULL * 1024ULL;
-inline constexpr usize k_ConnectedComponent2DMetadataHeadroomBytes = 64ULL * 1024ULL;
 
 struct ConnectedComponent2DPlan
 {
@@ -311,24 +310,22 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
   plan.maximumRunsPerLine = dimX / 2 + dimX % 2;
 
   usize oneLineCapacityBytes = 0;
-  usize bothLineCapacityBytes = 0;
-  usize fullWidthFixedBytes = 0;
+  usize runPayloadBytes = 0;
   usize rowValueBytes = 0;
-  const usize fullWidthObjectBytes = k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<T>) + 2 * sizeof(CcLine) + (writesProvisional ? sizeof(std::vector<uint32>) : 0);
   const usize valuesPerPixel = sizeof(T) + (writesProvisional ? sizeof(uint32) : 0);
-  if(!ConnectedComponentCheckedMultiply(plan.maximumRunsPerLine, sizeof(CcRun), oneLineCapacityBytes) || !ConnectedComponentCheckedMultiply(oneLineCapacityBytes, 2, bothLineCapacityBytes) ||
-     !ConnectedComponentCheckedAdd(fullWidthObjectBytes, bothLineCapacityBytes, fullWidthFixedBytes) || !ConnectedComponentCheckedMultiply(dimX, valuesPerPixel, rowValueBytes))
+  if(!ConnectedComponentCheckedMultiply(plan.maximumRunsPerLine, sizeof(CcRun), oneLineCapacityBytes) || !ConnectedComponentCheckedMultiply(oneLineCapacityBytes, 2, runPayloadBytes) ||
+     !ConnectedComponentCheckedMultiply(dimX, valuesPerPixel, rowValueBytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374,
                                                      fmt::format("Connected-component true-2-D full-width plan overflowed for dimensions {} x {} and {}-byte input values.", dimX, dimY, sizeof(T)));
   }
 
-  if(fullWidthFixedBytes <= targetBytes && rowValueBytes <= targetBytes - fullWidthFixedBytes)
+  if(runPayloadBytes <= targetBytes && rowValueBytes <= targetBytes - runPayloadBytes)
   {
-    plan.coreRows = std::min(dimY, (targetBytes - fullWidthFixedBytes) / rowValueBytes);
+    plan.coreRows = std::min(dimY, (targetBytes - runPayloadBytes) / rowValueBytes);
     plan.coreColumns = dimX;
     usize blockBytes = 0;
-    if(plan.coreRows == 0 || !ConnectedComponentCheckedMultiply(plan.coreRows, rowValueBytes, blockBytes) || !ConnectedComponentCheckedAdd(fullWidthFixedBytes, blockBytes, plan.residentBytes))
+    if(plan.coreRows == 0 || !ConnectedComponentCheckedMultiply(plan.coreRows, rowValueBytes, blockBytes) || !ConnectedComponentCheckedAdd(runPayloadBytes, blockBytes, plan.residentBytes))
     {
       return MakeErrorResult<ConnectedComponent2DPlan>(-8374,
                                                        fmt::format("Connected-component true-2-D full-width plan could not fit one row for dimensions {} x {} in {} bytes.", dimX, dimY, targetBytes));
@@ -338,17 +335,16 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
 
   plan.useTiles = true;
   plan.coreRows = 1;
-  const usize tileFixedBytes = k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<T>) + 2 * sizeof(std::vector<uint32>) + 2 * sizeof(uint32);
+  constexpr usize haloBytes = 2 * sizeof(uint32);
   const usize bytesPerColumn = sizeof(T) + 2 * sizeof(uint32);
-  if(tileFixedBytes > targetBytes || bytesPerColumn > targetBytes - tileFixedBytes)
+  if(haloBytes > targetBytes || bytesPerColumn > targetBytes - haloBytes)
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(
         -8374, fmt::format("Connected-component true-2-D tiled plan cannot fit one input/provisional column and previous-row halos for dimensions {} x {} in {} bytes.", dimX, dimY, targetBytes));
   }
-  plan.coreColumns = std::min(dimX, (targetBytes - tileFixedBytes) / bytesPerColumn);
+  plan.coreColumns = std::min(dimX, (targetBytes - haloBytes) / bytesPerColumn);
   usize tileColumnBytes = 0;
-  if(plan.coreColumns == 0 || !ConnectedComponentCheckedMultiply(plan.coreColumns, bytesPerColumn, tileColumnBytes) ||
-     !ConnectedComponentCheckedAdd(tileFixedBytes, tileColumnBytes, plan.residentBytes))
+  if(plan.coreColumns == 0 || !ConnectedComponentCheckedMultiply(plan.coreColumns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(haloBytes, tileColumnBytes, plan.residentBytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374, fmt::format("Connected-component true-2-D tiled plan overflowed for dimensions {} x {} and {}-byte input values.", dimX, dimY, sizeof(T)));
   }
@@ -394,13 +390,12 @@ inline usize AlignConnectedComponent2DRows(usize maximumRows, usize dimX, const 
 inline Result<usize> CreateConnectedComponent2DFinalChunkValues(usize totalValues, usize dimX, usize targetBytes, const std::optional<ShapeType>& provisionalChunkShape,
                                                                 const std::optional<ShapeType>& outputChunkShape)
 {
-  const usize fixedBytes = k_ConnectedComponent2DMetadataHeadroomBytes + sizeof(std::vector<uint32>);
-  if(totalValues == 0 || dimX == 0 || targetBytes <= fixedBytes || (targetBytes - fixedBytes) / sizeof(uint32) == 0)
+  if(totalValues == 0 || dimX == 0 || targetBytes < sizeof(uint32))
   {
     return MakeErrorResult<usize>(
         -8374, fmt::format("Connected-component true-2-D finalization cannot fit one uint32 label value for {} values, row width {}, and target {} bytes.", totalValues, dimX, targetBytes));
   }
-  usize chunkValues = std::min(totalValues, (targetBytes - fixedBytes) / sizeof(uint32));
+  usize chunkValues = std::min(totalValues, targetBytes / sizeof(uint32));
   if(chunkValues >= dimX)
   {
     const usize maximumRows = chunkValues / dimX;

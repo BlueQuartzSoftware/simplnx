@@ -44,6 +44,8 @@ Entries are referenced by stable ID (`ComputeFeatureCentroidsFilter-D<N>`) from 
 
 **Note (SIMPLNX-internal bugs fixed during V&V — not legacy deviations):** The periodic centroid had two SIMPLNX-internal defects, both fixed. (1) *Spacing:* the offset in the `ImageGeom` overload of `AdjustCentroidsForPeriodicFaces` was added in cell-index units (`(dim−1)/2`) to a physical-coordinate centroid, correct only when spacing == 1 (fixed during #1658). (2) *Model (issue #1665, 2026-07 follow-up):* the constant half-domain offset is itself only correct for a feature whose mass is symmetric about the seam, and can place asymmetric wrapped features outside the domain. The periodic path was reimplemented as a **minimum-image circular mean** accumulated during the cell sweep, and the range-based `ImageGeom` overload (insufficient inputs to compute a wrapped centroid) was removed. `test/ComputeFeatureCentroidsTest.cpp` Fixtures D/E (independent minimum-image oracle) and F (domain-filling fallback) pin the corrected behavior. Because 6.5.171 has no periodic path, neither fix is a change relative to legacy; recorded here for any SIMPLNX user who ran `Is Periodic` before the fixes.
 
+**Current periodic behavior (2026-10 correction):** An adversarial unequal-population case showed that the July circular estimator did not implement the documented arithmetic mean after unwrapping. The current path chooses the unique largest empty gap among occupied cell centers and averages all unwrapped cells with their actual multiplicities. Tied largest gaps and complete axis occupancy retain the ordinary mean. The nonperiodic legacy comparison and the historical V&V sign-off above are unchanged.
+
 ---
 
 ## Retracted candidate deviations
