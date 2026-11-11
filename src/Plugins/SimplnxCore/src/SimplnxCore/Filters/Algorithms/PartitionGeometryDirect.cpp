@@ -20,40 +20,33 @@ namespace
 constexpr usize k_InvalidPartitionIndex = std::numeric_limits<usize>::max();
 
 /**
- * @brief Maps input cell centers on one axis to flattened partition offsets.
- * @param inputDimension Specifies input cells on the axis.
- * @param inputOrigin Specifies input origin on the axis.
- * @param inputSpacing Specifies input spacing on the axis.
- * @param partitionDimension Specifies partition cells on the axis.
- * @param partitionOrigin Specifies partition origin on the axis.
- * @param partitionSpacing Specifies partition spacing on the axis.
- * @param partitionIndexMultiplier Converts an axis index to a flat-index contribution.
- * @return Partition offsets, or an invalid sentinel for exterior cell centers.
- *
- * Precomputed axis maps avoid repeated coordinate queries in the ImageGeom fast path.
+ * @brief Maps final input cell centers to checked flat partition offsets.
+ * @param inputDimension Gives the input axis length.
+ * @param inputOrigin Gives the input axis origin in geometry length units.
+ * @param inputSpacing Gives the input cell spacing in geometry length units.
+ * @param partitionGrid Provides final partition metadata.
+ * @param axis Selects X, Y or Z.
+ * @return Axis offsets, unmapped sentinels or an index-conversion error.
  */
-std::vector<usize> CreateImageAxisPartitionIndices(usize inputDimension, float32 inputOrigin, float32 inputSpacing, usize partitionDimension, float32 partitionOrigin, float32 partitionSpacing,
-                                                   usize partitionIndexMultiplier)
+Result<std::vector<usize>> CreateImageAxisPartitionIndices(usize inputDimension, float32 inputOrigin, float32 inputSpacing, const ImageGeom& partitionGrid, usize axis)
 {
   std::vector<usize> partitionIndices(inputDimension, k_InvalidPartitionIndex);
-  const float64 partitionMax = static_cast<float64>(partitionDimension) * partitionSpacing + partitionOrigin;
-
-  for(usize index = 0; index < inputDimension; index++)
+  const auto partitionOrigin = partitionGrid.getOrigin();
+  for(usize index = 0; index < inputDimension; ++index)
   {
-    const float64 coordinate = static_cast<float64>(index) * inputSpacing + inputOrigin + (0.5 * inputSpacing);
-    if(coordinate < partitionOrigin || coordinate > partitionMax)
+    Point3D<float64> coordinate = {partitionOrigin[0], partitionOrigin[1], partitionOrigin[2]};
+    coordinate[axis] = static_cast<float64>(index) * inputSpacing + inputOrigin + (0.5 * inputSpacing);
+    auto result = ComputeCheckedPartitionIndex(partitionGrid, coordinate);
+    if(result.invalid())
     {
-      continue;
+      return ConvertInvalidResult<std::vector<usize>>(std::move(result));
     }
-
-    const usize partitionIndex = static_cast<usize>(std::floor((coordinate - partitionOrigin) / partitionSpacing));
-    if(partitionIndex < partitionDimension)
+    if(result.value().has_value())
     {
-      partitionIndices[index] = partitionIndex * partitionIndexMultiplier;
+      partitionIndices[index] = *result.value();
     }
   }
-
-  return partitionIndices;
+  return {std::move(partitionIndices)};
 }
 
 /**
@@ -289,12 +282,18 @@ public:
         return;
       }
 
+      if(m_MaskArrayOpt.has_value() && !(*m_MaskArrayOpt)[idx])
+      {
+        m_PartitionIdsStore[idx] = m_OutOfBoundsValue;
+        continue;
+      }
+
       const float32 x = m_VerticesStore[idx * 3];
       const float32 y = m_VerticesStore[idx * 3 + 1];
       const float32 z = m_VerticesStore[idx * 3 + 2];
 
       auto partitionIndexResult = m_PSImageGeom.getIndex(x, y, z);
-      if((m_MaskArrayOpt.has_value() && !(*m_MaskArrayOpt)[idx]) || !partitionIndexResult.has_value())
+      if(!partitionIndexResult.has_value())
       {
         m_PartitionIdsStore[idx] = m_OutOfBoundsValue;
       }
@@ -427,23 +426,45 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
   if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStore != nullptr)
   {
     const auto& imageGeom = static_cast<const ImageGeom&>(inputGeometry);
-    const SizeVec3 partitionDimensions = psImageGeom.getDimensions();
     const FloatVec3 inputOrigin = imageGeom.getOrigin();
     const FloatVec3 inputSpacing = imageGeom.getSpacing();
-    const FloatVec3 partitionOrigin = psImageGeom.getOrigin();
-    const FloatVec3 partitionSpacing = psImageGeom.getSpacing();
-
-    const std::vector<usize> xPartitionIndices = CreateImageAxisPartitionIndices(dims[0], inputOrigin[0], inputSpacing[0], partitionDimensions[0], partitionOrigin[0], partitionSpacing[0], 1);
-    const std::vector<usize> yPartitionIndices =
-        CreateImageAxisPartitionIndices(dims[1], inputOrigin[1], inputSpacing[1], partitionDimensions[1], partitionOrigin[1], partitionSpacing[1], partitionDimensions[0]);
-    const std::vector<usize> zPartitionIndices =
-        CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], partitionDimensions[2], partitionOrigin[2], partitionSpacing[2], partitionDimensions[0] * partitionDimensions[1]);
+    auto xResult = CreateImageAxisPartitionIndices(dims[0], inputOrigin[0], inputSpacing[0], psImageGeom, 0);
+    if(xResult.invalid())
+    {
+      return ConvertResult(std::move(xResult));
+    }
+    auto yResult = CreateImageAxisPartitionIndices(dims[1], inputOrigin[1], inputSpacing[1], psImageGeom, 1);
+    if(yResult.invalid())
+    {
+      return ConvertResult(std::move(yResult));
+    }
+    auto zResult = CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], psImageGeom, 2);
+    if(zResult.invalid())
+    {
+      return ConvertResult(std::move(zResult));
+    }
+    const auto& xPartitionIndices = xResult.value();
+    const auto& yPartitionIndices = yResult.value();
+    const auto& zPartitionIndices = zResult.value();
 
     dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStore->data(), m_InputValues->StartingFeatureID, outOfBoundsValue,
                                                m_ShouldCancel));
     return {};
   }
 
+  // Void workers retain parallel execution after the immutable coordinates pass the checked conversion.
+  for(usize index = 0; index < partitionIdsStore.getNumberOfTuples(); ++index)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    auto checked = ComputeCheckedPartitionIndex(psImageGeom, inputGeometry.getCoords(index));
+    if(checked.invalid())
+    {
+      return ConvertResult(std::move(checked));
+    }
+  }
   dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIdsStore, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
 
   return {};
@@ -466,6 +487,23 @@ Result<> PartitionGeometryDirect::partitionNodeBasedGeometry(const VertexStore& 
   dataAlg.setRange(0, vertexListStore.getNumberOfTuples());
   dataAlg.requireArraysInMemory(algArrays);
   dataAlg.requireStoresInMemory(algStores);
+  // The validation pass propagates errors without adding shared mutable worker state.
+  for(usize index = 0; index < vertexListStore.getNumberOfTuples(); ++index)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    if(maskArrayOpt.has_value() && !(*maskArrayOpt)[index])
+    {
+      continue;
+    }
+    auto checked = ComputeCheckedPartitionIndex(psImageGeom, Point3Df{vertexListStore[3 * index], vertexListStore[3 * index + 1], vertexListStore[3 * index + 2]});
+    if(checked.invalid())
+    {
+      return ConvertResult(std::move(checked));
+    }
+  }
   dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexListStore, partitionIdsStore, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
 
   return {};

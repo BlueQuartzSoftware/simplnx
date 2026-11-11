@@ -68,3 +68,61 @@ TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUti
     CHECK(result.value() == (row == 0 ? SizeVec3{4294967295ULL, 1, 1} : row == 3 ? SizeVec3{5, 10, 15} : SizeVec3{1, 1, 1}));
   }
 }
+
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include <limits>
+
+TEST_CASE("GeometryUtilities: Positive image dimensions", "[simplnx][GeometryUtilities]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
+  CAPTURE(row);
+  const std::array<std::array<uint64, 3>, 7> inputs = {{{1, 1, 1}, {2, 3, 5}, {std::numeric_limits<uint64>::max(), 1, 1}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0}, {uint64{1} << 63, 2, 1}}};
+  const auto& dimensions = inputs[row];
+  auto result = GeometryUtilities::ValidateImageDimensions(dimensions, "Exact Dimensions", -86153);
+  if(row < 3)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.warnings().empty());
+    CHECK(result.value() == SizeVec3{static_cast<usize>(dimensions[0]), static_cast<usize>(dimensions[1]), static_cast<usize>(dimensions[2])});
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == -86153);
+    const auto& message = result.errors()[0].message;
+    CHECK(message.find("Exact Dimensions") != std::string::npos);
+    if(row < 6)
+    {
+      CHECK(message.find(std::string(1, "XYZ"[row - 3])) != std::string::npos);
+      CHECK(message.find("value 0") != std::string::npos);
+      CHECK(message.find("positive dimension") != std::string::npos);
+    }
+    else
+    {
+      CHECK(message.find("tuple product") != std::string::npos);
+      for(const auto value : dimensions)
+      {
+        CHECK(message.find(std::to_string(value)) != std::string::npos);
+      }
+    }
+  }
+}
+
+TEST_CASE("GeometryUtilities: Internal geometry and byte-count contracts", "[simplnx][GeometryUtilities]")
+{
+  DataStructure ds;
+  SECTION("Internal stand-in")
+  {
+    auto result = CreateImageGeometryAction(DataPath({"Placeholder"}), {0, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cells").apply(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  SECTION("Action byte count")
+  {
+    auto result = CreateArrayAction(DataType::int32, {usize{1} << 31, usize{1} << 31}, {1}, DataPath({"Too Large"})).apply(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors()[0].code == -270);
+    CHECK(result.errors()[0].message.find("byte") != std::string::npos);
+  }
+}

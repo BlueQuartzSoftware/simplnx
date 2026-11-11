@@ -23,6 +23,10 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_KernelExtentDomain = -86163;
+constexpr int32 k_KernelRadiusWarning = -86168;
+constexpr int32 k_KernelProductWarning = -86169;
+constexpr int32 k_KernelStorageWarning = -86170;
 constexpr int32 k_SigmaSquareOverflow = -86135;
 constexpr int32 k_SigmaSquareUnderflow = -86134;
 constexpr int32 k_SigmaFinite = -86108;
@@ -39,6 +43,10 @@ Result<> ValidateInterpolationParameters(uint64 technique, nonstd::span<const fl
 {
   for(usize axis = 0; axis < 3; ++axis)
   {
+    if(!std::isfinite(kernelSize[axis]))
+    {
+      return MakeErrorResult(k_KernelExtentDomain, fmt::format("Kernel Size {} value {} must be finite and nonnegative.", "XYZ"[axis], kernelSize[axis]));
+    }
     if(kernelSize[axis] < 0)
     {
       return MakeErrorResult(-11000, fmt::format("Kernel Size {} value {} must be nonnegative.", "XYZ"[axis], kernelSize[axis]));
@@ -226,6 +234,10 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  InterpolatePointCloudToRegularGridInputValues layoutInput{};
+  layoutInput.kernelSize = kernelSize;
+  layoutInput.imageGeomPath = imageGeomPath;
+  auto kernelLayout = InterpolatePointCloudToRegularGrid::ComputeKernelLayout(imageGeomRef, layoutInput);
   const DataPath interpolatedGroupPath = imageGeomRef.getCellDataPath();
   const SizeVec3 imageDims = imageGeomRef.getDimensions();
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
@@ -327,7 +339,27 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {std::move(actions)};
+  Result<OutputActions> output;
+  output.value() = std::move(actions);
+  if(kernelLayout.invalid())
+  {
+    const auto& error = kernelLayout.errors().front();
+    int32 warning = k_KernelStorageWarning;
+    switch(error.code)
+    {
+    case InterpolatePointCloudToRegularGrid::k_KernelRadiusRepresentation:
+      warning = k_KernelRadiusWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelProductRepresentation:
+      warning = k_KernelProductWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelStorageRepresentation:
+    default:
+      break;
+    }
+    output.warnings().push_back({warning, fmt::format("{} Preflight defers kernel setup until final Image Geometry metadata is available.", error.message)});
+  }
+  return {std::move(output)};
 }
 
 //------------------------------------------------------------------------------

@@ -152,7 +152,12 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
     for(usize chunkIndex = 0; chunkIndex < count; chunkIndex++)
     {
       const Point3D<float64> coord = inputGeometry.getCoords(offset + chunkIndex);
-      const auto partitionIndexResult = psImageGeom.getIndex(coord[0], coord[1], coord[2]);
+      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coord);
+      if(checkedIndex.invalid())
+      {
+        return ConvertResult(std::move(checkedIndex));
+      }
+      const auto& partitionIndexResult = checkedIndex.value();
       partitionIdsBuffer[chunkIndex] = partitionIndexResult.has_value() ? static_cast<int32>(*partitionIndexResult) + m_InputValues->StartingFeatureID : outOfBoundsValue;
     }
 
@@ -200,8 +205,18 @@ Result<> PartitionGeometryScanline::partitionNodeBasedGeometry(const VertexStore
     for(usize chunkIndex = 0; chunkIndex < count; chunkIndex++)
     {
       const usize vertexOffset = chunkIndex * 3;
-      const auto partitionIndexResult = psImageGeom.getIndex(verticesBuffer[vertexOffset], verticesBuffer[vertexOffset + 1], verticesBuffer[vertexOffset + 2]);
-      if((maskArrayOpt.has_value() && !maskBuffer[chunkIndex]) || !partitionIndexResult.has_value())
+      if(maskArrayOpt.has_value() && !maskBuffer[chunkIndex])
+      {
+        partitionIdsBuffer[chunkIndex] = outOfBoundsValue;
+        continue;
+      }
+      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, Point3Df{verticesBuffer[vertexOffset], verticesBuffer[vertexOffset + 1], verticesBuffer[vertexOffset + 2]});
+      if(checkedIndex.invalid())
+      {
+        return ConvertResult(std::move(checkedIndex));
+      }
+      const auto& partitionIndexResult = checkedIndex.value();
+      if(!partitionIndexResult.has_value())
       {
         partitionIdsBuffer[chunkIndex] = outOfBoundsValue;
       }

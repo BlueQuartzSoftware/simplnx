@@ -49,6 +49,11 @@ public:
   FeatureFaceCurvature& operator=(const FeatureFaceCurvature&) = delete;
   FeatureFaceCurvature& operator=(FeatureFaceCurvature&&) noexcept = delete;
 
+  /**
+   * @brief Executes the operation with prepared selections.
+   * @pre Neighborhood Ring Count is at least 1; geometry and face-array selections are valid.
+   * @return The execution result, including output errors.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

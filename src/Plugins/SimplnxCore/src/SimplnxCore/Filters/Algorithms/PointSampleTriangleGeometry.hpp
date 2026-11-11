@@ -89,6 +89,11 @@ public:
 
   using MeshIndexType = IGeometry::MeshIndexType;
 
+  /**
+   * @brief Executes the operation with prepared selections.
+   * @pre Number of Sample Points is nonnegative; source and output selections are valid.
+   * @return The execution result, including output errors.
+   */
   Result<> operator()();
 
 private:

@@ -30,6 +30,10 @@ The user may opt to use a **mask** (a boolean per-face flag) to prevent certain 
 - **Face Areas** -- a single-component per-face area array, produced by [Compute Triangle Areas](ComputeTriangleAreasFilter.md).
 - **Mask** (optional) -- a boolean per-face array, typically produced by a thresholding filter such as [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
+### Count Parameter Limits
+
+**Number of Sample Points** must be a nonnegative integer. A value of 0 creates an empty Vertex Geometry, an empty vertex Attribute Matrix and zero tuples in each transferred array. Negative values fail in preflight before output actions. With **Use Seed** enabled, the same input and seed reproduce the sampled points.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

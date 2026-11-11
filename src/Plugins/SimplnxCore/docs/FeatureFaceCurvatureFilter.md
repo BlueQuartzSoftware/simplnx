@@ -36,6 +36,10 @@ Principal curvatures and mean curvature are reported in **1/length** (the recipr
 - **Face Normals** -- computed by [Compute Triangle Normals](TriangleNormalFilter.md).
 - **Face Centroids** -- computed by [Compute Triangle Centroids](TriangleCentroidFilter.md).
 
+### Count Parameter Limits
+
+**Neighborhood Ring Count** must be an integer of at least 1. Preflight checks this value before scheduling curvature computation. There is no face-count upper bound or workload limit on this parameter. The ring count controls the neighborhood used for each curvature fit.
+
 % Auto generated parameter table will be inserted here
 
 ## References

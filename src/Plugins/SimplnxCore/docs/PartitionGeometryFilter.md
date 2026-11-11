@@ -129,6 +129,12 @@ On all partitioning modes, a vertex mask can be used with a vertex-based input g
 
 In *Advanced* mode, each **Cell Length** must be finite and greater than 0 for every geometry type. **Partition Grid Origin** must contain finite values. Other modes do not use these parameters.
 
+### Count Parameter Limits
+
+In Basic, Advanced and Bounding Box modes, every **Number Of Cells Per Axis** component must be an integer of at least 1. The XYZ product must fit the geometry size type. The resulting partition indices and IDs must fit the signed 32-bit representation. Preflight checks these parameter-derived values before output actions.
+
+Existing Partition Grid mode ignores Number Of Cells Per Axis, including an empty vector. Execution checks the selected grid's final origin, spacing, products and identifier range before partition writes. Final coordinate-to-index conversions also return errors when their results cannot be represented. An existing grid with zero cells assigns the out-of-bounds ID to each input element. **Starting Feature ID** uses a signed integer domain. Its resulting index and ID range must remain representable. No workload limit is imposed.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
