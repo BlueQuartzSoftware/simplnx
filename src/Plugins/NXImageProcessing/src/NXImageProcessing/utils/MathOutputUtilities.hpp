@@ -5,6 +5,8 @@
 #include <limits>
 #include <type_traits>
 
+// This header extends the established public ImageProcessing namespace.
+// NOLINTNEXTLINE(readability-identifier-naming)
 namespace nx::core::ImageProcessing
 {
 /**
