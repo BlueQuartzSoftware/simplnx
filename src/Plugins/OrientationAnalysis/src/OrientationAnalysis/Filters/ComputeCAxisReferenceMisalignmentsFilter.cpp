@@ -2,7 +2,6 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ComputeCAxisReferenceMisalignments.hpp"
 
-#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -10,12 +9,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include <fmt/format.h>
-
-#include <cmath>
-#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -40,154 +34,6 @@ ComputeCAxisReferenceMisalignmentsInputValues CreateInputValues(const Arguments&
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(ComputeCAxisReferenceMisalignmentsFilter::k_CrystalStructuresArrayPath_Key);
   inputValues.OutputArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(ComputeCAxisReferenceMisalignmentsFilter::k_CAxisReferenceMisalignmentsArrayName_Key));
   return inputValues;
-}
-
-/**
- * @brief Names the type of a selected object for a type error.
- * @param object Selected object.
- * @return For a DataArray, its element type (for example "float64"); otherwise the object type name (for example "StringArray").
- */
-std::string DescribeObjectType(const DataObject& object)
-{
-  if(const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(&object); dataArrayPtr != nullptr)
-  {
-    return DataTypeToString(dataArrayPtr->getDataType()).str();
-  }
-  return object.getTypeName();
-}
-
-/**
- * @brief Makes the error for a path that does not name an array of the required type.
- * @param dataStructure Holds the selected object, if any.
- * @param path Selected path.
- * @param label User-facing name of the input, for the message.
- * @param requiredType Accepted element types, quoted, for the message (for example "'bool' or 'uint8'").
- * @param errorCode Code of the error.
- * @return An error that says whether the path is missing or names the type it has.
- */
-Result<> MakeArrayTypeError(const DataStructure& dataStructure, const DataPath& path, std::string_view label, std::string_view requiredType, int32 errorCode)
-{
-  const auto* objectPtr = dataStructure.getData(path);
-  if(objectPtr == nullptr)
-  {
-    return MakeErrorResult(errorCode, fmt::format("{} path '{}' does not exist. Select an array of type {}.", label, path.toString(), requiredType));
-  }
-  return MakeErrorResult(
-      errorCode, fmt::format("{} path '{}' has type '{}', but type {} is required. Select an array of type {}.", label, path.toString(), DescribeObjectType(*objectPtr), requiredType, requiredType));
-}
-
-/**
- * @brief Checks, without throwing, that a path resolves to an ArrayType.
- *
- * ArraySelectionParameter applies its type list only to IDataArray, so a StringArray reaches preflightImpl().
- * @tparam ArrayType Required concrete DataArray type.
- * @param dataStructure Holds the array.
- * @param path Path of the array.
- * @param label User-facing name of the input, for the message.
- * @param typeName Required element type, quoted, for the message (for example "'float32'").
- * @param errorCode Code returned when the path is missing or has another type.
- * @return An error naming the type found, or a valid result.
- */
-template <typename ArrayType>
-Result<> ValidateArrayType(const DataStructure& dataStructure, const DataPath& path, std::string_view label, std::string_view typeName, int32 errorCode)
-{
-  if(dataStructure.getDataAs<ArrayType>(path) == nullptr)
-  {
-    return MakeArrayTypeError(dataStructure, path, label, typeName, errorCode);
-  }
-  return {};
-}
-
-/**
- * @brief Checks that a sibling input has the tuple count of the quaternion array.
- * @param dataStructure Holds both arrays.
- * @param array Sibling input.
- * @param path Path of the sibling input.
- * @param label User-facing name of the sibling input, for the message.
- * @param quatsPath Path of the quaternion array.
- * @param quatsTupleCount Tuple count of the quaternion array.
- * @return An error naming both paths and both counts, or a valid result.
- */
-Result<> ValidateTupleCount(const DataStructure& dataStructure, const IDataArray& array, const DataPath& path, std::string_view label, const DataPath& quatsPath, usize quatsTupleCount)
-{
-  if(!CheckArraysHaveSameTupleCount(dataStructure, {quatsPath, path}))
-  {
-    return MakeErrorResult(ComputeCAxisReferenceMisalignmentsFilter::k_TupleCountMismatchError,
-                           fmt::format("{} array '{}' has {} tuples, but Input Quaternions array '{}' has {} tuples. Select arrays with one tuple per quaternion.", label, path.toString(),
-                                       array.getNumberOfTuples(), quatsPath.toString(), quatsTupleCount));
-  }
-  return {};
-}
-
-/**
- * @brief Checks that the reference direction is finite and not near zero. VectorParameter guarantees three components.
- * @param referenceDirection Three sample-frame components.
- * @return k_InvalidReferenceDirectionError for a non-finite component or a near-zero norm, or a valid result.
- */
-Result<> ValidateReferenceDirection(const std::vector<float32>& referenceDirection)
-{
-  const float64 norm = std::hypot(static_cast<float64>(referenceDirection[0]), static_cast<float64>(referenceDirection[1]), static_cast<float64>(referenceDirection[2]));
-  if(!std::isfinite(referenceDirection[0]) || !std::isfinite(referenceDirection[1]) || !std::isfinite(referenceDirection[2]) ||
-     norm <= ComputeCAxisReferenceMisalignmentsFilter::k_MinReferenceDirectionNorm)
-  {
-    return MakeErrorResult(ComputeCAxisReferenceMisalignmentsFilter::k_InvalidReferenceDirectionError,
-                           fmt::format("Reference Direction [{}, {}, {}] must contain finite components and have length greater than {}. Enter a nonzero sample-frame direction, such as [0, 0, 1].",
-                                       referenceDirection[0], referenceDirection[1], referenceDirection[2], ComputeCAxisReferenceMisalignmentsFilter::k_MinReferenceDirectionNorm));
-  }
-  return {};
-}
-
-/**
- * @brief Makes the input checks that the parameters cannot make.
- *
- * Checks the reference direction, that each selected array is a DataArray of the required type (the mask
- * only when UseMask is set), and that Phases and the enabled mask have one tuple per quaternion. The
- * parameters already check existence, element types of DataArrays and component shapes. Array lookups do
- * not throw.
- * @param dataStructure Holds the selected arrays.
- * @param inputValues Identifies the arrays and the reference direction. OutputArrayPath is not read.
- * @return The error of the first failed check, or a valid result.
- */
-Result<> ValidateInputs(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues)
-{
-  if(auto result = ValidateReferenceDirection(inputValues.ReferenceDirection); result.invalid())
-  {
-    return result;
-  }
-
-  const DataPath& quatsPathRef = inputValues.QuatsArrayPath;
-  if(auto result = ValidateArrayType<Float32Array>(dataStructure, quatsPathRef, "Input Quaternions", "'float32'", ComputeCAxisReferenceMisalignmentsFilter::k_InvalidQuatsArrayError); result.invalid())
-  {
-    return result;
-  }
-  const usize quatsTupleCount = dataStructure.getDataRefAs<Float32Array>(quatsPathRef).getNumberOfTuples();
-
-  const DataPath& phasesPathRef = inputValues.PhasesArrayPath;
-  if(auto result = ValidateArrayType<Int32Array>(dataStructure, phasesPathRef, "Phases", "'int32'", ComputeCAxisReferenceMisalignmentsFilter::k_InvalidPhasesArrayError); result.invalid())
-  {
-    return result;
-  }
-  if(auto result = ValidateTupleCount(dataStructure, dataStructure.getDataRefAs<Int32Array>(phasesPathRef), phasesPathRef, "Phases", quatsPathRef, quatsTupleCount); result.invalid())
-  {
-    return result;
-  }
-
-  if(inputValues.UseMask)
-  {
-    const DataPath& maskPathRef = inputValues.MaskArrayPath;
-    const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPathRef);
-    if(maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8))
-    {
-      return MakeArrayTypeError(dataStructure, maskPathRef, "Mask", "'bool' or 'uint8'", ComputeCAxisReferenceMisalignmentsFilter::k_InvalidMaskArrayError);
-    }
-    if(auto result = ValidateTupleCount(dataStructure, *maskPtr, maskPathRef, "Mask", quatsPathRef, quatsTupleCount); result.invalid())
-    {
-      return result;
-    }
-  }
-
-  return ValidateArrayType<UInt32Array>(dataStructure, inputValues.CrystalStructuresArrayPath, "Crystal Structures", "'uint32'",
-                                        ComputeCAxisReferenceMisalignmentsFilter::k_InvalidCrystalStructuresArrayError);
 }
 } // namespace
 
@@ -274,7 +120,7 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
                                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const ComputeCAxisReferenceMisalignmentsInputValues inputValues = CreateInputValues(filterArgs);
-  Result<> validationResult = ValidateInputs(dataStructure, inputValues);
+  Result<> validationResult = ComputeCAxisReferenceMisalignments::ValidateInputs(dataStructure, inputValues);
   if(validationResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(validationResult), {})};
@@ -289,7 +135,7 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
   {
     if(inputValues.OutputArrayPath == inputRef.second)
     {
-      return {MakeErrorResult<OutputActions>(k_OutputPathCollisionError,
+      return {MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
                                              fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
                                                          "name that no input array uses.",
                                                          inputValues.OutputArrayPath.toString(), inputRef.first, inputValues.OutputArrayPath.getTargetName()))};

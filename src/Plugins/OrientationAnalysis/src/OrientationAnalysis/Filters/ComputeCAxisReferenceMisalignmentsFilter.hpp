@@ -39,40 +39,6 @@ public:
   static constexpr StringLiteral k_CAxisReferenceMisalignmentsArrayName_Key = "c_axis_reference_misalignments_array_name";
 
   /**
-   * @brief Preflight: the reference direction has a non-finite component or a near-zero length.
-   */
-  static constexpr int32 k_InvalidReferenceDirectionError = -98710;
-  /**
-   * @brief Preflight: the Phases array or the enabled mask has a different tuple count than the quaternion array.
-   */
-  static constexpr int32 k_TupleCountMismatchError = -98711;
-  /**
-   * @brief Preflight: the quaternion path does not resolve to a float32 array.
-   */
-  static constexpr int32 k_InvalidQuatsArrayError = -98715;
-  /**
-   * @brief Preflight: the Phases path does not resolve to an int32 array.
-   */
-  static constexpr int32 k_InvalidPhasesArrayError = -98717;
-  /**
-   * @brief Preflight: the enabled mask path does not resolve to a bool or uint8 array.
-   */
-  static constexpr int32 k_InvalidMaskArrayError = -98719;
-  /**
-   * @brief Preflight: the Crystal Structures path does not resolve to a uint32 array.
-   */
-  static constexpr int32 k_InvalidCrystalStructuresArrayError = -98721;
-  /**
-   * @brief Preflight: the output path equals the path of an input array.
-   */
-  static constexpr int32 k_OutputPathCollisionError = -98726;
-
-  /**
-   * @brief Reference directions at or below this dimensionless norm are treated as zero.
-   */
-  static constexpr float64 k_MinReferenceDirectionNorm = 1.0e-12;
-
-  /**
    * @brief Returns the name of the filter.
    * @return Registered filter name.
    */
