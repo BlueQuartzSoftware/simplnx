@@ -380,16 +380,16 @@ struct ColorizeVolumeFunctor
    * @return Error from source I/O or the image writer.
    */
   template <typename T>
-  Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, const WriteImageColor::SliceExtents& sliceExtents, const DataPath& dataArrayPath,
+  Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, const write_image_color::SliceExtents& sliceExtents, const DataPath& dataArrayPath,
                       const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, uint64 nonfinitePolicy,
-                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const WriteImageColor::ProgressCallbacks& progress)
+                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const write_image_color::ProgressCallbacks& progress)
   {
     const auto& [sliceW, sliceH, sliceCount] = sliceExtents;
-    if(Result<> sizeResult = WriteImageColor::ValidateSize<T>(sliceExtents, maskArray != nullptr); sizeResult.invalid())
+    if(Result<> sizeResult = write_image_color::ValidateSize<T>(sliceExtents, maskArray != nullptr); sizeResult.invalid())
     {
       return sizeResult;
     }
-    auto rangeResult = WriteImageColor::ScanRange<T>(dataArrayRef, maskArray, nonfinitePolicy, shouldCancel, progress.Range);
+    auto rangeResult = write_image_color::ScanRange<T>(dataArrayRef, maskArray, nonfinitePolicy, shouldCancel, progress.Range);
     if(rangeResult.invalid())
     {
       return ConvertResult(std::move(rangeResult));
@@ -499,8 +499,8 @@ struct ColorizeVolumeFunctor
             }
 
             const T sourceValue = groupValues[groupValueIndex];
-            const float32 nValue = WriteImageColor::Normalize(sourceValue, range.Minimum, range.Maximum);
-            const std::array<uint8, 3> rgb = WriteImageColor::ComputeRgb(nValue, binPoints, controlPoints);
+            const float32 nValue = write_image_color::Normalize(sourceValue, range.Minimum, range.Maximum);
+            const std::array<uint8, 3> rgb = write_image_color::ComputeRgb(binPoints, nValue, controlPoints);
             sliceBuffer[dst + 0] = rgb[0];
             sliceBuffer[dst + 1] = rgb[1];
             sliceBuffer[dst + 2] = rgb[2];
@@ -642,15 +642,15 @@ Result<> WriteImageScanline::operator()()
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(sliceCount, "Writing image slices");
   m_MessageHandler.sendInfoMessage("Preparing and writing image slices");
-  const WriteImageColor::ProgressCallbacks progress{.Range = [&](usize current, usize total) { progressThrottle.updatePercent("Computing color range", current, total); },
-                                                    .Rows =
-                                                        [&](usize current, usize total) {
-                                                          if(sliceCount == 1)
-                                                          {
-                                                            progressThrottle.updatePercent("Preparing image rows", current, total);
-                                                          }
-                                                        }};
-  const WriteImageColor::SliceExtents sliceExtents{.Width = sliceW, .Height = sliceH, .Count = sliceCount};
+  const write_image_color::ProgressCallbacks progress{.Range = [&](usize current, usize total) { progressThrottle.updatePercent("Computing color range", current, total); },
+                                                      .Rows =
+                                                          [&](usize current, usize total) {
+                                                            if(sliceCount == 1)
+                                                            {
+                                                              progressThrottle.updatePercent("Preparing image rows", current, total);
+                                                            }
+                                                          }};
+  const write_image_color::SliceExtents sliceExtents{.Width = sliceW, .Height = sliceH, .Count = sliceCount};
 
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
   auto writeSlice = [&](std::vector<uint8>& sliceBuffer, usize slice) -> Result<> {
@@ -734,7 +734,7 @@ Result<> WriteImageScanline::operator()()
       return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName));
     }
     std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
-    if(Result<> paletteResult = WriteImageColor::ValidatePalette(controlPoints, binPoints); paletteResult.invalid())
+    if(Result<> paletteResult = write_image_color::ValidatePalette(controlPoints, binPoints); paletteResult.invalid())
     {
       return MergeResults(ConvertResult(std::move(controlPointsResult)), std::move(paletteResult));
     }

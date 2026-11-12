@@ -924,16 +924,16 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: cancellation during color scan o
 TEST_CASE("NXImageProcessing::WriteImageFilter: color size and palette guards use actionable results", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
-  const auto empty = WriteImageColor::ValidateSize<float64>({.Width = 0, .Height = 1, .Count = 1}, false);
+  const auto empty = write_image_color::ValidateSize<float64>({.Width = 0, .Height = 1, .Count = 1}, false);
   SIMPLNX_RESULT_REQUIRE_INVALID(empty);
   REQUIRE(empty.errors().front().code == -27030);
-  const auto large = WriteImageColor::ValidateSize<float64>({.Width = std::numeric_limits<usize>::max(), .Height = 1, .Count = 1}, true);
+  const auto large = write_image_color::ValidateSize<float64>({.Width = std::numeric_limits<usize>::max(), .Height = 1, .Count = 1}, true);
   SIMPLNX_RESULT_REQUIRE_INVALID(large);
   REQUIRE(large.errors().front().code == -27032);
-  const auto invalidPalette = WriteImageColor::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {1, 0});
+  const auto invalidPalette = write_image_color::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {1, 0});
   SIMPLNX_RESULT_REQUIRE_INVALID(invalidPalette);
   REQUIRE(invalidPalette.errors().front().code == -27029);
-  const auto validPalette = WriteImageColor::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {0, 1});
+  const auto validPalette = write_image_color::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {0, 1});
   SIMPLNX_RESULT_REQUIRE_VALID(validPalette);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

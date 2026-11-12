@@ -20,10 +20,10 @@
 #include <utility>
 #include <vector>
 
-/** @namespace nx::core::WriteImageColor
+/** @namespace nx::core::write_image_color
  * @brief Contains color safety operations used only by the image writer.
  */
-namespace nx::core::WriteImageColor
+namespace nx::core::write_image_color
 {
 struct SliceExtents
 {
@@ -97,19 +97,26 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
   {
     return MakeErrorResult<Range<T>>(-27020, "Input array is empty.");
   }
-  constexpr usize targetPageBytes = 1024 * 1024;
+  constexpr usize targetPageBytes = usize{1024} * usize{1024};
   const bool scanMask = std::is_floating_point_v<T> && maskArray != nullptr;
-  const usize maskBytes = scanMask ? (maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8)) : 0;
+  usize maskBytes = 0;
+  if(scanMask)
+  {
+    maskBytes = maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8);
+  }
   const usize pageCount = std::min(count, std::max<usize>(1, targetPageBytes / (sizeof(T) + maskBytes)));
   // Scalar input can use bool. The store needs a contiguous bool buffer, which std::vector<bool> cannot provide.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
   auto values = std::make_unique<T[]>(pageCount);
   // The Boolean mask store also needs a contiguous bool buffer.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
   std::unique_ptr<bool[]> boolMask;
   std::unique_ptr<std::vector<uint8>> byteMask;
   if(scanMask)
   {
     if(maskArray->getDataType() == DataType::boolean)
     {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays) std::vector<bool> cannot provide a contiguous bool buffer.
       boolMask = std::make_unique<bool[]>(pageCount);
     }
     else
@@ -275,8 +282,8 @@ float32 Normalize(T value, T minimum, T maximum)
  */
 inline Result<> ValidatePalette(const std::vector<float32>& points, const std::vector<float32>& bins)
 {
-  if(points.size() < 8 || points.size() % 4 != 0 || bins.size() != points.size() / 4 || !std::all_of(points.begin(), points.end(), [](float32 value) { return std::isfinite(value); }) ||
-     !std::all_of(bins.begin(), bins.end(), [](float32 value) { return std::isfinite(value); }) || !std::is_sorted(bins.begin(), bins.end()))
+  if(points.size() < 8 || points.size() % 4 != 0 || bins.size() != points.size() / 4 || !std::ranges::all_of(points, [](float32 value) { return std::isfinite(value); }) ||
+     !std::ranges::all_of(bins, [](float32 value) { return std::isfinite(value); }) || !std::ranges::is_sorted(bins))
   {
     return MakeErrorResult(-27029, "Write Image requires at least two finite color controls in position order. Select a valid color preset.");
   }
@@ -287,12 +294,12 @@ inline Result<> ValidatePalette(const std::vector<float32>& points, const std::v
  * @brief Uses the existing linear palette interpolation and truncating RGB bytes.
  * Checked endpoints and usize indexes avoid invalid segment/channel casts.
  * The caller validates the palette once before entering the pixel loop.
- * @param value Finite normalized coordinate in [0, 1].
  * @param bins Validated normalized control positions.
+ * @param value Finite normalized coordinate in [0, 1].
  * @param points Validated packed position/RGB controls.
  * @return Three uint8 channels, with the existing truncation rule.
  */
-inline std::array<uint8, 3> ComputeRgb(float32 value, const std::vector<float32>& bins, const std::vector<float32>& points)
+inline std::array<uint8, 3> ComputeRgb(const std::vector<float32>& bins, float32 value, const std::vector<float32>& points)
 {
   const usize last = bins.size() - 1;
   usize left = 0;
@@ -305,7 +312,7 @@ inline std::array<uint8, 3> ComputeRgb(float32 value, const std::vector<float32>
   }
   else if(value > 0)
   {
-    right = static_cast<usize>(std::lower_bound(bins.begin(), bins.end(), value) - bins.begin());
+    right = static_cast<usize>(std::ranges::lower_bound(bins, value) - bins.begin());
     right = std::min(last, std::max<usize>(1, right));
     left = right - 1;
     const float32 width = bins[right] - bins[left];
@@ -317,9 +324,9 @@ inline std::array<uint8, 3> ComputeRgb(float32 value, const std::vector<float32>
   std::array<uint8, 3> rgb{};
   for(usize channel = 0; channel < rgb.size(); ++channel)
   {
-    const float64 scaled = (points[left * 4 + channel + 1] * (1.0 - fraction) + points[right * 4 + channel + 1] * fraction) * 255;
+    const float64 scaled = (points[(left * 4) + channel + 1] * (1.0 - fraction) + points[(right * 4) + channel + 1] * fraction) * 255;
     rgb.at(channel) = static_cast<uint8>(std::clamp(scaled, 0.0, 255.0));
   }
   return rgb;
 }
-} // namespace nx::core::WriteImageColor
+} // namespace nx::core::write_image_color
