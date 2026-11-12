@@ -53,12 +53,17 @@ Result<> ValidateSize(const SliceExtents& extents, bool hasMask)
   const usize bytesPerValue = sizeof(T) + (hasMask ? std::max(sizeof(bool), sizeof(uint8)) : 0);
   if(width == 0 || height == 0 || slices == 0 || width > maximum / height)
   {
-    return MakeErrorResult(-27030, "Write Image color slice dimensions are empty or too large. Reduce the image dimensions.");
+    return MakeErrorResult(
+        -27030,
+        fmt::format(
+            "Write Image color slice dimensions are empty or too large (width {}, height {}, slice count {}, index limit {}). Use positive dimensions whose width times height fits this limit.", width,
+            height, slices, maximum));
   }
   const usize pixels = width * height;
   if(pixels > maximum / 3 || pixels > maximum / bytesPerValue || slices > maximum / (pixels * bytesPerValue))
   {
-    return MakeErrorResult(-27032, "Write Image color buffer sizes exceed the supported index range. Reduce the image dimensions.");
+    return MakeErrorResult(-27032, fmt::format("Write Image color buffer sizes exceed the supported index range (width {}, height {}, slice count {}, index limit {}). Reduce the image dimensions.",
+                                               width, height, slices, maximum));
   }
   return {};
 }

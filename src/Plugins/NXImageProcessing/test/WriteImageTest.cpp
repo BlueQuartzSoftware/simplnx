@@ -924,12 +924,25 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: cancellation during color scan o
 TEST_CASE("NXImageProcessing::WriteImageFilter: color size and palette guards use actionable results", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
   UnitTest::LoadPlugins();
-  const auto empty = write_image_color::ValidateSize<float64>({.Width = 0, .Height = 1, .Count = 1}, false);
+  constexpr usize maximum = std::numeric_limits<usize>::max();
+  const auto empty = write_image_color::ValidateSize<float64>({.Width = 0, .Height = 2, .Count = 3}, false);
   SIMPLNX_RESULT_REQUIRE_INVALID(empty);
   REQUIRE(empty.errors().front().code == -27030);
-  const auto large = write_image_color::ValidateSize<float64>({.Width = std::numeric_limits<usize>::max(), .Height = 1, .Count = 1}, true);
+  const auto& emptyMessage = empty.errors().front().message;
+  CHECK(emptyMessage.find("width 0") != std::string::npos);
+  CHECK(emptyMessage.find("height 2") != std::string::npos);
+  CHECK(emptyMessage.find("slice count 3") != std::string::npos);
+  CHECK(emptyMessage.find("index limit " + std::to_string(maximum)) != std::string::npos);
+  CHECK(emptyMessage.find("positive dimensions") != std::string::npos);
+  const auto large = write_image_color::ValidateSize<float64>({.Width = maximum, .Height = 1, .Count = 2}, true);
   SIMPLNX_RESULT_REQUIRE_INVALID(large);
   REQUIRE(large.errors().front().code == -27032);
+  const auto& largeMessage = large.errors().front().message;
+  CHECK(largeMessage.find("width " + std::to_string(maximum)) != std::string::npos);
+  CHECK(largeMessage.find("height 1") != std::string::npos);
+  CHECK(largeMessage.find("slice count 2") != std::string::npos);
+  CHECK(largeMessage.find("index limit " + std::to_string(maximum)) != std::string::npos);
+  CHECK(largeMessage.find("Reduce the image dimensions") != std::string::npos);
   const auto invalidPalette = write_image_color::ValidatePalette({0, 0, 0, 0, 1, 1, 1, 1}, {1, 0});
   SIMPLNX_RESULT_REQUIRE_INVALID(invalidPalette);
   REQUIRE(invalidPalette.errors().front().code == -27029);
