@@ -411,12 +411,7 @@ Result<> ReadH5Ebsd::operator()()
       auto preflightResult = rotEuler.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          result.errors().push_back(error);
-        }
-        return result;
+        return {nonstd::make_unexpected(preflightResult.outputActions.errors())};
       }
 
       auto executeResult = rotEuler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
@@ -456,12 +451,7 @@ Result<> ReadH5Ebsd::operator()()
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          result.errors().push_back(error);
-        }
-        return result;
+        return {nonstd::make_unexpected(preflightResult.outputActions.errors())};
       }
 
       m_MessageHandler.sendMessage(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
