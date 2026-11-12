@@ -102,6 +102,12 @@ public:
   {
   }
 
+  ~CentroidsObservedReadStore() override = default;
+  CentroidsObservedReadStore(const CentroidsObservedReadStore&) = default;
+  CentroidsObservedReadStore(CentroidsObservedReadStore&&) = default;
+  CentroidsObservedReadStore& operator=(const CentroidsObservedReadStore&) = delete;
+  CentroidsObservedReadStore& operator=(CentroidsObservedReadStore&&) = default;
+
   Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {
     m_ReadCount++;
@@ -152,7 +158,12 @@ public:
     m_Manager.setBudgetBytes(budgetBytes);
   }
 
-  ~CentroidsBudgetSentinel()
+  CentroidsBudgetSentinel(const CentroidsBudgetSentinel&) = default;
+  CentroidsBudgetSentinel(CentroidsBudgetSentinel&&) = default;
+  CentroidsBudgetSentinel& operator=(const CentroidsBudgetSentinel&) = delete;
+  CentroidsBudgetSentinel& operator=(CentroidsBudgetSentinel&&) = delete;
+
+  ~CentroidsBudgetSentinel() noexcept
   {
     m_Manager.setBudgetBytes(m_PreviousBudget);
   }
@@ -664,8 +675,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
   SECTION("Fixture F - domain-filling feature (arithmetic-mean fallback)")
   {
     // 4x1x1, unit spacing; a single feature fills every cell (centers 0.5,1.5,2.5,3.5). It spans the full
-    // extent, so the periodic branch fires, but the unit vectors cancel (zero resultant): the circular mean
-    // is undefined, so the arithmetic mean 2.0 is kept. Class 4 fallback path.
+    // extent. Every coordinate is occupied, so there is no empty gap for a periodic cut. The algorithm
+    // keeps the arithmetic mean 2.0. Class 4 fallback path.
     auto sP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1, 1});
     auto periodic = Run(sP, true);
     RequireCentroid(periodic, 1, 2.0f, 0.5f, 0.5f);

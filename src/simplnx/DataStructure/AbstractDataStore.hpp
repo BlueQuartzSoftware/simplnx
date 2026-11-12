@@ -744,19 +744,16 @@ public:
   /**
    * @brief Optionally reads an extent with an explicit backend scratch allowance.
    *
-   * The destination belongs to the caller and is outside the allowance. True
-   * means that every destination value is valid. A valid false result leaves
-   * the destination unchanged and performs no payload read. An invalid result
-   * can leave a prefix and requires the caller to discard the destination.
-   * The default implementation declines without invoking a payload reader.
-   * Mandatory empty Result controls are caller-funded ABI storage, outside the
-   * backend allowance. Iterator-debug builds can allocate fixed empty-vector
-   * bookkeeping. No payload, preparation or diagnostic text is allowed before
-   * admission. BoundedRead::EmptyResultControlBytes() describes reviewed controls.
+   * scratchBudgetBytes is the maximum number of data-sized scratch bytes that this read can allocate.
+   * The caller owns the destination, and the budget does not include it.
+   * Control objects, diagnostic text, and rank/path metadata are outside the grant.
+   * True means every selected value is valid. Every non-success return leaves the destination unchanged.
+   * A valid false result performs no payload read. The default implementation declines without a payload reader.
+   * Supported resident numeric stores need zero scratch bytes.
    *
    * @param extent Supplies tuple-space coordinates in row-major order.
    * @param destination Receives exactly the selected tuples and all components.
-   * @param scratchBudgetBytes Limits owned backend scratch, including diagnostics.
+   * @param scratchBudgetBytes Limits simultaneous data scratch, including output staging and decoder workspace.
    * @return Complete, optional unavailability, or a validation/read error.
    */
   [[nodiscard]] virtual Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const

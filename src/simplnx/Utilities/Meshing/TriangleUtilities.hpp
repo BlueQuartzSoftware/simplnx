@@ -126,6 +126,13 @@ using TriangleNormalCalculator = std::array<float64, 3> (*)(const float32* vertA
  * @param shouldCancel Stops before loading vertices or processing the next block.
  * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.
  * @return Accumulated I/O warnings and errors, or success after cancellation.
+ *
+ * When the output store type is OutOfCore, the function calculates the normal of triangle 0 and writes it
+ * before it retains the compute admission. A store's first write can reserve its own working memory, for example
+ * to create a writable copy of a read-only imported source, and must not compete with the compute buffers. The
+ * stored normals are never read. Error -65817 reports an input read failure for triangle 0, error -65813 an
+ * invalid vertex index, and error -65818 the write. Error -65819 reports a grant lost to another consumer while
+ * the admission was released; triangle 0 then holds its new normal and later triangles keep their old values.
  */
 SIMPLNX_EXPORT Result<> CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
                                                  Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal);
@@ -159,6 +166,8 @@ SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::s
  * @param shouldCancel Cooperative cancellation flag.
  * @param mesgHandler Progress-message callback.
  * @return Provider, sort, cache, topology, or DataStore error, or success after cancellation.
+ * @note Connectivity scratch creation, staging, and copy-back retain the first 64 distinct warnings.
+ * Repeated and additional warnings are summarized. The limit does not bound individual messages or provider allocations.
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
                                                       const IFilter::MessageHandler& mesgHandler);

@@ -139,60 +139,74 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
   std::vector<std::pair<int32, int32>> faceLabelVector;
   faceLabelVector.emplace_back(0, 0);
 
-  // Two labels and one ID per triangle use at most 3 MiB of transfer buffers.
-  constexpr usize blockTriangles = 262144;
-  const usize bufferTriangles = std::min(blockTriangles, totalPoints);
-  std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
-  std::vector<int32> faceIdsBuffer(bufferTriangles);
+  constexpr usize k_PreferredTransferBytes = usize{3} * 1024 * 1024;
   auto& faceIdsStore = featureFaceIds.getDataStoreRef();
-  for(usize start = 0; start < totalPoints;)
+  if(totalPoints != 0)
   {
-    const usize count = std::min(blockTriangles, totalPoints - start);
-    result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
-    if(result.invalid())
+    // Cap complete triangles before multiplying; both label values and the ID share this grant.
+    constexpr usize k_BytesPerTriangle = 3 * sizeof(int32);
+    const usize requestedBytes = std::min(k_PreferredTransferBytes / k_BytesPerTriangle, totalPoints) * k_BytesPerTriangle;
+    auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+    const usize bufferTriangles = static_cast<usize>(reservation.sizeBytes() / k_BytesPerTriangle);
+    if(bufferTriangles == 0)
     {
-      return MergeResults(std::move(result), MakeErrorResult(-12910, fmt::format("Error reading face labels for shared feature faces at triangle {} ({} triangles).", start, count)));
+      return MakeErrorResult(-12919,
+                             fmt::format("Cannot allocate shared face input buffers for '{}' and '{}': requested {} bytes but received {}. At least {} bytes are required. "
+                                         "Release other working memory or increase the cache budget and retry.",
+                                         inputValues.FaceLabelsArrayPath.toString(), inputValues.FeatureFaceIdsArrayPath.toString(), requestedBytes, reservation.sizeBytes(), k_BytesPerTriangle));
     }
+    reservation.shrinkTo(bufferTriangles * k_BytesPerTriangle);
+    std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
+    std::vector<int32> faceIdsBuffer(bufferTriangles);
+    for(usize start = 0; start < totalPoints;)
+    {
+      const usize count = std::min(bufferTriangles, totalPoints - start);
+      result = MergeResults(std::move(result), faceLabels.getDataStoreRef().copyIntoBuffer(start * 2, nonstd::span<int32>(faceLabelsBuffer.data(), count * 2)));
+      if(result.invalid())
+      {
+        return MergeResults(std::move(result), MakeErrorResult(-12910, fmt::format("Error reading face labels for shared feature faces at triangle {} ({} triangles).", start, count)));
+      }
 
-    // Keep signed label ordering, unsigned key conversion and first-encounter IDs.
-    for(usize t = 0; t < count; ++t)
-    {
-      uint32 high = 0;
-      uint32 low = 0;
-      const int32 fl0 = faceLabelsBuffer[t * 2];
-      const int32 fl1 = faceLabelsBuffer[(t * 2) + 1];
-      if(fl0 < fl1)
+      // Keep signed label ordering, unsigned key conversion and first-encounter IDs.
+      for(usize triangleIndex = 0; triangleIndex < count; ++triangleIndex)
       {
-        high = fl0;
-        low = fl1;
+        uint32 high = 0;
+        uint32 low = 0;
+        const int32 fl0 = faceLabelsBuffer[triangleIndex * 2];
+        const int32 fl1 = faceLabelsBuffer[(triangleIndex * 2) + 1];
+        if(fl0 < fl1)
+        {
+          high = fl0;
+          low = fl1;
+        }
+        else
+        {
+          high = fl1;
+          low = fl0;
+        }
+        const uint64 faceId64 = ConvertToUInt64(high, low);
+        if(faceSizeMap.find(faceId64) == faceSizeMap.end())
+        {
+          faceSizeMap[faceId64] = 1;
+          faceIdMap[faceId64] = index;
+          faceIdsBuffer[triangleIndex] = index;
+          faceLabelVector.emplace_back(high, low);
+          ++index;
+        }
+        else
+        {
+          faceSizeMap[faceId64]++;
+          faceIdsBuffer[triangleIndex] = faceIdMap[faceId64];
+        }
       }
-      else
+      // Every ID in this span is assigned; any suffix beyond the geometry is untouched.
+      result = MergeResults(std::move(result), faceIdsStore.copyFromBuffer(start, nonstd::span<const int32>(faceIdsBuffer.data(), count)));
+      if(result.invalid())
       {
-        high = fl1;
-        low = fl0;
+        return MergeResults(std::move(result), MakeErrorResult(-12911, fmt::format("Error writing shared feature face IDs at triangle {} ({} triangles).", start, count)));
       }
-      const uint64 faceId64 = ConvertToUInt64(high, low);
-      if(faceSizeMap.find(faceId64) == faceSizeMap.end())
-      {
-        faceSizeMap[faceId64] = 1;
-        faceIdMap[faceId64] = index;
-        faceIdsBuffer[t] = index;
-        faceLabelVector.emplace_back(high, low);
-        ++index;
-      }
-      else
-      {
-        faceSizeMap[faceId64]++;
-        faceIdsBuffer[t] = faceIdMap[faceId64];
-      }
+      start += count;
     }
-    // Every ID in this span is assigned; any suffix beyond the geometry is untouched.
-    result = MergeResults(std::move(result), faceIdsStore.copyFromBuffer(start, nonstd::span<const int32>(faceIdsBuffer.data(), count)));
-    if(result.invalid())
-    {
-      return MergeResults(std::move(result), MakeErrorResult(-12911, fmt::format("Error writing shared feature face IDs at triangle {} ({} triangles).", start, count)));
-    }
-    start += count;
   }
   // Match the in-core cancellation point after assigning every triangle ID.
   if(shouldCancel)
@@ -200,10 +214,7 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     return result;
   }
 
-  // Triangle transfers finish before metadata admission. Randomization recreates only its ID buffer below.
-  std::vector<int32>().swap(faceLabelsBuffer);
-  std::vector<int32>().swap(faceIdsBuffer);
-
+  // Triangle buffers and their grant are released before output resizing can request working memory.
   auto& faceFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(inputValues.GrainBoundaryAttributeMatrixPath);
   const ShapeType tDims = {static_cast<usize>(index)};
   // Preserve the in-core resize sequence and its GCC false-positive suppression.
@@ -337,10 +348,21 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     // The original randomization visits the entire ID array, even if it has more
     // tuples than the geometry. Read each block before applying the permutation.
     const usize totalIds = featureFaceIds.getNumberOfTuples();
-    faceIdsBuffer.resize(std::min(blockTriangles, totalIds));
+    const usize requestedBytes = std::min(k_PreferredTransferBytes / sizeof(int32), totalIds) * sizeof(int32);
+    auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+    const usize bufferIds = static_cast<usize>(reservation.sizeBytes() / sizeof(int32));
+    if(totalIds != 0 && bufferIds == 0)
+    {
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-12920, fmt::format("Cannot allocate the shared face randomization buffer for '{}': requested {} bytes but received {}. At least {} bytes are required. "
+                                                              "Release other working memory or increase the cache budget and retry.",
+                                                              inputValues.FeatureFaceIdsArrayPath.toString(), requestedBytes, reservation.sizeBytes(), sizeof(int32))));
+    }
+    reservation.shrinkTo(bufferIds * sizeof(int32));
+    std::vector<int32> faceIdsBuffer(bufferIds);
     for(usize start = 0; start < totalIds;)
     {
-      const usize count = std::min(blockTriangles, totalIds - start);
+      const usize count = std::min(bufferIds, totalIds - start);
       result = MergeResults(std::move(result), faceIdsStore.copyIntoBuffer(start, nonstd::span<int32>(faceIdsBuffer.data(), count)));
       if(result.invalid())
       {

@@ -1,6 +1,10 @@
 #include "TriangleUtilities.hpp"
+
+#include "simplnx/Utilities/Meshing/TransferResult.hpp"
+
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Utilities/Meshing/WindingTransferWarnings.hpp"
 #include <array>
 #include <utility>
 
@@ -26,6 +30,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <list>
 #include <memory>
@@ -36,6 +41,39 @@
 #include <vector>
 
 using namespace nx::core;
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+namespace
+{
+thread_local int g_WindingWarningFailureCountdown = -1;
+thread_local bool g_WindingWarningFailureConsumed = false;
+} // namespace
+
+void nx::core::SetWindingWarningFailureForTesting(int count) noexcept
+{
+  g_WindingWarningFailureCountdown = count;
+  g_WindingWarningFailureConsumed = false;
+}
+
+bool nx::core::WindingWarningFailureConsumedForTesting() noexcept
+{
+  return g_WindingWarningFailureConsumed;
+}
+
+void nx::core::MaybeFailWindingWarningForTesting()
+{
+  if(g_WindingWarningFailureCountdown == 0)
+  {
+    g_WindingWarningFailureCountdown = -1;
+    g_WindingWarningFailureConsumed = true;
+    throw std::bad_alloc{};
+  }
+  if(g_WindingWarningFailureCountdown > 0)
+  {
+    --g_WindingWarningFailureCountdown;
+  }
+}
+#endif
 
 namespace
 {
@@ -275,7 +313,9 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateWindingRecordStore(uint64 r
   auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.valid() && result.value() == nullptr)
   {
-    return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-65781, "Triangle winding temporary-record provider returned a null store.");
+    auto failure = MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-65781, "Triangle winding temporary-record provider returned a null store.");
+    failure.warnings() = std::move(result.warnings());
+    return failure;
   }
   return result;
 }
@@ -534,11 +574,12 @@ private:
  * @param faceCache Provides pending scratch writes.
  * @param buffer Reuses the initial connectivity scan buffer.
  * @param facesModified Skips destination writes when no triangle was flipped.
+ * @param transferWarnings Receives bounded transfer warnings.
  * @return Scratch flush/read or destination-write error, or success.
  * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
  */
 Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
-                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified)
+                           nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified, WindingTransferWarnings& transferWarnings)
 {
   if(!facesModified)
   {
@@ -546,11 +587,13 @@ Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangle
   }
   // Preserve completed flips when traversal is cancelled.
   const std::atomic_bool neverCancel = false;
-  auto flushResult = faceCache.flush(neverCancel);
-  if(flushResult.invalid())
+  auto result = faceCache.flush(neverCancel);
+  if(result.invalid())
   {
-    return flushResult;
+    EnrichWindingError([&] { transferWarnings.appendOnError(result.warnings()); });
+    return result;
   }
+  transferWarnings.append(result.warnings());
   for(uint64 offset = 0; offset < faceStore.recordCount(); offset += k_WindingBatchRecords)
   {
     const uint64 count = std::min<uint64>(k_WindingBatchRecords, faceStore.recordCount() - offset);
@@ -558,19 +601,24 @@ Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangle
     auto readResult = faceStore.read(offset, count, bytes, neverCancel);
     if(readResult.invalid())
     {
+      EnrichWindingError([&] { transferWarnings.appendOnError(readResult.warnings()); });
       return ConvertResult(std::move(readResult));
     }
-    if(readResult.value() != count)
+    transferWarnings.append(readResult.warnings());
+    const uint64 recordsRead = readResult.value();
+    if(recordsRead != count)
     {
-      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, readResult.value(), count));
+      return MakeErrorResult(-65795, fmt::format("Triangle winding scratch connectivity read at triangle {} returned {} records; expected {}.", offset, recordsRead, count));
     }
     auto writeResult = triangles.copyFromBuffer(static_cast<usize>(offset * 3), nonstd::span<const IGeometry::MeshIndexType>(buffer.data(), static_cast<usize>(count * 3)));
     if(writeResult.invalid())
     {
+      EnrichWindingError([&] { transferWarnings.appendOnError(writeResult.warnings()); });
       return writeResult;
     }
+    transferWarnings.append(writeResult.warnings());
   }
-  return {};
+  return result;
 }
 
 /**
@@ -963,8 +1011,19 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   return result;
 }
 
-Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
-                                                         const IFilter::MessageHandler& mesgHandler)
+namespace
+{
+/**
+ * @brief Repairs winding using bounded scratch storage.
+ * @param triangles Supplies and receives triangle connectivity.
+ * @param idsStore Supplies face labels.
+ * @param shouldCancel Requests cancellation.
+ * @param mesgHandler Receives progress messages.
+ * @param transferWarnings Receives bounded warnings from scratch creation and transfers.
+ * @return The repair result, including copy-back warnings.
+ */
+Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+                                           const IFilter::MessageHandler& mesgHandler, WindingTransferWarnings& transferWarnings)
 {
   const usize componentCount = idsStore.getNumberOfComponents();
   if(componentCount > 2 || componentCount == 0)
@@ -1017,8 +1076,10 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   auto faceStoreResult = CreateWindingRecordStore<WindingFaceType>(triangleCount);
   if(faceStoreResult.invalid())
   {
+    EnrichWindingError([&] { transferWarnings.appendOnError(faceStoreResult.warnings()); });
     return ConvertResult(std::move(faceStoreResult));
   }
+  transferWarnings.append(faceStoreResult.warnings());
   const std::unique_ptr<ITemporaryRecordStore> faceStore = std::move(faceStoreResult.value());
 
   std::vector<IGeometry::MeshIndexType> faceBuffer;
@@ -1052,8 +1113,10 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
         faceStore->write(offset, count, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(faceBuffer.data()), static_cast<usize>(count * sizeof(WindingFaceType))), shouldCancel);
     if(faceStageResult.invalid())
     {
+      EnrichWindingError([&] { transferWarnings.appendOnError(faceStageResult.warnings()); });
       return faceStageResult;
     }
+    transferWarnings.append(faceStageResult.warnings());
     auto idReadResult = idsStore.copyIntoBuffer(static_cast<usize>(offset * componentCount), nonstd::span<int32>(idBuffer.data(), static_cast<usize>(count * componentCount)));
     if(idReadResult.invalid())
     {
@@ -1356,7 +1419,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   {
     if(shouldCancel)
     {
-      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+      return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
     }
     auto seedRecordResult = seedReader.read(seedOffset);
     if(seedRecordResult.invalid())
@@ -1451,7 +1514,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     {
       if(shouldCancel)
       {
-        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+        return WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
       }
       auto queuedResult = queueCache.read(queueHead, shouldCancel);
       if(queuedResult.invalid())
@@ -1572,16 +1635,33 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
     seedOffset = nextFeatureOffset;
   }
 
-  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified);
+  auto faceFlushResult = WriteWindingFaces(triangles, *faceStore, faceCache, nonstd::span<IGeometry::MeshIndexType>(faceBuffer.data(), faceBuffer.size()), facesModified, transferWarnings);
   if(faceFlushResult.invalid())
   {
     return faceFlushResult;
   }
   if(unrepairedCount > 0)
   {
-    return MakeWarningVoidResult(-56730, fmt::format("{} triangles cold not be made consistent, due to the nature of mesh implementation.", unrepairedCount));
+    return MergeResults(std::move(faceFlushResult), MakeWarningVoidResult(-56730, fmt::format("{} triangles cold not be made consistent, due to the nature of mesh implementation.", unrepairedCount)));
   }
-  return {};
+  return faceFlushResult;
+}
+} // namespace
+
+Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+                                                         const IFilter::MessageHandler& mesgHandler)
+{
+  WindingTransferWarnings transferWarnings;
+  auto result = RepairTriangleWindingExternalImpl(triangles, idsStore, shouldCancel, mesgHandler, transferWarnings);
+  if(result.invalid())
+  {
+    EnrichWindingError([&] { transferWarnings.attach(result); });
+  }
+  else
+  {
+    transferWarnings.attach(result);
+  }
+  return result;
 }
 
 MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
@@ -1675,6 +1755,75 @@ TriangleNormalWorkingPlan planNormalWorkingMemory(const AbstractDataStore<IGeome
   }
   return {.CacheVertices = cacheVertices, .FaceCapacity = faceCapacity, .PageVertices = pageVertices, .PayloadBytes = coordinateBytes + (faceCapacity * bytesPerFace)};
 }
+
+/**
+ * @brief Builds the error for a working grant that cannot fund one face.
+ * @param code Distinguishes the initial admission from the admission after the first-normal publication.
+ * @param requestedBytes Bytes requested from the working-memory budget.
+ * @param grantedBytes Bytes actually granted.
+ * @param vertexBytes Bytes needed to cache every vertex coordinate.
+ * @return Error result with the requested, granted, and minimum byte counts.
+ */
+Result<> MakeNormalAdmissionError(int32 code, uint64 requestedBytes, usize grantedBytes, usize vertexBytes)
+{
+  return MakeErrorResult(code, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached "
+                                           "vertices and one face. Retry after other operations finish.",
+                                           requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
+}
+
+/**
+ * @brief Calculates the normal of triangle 0 from its inputs and writes it before compute buffers are admitted.
+ * @param triangles Provides the three vertex indexes of triangle 0.
+ * @param verts Provides the XYZ coordinates of those vertices.
+ * @param normals Receives the normal of triangle 0.
+ * @param calculateNormal Preserves the caller's arithmetic using three resident XYZ pointers.
+ * @return Transfer warnings, or error -65817 for an input read, -65813 for an invalid vertex index, or -65818 for the write.
+ *
+ * A store's first write can need its own working reservation, for example to create a writable copy of a
+ * read-only imported source. Running that write while the caller holds no reservation keeps it from competing
+ * with the compute buffers. The stored normals are never read, so an imported output chunk is never decoded here.
+ * The function reads only the inputs that the block loop reads again; that loop later writes the same value again.
+ */
+Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+                            MeshingUtilities::detail::TriangleNormalCalculator calculateNormal)
+{
+  const usize numVertices = verts.getNumberOfTuples();
+  std::array<IGeometry::MeshIndexType, 3> face{};
+  auto result = triangles.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(face.data(), face.size()));
+  if(result.invalid())
+  {
+    return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                [&] { return MakeErrorResult(-65817, "Error reading the connectivity of triangle 0 before recalculating triangle normals."); });
+  }
+  std::array<float32, 9> coordinates{};
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    const auto vertexIndex = face[corner];
+    if(vertexIndex >= numVertices)
+    {
+      return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.", 0,
+                                                                                 vertexIndex, numVertices, numVertices)));
+    }
+  }
+  for(usize corner = 0; corner < face.size(); ++corner)
+  {
+    result = MeshingUtilities::detail::MergeTransferResult(result, verts.copyIntoBuffer(face[corner] * 3, nonstd::span<float32>(coordinates.data() + (corner * 3), 3)));
+    if(result.invalid())
+    {
+      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                  [&] { return MakeErrorResult(-65817, "Error reading the vertex coordinates of triangle 0 before recalculating triangle normals."); });
+    }
+  }
+  const auto normal = calculateNormal(coordinates.data(), coordinates.data() + 3, coordinates.data() + 6);
+  const std::array<float64, 3> values{normal[0], normal[1], normal[2]};
+  result = MeshingUtilities::detail::MergeTransferResult(result, normals.copyFromBuffer(0, nonstd::span<const float64>(values.data(), values.size())));
+  if(result.invalid())
+  {
+    return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                [&] { return MakeErrorResult(-65818, "Error writing the normal of triangle 0 before recalculating triangle normals."); });
+  }
+  return result;
+}
 } // namespace
 
 Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
@@ -1705,29 +1854,56 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
   const uint64 requestedBytes = std::min<uint64>(observedPlan.FaceCapacity == 0 ? preferredBytes : observedPlan.PayloadBytes, budget.maximumWorkingMemoryBytes());
   // A snapshot avoids known excess admission; a racing reservation can still reduce the actual grant.
   auto reservation = budget.reserveWorkingMemory(requestedBytes);
-  const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
-  const auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+  auto plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+  if(plan.FaceCapacity == 0)
+  {
+    return MakeNormalAdmissionError(-65815, requestedBytes, grantedBytes, vertexBytes);
+  }
+  Result<> result;
+  if(normals.getStoreType() == IDataStore::StoreType::OutOfCore)
+  {
+    // A store of type OutOfCore can reserve its own working memory on its first write. Release the admission
+    // while the normal of triangle 0 is calculated and written, then admit the checked plan again. No buffer
+    // exists yet, so the released bytes fund nothing. If the new admission fails, triangle 0 keeps its new
+    // normal and every later triangle keeps its old value.
+    const usize admittedBytes = plan.PayloadBytes;
+    reservation = {};
+    result = PublishFirstNormal(triangles, verts, normals, calculateNormal);
+    if(result.invalid())
+    {
+      return result;
+    }
+    // Cancellation during the publication stops before the second admission, buffer allocation, or any block transfer.
+    if(shouldCancel)
+    {
+      return result;
+    }
+    reservation = budget.reserveWorkingMemory(static_cast<uint64>(admittedBytes));
+    grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
+    if(grantedBytes < admittedBytes)
+    {
+      plan = planNormalWorkingMemory(triangles, verts, grantedBytes);
+      if(plan.FaceCapacity == 0)
+      {
+        return MergeResults(std::move(result), MakeNormalAdmissionError(-65819, admittedBytes, grantedBytes, vertexBytes));
+      }
+    }
+  }
   const bool cacheVertices = plan.CacheVertices;
   const usize bufferTriangles = plan.FaceCapacity;
-  if(bufferTriangles == 0)
-  {
-    return MakeErrorResult(
-        -65815, fmt::format("Triangle normal calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached vertices and one face.",
-                            requestedBytes, grantedBytes, k_NormalGatherBytesPerFace, vertexBytes + k_NormalFastBytesPerFace));
-  }
   const usize pageVertices = plan.PageVertices;
   // The checked plan fits the actual grant; release any remainder before allocations or I/O.
   reservation.shrinkTo(plan.PayloadBytes);
-  Result<> result;
   try
   {
     std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
     if(cacheVertices)
     {
-      result = MergeResults(std::move(result), verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
+      result = MeshingUtilities::detail::MergeTransferResult(result, verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."));
+        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-65810, "Error reading vertex coordinates for triangle normal calculation."); });
       }
     }
     std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
@@ -1742,10 +1918,11 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
         return result;
       }
       const usize count = std::min(bufferTriangles, numTriangles - start);
-      result = MergeResults(std::move(result), triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+      result = MeshingUtilities::detail::MergeTransferResult(result, triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+        return MeshingUtilities::detail::WithTransferFailureContext(
+            std::move(result), [&] { return MakeErrorResult(-65811, fmt::format("Error reading connectivity for triangle normal calculation at triangle {} ({} triangles).", start, count)); });
       }
 
       for(usize triangle = 0; triangle < count; ++triangle)
@@ -1764,11 +1941,12 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
       }
       if(!cacheVertices)
       {
-        result =
-            MergeResults(std::move(result), GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
+        result = MeshingUtilities::detail::MergeTransferResult(
+            result, GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
         if(result.invalid())
         {
-          return MergeResults(std::move(result), MakeErrorResult(-65810, fmt::format("Error reading vertex coordinates for triangle normal calculation at triangle {} ({} triangles).", start, count)));
+          return MeshingUtilities::detail::WithTransferFailureContext(
+              std::move(result), [&] { return MakeErrorResult(-65810, fmt::format("Error reading vertex coordinates for triangle normal calculation at triangle {} ({} triangles).", start, count)); });
         }
       }
       for(usize triangle = 0; triangle < count; ++triangle)
@@ -1785,10 +1963,11 @@ Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2
         normalBuffer[index + 2] = normal[2];
       }
 
-      result = MergeResults(std::move(result), normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
+      result = MeshingUtilities::detail::MergeTransferResult(result, normals.copyFromBuffer(start * 3, nonstd::span<const float64>(normalBuffer.data(), count * 3)));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)));
+        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+                                                                    [&] { return MakeErrorResult(-65812, fmt::format("Error writing normals at triangle {} ({} triangles).", start, count)); });
       }
       start += count;
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/BoundedRead.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
 
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
@@ -463,65 +464,75 @@ public:
   }
 
   /**
-   * @brief Reads a validated extent directly into caller storage within a fixed allowance.
+   * @brief Reads a validated resident extent without data scratch allocation.
    * @param extent Supplies tuple-space coordinates.
    * @param destination Receives every component of each selected tuple.
-   * @param scratchBudgetBytes Funds the fixed diagnostic carrier (4096 bytes).
-   * @return True on completion, false below the minimum or for bool, or an invalid result.
+   * @param scratchBudgetBytes Limits data scratch; supported resident reads need zero bytes.
+   * @return True on completion, false for bool, or an error before destination transfer.
    */
   [[nodiscard]] Result<bool> readExtentIntoBufferBounded(const Extent& extent, nonstd::span<T> destination, uint64 scratchBudgetBytes) const override
   {
-    if(scratchBudgetBytes < BoundedRead::k_DiagnosticBytes || !BoundedRead::DiagnosticRepresentationSupported())
-    {
-      return {false};
-    }
-    BoundedRead::Diagnostic diagnostic;
+    static_cast<void>(scratchBudgetBytes);
+    Result<> diagnostic;
     if constexpr(std::is_same_v<T, bool>)
     {
-      return diagnostic.finish(diagnostic.set(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores."));
+      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores.");
+      return ConvertResultTo(std::move(diagnostic), false);
     }
     uint64 components = 1;
     for(const auto size : getComponentShape())
     {
       if(size == 0 || !BoundedRead::Multiply(components, static_cast<uint64>(size), components))
       {
-        return diagnostic.finish(diagnostic.set(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64."));
+        return MakeErrorResult<bool>(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
       }
     }
     uint64 selectedTuples = 0;
     const auto status = BoundedRead::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
     if(status != BoundedRead::Status::Complete)
     {
-      return diagnostic.finish(status);
+      return ConvertResultTo(std::move(diagnostic), false);
     }
     if(m_Data == nullptr)
     {
-      return diagnostic.finish(diagnostic.set(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer."));
+      return MakeErrorResult<bool>(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer.");
     }
-    // All products are checked above. Map each selected tuple without coordinate allocation.
-    const auto& shape = getTupleShape();
-    for(uint64 outputTuple = 0; outputTuple < selectedTuples; ++outputTuple)
-    {
-      uint64 remaining = outputTuple;
-      uint64 sourceTuple = 0;
-      uint64 sourceStride = 1;
-      for(usize reverse = shape.size(); reverse != 0; --reverse)
+    const int exceptions = std::uncaught_exceptions();
+    auto publish = MakeScopeGuard([&]() noexcept {
+      if(std::uncaught_exceptions() != exceptions)
       {
-        const usize dimension = reverse - 1;
-        const uint64 count = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
-        const uint64 coordinate = extent.min[dimension] + (remaining % count) * extent.stride[dimension];
-        remaining /= count;
-        sourceTuple += coordinate * sourceStride;
-        sourceStride *= static_cast<uint64>(shape[dimension]);
+        return;
       }
-      const usize sourceOffset = static_cast<usize>(sourceTuple * components);
-      const usize outputOffset = static_cast<usize>(outputTuple * components);
-      for(usize component = 0; component < static_cast<usize>(components); ++component)
+      // All products are checked above. Map each selected tuple without coordinate allocation.
+      const auto& shape = getTupleShape();
+      for(uint64 outputTuple = 0; outputTuple < selectedTuples; ++outputTuple)
       {
-        destination[outputOffset + component] = m_Data[sourceOffset + component];
+        uint64 remaining = outputTuple;
+        uint64 sourceTuple = 0;
+        uint64 sourceStride = 1;
+        for(usize reverse = shape.size(); reverse != 0; --reverse)
+        {
+          const usize dimension = reverse - 1;
+          const uint64 count = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
+          const uint64 coordinate = extent.min[dimension] + (remaining % count) * extent.stride[dimension];
+          remaining /= count;
+          sourceTuple += coordinate * sourceStride;
+          sourceStride *= static_cast<uint64>(shape[dimension]);
+        }
+        const usize sourceOffset = static_cast<usize>(sourceTuple * components);
+        const usize outputOffset = static_cast<usize>(outputTuple * components);
+        for(usize component = 0; component < static_cast<usize>(components); ++component)
+        {
+          destination[outputOffset + component] = m_Data[sourceOffset + component];
+        }
       }
-    }
-    return {true};
+    });
+    // A prvalue constructs the actual return object before the publication guard runs.
+#if SIMPLNX_BUILD_TESTS
+    return Result<bool>{true, BoundedRead::MakeSuccessWarningsForTesting()};
+#else
+    return Result<bool>{true};
+#endif
   }
 
   /**

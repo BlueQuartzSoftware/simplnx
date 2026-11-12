@@ -1,4 +1,5 @@
 #include "GroupIO.hpp"
+#include "ObjectIO.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
@@ -11,9 +12,48 @@
 
 #include <iostream>
 #include <mutex>
+#include <string>
+
+#if SIMPLNX_BUILD_TESTS
+#include <new>
+#include <optional>
+
+namespace
+{
+thread_local std::optional<std::string> s_GroupConstructionFailureName;
+
+/**
+ * @brief Injects an allocation failure immediately before the base wrapper copies its name.
+ * @param groupName Supplies the constructor's borrowed child name.
+ * @return The unchanged name for the base constructor.
+ * @throws std::bad_alloc When the calling thread selects this group name.
+ */
+const std::string& CheckGroupConstructionForTesting(const std::string& groupName)
+{
+  if(s_GroupConstructionFailureName.has_value() && s_GroupConstructionFailureName.value() == groupName)
+  {
+    s_GroupConstructionFailureName.reset();
+    throw std::bad_alloc{};
+  }
+  return groupName;
+}
+} // namespace
+#endif
 
 namespace nx::core::HDF5
 {
+#if SIMPLNX_BUILD_TESTS
+void FailNextGroupConstructionForTesting(const std::string& groupName)
+{
+  s_GroupConstructionFailureName = groupName;
+}
+
+void ResetGroupConstructionFailureForTesting() noexcept
+{
+  s_GroupConstructionFailureName.reset();
+}
+#endif
+
 /**
  * @brief Opens an existing group or creates a missing group.
  * @param parentId Identifies the parent object. It must remain valid.
@@ -43,7 +83,11 @@ IdType getGroupId(IdType parentId, const std::string& groupName)
 GroupIO::GroupIO() = default;
 
 GroupIO::GroupIO(hid_t parentId, const std::string& groupName, hid_t groupId)
+#if SIMPLNX_BUILD_TESTS
+: ObjectIO(parentId, CheckGroupConstructionForTesting(groupName))
+#else
 : ObjectIO(parentId, groupName)
+#endif
 {
   setId(groupId);
 }
@@ -96,18 +140,19 @@ GroupIO GroupIO::openGroup(const std::string& name) const
     return {};
   }
   const hid_t selfId = getId();
-  hid_t groupId = H5I_INVALID_HID;
+  // Prepare metadata before acquisition so allocation failure cannot leave an unowned group identifier.
+  GroupIO group(selfId, name, H5I_INVALID_HID);
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-    groupId = H5Gopen(selfId, name.c_str(), H5P_DEFAULT);
+    group.setId(H5Gopen(selfId, name.c_str(), H5P_DEFAULT));
   }
-  if(groupId <= 0)
+  if(!group.isValid())
   {
     std::string ss = fmt::format("Failed to open Group '{}'.", name);
     std::cout << ss << std::endl;
     return {};
   }
-  return GroupIO(selfId, name, groupId);
+  return group;
 }
 
 DatasetIO GroupIO::openDataset(const std::string& name) const
@@ -236,21 +281,22 @@ GroupIO GroupIO::createGroup(const std::string& childName)
   const bool childIsGroup = isGroup(childName);
   const bool childExists = childIsGroup || exists(childName);
   const hid_t selfId = getId();
-  hid_t groupId = -1;
+  // Prepare metadata before acquisition so construction cannot fail after HDF5 creates the link.
+  GroupIO group(selfId, childName, H5I_INVALID_HID);
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if(childIsGroup)
     {
-      groupId = H5Gopen(selfId, childName.c_str(), H5P_DEFAULT);
+      group.setId(H5Gopen(selfId, childName.c_str(), H5P_DEFAULT));
     }
     else if(!childExists)
     {
-      groupId = H5Gcreate(selfId, childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      group.setId(H5Gcreate(selfId, childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
     }
   }
-  if(groupId > 0)
+  if(group.isValid())
   {
-    return GroupIO(selfId, childName, groupId);
+    return group;
   }
 
   std::string ss = fmt::format("Failed to create HDF5 group '{}' at path: ", childName, getObjectPath());
