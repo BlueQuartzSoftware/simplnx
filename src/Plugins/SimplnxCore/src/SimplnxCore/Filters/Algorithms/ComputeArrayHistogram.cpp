@@ -1,6 +1,7 @@
 #include "ComputeArrayHistogram.hpp"
 
 #include "simplnx/Common/Uuid.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -8,6 +9,8 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <cmath>
@@ -215,7 +218,7 @@ public:
   template <class FunctionT>
   Result<> forEach(usize numValues, FunctionT&& function)
   {
-    for(usize offset = 0; offset < numValues; offset += k_ChunkSize)
+    for(usize offset = 0; offset < numValues;)
     {
       if(m_ShouldCancel)
       {
@@ -229,33 +232,63 @@ public:
         return inputResult;
       }
 
-      if(m_BoolMaskBuffer != nullptr)
+      if(m_MaskArray == nullptr)
       {
-        const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<bool>>();
-        Result<> maskResult = maskStore.copyIntoBuffer(offset, nonstd::span<bool>(m_BoolMaskBuffer.get(), count));
-        if(maskResult.invalid())
-        {
-          return maskResult;
-        }
-      }
-      else if(m_UInt8MaskBuffer != nullptr)
-      {
-        const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>();
-        Result<> maskResult = maskStore.copyIntoBuffer(offset, nonstd::span<uint8>(m_UInt8MaskBuffer.get(), count));
-        if(maskResult.invalid())
-        {
-          return maskResult;
-        }
-      }
-
-      for(usize index = 0; index < count; index++)
-      {
-        const bool selected = m_MaskArray == nullptr || (m_BoolMaskBuffer != nullptr ? m_BoolMaskBuffer[index] : m_UInt8MaskBuffer[index] != 0);
-        if(selected)
+        for(usize index = 0; index < count; index++)
         {
           function(m_InputBuffer[index], offset + index);
         }
       }
+      else
+      {
+        const usize components = m_InputStore.getNumberOfComponents();
+        const usize firstTuple = offset / components;
+        const usize lastTuple = (offset + count - 1) / components;
+        const usize tupleCount = lastTuple - firstTuple + 1;
+        if(m_BoolMaskBuffer != nullptr)
+        {
+          const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<bool>>();
+          Result<> maskResult = maskStore.copyIntoBuffer(firstTuple, nonstd::span<bool>(m_BoolMaskBuffer.get(), tupleCount));
+          if(maskResult.invalid())
+          {
+            return maskResult;
+          }
+        }
+        else
+        {
+          const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>();
+          Result<> maskResult = maskStore.copyIntoBuffer(firstTuple, nonstd::span<uint8>(m_UInt8MaskBuffer.get(), tupleCount));
+          if(maskResult.invalid())
+          {
+            return maskResult;
+          }
+        }
+
+        usize index = 0;
+        usize maskIndex = 0;
+        usize tupleRemaining = components - (offset % components);
+        // A page can start or end inside a tuple. Each span covers the part of one tuple in this page,
+        // and one mask value selects or skips the whole span.
+        while(index < count)
+        {
+          const usize spanCount = std::min(tupleRemaining, count - index);
+          const bool selected = m_BoolMaskBuffer != nullptr ? m_BoolMaskBuffer[maskIndex] : m_UInt8MaskBuffer[maskIndex] != 0;
+          if(selected)
+          {
+            for(const usize end = index + spanCount; index < end; index++)
+            {
+              function(m_InputBuffer[index], offset + index);
+            }
+          }
+          else
+          {
+            index += spanCount;
+          }
+          maskIndex++;
+          tupleRemaining = components;
+        }
+      }
+      offset += count;
     }
 
     return {};
@@ -301,43 +334,13 @@ public:
       std::vector<T> selectedValues;
       selectedValues.reserve(m_NumValues);
 
-      auto collectSelectedValues = [&](const auto& maskStore) -> bool {
-        for(usize offset = 0; offset < m_NumValues; offset += k_ChunkSize)
-        {
-          if(m_ShouldCancel)
-          {
-            return false;
-          }
-
-          const usize end = std::min(offset + k_ChunkSize, m_NumValues);
-          for(usize index = offset; index < end; index++)
-          {
-            if(maskStore[index])
-            {
-              selectedValues.push_back(m_InputStore[index]);
-            }
-          }
-        }
-        return true;
-      };
-
-      bool completed = false;
-      if(m_MaskArray->getDataType() == DataType::boolean)
+      BufferedValueReader<T> reader(m_InputStore, m_MaskArray, m_ShouldCancel);
+      Result<> readResult = reader.forEach(m_NumValues, [&](T value, usize) { selectedValues.push_back(value); });
+      if(readResult.invalid() || m_ShouldCancel)
       {
-        const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<bool>>();
-        completed = collectSelectedValues(maskStore);
-      }
-      else
-      {
-        const auto& maskStore = m_MaskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>();
-        completed = collectSelectedValues(maskStore);
-      }
-      if(!completed)
-      {
-        return {};
+        return readResult;
       }
 
-      selectedValues.shrink_to_fit();
       modes = StatisticsCalculations::findModes(selectedValues);
     }
     else
@@ -650,7 +653,7 @@ struct ComputeHistogramFunctor
   {
     const auto& inputStore = inputArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& binRangesStore = binRangesArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-    const usize numValues = maskArray == nullptr ? inputStore.getSize() : inputStore.getNumberOfTuples();
+    const usize numValues = inputStore.getSize();
     BufferedValueReader<T> reader(inputStore, maskArray, shouldCancel);
 
     std::pair<T, T> range = {static_cast<T>(inputValues.MinRange), static_cast<T>(inputValues.MaxRange)};

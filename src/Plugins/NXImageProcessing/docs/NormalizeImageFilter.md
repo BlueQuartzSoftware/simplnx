@@ -8,6 +8,8 @@ NXImageProcessing (Pointwise)
 
 ## Description
 
+The input array must have one component.
+
 Shifts and scales the input image so that the output pixels have zero mean and unit variance, using the streaming mean and sample (N-1) variance of the input:
 
 ```

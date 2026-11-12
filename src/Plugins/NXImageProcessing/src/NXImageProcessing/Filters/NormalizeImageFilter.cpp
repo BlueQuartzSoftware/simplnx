@@ -1,5 +1,8 @@
 #include "NormalizeImageFilter.hpp"
 
+#include "NXImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
+
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -9,31 +12,20 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/format.h>
+
 using namespace nx::core;
 
 namespace
 {
-struct NormalizeOperation
-{
-  template <class T>
-  Result<ImageProcessing::ArrayStatistics<T>> computeStatistics(const AbstractDataStore<T>& inputStore, const std::atomic_bool& shouldCancel) const
-  {
-    return ImageProcessing::ComputeNormalizeStatistics(inputStore, shouldCancel);
-  }
+constexpr int32 k_InvalidInputArrayError = -94002;
 
-  template <class T>
-  Result<> validate(const ImageProcessing::ArrayStatistics<T>& /*stats*/) const
-  {
-    return {};
-  }
-  template <class T, class U>
-  auto makeMapOp(const ImageProcessing::ArrayStatistics<T>& stats) const
-  {
-    const double mean = stats.mean;
-    const double sigma = stats.sigma;
-    return [mean, sigma](T value) -> U { return static_cast<U>((static_cast<double>(value) - mean) / sigma); };
-  }
-};
+NormalizeImageInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  const auto inputPath = filterArgs.value<DataPath>(NormalizeImageFilter::k_InputImageDataPath_Key);
+  const auto outputName = filterArgs.value<DataObjectNameParameter::ValueType>(NormalizeImageFilter::k_OutputImageArrayName_Key);
+  return {inputPath, inputPath.replaceName(outputName)};
+}
 } // namespace
 
 namespace nx::core
@@ -65,7 +57,7 @@ Parameters NormalizeImageFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
                                                           "The result of the processing will be stored in this Data Array inside the same group as the input data.", "Output Image Data"));
@@ -83,24 +75,23 @@ IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
-  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
+  const auto inputValues = CreateInputValues(filterArgs);
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath) == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
+                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()))};
+  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
+      dataStructure, inputValues.InputArrayPath, imageGeomPath, inputValues.OutputArrayPath);
   return {std::move(resultOutputActions)};
 }
 Result<> NormalizeImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
-  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
-
-  const NormalizeOperation operation{};
-  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
-                                                                                                                 messageHandler);
+  const auto inputValues = CreateInputValues(filterArgs);
+  return NormalizeImage(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

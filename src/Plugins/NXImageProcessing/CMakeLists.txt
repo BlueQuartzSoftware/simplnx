@@ -100,6 +100,7 @@ set(FilterList
 )
 
 set(AlgorithmList
+  NormalizeImage
   ReadBinaryCTNorthstar
   ReadImage
   ReadImageStack

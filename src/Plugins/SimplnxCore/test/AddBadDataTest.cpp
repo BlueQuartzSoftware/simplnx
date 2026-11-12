@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -151,4 +153,79 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Geometry cell tuple count", "[SimplnxC
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
+}
+
+TEST_CASE("SimplnxCore::AddBadData component contract", "[SimplnxCore][AddBadDataFilter][ComponentContract]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  const usize components = GENERATE(usize{1}, usize{3});
+  CAPTURE(components);
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  const ShapeType tupleShape{2, 3, 4};
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
+
+  const DataPath distancesPath({"Image", "Cell Data", "Distances"});
+  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, distancesPath, tupleShape, ShapeType{components});
+  REQUIRE(store != nullptr);
+  auto* distancesPtr = Int32Array::Create(dataStructure, "Distances", store, cellAMPtr->getId());
+  REQUIRE(distancesPtr != nullptr);
+  REQUIRE(imageGeomPtr->getNumberOfCells() == 24);
+  REQUIRE(distancesPtr->getNumberOfTuples() == 24);
+  REQUIRE(distancesPtr->getNumberOfTuples() == imageGeomPtr->getNumberOfCells());
+  REQUIRE(distancesPtr->getNumberOfComponents() == components);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  const AddBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(distancesPath));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonVolFraction_Key, std::make_any<float32>(0.5F));
+  args.insertOrAssign(AddBadDataFilter::k_BoundaryNoise_Key, std::make_any<bool>(true));
+  args.insertOrAssign(AddBadDataFilter::k_BoundaryVolFraction_Key, std::make_any<float32>(0.5F));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(components == 1)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxCore][AddBadDataFilter]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+
+  const AddBadDataFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -76240);
+  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

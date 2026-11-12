@@ -2,8 +2,10 @@
 
 #include "SimplnxCore/Filters/Algorithms/FlyingEdges3D.hpp"
 
+#include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -13,11 +15,31 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
+#include <fmt/format.h>
+
+#include <memory>
+
 using namespace nx::core;
 namespace
 {
 const std::string k_VertexNormals = "VertexNormals";
+constexpr int32 k_CellTupleCountError = -10510;
+constexpr int32 k_InvalidInputArrayError = -10512;
+
+FlyingEdges3DInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  FlyingEdges3DInputValues inputValues;
+
+  inputValues.imageGeomPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key);
+  inputValues.contouringArrayPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key);
+  inputValues.triangleGeomPath = filterArgs.value<DataPath>(FlyingEdges3DFilter::k_CreatedTriangleGeometryPath_Key);
+  inputValues.isoVal = filterArgs.value<float64>(FlyingEdges3DFilter::k_IsoVal_Key);
+  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
+
+  return inputValues;
 }
+
+} // namespace
 
 namespace nx::core
 {
@@ -64,7 +86,7 @@ Parameters FlyingEdges3DFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
-                                                          GetAllDataTypes()));
+                                                          GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored",
@@ -93,7 +115,14 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   auto pTriangleGeomName = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto pContouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
 
-  if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, -10510); result.invalid())
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(pContouringArrayPath) == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidInputArrayError,
+                                           fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pContouringArrayPath.toString()))};
+  }
+
+  if(auto result = ValidateCellTupleCount(dataStructure, pImageGeomPath, {pContouringArrayPath}, k_CellTupleCountError); result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
@@ -119,13 +148,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  FlyingEdges3DInputValues inputValues;
-
-  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
-  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
+  auto inputValues = CreateInputValues(filterArgs);
 
   return FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

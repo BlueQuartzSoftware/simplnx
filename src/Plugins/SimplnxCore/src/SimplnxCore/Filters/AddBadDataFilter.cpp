@@ -2,8 +2,10 @@
 
 #include "SimplnxCore/Filters/Algorithms/AddBadData.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -16,9 +18,34 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/format.h>
+
+#include <memory>
 #include <random>
+#include <set>
 
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_InvalidInputArrayError = -76240;
+constexpr int32 k_CellTupleCountError = -76238;
+
+AddBadDataInputValues CreateInputValues(const Arguments& filterArgs)
+{
+  AddBadDataInputValues inputValues;
+
+  inputValues.PoissonNoise = filterArgs.value<bool>(AddBadDataFilter::k_PoissonNoise_Key);
+  inputValues.PoissonVolFraction = filterArgs.value<float32>(AddBadDataFilter::k_PoissonVolFraction_Key);
+  inputValues.BoundaryNoise = filterArgs.value<bool>(AddBadDataFilter::k_BoundaryNoise_Key);
+  inputValues.BoundaryVolFraction = filterArgs.value<float32>(AddBadDataFilter::k_BoundaryVolFraction_Key);
+  inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(AddBadDataFilter::k_ImageGeometryPath_Key);
+  inputValues.SeedValue = filterArgs.value<uint64>(AddBadDataFilter::k_SeedValue_Key);
+
+  return inputValues;
+}
+} // namespace
 
 namespace nx::core
 {
@@ -75,7 +102,7 @@ Parameters AddBadDataFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
-                                                          std::set<DataType>{DataType::int32}));
+                                                          std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);
@@ -109,7 +136,14 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
-  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, -76238);
+  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
+  if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(
+        k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", pGBEuclideanDistancesArrayPathValue.toString()))};
+  }
+
+  auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
   if(tupleCountResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
@@ -167,15 +201,7 @@ Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Argum
   // Store Seed Value in Top Level Array
   dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
-  AddBadDataInputValues inputValues;
-
-  inputValues.PoissonNoise = filterArgs.value<bool>(k_PoissonNoise_Key);
-  inputValues.PoissonVolFraction = filterArgs.value<float32>(k_PoissonVolFraction_Key);
-  inputValues.BoundaryNoise = filterArgs.value<bool>(k_BoundaryNoise_Key);
-  inputValues.BoundaryVolFraction = filterArgs.value<float32>(k_BoundaryVolFraction_Key);
-  inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.SeedValue = filterArgs.value<uint64>(k_SeedValue_Key);
+  auto inputValues = CreateInputValues(filterArgs);
 
   return AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

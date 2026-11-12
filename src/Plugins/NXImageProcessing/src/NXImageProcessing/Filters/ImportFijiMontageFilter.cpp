@@ -3,13 +3,20 @@
 #include "NXImageProcessing/Filters/Algorithms/ReadImage.hpp"
 #include "NXImageProcessing/utils/FijiMontageUtilities.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -19,7 +26,12 @@
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 
+#include <fmt/format.h>
+
 #include <filesystem>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -27,6 +39,52 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @class CreateMontageGrayscaleArrayAction
+ * @brief Plans the final scalar shape and creates the temporary color array for the reader.
+ *
+ * componentDims() reports the final shape after grayscale conversion. Execute mode
+ * temporarily creates the file component count so the reader can import every channel.
+ */
+class CreateMontageGrayscaleArrayAction : public CreateArrayAction
+{
+public:
+  CreateMontageGrayscaleArrayAction(const std::vector<usize>& tupleDims, usize fileComponentCount, const DataPath& arrayPath)
+  : CreateArrayAction(DataType::uint8, tupleDims, {1}, arrayPath)
+  , m_FileComponentCount(fileComponentCount)
+  {
+  }
+
+  ~CreateMontageGrayscaleArrayAction() override = default;
+  CreateMontageGrayscaleArrayAction(const CreateMontageGrayscaleArrayAction&) = delete;
+  CreateMontageGrayscaleArrayAction(CreateMontageGrayscaleArrayAction&&) = delete;
+  CreateMontageGrayscaleArrayAction& operator=(const CreateMontageGrayscaleArrayAction&) = delete;
+  CreateMontageGrayscaleArrayAction& operator=(CreateMontageGrayscaleArrayAction&&) = delete;
+
+  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  {
+    if(mode == Mode::Preflight)
+    {
+      return CreateArrayAction::apply(dataStructure, mode);
+    }
+    const CreateArrayAction readAction(type(), dims(), {m_FileComponentCount}, path(), dataFormat(), fillValue(), chunkShapeHint(), initializationMode());
+    return readAction.apply(dataStructure, mode);
+  }
+
+  UniquePointer clone() const override
+  {
+    return std::make_unique<CreateMontageGrayscaleArrayAction>(dims(), m_FileComponentCount, path());
+  }
+
+private:
+  usize m_FileComponentCount;
+};
+
+bool IsGrayscaleConvertible(DataType type, usize components)
+{
+  return type == DataType::uint8 && (components == 3 || components == 4);
+}
+
 // Resolves a single tile's geometry + array DataPaths given the montage naming options.
 struct TilePaths
 {
@@ -241,6 +299,13 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   {
     const fiji::FijiTile& tile = tiles[i];
     const ImageMetadata& md = m_Cache.metadata[i];
+    if(convertToGrayScale && md.numComponents != 1 && md.numComponents != 3 && md.numComponents != 4)
+    {
+      return MakePreflightErrorResult(
+          -35927,
+          fmt::format("Tile '{}' has {} components. Grayscale conversion supports images with 1, 3, or 4 components. Turn off 'Convert To GrayScale' or convert the tile to grayscale, RGB, or RGBA.",
+                      tile.filePath.string(), md.numComponents));
+    }
 
     const TilePaths paths = MakeTilePaths(tile, parentDataGroup, dataGroupName, cellAmName, imageArrayName);
 
@@ -253,13 +318,22 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(paths.geomPath, geomDims, originVec, spacingVec, cellAmName, lengthUnit));
 
     const DataType arrayType = changeDataType ? destType : md.dataType;
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(arrayType, arrayTupleDims, componentDims, paths.arrayPath));
+    if(convertToGrayScale && IsGrayscaleConvertible(arrayType, md.numComponents))
+    {
+      resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.numComponents, paths.arrayPath));
+    }
+    else
+    {
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(arrayType, arrayTupleDims, componentDims, paths.arrayPath));
+    }
   }
 
   if(convertToGrayScale)
   {
-    preflightUpdatedValues.push_back(
-        {"GrayScale", fmt::format("Due to execution order, grayscale conversion runs during execute; every '{}' array will be converted to single-channel grayscale.", imageArrayName)});
+    preflightUpdatedValues.push_back({.name = "GrayScale",
+                                      .value = fmt::format("Grayscale conversion runs during execution for uint8 RGB and RGBA '{}' arrays. Scalar tiles skip grayscale conversion. Other RGB and RGBA "
+                                                           "tiles are imported without grayscale conversion and produce a warning.",
+                                                           imageArrayName)});
   }
 
   preflightUpdatedValues.push_back({"Import Information", fmt::format("Imported Image Count: {}", tiles.size())});
@@ -329,13 +403,37 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
         messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
       }
       result.warnings().emplace_back(Warning{-35940, fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
+      const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
+      if(convertToGrayScale && IsGrayscaleConvertible(failedArray.getDataType(), failedArray.getNumberOfComponents()))
+      {
+        const ShapeType tupleShape = failedArray.getIDataStoreRef().getTupleShape();
+        const DeleteDataAction deleteAction(paths.arrayPath);
+        auto deleteResult = deleteAction.apply(dataStructure, IDataAction::Mode::Execute);
+        if(deleteResult.invalid())
+        {
+          return MergeResults(std::move(result), std::move(deleteResult));
+        }
+        result = MergeResults(std::move(result), std::move(deleteResult));
+        const CreateArrayAction scalarAction(DataType::uint8, tupleShape, {1}, paths.arrayPath, "", "", {}, DataStoreInitializationMode::DeferredZeroFill);
+        auto createResult = scalarAction.apply(dataStructure, IDataAction::Mode::Execute);
+        if(createResult.invalid())
+        {
+          return MergeResults(std::move(result), std::move(createResult));
+        }
+        result = MergeResults(std::move(result), std::move(createResult));
+      }
       continue; // mirror legacy: try to continue with the remaining tiles
     }
     ++successfulTileCount; // the tile's pixel data was read; grayscale (below) is a further transform, not a read
 
     if(convertToGrayScale)
     {
-      if(dataStructure.getDataRefAs<IDataArray>(paths.arrayPath).getDataType() != DataType::uint8)
+      const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(paths.arrayPath);
+      if(imageArray.getNumberOfComponents() == 1)
+      {
+        continue;
+      }
+      if(!IsGrayscaleConvertible(imageArray.getDataType(), imageArray.getNumberOfComponents()))
       {
         result.warnings().emplace_back(Warning{-35932, fmt::format("Tile array '{}' is not uint8; grayscale conversion skipped.", paths.arrayPath.getTargetName())});
         continue;

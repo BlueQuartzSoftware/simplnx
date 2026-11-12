@@ -5,11 +5,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -158,4 +161,70 @@ TEST_CASE("SimplnxCore::Image Contouring FlyingEdges3D: Geometry cell tuple coun
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
+}
+
+TEST_CASE("SimplnxCore::FlyingEdges3D component contract", "[SimplnxCore][FlyingEdges3D][ComponentContract]")
+{
+  const usize components = GENERATE(usize{1}, usize{3});
+  CAPTURE(components);
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({4, 3, 2});
+  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  const ShapeType tupleShape{2, 3, 4};
+  auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellAMPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAMPtr);
+
+  const DataPath inputPath({"Image", "Cell Data", "Values"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, tupleShape, ShapeType{components});
+  REQUIRE(store != nullptr);
+  auto* inputPtr = Float32Array::Create(dataStructure, "Values", store, cellAMPtr->getId());
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(imageGeomPtr->getNumberOfCells() == 24);
+  REQUIRE(inputPtr->getNumberOfTuples() == 24);
+  REQUIRE(inputPtr->getNumberOfComponents() == components);
+
+  const FlyingEdges3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(inputPath));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(components == 1)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FlyingEdges3D: rejects nonnumeric input arrays", "[SimplnxCore][FlyingEdges3D]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+
+  const FlyingEdges3DFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -10512);
+  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

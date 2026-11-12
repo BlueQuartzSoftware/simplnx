@@ -29,7 +29,7 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
 
 /**
  * @class ComputeArrayHistogram
- * @brief Computes histograms and optional exact modal ranges for scalar arrays.
+ * @brief Computes histograms and optional exact modal ranges for numeric arrays.
  *
  * Range and histogram passes use sequential 65,536-value pages for all stores.
  * Resident modal calculation can retain every selected value. Out-of-core modal
@@ -64,9 +64,9 @@ public:
   /**
    * @brief Computes each selected array in input order.
    * @return Range, mask, bulk-I/O, temporary-file, or modal-sort errors.
-   * @pre NumberOfBins is at least one.
-   * @pre Input arrays are scalar and output-path collections match input count.
-   * @pre Mask type is Bool or UInt8.
+   * @pre Output-path collections match input count.
+   * @pre NumberOfBins is at least one and mask type is Bool or UInt8.
+   * @pre The mask has component shape {1} and one tuple per tuple of each input array.
    * @pre An automatic integral range can increment its maximum without overflow.
    */
   Result<> operator()();

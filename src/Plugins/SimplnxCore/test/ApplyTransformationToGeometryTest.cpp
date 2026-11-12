@@ -38,6 +38,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -291,6 +292,119 @@ void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom&
 }
 
 } // namespace apply_transformation_to_geometry
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry matrix contract", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  const DataPath geometryPath({"Geometry"});
+  const DataPath vertexPath({"Geometry", "Vertices"});
+  const DataPath matrixPath({"Matrix"});
+  const ApplyTransformationToGeometryFilter filter;
+
+  const auto createMatrix = [&](DataStructure& dataStructure, usize tuples, usize components) {
+    auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, matrixPath, {tuples}, {components});
+    auto* matrixPtr = Float32Array::Create(dataStructure, matrixPath.getTargetName(), std::move(store));
+    REQUIRE(matrixPtr != nullptr);
+    return matrixPtr;
+  };
+  const auto createTriangle = [&](DataStructure& dataStructure) {
+    auto* geometryPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+    REQUIRE(geometryPtr != nullptr);
+    auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vertexPath, {3}, {3});
+    auto* verticesPtr = Float32Array::Create(dataStructure, vertexPath.getTargetName(), std::move(store), geometryPtr->getId());
+    REQUIRE(verticesPtr != nullptr);
+    constexpr std::array<float32, 9> coordinates = {1.0F, 2.0F, 3.0F, -2.0F, 0.0F, 4.0F, 0.0F, -1.0F, 2.0F};
+    for(usize i = 0; i < coordinates.size(); i++)
+    {
+      (*verticesPtr)[i] = coordinates.at(i);
+    }
+    geometryPtr->setVertices(*verticesPtr);
+  };
+  const auto makeArgs = [&]() {
+    Arguments args = filter.getDefaultArguments();
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
+                        std::make_any<ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(matrixPath));
+    return args;
+  };
+
+  SECTION("Node geometry rejects matrices with fewer or more than 16 values")
+  {
+    for(const usize count : {3, 17})
+    {
+      CAPTURE(count);
+      DataStructure dataStructure;
+      createTriangle(dataStructure);
+      createMatrix(dataStructure, count, 1);
+      const auto result = filter.preflight(dataStructure, makeArgs());
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+      REQUIRE(result.outputActions.errors().size() == 1);
+      REQUIRE(result.outputActions.errors()[0].code == -82019);
+    }
+  }
+
+  SECTION("Node geometry accepts all 16-value layouts and translates vertices")
+  {
+    constexpr std::array<std::array<usize, 2>, 3> layouts = {{{16, 1}, {1, 16}, {4, 4}}};
+    constexpr std::array<float32, 16> translation = {1.0F, 0.0F, 0.0F, 10.0F, 0.0F, 1.0F, 0.0F, -3.0F, 0.0F, 0.0F, 1.0F, 5.0F, 0.0F, 0.0F, 0.0F, 1.0F};
+    constexpr std::array<float32, 9> expected = {11.0F, -1.0F, 8.0F, 8.0F, -3.0F, 9.0F, 10.0F, -4.0F, 7.0F};
+    for(const auto& layout : layouts)
+    {
+      CAPTURE(layout[0], layout[1]);
+      DataStructure dataStructure;
+      createTriangle(dataStructure);
+      auto* matrixPtr = createMatrix(dataStructure, layout[0], layout[1]);
+      for(usize i = 0; i < translation.size(); i++)
+      {
+        (*matrixPtr)[i] = translation.at(i);
+      }
+      const auto args = makeArgs();
+      const auto preflight = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+      const auto execute = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+      const Float32Array* verticesPtr = nullptr;
+      REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32Array>(vertexPath));
+      REQUIRE(verticesPtr != nullptr);
+      for(usize i = 0; i < expected.size(); i++)
+      {
+        CHECK((*verticesPtr)[i] == expected.at(i));
+      }
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
+
+  SECTION("Image geometry retains its matrix size validation")
+  {
+    DataStructure dataStructure;
+    auto* geometryPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+    REQUIRE(geometryPtr != nullptr);
+    geometryPtr->setDimensions({1, 1, 1});
+    auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, geometryPtr->getId());
+    REQUIRE(cellsPtr != nullptr);
+    geometryPtr->setCellData(*cellsPtr);
+    createMatrix(dataStructure, 3, 1);
+    auto args = makeArgs();
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(geometryPath.createChildPath("Cell Data")));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == -82019);
+  }
+
+  SECTION("An inactive precomputed path is not required")
+  {
+    DataStructure dataStructure;
+    createTriangle(dataStructure);
+    auto args = makeArgs();
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+}
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {

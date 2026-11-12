@@ -1,6 +1,82 @@
 #include "NXImageProcessing/Filters/NormalizeImageFilter.hpp"
 #include "ItkGoldenTestUtils.hpp"
+
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+
+#include <catch2/catch.hpp>
+
+#include <any>
+
 using namespace nx::core;
+
+TEST_CASE("NXImageProcessing::NormalizeImage component contract", "[NXImageProcessing][NormalizeImageFilter][ComponentContract]")
+{
+  const auto appPtr = Application::GetOrCreateInstance();
+  REQUIRE(appPtr != nullptr);
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  const usize components = GENERATE(usize{1}, usize{3});
+  CAPTURE(components);
+
+  DataStructure dataStructure;
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({3, 1, 1});
+  const ShapeType tupleShape{1, 1, 3};
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imagePtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imagePtr->setCellData(*cellDataPtr);
+
+  const DataPath inputPath({"Image", "Cell Data", "Input"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, tupleShape, ShapeType{components});
+  REQUIRE(store != nullptr);
+  auto* inputPtr = Float32Array::Create(dataStructure, "Input", store, cellDataPtr->getId());
+  REQUIRE(inputPtr != nullptr);
+  REQUIRE(imagePtr->getNumberOfCells() == 3);
+  REQUIRE(inputPtr->getNumberOfTuples() == 3);
+  REQUIRE(inputPtr->getNumberOfComponents() == components);
+
+  const NormalizeImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(NormalizeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const auto preflight = filter.preflight(dataStructure, args);
+  if(components == 3)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    REQUIRE(preflight.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    (*inputPtr)[0] = 1.0F;
+    (*inputPtr)[1] = 2.0F;
+    (*inputPtr)[2] = 3.0F;
+    const auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const DataPath outputPath({"Image", "Cell Data", "Output"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE(output.getSize() == 3);
+    // Mean is 2 and sample standard deviation is 1.
+    REQUIRE(output[0] == Approx(-1.0).margin(1.0e-12));
+    REQUIRE(output[1] == Approx(0.0).margin(1.0e-12));
+    REQUIRE(output[2] == Approx(1.0).margin(1.0e-12));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden (plan Sec.3/Sec.6). Mirrors ITKNormalizeImageTest.cpp(defaults): read
@@ -41,4 +117,27 @@ TEST_CASE("NXImageProcessing::NormalizeImageFilter: ITK real-image golden (defau
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("NXImageProcessing::NormalizeImage: rejects nonnumeric input arrays", "[NXImageProcessing][NormalizeImageFilter]")
+{
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Input", {2}, {"one", "two"}) != nullptr);
+
+  const NormalizeImageFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(NormalizeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -94002);
+  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

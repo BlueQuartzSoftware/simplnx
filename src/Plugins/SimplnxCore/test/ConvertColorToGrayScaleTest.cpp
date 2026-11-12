@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -21,6 +22,7 @@
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 
 #include <array>
+#include <atomic>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -526,4 +528,109 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScaleFilter: SIMPL Backwards Compatibi
       CHECK(args.value<std::string>(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::PreflightColorToGrayScale: rejects invalid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
+{
+  struct RejectionCase
+  {
+    ChoicesParameter::ValueType Algorithm;
+    usize Components;
+    int32 Channel;
+    int32 Error;
+  };
+  const auto testCase = GENERATE(from_range(std::vector<RejectionCase>{{0, 1, 0, -10710},
+                                                                       {0, 2, 0, -10710},
+                                                                       {1, 1, 0, -10710},
+                                                                       {1, 2, 0, -10710},
+                                                                       {2, 1, 0, -10710},
+                                                                       {2, 2, 0, -10710},
+                                                                       {3, 1, -1, -10711},
+                                                                       {3, 1, 1, -10711},
+                                                                       {3, 2, -1, -10711},
+                                                                       {3, 2, 2, -10711},
+                                                                       {3, 3, 3, -10711},
+                                                                       {3, 4, 4, -10711}}));
+  DataStructure dataStructure;
+  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {testCase.Components});
+  REQUIRE(inputPtr != nullptr);
+  ConvertColorToGrayScaleInputValues values{};
+  values.ConversionAlgorithm = testCase.Algorithm;
+  values.ColorWeights = {0.25f, 0.5f, 0.25f};
+  values.ColorChannel = testCase.Channel;
+  values.InputDataArrayPaths = {DataPath({"Input"})};
+  values.OutputArrayPrefix = "gray";
+  auto result = PreflightColorToGrayScale(dataStructure, values);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE_FALSE(result.outputActions.errors().empty());
+  REQUIRE(result.outputActions.errors().front().code == testCase.Error);
+}
+
+TEST_CASE("SimplnxCore::PreflightColorToGrayScale: accepts valid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto algorithm = GENERATE(0, 1, 2, 3);
+  const auto components = GENERATE(3, 4);
+  DataStructure dataStructure;
+  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {static_cast<usize>(components)});
+  REQUIRE(inputPtr != nullptr);
+  (*inputPtr)[0] = 200;
+  (*inputPtr)[1] = 100;
+  (*inputPtr)[2] = 50;
+  if(components == 4)
+  {
+    (*inputPtr)[3] = 3;
+  }
+  ConvertColorToGrayScaleInputValues values{};
+  values.ConversionAlgorithm = algorithm;
+  values.ColorWeights = {0.25f, 0.5f, 0.25f};
+  values.ColorChannel = components - 1;
+  values.InputDataArrayPaths = {DataPath({"Input"})};
+  values.OutputArrayPrefix = "gray";
+  auto pre = PreflightColorToGrayScale(dataStructure, values);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  auto actionResult = pre.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
+  const std::atomic_bool cancel = false;
+  scope.execute([&] {
+    auto conversionResult = ConvertColorToGrayScaleArrays(dataStructure, values, {}, cancel);
+    SIMPLNX_RESULT_REQUIRE_VALID(conversionResult);
+  });
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"})));
+  const auto& output = dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"}));
+  const std::vector<uint8> expected = components == 3 ? std::vector<uint8>{113, 117, 125, 50} : std::vector<uint8>{113, 117, 125, 3};
+  REQUIRE(output[0] == expected[algorithm]);
+}
+
+TEST_CASE("SimplnxCore::ConvertColorToGrayScale: single channel accepts scalar and two component input", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const usize components = GENERATE(1, 2);
+  DataStructure dataStructure;
+  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {components});
+  REQUIRE(inputPtr != nullptr);
+  (*inputPtr)[0] = 64;
+  if(components == 2)
+  {
+    (*inputPtr)[1] = 50;
+  }
+  ConvertColorToGrayScaleInputValues values{};
+  values.ConversionAlgorithm = 3;
+  values.ColorWeights = {0.25f, 0.5f, 0.25f};
+  values.ColorChannel = static_cast<int32>(components - 1);
+  values.InputDataArrayPaths = {DataPath({"Input"})};
+  values.OutputArrayPrefix = "gray";
+  auto pre = PreflightColorToGrayScale(dataStructure, values);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  auto actionResult = pre.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
+  const std::atomic_bool cancel = false;
+  scope.execute([&] {
+    auto conversionResult = ConvertColorToGrayScaleArrays(dataStructure, values, {}, cancel);
+    SIMPLNX_RESULT_REQUIRE_VALID(conversionResult);
+  });
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"})));
+  REQUIRE(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"}))[0] == (components == 1 ? 64 : 50));
 }

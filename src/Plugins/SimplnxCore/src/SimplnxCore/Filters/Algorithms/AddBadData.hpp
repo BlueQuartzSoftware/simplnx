@@ -62,6 +62,7 @@ public:
    * @brief Zeros selected tuples in all numeric cell arrays.
    * @return Source and destination transfer errors.
    * @pre Noise fractions are in the range [0, 1].
+   * @pre The distance array is an Int32 DataArray with component shape {1}.
    * @pre The distance array and all child arrays match the image cell count.
    * @pre Direct-path in-memory stores have concrete DataStore dynamic types.
    *
