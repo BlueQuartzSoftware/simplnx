@@ -8,6 +8,8 @@ Sampling (Resample)
 
 This **Filter** changes the cell resolution of an **Image Geometry** by overlaying a new regular grid on the existing data and copying the *closest-cell* value from the old grid to each new cell. No interpolation is performed.
 
+The output Image Geometry retains the input geometry's length unit, including when **Perform In Place** is enabled.
+
 Copied child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
 
 The overall **bounds** of the volume do not change -- only the spacing and the number of cells. To scale the physical extent of a geometry, apply a scaling transformation with [Apply Transformation To Geometry](ApplyTransformationToGeometryFilter.md) instead.

@@ -10,7 +10,7 @@ This **Filter** computes the 2D **moment invariants** Omega-1 and Omega-2 for ea
 
 In practice these values measure how elongated or irregular a **Feature** is. A perfect circle gives the smallest possible Omega values; the more a **Feature** deviates toward an elongated ellipse or an irregular shape, the larger the Omega values become. By thresholding Omega-1 and Omega-2, you can classify **Features** by shape, for example separating round particles from elongated or irregular ones.
 
-Based on the paper by MacSleyne et al. [1], the algorithm calculates the 2D central moments for each **Feature** starting at *feature id = 1*. Because *feature id 0* is of special significance and is typically a matrix or background, it is ignored. If any **Feature** has a Z extent (Z Delta) greater than 1 cell, that **Feature** is skipped. The algorithm works strictly in the XY plane and is meant to be applied to a 2D image.
+Based on the paper by MacSleyne et al. [1], the algorithm calculates the 2D central moments for each **Feature** starting at *feature id = 1*. Because *feature id 0* is of special significance and is typically a matrix or background, it is ignored. If any **Feature** has a Z extent (Z Delta) greater than 1 cell, that **Feature** is skipped. The algorithm works strictly in the XY plane and is meant to be applied to a 2D image. A **Feature** with no cells, or with a Z extent greater than 1 cell, gets 0 for Omega-1, Omega-2 and every Central Moment.
 
 The **Filter** can optionally normalize the values to a unit circle (the *Normalize Moment Invariants* parameter) and can optionally save the full 3x3 *Central Moments* matrix as a Data Array in the *Feature Attribute Matrix*.
 

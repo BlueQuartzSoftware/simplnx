@@ -2,8 +2,13 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include "SurfaceMeshingTestUtils.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -14,22 +19,115 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
+#include <any>
 #include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
 #include <memory>
 #include <optional>
+#include <type_traits>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
 namespace fs = std::filesystem;
+
+namespace
+{
+template <class GeometryT>
+void RequirePreflightWithoutCellAttributeMatrix(UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
+{
+  DataStructure dataStructure;
+  auto* gridGeomPtr = GeometryT::Create(dataStructure, "Grid Geometry");
+  REQUIRE((gridGeomPtr != nullptr));
+  gridGeomPtr->setDimensions({4, 1, 1});
+  if constexpr(std::is_same_v<GeometryT, ImageGeom>)
+  {
+    gridGeomPtr->setOrigin({0, 0, 0});
+    gridGeomPtr->setSpacing({1, 1, 1});
+  }
+  REQUIRE((gridGeomPtr->getCellData() == nullptr));
+  REQUIRE((gridGeomPtr->getNumberOfCells() == 4));
+  auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
+  REQUIRE((elsewherePtr != nullptr));
+
+  usize tupleCount = 4;
+  bool fixProblemVoxels = false;
+  int32 expectedCode = 0;
+  SECTION("Matching Feature Id count with correction off")
+  {
+  }
+  SECTION("Mismatched Feature Id count")
+  {
+    tupleCount = 3;
+    expectedCode = -76533;
+  }
+  SECTION("Correction requires the geometry Cell Attribute Matrix")
+  {
+    fixProblemVoxels = true;
+    expectedCode = -76532;
+  }
+
+  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Ids", {tupleCount}, {1}, elsewherePtr->getId());
+  REQUIRE((featureIdsPtr != nullptr));
+  const std::array<int32, 4> featureIds{1, 1, 2, 2};
+  for(usize index = 0; index < tupleCount; index++)
+  {
+    (*featureIdsPtr)[index] = featureIds.at(index);
+  }
+
+  const QuickSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Grid Geometry"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Elsewhere", "Feature Ids"})));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(fixProblemVoxels));
+
+  const auto result = filter.preflight(dataStructure, args);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    if(algorithmScope != nullptr)
+    {
+      const auto executeResult = algorithmScope->executeFilter(filter, dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+      const auto triangleGeomPath = args.value<DataPath>(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath));
+      const auto& triangleGeomRef = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
+      // The 18 exterior quads and one interface quad each give two triangles.
+      // All 5 x 2 x 2 lattice vertices lie on the strip boundary.
+      CHECK((triangleGeomRef.getNumberOfFaces() == 38));
+      CHECK((triangleGeomRef.getNumberOfVertices() == 20));
+    }
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE((result.outputActions.errors().size() == 1));
+    CHECK((result.outputActions.errors().front().code == expectedCode));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Image Geometry without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  RequirePreflightWithoutCellAttributeMatrix<ImageGeom>(&scope);
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Rectilinear Grid without a Cell Attribute Matrix", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  RequirePreflightWithoutCellAttributeMatrix<RectGridGeom>();
+}
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning warnings", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {

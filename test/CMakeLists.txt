@@ -60,6 +60,7 @@ set(SIMPLNX_TEST_SRCS
   GeometryTestUtilities.hpp
   H5Test.cpp
   H5IOTest.cpp
+  ImageGeometryResampleTest.cpp
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp
   IParallelAlgorithmTest.cpp

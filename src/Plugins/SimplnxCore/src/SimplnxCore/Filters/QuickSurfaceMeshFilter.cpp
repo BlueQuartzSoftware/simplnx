@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/QuickSurfaceMesh.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
@@ -173,7 +174,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendDataObjectModificationNotification(featureIdsPath, DataObjectModification::ModifiedType::Modified);
   }
 
-  const usize elementTupleCount = gridGeom.getCellData()->getNumberOfTuples();
+  const usize elementTupleCount = gridGeom.getNumberOfCells();
   constexpr usize numElements = 0;
 
   // Create the Triangle Geometry action and store it

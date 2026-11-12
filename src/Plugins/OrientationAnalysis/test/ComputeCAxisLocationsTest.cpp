@@ -1,15 +1,26 @@
+#include <any>
 #include <array>
 #include <catch2/catch.hpp>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
+#include <string>
 #include <vector>
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -70,6 +81,88 @@ template <class T>
 bool ContainsCode(const std::vector<T>& vec, int32 code)
 {
   return std::find_if(vec.cbegin(), vec.cend(), [code](const T& item) { return item.code == code; }) != vec.cend();
+}
+
+void CheckUndefinedCAxisDirections(bool requireOutOfCore)
+{
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const float32 infinity = std::numeric_limits<float32>::infinity();
+  const std::array<std::array<float32, 4>, 5> quaternionFixtures = {
+      std::array<float32, 4>{0.0F, 0.0F, 0.0F, 1.0F},     std::array<float32, 4>{0.0F, 0.0F, 0.0F, 0.0F},      std::array<float32, 4>{nan, 0.0F, 0.0F, 1.0F},
+      std::array<float32, 4>{0.0F, infinity, 0.0F, 1.0F}, std::array<float32, 4>{0.0F, 0.0F, 0.0F, -infinity},
+  };
+  const std::array<uint32, 3> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Hexagonal_Low};
+  const usize cellCount = quaternionFixtures.size() * 2;
+  const DataPath quatsPath({"Quats"});
+  const DataPath phasesPath({"Phases"});
+  const DataPath crystalStructuresPath({"CrystalStructures"});
+  const DataPath outputPath({"CAxisLocations"});
+  DataStructure dataStructure;
+  auto* quatsPtr = Float32Array::Create(dataStructure, quatsPath.getTargetName(), DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, {cellCount}, {4}));
+  auto* phasesPtr = Int32Array::Create(dataStructure, phasesPath.getTargetName(), DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {cellCount}, {1}));
+  auto* crystalStructuresPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(),
+                                                   DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {crystalStructureValues.size()}, {1}));
+  REQUIRE((quatsPtr != nullptr));
+  REQUIRE((phasesPtr != nullptr));
+  REQUIRE((crystalStructuresPtr != nullptr));
+  for(usize phaseIdx = 0; phaseIdx < crystalStructureValues.size(); phaseIdx++)
+  {
+    crystalStructuresPtr->setValue(phaseIdx, crystalStructureValues.at(phaseIdx));
+  }
+  for(usize tupleIdx = 0; tupleIdx < cellCount; tupleIdx++)
+  {
+    phasesPtr->setValue(tupleIdx, tupleIdx < quaternionFixtures.size() ? 1 : 2);
+    for(usize componentIdx = 0; componentIdx < 4; componentIdx++)
+    {
+      quatsPtr->setComponent(tupleIdx, componentIdx, quaternionFixtures.at(tupleIdx % quaternionFixtures.size()).at(componentIdx));
+    }
+  }
+  if(requireOutOfCore)
+  {
+    REQUIRE((quatsPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore));
+    REQUIRE((phasesPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore));
+    REQUIRE((crystalStructuresPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore));
+    REQUIRE((quatsPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC"));
+    REQUIRE((phasesPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC"));
+    REQUIRE((crystalStructuresPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC"));
+  }
+  const ComputeCAxisLocationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(quatsPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(ComputeCAxisLocationsFilter::k_CAxisLocationsArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const Float32Array* outputPtr = nullptr;
+  REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<Float32Array>(outputPath));
+  REQUIRE((outputPtr->getNumberOfTuples() == cellCount));
+  REQUIRE((outputPtr->getNumberOfComponents() == 3));
+  if(requireOutOfCore)
+  {
+    REQUIRE((outputPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore));
+    REQUIRE((outputPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC"));
+  }
+  // Identity preserves [001]. The other fixtures have no finite, nonzero c-axis direction.
+  const std::array<float32, 3> identityDirection = {0.0F, 0.0F, 1.0F};
+  for(usize tupleIdx = 0; tupleIdx < cellCount; tupleIdx++)
+  {
+    for(usize componentIdx = 0; componentIdx < 3; componentIdx++)
+    {
+      CAPTURE(tupleIdx, componentIdx);
+      if(tupleIdx % quaternionFixtures.size() == 0)
+      {
+        REQUIRE((outputPtr->getValue((tupleIdx * 3) + componentIdx) == Approx(identityDirection.at(componentIdx)).margin(1.0E-7F)));
+      }
+      else
+      {
+        REQUIRE(std::isnan(outputPtr->getValue((tupleIdx * 3) + componentIdx)));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -488,4 +581,18 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 65536-
   REQUIRE(cAxisLocations[tailOffset + 2] == Approx(0.0F).margin(k_Tolerance));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Undefined quaternion directions", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+  CheckUndefinedCAxisDirections(false);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: genuine HDF5 undefined quaternion directions", "[OrientationAnalysis][ComputeCAxisLocationsFilter][.OocStoreContract]")
+{
+  REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  CheckUndefinedCAxisDirections(true);
 }

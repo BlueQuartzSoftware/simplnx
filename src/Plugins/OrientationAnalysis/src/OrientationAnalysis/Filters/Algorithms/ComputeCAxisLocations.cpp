@@ -8,6 +8,8 @@
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
+#include <cmath>
+
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 
@@ -112,7 +114,15 @@ Result<> ComputeCAxisLocations::operator()()
         const usize qi = chunkTupleIdx * 4;
         ebsdlib::OrientationMatrixFType oMatrix = ebsdlib::QuaternionFType(quatBuf[qi], quatBuf[qi + 1], quatBuf[qi + 2], quatBuf[qi + 3]).toOrientationMatrix();
         c1 = oMatrix.transpose() * cAxis;
-        c1.normalize();
+        const float32 cAxisNorm = c1.norm();
+        if(!std::isfinite(cAxisNorm) || cAxisNorm == 0.0F)
+        {
+          outputBuf[chunkTupleIdx * 3] = NAN;
+          outputBuf[(chunkTupleIdx * 3) + 1] = NAN;
+          outputBuf[(chunkTupleIdx * 3) + 2] = NAN;
+          continue;
+        }
+        c1 /= cAxisNorm;
         if(c1[2] < 0)
         {
           c1 *= -1.0f;
