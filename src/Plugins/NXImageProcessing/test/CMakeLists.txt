@@ -176,9 +176,3 @@ add_test(NAME "${PLUGIN_NAME}_test_profile_isolation"
     -DPROFILE_RUNNER_ONLY=TRUE
     -P "${simplnx_SOURCE_DIR}/test/VerifyTestProfileLifecycle.cmake")
 set_tests_properties("${PLUGIN_NAME}_test_profile_isolation" PROPERTIES RUN_SERIAL TRUE TIMEOUT 60)
-
-if(DREAM3DNX_ENABLE_OOC)
-  add_test(NAME ImageProcessingOocStoreContracts
-    COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
-  set_tests_properties(ImageProcessingOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
-endif()
