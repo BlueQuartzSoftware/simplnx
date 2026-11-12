@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <EbsdLib/IO/HKL/CtfConstants.h>
 #include <EbsdLib/IO/TSL/AngConstants.h>
@@ -140,18 +141,20 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     inputPath = fs::path(files[0]);
   }
 
-  if(inputPath.extension() == ("." + ebsdlib::Ctf::FileExt))
+  if(StringUtilities::toLower(inputPath.extension().string()) == ("." + ebsdlib::Ctf::FileExt))
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
+  if(!ConvertHexGridToSquareGrid::IsAngFile(inputPath))
   {
-    return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
+    return MakePreflightErrorResult(
+        -44602, fmt::format("The file '{}' has the extension '{}'. This filter reads only TSL .ang files. The extension can use any letter case, for example .ang or .ANG. Select an .ang file.",
+                            inputPath.string(), inputPath.extension().string()));
   }
 
   if(!fs::exists(inputPath))
   {
-    return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
+    return MakePreflightErrorResult(-44603, "Please select a valid file path to run");
   }
 
   if(!fs::exists(s_HeaderCache[m_InstanceId].workingPath) || s_HeaderCache[m_InstanceId].workingPath != inputPath ||
