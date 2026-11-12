@@ -136,10 +136,36 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
   if(const int err = reader->readHeaderOnly(); err < 0)
   {
-    return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
+    return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header of scan '{}' in '{}'.\n  Error Code: {}\n  Message: {}", pSelectedScanNamesValue.scanNames.front(),
+                                                       pSelectedScanNamesValue.inputFilePath.string(), err, reader->getErrorMessage()));
   }
 
-  // create the Image Geometry and it's attribute matrices
+  // Keep the first header for output actions and metadata; inspect later scans without reading point arrays.
+  auto scanCheckReader = ebsdlib::H5EspritReader::New();
+  scanCheckReader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
+  scanCheckReader->setReadPatternData(false);
+  for(const auto& scanName : pSelectedScanNamesValue.scanNames)
+  {
+    if(scanName == pSelectedScanNamesValue.scanNames.front())
+    {
+      continue;
+    }
+    scanCheckReader->setHDF5Path(scanName);
+    if(const int err = scanCheckReader->readHeaderOnly(); err < 0)
+    {
+      return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header of scan '{}' in '{}'.\n  Error Code: {}\n  Message: {}", scanName,
+                                                         pSelectedScanNamesValue.inputFilePath.string(), err, scanCheckReader->getErrorMessage()));
+    }
+    if(scanCheckReader->getXDimension() != reader->getXDimension() || scanCheckReader->getYDimension() != reader->getYDimension())
+    {
+      return MakePreflightErrorResult(-9684, fmt::format("Scan '{}' in file '{}' has {} columns and {} rows, but the first selected scan '{}' has {} columns and {} rows. "
+                                                         "All selected scans must have the same number of columns and rows. Select scans with the same dimensions.",
+                                                         scanName, pSelectedScanNamesValue.inputFilePath.string(), scanCheckReader->getXDimension(), scanCheckReader->getYDimension(),
+                                                         pSelectedScanNamesValue.scanNames.front(), reader->getXDimension(), reader->getYDimension()));
+    }
+  }
+
+  // Create the Image Geometry and its attribute matrices.
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {

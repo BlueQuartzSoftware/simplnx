@@ -8,6 +8,8 @@ IO (Input)
 
 This filter reads a single `.h5` file (the HDF5-based EBSD export from EDAX OIM Analysis software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
 
+All selected scans must have the same number of columns and rows; otherwise, the filter reports an error.
+
 The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample). When stacking multiple slices into a 3D volume, the *Z Spacing* parameter sets the out-of-plane distance between adjacent slices in microns, and the *Origin* parameter sets the location of the volume's corner in microns.
 
 ![User interface before entering a proper "Z Spacing" value and selecting which scans to include.](Images/ReadEDAXH5_1.png)

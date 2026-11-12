@@ -261,6 +261,9 @@ output-type option that the writing code ignores.
   Get the cell count from the geometry, never from `getCellData()->getNumberOfTuples()`.
 - **Sibling inputs** that the algorithm reads with the same index have the same tuple count:
   `CheckArraysHaveSameTupleCount()`. Include an optional input (a mask) only when its option is on.
+- **Scans stacked into one Image Geometry:** compare every selected scan's columns and rows separately with the
+  first scan, using header-only reads in preflight. Recheck the loaded scan against the destination geometry before
+  copying cell data, because the file can change after preflight. Equal point counts do not imply equal dimensions.
 - **Outputs sized from an Attribute Matrix:** every input that sets the loop count has that matrix's tuple count.
 - **A filter that changes Feature Ids, their sibling cell arrays or the Feature Attribute Matrix in place** requires
   Feature Ids in the geometry's own Cell Attribute Matrix. Check membership by object ID, not by path: one DataObject
@@ -274,7 +277,8 @@ Every message names both paths and both counts.
 **Example of the broken rule:** `AddBadData` did not check its Boundary Euclidean Distances input against the
 geometry's cell count, nor did `ComputeFeatureSizes` and `WriteINLFile` (PR #1840). `ErodeDilateBadData`, `FillBadData`
 and `RemoveFlaggedFeatures` took the arrays to change from `featureIds.getParent()` without checking that parent, and
-compared selected paths as strings (PR #1829).
+compared selected paths as strings (PR #1829). `ReadH5OimDataFilter` and `ReadH5EspritDataFilter` sized a volume from
+only the first scan, then copied that many points from smaller later scans without rejecting them (issue #1882).
 
 **Why:** an array with the wrong tuple count is indexed past its end or reads unrelated tuples. A path comparison misses
 an array selected through another path to the same Attribute Matrix, and an unrelated parent selects the wrong arrays
@@ -283,6 +287,7 @@ to change.
 **What to look for:**
 
 - A geometry-indexed input checked only against its siblings, or not at all.
+- A multi-scan reader that checks only the first header or compares only the product of columns and rows.
 - `featureIdsPath.getParent()` used to find the arrays to change.
 - `==` between selected `DataPath`s to decide membership.
 
