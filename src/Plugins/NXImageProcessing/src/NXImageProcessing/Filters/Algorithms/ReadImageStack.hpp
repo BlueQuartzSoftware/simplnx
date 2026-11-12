@@ -85,7 +85,7 @@ struct NXIMAGEPROCESSING_EXPORT ReadImageStackInputValues
  * @param imageGeomPath Identifies the selected stack geometry.
  * @return Path with the selected geometry name followed by "_resampled".
  */
-IMAGEPROCESSING_EXPORT DataPath ResampledTemporaryGeometryPath(const DataPath& imageGeomPath);
+NXIMAGEPROCESSING_EXPORT DataPath ResampledTemporaryGeometryPath(const DataPath& imageGeomPath);
 
 /**
  * @class ReadImageStack
