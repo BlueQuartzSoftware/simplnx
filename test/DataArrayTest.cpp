@@ -2799,3 +2799,77 @@ TEST_CASE("DataStore resident value copies retain destination initialization", "
   REQUIRE(destination.copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
   CHECK(actual == std::array<int32, 6>{10, 11, 20, 21, 7, 7});
 }
+
+namespace
+{
+// Exercise buffered copying deterministically without claiming disk-backed storage.
+class BufferedCopyTestStore : public DataStore<int32>
+{
+public:
+  using DataStore<int32>::DataStore;
+  BufferedCopyTestStore(const BufferedCopyTestStore&) = default;
+  BufferedCopyTestStore(BufferedCopyTestStore&&) = default;
+  BufferedCopyTestStore& operator=(const BufferedCopyTestStore&) = delete;
+  BufferedCopyTestStore& operator=(BufferedCopyTestStore&&) = delete;
+  ~BufferedCopyTestStore() override = default;
+  IDataStore::StoreType getStoreType() const override
+  {
+    return IDataStore::StoreType::OutOfCore;
+  }
+};
+} // namespace
+
+TEST_CASE("DataArrayUtilities CopyData overlap", "[DataArrayUtilities][L05]")
+{
+  UnitTest::LoadPlugins();
+  const bool buffered = GENERATE(false, true);
+  const bool sharedStore = GENERATE(false, true);
+  const usize components = GENERATE(usize{1}, usize{3});
+  const usize tuples = GENERATE(usize{8}, usize{70000});
+  const usize destination = GENERATE(usize{0}, usize{1}, usize{2});
+  const usize source = 1;
+  const usize count = tuples - 2;
+  CAPTURE(buffered, sharedStore, components, tuples, destination);
+  DataStructure dataStructure;
+  std::shared_ptr<AbstractDataStore<int32>> store;
+  if(buffered)
+  {
+    store = std::make_shared<BufferedCopyTestStore>(ShapeType{tuples}, ShapeType{components}, 0);
+  }
+  else
+  {
+    store = std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{components}, 0);
+  }
+  auto* values = Int32Array::Create(dataStructure, "Values", store);
+  REQUIRE(values != nullptr);
+  for(usize i = 0; i < values->getSize(); ++i)
+  {
+    (*values)[i] = static_cast<int32>(i);
+  }
+  auto* sourceValues = sharedStore ? Int32Array::Create(dataStructure, "Alias", store) : values;
+  REQUIRE(sourceValues != nullptr);
+  auto result = CopyFromArray::CopyData(*sourceValues, *values, destination, source, count);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  for(usize i = 0; i < values->getSize(); ++i)
+  {
+    const bool copied = i >= destination * components && i < (destination + count) * components;
+    const int32 expected = static_cast<int32>(copied ? i - destination * components + source * components : i);
+    CAPTURE(i);
+    REQUIRE((*values)[i] == expected);
+  }
+}
+
+TEST_CASE("DataArrayUtilities CopyData string overlap", "[DataArrayUtilities][L05]")
+{
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* values = StringArray::CreateWithValues(dataStructure, "Values", {6}, {"a", "b", "c", "d", "e", "f"});
+  REQUIRE(values != nullptr);
+  auto result = CopyFromArray::CopyData(*values, *values, 2, 1, 3);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const std::vector<std::string> expected = {"a", "b", "b", "c", "d", "f"};
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    CHECK((*values)[i] == expected[i]);
+  }
+}

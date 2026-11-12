@@ -1635,3 +1635,103 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
     }
   }
 }
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Function result indexing", "[SimplnxCore][ArrayCalculatorFilter]")
+{
+  DataStructure ds;
+  auto* matrix = AttributeMatrix::Create(ds, k_AttributeMatrix, {2});
+  REQUIRE(matrix != nullptr);
+  auto* first = Float64Array::CreateWithStore<Float64DataStore>(ds, "MC1", {2}, {3}, matrix->getId());
+  auto* second = Float64Array::CreateWithStore<Float64DataStore>(ds, "MC2", {2}, {3}, matrix->getId());
+  REQUIRE(first != nullptr);
+  REQUIRE(second != nullptr);
+  const std::vector<float64> firstValues = {1, -8, 3, 9, 5, 2};
+  const std::vector<float64> secondValues = {4, 6, 2, 7, -3, 10};
+  for(usize i = 0; i < firstValues.size(); i++)
+  {
+    (*first)[i] = firstValues[i];
+    (*second)[i] = secondValues[i];
+  }
+
+  std::string equation;
+  std::vector<float64> expected;
+  bool expectInvalid = false;
+  // Literal, hand-calculated results for two tuples with three components each.
+  SECTION("Maximum result component")
+  {
+    equation = R"(max("MC1", "MC2")[1])";
+    expected = {6, 5};
+  }
+  SECTION("Minimum result component")
+  {
+    equation = R"(min("MC1", "MC2")[0])";
+    expected = {1, 7};
+  }
+  SECTION("Maximum result tuple and component")
+  {
+    equation = R"(max("MC1", "MC2")[1, 2])";
+    expected = {10};
+  }
+  SECTION("Array argument indexing remains a shape error")
+  {
+    equation = R"(max("MC1", "MC2"[1]))";
+    expectInvalid = true;
+  }
+  SECTION("Parenthesized sum component")
+  {
+    equation = R"(("MC1" + "MC2")[1])";
+    expected = {-2, 2};
+  }
+  SECTION("Unary function result component")
+  {
+    equation = R"(abs("MC1")[1])";
+    expected = {8, 5};
+  }
+  SECTION("Unary function result tuple and component")
+  {
+    equation = R"(abs("MC1")[0, 1])";
+    expected = {8};
+  }
+  SECTION("Nested function result component")
+  {
+    equation = R"(max(abs("MC1"), "MC2")[1])";
+    expected = {8, 5};
+  }
+  CAPTURE(equation);
+  ArrayCalculatorFilter filter;
+  Arguments args;
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                      std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, equation, CalculatorParameter::Radians}));
+  args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+  const DataPath outputPath({"Result"});
+  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+  const auto preflight = filter.preflight(ds, args);
+  if(expectInvalid)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().front().code == static_cast<int32>(CalculatorErrorCode::InconsistentCompDims));
+    UnitTest::CheckArraysInheritTupleDims(ds);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  DataStructure preview = ds;
+  auto actions = preflight.outputActions.value();
+  const auto applied = actions.applyAll(preview, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  REQUIRE_NOTHROW(preview.getDataRefAs<Float64Array>(outputPath));
+  const auto& planned = preview.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE(planned.getTupleShape() == ShapeType{expected.size()});
+  REQUIRE(planned.getComponentShape() == ShapeType{1});
+  const auto executed = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
+  const auto& output = ds.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE(output.getTupleShape() == planned.getTupleShape());
+  REQUIRE(output.getComponentShape() == planned.getComponentShape());
+  for(usize i = 0; i < expected.size(); i++)
+  {
+    REQUIRE(output[i] == expected[i]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(preview);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}

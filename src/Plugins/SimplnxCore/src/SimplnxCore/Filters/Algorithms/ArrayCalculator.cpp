@@ -1764,6 +1764,15 @@ Result<> ArrayCalculatorParser::parse()
                                fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
       }
       opStack.pop_back();
+      // Complete the function call before a following postfix extraction consumes its result.
+      if(!opStack.empty() && opStack.back().kind == ParsedItem::Kind::Operator && opStack.back().op != nullptr && opStack.back().op->kind == OperatorDef::Function)
+      {
+        RpnItem rpn;
+        rpn.type = RpnItem::Type::Operator;
+        rpn.op = opStack.back().op;
+        m_RpnItems.push_back(rpn);
+        opStack.pop_back();
+      }
       break;
     }
 

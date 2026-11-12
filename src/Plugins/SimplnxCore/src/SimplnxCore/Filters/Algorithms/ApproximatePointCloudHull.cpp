@@ -84,22 +84,16 @@ Result<> ApproximatePointCloudHull::operator()()
     }
   }
 
-  for(auto i = 0; i < 3; i++)
-  {
-    meshMinExtents[i] -= (inverseResolution[i] / 2.0f);
-    meshMaxExtents[i] += (inverseResolution[i] / 2.0f);
-  }
-
   int64 bboxMin[3] = {0, 0, 0};
   int64 bboxMax[3] = {0, 0, 0};
 
-  bboxMin[0] = static_cast<int64>(std::floor(meshMinExtents[0] * inverseResolution[0]));
-  bboxMin[1] = static_cast<int64>(std::floor(meshMinExtents[1] * inverseResolution[1]));
-  bboxMin[2] = static_cast<int64>(std::floor(meshMinExtents[2] * inverseResolution[2]));
-
-  bboxMax[0] = static_cast<int64>(std::floor(meshMaxExtents[0] * inverseResolution[0]));
-  bboxMax[1] = static_cast<int64>(std::floor(meshMaxExtents[1] * inverseResolution[1]));
-  bboxMax[2] = static_cast<int64>(std::floor(meshMaxExtents[2] * inverseResolution[2]));
+  // Add an empty one-voxel border on each side of the occupied grid.
+  // Both padding and vertex mapping use integer voxel indices so float rounding cannot remove the border.
+  for(usize i = 0; i < 3; i++)
+  {
+    bboxMin[i] = static_cast<int64>(std::floor(meshMinExtents[i] * inverseResolution[i])) - 1;
+    bboxMax[i] = static_cast<int64>(std::floor(meshMaxExtents[i] * inverseResolution[i])) + 1;
+  }
 
   auto dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
   auto dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
@@ -126,9 +120,9 @@ Result<> ApproximatePointCloudHull::operator()()
         progressThrottle.updatePercent(v);
       }
     }
-    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0]) - static_cast<float>(bboxMin[0]));
-    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1]) - static_cast<float>(bboxMin[1]));
-    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2]) - static_cast<float>(bboxMin[2]));
+    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0])) - bboxMin[0];
+    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1])) - bboxMin[1];
+    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2])) - bboxMin[2];
     int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
     vertsInVoxels[index].push_back(v);
   }

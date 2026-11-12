@@ -714,17 +714,22 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
   const usize medianPosition = (stats.count / 2) + 1;
   usize cumulativeFrequency = 0;
   uint64 maxCount = 0;
-  std::optional<T> previousValue;
+  std::optional<T> lowerMiddleValue;
   bool medianFound = false;
   Result<> result = ScanSortedGroups<T>(sortedPath, stats.count, shouldCancel, reportProgress, [&](T value, uint64 frequency) {
     stats.uniqueValCount++;
     maxCount = std::max(maxCount, frequency);
     cumulativeFrequency += frequency;
+    if(stats.count % 2 == 0 && !lowerMiddleValue.has_value() && cumulativeFrequency >= stats.count / 2)
+    {
+      lowerMiddleValue = value;
+    }
     if(!medianFound && cumulativeFrequency >= medianPosition)
     {
-      if(stats.count % 2 == 0 && cumulativeFrequency == medianPosition && previousValue.has_value())
+      // Average only when the lower middle rank is in an earlier group. One shared value is used as is, so it cannot overflow.
+      if(stats.count % 2 == 0 && cumulativeFrequency - frequency >= stats.count / 2)
       {
-        stats.medianValue = (static_cast<float32>(previousValue.value()) + static_cast<float32>(value)) / 2.0f;
+        stats.medianValue = static_cast<float32>((static_cast<float64>(lowerMiddleValue.value()) + static_cast<float64>(value)) / 2.0);
       }
       else
       {
@@ -732,7 +737,6 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
       }
       medianFound = true;
     }
-    previousValue = value;
   });
   if(result.invalid() || shouldCancel || modesList == nullptr)
   {

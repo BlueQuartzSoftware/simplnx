@@ -32,5 +32,5 @@ Result<> CreatePythonSkeleton::operator()()
     return nx::core::WritePythonFiltersToPlugin(m_InputValues->pluginInputDir, m_InputValues->filterNames);
   }
 
-  return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
+  return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginHumanName, "Description", m_InputValues->filterNames);
 }

@@ -75,6 +75,7 @@ set(SIMPLNX_TEST_SRCS
   NeighborUtilitiesTest.cpp
   ParallelChunkCodecTest.cpp
   NxInfoTest.cpp
+  RenameDataActionTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
   PipelineFilterMessagingTest.cpp

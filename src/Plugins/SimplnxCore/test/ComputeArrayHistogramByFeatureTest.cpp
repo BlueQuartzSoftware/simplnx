@@ -230,6 +230,7 @@ std::vector<int32> executeInt32ModalCase(UnitTest::AlgorithmTestScope& scope, co
   const DataPath histogramPath = outputPath.createChildPath("\"Values\" Histogram");
   if(countsResult != nullptr)
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(histogramPath.createChildPath("Bin Counts")));
     const auto& counts = dataStructure.getDataRefAs<UInt64Array>(histogramPath.createChildPath("Bin Counts"));
     countsResult->resize(counts.getDataStoreRef().getSize());
     auto countsReadResult = counts.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint64>(countsResult->data(), countsResult->size()));
@@ -237,12 +238,15 @@ std::vector<int32> executeInt32ModalCase(UnitTest::AlgorithmTestScope& scope, co
   }
   if(rangesResult != nullptr)
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(histogramPath.createChildPath("Bin Ranges")));
     const auto& ranges = dataStructure.getDataRefAs<Int32Array>(histogramPath.createChildPath("Bin Ranges"));
     rangesResult->resize(ranges.getDataStoreRef().getSize());
     auto rangesReadResult = ranges.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(rangesResult->data(), rangesResult->size()));
     SIMPLNX_RESULT_REQUIRE_VALID(rangesReadResult);
   }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(histogramPath.createChildPath("Modal Bin Ranges")));
   const auto& modal = dataStructure.getDataRefAs<NeighborList<int32>>(histogramPath.createChildPath("Modal Bin Ranges"));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
   if(modal.getNumberOfTuples() == 0)
   {
     return {};
@@ -428,14 +432,16 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
 
     REQUIRE(modalBinRange0[0] == 1);
     REQUIRE(modalBinRange0[1] == 15);
-    REQUIRE(modalBinRange0[2] == 30);
-    REQUIRE(modalBinRange0[3] == 44);
-    REQUIRE(modalBinRange1[0] == 11);
-    REQUIRE(modalBinRange1[1] == 14);
+    // Modes 1 and 73 occupy bins [1, 15] and [59, 74]; mode 20 occupies [17, 21].
+    REQUIRE(modalBinRange0[2] == 59);
+    REQUIRE(modalBinRange0[3] == 74);
+    REQUIRE(modalBinRange1[0] == 17);
+    REQUIRE(modalBinRange1[1] == 21);
     REQUIRE(modalBinRange2[0] == 10);
     REQUIRE(modalBinRange2[1] == 12);
-    REQUIRE(modalBinRange2[2] == 15);
-    REQUIRE(modalBinRange2[3] == 17);
+    // Feature 2 has tied modes 10 and 22, in bins [10, 12] and [20, 23].
+    REQUIRE(modalBinRange2[2] == 20);
+    REQUIRE(modalBinRange2[3] == 23);
   }
 
   // No mask keeps the Scanline path on bulk reads without a mask buffer.
@@ -540,7 +546,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline bounded modal f
   // exercise the no-external-sort bounded fallback on an in-memory store.
   UnitTest::AlgorithmTestScope scope(*scanlineScenario);
   const std::vector<int32> oneFeature(4, 0);
-  CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 2, 0.0, 4.0, true, DataPath({"TiedAscending"})) == std::vector<int32>{0, 2, 2, 2});
+  // Modes 1 and 2 occupy the two width-2 bins [0, 2] and [2, 4].
+  CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 2, 0.0, 4.0, true, DataPath({"TiedAscending"})) == std::vector<int32>{0, 2, 2, 4});
   CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 1, 0.0, 4.0, true, DataPath({"DuplicatePairs"})) == std::vector<int32>{0, 4, 0, 4});
   std::vector<int32> uniqueValues(1024);
   std::iota(uniqueValues.begin(), uniqueValues.end(), 0);
@@ -805,10 +812,12 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
     std::vector<int32> ranges;
     std::vector<std::vector<int32>> modalLists;
     const auto modalRange = executeInt32ModalCase(scope, values, featureIds, 2, 7.0, 7.0, true, DataPath({"Degenerate"}), &counts, &ranges, &modalLists);
-    // Every populated feature must use the complete range [0, numFeatures).
-    REQUIRE(modalRange == std::vector<int32>{0, 1024});
-    REQUIRE(modalLists[512] == modalRange);
-    REQUIRE(modalLists[1023] == modalRange);
+    // The user supplied the single degenerate bin [7, 7] for every feature.
+    CHECK(modalRange == std::vector<int32>{7, 7});
+    for(const auto& modalList : modalLists)
+    {
+      CHECK(modalList == std::vector<int32>{7, 7});
+    }
     REQUIRE(counts.size() == k_FeatureCount * 2);
     REQUIRE(counts[0] == 1);
     REQUIRE(counts[1] == 0);
@@ -816,4 +825,67 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
     REQUIRE(ranges.size() == k_FeatureCount * 4);
     REQUIRE(std::all_of(ranges.begin(), ranges.end(), [](int32 value) { return value == 7; }));
   }
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate data range modal oracle", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  UnitTest::LoadPlugins();
+  DataStructure dataStructure;
+  auto* group = DataGroup::Create(dataStructure, "Input");
+  REQUIRE(group != nullptr);
+  auto* values = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Values", {4}, {1}, group->getId());
+  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {4}, {1}, group->getId());
+  REQUIRE(values != nullptr);
+  REQUIRE(ids != nullptr);
+  // At 2^25 and 2^26, float32 addition of 1 rounds back to the same value.
+  // Each feature therefore has a literal, data-derived degenerate range.
+  const std::array<float32, 2> expected = {33554432.0F, 67108864.0F};
+  for(usize index = 0; index < 4; ++index)
+  {
+    values->setValue(index, expected[index / 2]);
+    ids->setValue(index, static_cast<int32>(index / 2));
+  }
+  ComputeArrayHistogramByFeatureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CalculateModalBinRanges_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({DataPath({"Input", "Values"})}));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const DataPath output({"Histograms", "\"Values\" Histogram"});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges")));
+  const auto& modal = dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges"));
+  const auto& ranges = dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges"));
+  REQUIRE(modal.getNumberOfTuples() == 2);
+  for(usize feature = 0; feature < 2; ++feature)
+  {
+    CHECK(modal.getList(feature) == std::vector<float32>{expected[feature], expected[feature]});
+    for(usize component = 0; component < 4; ++component)
+    {
+      CHECK(ranges[feature * 4 + component] == expected[feature]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired bounds in later bins", "[SimplnxCore][ComputeArrayHistogram]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const std::vector<int32> featureIds(4, 0);
+  // Width-2 bins over [0, 8) put mode 5 in [4, 6] and mode 7 in [6, 8].
+  CHECK(executeInt32ModalCase(scope, {0, 5, 5, 7}, featureIds, 4, 0.0, 8.0, true, DataPath({"LaterBin"})) == std::vector<int32>{4, 6});
+  CHECK(executeInt32ModalCase(scope, {0, 7, 7, 5}, featureIds, 4, 0.0, 8.0, true, DataPath({"LastBin"})) == std::vector<int32>{6, 8});
+  // The tied modes 1 and 2 occupy [0, 2] and [2, 4] in ascending value order.
+  CHECK(executeInt32ModalCase(scope, {2, 1, 2, 1}, featureIds, 2, 0.0, 4.0, true, DataPath({"TiedBins"})) == std::vector<int32>{0, 2, 2, 4});
 }

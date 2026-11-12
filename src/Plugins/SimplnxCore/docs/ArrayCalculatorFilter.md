@@ -87,7 +87,7 @@ If the infix expression `Foo + Bar` then the output values are as follows:
 
     [{0, 0, 0}, {0, 0, 0}]
 
-Alternatively, multi-component arrays may be entered specifying a particular *index*. In this case, operations are performed tuple-by-tuple, but only for the specific component specified in each array, so the output array will always be a scalar value. Indices are specified using `[]` notation after the array name. Additionally, indices are *zero based*.  For example, `Foo[1]` is valid syntax, but `Foo[3]` is not valid. Additionally, indices must be positive integers only.  If any array in the infix expression uses index notation, then all arrays must specify an index.  
+Alternatively, multi-component arrays may be entered specifying a particular *index*. In this case, operations are performed tuple-by-tuple, but only for the specific component specified in each array, so the output array will always be a scalar value. Indices use `[c]` for a component or `[t, c]` for a tuple and component. Either form can follow an array name, a function call, or a parenthesized expression. For example, `max("MC1","MC2")[1]` selects component 1 of the function result. Additionally, indices are *zero based*.  For example, `Foo[1]` is valid syntax, but `Foo[3]` is not valid. Additionally, indices must be positive integers only.  If any array in the infix expression uses index notation, then all arrays must specify an index.
 
 Consider the infix expression `Foo[0] + Foo[1] + Foo[2]`. This expression will add all the components of *Foo* for each tuple. The result of this expression is the following:
 

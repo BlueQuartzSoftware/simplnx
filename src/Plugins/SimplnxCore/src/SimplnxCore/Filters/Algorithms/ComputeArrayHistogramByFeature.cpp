@@ -339,9 +339,9 @@ public:
           {
             if(std::fabs(increment) < 1E-10)
             {
-              // The modal contract uses [0, featureCount), independent of worker range.
-              m_ModalBinRangesList->addEntry(j, static_cast<Type>(0));
-              m_ModalBinRangesList->addEntry(j, static_cast<Type>(m_HistogramStore.getNumberOfTuples()));
+              // Use this feature's histogram bounds for the degenerate modal range.
+              m_ModalBinRangesList->addEntry(j, ranges.front());
+              m_ModalBinRangesList->addEntry(j, ranges.back());
             }
             else if(!modalMaps[localFeatureIndex].empty())
             {
@@ -356,8 +356,8 @@ public:
                   const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
                   if((modalBin >= 0) && (modalBin < m_NumBins))
                   {
-                    m_ModalBinRangesList->addEntry(j, ranges[modalBin]);
-                    m_ModalBinRangesList->addEntry(j, ranges[modalBin + 1]);
+                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin]);
+                    m_ModalBinRangesList->addEntry(j, ranges[2 * modalBin + 1]);
                   }
                 }
               }
@@ -608,8 +608,8 @@ int32 calculateSafeBin(const T& value, const T& minimum, float32 increment)
  * @param maximum Exclusive histogram upper bound.
  * @param increment Bin width.
  *
- * Values outside the histogram range are omitted. The Direct-compatible layout
- * indexes the feature's flat range buffer by bin.
+ * Values outside the histogram range are omitted. Each bin has a lower and upper bound
+ * in the feature's flat range buffer.
  */
 template <typename T>
 void appendModalRange(NeighborList<T>& modalBinRanges, usize feature, const T& value, const T* ranges, usize bins, const T& minimum, const T& maximum, float32 increment)
@@ -621,7 +621,7 @@ void appendModalRange(NeighborList<T>& modalBinRanges, usize feature, const T& v
   const int32 bin = calculateSafeBin(value, minimum, increment);
   if(bin >= 0 && static_cast<usize>(bin) < bins)
   {
-    const usize rangeOffset = feature * bins * 2 + static_cast<usize>(bin);
+    const usize rangeOffset = feature * bins * 2 + 2 * static_cast<usize>(bin);
     modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset]);
     modalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset + 1]);
   }
@@ -1157,9 +1157,10 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
       {
         if(lengths[feature] > 0 && std::fabs(increments[feature]) < 1.0E-10F)
         {
-          // Degenerate modal ranges use [0, numFeatures) for every populated feature.
-          typedModalBinRanges.addEntry(static_cast<int32>(feature), static_cast<T>(0));
-          typedModalBinRanges.addEntry(static_cast<int32>(feature), static_cast<T>(numFeatures));
+          // Use this feature's histogram bounds for the degenerate modal range.
+          const usize rangeOffset = feature * bins * 2;
+          typedModalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset]);
+          typedModalBinRanges.addEntry(static_cast<int32>(feature), ranges[rangeOffset + bins * 2 - 1]);
         }
       }
       if(externalSort != nullptr)

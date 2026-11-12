@@ -16,7 +16,7 @@ public:
   /**
    * @brief Constructs a RenameDataAction.
    * @param path The path to the DataObject to rename
-   * @param newName The new name for the object
+   * @param newName A non-empty object name without '/'.
    * @param overwrite Whether to overwrite an existing object with the new name
    */
   RenameDataAction(const DataPath& path, const std::string& newName, bool overwrite = false);
@@ -30,7 +30,9 @@ public:
 
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
-   * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
+   * Invalid names fail before the DataStructure changes. Overwrite removes only the selected placement.
+   * Other placements retain their children. Objects with no placement are deleted.
+   * Other errors can leave partial changes in the DataStructure.
    * @param dataStructure The DataStructure to modify
    * @param mode The mode (Preflight or Execute)
    * @return Result<> Result with any errors or warnings

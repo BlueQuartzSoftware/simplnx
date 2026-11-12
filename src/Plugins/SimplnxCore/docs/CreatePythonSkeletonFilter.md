@@ -10,6 +10,10 @@ The **Create Python Plugin and/or Filters** is a tool in the DREAM3D-NX environm
 
 The filter is driven entirely by its parameters (described in the auto-generated table below), which dictate whether a new plugin is created or an existing one is modified.
 
+### Filter Names
+
+Each comma-separated name must be an ASCII Python identifier. The first character must be a letter or underscore. Later characters can also be digits. Names cannot be Python keywords or `__debug__`. The filter ignores white space around each name and one trailing empty entry, so `A, B,` creates filters `A` and `B`. Empty entries elsewhere, including `A,,B` and `A, ,B`, are rejected. An empty or white-space-only list creates no filters.
+
 ## Usage
 
 ### Generating a New Plugin

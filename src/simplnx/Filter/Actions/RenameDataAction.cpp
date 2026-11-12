@@ -1,44 +1,60 @@
 #include "RenameDataAction.hpp"
 
-#include "simplnx/DataStructure/EmptyDataStore.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 
 #include <fmt/core.h>
+
+#include <optional>
 
 using namespace nx::core;
 
 namespace
 {
-Result<> TerminateNodesRecursively(DataStructure& dataStructure, DataObject::IdType id, IDataAction::Mode mode, const bool checkDependence)
-{
-  Result<> result = {};
-  DataObject* node = dataStructure.getData(id);
+constexpr int32 k_OtherParentNameClash = -6605;
+constexpr int32 k_RenameFailed = -6606;
+constexpr int32 k_DetachTargetFailed = -6607;
+constexpr int32 k_InvalidNewName = -6608;
 
-  if(checkDependence)
+/**
+ * @brief Removes one placement and deletes descendants that have no remaining placement.
+ * @param dataStructure The graph to modify.
+ * @param id Identifies the object whose placement is removed.
+ * @param parentId Identifies the selected parent, or zero for the root.
+ * @param selectedPath The original selected path for failure diagnostics.
+ * @return The first failure to remove a placement, or success.
+ */
+Result<> RemovePlacementRecursively(DataStructure& dataStructure, DataObject::IdType id, DataObject::IdType parentId, const DataPath& selectedPath)
+{
+  // Keep the detached parent alive while its child links are removed.
+  const auto node = dataStructure.getSharedData(id);
+  if(node == nullptr || !dataStructure.removeParent(id, parentId))
   {
-    auto parentIds = node->getParentIds();
-    if(parentIds.size() > 1)
-    {
-      return {};
-    }
+    return MakeErrorResult(k_DetachTargetFailed, fmt::format("Could not remove the overwrite placement at '{}'. Choose a different name or remove the target first.", selectedPath.toString()));
   }
 
-  auto* baseGroup = dataStructure.getDataAs<BaseGroup>(id);
-  if(baseGroup != nullptr)
+  // Root placements are not included in the object's parent IDs.
+  if(!node->getParentIds().empty() || dataStructure.getData(DataPath({node->getName()})) == node.get())
   {
-    auto childIds = baseGroup->GetChildrenIds();
-    if(!childIds.empty())
+    return {};
+  }
+
+  auto* group = dynamic_cast<BaseGroup*>(node.get());
+  if(group != nullptr)
+  {
+    const auto childIds = group->GetChildrenIds();
+    for(const auto childId : childIds)
     {
-      for(const auto& childId : childIds)
+      const auto* child = dataStructure.getData(childId);
+      auto result = RemovePlacementRecursively(dataStructure, childId, id, selectedPath.createChildPath(child->getName()));
+      if(result.invalid())
       {
-        result = MergeResults(result, TerminateNodesRecursively(dataStructure, childId, mode, checkDependence));
+        return result;
       }
     }
   }
-
-  dataStructure.removeData(node->getId());
-
-  return result;
+  return {};
 }
 } // namespace
 
@@ -56,6 +72,10 @@ RenameDataAction::~RenameDataAction() noexcept = default;
 Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
 {
   static constexpr StringLiteral prefix = "RenameDataAction: ";
+  if(!DataObject::IsValidName(m_NewName))
+  {
+    return MakeErrorResult(k_InvalidNewName, fmt::format("{}New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", prefix, m_NewName, m_Path.toString()));
+  }
   auto dataObject = dataStructure.getData(m_Path);
   if(dataObject == nullptr)
   {
@@ -82,34 +102,48 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       }
     }
 
-    DataObject::IdType targetId = std::numeric_limits<DataObject::IdType>::max();
-    for(auto dataObjectID : dataStructure.getAllDataObjectIds())
+    const auto* selectedParent = dataStructure.getData(m_Path.getParent());
+    std::optional<DataPath> clashPath;
+    const DataPath rootTargetPath({m_NewName});
+    if(selectedParent != nullptr && dataStructure.getData(DataPath({dataObject->getName()})) == dataObject && dataStructure.getData(rootTargetPath) != nullptr)
     {
-      if(dataStructure.getData(dataObjectID)->getName() == m_NewName)
+      clashPath = rootTargetPath;
+    }
+    for(const auto parentId : dataObject->getParentIds())
+    {
+      if(selectedParent != nullptr && parentId == selectedParent->getId())
       {
-        targetId = dataObjectID;
+        continue;
+      }
+      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
+      if(parent != nullptr && parent->contains(m_NewName))
+      {
+        clashPath = parent->getDataPaths().front().createChildPath(m_NewName);
         break;
       }
     }
 
-    if(targetId != std::numeric_limits<DataObject::IdType>::max())
+    if(clashPath.has_value())
     {
+      return MakeErrorResult(k_OtherParentNameClash, fmt::format("{}Could not rename DataObject at '{}' to '{}': another parent has a child at '{}'. Choose a different name or remove '{}' first.",
+                                                                 prefix, m_Path.toString(), m_NewName, clashPath->toString(), clashPath->toString()));
+    }
+
+    auto* target = dataStructure.getData(m_Path.replaceName(m_NewName));
+    if(target != nullptr)
+    {
+      const auto targetId = target->getId();
       if(mode == Mode::Preflight)
       {
-        std::string ss = fmt::format("{}Another object exists with that name, will overwrite destroying other DataObject at '{}' and replacing it with '{}'", prefix, m_NewName, m_Path.toString());
+        std::string ss = fmt::format("{}The object at '{}' will be replaced under the selected parent. Other placements and their children are kept. Objects left with no placement are deleted.",
+                                     prefix, m_Path.replaceName(m_NewName).toString());
         result.warnings().emplace_back(Warning{-6602, ss});
+        return result;
       }
-      else
+      auto removalResult = RemovePlacementRecursively(dataStructure, targetId, selectedParent == nullptr ? 0 : selectedParent->getId(), m_Path.replaceName(m_NewName));
+      if(removalResult.invalid())
       {
-        if(dataStructure.getDataAs<BaseGroup>(targetId) != nullptr)
-        {
-          // Recursive removal of overwritten object
-          result = MergeResults(result, ::TerminateNodesRecursively(dataStructure, targetId, mode, true));
-        }
-        else
-        {
-          dataStructure.removeData(targetId);
-        }
+        return removalResult;
       }
     }
   }
@@ -137,13 +171,16 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
     }
   }
 
-  dataObject->rename(m_NewName);
+  if(!dataObject->rename(m_NewName))
+  {
+    return MakeErrorResult(k_RenameFailed, fmt::format("{}Could not rename DataObject at '{}' to '{}'. Choose a valid name that is unique under every parent.", prefix, m_Path.toString(), m_NewName));
+  }
   return result;
 }
 
 IDataAction::UniquePointer RenameDataAction::clone() const
 {
-  return std::make_unique<RenameDataAction>(m_Path, m_NewName);
+  return std::make_unique<RenameDataAction>(m_Path, m_NewName, m_Overwrite);
 }
 
 std::string RenameDataAction::newName() const
