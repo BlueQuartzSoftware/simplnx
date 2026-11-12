@@ -19,7 +19,9 @@ Two rendering methods are available through the *Pole Figure Type* parameter:
 
 The crystal symmetry used when folding orientations into the pole figure is determined by each phase's **Laue Class** -- the point-group symmetry class of the crystal (for example, cubic m-3m or hexagonal 6/mmm). The Laue Class is looked up from the per-**Ensemble** Crystal Structures array.
 
-**Only an advanced user with intimate knowledge of the modified Lambert projection should change the *Lambert Image Size (Pixels)* parameter.** This value is the height/width, in *pixels*, of the internal Lambert square used for interpolation.
+**Only an advanced user with intimate knowledge of the modified Lambert projection should change the *Lambert Image Size (Pixels)* parameter.** This value is the height and width, in *pixels*, of the internal Lambert square used for interpolation. The supported range is 16 to 1024 pixels, including both limits.
+
+For *Color Intensity*, *Number of Colors* must be from 4 to 256, including both limits. These two parameters are used and checked only for *Color Intensity*. They are ignored for *Discrete*.
 
 ### Reference Frame Conventions (Matching EDAX OIM and MTEX)
 
@@ -68,7 +70,7 @@ The count-image coordinates are pixel indices, so the geometry length unit is "U
 
 ### Image Size
 
-The *Image Size (Square Pixels)* parameter sets the height and width, in *pixels*, of each individual pole figure in the output image.
+The *Image Size (Square Pixels)* parameter sets the height and width, in *pixels*, of each individual pole figure in the output image. The supported range is 128 to 8000 pixels, including both limits, for both rendering methods. A size of 1 pixel is not supported.
 
 ### Image Layout
 

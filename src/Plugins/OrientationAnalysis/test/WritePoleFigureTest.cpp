@@ -16,6 +16,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -361,7 +362,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
   REQUIRE(maskStore->getDataFormat() == "HDF5-OOC");
   WritePoleFigureFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(32));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(128));
   args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
   args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
@@ -387,7 +388,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
     const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
     REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
-    std::vector<float64> values(32 * 32);
+    std::vector<float64> values(128 * 128);
     auto readResult = output.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(values.data(), values.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     REQUIRE(std::accumulate(values.begin(), values.end(), 0.0) == expectedSums[familyIdx]);
@@ -395,10 +396,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
     {
       // Two cubic <001> families give four poles at the center. Identity gives
       // four cardinal equatorial poles; the 45-degree tail gives four diagonals.
-      // The stored image reverses row order, so the center is at (16,15).
-      std::vector<float64> expected(32 * 32, 0.0);
-      expected[15 * 32 + 16] = 4.0;
-      for(usize index : {15 * 32 + 1, 15 * 32 + 31, 16, 30 * 32 + 16, 5 * 32 + 6, 5 * 32 + 26, 25 * 32 + 6, 25 * 32 + 26})
+      // The stored image reverses row order, so the center is at (64,63).
+      std::vector<float64> expected(128 * 128, 0.0);
+      expected[63 * 128 + 64] = 4.0;
+      for(usize index : {63 * 128 + 1, 63 * 128 + 127, 64, 126 * 128 + 64, 19 * 128 + 20, 19 * 128 + 108, 107 * 128 + 20, 107 * 128 + 108})
       {
         expected[index] = 1.0;
       }
@@ -406,6 +407,125 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: supported sampling dimensions", "[OrientationAnalysis][WritePoleFigureFilter]")
+{
+  const UnitTest::TestFileSentinel sentinel(unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+  auto dataStructure = UnitTest::LoadDataStructure(fs::path(unit_test::k_TestFilesDir.view()) / "Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d");
+  WritePoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"Imported Data", "Eulers"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Imported Data", "Phases"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix", "CrystalStructures"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix", "PhaseNames"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Sampling Pole Figures"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Sampling Counts"})));
+  struct Boundary
+  {
+    std::string key;
+    int32 minimum;
+    int32 maximum;
+    int32 code;
+  };
+  const std::array<Boundary, 3> boundaries = {
+      {{WritePoleFigureFilter::k_ImageSize_Key, 128, 8000, -680002}, {WritePoleFigureFilter::k_LambertSize_Key, 16, 1024, -680004}, {WritePoleFigureFilter::k_NumColors_Key, 4, 256, -680005}}};
+  for(const auto& boundary : boundaries)
+  {
+    for(const int32 value : {boundary.minimum - 1, boundary.minimum, boundary.maximum, boundary.maximum + 1})
+    {
+      DYNAMIC_SECTION(boundary.key << " = " << value)
+      {
+        args.insertOrAssign(boundary.key, std::make_any<int32>(value));
+        auto result = filter.preflight(dataStructure, args);
+        if(value < boundary.minimum || value > boundary.maximum)
+        {
+          SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+          REQUIRE(result.outputActions.errors().size() == 1);
+          REQUIRE(result.outputActions.errors()[0].code == boundary.code);
+        }
+        else
+        {
+          SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+        }
+      }
+    }
+    if(boundary.key != WritePoleFigureFilter::k_ImageSize_Key)
+    {
+      for(const int32 value : {boundary.minimum - 1, boundary.maximum + 1})
+      {
+        DYNAMIC_SECTION("Discrete ignores " << boundary.key << " = " << value)
+        {
+          args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
+          args.insertOrAssign(boundary.key, std::make_any<int32>(value));
+          auto result = filter.preflight(dataStructure, args);
+          SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+        }
+      }
+    }
+  }
+  for(const int32 value : {127, 128, 8000, 8001})
+  {
+    DYNAMIC_SECTION("Discrete Image Size = " << value)
+    {
+      args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
+      args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(value));
+      auto result = filter.preflight(dataStructure, args);
+      if(value == 127 || value == 8001)
+      {
+        SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+        REQUIRE(result.outputActions.errors().size() == 1);
+        REQUIRE(result.outputActions.errors()[0].code == -680002);
+      }
+      else
+      {
+        SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+      }
+    }
+  }
+  SECTION("Color Intensity reports all unsupported sampling dimensions")
+  {
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(127));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(15));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(3));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 3);
+    for(const int32 code : {-680002, -680004, -680005})
+    {
+      REQUIRE(std::count_if(result.outputActions.errors().begin(), result.outputActions.errors().end(), [code](const Error& error) { return error.code == code; }) == 1);
+    }
+  }
+  SECTION("Color Intensity accepts all maximum dimensions")
+  {
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(8000));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(1024));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(256));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  SECTION("Image Size 1 is unsupported")
+  {
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1));
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == -680002);
+  }
+  SECTION("Color Intensity executes at all minimum dimensions")
+  {
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(128));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(16));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(4));
+    auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const DataPath countsPath({"Sampling Counts", "Cell Data", "Phase_1_<001>"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(countsPath));
+    REQUIRE(dataStructure.getDataRefAs<Float64Array>(countsPath).getNumberOfTuples() == 128 * 128);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 // -----------------------------------------------------------------------------

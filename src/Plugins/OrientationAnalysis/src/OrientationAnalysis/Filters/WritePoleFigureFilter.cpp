@@ -4,6 +4,7 @@
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -33,6 +34,12 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_MinImageSize = 128;
+constexpr int32 k_MaxImageSize = 8000;
+constexpr int32 k_MinLambertSize = 16;
+constexpr int32 k_MaxLambertSize = 1024;
+constexpr int32 k_MinNumColors = 4;
+constexpr int32 k_MaxNumColors = 256;
 
 /**
  * @brief Measures the width of the letter X at the selected font size.
@@ -85,15 +92,16 @@ Parameters WritePoleFigureFilter::parameters() const
   // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
-  params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
+  params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The height and width of each output pole figure, from 128 to 8000 pixels (inclusive).", 512));
 
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
                                                    ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
-  params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
-  params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
+  params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)",
+                                                 "The height and width of the internal Lambert square used for interpolation with Color Intensity, from 16 to 1024 pixels (inclusive).", 64));
+  params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors for Color Intensity pole figures, from 4 to 256 (inclusive).", 32));
   params.insert(
       std::make_unique<Int32Parameter>(k_DiscreteMarkerRadius_Key, "Discrete Marker Radius (Pixels)", "Radius of each discrete pole marker. Only used for the Discrete pole figure type.", 3));
   params.insert(std::make_unique<ChoicesParameter>(
@@ -198,9 +206,27 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   PreflightResult preflightResult;
 
-  if(pImageSizeValue <= 0)
+  ErrorCollection samplingErrors;
+  if(pImageSizeValue < k_MinImageSize || pImageSizeValue > k_MaxImageSize)
   {
-    return {MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), {}};
+    samplingErrors.push_back({-680002, fmt::format("'Image Size (Square Pixels)' is {}. Select a value from {} to {} (inclusive).", pImageSizeValue, k_MinImageSize, k_MaxImageSize)});
+  }
+  if(filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key) == to_underlying(WritePoleFigure::Algorithm::LambertProjection))
+  {
+    const auto pLambertSizeValue = filterArgs.value<int32>(k_LambertSize_Key);
+    if(pLambertSizeValue < k_MinLambertSize || pLambertSizeValue > k_MaxLambertSize)
+    {
+      samplingErrors.push_back({-680004, fmt::format("'Lambert Image Size (Pixels)' is {}. Select a value from {} to {} (inclusive).", pLambertSizeValue, k_MinLambertSize, k_MaxLambertSize)});
+    }
+    const auto pNumColorsValue = filterArgs.value<int32>(k_NumColors_Key);
+    if(pNumColorsValue < k_MinNumColors || pNumColorsValue > k_MaxNumColors)
+    {
+      samplingErrors.push_back({-680005, fmt::format("'Number of Colors' is {}. Select a value from {} to {} (inclusive).", pNumColorsValue, k_MinNumColors, k_MaxNumColors)});
+    }
+  }
+  if(!samplingErrors.empty())
+  {
+    return {{nonstd::make_unexpected(std::move(samplingErrors))}, {}};
   }
   // The marker radius is only active (and only used) for the Discrete pole figure type.
   if(filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key) == 1ULL)

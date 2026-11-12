@@ -15,8 +15,8 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
 | Oracle (confirmed) | Class 5 expert-visual and Class 4 wiring invariants are retained; the new Class 1 HDF5 boundary oracle checks exact discrete pole counts and the entire <001> intensity image. |
-| Code paths enumerated | 10 of 14 listed paths exercised; layout selection and three defensive validation/warning rows remain unasserted. Empty-phase skipping is not separately proven. |
-| Tests today | 4 registered entries in the focused selection, plus one hidden HDF5 boundary case. Paired selections pass 4/4. |
+| Code paths enumerated | 11 of 14 listed paths exercised; layout selection and two defensive validation/warning rows remain unasserted, and the marker-radius guard `-680003` in row 12 is not directly tested. Empty-phase skipping is not separately proven. |
+| Tests today | 5 registered entries in the focused selection, plus one hidden HDF5 boundary case. The in-core Release selection passes 5/5 (2026-11-12). The paired out-of-core selection passed 4/4 before the sampling-dimension test was added and has not been re-run since. |
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
 | Legacy comparison      | Three-way expert-visual (6.5.171 / patched local legacy build / SIMPLNX) on hex **and** cubic. 6.5.171 matches the patched local legacy build (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
 | Bug flags              | **None.** All 4 deviations are cosmetic (axis/family labels, font) or an intentional rendering improvement (discrete vector markers). No correctness defect. |
@@ -58,9 +58,11 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 No new defect was found during this OOC recertification. Existing fixes and deviation dispositions remain documented in this report and its sidecar.
 
+Issue #1957 (2026-11-12, also #1908 items L89 and L90): preflight now accepts only the supported sampling dimensions. *Image Size* must be 128 to 8000 (`-680002`). For *Color Intensity* only, *Lambert Image Size* must be 16 to 1024 (`-680004`) and *Number of Colors* must be 4 to 256 (`-680005`); *Discrete* does not use these two values and does not check them. All limits include both ends. The legacy migration impact is recorded in `WritePoleFigureFilter-D6` in the deviations sidecar. All invalid active sampling values are reported in one preflight. Before this change, preflight rejected only an *Image Size* of 0 or less, so an *Image Size* of 1 and unchecked Lambert and color values reached the algorithm.
+
 ## Code path coverage
 
-10 of 14 listed simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
+11 of 14 listed simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
 
 Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilter.cpp` preflight.
 
@@ -77,7 +79,7 @@ Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilte
 | 9  | (d) Intensity      | unknown crystal structure → warning, skip                              | *Not directly tested — defensive warning branch.*                |
 | 10 | (e) Composite      | SaveAsImageGeometry / WriteImageToDisk; DiscreteMarkerRadius            | `Discrete mode and marker radius reach algorithm` (1 px vs 10 px composites differ); A/B renders (write-to-disk); Mask/HexConv tests (image geometry) |
 | 11 | (a) Preflight      | mask array wrong type → error `-53900`                                  | *Not directly tested — low-value validation branch.*             |
-| 12 | (a) Preflight      | ImageSize ≤ 0 → error `-680002`; Discrete mode with marker radius < 1 → error `-680003` | *Guards added during review; not directly tested — low-value validation branches.* |
+| 12 | (a) Preflight      | ImageSize outside 128–8000 → error `-680002`; Color Intensity with Lambert Size outside 16–1024 → error `-680004` or Number of Colors outside 4–256 → error `-680005` (Discrete ignores both); Discrete mode with marker radius < 1 → error `-680003` | `supported sampling dimensions` (each range below, at and above both limits; Image Size boundaries also checked under Discrete; Discrete ignores out-of-range Lambert and color values; one case checks all three error codes together). *The marker-radius guard `-680003` is not directly tested.* |
 | 13 | (h) SIMPL convert  | 6.4 / 6.5 SIMPL JSON → Arguments (legacy ImageFormat dropped, D5)       | `SIMPL Backwards Compatibility`                                  |
 | 14 | OOC storage | 65536-block discrete-count oracle | `real HDF5 65536-block discrete-count oracle` — independent exact values across the boundary |
 
@@ -88,10 +90,13 @@ Source: `Algorithms/WritePoleFigure.cpp` (535 lines), plus `WritePoleFigureFilte
 | `Mask filter changes the rendered pole figure` | kept | Class 4 invariant: masked vs unmasked composite RGB differ by >1% of bytes. Consumes `Pole_Figure_Exemplars_v6`. Passes on EbsdLib 3.1.0. |
 | `HexConvention choice reaches algorithm` | kept | Class 4 invariant: X‖a vs X‖a* differ in both the intensity array and the composite RGB (both plumbing paths). Passes on EbsdLib 3.1.0. |
 | `Discrete mode and marker radius reach algorithm` | new-for-V&V | Class 4 invariant: Discrete vs Color composites differ; 1 px vs 10 px marker radii differ. Pins the GenerationAlgorithm and DiscreteMarkerRadius plumbing in CI (previously covered only by manual A/B renders). |
+| `supported sampling dimensions` | new (issue #1957) | Class 1 contract oracle: the user-specified inclusive ranges. For each of Image Size (128–8000, `-680002`), Lambert Image Size (16–1024, `-680004`) and Number of Colors (4–256, `-680005`), the value below the minimum and above the maximum fails with exactly that code, and both limits pass. Discrete accepts out-of-range Lambert and color values. Image Size 1 fails with `-680002`. Color Intensity accepts 8000/1024/256 together in preflight, and executes at 128/16/4 with a 128×128 count array. |
 | `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. The legacy `ImageFormat` key is intentionally not converted (D5). |
-| `real HDF5 65536-block discrete-count oracle` | new-for-V&V | 29 assertions; Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. |
+| `real HDF5 65536-block discrete-count oracle` | new-for-V&V | 29 assertions; Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 128×128 <001> count image (32×32 before issue #1957 set the minimum Image Size to 128) is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. |
 
 OOC recertification (2026-09-21): 4/4 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 65536-block discrete-count oracle` passes 29 assertions. Two selected cubic orientations straddle the 65,536-tuple extraction boundary: identity and a 45-degree Z rotation. A third phase-one orientation is masked out. Independent cubic family multiplicities give total discrete counts [12,24,16]. The complete 32×32 <001> count image is compared with a constructed histogram: four center counts, four cardinal equatorial poles, and four diagonal poles after the documented row flip. This Class 1 numerical oracle supplements the historical expert-visual renderer verification. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
+
+Issue #1957 (2026-11-12) moved the hidden oracle from a 32×32 to a 128×128 image, the new minimum Image Size. The expected indices were derived again by hand: half size 64, radial scale 63, stored row = 127 − y. The center is (64,63); the cardinal poles are at x = 1 and x = 127 on row 63 and at x = 64 on rows 0 and 126; the diagonal poles are at x = 20 and x = 108 on rows 19 and 107 (63 × 0.7071 = 44.5, truncated to 44). The family sums [12,24,16] do not change. The test compiles, but it has not been re-run in an out-of-core build since this change. The 2026-09-21 result above is for the 32×32 version.
 
 ## Exemplar archive
 
@@ -102,12 +107,14 @@ OOC recertification (2026-09-21): 4/4 entries pass in both DREAM3DNX CTest selec
 
 ## Deviations from DREAM3D 6.5.171
 
-Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 matches the patched local legacy build. Full renders archived to OneDrive; regeneration scripts committed under `Code_Review/vv/WritePoleFigure/`. All four are cosmetic / labeling / intentional-rendering; none is a defect.
+Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 matches the patched local legacy build. Full renders archived to OneDrive; regeneration scripts committed under `Code_Review/vv/WritePoleFigure/`. D1–D5 describe cosmetic, labeling, rendering or output-format choices. D6 records the supported sampling ranges introduced by issue #1957, based on legacy source inspection.
 
 - `WritePoleFigureFilter-D1` — axis labels `X`/`Y` (legacy) → `A1`/`A2` (SIMPLNX). Cosmetic.
 - `WritePoleFigureFilter-D2` — font/text-metrics differ (libharu Helvetica → EbsdLib canvas_ity). Library, cosmetic.
 - `WritePoleFigureFilter-D3` — hex/trig per-figure family labels differ but name symmetry-equivalent families. Cosmetic.
 - `WritePoleFigureFilter-D4` — Discrete markers: filled circles (configurable radius) → intentional rendering improvement over legacy single black pixels.
 - `WritePoleFigureFilter-D5` — legacy Image Format choice (tif/bmp/png/pdf) dropped; SIMPLNX always writes PNG. The legacy `ImageFormat` key is not converted from SIMPL JSON.
+
+- `WritePoleFigureFilter-D6` — converted legacy sampling values outside the supported ranges now fail preflight; users must change the values.
 
 See `vv/deviations/WritePoleFigureFilter.md`.
