@@ -770,6 +770,10 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: EBSD regression finite header
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == (key == "Spacing" ? -67602 : -67621));
+  if(key != "Spacing" && std::isfinite(value))
+  {
+    REQUIRE(result.outputActions.errors().front().message.find("computed origin") != std::string::npos);
+  }
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Header vector size", "[OrientationAnalysis][ReadGrainMapper3D]")
@@ -829,4 +833,56 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Computed origin fits geometry
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -67621);
   REQUIRE(result.outputActions.errors().front().message.find("computed origin") != std::string::npos);
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Large finite headers can cancel", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  UnitTest::LoadPlugins();
+  const auto group = GENERATE(std::string("LabDCT"), std::string("AbsorptionCT"));
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gm_large_finite.h5";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteGrainMapperFixture(path.filename().string(), {});
+  {
+    const hid_t file = H5Fopen(path.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    REQUIRE(file >= 0);
+    const auto close = MakeScopeGuard([&]() noexcept { H5Fclose(file); });
+    const hid_t gid = OpenOrCreateGroup(file, group);
+    const auto closeGroup = MakeScopeGuard([&]() noexcept { H5Gclose(gid); });
+    for(const auto& key : {"Spacing", "Extent", "Center", "VirtualShift"})
+    {
+      if(H5Lexists(gid, key, H5P_DEFAULT) > 0)
+      {
+        REQUIRE(H5Ldelete(gid, key, H5P_DEFAULT) >= 0);
+      }
+      float64 value = 1;
+      if(group == "LabDCT")
+      {
+        value = std::string(key) == "Extent" ? 1e40 : std::string(key) == "Center" ? 5e39 : std::string(key) == "VirtualShift" ? 0 : 1;
+      }
+      else
+      {
+        value = std::string(key) == "Center" ? 1e40 : std::string(key) == "VirtualShift" ? -1e40 : 1;
+      }
+      WriteVector<float64>(gid, key, {3}, {value, value, value});
+    }
+    if(group == "AbsorptionCT")
+    {
+      WriteVector<uint16>(gid, "Data", {1, 1, 1}, {17});
+    }
+  }
+  DataStructure ds;
+  ReadGrainMapper3DFilter filter;
+  auto args = GrainMapperArguments(path, DataPath({"Header"}));
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, group == "LabDCT");
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, group == "AbsorptionCT");
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedAbsorptionGeometryPath_Key, DataPath({"Header"}));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* geometry = ds.getDataAs<ImageGeom>(DataPath({"Header"}));
+  REQUIRE(geometry != nullptr);
+  REQUIRE(geometry->getOrigin() == FloatVec3(0, 0, 0));
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

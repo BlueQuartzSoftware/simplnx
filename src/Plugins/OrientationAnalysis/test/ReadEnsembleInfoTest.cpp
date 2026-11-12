@@ -12,8 +12,10 @@
 #include <fstream>
 namespace fs = std::filesystem;
 
+#include "OrientationAnalysis/Filters/Algorithms/ReadEnsembleInfo.hpp"
 #include "OrientationAnalysis/Filters/ReadEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 
 using namespace nx::core;
 using namespace unit_test;
@@ -266,4 +268,42 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfo: EBSD regression preflight vali
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == input.second);
+}
+
+TEST_CASE("OrientationAnalysis::ReadEnsembleInfo: Direct algorithm clears extra tuples", "[OrientationAnalysis][ReadEnsembleInfo]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path path = fs::path(k_BinaryTestOutputDir.view()) / "ensemble_shrink.ini";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteTestFile(path.string(), "[EnsembleInfo]\nNumber_Phases=1\n[1]\nCrystalStructure=Cubic_High\nPhaseType=PrimaryPhase\n");
+  DataStructure ds;
+  ReadEnsembleInfoInputValues input;
+  input.InputFile = path.string();
+  input.CrystalStructuresArrayName = DataPath({"Crystals"});
+  input.PhaseTypesArrayName = DataPath({"Phases"});
+  for(const auto& output : {input.CrystalStructuresArrayName, input.PhaseTypesArrayName})
+  {
+    auto created = CreateArrayAction(DataType::uint32, ShapeType{4}, ShapeType{1}, output).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(created);
+    auto* array = ds.getDataAs<UInt32Array>(output);
+    REQUIRE(array != nullptr);
+    array->fill(1);
+  }
+  const std::atomic_bool cancel = false;
+  const IFilter::MessageHandler handler;
+  auto result = ReadEnsembleInfo(ds, handler, cancel, &input)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  for(const auto& output : {input.CrystalStructuresArrayName, input.PhaseTypesArrayName})
+  {
+    const auto* array = ds.getDataAs<UInt32Array>(output);
+    REQUIRE(array != nullptr);
+    CHECK((*array)[0] == 999);
+    CHECK((*array)[1] == (output == input.CrystalStructuresArrayName ? 1 : 0));
+    CHECK((*array)[2] == 999);
+    CHECK((*array)[3] == 999);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

@@ -22,7 +22,7 @@ namespace
 constexpr int32 k_InvalidOriginHeader = -67621;
 constexpr int32 k_InvalidOriginVectorSize = -67622;
 
-Result<> ValidateOriginHeader(const std::string& file, const std::string& group, const std::string& key, const std::vector<float64>& values)
+Result<> ValidateOriginHeader(const std::string& file, const std::string& group, const std::string& key, const std::vector<float64>& values, bool requireFloat32Range, const std::string& geometryValue)
 {
   if(values.size() != 3)
   {
@@ -30,10 +30,11 @@ Result<> ValidateOriginHeader(const std::string& file, const std::string& group,
   }
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(!std::isfinite(values[axis]) || std::abs(values[axis]) > std::numeric_limits<float32>::max())
+    if(!std::isfinite(values[axis]) || (requireFloat32Range && std::abs(values[axis]) > std::numeric_limits<float32>::max()))
     {
-      return MakeErrorResult(k_InvalidOriginHeader, fmt::format("File '{}' header '{}/{}[{}]' = {} cannot define a finite Image Geometry origin. Supply finite values that fit float32.", file, group,
-                                                                key, axis, values[axis]));
+      return MakeErrorResult(k_InvalidOriginHeader,
+                             fmt::format("File '{}' header '{}/{}[{}]' = {} cannot define finite Image Geometry {}. Supply finite values that produce {} within the float32 range.", file, group, key,
+                                         axis, values[axis], geometryValue, geometryValue));
     }
   }
   return {};
@@ -204,7 +205,7 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
 
   if(m_LabDctSpacing.size() != 3)
   {
-    return ValidateOriginHeader(m_FileName, "LabDCT", "Spacing", m_LabDctSpacing);
+    return ValidateOriginHeader(m_FileName, "LabDCT", "Spacing", m_LabDctSpacing, true, "spacing");
   }
   for(usize axis = 0; axis < 3; ++axis)
   {
@@ -240,15 +241,15 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
     return MakeErrorResult(-38608, "GrainMapperReader: Error reading data set /LabDCT/VirtualShift");
   }
 
-  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Extent", extents); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Extent", extents, false, "origin"); result.invalid())
   {
     return result;
   }
-  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Center", center); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Center", center, false, "origin"); result.invalid())
   {
     return result;
   }
-  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "VirtualShift", virtualShift); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "VirtualShift", virtualShift, false, "origin"); result.invalid())
   {
     return result;
   }
@@ -256,7 +257,7 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
   m_LabDctOrigin[0] = (center[0] - (extents[0] * 0.5)) + virtualShift[0];
   m_LabDctOrigin[1] = (center[1] - (extents[1] * 0.5)) + virtualShift[1];
   m_LabDctOrigin[2] = (center[2] - (extents[2] * 0.5)) + virtualShift[2];
-  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "computed origin", m_LabDctOrigin); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "computed origin", m_LabDctOrigin, true, "origin"); result.invalid())
   {
     return result;
   }
@@ -318,11 +319,11 @@ nx::core::Result<> GrainMapperReader::readAbsorptionHeader(hid_t fileId)
     return MakeErrorResult(-38608, "GrainMapperReader: Error reading data set /AbsorptionCT/VirtualShift");
   }
 
-  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "Center", center); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "Center", center, false, "origin"); result.invalid())
   {
     return result;
   }
-  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "VirtualShift", virtualShift); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "VirtualShift", virtualShift, false, "origin"); result.invalid())
   {
     return result;
   }
@@ -330,7 +331,7 @@ nx::core::Result<> GrainMapperReader::readAbsorptionHeader(hid_t fileId)
   m_AbsorptionCTOrigin[0] = (center[0] - (extents[0] * 0.5)) + virtualShift[0];
   m_AbsorptionCTOrigin[1] = (center[1] - (extents[1] * 0.5)) + virtualShift[1];
   m_AbsorptionCTOrigin[2] = (center[2] - (extents[2] * 0.5)) + virtualShift[2];
-  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "computed origin", m_AbsorptionCTOrigin); result.invalid())
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "computed origin", m_AbsorptionCTOrigin, true, "origin"); result.invalid())
   {
     return result;
   }

@@ -59,7 +59,7 @@ Once the reference frames are correct, the imported Euler angles (three angles, 
 
 ### Header validation
 
-The file must contain supported phase Symmetry or Laue Group values. Max X Points and Max Y Points must be positive. X Resolution and Y Resolution must be finite and greater than zero. When the recommended sample rotation is active, SampleTransformationAxis must be finite and nonzero. Preflight reports invalid header values before it creates geometry actions.
+The file must contain supported phase Symmetry or Laue Group values. Max X Points and Max Y Points must be positive. X Resolution and Y Resolution must be finite and greater than zero. When the recommended sample rotation is active, SampleTransformationAxis must normalize to finite, nonzero float32 values. Preflight reports invalid header values before it creates geometry actions.
 
 The selected start and end slices must be within the inclusive slice range stored in the file.
 

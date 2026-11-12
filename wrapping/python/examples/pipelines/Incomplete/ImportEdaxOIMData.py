@@ -2,6 +2,7 @@ import simplnx as nx
 
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
+import numpy as np
 
 
 #Create a Data Structure
@@ -62,7 +63,7 @@ nx_filter = nx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
-                        write_xdmf_file=False
+                        write_xdmf_file=True
 )
 nxtest.check_filter_result(nx_filter, result)
 

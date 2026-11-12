@@ -165,7 +165,7 @@
           "version": 1
         },
         "write_xdmf_file": {
-          "value": false,
+          "value": true,
           "version": 1
         }
       },

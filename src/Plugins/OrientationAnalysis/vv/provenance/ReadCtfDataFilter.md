@@ -47,4 +47,4 @@ The tar.gz remains in the GitHub [Data_Archive release](https://github.com/BlueQ
 
 ## Preflight regression fixtures
 
-The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle is the positive slice-count or finite Origin contract. No archive or generated exemplar was added or changed.
+The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle requires a positive slice count. No archive or generated exemplar was added or changed.

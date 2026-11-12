@@ -136,7 +136,8 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   {
     if(!std::isfinite(pOriginValue[component]))
     {
-      return MakePreflightErrorResult(-9592, fmt::format("Origin component '{}' has value {}. Set this component to a finite float32 value.", k_Axes[component], pOriginValue[component]));
+      return MakePreflightErrorResult(
+          -9592, fmt::format("File '{}' has Origin component '{}' = {}. Set this component to a finite float32 value.", inputFilePath, k_Axes[component], pOriginValue[component]));
     }
   }
 

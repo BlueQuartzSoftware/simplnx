@@ -698,3 +698,50 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: StructuralValidation slice range", "
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == (range == 1 ? -2002 : -67614));
 }
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Float normalization axis", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const auto variant = GENERATE(0, 1, 2, 3, 4, 5);
+  CAPTURE(variant);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_h5ebsd_hex_selection.h5ebsd";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  REQUIRE(WriteHexagonalH5EbsdFixture() == path);
+  {
+    const hid_t id = H5Support::H5Utilities::openFile(path.string(), false);
+    REQUIRE(id >= 0);
+    H5Support::H5ScopedFileSentinel sentinel(id, true);
+    REQUIRE(H5Ldelete(id, ebsdlib::H5Ebsd::SampleTransformationAxis.c_str(), H5P_DEFAULT) >= 0);
+    REQUIRE(H5Ldelete(id, ebsdlib::H5Ebsd::SampleTransformationAngle.c_str(), H5P_DEFAULT) >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<float32>(id, ebsdlib::H5Ebsd::SampleTransformationAngle, variant == 5 ? 90.0F : 45.0F) >= 0);
+    const std::array<float32, 6> values = {0.0F, std::numeric_limits<float32>::infinity(), 1e-30F, 1e30F, std::numeric_limits<float32>::quiet_NaN(), 2.0F};
+    REQUIRE(H5Support::H5Lite::writeVectorDataset<float32>(id, ebsdlib::H5Ebsd::SampleTransformationAxis, {3}, {variant == 5 ? 0.0F : values[variant], 0.0F, variant == 5 ? 2.0F : 0.0F}) >= 0);
+  }
+  ReadH5EbsdFileParameter::ValueType input;
+  input.inputFilePath = path.string();
+  input.startSlice = 0;
+  input.endSlice = 0;
+  input.useRecommendedTransform = true;
+  input.selectedArrayNames = {Constants::k_EulerAngles, Constants::k_Phases};
+  Arguments args;
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+  DataStructure ds;
+  ReadH5EbsdFilter filter;
+  auto result = filter.preflight(ds, args).outputActions;
+  if(variant == 5)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    UnitTest::CheckArraysInheritTupleDims(ds);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors()[0].code == -67603);
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -67603);
+}

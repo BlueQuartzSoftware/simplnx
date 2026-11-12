@@ -148,12 +148,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   if(pReadH5EbsdFilterValue.useRecommendedTransform && reader->getSampleTransformationAngle() > 0)
   {
     const auto axis = reader->getSampleTransformationAxis();
-    const float64 norm = std::hypot(static_cast<float64>(axis[0]), static_cast<float64>(axis[1]), static_cast<float64>(axis[2]));
+    const auto normalizedAxis = FloatVec3(axis[0], axis[1], axis[2]).normalize();
+    const float32 norm = normalizedAxis.magnitude();
     if(!std::isfinite(norm) || norm == 0)
     {
-      return MakePreflightErrorResult(
-          EbsdReaderUtilities::k_InvalidSampleTransform,
-          fmt::format("File '{}' has invalid header 'SampleTransformationAxis' = ({}, {}, {}). Use a finite, nonzero rotation axis.", pReadH5EbsdFilterValue.inputFilePath, axis[0], axis[1], axis[2]));
+      return MakePreflightErrorResult(EbsdReaderUtilities::k_InvalidSampleTransform,
+                                      fmt::format("File '{}' has invalid header 'SampleTransformationAxis' = ({}, {}, {}). Use a rotation axis that normalizes to finite, nonzero float32 values.",
+                                                  pReadH5EbsdFilterValue.inputFilePath, axis[0], axis[1], axis[2]));
     }
   }
 

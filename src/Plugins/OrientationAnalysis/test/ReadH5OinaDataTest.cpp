@@ -1558,6 +1558,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Origin components must be 
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors()[0].code == -9592);
   REQUIRE(result.errors()[0].message.find("Origin") != std::string::npos);
+  REQUIRE(result.errors()[0].message.find(path.string()) != std::string::npos);
   REQUIRE(result.errors()[0].message.find(std::array<std::string, 3>{"x", "y", "z"}[axis]) != std::string::npos);
   const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);

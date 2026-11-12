@@ -220,4 +220,4 @@ regenerated, the `.dream3d` and `.xdmf` members can be dropped: nothing reads th
 
 ## Preflight regression fixtures
 
-The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle is the positive slice-count or finite Origin contract. No archive or generated exemplar was added or changed.
+The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle requires finite Origin components. No archive or generated exemplar was added or changed.

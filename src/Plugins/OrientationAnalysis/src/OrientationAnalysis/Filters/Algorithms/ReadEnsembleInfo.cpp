@@ -84,6 +84,8 @@ Result<> ReadEnsembleInfo::readFile()
   {
     return ConvertResult(std::move(phases));
   }
+  crystalStructures.fill(ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  phaseTypes.fill(static_cast<uint32>(PhaseType::Type::Unknown));
   for(usize index = 0; index < phases.value().size(); ++index)
   {
     crystalStructures[index] = phases.value()[index][0];
@@ -94,37 +96,37 @@ Result<> ReadEnsembleInfo::readFile()
 
 Result<std::vector<std::array<uint32, 2>>> ReadEnsembleInfo::ReadEnsembleFile(const std::string& file)
 {
-  using PhaseValues = std::vector<std::array<uint32, 2>>;
+  using PhaseValuesType = std::vector<std::array<uint32, 2>>;
   ini::IniFile inputIni;
   inputIni.load(file);
   if(inputIni.count(k_EnsembleInfo) == 0)
   {
-    return MakeErrorResult<PhaseValues>(-13001, fmt::format("File '{}' has no group '{}'.", file, k_EnsembleInfo));
+    return MakeErrorResult<PhaseValuesType>(-13001, fmt::format("File '{}' has no group '{}'.", file, k_EnsembleInfo));
   }
   if(inputIni[k_EnsembleInfo].count(k_NumberPhases) == 0)
   {
-    return MakeErrorResult<PhaseValues>(-13002, fmt::format("File '{}' group '{}' has no key '{}'.", file, k_EnsembleInfo, k_NumberPhases));
+    return MakeErrorResult<PhaseValuesType>(-13002, fmt::format("File '{}' group '{}' has no key '{}'.", file, k_EnsembleInfo, k_NumberPhases));
   }
   const int32 numPhases = inputIni[k_EnsembleInfo][k_NumberPhases].as<int32>();
   if(numPhases <= 0)
   {
-    return MakeErrorResult<PhaseValues>(-13003, fmt::format("File '{}' has Number_Phases = {}. Use a positive phase count.", file, numPhases));
+    return MakeErrorResult<PhaseValuesType>(-13003, fmt::format("File '{}' has Number_Phases = {}. Use a positive phase count.", file, numPhases));
   }
-  PhaseValues values{{ebsdlib::CrystalStructure::UnknownCrystalStructure, static_cast<uint32>(PhaseType::Type::Unknown)}};
+  PhaseValuesType values{{ebsdlib::CrystalStructure::UnknownCrystalStructure, static_cast<uint32>(PhaseType::Type::Unknown)}};
   for(int64 index = 1; index <= numPhases; ++index)
   {
     const std::string group = std::to_string(index);
     if(inputIni.count(group) == 0)
     {
-      return MakeErrorResult<PhaseValues>(-13004, fmt::format("File '{}' has no phase group '{}'. Number phases consecutively from 1.", file, group));
+      return MakeErrorResult<PhaseValuesType>(-13004, fmt::format("File '{}' has no phase group '{}'. Number phases consecutively from 1.", file, group));
     }
     if(inputIni[group].count(k_CrystalStructure) == 0)
     {
-      return MakeErrorResult<PhaseValues>(-13005, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_CrystalStructure));
+      return MakeErrorResult<PhaseValuesType>(-13005, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_CrystalStructure));
     }
     if(inputIni[group].count(k_PhaseType) == 0)
     {
-      return MakeErrorResult<PhaseValues>(-13006, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_PhaseType));
+      return MakeErrorResult<PhaseValuesType>(-13006, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_PhaseType));
     }
     const auto crystalString = inputIni[group][k_CrystalStructure].as<std::string>();
     const auto phaseString = inputIni[group][k_PhaseType].as<std::string>();
@@ -132,12 +134,12 @@ Result<std::vector<std::array<uint32, 2>>> ReadEnsembleInfo::ReadEnsembleFile(co
     const auto phase = k_EnsemblePhaseTypeInfoLookup.find(phaseString);
     if(crystal == k_EnsembleCrystalInfoLookup.end())
     {
-      return MakeErrorResult<PhaseValues>(
+      return MakeErrorResult<PhaseValuesType>(
           -13007, fmt::format("File '{}' phase '{}' has invalid CrystalStructure '{}'. Use a crystal structure listed in the filter documentation.", file, group, crystalString));
     }
     if(phase == k_EnsemblePhaseTypeInfoLookup.end() || phase->second == static_cast<uint32>(PhaseType::Type::Unknown))
     {
-      return MakeErrorResult<PhaseValues>(-13008, fmt::format("File '{}' phase '{}' has invalid PhaseType '{}'. Use a phase type listed in the filter documentation.", file, group, phaseString));
+      return MakeErrorResult<PhaseValuesType>(-13008, fmt::format("File '{}' phase '{}' has invalid PhaseType '{}'. Use a phase type listed in the filter documentation.", file, group, phaseString));
     }
     values.push_back({crystal->second, phase->second});
   }
