@@ -1,5 +1,7 @@
 # Read GrainMapper3D File
 
+All mapped numeric dataset types are imported; LabDCT spacing must be finite and positive, and geometry header values must define a finite origin.
+
 ## Group (Subgroup)
 
 Readers

@@ -7,6 +7,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include <filesystem>
 #include <fstream>
 namespace fs = std::filesystem;
@@ -151,7 +152,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("CrystalStructure missing")
   {
@@ -161,7 +162,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("PrimaryPhase misspelled")
   {
@@ -171,7 +172,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("Cubic misspelled")
   {
@@ -181,7 +182,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
   SECTION("Incorrect group numbers")
   {
@@ -191,7 +192,7 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
 
   // Execute the filter and check the result
@@ -241,4 +242,28 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: SIMPL Backwards Compatib
       CHECK(args.value<std::string>(ReadEnsembleInfoFilter::k_PhaseTypesArrayName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ReadEnsembleInfo: EBSD regression preflight validation", "[OrientationAnalysis][ReadEnsembleInfo]")
+{
+  const auto input = GENERATE(std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=-1\n"), -13003), std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=1\n"), -13004),
+                              std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=1\n[1]\nPhaseType=PrimaryPhase\n"), -13005),
+                              std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=1\n[1]\nCrystalStructure=Cubic_High\n"), -13006),
+                              std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=1\n[1]\nCrystalStructure=bad\nPhaseType=PrimaryPhase\n"), -13007),
+                              std::make_pair(std::string("[EnsembleInfo]\nNumber_Phases=1\n[1]\nCrystalStructure=Cubic_High\nPhaseType=bad\n"), -13008));
+  const fs::path path = fs::path(k_BinaryTestOutputDir.view()) / "ensemble_regression.ini";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteTestFile(path.string(), input.first);
+  DataStructure ds;
+  DataGroup::Create(ds, "Data");
+  ReadEnsembleInfoFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadEnsembleInfoFilter::k_InputFile_Key, path);
+  args.insertOrAssign(ReadEnsembleInfoFilter::k_ParentGroupPath_Key, DataPath({"Data"}));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().front().code == input.second);
 }

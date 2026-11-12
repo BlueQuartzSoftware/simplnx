@@ -458,6 +458,37 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     {
       result = FillDataArrayAnnounced<uint8>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
     }
+    else
+    {
+      // Conversion datasets were removed from their sets above. Only the remaining
+      // mapped scalar types need a direct transfer here.
+      switch(nameToDataTypeMap.at(dataSetName))
+      {
+      case DataType::int8:
+        result = FillDataArrayAnnounced<int8>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::int16:
+        result = FillDataArrayAnnounced<int16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint16:
+        result = FillDataArrayAnnounced<uint16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint32:
+        result = FillDataArrayAnnounced<uint32>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::int64:
+        result = FillDataArrayAnnounced<int64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::uint64:
+        result = FillDataArrayAnnounced<uint64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      case DataType::float64:
+        result = FillDataArrayAnnounced<float64>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
+        break;
+      default:
+        break;
+      }
+    }
     if(result.invalid())
     {
       return result;

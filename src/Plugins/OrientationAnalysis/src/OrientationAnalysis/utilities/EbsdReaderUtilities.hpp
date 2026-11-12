@@ -4,6 +4,7 @@
 
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <H5Support/H5Utilities.h>
 #include <algorithm>
@@ -21,6 +22,7 @@
 
 #include <cmath>
 #include <concepts>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -31,6 +33,39 @@ using namespace nx::core;
 
 namespace EbsdReaderUtilities
 {
+/**
+ * @brief Return the lowercase file suffix for EBSD dispatch.
+ * @param path Input file path.
+ * @return Lowercase suffix with its leading dot, or an empty string if absent.
+ */
+inline std::string NormalizedExtension(const std::filesystem::path& path)
+{
+  return StringUtilities::toLower(path.extension().string());
+}
+
+/** @brief Error for an output file that resolves to its input. */
+inline constexpr int32 k_SameHexOutputFile = -44604;
+
+/**
+ * @brief Reject a final output that resolves to its input before creating a temporary file.
+ * @param input Source ANG file path.
+ * @param output Final output path, before AtomicFile creates a temporary file.
+ * @return Error if normalized paths match or existing files are equivalent.
+ */
+inline Result<> ValidateHexOutputPath(const std::filesystem::path& input, const std::filesystem::path& output)
+{
+  std::error_code inputError;
+  std::error_code outputError;
+  const auto normalizedInput = std::filesystem::weakly_canonical(input, inputError);
+  const auto normalizedOutput = std::filesystem::weakly_canonical(output, outputError);
+  std::error_code equivalentError;
+  if((!inputError && !outputError && normalizedInput == normalizedOutput) || std::filesystem::equivalent(input, output, equivalentError))
+  {
+    return MakeErrorResult(k_SameHexOutputFile, fmt::format("Output file '{}' is the input file '{}'. Choose another output directory or a nonempty output prefix.", output.string(), input.string()));
+  }
+  return {};
+}
+
 /**
  * @brief Gives the rotation about the crystal c-axis from the Oxford/HKL hexagonal frame to EDAX/TSL, in radians.
  * @tparam T Floating-point type for the offset.

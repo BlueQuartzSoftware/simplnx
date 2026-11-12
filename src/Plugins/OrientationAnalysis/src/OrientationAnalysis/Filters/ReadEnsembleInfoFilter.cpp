@@ -102,27 +102,12 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  int32 numPhases = 0;
-
-  ini::IniFile inputIni;
-  inputIni.load(pInputFileValue);
-  if(inputIni.count(ReadEnsembleInfo::k_EnsembleInfo) == 0)
+  auto phases = ReadEnsembleInfo::ReadEnsembleFile(pInputFileValue);
+  if(phases.invalid())
   {
-    return MakePreflightErrorResult(-13001, fmt::format("Could not find the group name {} from the input file '{}'", ReadEnsembleInfo::k_EnsembleInfo, pInputFileValue));
+    return MakePreflightErrorResult(phases.errors().front().code, phases.errors().front().message);
   }
-  if(inputIni[ReadEnsembleInfo::k_EnsembleInfo].count(ReadEnsembleInfo::k_NumberPhases) == 0)
-  {
-    return MakePreflightErrorResult(
-        -13002, fmt::format("Could not find the key {} in the {} group from the input file '{}'", ReadEnsembleInfo::k_NumberPhases, ReadEnsembleInfo::k_EnsembleInfo, pInputFileValue));
-  }
-  numPhases = inputIni[ReadEnsembleInfo::k_EnsembleInfo][ReadEnsembleInfo::k_NumberPhases].as<int32>(); // read number of phases from input file
-
-  if(0 == numPhases) // 0 was entered as the Number_Phases
-  {
-    return MakePreflightErrorResult(-13003, fmt::format("The {} in the {} group must be greater than 0", ReadEnsembleInfo::k_NumberPhases, ReadEnsembleInfo::k_EnsembleInfo));
-  }
-
-  ShapeType tupleDims(1, numPhases + 1);
+  ShapeType tupleDims{phases.value().size()};
   auto attributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAttributeMatrixPath, tupleDims);
   resultOutputActions.value().appendAction(std::move(attributeMatrixAction));
 

@@ -1,13 +1,17 @@
 import simplnx as nx
 
-import nximageprocessing as nximgproc
 import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
-import numpy as np
 
 #Create a Data Structure
 data_structure = nx.DataStructure()
+
+# The existing 6_6_ImportH5Data archive supplies this single-scan OIM file.
+scan_selection = nxor.OEMEbsdScanSelectionParameter.ValueType()
+scan_selection.input_file_path = str(nxtest.get_data_directory() / "OrientationAnalysis/EdaxOIMData.h5")
+scan_selection.scan_names = ["Scan 1"]
+scan_selection.stacking_order = 0
 
 # Filter 1
 # Instantiate Filter
@@ -17,9 +21,10 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
     cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
-    image_geometry_name=nx.DataPath("ImageGeom"),
+    output_image_geometry_path=nx.DataPath("ImageGeom"),
     origin=[0.0, 0.0, 0.0],
     read_pattern_data=False,
+    selected_scan_names=scan_selection,
     z_spacing=1.0
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -44,7 +49,7 @@ result = nx_filter.execute(
     remove_original_geometry=True,
     rotate_slice_by_slice=True,
     rotation_axis_angle=[0.0, 1.0, 0.0, 180.0],
-    rotation_representation=("Axis Angle"),
+    rotation_representation_index=0,
     input_image_geometry_path=nx.DataPath("ImageGeom")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -57,7 +62,7 @@ nx_filter = nx.WriteDREAM3DFilter()
 # Execute WriteDREAM3DFilter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
                         export_file_path=output_file_path,
-                        write_xdmf_file=True
+                        write_xdmf_file=False
 )
 nxtest.check_filter_result(nx_filter, result)
 

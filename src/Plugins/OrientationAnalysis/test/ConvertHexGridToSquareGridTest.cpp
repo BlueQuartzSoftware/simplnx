@@ -1,5 +1,12 @@
+#include "OrientationAnalysis/Filters/Algorithms/ConvertHexGridToSquareGrid.hpp"
+#include "H5Support/H5Lite.h"
+#include "H5Support/H5Utilities.h"
 #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGridFilter.hpp"
+#include "OrientationAnalysis/Filters/EbsdToH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
+#include <chrono>
 
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -224,4 +231,189 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Cancellation b
   fs::remove_all(outputPath, cleanupError);
   REQUIRE_FALSE(cleanupError);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+std::string SyntheticAng(float32 step = 1.0F, const std::string& comment = "#\n")
+{
+  return "# TEM_PIXperUM 1\n# x-star 0.5\n# y-star 0.5\n# z-star 0.5\n# WorkingDistance 15\n"
+         "# Phase 1\n# MaterialName Nickel\n# Formula Ni\n# Symmetry 43\n# LatticeConstants 3.52 3.52 3.52 90 90 90\n"
+         "# NumberFamilies 0\n# Categories 0 0 0 0 0\n# GRID: HexGrid\n# XSTEP: " +
+         std::to_string(step) + "\n# YSTEP: 1\n# NCOLS_ODD: 2\n# NCOLS_EVEN: 1\n# NROWS: 2\n" + comment +
+         "0.1 0.2 0.3 0 0 10 0.5 1 100 1\n0.4 0.5 0.6 1 0 20 0.5 1 100 1\n0.7 0.8 0.9 0.5 1 30 0.5 1 100 1\n";
+}
+void WriteSyntheticAng(const fs::path& path, float32 step = 1.0F, const std::string& comment = "#\n")
+{
+  std::ofstream file(path, std::ios::binary);
+  file << SyntheticAng(step, comment);
+  REQUIRE(file.good());
+}
+Arguments HexArguments(const fs::path& path)
+{
+  Arguments args;
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, false);
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key, path);
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, path.parent_path());
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::string("square_"));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::vector<float32>{1, 1});
+  return args;
+}
+} // namespace
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: EBSD regression suffix", "[OrientationAnalysis][ConvertHexGridToSquareGrid]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_suffix.ANG";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(path.parent_path() / "square_ebsd_suffix.ANG", ec);
+  });
+  WriteSyntheticAng(path);
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure ds;
+  auto result = filter.execute(ds, HexArguments(path));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(fs::exists(path.parent_path() / "square_ebsd_suffix.ANG"));
+}
+TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: EBSD regression suffix", "[OrientationAnalysis][EbsdToH5Ebsd]")
+{
+  const auto extension = GENERATE(std::string(".ang"), std::string(".ANG"), std::string(".Ctf"));
+  const fs::path dir = fs::path(unit_test::k_BinaryTestOutputDir.view());
+  const fs::path input = dir / ("ebsd_stack1" + extension);
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(input, ec);
+    fs::remove(dir / "ebsd_stack.h5ebsd", ec);
+  });
+  {
+    std::ofstream file(input);
+    if(extension == ".Ctf")
+    {
+      file << "Channel Text File\nPrj\tSynthetic\nAuthor\tTest\nJobMode\tGrid\n"
+              "XCells\t1\nYCells\t1\nXStep\t1\nYStep\t1\nAcqE1\t0\nAcqE2\t0\nAcqE3\t0\n"
+              "Euler angles refer to Sample Coordinate system (CS0)!\tMag\t2000\tCoverage\t100\tDevice\t0\tKV\t20\tTiltAngle\t70\tTiltAxis\t0\n"
+              "Phases\t1\n3.52;3.52;3.52\t90;90;90\tNickel\t11\tSynthetic\n"
+              "Phase\tX\tY\tBands\tError\tEuler1\tEuler2\tEuler3\tMAD\tBC\tBS\n"
+              "1\t0\t0\t7\t0\t10\t20\t30\t0.5\t105\t177\n";
+    }
+    else
+    {
+      file << StringUtilities::replace(StringUtilities::replace(StringUtilities::replace(SyntheticAng(), "HexGrid", "SqrGrid"), "NCOLS_EVEN: 1", "NCOLS_EVEN: 2"), "0.9 0.5 1", "0.9 0 1")
+           << "1.0 1.1 1.2 1 1 40 0.5 1 100 1\n";
+    }
+    REQUIRE(file.good());
+  }
+  GeneratedFileListParameter::ValueType list;
+  list.inputPath = dir.string();
+  list.filePrefix = "ebsd_stack";
+  list.fileExtension = extension;
+  list.paddingDigits = 0;
+  list.startIndex = 1;
+  list.endIndex = 1;
+  list.incrementIndex = 1;
+  Arguments args;
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, list);
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, dir / "ebsd_stack.h5ebsd");
+  EbsdToH5EbsdFilter filter;
+  DataStructure ds;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(fs::exists(dir / "ebsd_stack.h5ebsd"));
+}
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: EBSD regression cache older timestamp", "[OrientationAnalysis][ConvertHexGridToSquareGrid]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_cache.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteSyntheticAng(path);
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure ds;
+  auto first = filter.preflight(ds, HexArguments(path));
+  SIMPLNX_RESULT_REQUIRE_VALID(first.outputActions);
+  const auto originalTime = fs::last_write_time(path);
+  WriteSyntheticAng(path, 2.0F);
+  fs::last_write_time(path, originalTime - std::chrono::hours(1));
+  auto second = filter.preflight(ds, HexArguments(path));
+  SIMPLNX_RESULT_REQUIRE_VALID(second.outputActions);
+  REQUIRE(second.outputValues.at(0).value != first.outputValues.at(0).value);
+  auto third = filter.preflight(ds, HexArguments(path));
+  SIMPLNX_RESULT_REQUIRE_VALID(third.outputActions);
+  REQUIRE(third.outputValues.at(0).value == second.outputValues.at(0).value);
+}
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: EBSD regression same file", "[OrientationAnalysis][ConvertHexGridToSquareGrid]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_preserve.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteSyntheticAng(path);
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure ds;
+  auto args = HexArguments(path);
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::string{});
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().front().code == -44604);
+  ConvertHexGridToSquareGridInputValues values;
+  values.MultiFile = false;
+  values.InputPath = path;
+  values.OutputPath = path.parent_path() / ".";
+  values.OutputFilePrefix = "";
+  values.XYSpacing = {1, 1};
+  std::atomic_bool cancel = false;
+  auto result = ConvertHexGridToSquareGrid(ds, {}, cancel, &values)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -44604);
+  std::ifstream file(path);
+  const std::string bytes((std::istreambuf_iterator<char>(file)), {});
+  REQUIRE(bytes == SyntheticAng());
+}
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: EBSD regression short comments", "[OrientationAnalysis][ConvertHexGridToSquareGrid]")
+{
+  const auto comment = GENERATE(std::string("# \n"), std::string("# Notes\n"));
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_comment.ang";
+  const auto output = path.parent_path() / "square_ebsd_comment.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(output, ec);
+  });
+  WriteSyntheticAng(path, 1, comment);
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure ds;
+  auto result = filter.execute(ds, HexArguments(path));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  std::ifstream file(output);
+  const std::string bytes((std::istreambuf_iterator<char>(file)), {});
+  REQUIRE(bytes.find(comment) != std::string::npos);
+}
+
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: CTF suffix is case insensitive", "[OrientationAnalysis][ConvertHexGridToSquareGrid]")
+{
+  const auto extension = GENERATE(std::string(".ctf"), std::string(".Ctf"), std::string(".CTF"));
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("ebsd_not_hex1" + extension);
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteSyntheticAng(path);
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure ds;
+  auto args = HexArguments(path);
+  GeneratedFileListParameter::ValueType list;
+  list.inputPath = path.parent_path().string();
+  list.filePrefix = "ebsd_not_hex";
+  list.fileExtension = extension;
+  list.startIndex = 1;
+  list.endIndex = 1;
+  list.incrementIndex = 1;
+  list.paddingDigits = 0;
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, true);
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, list);
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().front().code == -44601);
 }

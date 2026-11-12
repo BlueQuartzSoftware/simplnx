@@ -1,5 +1,7 @@
 #include "ConvertHexGridToSquareGridFilter.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ConvertHexGridToSquareGrid.hpp"
 
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -140,11 +142,11 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     inputPath = fs::path(files[0]);
   }
 
-  if(inputPath.extension() == ("." + ebsdlib::Ctf::FileExt))
+  if(EbsdReaderUtilities::NormalizedExtension(inputPath) == ("." + ebsdlib::Ctf::FileExt))
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
+  else if(EbsdReaderUtilities::NormalizedExtension(inputPath) != ("." + ebsdlib::Ang::FileExt))
   {
     return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
   }
@@ -154,8 +156,21 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
   }
 
+  const auto outputDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  const auto prefix = filterArgs.value<std::string>(k_OutputPrefix_Key);
+  const auto inputFiles = pUseMultipleFilesValue ? pInputFileListInfoValue.generate() : std::vector<std::string>{inputPath.string()};
+  for(const auto& file : inputFiles)
+  {
+    const fs::path source(file);
+    auto pathResult = EbsdReaderUtilities::ValidateHexOutputPath(source, outputDirectory / (prefix + source.filename().string()));
+    if(pathResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(pathResult), {})};
+    }
+  }
+
   if(!fs::exists(s_HeaderCache[m_InstanceId].workingPath) || s_HeaderCache[m_InstanceId].workingPath != inputPath ||
-     fs::last_write_time(s_HeaderCache[m_InstanceId].workingPath) > s_HeaderCache[m_InstanceId].lastWrite || s_HeaderCache[m_InstanceId].preflightReturnString.empty())
+     fs::last_write_time(s_HeaderCache[m_InstanceId].workingPath) != s_HeaderCache[m_InstanceId].lastWrite || s_HeaderCache[m_InstanceId].preflightReturnString.empty())
   {
     s_HeaderCache[m_InstanceId].workingPath = inputPath;
     s_HeaderCache[m_InstanceId].lastWrite = fs::last_write_time(inputPath);

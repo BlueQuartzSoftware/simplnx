@@ -415,6 +415,8 @@ add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
 # These should be relative to the
 set(PREBUILT_PIPELINE_NAMES
 
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/ImportEdaxOIMData.d3dpipeline"
+
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Align_Sections_Examples/AlignSectionsMutualInformation.d3dpipeline" # This example depends on the SmallIN100.h5ebsd file
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/CI_Histogram.d3dpipeline"

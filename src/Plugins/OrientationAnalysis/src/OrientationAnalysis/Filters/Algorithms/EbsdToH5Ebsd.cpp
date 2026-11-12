@@ -1,5 +1,7 @@
 #include "EbsdToH5Ebsd.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -152,9 +154,8 @@ Result<> EbsdToH5Ebsd::operator()()
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
     auto firstFilePath = fs::path(fileList[0]);
-    std::string ext = firstFilePath.extension().string();
-    ext.erase(0, 1); // Remove the '.' from the string
-    if(ext == ebsdlib::Ang::FileExt)
+    const std::string ext = EbsdReaderUtilities::NormalizedExtension(firstFilePath);
+    if(ext == "." + ebsdlib::Ang::FileExt)
     {
       err = H5Support::H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ang::Manufacturer);
       if(err < 0)
@@ -165,7 +166,7 @@ Result<> EbsdToH5Ebsd::operator()()
       }
       fileImporter = ebsdlib::H5AngImporter::New();
     }
-    else if(ext == ebsdlib::Ctf::FileExt)
+    else if(ext == "." + ebsdlib::Ctf::FileExt)
     {
       err = H5Support::H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ctf::Manufacturer);
       if(err < 0)
