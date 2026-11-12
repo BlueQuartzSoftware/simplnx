@@ -21,6 +21,7 @@
 #include <fstream>
 #include <mutex>
 #include <new>
+#include <string_view>
 
 /**
  * @namespace nx::core::ImageRotationUtilities

@@ -38,7 +38,7 @@ If *Put Input Origin at the Center of Geometry* is enabled, the user-supplied or
 
 ### Numeric input constraints
 
-When **Change Spacing** is enabled, each **Spacing** component must be finite and greater than 0. When **Change Origin** is enabled, each **Origin** component must be finite. **Put Input Origin at the Center of Geometry** is active only when **Change Origin** is enabled. Inactive vectors are ignored. Preflight warns if centering with the current geometry metadata produces a nonfinite origin. Execution checks the final centered origin before changing spacing or origin.
+When **Set Spacing** is enabled, each **Spacing** component must be finite and greater than 0. When **Set Origin** is enabled, each **Origin** component must be finite. **Put Input Origin at the Center of Geometry** is active only when **Set Origin** is enabled. Inactive vectors are ignored. Preflight warns if centering with the current geometry metadata produces a nonfinite origin. Execution checks the final centered origin before changing spacing or origin.
 
 % Auto generated parameter table will be inserted here
 
