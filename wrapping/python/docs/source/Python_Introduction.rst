@@ -23,7 +23,7 @@ are three plugins, but only 2 of those you will need to explicitly import.
 
 + ComplexCode: This plugin is included into the *simplnx* module automatically
 + OrientationAnalysis: This plugin should be imported if any of the functionality is needed.
-+ ImageProcessing: This plugin should be imported if any of the functionality is needed.
++ NXImageProcessing: This plugin should be imported if any of the functionality is needed.
 
 In your python file you will need the following
 
@@ -35,8 +35,8 @@ If you will need functionality from either of the other *simplnx* plugins then y
 
 .. code:: python
 
-    import imageprocessing as cximgproc
-    import orientationanalysis as cxor
+    import nximageprocessing as nximgproc
+    import orientationanalysis as nxor
 
 Creating the DataStructure
 --------------------------
@@ -363,7 +363,7 @@ The next code section was take from `basic_arrays.py <https://github.com/BlueQua
     npdata[:] = np.loadtxt(file_path, delimiter=',')
     # Run the ConvertOrientation Filter to convert the Eulers to Quaternions
     quat_path = nx.DataPath(['Quaternions'])
-    result = cxor.ConvertOrientations.execute(data_structure=data_structure,
+    result = nxor.ConvertOrientations.execute(data_structure=data_structure,
                                             input_orientation_array_path=array_path,
                                             input_type=0,
                                             output_orientation_array_name='Quaternions',

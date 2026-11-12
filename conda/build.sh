@@ -14,7 +14,7 @@ echo "#-------------------------------------------------------------------------
 mkdir -p "$PREFIX/share/simplnx/pipelines/"
 cp -r "simplnx/src/Plugins/SimplnxCore/pipelines" "$PREFIX/share/simplnx/pipelines/SimplnxCore/"
 cp -r "simplnx/src/Plugins/OrientationAnalysis/pipelines" "$PREFIX/share/simplnx/pipelines/OrientationAnalysis/"
-cp -r "simplnx/src/Plugins/ImageProcessing/pipelines" "$PREFIX/share/simplnx/pipelines/ImageProcessing/"
+cp -r "simplnx/src/Plugins/NXImageProcessing/pipelines" "$PREFIX/share/simplnx/pipelines/NXImageProcessing/"
 
 # *****************************************************************************
 echo "#-------------------------------------------------------------------------------"

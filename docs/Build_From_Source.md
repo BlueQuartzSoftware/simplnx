@@ -158,7 +158,7 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 | `SIMPLNX_BUILD_PYTHON_TESTS` | `BOOL` | Turning this on will also compile the python tests and include them in the all ctests target |
 | `SIMPLNX_BUILD_PYTHON_DOCS` | `BOOL` | Turning this on will build the python documentation, `SPHINX_BUILD_EXECUTABLE` must be defined |
 
-### ImageProcessing
+### NXImageProcessing
 
 This plugin gives simplnx the ability to read and write images, and to process images. It uses its own
 image-processing code, so it needs no third-party image library and no extra CMake argument.
