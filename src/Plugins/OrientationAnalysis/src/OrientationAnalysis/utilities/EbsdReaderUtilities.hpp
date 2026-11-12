@@ -322,9 +322,9 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
 
     if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
     {
-      const auto ops = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup < 0 ? usize{0} : static_cast<usize>(phaseInfo.SpaceGroup));
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                                               (ops != nullptr ? ops->getSymmetryName() : "Unknown"), phaseInfo.SpaceGroup)});
+      const auto ops = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(static_cast<usize>(phaseInfo.SpaceGroup));
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.PhaseIndex),
+                                        fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name, ops->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
 }

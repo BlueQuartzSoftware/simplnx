@@ -212,6 +212,11 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(const GrainMapperReader& reader
     return {};
   }
   const auto phases = reader.getPhaseVector();
+  const auto validationResult = ValidateSpaceGroups(phases, m_InputValues->InputFile.string());
+  if(validationResult.invalid())
+  {
+    return validationResult;
+  }
   DataPath cellEnsembleAMPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellEnsembleAttributeMatrixName);
 
   // Use the standard EBSD ensemble names that downstream orientation filters expect.
@@ -234,7 +239,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(const GrainMapperReader& reader
   for(const auto& phase : phases)
   {
     const int32 phaseId = index++;
-    crystalStructures[phaseId] = ebsdlib::LaueOps::GetLaueOpsIndexFromSpaceGroupNumber(phase.SpaceGroup < 0 ? usize{0} : static_cast<usize>(phase.SpaceGroup));
+    crystalStructures[phaseId] = ebsdlib::LaueOps::GetLaueOpsIndexFromSpaceGroupNumber(static_cast<usize>(phase.SpaceGroup));
     materialNames[phaseId] = phase.Name;
     std::vector<double> lc = phase.UnitCell;
 

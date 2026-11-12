@@ -10,6 +10,8 @@
 
 #include "simplnx/Common/Types.hpp"
 
+#include <EbsdLib/LaueOps/LaueOps.h>
+
 #include <fmt/format.h>
 #include <utility>
 
@@ -34,10 +36,23 @@ constexpr int32 k_InvalidAbsorptionCenter = -38616;
 constexpr int32 k_InvalidAbsorptionVirtualShift = -38617;
 constexpr int32 k_InvalidCompletenessInfo = -38618;
 constexpr int32 k_InvalidCompletenessRank = -38619;
+constexpr int32 k_InvalidSpaceGroup = -67600;
 } // namespace
 
 namespace GrainMapper3DUtilities
 {
+Result<> ValidateSpaceGroups(const std::vector<GrainMapperReader::GrainMapperPhase>& phases, const std::string& filePath)
+{
+  for(const auto& phase : phases)
+  {
+    if(phase.SpaceGroup < 1 || phase.SpaceGroup > 230 || ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(static_cast<usize>(phase.SpaceGroup)) == nullptr)
+    {
+      return MakeErrorResult(k_InvalidSpaceGroup, fmt::format("File '{}' phase {} has invalid Space Group {}. Use a space group from 1 to 230.", filePath, phase.PhaseIndex, phase.SpaceGroup));
+    }
+  }
+  return {};
+}
+
 const std::map<std::string, size_t> k_NameToCompDimMap = {{GM3DConst::k_CompletenessName, 1}, {GM3DConst::k_GrainIdName, 1},  {GM3DConst::k_MaskName, 1},     {GM3DConst::k_PhaseIdName, 1},
                                                           {GM3DConst::k_RodriguesName, 3},    {GM3DConst::k_EulerZXZName, 3}, {GM3DConst::k_EulerZYZName, 3}, {GM3DConst::k_QuaternionName, 4},
                                                           {GM3DConst::k_IPF001Name, 3},       {GM3DConst::k_IPF010Name, 3},   {GM3DConst::k_IPF100Name, 3}};

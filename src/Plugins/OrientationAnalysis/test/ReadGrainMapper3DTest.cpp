@@ -739,9 +739,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:SpaceGroupSymmetry", "[Orienta
       GENERATE(std::make_pair(2, CrystalStructure::Triclinic), std::make_pair(10, CrystalStructure::Monoclinic), std::make_pair(47, CrystalStructure::OrthoRhombic),
                std::make_pair(83, CrystalStructure::Tetragonal_Low), std::make_pair(123, CrystalStructure::Tetragonal_High), std::make_pair(147, CrystalStructure::Trigonal_Low),
                std::make_pair(162, CrystalStructure::Trigonal_High), std::make_pair(175, CrystalStructure::Hexagonal_Low), std::make_pair(194, CrystalStructure::Hexagonal_High),
-               std::make_pair(200, CrystalStructure::Cubic_Low), std::make_pair(225, CrystalStructure::Cubic_High), std::make_pair(-1, CrystalStructure::UnknownCrystalStructure),
-               std::make_pair(0, CrystalStructure::UnknownCrystalStructure), std::make_pair(231, CrystalStructure::UnknownCrystalStructure),
-               std::make_pair(std::numeric_limits<int32>::max(), CrystalStructure::UnknownCrystalStructure));
+               std::make_pair(200, CrystalStructure::Cubic_Low), std::make_pair(225, CrystalStructure::Cubic_High));
   CAPTURE(spaceGroup, expected);
   GrainMapperFixtureSpec spec;
   spec.SpaceGroup = spaceGroup;
@@ -758,7 +756,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:SpaceGroupSymmetry", "[Orienta
   const auto preflight = filter.preflight(dataStructure, args);
   auto actions = preflight.outputActions;
   SIMPLNX_RESULT_REQUIRE_VALID(actions);
-  const std::string expectedName = expected == CrystalStructure::UnknownCrystalStructure ? "Unknown" : LaueOps::GetAllOrientationOps()[expected]->getSymmetryName();
+  const std::string expectedName = LaueOps::GetAllOrientationOps()[expected]->getSymmetryName();
   bool foundSymmetry = false;
   for(const auto& value : preflight.outputValues)
   {
@@ -773,6 +771,55 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:SpaceGroupSymmetry", "[Orienta
   const auto& structures = RequireDataArray<uint32>(dataStructure, geometryPath.createChildPath(k_CellEnsembleAttributeMatrixName).createChildPath("CrystalStructures"));
   CHECK(structures[1] == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:InvalidSpaceGroup", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const int32 spaceGroup = GENERATE(-1, 0, 231, std::numeric_limits<int32>::max());
+  GrainMapperFixtureSpec spec;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_InvalidSpaceGroup.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Invalid SpaceGroup"});
+  ApplyGrainMapperRegularActions(dataStructure, inputFile, geometryPath);
+  const auto structuresPath = geometryPath.createChildPath(k_CellEnsembleAttributeMatrixName).createChildPath("CrystalStructures");
+  auto* structures = dataStructure.getDataAs<UInt32Array>(structuresPath);
+  REQUIRE(structures != nullptr);
+  structures->fill(42);
+  spec.SpaceGroup = spaceGroup;
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  const std::string expectedMessage = "File '" + inputFile.string() + "' phase 0 has invalid Space Group " + std::to_string(spaceGroup) + ". Use a space group from 1 to 230.";
+
+  SECTION("Preflight")
+  {
+    const ReadGrainMapper3DFilter filter;
+    const auto args = GrainMapperArguments(inputFile, geometryPath);
+    const DataStructure preflightData;
+    const auto preflight = filter.preflight(preflightData, args);
+    const auto& result = preflight.outputActions;
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -67600);
+    CHECK(result.errors().front().message == expectedMessage);
+    CHECK(preflight.outputValues.empty());
+  }
+  SECTION("Execute without preflight")
+  {
+    const IFilter::MessageHandler messageHandler = {};
+    const std::atomic_bool shouldCancel = false;
+    auto inputValues = GrainMapperInputValues(inputFile, geometryPath);
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -67600);
+    CHECK(result.errors().front().message == expectedMessage);
+    CHECK((*structures)[0] == 42);
+    CHECK((*structures)[1] == 42);
+  }
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:InvalidUnitCell", "[OrientationAnalysis][ReadGrainMapper3D]")

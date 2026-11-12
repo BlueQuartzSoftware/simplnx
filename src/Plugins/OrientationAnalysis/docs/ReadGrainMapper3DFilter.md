@@ -16,7 +16,7 @@ This filter reads Version 4 and Version 5 **GrainMapper3D** HDF5 (`.h5`) files. 
 
 When LabDCT is selected, the filter sets **Crystal Structures** from each phase's `SpaceGroup` value.
 EbsdLib maps values 1 to 230 to Laue classes with the ranges from International Tables for Crystallography, Volume A.
-A value outside 1 to 230 imports as **Unknown**.
+Preflight reports an error for a space group outside 1 to 230.
 
 When LabDCT is selected, each phase's `UnitCell` must contain exactly 6 values.
 The `Extent`, `Spacing`, `Center`, and `VirtualShift` datasets must each contain exactly 3 values in every selected image group.

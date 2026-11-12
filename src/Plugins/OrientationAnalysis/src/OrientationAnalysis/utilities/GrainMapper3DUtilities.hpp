@@ -134,4 +134,12 @@ private:
   std::map<std::string, nx::core::DataType> m_NameToDataTypeMap;
 };
 
+/**
+ * @brief Rejects phases with space groups outside 1 to 230 or without a Laue mapping.
+ * @param phases Phase metadata read from the file.
+ * @param filePath Input file path included in the error message.
+ * @return Error -67600 for the first invalid phase, or success.
+ */
+ORIENTATIONANALYSIS_EXPORT nx::core::Result<> ValidateSpaceGroups(const std::vector<GrainMapperReader::GrainMapperPhase>& phases, const std::string& filePath);
+
 }; // namespace GrainMapper3DUtilities
