@@ -126,7 +126,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
   }
 }
 
-TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported voxel types", "[ImageProcessing][ReadVolumeGraphicsFileFilter]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported voxel types", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
 {
   const int32 bits = GENERATE(16, 32, 64);
   const std::string datatype = bits == 64 ? "float" : "unsigned integer";
@@ -180,7 +180,7 @@ TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported vox
   CHECK(preflightResult.outputActions.errors()[0].message.find("BitsPerElement " + std::to_string(bits)) != std::string::npos);
 }
 
-TEST_CASE("ImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defaults", "[ImageProcessing][ReadVolumeGraphicsFileFilter]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defaults", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
 {
   const bool declareType = GENERATE(false, true);
   CAPTURE(declareType);

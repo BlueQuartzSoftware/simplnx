@@ -1489,7 +1489,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[N
   UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   enum class OrientationCase
   {
@@ -1598,7 +1598,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[Ima
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -1687,7 +1687,7 @@ TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite c
   UnitTest::CheckArraysInheritTupleDims(executeData);
 }
 
-TEST_CASE("ImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[ImageProcessing][ReadNIfTIFileFilter]")
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
   UnitTest::LoadPlugins();
 
