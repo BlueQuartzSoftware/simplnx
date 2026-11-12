@@ -56,7 +56,7 @@ simplnx is the C++20 data-processing library behind DREAM3D-NX. It has no UI dep
 - `src/simplnx/`: the core library (DataStructure, filters, parameters, pipelines, utilities).
 - `src/Plugins/<Plugin>/`: in-tree filter plugins. Each holds its filters, `Filters/Algorithms/`, `docs/` (one Markdown
   page per filter) and `test/`.
-- `src/nxrunner/`: the command-line pipeline runner. `test/`: core library tests. `docs/`: developer documentation,
+- `src/apps/`: the command-line tools (`nxrunner` and `nxinfo`). `test/`: core library tests. `docs/`: developer documentation,
   including `docs/Coding_Knowledge_Base.md`.
 - Out-of-tree filter plugins, such as SimplnxReview, live in their own repositories and join the build through
   `SIMPLNX_PLUGIN_SEARCH_DIRS` and `SIMPLNX_EXTRA_PLUGINS`. These variables do not enable SimplnxOoc. When you need
