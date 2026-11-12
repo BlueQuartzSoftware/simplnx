@@ -150,7 +150,7 @@ TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Ramp computed-expected (bo
 // ITK-sourced real-image md5 golden: duplicates the Ball r{1,1,1} case of ITKBlackTopHatImageTest on STAPLE1.png
 // (uint8, 200x150x1), Safe Border default (true). The test compares our output md5 with the committed ITK hash. Black
 // top-hat == closing - in; this is a regression for the composite Safe Border 2D size-1-axis pad defect (fixed by
-// SafeBorderPadRadius in ImageProcessingFilterUtilities.hpp): before the fix the underlying closing's Safe Border
+// SafeBorderPadRadius in ImageFilterExecutorDetail.hpp): before the fix the underlying closing's Safe Border
 // path diverged on the 2D Ball SE, so this filter produced 429243242c23867fefa7eab7438747f8 instead of the committed
 // 445a5da6221f6d976d169b70c5538614; clamping the pad to 0 on the size-1 axis reproduces ITK exactly.
 // -----------------------------------------------------------------------------
