@@ -444,7 +444,7 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker conversion policy defaults to Error", "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker conversion policy defaults to Error", "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const WSFilter filter;
@@ -472,8 +472,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: default Error rejects a changed uint64 marker before flooding",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: default Error rejects a changed uint64 marker before flooding",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
@@ -504,8 +504,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: defaul
 }
 // NOLINTEND(bugprone-chained-comparison)
 
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32_MAX marker remains valid with uint64 output",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32_MAX marker remains valid with uint64 output",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
@@ -528,8 +528,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32
   REQUIRE(outputArrayPtr->getDataStoreRef().getValue(0) == uint64{4294967295ULL});
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: native lossless seeds propagate exactly",
-                   "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: native lossless seeds propagate exactly",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -557,8 +557,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilte
   }
 }
 
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: wide marker bounds have literal legacy results",
-                   "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: wide marker bounds have literal legacy results",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -576,8 +576,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilte
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias and lost seed choices have exact flood consequences",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias and lost seed choices have exact flood consequences",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -590,8 +590,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias 
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker copy checks chunk boundaries before writing",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker copy checks chunk boundaries before writing",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -633,7 +633,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invalid policy is rejected before execution", "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invalid policy is rejected before execution",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -651,8 +652,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invali
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: diagnostic context keeps exact 64-bit extrema",
-                   "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: diagnostic context keeps exact 64-bit extrema",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -686,8 +687,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilte
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy cancellation retains observed warning only",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy cancellation retains observed warning only",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -715,8 +716,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy c
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy warning survives transfer failure or allocation failure",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy warning survives transfer failure or allocation failure",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -760,8 +761,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy w
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conversion warning survives later facade outcomes",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conversion warning survives later facade outcomes",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -822,8 +823,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conver
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: successful transfer warnings survive later marker-copy failure",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: successful transfer warnings survive later marker-copy failure",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -853,8 +854,8 @@ TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: succes
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restoration retains transfer warnings through a short final chunk",
-          "[ImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restoration retains transfer warnings through a short final chunk",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);

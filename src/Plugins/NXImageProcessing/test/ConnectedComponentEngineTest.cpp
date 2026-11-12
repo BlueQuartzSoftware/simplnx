@@ -1129,8 +1129,8 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D cancell
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: native provisional capacity decisions require no large forest",
-          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: native provisional capacity decisions require no large forest",
+          "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
@@ -1183,7 +1183,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: native provisional capacit
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reuse consequence model", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: small legacy zero and reuse consequence model", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   // Literal wrapped IDs in a tiny real uint32 union-find. This is not a 2^32-entry forest execution.
@@ -1212,8 +1212,8 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: small legacy zero and reus
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor consequence model preserves a foreground root",
-          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: tiled zero-neighbor consequence model preserves a foreground root",
+          "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   const bool fullyConnected = GENERATE(false, true);
@@ -1269,8 +1269,8 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: tiled zero-neighbor conseq
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: capacity warning context retains independent delivered diagnostics",
-          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: capacity warning context retains independent delivered diagnostics",
+          "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
@@ -1294,8 +1294,8 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: capacity warning context r
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: seeded warning context survives resident retry copy error and cancellation",
-          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: seeded warning context survives resident retry copy error and cancellation",
+          "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
@@ -1354,8 +1354,8 @@ TEST_CASE("ImageProcessing::ConnectedComponentEngine: seeded warning context sur
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentEngine: allocation addressability and I/O failures remain errors under both policies",
-          "[ImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
+TEST_CASE("NXImageProcessing::ConnectedComponentEngine: allocation addressability and I/O failures remain errors under both policies",
+          "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter][ConnectedComponentEngine]")
 {
   UnitTest::LoadPlugins();
   const auto handling = GENERATE(ConnectedComponentLabelLimitHandling::Error, ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy);
