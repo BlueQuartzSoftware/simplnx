@@ -1,6 +1,6 @@
 #include "NormalizeImageFilter.hpp"
 
-#include "ImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
+#include "NXImageProcessing/Filters/Algorithms/NormalizeImage.hpp"
 
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
