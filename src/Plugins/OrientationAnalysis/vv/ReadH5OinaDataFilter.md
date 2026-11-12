@@ -78,6 +78,7 @@ Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.c
 | 1 | Preflight | Reject non-positive or non-finite Z spacing (`-9580`) | `Parameter Rejections` |
 | 2 | Preflight | Reject an empty scan selection (`-9581`) | `Parameter Rejections` |
 | 3 | Preflight | Reject pattern import (`-9583`) | `Parameter Rejections` |
+| 3a | Preflight | Reject nonfinite Origin components (`-9592`) | `Origin components must be finite (-9592)`; `Finite Origin bounds accepted` covers valid boundaries. |
 | 4 | Preflight | Fail while listing scans (`-9582`) | *Not directly tested. Requires a present file that cannot be read.* |
 | 5 | Preflight | Reject a selected scan that is not in the file (`-9586`) | `Missing Scan Name rejected` |
 | 6 | Preflight | Fail while reading the first scan header (`-9582`) | `Missing Lattice Angles`; `Invalid Phase Group Name` |
@@ -120,6 +121,8 @@ Source: `Filters/ReadH5OinaDataFilter.cpp`, `Filters/Algorithms/ReadH5OinaData.c
 | `Multi-Scan Slab Placement` | new-for-V&V | Verifies all scan slabs with disjoint values. |
 | `Multi-Scan Hexagonal Alignment` | new-for-V&V | Verifies alignment on each scan slab. |
 | `Format Version Variants` | new-for-V&V | Covers version 5.0, version 2.0, and no version dataset. |
+| `Origin components must be finite (-9592)` | new-for-V&V | Rejects NaN and both infinities on all three axes in preflight and public execute. |
+| `Finite Origin bounds accepted` | new-for-V&V | Imports with negative and positive float32 limits and zero; verifies stored Origin. |
 | `Parameter Rejections` | new-for-V&V | Covers Z spacing, empty selection, and unsupported pattern import. |
 | `Invalid Cell Counts rejected` | new-for-V&V | Covers zero and negative cell counts. |
 | `Scan Header Mismatch rejected` | new-for-V&V | Covers grid dimensions and step-size differences. |
@@ -192,3 +195,10 @@ The deviations document compares this verified version with `ReadH5OinaDataFilte
 | `ReadH5OinaDataFilter-D11` | Both cell counts are validated and the returned error code is consistent. |
 | `ReadH5OinaDataFilter-D12` | Invalid phase-group names produce an error instead of an exception. |
 | `ReadH5OinaDataFilter-D13` | Geometry spacing must be finite and positive. |
+
+
+## Origin validation correction
+
+`ReadH5OinaDataFilter-D16` adds preflight error `-9592` for nonfinite Origin components, before output actions. The message names the parameter, component and value. Test sensitivity verification: all nine invalid component cases failed before the production change. Finite float32 bounds remain accepted. Origin and Z Spacing are float32 parameters; a finite wider value cannot reach this interface unchanged. The existing Z Spacing guard (`-9580`) covers the only user spacing override. No archive changed.
+
+Paired Release validation for these preflight corrections: the combined `OrientationAnalysis::Read(CtfData|H5OinaData|AngData|H5Ebsd)` selection passed 55/55 in-core and 56/56 in the OOC build. Both builds used `OrientationAnalysisUnitTest`; CTest ran serially.

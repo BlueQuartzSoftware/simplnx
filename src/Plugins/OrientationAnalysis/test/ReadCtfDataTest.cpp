@@ -432,31 +432,26 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value reje
 }
 
 //------------------------------------------------------------------------------
-// A "ZCells 0" header prevents the reader's z loop from running, leaving its
-// X/Y buffers zero-filled. CtfReader::applyRasterOrder() rejects the file with
-// -101105 because those positions span a 1 x 1 extent instead of the header grid.
-// The simplnx -19603 cell-count guard remains as a backstop for a file that
-// changes between preflight and execute.
-//------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Reader/Geometry Cell Count Mismatch rejected (-101105)", "[OrientationAnalysis][ReadCtfDataFilter]")
+// Explicit zero is invalid; an absent ZCells key retains the reader's one-slice default.
+TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells preflight rejected (-67601)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
-
-  const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_zero_zcells.ctf", MakeToyCtf("ZCells\t0\n"));
-
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ctf_vv_zero_zcells.ctf";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteCtfFile(path.filename().string(), MakeToyCtf("ZCells\t0\n"));
   ReadCtfDataFilter filter;
-  DataStructure dataStructure;
-  Arguments args = MakeDefaultArgs(inputCtfFile);
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto executeResult = filter.execute(dataStructure, args);
+  DataStructure ds;
+  const auto args = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors()[0].code == -67601);
+  REQUIRE(result.errors()[0].message.find("ZCells") != std::string::npos);
+  REQUIRE(result.errors()[0].message.find(path.string()) != std::string::npos);
+  const auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors()[0].code == -101105);
-  REQUIRE(executeResult.result.errors()[0].message.find("raster grid") != std::string::npos);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(executeResult.result.errors()[0].code == -67601);
 }
 
 //------------------------------------------------------------------------------

@@ -1535,3 +1535,54 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaData: HeaderValidation optional Space 
                              {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High});
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
+
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Origin components must be finite (-9592)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  const auto axis = GENERATE(0, 1, 2);
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_origin.h5oina";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto scan = MakeFixtureAScan();
+  WriteH5OinaFixture(path.filename().string(), {scan});
+  auto args = MakeArgs(path, {scan.name});
+  std::vector<float32> origin = {-2.0F, 3.0F, -4.0F};
+  origin[axis] = value;
+  args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(origin));
+  ReadH5OinaDataFilter filter;
+  DataStructure ds;
+  auto result = filter.preflight(ds, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors()[0].code == -9592);
+  REQUIRE(result.errors()[0].message.find("Origin") != std::string::npos);
+  REQUIRE(result.errors()[0].message.find(std::array<std::string, 3>{"x", "y", "z"}[axis]) != std::string::npos);
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -9592);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Finite Origin bounds accepted", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "finite_origin.h5oina";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  const auto scan = MakeFixtureAScan();
+  WriteH5OinaFixture(path.filename().string(), {scan});
+  auto args = MakeArgs(path, {scan.name});
+  const std::vector<float32> origin = {-std::numeric_limits<float32>::max(), 0.0F, std::numeric_limits<float32>::max()};
+  args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(origin));
+  ReadH5OinaDataFilter filter;
+  DataStructure ds;
+  auto result = filter.preflight(ds, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(k_ImageGeomPath));
+  REQUIRE(ds.getDataRefAs<ImageGeom>(k_ImageGeomPath).getOrigin() == FloatVec3(origin[0], origin[1], origin[2]));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}

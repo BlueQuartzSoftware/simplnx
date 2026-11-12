@@ -346,3 +346,27 @@ Error codes `-34970` (null pattern data) and `-9588` (stacking order not applied
 **Test sensitivity verification:** Synthetic files in `test/ReadH5OinaDataTest.cpp` reproduce the failure before the fix. The regression cases are `OrientationAnalysis::ReadH5OinaData: HeaderValidation symmetry` and `ReadH5OinaData: HeaderValidation optional Space Group`. The oracle is the supported symmetry domain and the finite, positive grid contract. The legacy executable was not run for these new malformed inputs.
 
 **Recommendation:** Correct the named header value or export the file again from the acquisition software.
+
+
+---
+
+## ReadH5OinaDataFilter-D16
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadH5OinaDataFilter-D16` |
+| **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Preflight validation defect |
+
+**Symptom:** NaN or infinity in a user Origin component reached Image Geometry metadata.
+
+**Root cause:** Preflight validated spacing but did not validate Origin.
+
+**Affected users:** Users supplying nonfinite Origin components.
+
+**Correct behavior:** Preflight rejects nonfinite Origin with error `-9592`, naming Origin, the x/y/z component and its value. Origin is already float32, so no finite out-of-float32-range value reaches this check. Z Spacing already rejects nonfinite and nonpositive values with `-9580`; there is no user X/Y spacing override.
+
+**Test sensitivity verification:** `Origin components must be finite (-9592)` failed for NaN and both infinities on all three axes before the fix. `Finite Origin bounds accepted` verifies negative and positive float32 limits and zero through execute. The oracle is the finite geometry metadata contract; no generated exemplar is used.
+
+**Recommendation:** Set every Origin component to a finite float32 value.

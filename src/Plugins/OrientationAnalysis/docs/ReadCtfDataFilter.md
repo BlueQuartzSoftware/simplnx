@@ -68,6 +68,8 @@ None — this filter reads directly from a `.ctf` file on disk.
 
 ### Header validation
 
+Preflight rejects an explicit ZCells value of zero; a file without ZCells uses one slice.
+
 The file must contain supported phase Laue Group values. XStep and YStep must be finite and greater than zero, including for multi-slice files. Preflight reports invalid header values before it creates the geometry.
 
 % Auto generated parameter table will be inserted here

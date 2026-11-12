@@ -23,6 +23,7 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <list>
 #include <string>
@@ -128,6 +129,16 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const std::string inputFilePath = pSelectedScanNamesValue.inputFilePath.string();
+
+  // Origin is already float32; reject nonfinite components before geometry actions use them.
+  constexpr std::array<const char*, 3> k_Axes = {"x", "y", "z"};
+  for(usize component = 0; component < pOriginValue.size(); ++component)
+  {
+    if(!std::isfinite(pOriginValue[component]))
+    {
+      return MakePreflightErrorResult(-9592, fmt::format("Origin component '{}' has value {}. Set this component to a finite float32 value.", k_Axes[component], pOriginValue[component]));
+    }
+  }
 
   if(!std::isfinite(pZSpacingValue) || pZSpacingValue <= 0)
   {
