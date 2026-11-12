@@ -1377,7 +1377,7 @@ void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: nested resampling preserves output path", "[ImageProcessing][ReadImageStackFilter][NestedPaths]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path", "[NXImageProcessing][ReadImageStackFilter][NestedPaths]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
@@ -1395,7 +1395,7 @@ TEST_CASE("ImageProcessing::ReadImageStackFilter: nested resampling preserves ou
   }
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter: nested resampling preserves output path with real OOC stores", "[ImageProcessing][ReadImageStackFilter][NestedPaths][.OocStoreContract]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path with real OOC stores", "[NXImageProcessing][ReadImageStackFilter][NestedPaths][.OocStoreContract]")
 {
   REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
