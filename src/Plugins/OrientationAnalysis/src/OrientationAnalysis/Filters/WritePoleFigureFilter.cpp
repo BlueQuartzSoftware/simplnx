@@ -43,17 +43,18 @@ constexpr int32 k_MaxNumColors = 256;
 
 /**
  * @brief Measures the width of the letter X at the selected font size.
- * @param imageSize Temporary canvas width and height in pixels.
+ *
+ * A 1x1 canvas is sufficient because the measured width depends only on the font and font size.
  * @param fontPtSize Font size in points.
  * @return Measured text width in pixels.
  */
-float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
+float32 GetXCharWidth(float32 fontPtSize)
 {
-  std::vector<unsigned char> m_LatoBold;
-  fonts::Base64Decode(fonts::k_LatoBoldBase64, m_LatoBold);
+  std::vector<unsigned char> latoBold;
+  fonts::Base64Decode(fonts::k_LatoBoldBase64, latoBold);
 
-  canvas_ity::canvas tempContext(imageSize, imageSize);
-  tempContext.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
+  canvas_ity::canvas tempContext(1, 1);
+  tempContext.set_font(latoBold.data(), static_cast<int>(latoBold.size()), fontPtSize);
   return tempContext.measure_text("X");
 }
 
@@ -250,7 +251,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   float32 fontPtSize = pImageSizeValue / 16.0f;
   float32 margins = pImageSizeValue / 32.0f;
 
-  float32 xCharWidth = GetXCharWidth(pImageSizeValue, fontPtSize);
+  const float32 xCharWidth = GetXCharWidth(fontPtSize);
 
   int32 pageWidth = 0;
   int32 pageHeight = margins + fontPtSize;

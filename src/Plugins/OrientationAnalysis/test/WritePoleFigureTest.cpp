@@ -409,6 +409,53 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: composite dimensions use the measured X width", "[OrientationAnalysis][WritePoleFigureFilter]")
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::TestFileSentinel sentinel(unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+  auto dataStructure = UnitTest::LoadDataStructure(fs::path(unit_test::k_TestFilesDir.view()) / "Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d");
+  const WritePoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"Imported Data", "Eulers"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Imported Data", "Phases"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix", "CrystalStructures"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix", "PhaseNames"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Layout Pole Figures"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Layout Counts"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(128));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
+
+  // Independent font-table oracle: embedded LatoBold.hpp, cmap 'X' -> X,
+  // hmtx advance 1358, head units_per_em 2000 (read with fontTools.ttLib).
+  // At Image Size 128: font = 8, margin = 4, X width = 1358 * 8 / 2000 = 5.432.
+  // Horizontal width = trunc(4 * (4 + 128 + 5.432 + 4)) = 565.
+  // Height = (4 + 8) + (4 + 8 + 128 + 16 + 8) = 176.
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto preview = dataStructure;
+  auto applied = preflight.outputActions.value().applyAll(preview, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+  const DataPath geometryPath({"Layout Pole Figures"});
+  REQUIRE_NOTHROW(preview.getDataRefAs<ImageGeom>(geometryPath));
+  // This checks the X width that preflight measures. The preflight value is the current provisional
+  // behavior, not the rendered size: preflight passes the page dimensions in ZYX order and leaves out
+  // a margin, so it differs from execution (issue #1867, WritePoleFigure saved composite item).
+  REQUIRE(preview.getDataRefAs<ImageGeom>(geometryPath).getDimensions() == SizeVec3{1, 176, 565});
+  auto executed = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executed.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geometryPath));
+  // The renderer includes a third margin per panel and truncates before multiplying:
+  // 4 * trunc(128 + 3 * 4 + 5.432) = 580 (PoleFigureCompositor layout).
+  // This value records the current EbsdLib compositor layout; only the X width above is an independent oracle.
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geometryPath).getDimensions() == SizeVec3{580, 176, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: supported sampling dimensions", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   const UnitTest::TestFileSentinel sentinel(unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");

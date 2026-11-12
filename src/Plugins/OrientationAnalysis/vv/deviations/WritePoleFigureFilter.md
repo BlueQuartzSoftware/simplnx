@@ -110,6 +110,6 @@ Entries D1–D5 below were established by an expert (Class 5) side-by-side revie
 
 **Root cause:** Issue #1957 defines supported sampling ranges. DREAM.3D 6.5.171 did not check these three ranges; its defaults were 512/64/32. SIMPL conversion preserves the supplied values. Public legacy source: `BlueQuartzSoftware/DREAM3D`, `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/WritePoleFigure.cpp`, constructor, `setupFilterParameters()` and `dataCheck()`.
 
-**Affected users:** Users converting legacy pipelines whose sampling values fall outside the applicable ranges.
+**Affected users:** Users converting legacy pipelines whose sampling values fall outside the applicable ranges. Both versions set the label font size to Image Size / 16. A small Image Size therefore gave labels that are difficult to read in legacy DREAM.3D too. For example, Image Size 64 gives labels that are 4 pixels high.
 
 **Recommendation:** Change each value reported by preflight to a value in its supported range, then run preflight again. The legacy defaults remain valid.
