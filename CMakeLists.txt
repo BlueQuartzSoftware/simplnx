@@ -111,6 +111,7 @@ project(simplnx
 )
 
 set(SIMPLNX_BIN_DIR ${PROJECT_BINARY_DIR}/bin)
+set(SIMPLNX_TEST_OUTPUT_DIR "${PROJECT_BINARY_DIR}/simplnx/test_output")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SIMPLNX_BIN_DIR} CACHE PATH "Single Directory for all Libraries")
 
@@ -752,6 +753,10 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataObject.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureExportUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureGraphViz.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureJson.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureText.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
@@ -975,9 +980,9 @@ if(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST)
 endif()
 
 # ------------------------------------------------------------------------------
-# CLI Executable
+# CLI Executables (nxrunner, nxinfo)
 # ------------------------------------------------------------------------------
-add_subdirectory(${simplnx_SOURCE_DIR}/src/nxrunner)
+add_subdirectory(${simplnx_SOURCE_DIR}/src/apps)
 
 #------------------------------------------------------------------------------
 # Simplnx Plugins Section
@@ -1039,7 +1044,7 @@ if(BUILD_TESTING AND SIMPLNX_BUILD_TESTS AND SIMPLNX_PLUGIN_ENABLE_TestOne AND S
         "-DNXRUNNER_EXECUTABLE=$<TARGET_FILE:nxrunner>"
         "-DTEST_MODE=${_completion_mode}"
         "-DSCRATCH_ROOT=${simplnx_BINARY_DIR}/CTestPipelineFlush/${_completion_mode}/$<CONFIG>"
-        -P "${simplnx_SOURCE_DIR}/src/nxrunner/test/PipelineFlushReachesUserTest.cmake"
+        -P "${simplnx_SOURCE_DIR}/src/apps/test/PipelineFlushReachesUserTest.cmake"
     )
     set_tests_properties("nxrunner_pipeline_flush_${_completion_mode}" PROPERTIES
       RUN_SERIAL TRUE
