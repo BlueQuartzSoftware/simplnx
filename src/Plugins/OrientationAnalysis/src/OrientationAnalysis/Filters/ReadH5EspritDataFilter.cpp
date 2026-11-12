@@ -139,7 +139,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
   }
 
-  if(auto headerResult = EbsdReaderUtilities::ValidateOemHeader(*reader, pReadPatternDataValue, -9683); headerResult.invalid())
+  if(auto headerResult = EbsdReaderUtilities::ValidateOemHeader(*reader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); headerResult.invalid())
   {
     return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
   }
@@ -159,7 +159,26 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     {
       return MakePreflightErrorResult(-9682, fmt::format("Could not read scan '{}' in file '{}': {}", scanName, pSelectedScanNamesValue.inputFilePath.string(), scanReader->getErrorMessage()));
     }
-    if(auto result = EbsdReaderUtilities::ValidateOemHeader(*scanReader, pReadPatternDataValue, -9683); result.invalid())
+    if(auto result = EbsdReaderUtilities::ValidateOemHeader(*scanReader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+    if(auto result = EbsdReaderUtilities::ValidateOemScanCompatibility(*reader, *scanReader, pReadPatternDataValue); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+    if(pReadPatternDataValue)
+    {
+      if(auto result = EbsdReaderUtilities::ValidateOemPatternDataset(*scanReader); result.invalid())
+      {
+        return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+      }
+    }
+  }
+
+  if(pReadPatternDataValue)
+  {
+    if(auto result = EbsdReaderUtilities::ValidateOemPatternDataset(*reader); result.invalid())
     {
       return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
     }

@@ -170,6 +170,11 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
     return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
   }
 
+  if(auto result = EbsdReaderUtilities::ValidateChannel5Fields(reader, pCreateCompatibleTypes, filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key)); result.invalid())
+  {
+    return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+  }
+
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 

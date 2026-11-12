@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -80,6 +81,14 @@ public:
    */
   Result<> execute()
   {
+    if constexpr(std::is_same_v<T, ebsdlib::H5OIMReader> || std::is_same_v<T, ebsdlib::H5EspritReader>)
+    {
+      if(m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath) == nullptr)
+      {
+        return MakeErrorResult(EbsdReaderUtilities::k_OemDestinationMismatch,
+                               fmt::format("File '{}' has no destination geometry '{}'. Apply preflight actions before import.", m_Reader->getFileName(), m_InputValues->ImageGeometryPath.toString()));
+      }
+    }
     auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
     imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
 
@@ -119,7 +128,7 @@ public:
   /**
    * @brief Loads one scan and copies its phase metadata to ensemble arrays.
    * @param scanName HDF5 scan path selected by the user.
-   * @return EbsdLib read or missing-phase errors.
+   * @return Header, dataset, destination, EbsdLib read, or missing-phase errors.
    * @pre Ensemble arrays reserve index zero and contain every source phase index.
    * @pre Each source phase supplies six lattice constants.
    *
@@ -130,6 +139,66 @@ public:
   {
     m_Reader->setReadPatternData(m_InputValues->ReadPatternData);
     m_Reader->setHDF5Path(scanName);
+
+    if constexpr(std::is_same_v<T, ebsdlib::H5OIMReader> || std::is_same_v<T, ebsdlib::H5EspritReader>)
+    {
+      if(m_InputValues->SelectedScanNames.scanNames.empty())
+      {
+        return MakeErrorResult(EbsdReaderUtilities::k_OemDestinationMismatch, fmt::format("File '{}' has 0 selected scans. Select at least one scan and run preflight.", m_Reader->getFileName()));
+      }
+      // EbsdLib can reorder pattern buffers during readFile, so check metadata first.
+      if(const int32 err = m_Reader->readHeaderOnly(); err < 0)
+      {
+        return MakeErrorResult(-8970, fmt::format("Could not read scan '{}' in file '{}': {}", scanName, m_Reader->getFileName(), m_Reader->getErrorMessage()));
+      }
+      constexpr int32 k_MissingPatternDimensions = std::is_same_v<T, ebsdlib::H5OIMReader> ? EbsdReaderUtilities::k_OimMissingPatternDimensions : EbsdReaderUtilities::k_EspritMissingPatternDimensions;
+      if(auto result = EbsdReaderUtilities::ValidateOemHeader(*m_Reader, m_InputValues->ReadPatternData, k_MissingPatternDimensions); result.invalid())
+      {
+        return result;
+      }
+      auto first = T::New();
+      first->setFileName(m_Reader->getFileName());
+      first->setHDF5Path(m_InputValues->SelectedScanNames.scanNames.front());
+      first->setReadPatternData(m_InputValues->ReadPatternData);
+      if(const int32 err = first->readHeaderOnly(); err < 0)
+      {
+        return MakeErrorResult(-8970, fmt::format("Could not read scan '{}' in file '{}': {}", first->getHDF5Path(), first->getFileName(), first->getErrorMessage()));
+      }
+      if(auto result = EbsdReaderUtilities::ValidateOemScanCompatibility(*first, *m_Reader, m_InputValues->ReadPatternData); result.invalid())
+      {
+        return result;
+      }
+      if(m_InputValues->ReadPatternData)
+      {
+        if(auto result = EbsdReaderUtilities::ValidateOemPatternDataset(*m_Reader); result.invalid())
+        {
+          return result;
+        }
+      }
+      const auto& geometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+      if(geometry.getNumXCells() != static_cast<usize>(m_Reader->getXDimension()) || geometry.getNumYCells() != static_cast<usize>(m_Reader->getYDimension()) ||
+         geometry.getNumZCells() != m_InputValues->SelectedScanNames.scanNames.size())
+      {
+        return MakeErrorResult(EbsdReaderUtilities::k_OemDestinationMismatch,
+                               fmt::format("File '{}' scan '{}' grid X={}, Y={}, selected scans={} does not match destination geometry '{}' X={}, Y={}, Z={}. Run preflight again.",
+                                           m_Reader->getFileName(), scanName, m_Reader->getXDimension(), m_Reader->getYDimension(), m_InputValues->SelectedScanNames.scanNames.size(),
+                                           m_InputValues->ImageGeometryPath.toString(), geometry.getNumXCells(), geometry.getNumYCells(), geometry.getNumZCells()));
+      }
+      if(m_InputValues->ReadPatternData)
+      {
+        std::array<int32, 2> dims = {};
+        m_Reader->getPatternDims(dims);
+        const std::string name = std::is_same_v<T, ebsdlib::H5EspritReader> ? ebsdlib::H5Esprit::RawPatterns : ebsdlib::Ang::PatternData;
+        const auto path = m_InputValues->CellAttributeMatrixPath.createChildPath(name);
+        const auto* patterns = m_DataStructure.getDataAs<UInt8Array>(path);
+        if(patterns == nullptr || patterns->getComponentShape() != ShapeType{static_cast<usize>(dims[0]), static_cast<usize>(dims[1])})
+        {
+          return MakeErrorResult(EbsdReaderUtilities::k_OemPatternDestinationMismatch,
+                                 fmt::format("File '{}' scan '{}' pattern height={}, width={} does not match destination '{}'. Run preflight again.", m_Reader->getFileName(), scanName, dims[0],
+                                             dims[1], path.toString()));
+        }
+      }
+    }
 
     if(const int32 err = m_Reader->readFile(); err < 0)
     {
@@ -148,6 +217,22 @@ public:
     auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
     auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
     Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
+
+    if constexpr(std::is_same_v<T, ebsdlib::H5OIMReader> || std::is_same_v<T, ebsdlib::H5EspritReader>)
+    {
+      for(const auto& phase : phases)
+      {
+        const int32 id = phase == nullptr ? -1 : phase->getPhaseIndex();
+        if(id <= 0 || static_cast<usize>(id) >= crystalStructures.getNumberOfTuples() || static_cast<usize>(id) >= materialNames.getNumberOfTuples() ||
+           static_cast<usize>(id) >= latticeConstantsArray.getNumberOfTuples() || phase->getLatticeConstants().size() != 6)
+        {
+          return MakeErrorResult(
+              EbsdReaderUtilities::k_OemPhaseDestinationMismatch,
+              fmt::format("File '{}' scan '{}' phase ID {} does not fit ensemble '{}' with {} tuples or does not have six lattice constants. Run preflight again with a valid phase table.",
+                          m_Reader->getFileName(), scanName, id, m_InputValues->CellEnsembleAttributeMatrixPath.toString(), crystalStructures.getNumberOfTuples()));
+        }
+      }
+    }
 
     crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     materialNames[0] = "Invalid Phase";

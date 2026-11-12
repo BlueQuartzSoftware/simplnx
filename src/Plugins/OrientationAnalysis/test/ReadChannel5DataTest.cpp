@@ -837,3 +837,57 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data: HeaderValidation count limits 
   REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
   REQUIRE(result.errors()[0].code == (cells ? (variant == 0 ? -67604 : -67605) : -67602));
 }
+
+TEST_CASE("OrientationAnalysis::ReadChannel5Data: StructuralValidation required fields", "[OrientationAnalysis][ReadChannel5Data]")
+{
+  const int field = GENERATE(2, 3, 4);
+  CAPTURE(field);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "structural.cpr";
+  auto crc = path;
+  crc.replace_extension("crc");
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(crc, ec);
+  });
+  REQUIRE(WriteSyntheticChannel5Files(path, crc, 1, 1));
+  DataStructure directDs;
+  ApplySyntheticChannel5RegularActions(directDs, path);
+  std::ifstream input(path);
+  std::string text((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+  input.close();
+  const std::string from = "Field" + std::to_string(field) + "=" + std::to_string(field + 1);
+  const auto pos = text.find(from);
+  REQUIRE(pos != std::string::npos);
+  text.replace(pos, from.size(), "Field" + std::to_string(field) + "=8");
+  {
+    std::ofstream output(path);
+    output << text;
+  }
+  Arguments args;
+  args.insertOrAssign(ReadChannel5DataFilter::k_InputFile_Key, std::make_any<fs::path>(path));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(true));
+  DataStructure ds;
+  ReadChannel5DataFilter filter;
+  auto result = filter.preflight(ds, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -67615);
+  auto values = SyntheticChannel5InputValues(path);
+  const std::atomic_bool cancel = false;
+  auto direct = ReadChannel5Data(directDs, {}, cancel, &values)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(direct);
+  REQUIRE(direct.errors().front().code == -67615);
+  if(field == 4)
+  {
+    args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(true));
+    auto aligned = filter.preflight(ds, args).outputActions;
+    SIMPLNX_RESULT_REQUIRE_INVALID(aligned);
+    REQUIRE(aligned.errors().front().code == -67615);
+    values.CreateCompatibleArrays = false;
+    values.EdaxHexagonalAlignment = true;
+    auto alignedDirect = ReadChannel5Data(directDs, {}, cancel, &values)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(alignedDirect);
+    REQUIRE(alignedDirect.errors().front().code == -67615);
+  }
+}

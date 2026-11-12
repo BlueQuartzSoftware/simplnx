@@ -2,7 +2,11 @@
 
 #include "OrientationAnalysis/utilities/GrainMapper3DUtilities.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+
+#include <H5Support/H5Utilities.h>
+#include <algorithm>
 
 #include <EbsdLib/IO/BrukerNano/H5EspritReader.h>
 #include <EbsdLib/IO/HKL/CprReader.h>
@@ -59,6 +63,8 @@ inline constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
 }
 
 /** Error codes shared by EBSD header validation in preflight and execution. */
+inline constexpr int32 k_OimMissingPatternDimensions = -9583;
+inline constexpr int32 k_EspritMissingPatternDimensions = -9683;
 inline constexpr int32 k_InvalidPhaseSymmetry = -67600;
 inline constexpr int32 k_InvalidHeaderDimension = -67601;
 inline constexpr int32 k_InvalidHeaderSpacing = -67602;
@@ -511,6 +517,176 @@ Result<> ValidateOemHeader(ReaderType& reader, bool readPatterns, int32 missingP
         }
         return result;
       }
+    }
+  }
+  return {};
+}
+
+/** Error codes for scan structure and requested pattern metadata. */
+inline constexpr int32 k_ScanGridMismatch = -67606;
+inline constexpr int32 k_ScanSpacingMismatch = -67607;
+inline constexpr int32 k_ScanPhaseCountMismatch = -67608;
+inline constexpr int32 k_PatternDatasetMissing = -67609;
+inline constexpr int32 k_PatternDatasetType = -67610;
+inline constexpr int32 k_PatternDatasetRank = -67611;
+inline constexpr int32 k_PatternDatasetExtent = -67612;
+inline constexpr int32 k_SliceRangeOutsideFile = -67614;
+inline constexpr int32 k_RequiredChannel5Field = -67615;
+inline constexpr int32 k_OemDestinationMismatch = -67616;
+inline constexpr int32 k_OemPatternDestinationMismatch = -67617;
+inline constexpr int32 k_OemPhaseDestinationMismatch = -67618;
+inline constexpr int32 k_ScanPhaseMismatch = -67619;
+inline constexpr int32 k_ScanPatternMismatch = -67620;
+
+/**
+ * @brief Compare scan properties that share one geometry and ensemble table.
+ * @tparam ReaderType Esprit or OIM reader type.
+ * @param first Reference scan with a validated header.
+ * @param scan Scan to compare with the reference.
+ * @param readPatterns Whether the output includes patterns.
+ * @return Error if the grids, spacing, phase tables, or active pattern shapes differ.
+ */
+template <typename ReaderType>
+Result<> ValidateOemScanCompatibility(ReaderType& first, ReaderType& scan, bool readPatterns)
+{
+  const auto context = fmt::format("File '{}' scans '{}' and '{}'", scan.getFileName(), first.getHDF5Path(), scan.getHDF5Path());
+  if(first.getXDimension() != scan.getXDimension() || first.getYDimension() != scan.getYDimension())
+  {
+    return MakeErrorResult(k_ScanGridMismatch, fmt::format("{} have different grids: X={}, Y={} and X={}, Y={}. Select scans with the same grid.", context, first.getXDimension(),
+                                                           first.getYDimension(), scan.getXDimension(), scan.getYDimension()));
+  }
+  const auto normalizedStep = [](auto value) {
+    if constexpr(std::is_same_v<ReaderType, ebsdlib::H5EspritReader>)
+    {
+      return value == 0 ? decltype(value){1} : value;
+    }
+    return value;
+  };
+  if(normalizedStep(first.getXStep()) != normalizedStep(scan.getXStep()) || normalizedStep(first.getYStep()) != normalizedStep(scan.getYStep()))
+  {
+    return MakeErrorResult(k_ScanSpacingMismatch, fmt::format("{} have different spacing: X={}, Y={} and X={}, Y={}. Select scans with the same spacing.", context, first.getXStep(), first.getYStep(),
+                                                              scan.getXStep(), scan.getYStep()));
+  }
+  const auto firstPhases = first.getPhaseVector();
+  const auto scanPhases = scan.getPhaseVector();
+  if(firstPhases.size() != scanPhases.size())
+  {
+    return MakeErrorResult(k_ScanPhaseCountMismatch, fmt::format("{} have different phase counts: {} and {}. Select scans with the same phase table.", context, firstPhases.size(), scanPhases.size()));
+  }
+  for(usize i = 0; i < firstPhases.size(); ++i)
+  {
+    const auto& a = firstPhases[i];
+    const auto& b = scanPhases[i];
+    if(a == nullptr || b == nullptr || a->getPhaseIndex() != b->getPhaseIndex() || a->determineOrientationOpsIndex() != b->determineOrientationOpsIndex() ||
+       a->getMaterialName() != b->getMaterialName() || a->getLatticeConstants() != b->getLatticeConstants())
+    {
+      return MakeErrorResult(k_ScanPhaseMismatch,
+                             fmt::format("{} have different phase table entries at position {} (IDs {} and {}, materials '{}' and '{}', orientation indices {} and {}, lattice constants [{}] and "
+                                         "[{}]). Select scans with the same phase table.",
+                                         context, i, a == nullptr ? -1 : a->getPhaseIndex(), b == nullptr ? -1 : b->getPhaseIndex(), a == nullptr ? "<missing>" : a->getMaterialName(),
+                                         b == nullptr ? "<missing>" : b->getMaterialName(), a == nullptr ? -1 : static_cast<int32>(a->determineOrientationOpsIndex()),
+                                         b == nullptr ? -1 : static_cast<int32>(b->determineOrientationOpsIndex()),
+                                         a == nullptr ? "<missing>" : fmt::format("{}", fmt::join(a->getLatticeConstants(), ", ")),
+                                         b == nullptr ? "<missing>" : fmt::format("{}", fmt::join(b->getLatticeConstants(), ", "))));
+    }
+  }
+  if(readPatterns)
+  {
+    std::array<int32, 2> a = {}, b = {};
+    first.getPatternDims(a);
+    scan.getPatternDims(b);
+    if(a != b)
+    {
+      return MakeErrorResult(k_ScanPatternMismatch,
+                             fmt::format("{} have different pattern shapes: height={}, width={} and height={}, width={}. Select scans with the same pattern shape.", context, a[0], a[1], b[0], b[1]));
+    }
+  }
+  return {};
+}
+
+/**
+ * @brief Check pattern metadata before EbsdLib reads or reorders the pattern buffer.
+ * @tparam ReaderType Esprit or OIM reader type.
+ * @param reader Reader with a validated scan header.
+ * @return Error if the dataset is unavailable or its type or shape does not match the header.
+ *
+ * This check reads metadata only. It does not allocate or read pattern values.
+ */
+template <typename ReaderType>
+Result<> ValidateOemPatternDataset(ReaderType& reader)
+{
+  const std::string name = std::is_same_v<ReaderType, ebsdlib::H5EspritReader> ? ebsdlib::H5Esprit::RawPatterns : ebsdlib::Ang::PatternData;
+  const std::string path = reader.getHDF5Path() + "/EBSD/Data/" + name;
+  const auto context = fmt::format("File '{}' scan '{}' dataset '{}'", reader.getFileName(), reader.getHDF5Path(), path);
+  const hid_t file = H5Support::H5Utilities::openFile(reader.getFileName(), true);
+  const auto closeFile = MakeScopeGuard([&]() noexcept {
+    if(file >= 0)
+      H5Fclose(file);
+  });
+  const hid_t dataset = file < 0 ? -1 : H5Dopen2(file, path.c_str(), H5P_DEFAULT);
+  if(dataset < 0)
+  {
+    return MakeErrorResult(k_PatternDatasetMissing, fmt::format("{} cannot be opened. Supply pattern data for every selected scan or turn off Import Pattern Data.", context));
+  }
+  const auto closeDataset = MakeScopeGuard([&]() noexcept { H5Dclose(dataset); });
+  const hid_t type = H5Dget_type(dataset);
+  const auto closeType = MakeScopeGuard([&]() noexcept {
+    if(type >= 0)
+      H5Tclose(type);
+  });
+  if(type < 0 || H5Tget_class(type) != H5T_INTEGER || H5Tget_size(type) != 1 || H5Tget_sign(type) != H5T_SGN_NONE)
+  {
+    return MakeErrorResult(k_PatternDatasetType, fmt::format("{} has type '{}', size {} bytes, sign '{}'. Expected unsigned 8-bit integer patterns.", context,
+                                                             type < 0                          ? "unavailable" :
+                                                             H5Tget_class(type) == H5T_INTEGER ? "integer" :
+                                                             H5Tget_class(type) == H5T_FLOAT   ? "floating point" :
+                                                                                                 "non-integer",
+                                                             type < 0 ? 0 : H5Tget_size(type),
+                                                             type >= 0 && H5Tget_class(type) == H5T_INTEGER ? (H5Tget_sign(type) == H5T_SGN_NONE ? "unsigned" : "signed") : "not applicable"));
+  }
+  const hid_t space = H5Dget_space(dataset);
+  const auto closeSpace = MakeScopeGuard([&]() noexcept {
+    if(space >= 0)
+      H5Sclose(space);
+  });
+  const int32 rank = space < 0 ? -1 : H5Sget_simple_extent_ndims(space);
+  if(rank != 3)
+  {
+    return MakeErrorResult(k_PatternDatasetRank, fmt::format("{} has rank {}. Expected rank 3: points, height, width.", context, rank));
+  }
+  std::array<hsize_t, 3> dims = {};
+  std::array<int32, 2> patternDims = {};
+  reader.getPatternDims(patternDims);
+  const uint64 points = static_cast<uint64>(reader.getXDimension()) * static_cast<uint64>(reader.getYDimension());
+  if(H5Sget_simple_extent_dims(space, dims.data(), nullptr) < 0 || dims[0] != points || dims[1] != static_cast<hsize_t>(patternDims[0]) || dims[2] != static_cast<hsize_t>(patternDims[1]))
+  {
+    return MakeErrorResult(k_PatternDatasetExtent, fmt::format("{} has points={}, height={}, width={}; expected points={}, height={}, width={}. Correct the pattern dataset to match its scan header.",
+                                                               context, dims[0], dims[1], dims[2], points, patternDims[0], patternDims[1]));
+  }
+  return {};
+}
+
+/**
+ * @brief Require Euler fields used by Channel5 conversion or hexagonal alignment.
+ * @param reader Reader for the selected CPR file.
+ * @param compatible Whether to create compatible arrays.
+ * @param align Whether to apply hexagonal alignment.
+ * @return Error if an active Euler field is missing or has the wrong type.
+ */
+inline Result<> ValidateChannel5Fields(ebsdlib::CprReader& reader, bool compatible, bool align)
+{
+  const auto parsers = reader.createFieldParsers(reader.getFileName());
+  for(const auto& name : {ebsdlib::Ctf::phi1, ebsdlib::Ctf::Phi, ebsdlib::Ctf::phi2})
+  {
+    if(!compatible && (!align || name != ebsdlib::Ctf::phi2))
+    {
+      continue;
+    }
+    if(std::none_of(parsers.begin(), parsers.end(),
+                    [&](const auto& parser) { return parser.FieldDefinition.FieldName == name && parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::Float; }))
+    {
+      return MakeErrorResult(k_RequiredChannel5Field, fmt::format("File '{}' is missing required field '{}' with type '{}'. Supply this field or turn off compatible arrays and hexagonal alignment.",
+                                                                  reader.getFileName(), name, "float32"));
     }
   }
   return {};

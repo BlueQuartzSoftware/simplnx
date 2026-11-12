@@ -18,6 +18,7 @@
 
 #include <EbsdLib/IO/HKL/H5CtfImporter.h>
 #include <EbsdLib/IO/TSL/AngConstants.h>
+#include <EbsdLib/IO/TSL/H5AngImporter.h>
 #include <H5Support/H5Lite.h>
 #include <H5Support/H5ScopedSentinel.h>
 #include <H5Support/H5Utilities.h>
@@ -36,7 +37,7 @@ namespace
 {
 const std::string k_MaterialName("MaterialName");
 
-fs::path WriteHexagonalH5EbsdFixture()
+fs::path WriteHexagonalH5EbsdFixture(bool ang = false)
 {
   const fs::path outputDir(unit_test::k_BinaryTestOutputDir.view());
   const auto ctfPath = outputDir / "read_h5ebsd_hex_selection.ctf";
@@ -67,11 +68,53 @@ fs::path WriteHexagonalH5EbsdFixture()
   const hid_t fileId = H5Support::H5Utilities::createFile(h5Path.string());
   REQUIRE(fileId >= 0);
   H5Support::H5ScopedFileSentinel sentinel(fileId, true);
-  auto importer = ebsdlib::H5CtfImporter::New();
-  REQUIRE(importer->importFile(fileId, 0, ctfPath.string()) >= 0);
-  REQUIRE(importer->getErrorCode() == 0);
+  if(ang)
+  {
+    auto angPath = ctfPath;
+    angPath.replace_extension("ang");
+    const auto cleanupAng = MakeScopeGuard([&]() noexcept {
+      std::error_code ec;
+      fs::remove(angPath, ec);
+    });
+    {
+      std::ofstream file(angPath);
+      file << R"(# TEM_PIXperUM 1
+# x-star 0.5
+# y-star 0.5
+# z-star 0.5
+# WorkingDistance 15
+# Phase 1
+# MaterialName Nickel
+# Formula Ni
+# Info
+# Symmetry 43
+# LatticeConstants 3.52 3.52 3.52 90 90 90
+# NumberFamilies 0
+# Categories 0 0 0 0 0
+# GRID: SqrGrid
+# XSTEP: 1
+# YSTEP: 1
+# NCOLS_ODD: 3
+# NCOLS_EVEN: 3
+# NROWS: 1
+0 0 0 0 0 100 1 1 0 0
+0 0 0 1 0 100 1 1 0 0
+0 0 0 2 0 100 1 1 0 0
+)";
+      file.close();
+      REQUIRE(file.good());
+    }
+    auto importer = ebsdlib::H5AngImporter::New();
+    REQUIRE(importer->importFile(fileId, 0, angPath.string()) >= 0);
+  }
+  else
+  {
+    auto importer = ebsdlib::H5CtfImporter::New();
+    REQUIRE(importer->importFile(fileId, 0, ctfPath.string()) >= 0);
+    REQUIRE(importer->getErrorCode() == 0);
+  }
   namespace H5Lite = H5Support::H5Lite;
-  REQUIRE(H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ctf::Manufacturer) >= 0);
+  REQUIRE(H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ang ? ebsdlib::Ang::Manufacturer : ebsdlib::Ctf::Manufacturer) >= 0);
   REQUIRE(H5Lite::writeScalarDataset<int32>(fileId, ebsdlib::H5Ebsd::ZStartIndex, 0) >= 0);
   REQUIRE(H5Lite::writeScalarDataset<int32>(fileId, ebsdlib::H5Ebsd::ZEndIndex, 0) >= 0);
   REQUIRE(H5Lite::writeScalarDataset<int64>(fileId, ebsdlib::H5Ebsd::XPoints, 3) >= 0);
@@ -623,4 +666,35 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HeaderValidation", "[OrientationAnal
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
   REQUIRE(result.errors()[0].code == (field == "LaueGroup" ? -67600 : field.find("Points") != std::string::npos ? -67601 : field.find("Axis") != std::string::npos ? -67603 : -67602));
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: StructuralValidation slice range", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const bool ang = GENERATE(false, true);
+  const int range = GENERATE(0, 1, 2, 3, 4);
+  CAPTURE(ang, range);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_h5ebsd_hex_selection.h5ebsd";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  REQUIRE(WriteHexagonalH5EbsdFixture(ang) == path);
+  ReadH5EbsdFileParameter::ValueType input;
+  input.inputFilePath = path.string();
+  input.startSlice = range == 1 ? 1 : range == 3 ? -1 : 0;
+  input.endSlice = range == 0 ? 1 : range == 2 ? 2 : 0;
+  input.useRecommendedTransform = false;
+  Arguments args;
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+  DataStructure ds;
+  ReadH5EbsdFilter filter;
+  auto result = filter.preflight(ds, args).outputActions;
+  if(range == 4)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == (range == 1 ? -2002 : -67614));
 }

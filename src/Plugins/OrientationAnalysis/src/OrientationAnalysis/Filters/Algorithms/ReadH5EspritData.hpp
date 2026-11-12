@@ -26,8 +26,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EspritDataInputValues
  * class interleaves Euler channels in 65,536-tuple pages. It writes scalar and
  * pattern channels with one scan-sized destination transfer.
  *
- * The destination transfers support out-of-core stores, but the current method
- * does not inspect their Result values. Cancellation returns success between
+ * The destination transfers support out-of-core stores and return transfer errors.
+ * Cancellation returns success between
  * scans and preserves completed scan data.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadH5EspritData : public IEbsdOemReader<ebsdlib::H5EspritReader>
@@ -60,9 +60,7 @@ public:
   /**
    * @brief Copies one loaded scan into its volume destination range.
    * @param index Zero-based scan index.
-   * @return Error when requested pattern data is absent.
-   *
-   * The current method does not inspect destination bulk-I/O Result values.
+   * @return Missing-pattern or destination transfer errors.
    */
   Result<> copyRawEbsdData(int index) override;
 

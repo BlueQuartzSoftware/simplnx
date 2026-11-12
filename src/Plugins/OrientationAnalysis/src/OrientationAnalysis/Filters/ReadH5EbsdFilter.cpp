@@ -124,6 +124,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     }
   }
 
+  if(pReadH5EbsdFilterValue.startSlice < reader->getZStart() || pReadH5EbsdFilterValue.endSlice > reader->getZEnd())
+  {
+    return MakePreflightErrorResult(EbsdReaderUtilities::k_SliceRangeOutsideFile,
+                                    fmt::format("File '{}' has slice range [{}, {}], but selected slices are [{}, {}]. Select slices within the file range.", pReadH5EbsdFilterValue.inputFilePath,
+                                                reader->getZStart(), reader->getZEnd(), pReadH5EbsdFilterValue.startSlice, pReadH5EbsdFilterValue.endSlice));
+  }
+
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(dims[0]), static_cast<size_t>(dims[1]),
                                                             static_cast<size_t>(pReadH5EbsdFilterValue.endSlice - pReadH5EbsdFilterValue.startSlice + 1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
