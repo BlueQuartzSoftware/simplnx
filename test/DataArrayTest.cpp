@@ -2798,6 +2798,8 @@ TEST_CASE("DataStore resident value copies retain destination initialization", "
   std::array<int32, 6> actual{};
   REQUIRE(destination.copyIntoBuffer(0, {actual.data(), actual.size()}).valid());
   CHECK(actual == std::array<int32, 6>{10, 11, 20, 21, 7, 7});
+}
+
 namespace
 {
 // Exercise buffered copying deterministically without claiming disk-backed storage.
