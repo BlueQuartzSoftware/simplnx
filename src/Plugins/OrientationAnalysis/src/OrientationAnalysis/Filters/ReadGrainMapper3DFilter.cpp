@@ -202,7 +202,10 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     DataPath cellEnsembleAMPath = pLabDCTImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
 
     EbsdReaderUtilities::GeneratePreflightScanInformation<GrainMapperReader>(reader, preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+    if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues, pInputFileValue.string()); phaseResult.invalid())
+    {
+      return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+    }
 
     auto phases = reader.getPhaseVector();
     std::vector<usize> ensembleTupleDims{phases.size() + 1};

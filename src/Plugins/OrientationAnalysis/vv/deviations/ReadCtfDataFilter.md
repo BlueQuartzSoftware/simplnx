@@ -106,3 +106,27 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 **Correct behavior:** Both hexagonal Laue classes receive the same shift, before optional conversion to radians. Cubic and unindexed points remain unchanged; trigonal phases are outside this correction. Covered by `test/ReadCtfDataTest.cpp::"Euler Conversion Combinations"`.
 
 **Recommendation:** Re-import 6/m data when EDAX alignment is required.
+
+
+---
+
+## ReadCtfDataFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D6` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Header validation defect, reproduced with EbsdLib 3.1.3 |
+
+**Symptom:** An unsupported Laue Group causes a segmentation fault in the preflight preview. Negative or non-finite XStep and YStep values reach the Image Geometry, including in multi-slice files.
+
+**Root cause:** The preview uses a file-derived orientation-operations index without a bounds check. Geometry creation also requires validation of header dimensions and steps before unsigned conversion or spacing assignment.
+
+**Affected users:** Users importing malformed or edited EBSD files. Valid input files retain their symmetry mappings and geometry.
+
+**Correct behavior:** Preflight rejects unsupported Laue Group with error `-67600` and invalid steps with `-67602`. The messages identify the file, header key and value; the symmetry error also identifies the phase. Public execute also rejects the invalid header through its preflight check.
+
+**Test sensitivity verification:** Synthetic files in `test/ReadCtfDataTest.cpp` reproduce the failure before the fix. The regression cases are `OrientationAnalysis::ReadCtfData: HeaderValidation symmetry` and `ReadCtfData: HeaderValidation steps`. The oracle is the supported symmetry domain and the finite, positive grid contract. The legacy executable was not run for these new malformed inputs.
+
+**Recommendation:** Correct the named header value or export the file again from the acquisition software.

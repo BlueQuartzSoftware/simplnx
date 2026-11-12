@@ -322,3 +322,27 @@ These are not behavioral deviations on well-formed files — every one of them i
 | `-34972` | A phase value outside `[0, phase count]` | The value indexed `CrystalStructures` unchecked in the alignment loop, reading past the end of the ensemble array |
 
 Error codes `-34970` (null pattern data) and `-9588` (stacking order not applied) are retired: the first with the unreachable execute-side pattern block described in D4, the second with the stacking-order implementation described in D9.
+
+
+---
+
+## ReadH5OinaDataFilter-D15
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadH5OinaDataFilter-D15` |
+| **Filter UUID** | `fad3d47f-f1e1-4429-bc65-5e021be62ba0` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Header validation defect, reproduced with EbsdLib 3.1.3 |
+
+**Symptom:** An unsupported Laue Group causes a segmentation fault in the preflight phase preview.
+
+**Root cause:** The preview uses a file-derived orientation-operations index without a bounds check. The informational Space Group does not validate the Laue Group used for that index.
+
+**Affected users:** Users importing malformed or edited EBSD files. Valid input files retain their symmetry mappings and geometry.
+
+**Correct behavior:** Preflight rejects unsupported Laue Group with error `-67600`, before a preview lookup. The error identifies the file, phase and value. The informational Space Group remains optional. Public execute also rejects the invalid header through its preflight check.
+
+**Test sensitivity verification:** Synthetic files in `test/ReadH5OinaDataTest.cpp` reproduce the failure before the fix. The regression cases are `OrientationAnalysis::ReadH5OinaData: HeaderValidation symmetry` and `ReadH5OinaData: HeaderValidation optional Space Group`. The oracle is the supported symmetry domain and the finite, positive grid contract. The legacy executable was not run for these new malformed inputs.
+
+**Recommendation:** Correct the named header value or export the file again from the acquisition software.

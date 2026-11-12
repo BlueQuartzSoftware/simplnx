@@ -564,3 +564,63 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Automatic and explicit transformatio
   UnitTest::CheckArraysInheritTupleDims(automatic);
   UnitTest::CheckArraysInheritTupleDims(manual);
 }
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HeaderValidation", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const std::string field = GENERATE("Max X Points", "Max Y Points", "X Resolution", "Y Resolution", "SampleTransformationAxis", "LaueGroup");
+  const auto variant = GENERATE(0, 1, 2, 3);
+  CAPTURE(field, variant);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_h5ebsd_hex_selection.h5ebsd";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  REQUIRE(WriteHexagonalH5EbsdFixture() == path);
+  {
+    const hid_t id = H5Support::H5Utilities::openFile(path.string(), false);
+    REQUIRE(id >= 0);
+    H5Support::H5ScopedFileSentinel sentinel(id, true);
+    if(field == "LaueGroup")
+    {
+      REQUIRE(H5Ldelete(id, "0/Header/Phases/1/LaueGroup", H5P_DEFAULT) >= 0);
+      REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(id, "0/Header/Phases/1/LaueGroup", 999) >= 0);
+    }
+    else
+    {
+      REQUIRE(H5Ldelete(id, field.c_str(), H5P_DEFAULT) >= 0);
+      if(field.find("Points") != std::string::npos)
+      {
+        REQUIRE(H5Support::H5Lite::writeScalarDataset<int64>(id, field, variant % 2 == 0 ? 0 : -1) >= 0);
+      }
+      else if(field == "SampleTransformationAxis")
+      {
+        REQUIRE(H5Ldelete(id, ebsdlib::H5Ebsd::SampleTransformationAngle.c_str(), H5P_DEFAULT) >= 0);
+        REQUIRE(H5Support::H5Lite::writeScalarDataset<float32>(id, ebsdlib::H5Ebsd::SampleTransformationAngle, 45.0F) >= 0);
+        const float32 value = variant % 2 == 0 ? 0.0F : std::numeric_limits<float32>::infinity();
+        REQUIRE(H5Support::H5Lite::writeVectorDataset<float32>(id, field, {3}, {value, 0.0F, 0.0F}) >= 0);
+      }
+      else
+      {
+        const std::array<float32, 4> values = {0.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity()};
+        REQUIRE(H5Support::H5Lite::writeScalarDataset<float32>(id, field, values[variant]) >= 0);
+      }
+    }
+  }
+  ReadH5EbsdFileParameter::ValueType input;
+  input.inputFilePath = path.string();
+  input.startSlice = 0;
+  input.endSlice = 0;
+  input.useRecommendedTransform = true;
+  Arguments args;
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+  DataStructure ds;
+  ReadH5EbsdFilter filter;
+  const auto argsForValidation = args;
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == (field == "LaueGroup" ? -67600 : field.find("Points") != std::string::npos ? -67601 : field.find("Axis") != std::string::npos ? -67603 : -67602));
+}

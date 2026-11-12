@@ -1,3 +1,4 @@
+#include "simplnx/Common/ScopeGuard.hpp"
 /* ============================================================================
  * ReadH5OinaData V&V test suite.
  *
@@ -1481,4 +1482,56 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Real AZtec File Readback",
                               });
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5OinaData: HeaderValidation symmetry", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  const auto laue = GENERATE(-1, 0, 12, 999);
+  auto scan = MakeFixtureAScan();
+  scan.phases[0].laueGroup = laue;
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_header.h5oina";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteH5OinaFixture(path.filename().string(), {scan});
+  DataStructure ds;
+  ReadH5OinaDataFilter filter;
+  const auto argsForValidation = MakeArgs(path, {scan.name});
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67600);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5OinaData: HeaderValidation optional Space Group", "[OrientationAnalysis][ReadH5OinaDataFilter]")
+{
+  const bool omit = GENERATE(false, true);
+  auto scan = MakeFixtureAScan();
+  scan.phases[0].spaceGroup = 0;
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "optional_space_group.h5oina";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteH5OinaFixture(path.filename().string(), {scan});
+  if(omit)
+  {
+    const hid_t id = H5Fopen(path.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    REQUIRE(id >= 0);
+    const auto close = MakeScopeGuard([&]() noexcept { H5Fclose(id); });
+    REQUIRE(H5Ldelete(id, "1/EBSD/Header/Phases/1/Space Group", H5P_DEFAULT) >= 0);
+  }
+  DataStructure ds;
+  ReadH5OinaDataFilter filter;
+  const auto argsForValidation = MakeArgs(path, {scan.name});
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  CompareArrayValues<uint32>(ds, k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures),
+                             {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High, ebsdlib::CrystalStructure::Cubic_High});
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

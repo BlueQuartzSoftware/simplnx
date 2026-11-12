@@ -1,3 +1,4 @@
+#include "simplnx/Common/ScopeGuard.hpp"
 /*
  * This suite validates the ReadCtfDataFilter value-add independently of EbsdLib parsing.
  * The oracle checks geometry construction, phase preservation, Euler interleaving,
@@ -493,12 +494,9 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Invalid Cells Preflight Error
 }
 
 //------------------------------------------------------------------------------
-// EbsdLib error passthrough: a zero X Step is accepted at preflight (header-only
-// read performs no step validation) but CtfReader::readFile() rejects it at
-// execute. CtfReader only sets its error MESSAGE on this path (the error code
-// member stays 0), so the filter reports the readFile() return value: -102.
+// Zero XStep must fail in preflight, before any Image Geometry is created.
 //------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - Zero Step (-102)", "[OrientationAnalysis][ReadCtfDataFilter]")
+TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero Step Preflight Error (-67602)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -512,11 +510,12 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - Z
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -67602);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors()[0].code == -102);
+  REQUIRE(executeResult.result.errors()[0].code == -67602);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -676,4 +675,50 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: SIMPL Backwards Compatibility
       CHECK(args.value<std::string>(ReadCtfDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "CellEnsembleData");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ReadCtfData: HeaderValidation symmetry", "[OrientationAnalysis][ReadCtfData]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_header.ctf";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto phase = k_TwoPhaseBlock;
+  phase.replace(phase.find("\t9\t"), 3, "\t999\t");
+  WriteCtfFile(path.filename().string(), MakeToyCtf("", phase));
+  DataStructure ds;
+  ReadCtfDataFilter filter;
+  const auto argsForValidation = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67600);
+}
+TEST_CASE("OrientationAnalysis::ReadCtfData: HeaderValidation steps", "[OrientationAnalysis][ReadCtfData]")
+{
+  const auto value = GENERATE("-1", "nan", "inf");
+  const auto key = GENERATE("XStep", "YStep");
+  const auto slices = GENERATE("", "ZCells\t2\n");
+  CAPTURE(value, key, slices);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_step.ctf";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto contents = MakeToyCtf(slices);
+  const auto pos = contents.find(std::string(key) + "\t") + std::string(key).size() + 1;
+  contents.replace(pos, contents.find('\n', pos) - pos, value);
+  WriteCtfFile(path.filename().string(), contents);
+  DataStructure ds;
+  ReadCtfDataFilter filter;
+  const auto argsForValidation = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67602);
 }

@@ -328,7 +328,10 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   }
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
+  if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues); phaseResult.invalid())
+  {
+    return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+  }
 
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {

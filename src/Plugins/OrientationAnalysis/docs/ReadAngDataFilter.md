@@ -71,6 +71,10 @@ SEM Signal
 Fit of Solution
 ```
 
+### Header validation
+
+The file must contain supported phase Symmetry values and positive scan dimensions. XSTEP and YSTEP must be finite and greater than zero. Preflight reports the file, header key and invalid value before it creates the geometry.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

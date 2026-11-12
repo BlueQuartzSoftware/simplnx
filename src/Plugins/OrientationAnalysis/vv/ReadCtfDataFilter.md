@@ -62,7 +62,7 @@ Hand-authored toy `.ctf` fixtures live as string literals in the test source: a 
 - `…::"Euler Conversion Combinations"` — DYNAMIC_SECTION over the 2×2 DegreesToRadians × EdaxHexagonalAlignment grid, 18 Euler values each, hex shift scoped to Hexagonal_High points only.
 - `…::"3D Multi-Slice CTF"` — DYNAMIC_SECTION over ZStep present/absent; dims/spacing/arrays for the 2-slice fixture (regression pin for D4).
 - `…::"Empty Phases rejected (-19600)"`, `…::"Missing Data Column rejected (-19601)"`, `…::"Out-of-Range Phase Value rejected (-19602)"`, `…::"Reader/Geometry Cell Count Mismatch rejected (-19603)"`, `…::"Invalid Cells Preflight Error (-19604)"` — value-add guards.
-- `…::"EbsdLib Error Passthrough - Zero Step (-102)"`, `…- Truncated Data (-105)"`, `…- Unknown Column (-107)"` — error propagation from the trusted boundary (three distinct return points in `CtfReader`).
+- `…::"EbsdLib Error Passthrough - Truncated Data (-105)"`, `…::"EbsdLib Error Passthrough - Unknown Column (-107)"` — error propagation from the trusted boundary (two distinct return points in `CtfReader`).
 - `…::"SIMPL Backwards Compatibility"` — UUID + argument conversion (6.4 and 6.5 fixtures; DYNAMIC_SECTION).
 
 All 12 pass in `simplnx-Rel` and `simplnx-ooc-Rel`. Reconciliation found zero SIMPLNX-vs-oracle discrepancies (the pre-identified fixes — 3D support, guards, double intermediates — were implemented before the first oracle run). Every fixed delta has a regression pin that fails against the pre-fix code: the guard error codes did not exist, the 3D dims assertion cannot pass against the z=1 hard-code, and — added after the adversarial review found the original angles blind to it — four Euler fixture values (7.125°, 3.375°, 6.75°, and 37.125° via the hex shift) whose correctly-rounded results differ between float32 arithmetic and the double-precision intermediates.
@@ -107,7 +107,7 @@ No new defect was found during this storage recertification. Existing fixes and 
 | 4  | (a) Preflight | Per-column array creation with int32/float32 type dispatch from `CtfFields` | `Class 1 Analytical Oracle` (all 9 cell arrays exist with right types) |
 | 5  | (a) Preflight | Ensemble AM sized `phases + 1`; CrystalStructures/LatticeConstants/MaterialName actions | `Class 1 Analytical Oracle` (3 tuples) + `3D Multi-Slice CTF` (2 tuples) |
 | 6  | (a) Preflight | Scan/phase preflight-info values (incl. Z line when ZCells > 1) | *Exercised implicitly by every preflight; display-only values, not asserted.* |
-| 7  | (b) Execute | `readFile()` error → passthrough (with error-code fallback) | `Zero Step (-102)` (fallback path), `Truncated Data (-105)`, `Unknown Column (-107)` *(other reader codes are the same return statement)* |
+| 7  | (b) Execute | `readFile()` error → passthrough (with error-code fallback) | `Truncated Data (-105)`, `Unknown Column (-107)` *(other reader codes are the same return statement)* |
 | 8  | (b) Execute | `phases.empty()` → `-19600` | `Empty Phases rejected (-19600)` |
 | 9  | (b) Execute | All-slot Invalid-Phase default initialization | `Class 1 Analytical Oracle` (slot 0). *Uncovered-slot case is unreachable for CTF — CtfReader assigns indices 1..N contiguously.* |
 | 9b | (b) Execute | phase index `>= numTuples` → `-19605` | *Not directly tested. Only reachable if the file gains a phase between the execute-time preflight and the algorithm's re-read — requires file-mutation injection inside a single execute call. Mirrors ReadAngDataFilter's untested `-19504`.* |
@@ -137,7 +137,7 @@ No new defect was found during this storage recertification. Existing fixes and 
 | `…: Out-of-Range Phase Value rejected (-19602)` | new-for-V&V | Value-add guard. Legacy silently succeeds with heap-dependent output (demonstrated, D3). |
 | `…: Reader/Geometry Cell Count Mismatch rejected (-19603)` | new-for-V&V | Value-add guard. Static `ZCells 0` fixture — no file-mutation injection needed. |
 | `…: Invalid Cells Preflight Error (-19604)` | new-for-V&V | Value-add preflight rejection (`XCells 0`). |
-| `…: EbsdLib Error Passthrough - Zero Step (-102)` | new-for-V&V | Exercises the error-code fallback (reader sets message only). |
+| `…: Zero Step Preflight Error (-67602)` | Header validation regression | Rejects zero XStep during preflight and public execute. |
 | `…: EbsdLib Error Passthrough - Truncated Data (-105)` | new-for-V&V | Premature-EOF return point. |
 | `…: EbsdLib Error Passthrough - Unknown Column (-107)` | new-for-V&V | Column-allocation return point. |
 | `…: SIMPL Backwards Compatibility` | new-for-V&V | DYNAMIC_SECTION over the existing 6.4/6.5 conversion fixtures — the filter previously had **no** conversion test despite shipping the fixtures. |

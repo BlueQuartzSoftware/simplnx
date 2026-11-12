@@ -136,6 +136,11 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   // A ZCells of 0 slips through the header-only read; it is caught at execute by the -19603
   // reader/geometry cell-count guard.
   const size_t zCells = reader.getZCells() < 1 ? 1 : static_cast<size_t>(reader.getZCells());
+  if(auto headerResult = EbsdReaderUtilities::ValidateHeaderGrid(reader); headerResult.invalid())
+  {
+    return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
+  }
+
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXCells()), static_cast<size_t>(reader.getYCells()), zCells};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
@@ -146,7 +151,10 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
+  if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues); phaseResult.invalid())
+  {
+    return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+  }
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
 

@@ -56,6 +56,10 @@ None — this filter reads directly from a `.cpr`/`.crc` file pair on disk.
 | **Figure 1:** showing TSL and Oxford Instr. conventions. EDAX/TSL is in **Green**. Oxford Inst. is in **Red**. |
 
 
+### Header validation
+
+The CPR file must contain supported phase LaueGroup values. xCells and yCells must be positive and their product must fit a signed 32-bit count. GridDistX and GridDistY must be finite and greater than zero. Preflight reports invalid header values before it creates the geometry.
+
 % Auto generated parameter table will be inserted here
 
 

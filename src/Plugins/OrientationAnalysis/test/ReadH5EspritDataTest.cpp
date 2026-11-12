@@ -1,4 +1,10 @@
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include <H5Support/H5Lite.h>
+#include <H5Support/H5ScopedSentinel.h>
+#include <H5Support/H5Utilities.h>
 #include <catch2/catch.hpp>
+#include <limits>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -293,4 +299,91 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: SIMPL Backwards Compatib
       CHECK(scanSel.scanNames == std::list<std::string>{"Scan1"});
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5EspritData: HeaderValidation", "[OrientationAnalysis][ReadH5EspritDataFilter]")
+{
+  const std::string field = GENERATE("columns", "rows", "xstep", "ystep", "width", "height", "symmetry");
+  const auto variant = GENERATE(0, 1, 2, 3);
+  const bool laterScan = GENERATE(false, true);
+  CAPTURE(field, variant, laterScan);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "header_validation_Esprit.h5";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  {
+    namespace H5Lite = H5Support::H5Lite;
+    const hid_t id = H5Support::H5Utilities::createFile(path.string());
+    REQUIRE(id >= 0);
+    H5Support::H5ScopedFileSentinel sentinel(id, true);
+    for(const std::string scanName : {"Scan", "Scan2"})
+    {
+      const bool invalidHeader = scanName == (laterScan ? "Scan2" : "Scan");
+      const std::string header = scanName + "/EBSD/Header/";
+      const auto intValue = [&](const std::string& name, const std::string& target, int32 normal) {
+        REQUIRE(H5Lite::writeScalarDataset<int32>(id, header + name, invalidHeader && field == target ? (variant % 2 == 0 ? 0 : -1) : normal) >= 0);
+      };
+      const auto stepValue = [&](const std::string& name, const std::string& target) {
+        const std::array<double, 4> values = {-1.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(), 0.0};
+        REQUIRE(H5Lite::writeScalarDataset<float64>(id, header + name, invalidHeader && field == target ? values[variant] : 0.5) >= 0);
+      };
+
+      REQUIRE(H5Support::H5Utilities::createGroupsFromPath(header + "Phases/1", id) >= 0);
+      REQUIRE(H5Support::H5Utilities::createGroupsFromPath(scanName + "/EBSD/Data", id) >= 0);
+      intValue(ebsdlib::H5Esprit::NCOLS, "columns", 1);
+      intValue(ebsdlib::H5Esprit::NROWS, "rows", 1);
+      intValue(ebsdlib::H5Esprit::PatternWidth, "width", 1);
+      intValue(ebsdlib::H5Esprit::PatternHeight, "height", 1);
+      REQUIRE(H5Lite::writeScalarDataset<int32>(id, header + ebsdlib::H5Esprit::NPoints, 1) >= 0);
+      stepValue(ebsdlib::H5Esprit::XSTEP, "xstep");
+      stepValue(ebsdlib::H5Esprit::YSTEP, "ystep");
+      for(const auto& key : {ebsdlib::H5Esprit::GridType, ebsdlib::H5Esprit::OriginalFile})
+      {
+        REQUIRE(H5Lite::writeStringDataset(id, header + key, "SqrGrid") >= 0);
+      }
+      for(const auto& key : {ebsdlib::H5Esprit::SEPixelSizeX, ebsdlib::H5Esprit::SEPixelSizeY, ebsdlib::H5Esprit::ZOffset})
+      {
+        REQUIRE(H5Lite::writeScalarDataset<float64>(id, header + key, 1.0) >= 0);
+      }
+      const std::string phase = header + "Phases/1/";
+      for(const auto& key : {ebsdlib::H5Esprit::Formula, ebsdlib::H5Esprit::Name, ebsdlib::H5Esprit::SpaceGroup})
+      {
+        REQUIRE(H5Lite::writeStringDataset(id, phase + key, "Nickel") >= 0);
+      }
+      REQUIRE(H5Lite::writeScalarDataset<int32>(id, phase + ebsdlib::H5Esprit::IT, invalidHeader && field == "symmetry" ? 999 : 225) >= 0);
+      REQUIRE(H5Lite::writeScalarDataset<int32>(id, phase + ebsdlib::H5Esprit::Setting, 1) >= 0);
+      REQUIRE(H5Lite::writeVectorDataset<float32>(id, phase + ebsdlib::H5Esprit::LatticeConstants, {6}, {1, 1, 1, 90, 90, 90}) >= 0);
+      REQUIRE(H5Lite::writeVectorDataset<uint8>(id, scanName + "/EBSD/Data/" + ebsdlib::H5Esprit::RawPatterns, {1, 1, 1}, {0}) >= 0);
+    }
+  }
+  DataStructure ds;
+  ReadH5EspritDataFilter filter;
+  Arguments args;
+  OEMEbsdScanSelectionParameter::ValueType selection = {path, ebsdlib::RefFrameZDir::LowtoHigh, {"Scan", "Scan2"}};
+  args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(selection));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_ReadPatternData_Key, std::make_any<bool>(field == "width" || field == "height"));
+  const auto argsForValidation = args;
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+
+  if((field == "xstep" || field == "ystep") && variant == 3)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE_FALSE(result.value().actions.empty());
+    const auto* geometryAction = dynamic_cast<const CreateImageGeometryAction*>(result.value().actions[0].get());
+    REQUIRE(geometryAction != nullptr);
+    REQUIRE(geometryAction->spacing()[field == "xstep" ? 0 : 1] == (laterScan ? 0.5F : 1.0F));
+    return;
+  }
+
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  // Zero patterns already have an existing error. Negative patterns need positive-domain validation.
+  if((field == "width" || field == "height") && variant % 2 == 0)
+  {
+    return;
+  }
+  REQUIRE(result.errors()[0].code == (field == "symmetry" ? -67600 : field == "columns" || field == "rows" || field == "width" || field == "height" ? -67601 : -67602));
 }

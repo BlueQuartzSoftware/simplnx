@@ -760,3 +760,80 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("OrientationAnalysis::ReadChannel5Data: HeaderValidation", "[OrientationAnalysis][ReadChannel5Data]")
+{
+  const auto field = GENERATE("xCells=1", "yCells=1", "GridDistX=0.25", "GridDistY=0.5", "LaueGroup=11");
+  const auto value = GENERATE("-1", "0");
+  CAPTURE(field, value);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_header.cpr";
+  auto crc = path;
+  crc.replace_extension(".crc");
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(crc, ec);
+  });
+  REQUIRE(WriteSyntheticChannel5Files(path, crc, 1, 1));
+  std::ifstream input(path);
+  std::string contents((std::istreambuf_iterator<char>(input)), {});
+  input.close();
+  const auto pos = contents.find(field);
+  REQUIRE(pos != std::string::npos);
+  const auto prefix = std::string(field).substr(0, std::string(field).find('=') + 1);
+  contents.replace(pos, std::string(field).size(), prefix + value);
+  {
+    std::ofstream output(path);
+    output << contents;
+  }
+  DataStructure ds;
+  ReadChannel5DataFilter filter;
+  const auto argsForValidation = SyntheticChannel5Arguments(path, false);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == (prefix == "LaueGroup=" ? -67600 : prefix.find("Cells") != std::string::npos ? -67601 : -67602));
+}
+
+TEST_CASE("OrientationAnalysis::ReadChannel5Data: HeaderValidation count limits and nonfinite steps", "[OrientationAnalysis][ReadChannel5Data]")
+{
+  const std::string field = GENERATE("xCells=1", "yCells=1", "GridDistX=0.25", "GridDistY=0.5");
+  const int variant = GENERATE(0, 1);
+  const bool cells = field.find("Cells") != std::string::npos;
+  const std::string value = cells ? (variant == 0 ? "2147483648" : "65536") : (variant == 0 ? "nan" : "inf");
+  CAPTURE(field, value);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_limits.cpr";
+  auto crc = path;
+  crc.replace_extension(".crc");
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+    fs::remove(crc, ec);
+  });
+  REQUIRE(WriteSyntheticChannel5Files(path, crc, 1, 1));
+  std::ifstream input(path);
+  std::string contents((std::istreambuf_iterator<char>(input)), {});
+  input.close();
+  const auto prefix = field.substr(0, field.find('=') + 1);
+  contents.replace(contents.find(field), field.size(), prefix + value);
+  if(cells && variant == 1)
+  {
+    const std::string other = field == "xCells=1" ? "yCells=1" : "xCells=1";
+    contents.replace(contents.find(other), other.size(), other.substr(0, other.find('=') + 1) + "65536");
+  }
+  {
+    std::ofstream output(path);
+    output << contents;
+  }
+  DataStructure ds;
+  ReadChannel5DataFilter filter;
+  const auto argsForValidation = SyntheticChannel5Arguments(path, false);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == (cells ? (variant == 0 ? -67604 : -67605) : -67602));
+}

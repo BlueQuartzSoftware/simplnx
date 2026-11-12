@@ -667,3 +667,30 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
     REQUIRE(executeResult.result.errors().front().code == -89365);
   }
 }
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: HeaderValidation symmetry", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  const int32 spaceGroup = GENERATE(0, -1, 231);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_header_grain.h5";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  WriteGrainMapperFixture(path.filename().string(), {});
+  {
+    const hid_t id = H5Fopen(path.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    REQUIRE(id >= 0);
+    const auto close = MakeScopeGuard([&]() noexcept { H5Fclose(id); });
+    REQUIRE(H5Ldelete(id, "PhaseInfo/Phase01/SpaceGroup", H5P_DEFAULT) >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(id, "PhaseInfo/Phase01/SpaceGroup", spaceGroup) >= 0);
+  }
+  DataStructure ds;
+  ReadGrainMapper3DFilter filter;
+  const auto argsForValidation = GrainMapperArguments(path, DataPath({"Geometry"}));
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67600);
+}

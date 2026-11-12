@@ -301,11 +301,16 @@ that pass reads each value before it uses it and writes no output until the pass
 `Int32Array`, call the `ValidateFeatureIdsToFeatureAttributeMatrixIndexing()` overload that takes `shouldCancel`. For
 other inputs, scan the minimum and maximum. A masked filter checks only the ids it uses, with the same mask and sentinel
 rules as execute. A negative value is out of range unless the code skips it before it indexes. An index that comes from
-a parameter value (for example **Phase Index**) is checked in preflight.
+a parameter value (for example **Phase Index**) is checked in preflight. Header values are also available in preflight.
+Check a file-derived symmetry index before a preview lookup, including the unknown-structure sentinel. Check signed
+dimensions before conversion to shapes and require finite, positive steps before geometry creation. Preserve an explicit
+format-specific zero default only where the reader documents it.
 
 **Example of the broken rule:** `ComputeNumFeatures` indexed its ensemble output with unchecked Feature Phases
 (PR #1766). The Direct algorithms of QuickSurfaceMesh and SurfaceNets transferred selected feature data without the
-bounds check that their Scanline algorithms had (PR #1765).
+bounds check that their Scanline algorithms had (PR #1765). The EBSD reader phase previews indexed orientation operations
+with an unsupported symmetry sentinel, which caused preflight crashes (issue #1867). Their unchecked header dimensions
+and steps also reached Image Geometry creation (issue #1877).
 
 **Why:** a value read from data can be anything; an unchecked index writes or reads out of bounds.
 

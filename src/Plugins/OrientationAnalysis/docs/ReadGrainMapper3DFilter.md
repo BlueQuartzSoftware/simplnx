@@ -54,6 +54,10 @@ Use [Compute IPF Colors](ComputeIPFColorsFilter.md) if you need to specifically 
 
 None. This filter reads directly from a `.h5` GrainMapper3D file and creates the **Image Geometry**, **Cell** data, and **Ensemble** data itself.
 
+### Header validation
+
+Phase SpaceGroup values must be from 1 through 230. Preflight rejects an invalid value before it looks up the phase symmetry.
+
 % Auto generated parameter table will be inserted here
 
 ## References
