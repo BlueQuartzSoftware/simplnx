@@ -126,7 +126,7 @@ void RunCompactInt16Otsu(DataStructure& ds, const DataPath& inputPath)
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy is explicit and defaults to Error", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy is explicit and defaults to Error", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
   const OtsuMultipleThresholdsImageFilter filter;
@@ -146,7 +146,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy 
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask selection is optional and linked", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask selection is optional and linked", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
   const OtsuMultipleThresholdsImageFilter filter;
@@ -180,7 +180,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask sel
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: masked label has a separate uint8 control", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: masked label has a separate uint8 control", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
   const OtsuMultipleThresholdsImageFilter filter;
@@ -198,8 +198,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: masked label has 
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: preflight checks the complete configured uint8 class interval",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: preflight checks the complete configured uint8 class interval",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
@@ -393,7 +393,7 @@ private:
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains literal endpoint frequencies and labels", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains literal endpoint frequencies and labels", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -429,7 +429,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Warn retains lite
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects each selected nonfinite kind", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects each selected nonfinite kind", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -446,8 +446,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects eac
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask precedes Error and accepts flat tuple count across parents",
-                   "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]", bool, uint8)
+TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask precedes Error and accepts flat tuple count across parents",
+                   "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]", bool, uint8)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -480,7 +480,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask pre
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite data is required in both modes", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite data is required in both modes", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -501,7 +501,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite d
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask collision and tuple validation", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask collision and tuple validation", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -549,7 +549,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask c
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: full native integer spans retain a valid two-bin split", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",
+TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: full native integer spans retain a valid two-bin split", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",
                    int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -575,7 +575,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: full nat
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants and detectable numeric collapse are distinct", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: true constants and detectable numeric collapse are distinct", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const std::atomic_bool shouldCancel{false};
@@ -645,8 +645,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: true constants an
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer ring preserves full payload batches at its grant boundary",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuRingGrant]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer ring preserves full payload batches at its grant boundary",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuRingGrant]")
 {
   // The counting store exercises charged scan buffers and records caller transfers. It has no disk backing.
   constexpr usize valueCount = 16;
@@ -688,7 +688,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: bounded transfers preserve failures and cancellation", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: bounded transfers preserve failures and cancellation", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   std::atomic_bool shouldCancel{false};
@@ -1042,7 +1042,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: ITK real-image 
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipeline imports receive intentional defaults", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipeline imports receive intentional defaults", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const OtsuMultipleThresholdsImageFilter filter;
@@ -1072,8 +1072,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipeli
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection validates scalar bool or uint8 and ignores disabled paths",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection validates scalar bool or uint8 and ignores disabled paths",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -1113,8 +1113,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection va
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep explicit Warn endpoints and empty selected data errors",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep explicit Warn endpoints and empty selected data errors",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const std::atomic_bool shouldCancel{false};
@@ -1146,7 +1146,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: constants keep ex
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper configuration errors are actionable", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper configuration errors are actionable", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const std::atomic_bool shouldCancel{false};
@@ -1216,7 +1216,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper co
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal class labels coexist with masked label zero", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal class labels coexist with masked label zero", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -1237,7 +1237,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal cla
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds keep ordinary Warn endpoint classes", "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds keep ordinary Warn endpoint classes", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -1265,8 +1265,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds ke
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: first centroid may equal minimum with usable two-bin separation",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuCentroidSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: first centroid may equal minimum with usable two-bin separation",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuCentroidSafeRed]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -1313,8 +1313,8 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: first centroid ma
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: floating summaries preserve literal counts across resident and buffered batches",
-          "[ImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: floating summaries preserve literal counts across resident and buffered batches",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const bool buffered = GENERATE(false, true);
@@ -1370,7 +1370,7 @@ TEST_CASE("ImageProcessing::OtsuMultipleThresholdsImageFilter: floating summarie
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::C15Compatibility resident validity masked Otsu feeds selected components", "[ImageProcessing][C15Compatibility][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::C15Compatibility resident validity masked Otsu feeds selected components", "[NXImageProcessing][C15Compatibility][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);

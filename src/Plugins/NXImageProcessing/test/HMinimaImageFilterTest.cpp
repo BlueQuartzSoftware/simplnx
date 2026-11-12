@@ -1,6 +1,6 @@
 #include "C15CompatibilityTestUtils.hpp"
-#include "ImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
-#include "ImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
+#include "NXImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
+#include "NXImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
 
@@ -56,7 +56,7 @@ Arguments makeHMinimaArguments(const DataPath& inputPath, float64 height, bool f
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: integer fractional Height fails preflight", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional Height fails preflight", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -80,8 +80,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: integer fractional Heig
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves values and type", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
-                   uint64, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves values and type", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
+                   int64, uint64, float32, float64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -128,7 +128,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves v
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: floating fractional Height retains fractional minima", "[ImageProcessing][Issue1874][HMinimaImageFilter]", float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: floating fractional Height retains fractional minima", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -168,7 +168,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: floating fractional Hei
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: native 64-bit marker preserves units above double precision", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: native 64-bit marker preserves units above double precision", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -203,8 +203,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: native 64-bit marker pr
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves native integer bounds", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
-                   int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves native integer bounds", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32,
+                   uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -241,7 +241,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: zero Height preserves n
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height raises or saturates native integer markers", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16,
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height raises or saturates native integer markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -279,7 +279,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height raises or 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: large whole Height retains exact native 64-bit markers", "[ImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: large whole Height retains exact native 64-bit markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -318,7 +318,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HMinimaImageFilter: large whole Height reta
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::HMinimaImageFilter: whole Height is stable under a signed baseline shift", "[ImageProcessing][Issue1874][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height is stable under a signed baseline shift", "[NXImageProcessing][Issue1874][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -589,7 +589,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::C15Compatibility resident fractional minima produce watershed markers", "[ImageProcessing][C15Compatibility][Issue1874][HMinimaImageFilter]")
+TEST_CASE("NXImageProcessing::C15Compatibility resident fractional minima produce watershed markers", "[NXImageProcessing][C15Compatibility][Issue1874][HMinimaImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));

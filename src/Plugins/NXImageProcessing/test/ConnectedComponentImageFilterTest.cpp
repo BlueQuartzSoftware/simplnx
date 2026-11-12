@@ -94,7 +94,7 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: provisional label limit policy is explicit and defaults to Error", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: provisional label limit policy is explicit and defaults to Error", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const ConnectedComponentImageFilter filter;
@@ -126,7 +126,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: provisional label lim
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: both policies preserve literal connectivity labels and uint32 shape", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: both policies preserve literal connectivity labels and uint32 shape", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -179,7 +179,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: both policies preserv
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: many provisional runs can form one exact component", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: many provisional runs can form one exact component", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -213,7 +213,7 @@ TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: many provisional runs
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::ConnectedComponentImageFilter: execution cancellation keeps the filter cancellation result", "[ImageProcessing][Issue1874][ConnectedComponentImageFilter]")
+TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: execution cancellation keeps the filter cancellation result", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);

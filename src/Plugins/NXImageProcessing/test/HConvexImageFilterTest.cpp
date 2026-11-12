@@ -107,7 +107,7 @@ private:
 };
 } // namespace
 
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: integer fractional Height fails preflight", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32, uint32,
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional Height fails preflight", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -128,8 +128,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: integer fractional Heig
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero contrast with unchanged type", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
-                   uint32, int64, uint64, float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zero contrast with unchanged type", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
+                   int32, uint32, int64, uint64, float32, float64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -172,7 +172,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: floating fractional Height retains fractional contrast", "[ImageProcessing][Issue1874][HConvexImageFilter]", float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: floating fractional Height retains fractional contrast", "[NXImageProcessing][Issue1874][HConvexImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -209,7 +209,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: floating fractional Hei
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: native 64-bit unit contrast above double precision", "[ImageProcessing][Issue1874][HConvexImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit unit contrast above double precision", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int64, uint64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -241,7 +241,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: native 64-bit unit cont
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::HConvexImageFilter: exact signed 64-bit marker boundaries in both directions", "[ImageProcessing][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: exact signed 64-bit marker boundaries in both directions", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr int64 minimum = std::numeric_limits<int64>::lowest();
@@ -273,7 +273,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact signed 64-bit marker bound
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: exact integer marker zero unit and huge Heights", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: exact integer marker zero unit and huge Heights", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -310,7 +310,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: exact integer marker ze
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker arithmetic requires explicit opt-in", "[ImageProcessing][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker arithmetic requires explicit opt-in", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   constexpr int64 inputValue = (int64{1} << 54) + 1;
@@ -331,7 +331,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker arithmetic requires
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker Height immediately below 2^64", "[ImageProcessing][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker Height immediately below 2^64", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   ImageProcessing::ReconstructionMarkerOptions options;
@@ -352,7 +352,8 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: exact marker Height immediately 
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: signed contrast overflow and adjacent representable contrast", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, int16, int32, int64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: signed contrast overflow and adjacent representable contrast", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, int16, int32,
+                   int64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -401,7 +402,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: signed contrast overflo
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero contrast at native integer bounds", "[ImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zero contrast at native integer bounds", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
@@ -431,7 +432,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::HConvexImageFilter: zero Height gives zero 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::HConvexImageFilter: whole Height contrast is stable under a signed baseline shift", "[ImageProcessing][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: whole Height contrast is stable under a signed baseline shift", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -457,7 +458,7 @@ TEST_CASE("ImageProcessing::HConvexImageFilter: whole Height contrast is stable 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::HConvexImageFilter: chunked contrast preserves transfer Results and cancellation", "[ImageProcessing][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: chunked contrast preserves transfer Results and cancellation", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   HConvexTransferStore input(2);
@@ -769,7 +770,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("ImageProcessing::C15Compatibility resident exact widening supports fractional HConvex height", "[ImageProcessing][C15Compatibility][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::C15Compatibility resident exact widening supports fractional HConvex height", "[NXImageProcessing][C15Compatibility][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));

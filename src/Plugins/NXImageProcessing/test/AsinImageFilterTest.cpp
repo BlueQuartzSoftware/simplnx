@@ -62,7 +62,8 @@ DataPath runMappedIntegerAsin(DataStructure& dataStructure, const DataPath& inpu
 
 // The principal angle at integer one is pi/2 radians for every integer width and signedness.
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer one produces float32 radians", "[ImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer one produces float32 radians", "[NXImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
+                   uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -82,8 +83,8 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer one produces float
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer endpoints and invalid values produce floating angles", "[ImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32,
-                   uint32, int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer endpoints and invalid values produce floating angles", "[NXImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16,
+                   int32, uint32, int64, uint64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -122,7 +123,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: integer endpoints and inva
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: floating input retains type and principal angles", "[ImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: floating input retains type and principal angles", "[NXImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -156,7 +157,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: floating input retains typ
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: adjacent domain boundaries remain distinct", "[ImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
+TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: adjacent domain boundaries remain distinct", "[NXImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
@@ -184,7 +185,7 @@ TEMPLATE_TEST_CASE("ImageProcessing::AsinImageFilter: adjacent domain boundaries
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("ImageProcessing::AsinImageFilter: mapped multi-component output preserves tuple shape", "[ImageProcessing][Issue1874][AsinImageFilter]")
+TEST_CASE("NXImageProcessing::AsinImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][AsinImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
