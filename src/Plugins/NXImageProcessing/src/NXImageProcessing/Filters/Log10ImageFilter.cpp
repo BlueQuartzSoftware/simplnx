@@ -2,7 +2,7 @@
 
 #include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
 
-#include "ImageProcessing/utils/MathOutputUtilities.hpp"
+#include "NXImageProcessing/utils/MathOutputUtilities.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
