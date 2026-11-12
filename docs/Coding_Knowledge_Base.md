@@ -136,9 +136,8 @@ runs `preflightImpl()` before `executeImpl()`, and returns the preflight errors 
   without the filter, is not a defect. Issue #1887 reported this for the DBSCAN Epsilon; only its NaN case was a
   defect, because the preflight check `Epsilon <= 0` lets a NaN through.
 
-**Example of the broken rule:** `ComputeCAxisReferenceMisalignments::operator()()` called the same `ValidateInputs()`
-that its filter's `preflightImpl()` had already called (PR #1890), so every run checked its inputs twice. During the
-review of PR #1763, a new empty-mesh check in preflight broke every pipeline that used **Create Surface Mesh
+**Example of the broken rule:** an algorithm's `operator()()` called the same static `ValidateInputs()` that its
+filter's `preflightImpl()` had already called, so every run checked its inputs twice. During the review of PR #1763, a new empty-mesh check in preflight broke every pipeline that used **Create Surface Mesh
 (QuickMesh)**, **Create Surface Mesh (Surface Nets)** or M3C before it ran.
 
 **Why:** `IFilter::execute()` always runs preflight before `executeImpl()`, so an input check in the algorithm never
