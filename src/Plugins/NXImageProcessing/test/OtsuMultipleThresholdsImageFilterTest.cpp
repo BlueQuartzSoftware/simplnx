@@ -9,6 +9,7 @@
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -19,6 +20,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
@@ -1072,6 +1074,39 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipe
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: StringArray masks return a preflight error only when enabled", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  const bool useMask = GENERATE(true, false);
+  CAPTURE(useMask);
+  const auto application = Application::GetOrCreateInstance();
+  REQUIRE(application != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, 2, 1, 1, {0, 4});
+  const DataPath maskPath({"String Mask"});
+  const auto* maskPtr = StringArray::CreateWithValues(dataStructure, "String Mask", ShapeType{2}, {"1", "1"});
+  REQUIRE(maskPtr != nullptr);
+  auto args = otsuArguments(inputPath);
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(useMask));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  const OtsuMultipleThresholdsImageFilter filter;
+  const auto result = filter.preflight(dataStructure, args);
+  if(useMask)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    const auto& error = result.outputActions.errors().front();
+    REQUIRE(error.code == -83100);
+    REQUIRE(error.message.find(maskPath.toString()) != std::string::npos);
+    REQUIRE(error.message.find("scalar bool or uint8") != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  REQUIRE(dataStructure.getData(inputPath.replaceName("Output")) == nullptr);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection validates scalar bool or uint8 and ignores disabled paths",
           "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {

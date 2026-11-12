@@ -135,12 +135,19 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
                                      labelOffset, lastLabel))};
     }
     const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-    const auto& mask = dataStructure.getDataRefAs<IDataArray>(maskPath);
+    // ArraySelectionParameter also accepts nonnumeric array kinds.
+    const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPath);
+    if(maskPtr == nullptr)
+    {
+      constexpr int32 k_InvalidMaskArrayKind = -83100;
+      return {.outputActions =
+                  MakeErrorResult<OutputActions>(k_InvalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
+    }
     const auto& input = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-    if(mask.getNumberOfTuples() != input.getNumberOfTuples())
+    if(maskPtr->getNumberOfTuples() != input.getNumberOfTuples())
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-8314, fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
-                                                                                 maskPath.toString(), mask.getNumberOfTuples(), selectedInputArray.toString(), input.getNumberOfTuples()))};
+                                                                                 maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), input.getNumberOfTuples()))};
     }
   }
 
