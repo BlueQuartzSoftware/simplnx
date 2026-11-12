@@ -139,9 +139,9 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPath);
     if(maskPtr == nullptr)
     {
-      constexpr int32 k_InvalidMaskArrayKind = -83100;
+      constexpr int32 invalidMaskArrayKind = -83100;
       return {.outputActions =
-                  MakeErrorResult<OutputActions>(k_InvalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
+                  MakeErrorResult<OutputActions>(invalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
     }
     const auto& input = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
     if(maskPtr->getNumberOfTuples() != input.getNumberOfTuples())
