@@ -3,6 +3,7 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -14,6 +15,14 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
+
+namespace
+{
+DataPath FeatureIdsPath(const IGridGeometry& gridGeometry, const Arguments& filterArgs)
+{
+  return gridGeometry.getCellDataPath().createChildPath(filterArgs.value<std::string>(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key));
+}
+} // namespace
 
 namespace nx::core
 {
@@ -126,8 +135,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   // Validate the Grid Geometry
   auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
-  DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
-  auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  auto featureIdsPath = FeatureIdsPath(*inputGridGeom, filterArgs);
   auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
@@ -181,7 +189,8 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  const auto& inputGridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
+  inputValues.FeatureIdsArrayPath = FeatureIdsPath(inputGridGeom, filterArgs);
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);

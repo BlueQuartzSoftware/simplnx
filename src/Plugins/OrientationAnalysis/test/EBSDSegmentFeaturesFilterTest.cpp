@@ -7,10 +7,18 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -20,15 +28,20 @@
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <fmt/format.h>
 
+#include <any>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <set>
+#include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -61,6 +74,156 @@ constexpr usize k_SmallBlockSize = 5;
 constexpr usize k_LargeDim = 200;
 constexpr usize k_LargeBlockSize = 25;
 
+template <typename T>
+DataArray<T>& createEbsdInputArray(DataStructure& dataStructure, const DataPath& path, const AttributeMatrix& parent, usize componentCount)
+{
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, parent.getShape(), {componentCount});
+  REQUIRE((store != nullptr));
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), store, parent.getId());
+  REQUIRE((arrayPtr != nullptr));
+  return *arrayPtr;
+}
+
+void checkExternalQuaternions(UnitTest::AlgorithmTestScope* scopePtr)
+{
+  const DataPath geometryPath({"Group", "Geometry"});
+  const DataPath cellDataPath = geometryPath.createChildPath("Geometry Cell Data");
+  const DataPath externalDataPath({"External Geometry Inputs"});
+  const DataPath quatsPath = externalDataPath.createChildPath("Quats");
+  const DataPath phasesPath = externalDataPath.createChildPath("Phases");
+  const DataPath decoyPath = externalDataPath.createChildPath("Geometry FeatureIds");
+  const DataPath ensemblePath({"Ensemble Data"});
+  const DataPath crystalsPath = ensemblePath.createChildPath("CrystalStructures");
+  const DataPath featureIdsPath = cellDataPath.createChildPath("Geometry FeatureIds");
+  const DataPath featureDataPath = geometryPath.createChildPath("Geometry Feature Data");
+  const DataPath activePath = featureDataPath.createChildPath("Active");
+  constexpr std::array<int32, 5> inputPhases = {1, 1, 0, 1, 1};
+  constexpr std::array<int32, 5> inputDecoy = {73, 74, 75, 76, 77};
+  constexpr std::array<uint32, 2> inputCrystals = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
+
+  DataStructure dataStructure;
+  auto* groupPtr = DataGroup::Create(dataStructure, "Group");
+  REQUIRE((groupPtr != nullptr));
+  auto* geometryPtr = ImageGeom::Create(dataStructure, geometryPath.getTargetName(), groupPtr->getId());
+  REQUIRE((geometryPtr != nullptr));
+  geometryPtr->setDimensions({5, 1, 1});
+  geometryPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  geometryPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {1, 1, 5}, geometryPtr->getId());
+  auto* externalPtr = AttributeMatrix::Create(dataStructure, externalDataPath.getTargetName(), {1, 1, 5});
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, ensemblePath.getTargetName(), {2});
+  REQUIRE((cellsPtr != nullptr));
+  REQUIRE((externalPtr != nullptr));
+  REQUIRE((ensemblesPtr != nullptr));
+  geometryPtr->setCellData(*cellsPtr);
+
+  auto& quats = createEbsdInputArray<float32>(dataStructure, quatsPath, *externalPtr, 4);
+  auto& phases = createEbsdInputArray<int32>(dataStructure, phasesPath, *externalPtr, 1);
+  auto& decoy = createEbsdInputArray<int32>(dataStructure, decoyPath, *externalPtr, 1);
+  auto& crystals = createEbsdInputArray<uint32>(dataStructure, crystalsPath, *ensemblesPtr, 1);
+  quats.fill(0.0F);
+  for(usize cell = 0; cell < inputPhases.size(); ++cell)
+  {
+    quats[(cell * 4) + 3] = 1.0F;
+    phases[cell] = inputPhases.at(cell);
+    decoy[cell] = inputDecoy.at(cell);
+  }
+  for(usize phase = 0; phase < inputCrystals.size(); ++phase)
+  {
+    crystals[phase] = inputCrystals.at(phase);
+  }
+  for(const IDataArray* arrayPtr : std::array<const IDataArray*, 4>{&quats, &phases, &decoy, &crystals})
+  {
+    if(scopePtr != nullptr)
+    {
+      scopePtr->requireExpectedStore(*arrayPtr);
+    }
+    else
+    {
+      UnitTest::RequireDiskBackedStore(*arrayPtr);
+    }
+  }
+
+  EBSDSegmentFeaturesFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(quatsPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalsPath));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(featureIdsPath.getTargetName()));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(featureDataPath.getTargetName()));
+  args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(activePath.getTargetName()));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  // The shared result-check macro uses a do-while wrapper.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto executeResult = scopePtr != nullptr ? scopePtr->executeFilter(filter, dataStructure, args) : filter.execute(dataStructure, args);
+  // The shared result-check macro uses a do-while wrapper.
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  if(scopePtr == nullptr)
+  {
+    const auto after = GetAlgorithmPathExecutionCounts();
+    REQUIRE((after.OutOfCore == before.OutOfCore + 1));
+    REQUIRE((after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1));
+    REQUIRE((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
+    REQUIRE((after.InCore == before.InCore));
+    REQUIRE((after.InCoreOnInMemoryStore == before.InCoreOnInMemoryStore));
+    REQUIRE((after.InCoreOnOutOfCoreStore == before.InCoreOnOutOfCoreStore));
+  }
+
+  const auto& featureIds = UnitTest::GetRequiredData<Int32Array>(dataStructure, featureIdsPath);
+  const auto& active = UnitTest::GetRequiredData<UInt8Array>(dataStructure, activePath);
+  REQUIRE((geometryPtr->getCellDataPath() == cellDataPath));
+  REQUIRE((featureIds.getTupleShape() == ShapeType{1, 1, 5}));
+  REQUIRE((featureIds.getNumberOfComponents() == 1));
+  REQUIRE((active.getNumberOfTuples() == 3));
+  REQUIRE((active.getNumberOfComponents() == 1));
+  if(scopePtr != nullptr)
+  {
+    scopePtr->requireExpectedStore(featureIds);
+    scopePtr->requireExpectedStore(active);
+  }
+  else
+  {
+    UnitTest::RequireDiskBackedStore(featureIds);
+    UnitTest::RequireDiskBackedStore(active);
+  }
+
+  // Identity quaternions have zero misorientation. Phase zero separates two
+  // connected pairs, so deterministic labels are [1, 1, 0, 2, 2].
+  constexpr std::array<int32, 5> expectedFeatureIds = {1, 1, 0, 2, 2};
+  constexpr std::array<uint8, 3> expectedActive = {0, 1, 1};
+  for(usize cell = 0; cell < inputPhases.size(); ++cell)
+  {
+    CAPTURE(cell);
+    CHECK((featureIds[cell] == expectedFeatureIds.at(cell)));
+    CHECK((decoy[cell] == inputDecoy.at(cell)));
+    CHECK((phases[cell] == inputPhases.at(cell)));
+    for(usize component = 0; component < 4; ++component)
+    {
+      CHECK((quats[(cell * 4) + component] == (component == 3 ? 1.0F : 0.0F)));
+    }
+  }
+  for(usize feature = 0; feature < expectedActive.size(); ++feature)
+  {
+    CHECK((active[feature] == expectedActive.at(feature)));
+  }
+  for(usize phase = 0; phase < inputCrystals.size(); ++phase)
+  {
+    CHECK((crystals[phase] == inputCrystals.at(phase)));
+  }
+  CHECK((dataStructure.getDataAs<DataGroup>(DataPath({"Geometry"})) == nullptr));
+  CHECK((dataStructure.getDataAs<IDataArray>(DataPath({"Geometry FeatureIds"})) == nullptr));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 tolerance = 5.0f, ChoicesParameter::ValueType neighborScheme = 0, bool randomize = false)
 {
   args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(tolerance));
@@ -78,6 +241,23 @@ void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 t
   args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(randomize));
 }
 } // namespace
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions keep Feature Ids in geometry cell data", "[OrientationAnalysis][EBSDSegmentFeatures][NestedPaths]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  checkExternalQuaternions(&scope);
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: external quaternions keep Feature Ids in geometry cell data with real OOC stores",
+          "[OrientationAnalysis][EBSDSegmentFeatures][NestedPaths][.OocStoreContract]")
+{
+  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  REQUIRE_FALSE(ForceInCoreAlgorithm());
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  checkExternalQuaternions(nullptr);
+}
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: No Valid Voxels Returns Error", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {

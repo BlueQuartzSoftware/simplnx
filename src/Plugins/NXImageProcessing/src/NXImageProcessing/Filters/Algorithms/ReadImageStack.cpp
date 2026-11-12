@@ -51,6 +51,11 @@ Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config)
   return args;
 }
 
+DataPath ResampledTemporaryGeometryPath(const DataPath& imageGeomPath)
+{
+  return imageGeomPath.replaceName(imageGeomPath.getTargetName() + "_resampled");
+}
+
 } // namespace nx::core
 
 namespace
@@ -328,9 +333,9 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
         }
       }
 
-      // The resample filter defers its final rename. Use the temporary path until
-      // deferred actions complete.
-      destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});
+      // ReadImageStackFilter renames the resampled geometry in a deferred action.
+      // Until that action runs, the output geometry is at the temporary path beside the selected geometry.
+      destImageGeomPath = ResampledTemporaryGeometryPath(imageGeomPath);
     }
 
     DataPath srcImageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);

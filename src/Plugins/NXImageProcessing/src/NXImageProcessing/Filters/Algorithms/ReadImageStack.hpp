@@ -81,6 +81,13 @@ struct NXIMAGEPROCESSING_EXPORT ReadImageStackInputValues
 };
 
 /**
+ * @brief Builds the temporary sibling path used until the deferred geometry rename.
+ * @param imageGeomPath Identifies the selected stack geometry.
+ * @return Path with the selected geometry name followed by "_resampled".
+ */
+NXIMAGEPROCESSING_EXPORT DataPath ResampledTemporaryGeometryPath(const DataPath& imageGeomPath);
+
+/**
  * @class ReadImageStack
  * @brief Reads an ordered image-file sequence into a three-dimensional DataArray.
  *

@@ -4,20 +4,36 @@
 #include "NXImageProcessing/Filters/ReadImageStackFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <tiffio.h>
 
 #include <algorithm>
+#include <any>
+#include <array>
+#include <filesystem>
 #include <limits>
+#include <string>
+#include <system_error>
+#include <vector>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -1253,7 +1269,149 @@ void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, c
   }
   TIFFClose(tif);
 }
+
+enum class NestedImageStackResampling : nx::core::uint8
+{
+  Scale50,
+  ExactDimensions,
+  Scale100
+};
+
+void checkNestedImageStack(NestedImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
+{
+  constexpr nx::core::uint32 width = 4;
+  constexpr nx::core::uint32 height = 6;
+  constexpr usize inputSliceSize = static_cast<usize>(width) * height;
+  constexpr std::array<nx::core::uint8, 2> sliceValues = {17, 203};
+  const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedReadImageStack-" + Uuid::GenerateV4().str());
+  REQUIRE(fs::create_directories(inputDir));
+  const std::array<fs::path, 2> inputFiles = {inputDir / "slice_0.tif", inputDir / "slice_1.tif"};
+  const auto removeInputs = MakeScopeGuard([&inputDir, &inputFiles]() noexcept {
+    std::error_code error;
+    for(const auto& path : inputFiles)
+    {
+      fs::remove(path, error);
+    }
+    fs::remove(inputDir, error);
+  });
+  for(usize slice = 0; slice < sliceValues.size(); ++slice)
+  {
+    WriteMultiPageTiff(inputFiles.at(slice), width, height, {std::vector<nx::core::uint8>(inputSliceSize, sliceValues.at(slice))});
+  }
+
+  const DataPath geometryPath({"Stack Parent", "Stack"});
+  const DataPath rootDecoyPath({"Stack"});
+  const std::string cellDataName = "Stack Cells";
+  const std::string imageArrayName = "Stack Values";
+  const DataPath imagePath = geometryPath.createChildPath(cellDataName).createChildPath(imageArrayName);
+  DataStructure dataStructure;
+  REQUIRE((DataGroup::Create(dataStructure, "Stack Parent") != nullptr));
+  auto* decoyPtr = DataGroup::Create(dataStructure, "Stack");
+  REQUIRE((decoyPtr != nullptr));
+  auto* decoyChildPtr = DataGroup::Create(dataStructure, "Keep Me", decoyPtr->getId());
+  REQUIRE((decoyChildPtr != nullptr));
+  const auto decoyId = decoyPtr->getId();
+  const auto decoyChildId = decoyChildPtr->getId();
+
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = inputDir.string();
+  fileList.filePrefix = "slice_";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = ".tif";
+  fileList.startIndex = 0;
+  fileList.endIndex = 1;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 1;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+  const ReadImageStackFilter filter;
+  const ChoicesParameter::ValueType resampleMode = resampling == NestedImageStackResampling::ExactDimensions ? 2 : 1;
+  const float32 scaling = resampling == NestedImageStackResampling::Scale50 ? 50.0F : 100.0F;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(ReadImageStackFilter::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
+  args.insertOrAssign(ReadImageStackFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageArrayName));
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(resampleMode));
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, std::make_any<float32>(scaling));
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<nx::core::uint64>{3, 2}));
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  const auto& image = UnitTest::GetRequiredData<UInt8Array>(dataStructure, imagePath);
+  REQUIRE((geometry.getDimensions() == expectedDimensions));
+  REQUIRE((image.getTupleShape() == ShapeType{2, expectedDimensions[1], expectedDimensions[0]}));
+  REQUIRE((image.getNumberOfComponents() == 1));
+  if(requireDiskStore)
+  {
+    UnitTest::RequireDiskBackedStore(image);
+  }
+  else
+  {
+    REQUIRE((image.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory));
+  }
+
+  // A constant slice retains its value under resampling, independently of interpolation details.
+  const usize sliceSize = expectedDimensions[0] * expectedDimensions[1];
+  for(usize slice = 0; slice < sliceValues.size(); ++slice)
+  {
+    for(usize pixel = 0; pixel < sliceSize; ++pixel)
+    {
+      CAPTURE(slice, pixel);
+      CHECK((image[(slice * sliceSize) + pixel] == sliceValues.at(slice)));
+    }
+  }
+  CHECK((dataStructure.getDataAs<ImageGeom>(rootDecoyPath) == nullptr));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"Stack_resampled"})));
+  CHECK_FALSE(dataStructure.containsData(geometryPath.replaceName("Stack_resampled")));
+  const auto& decoy = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath);
+  const auto& decoyChild = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath.createChildPath("Keep Me"));
+  CHECK((decoy.getId() == decoyId));
+  CHECK((decoyChild.getId() == decoyChildId));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 } // namespace
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path", "[NXImageProcessing][ReadImageStackFilter][NestedPaths]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  SECTION("50 percent scaling")
+  {
+    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, false);
+  }
+  SECTION("Exact dimensions")
+  {
+    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, false);
+  }
+  SECTION("100 percent scaling")
+  {
+    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, false);
+  }
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path with real OOC stores", "[NXImageProcessing][ReadImageStackFilter][NestedPaths][.OocStoreContract]")
+{
+  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  SECTION("50 percent scaling")
+  {
+    checkNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, true);
+  }
+  SECTION("Exact dimensions")
+  {
+    checkNestedImageStack(NestedImageStackResampling::ExactDimensions, {3, 2, 2}, true);
+  }
+  SECTION("100 percent scaling")
+  {
+    checkNestedImageStack(NestedImageStackResampling::Scale100, {4, 6, 2}, true);
+  }
+}
 
 // Stacks a list of multi-page TIFFs. Legacy ITKImportImageStack behavior (and the expected NX behavior)
 // is: Z == number of FILES, each slice is the FIRST page of the corresponding file, and pages past the

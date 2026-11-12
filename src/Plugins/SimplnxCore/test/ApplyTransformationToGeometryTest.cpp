@@ -1,24 +1,44 @@
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <algorithm>
+#include <any>
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -28,8 +48,178 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
+void executeIdentityTransform(const ApplyTransformationToGeometryFilter& filter, DataStructure& dataStructure, const Arguments& args)
+{
+  auto result = filter.execute(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+}
+
+void checkTransformDescendantPaths(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
+{
+  DataStructure dataStructure;
+  REQUIRE((DataGroup::Create(dataStructure, "Grain Group") != nullptr));
+  auto* decoyPtr = DataGroup::Create(dataStructure, "Grain");
+  REQUIRE((decoyPtr != nullptr));
+  auto* decoyChildPtr = DataGroup::Create(dataStructure, "Keep Me", decoyPtr->getId());
+  REQUIRE((decoyChildPtr != nullptr));
+  const auto decoyId = decoyPtr->getId();
+  const auto decoyChildId = decoyChildPtr->getId();
+  const DataPath geometryPath({"Grain Group", "Grain"});
+  const DataPath cellPath({"Grain Group", "Grain", "Grain Cells", "Grain Pixels"});
+  const DataPath valuesPath({"Grain Group", "Grain", "Grain Data", "Grain Details", "Grain Metrics", "Grain Values"});
+  const DataPath directPath({"Grain Group", "Grain", "Grain Transform"});
+  const auto createGeometryResult = CreateImageGeometryAction(geometryPath, {2, 2, 2}, {0, 0, 0}, {1, 1, 1}, "Grain Cells").apply(dataStructure, IDataAction::Mode::Execute);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(createGeometryResult);
+  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  const auto& cells = UnitTest::GetRequiredData<AttributeMatrix>(dataStructure, DataPath({"Grain Group", "Grain", "Grain Cells"}));
+  auto pixelStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellPath, {2, 2, 2}, {1});
+  REQUIRE((pixelStore != nullptr));
+  auto* pixelsPtr = Int32Array::Create(dataStructure, "Grain Pixels", pixelStore, cells.getId());
+  REQUIRE((pixelsPtr != nullptr));
+  constexpr std::array<int32, 8> expectedPixels = {2, 5, 11, 17, 23, 31, 41, 53};
+  for(usize index = 0; index < expectedPixels.size(); ++index)
+  {
+    (*pixelsPtr)[index] = expectedPixels.at(index);
+  }
+  auto* dataPtr = DataGroup::Create(dataStructure, "Grain Data", geometry.getId());
+  REQUIRE((dataPtr != nullptr));
+  auto* detailsPtr = DataGroup::Create(dataStructure, "Grain Details", dataPtr->getId());
+  REQUIRE((detailsPtr != nullptr));
+  auto* metricsPtr = AttributeMatrix::Create(dataStructure, "Grain Metrics", {2}, detailsPtr->getId());
+  REQUIRE((metricsPtr != nullptr));
+  auto valuesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, valuesPath, {2}, {1});
+  REQUIRE((valuesStore != nullptr));
+  auto* valuesPtr = Float32Array::Create(dataStructure, "Grain Values", valuesStore, metricsPtr->getId());
+  REQUIRE((valuesPtr != nullptr));
+  (*valuesPtr)[0] = 7.5F;
+  (*valuesPtr)[1] = -3.25F;
+  auto directStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, directPath, {2}, {1});
+  REQUIRE((directStore != nullptr));
+  auto* directPtr = Float32Array::Create(dataStructure, "Grain Transform", directStore, geometry.getId());
+  REQUIRE((directPtr != nullptr));
+  (*directPtr)[0] = 19.0F;
+  (*directPtr)[1] = -29.0F;
+  if(algorithmTestScopePtr == nullptr)
+  {
+    UnitTest::RequireDiskBackedStore(*pixelsPtr);
+    UnitTest::RequireDiskBackedStore(*valuesPtr);
+    UnitTest::RequireDiskBackedStore(*directPtr);
+  }
+
+  const ApplyTransformationToGeometryFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Grain Group", "Grain", "Grain Cells"})));
+  // The manual identity path creates a replacement geometry and copies non-cell children.
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key,
+                      std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  const auto preflight = filter.preflight(dataStructure, args);
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+
+  // Check declarations separately: deepCopy preserves real descendants even if their declared paths are wrong.
+  const std::vector<DataPath> expectedGroupPaths = {DataPath({"Grain Group", ".Grain", "Grain Data"}), DataPath({"Grain Group", ".Grain", "Grain Data", "Grain Details"}),
+                                                    DataPath({"Grain Group", ".Grain", "Grain Data", "Grain Details", "Grain Metrics"}),
+                                                    DataPath({"Grain Group", ".Grain", "Grain Data", "Grain Details", "Grain Metrics", "Grain Values"})};
+  const std::vector<DataPath> expectedDirectPaths = {DataPath({"Grain Group", ".Grain", "Grain Transform"})};
+  usize copyActionCount = 0;
+  for(const auto& action : preflight.outputActions.value().actions)
+  {
+    const auto* copyActionPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
+    if(copyActionPtr == nullptr)
+    {
+      continue;
+    }
+    ++copyActionCount;
+    const bool copiesGroup = copyActionPtr->path() == DataPath({"Grain Group", "Grain", "Grain Data"});
+    CHECK((copiesGroup || copyActionPtr->path() == directPath));
+    const auto& expectedPaths = copiesGroup ? expectedGroupPaths : expectedDirectPaths;
+    CHECK((copyActionPtr->newPath() == expectedPaths.front()));
+    const auto declaredPaths = copyActionPtr->getAllCreatedPaths();
+    CHECK((declaredPaths.size() == expectedPaths.size()));
+    for(const auto& expectedPath : expectedPaths)
+    {
+      CAPTURE(expectedPath.toString());
+      CHECK((std::ranges::find(declaredPaths, expectedPath) != declaredPaths.end()));
+    }
+  }
+  CHECK((copyActionCount == 2));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  if(algorithmTestScopePtr != nullptr)
+  {
+    algorithmTestScopePtr->execute([&] { executeIdentityTransform(filter, dataStructure, args); });
+  }
+  else
+  {
+    executeIdentityTransform(filter, dataStructure, args);
+  }
+  if(algorithmTestScopePtr == nullptr)
+  {
+    const auto after = GetAlgorithmPathExecutionCounts();
+    CHECK((after.OutOfCoreOnOutOfCoreStore > before.OutOfCoreOnOutOfCoreStore));
+    CHECK((after.InCore == before.InCore));
+    CHECK((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
+  }
+  const auto& outputGeometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  CHECK((outputGeometry.getDimensions() == SizeVec3{2, 2, 2}));
+  CHECK((outputGeometry.getOrigin() == FloatVec3{0, 0, 0}));
+  CHECK((outputGeometry.getSpacing() == FloatVec3{1, 1, 1}));
+  const auto& outputPixels = UnitTest::GetRequiredData<Int32Array>(dataStructure, cellPath);
+  const auto& outputValues = UnitTest::GetRequiredData<Float32Array>(dataStructure, valuesPath);
+  const auto& outputDirect = UnitTest::GetRequiredData<Float32Array>(dataStructure, directPath);
+  REQUIRE((outputPixels.getTupleShape() == ShapeType{2, 2, 2}));
+  REQUIRE((outputPixels.getNumberOfComponents() == 1));
+  REQUIRE((outputValues.getNumberOfTuples() == 2));
+  REQUIRE((outputValues.getNumberOfComponents() == 1));
+  REQUIRE((outputDirect.getNumberOfTuples() == 2));
+  REQUIRE((outputDirect.getNumberOfComponents() == 1));
+  for(usize index = 0; index < expectedPixels.size(); ++index)
+  {
+    CHECK((outputPixels[index] == expectedPixels.at(index)));
+  }
+  CHECK((outputValues[0] == 7.5F));
+  CHECK((outputValues[1] == -3.25F));
+  CHECK((outputDirect[0] == 19.0F));
+  CHECK((outputDirect[1] == -29.0F));
+  if(algorithmTestScopePtr == nullptr)
+  {
+    UnitTest::RequireDiskBackedStore(outputPixels);
+    UnitTest::RequireDiskBackedStore(outputValues);
+    UnitTest::RequireDiskBackedStore(outputDirect);
+  }
+  CHECK((dataStructure.getTopLevelData().size() == 2));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Grain"})).getId() == decoyId));
+  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Grain", "Keep Me"})).getId() == decoyChildId));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"Grain Group", ".Grain"})));
+  CHECK_FALSE(dataStructure.containsData(DataPath({".Grain Group"})));
+  CHECK_FALSE(dataStructure.containsData(DataPath({".Grain"})));
+  CHECK_FALSE(dataStructure.containsData(DataPath({"Grain Group", "Grain", ".Grain Data"})));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
 } // namespace
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: nested geometry preserves descendant names", "[SimplnxCore][ApplyTransformationToGeometryFilter][NestedPaths]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  checkTransformDescendantPaths(&algorithmTestScope);
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: nested geometry preserves descendant names with real OOC stores",
+          "[SimplnxCore][ApplyTransformationToGeometryFilter][NestedPaths][.OocStoreContract]")
+{
+  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  REQUIRE_FALSE(ForceInCoreAlgorithm());
+  REQUIRE_FALSE(ForceOocAlgorithm());
+  checkTransformDescendantPaths(nullptr);
+}
 
 namespace apply_transformation_to_geometry
 {
