@@ -64,8 +64,9 @@ public:
   /**
    * @brief Computes each selected array in input order.
    * @return Range, mask, bulk-I/O, temporary-file, or modal-sort errors.
+   * @pre NumberOfBins is at least one.
    * @pre Input arrays are scalar and output-path collections match input count.
-   * @pre NumberOfBins is positive and mask type is Bool or UInt8.
+   * @pre Mask type is Bool or UInt8.
    * @pre An automatic integral range can increment its maximum without overflow.
    */
   Result<> operator()();

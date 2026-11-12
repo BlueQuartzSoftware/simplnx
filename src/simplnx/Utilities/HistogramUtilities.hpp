@@ -24,22 +24,30 @@ float32 CalculateIncrement(Type min, Type max, int32 numBins)
 }
 
 /**
- * @function FillBinRange
- * @brief This function fills a container that is STL compatible and has a bracket operator defined with the bin ranges in the following pattern:
- *  bin_ranges = {minimum, maximum, next maximum, ...} with the format being that the bin's range is defined by bin_ranges[bin_index] <= X < bin_ranges[bin_index + 1]
- * @tparam Type this the end type of the function in that the container and data values are of this type
- * @tparam Container this is the type of object the ranges are loaded into, !!! It is expected that this class is STL compatible nd has a defined `[]` operator !!!
- * @param outputContainer this is the object that the ranges will be loaded into. ASSUMPTION: size is >= numBins + 1 !!! NO Bounds Check!!!
- * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
- * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
- * @param increment this is the uniform size of the bins
+ * @brief Returns the lower-bound index in the paired bin-range array.
+ * @param bin Identifies the histogram bin.
+ * @return Element index of the bin's inclusive lower bound.
+ * @pre The array contains two elements per bin and bin is a valid bin index.
+ */
+constexpr usize BinRangeIndex(usize bin)
+{
+  return bin * 2;
+}
+
+/**
+ * @brief Fills the paired inclusive lower and exclusive upper bounds for each histogram bin.
+ * @tparam Type Specifies the range value type.
+ * @tparam Container Supports indexed writes of Type values.
+ * @param outputContainer Receives two elements per bin, in lower-bound then upper-bound order.
+ * @param rangeMinMax Specifies the inclusive minimum and exclusive maximum of the overall histogram range.
+ * @param numBins Specifies the number of histogram bins.
+ * @param increment Specifies the uniform bin width in input units.
+ * @pre outputContainer contains at least 2 * numBins elements.
+ * @pre The caller checks that the bounds fit Type.
  */
 template <typename Type, class Container>
 void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const float32 increment)
 {
-  // WARNING: No bounds checking for type compatibility, it is expected to be done higher up where the type is not abstracted
-  // EXPECTED CONTAINER SIZE: numBins + 1
-
   if(numBins == 1) // if one bin, just set the range to the inputs
   {
     outputContainer[0] = rangeMinMax.first;
@@ -47,24 +55,24 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
     return;
   }
 
-  // iterate through loading the middle values of the sequence considering `lower bound inclusive, upper bound exclusive`
-  // We are filling a 2 component array. For STL containers this means the size of the container is 2*numbins
-  // We are going to put all the lower bin values into a component and the upper bin values in another component
+  // Each tuple contains the bin's inclusive lower bound and exclusive upper bound.
   for(int32 i = 0; i < numBins; i++)
   {
-    outputContainer[i * 2 + 0] = rangeMinMax.first + static_cast<Type>(increment * i);
-    outputContainer[i * 2 + 1] = rangeMinMax.first + static_cast<Type>(increment * (i + 1.0F));
+    const usize lowerIndex = BinRangeIndex(static_cast<usize>(i));
+    outputContainer[lowerIndex] = rangeMinMax.first + static_cast<Type>(increment * i);
+    outputContainer[lowerIndex + 1] = rangeMinMax.first + static_cast<Type>(increment * (i + 1.0F));
   }
 }
 
 /**
- * @function FillBinRange
- * @brief This overload is provided in the case the bin size is not provided and therefore must be calculated - see above overload for more detail on functionality
- * @tparam Type this the end type of the function in that the container and data values are of this type
- * @tparam Container this is the type of object the ranges are loaded into, !!! It is expected that this class is STL compatible nd has a defined `[]` operator !!!
- * @param outputContainer this is the object that the ranges will be loaded into. ASSUMPTION: size is >= numBins + 1 !!! NO Bounds Check!!!
- * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
- * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+ * @brief Fills paired histogram bin bounds with a calculated uniform width.
+ * @tparam Type Specifies the range value type.
+ * @tparam Container Supports indexed writes of Type values.
+ * @param outputContainer Receives two elements per bin, in lower-bound then upper-bound order.
+ * @param rangeMinMax Specifies the inclusive minimum and exclusive maximum of the overall histogram range.
+ * @param numBins Specifies the number of histogram bins.
+ * @pre outputContainer contains at least 2 * numBins elements.
+ * @pre The caller checks that the bounds fit Type.
  */
 template <typename Type, class Container>
 void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins)

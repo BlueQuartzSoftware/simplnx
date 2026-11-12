@@ -79,6 +79,16 @@ The output array can be placed in two ways:
 
 None — this filter reads directly from a raw binary file on disk.
 
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Explicit tuple dimensions must be at least 1.
+Component dimensions must be at least 1, with a representable product.
+When the output parent is an **Attribute Matrix**, its tuple shape overrides the tuple table, including an empty matrix.
+The filter does not validate the ignored tuple table.
+The tuple count multiplied by the component count must fit the size count before file-size comparisons.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

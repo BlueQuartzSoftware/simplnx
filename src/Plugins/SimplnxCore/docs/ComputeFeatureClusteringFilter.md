@@ -22,6 +22,10 @@ The **Filter** also outputs the clustering list (every inter-**Feature** distanc
 
 *Note:* Because the algorithm iterates over all **Features**, each distance is double-counted. For example, the distance from **Feature** 1 to **Feature** 2 is counted along with the identical distance from **Feature** 2 to **Feature** 1.
 
+### Bin Count
+
+**Number of Bins for RDF** is a dimensionless count and must be at least 1. Preflight rejects zero and negative counts.
+
 ### Required Input Sources
 
 - **Centroids** -- the X, Y, Z coordinates of each Feature's center of mass, produced by [Compute Feature Centroids](ComputeFeatureCentroidsFilter.md).

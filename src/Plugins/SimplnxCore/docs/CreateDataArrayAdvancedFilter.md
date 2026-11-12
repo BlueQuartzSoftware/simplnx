@@ -42,7 +42,7 @@ When creating a Data Array within an Attribute matrix, the tuple dimensions will
 
 If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the tuple dimensions themselves.
 
-Tuple and component dimensions must be positive whole numbers.
+Explicit tuple and component dimensions must be positive whole numbers.
 
 ### Scalar Type Values
 
@@ -81,6 +81,16 @@ For the simpler case of a single-component-dimension array (most data), use [Cre
 ### Required Input Sources
 
 None. The array is created from user-supplied parameters; when the parent is an Attribute Matrix, the tuple dimensions are inherited from it.
+
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Explicit tuple dimensions must be at least 1.
+Component dimensions must be at least 1, with a representable product.
+When the output parent is an **Attribute Matrix**, its tuple shape overrides the tuple table, including an empty matrix.
+The filter does not validate the ignored tuple table.
+The component count must also fit the numeric and text vectors used for initialization previews.
 
 % Auto generated parameter table will be inserted here
 

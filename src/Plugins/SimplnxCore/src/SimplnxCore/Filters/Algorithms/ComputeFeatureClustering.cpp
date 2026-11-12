@@ -132,6 +132,11 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
   return m_ShouldCancel;
 }
 
+usize ComputeFeatureClustering::RdfCacheIndex(usize numberOfBins, usize ensemble, usize bin)
+{
+  return numberOfBins * ensemble + bin;
+}
+
 Result<> ComputeFeatureClustering::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
@@ -296,7 +301,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -319,7 +324,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfCache[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -337,8 +342,9 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 0; i < m_InputValues->NumberOfBins; i++)
   {
-    oldCount[i] = rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
-    rdfCache[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
+    const usize cacheIndex = RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(m_InputValues->PhaseNumber), i);
+    oldCount[i] = rdfCache[cacheIndex];
+    rdfCache[cacheIndex] = oldCount[i] / randomRDF[i + 1];
   }
 
   // Publish the RDF after all bins are normalized.

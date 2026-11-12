@@ -12,6 +12,7 @@
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -88,20 +89,13 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  ShapeType tDims = {};
-  const auto& rowData = tupleDimsData.at(0);
-  tDims.reserve(rowData.size());
-  for(usize i = 0; i < rowData.size(); ++i)
+  ShapeType tDims;
+  auto dimensions = ConvertDimensions(tupleDimsData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue));
+  if(dimensions.invalid())
   {
-    auto floatValue = rowData[i];
-    if(floatValue == 0)
-    {
-      return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue),
-                                      fmt::format("Tuple dimension at index {0} cannot have a value of zero.  Please input a positive integer at index {0}.", i));
-    }
-
-    tDims.push_back(static_cast<usize>(floatValue));
+    return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
+  tDims = std::move(dimensions.value());
 
   auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
   auto inputArrayTupleShape = inputArray.getTupleShape();

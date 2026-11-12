@@ -36,6 +36,7 @@ set(SIMPLNX_TEST_SRCS
   CheckedFlushTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
+  DimensionConversionTest.cpp
   DataArrayTest.cpp
   DataStoreBulkTest.cpp
   DataIOCollectionExternalSortCompileTest.cpp
@@ -60,6 +61,7 @@ set(SIMPLNX_TEST_SRCS
   GeometryTestUtilities.hpp
   H5Test.cpp
   H5IOTest.cpp
+  HistogramUtilitiesTest.cpp
   ImageGeometryResampleTest.cpp
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp

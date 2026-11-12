@@ -14,38 +14,11 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <span>
+#include <limits>
+#include <numeric>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
-
-namespace
-{
-// -----------------------------------------------------------------------------
-std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
-{
-  std::vector<size_t> cDims;
-  std::vector<std::string> dimsStrVec = StringUtilities::split(cDimsStr, std::vector<char>{','}, true);
-  for(const auto& stringValue : dimsStrVec)
-  {
-    std::string dimsStr = StringUtilities::trimmed(stringValue);
-
-    try
-    {
-      int val = std::stoi(dimsStr);
-      cDims.push_back(val);
-    } catch(std::invalid_argument const& e)
-    {
-      return {};
-    } catch(std::out_of_range const& e)
-    {
-      return {};
-    }
-  }
-
-  return cDims;
-}
-} // namespace
 
 namespace nx::core
 {
@@ -173,14 +146,14 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
           fmt::format("The component dimensions are empty for dataset with path '{}'.  Please enter the component dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
     }
 
-    std::vector<size_t> cDims = createDimensionVector(cDimsStr);
-    if(cDims.empty())
+    auto componentDimensions = ConvertDimensions(cDimsStr, fmt::format("Component for dataset '{}'", datasetPath), ZeroDimensionPolicy::Reject, -20010);
+    if(componentDimensions.invalid())
     {
-      return MakePreflightErrorResult(-20010,
-                                      fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
+      return {ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
     }
+    ShapeType cDims = std::move(componentDimensions.value());
 
-    std::vector<size_t> tDims;
+    ShapeType tDims;
     if(parentAM == nullptr)
     {
       std::string tDimsStr = datasetImportInfo.tupleDimensions;
@@ -190,79 +163,43 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
             -20011, fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
       }
 
-      tDims = createDimensionVector(tDimsStr);
-      if(tDims.empty())
+      auto tupleDimensions = ConvertDimensions(tDimsStr, fmt::format("Tuple for dataset '{}'", datasetPath), ZeroDimensionPolicy::Allow, -20012);
+      if(tupleDimensions.invalid())
       {
-        return MakePreflightErrorResult(-20012,
-                                        fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
+        return {ConvertInvalidResult<OutputActions>(std::move(tupleDimensions))};
       }
+      tDims = std::move(tupleDimensions.value());
     }
     else
     {
       tDims = parentAM->getShape();
     }
 
-    // Calculate the product of the dataset dimensions and the product of the component dimensions.
-    // Since we're already looping over both of these sets of dimensions, let's also create our error message
-    // in case the equation does not work and we have to bail.
+    auto tupleCount = ComputeDimensionProduct(tDims, fmt::format("Tuple for dataset '{}'", datasetPath));
+    if(tupleCount.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+    }
+    auto componentCount = ComputeDimensionProduct(cDims, fmt::format("Component for dataset '{}'", datasetPath));
+    if(componentCount.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(componentCount))};
+    }
+    const usize numOfTuples = tupleCount.value();
+    const usize totalComponents = componentCount.value();
+    if(numOfTuples != 0 && totalComponents > std::numeric_limits<usize>::max() / numOfTuples)
+    {
+      return MakePreflightErrorResult(DimensionConversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for dataset '{}' exceeds {} elements. Use smaller dimensions.",
+                                                                                               numOfTuples, totalComponents, datasetPath, std::numeric_limits<usize>::max()));
+    }
+    const usize userEnteredTotalElements = numOfTuples * totalComponents;
+    // The file reader supplies the dataset dimensions; user shape validation does not change that contract.
+    const usize hdf5TotalElements = std::accumulate(dims.begin(), dims.end(), usize{1}, std::multiplies<>());
     std::stringstream stream;
-
-    stream << "-------------------------------------------\n";
-    stream << fmt::format("HDF5 File Path: '{}'\n", inputFile);
-    stream << fmt::format("HDF5 Dataset Path: '{}'\n", datasetPath);
-
-    size_t hdf5TotalElements = 1;
-    stream << "    No. of Dimension(s): " << StringUtilities::number(dims.size()) << "\n";
-    stream << "    Dimension Size(s): ";
-    for(int i = 0; i < dims.size(); i++)
-    {
-      stream << StringUtilities::number(dims[i]);
-      hdf5TotalElements = hdf5TotalElements * dims[i];
-      if(i != dims.size() - 1)
-      {
-        stream << " x ";
-      }
-    }
-
-    // NOTE: When simplnx implements the AttributeMatrix, the user entered tuple dimensions should be optional in lieu of an attribute matrix as the selected data path/parent.
-    stream << "\n";
-    stream << "    Total HDF5 Dataset Element Count: " << hdf5TotalElements << "\n";
-    stream << "-------------------------------------------\n";
-    stream << "No. of Tuple Dimension(s): " << StringUtilities::number(static_cast<uint64>(tDims.size())) << "\n";
-    stream << "Tuple Dimension(s): ";
-    size_t userEnteredTotalElements = 1;
-    for(int i = 0; i < tDims.size(); i++)
-    {
-      userEnteredTotalElements = userEnteredTotalElements * tDims[i];
-      int d = tDims[i];
-      stream << StringUtilities::number(d);
-      if(i != tDims.size() - 1)
-      {
-        stream << " x ";
-      }
-    }
-    stream << "\n";
-
-    int numOfTuples = userEnteredTotalElements;
-    stream << fmt::format("Total Attribute Matrix Tuple Count: '{}'\n", StringUtilities::number(numOfTuples));
-    stream << "No. of Component Dimension(s): " << StringUtilities::number(static_cast<uint64>(cDims.size())) << "\n";
-    stream << "Component Dimension(s): ";
-    int totalComponents = 1;
-    for(int i = 0; i < cDims.size(); i++)
-    {
-      userEnteredTotalElements = userEnteredTotalElements * cDims[i];
-      totalComponents = totalComponents * cDims[i];
-      int d = cDims[i];
-      stream << StringUtilities::number(d);
-      if(i != cDims.size() - 1)
-      {
-        stream << " x ";
-      }
-    }
-
-    stream << "\n";
-    stream << fmt::format("Total Component Count: '{}'\n", StringUtilities::number(totalComponents));
-    stream << "\n";
+    stream << fmt::format("HDF5 File Path: '{}'\nHDF5 Dataset Path: '{}'\n", inputFile, datasetPath);
+    stream << fmt::format("HDF5 dimensions: [{}], element count: {}\n", StringUtilities::formatDimensions(dims), hdf5TotalElements);
+    stream << fmt::format("Tuple dimensions: [{}], tuple count: {}\n", StringUtilities::formatDimensions(tDims), numOfTuples);
+    stream << fmt::format("Component dimensions: [{}], component count: {}\n", StringUtilities::formatDimensions(cDims), totalComponents);
 
     if(hdf5TotalElements != userEnteredTotalElements)
     {

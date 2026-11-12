@@ -1,5 +1,6 @@
 #include "SimplnxCore/Filters/ReadHDF5DatasetFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -663,5 +664,132 @@ TEST_CASE("SimplnxCore::ReadHDF5DatasetFilter: SIMPL Backwards Compatibility", "
 
       const Arguments args = pipelineFilter->getArguments();
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension RED tokens", "[SimplnxCore][ReadHDF5Dataset][DimensionRed]")
+{
+  writeHDF5File();
+  ReadHDF5DatasetFilter filter;
+  DataStructure ds;
+  const bool components = GENERATE(true, false);
+  const bool negative = GENERATE(false, true);
+  auto args = filter.getDefaultArguments();
+  ReadHDF5DatasetParameter::DatasetImportInfo info;
+  // Query the established fixture name instead of depending on the HDF5 spelling for int32.
+  info.dataSetPath = "/Pointer/Pointer1DArrayDataset<" + HDF5::Support::HdfTypeForPrimitiveAsStr<int32>() + ">";
+  info.componentDimensions = components ? (negative ? "-1" : "72abc") : "72";
+  info.tupleDimensions = components ? "40" : (negative ? "-1" : "40x");
+  ReadHDF5DatasetParameter::ValueType value = {std::nullopt, m_FilePath, {info}};
+  args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key, std::make_any<ReadHDF5DatasetParameter::ValueType>(value));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (components ? -20010 : -20012));
+}
+
+TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension grammar, products and inherited controls", "[SimplnxCore][ReadHDF5Dataset]")
+{
+  const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "Hdf5DimensionBoundaries.h5";
+  {
+    auto file = HDF5::FileIO::WriteFile(input);
+    REQUIRE(file.isValid());
+    auto dataset = file.createDataset("Values");
+    const std::vector<int32> values = {1, 2, 3, 4, 5, 6};
+    auto written = dataset.writeSpan<int32>({6}, values);
+    SIMPLNX_RESULT_REQUIRE_VALID(written);
+    auto empty = file.createDataset("Empty");
+    auto created = empty.createEmptyDataset<int32>({0});
+    SIMPLNX_RESULT_REQUIRE_VALID(created);
+  }
+  ReadHDF5DatasetFilter filter;
+  DataStructure ds;
+  ReadHDF5DatasetParameter::DatasetImportInfo info;
+  info.dataSetPath = "/Values";
+  info.componentDimensions = "3";
+  info.tupleDimensions = "2";
+  std::optional<DataPath> parent;
+  int32 expectedCode = 0;
+  std::string phrase;
+  SECTION("Token grammar and old empty codes")
+  {
+    const bool components = GENERATE(true, false);
+    const std::string text = GENERATE(std::string("3abc"), std::string("2x"), std::string("-1"), std::string("+1"), std::string(""), std::string(",3"), std::string("3,"), std::string("3,,4"),
+                                      std::string("1e3"), std::string("18446744073709551616"));
+    CAPTURE(components, text);
+    (components ? info.componentDimensions : info.tupleDimensions) = text;
+    expectedCode = text.empty() ? (components ? -20009 : -20011) : (components ? -20010 : -20012);
+    phrase = text.empty() ? "empty" : "token '";
+  }
+  SECTION("Component zero")
+  {
+    info.componentDimensions = "0";
+    expectedCode = -79009;
+    phrase = "cannot be 0";
+  }
+  SECTION("Per-shape overflow")
+  {
+    const bool components = GENERATE(true, false);
+    (components ? info.componentDimensions : info.tupleDimensions) = "4294967296,4294967296";
+    expectedCode = -79001;
+    phrase = "dimensions [Y=4294967296, X=4294967296] have a product";
+  }
+  SECTION("Combined overflow")
+  {
+    info.componentDimensions = "4294967296";
+    info.tupleDimensions = "8589934592";
+    expectedCode = -79004;
+    phrase = "8589934592 times component count 4294967296";
+  }
+  SECTION("Unsigned decimal above INT_MAX reaches dataset count comparison")
+  {
+    info.componentDimensions = "3000000000";
+    expectedCode = -20013;
+    phrase = "3000000000";
+  }
+  SECTION("Whitespace control")
+  {
+    info.componentDimensions = " 3 ";
+    info.tupleDimensions = " 2 ";
+  }
+  SECTION("Empty dataset and zero tuples")
+  {
+    info.dataSetPath = "/Empty";
+    info.tupleDimensions = "0";
+  }
+  SECTION("Ignored tuple string and inherited zero tuples")
+  {
+    const bool empty = GENERATE(false, true);
+    REQUIRE(AttributeMatrix::Create(ds, "Parent", {empty ? usize{0} : usize{2}}) != nullptr);
+    parent = DataPath({"Parent"});
+    info.dataSetPath = empty ? "/Empty" : "/Values";
+    info.tupleDimensions = "-1,invalid";
+  }
+  auto args = filter.getDefaultArguments();
+  ReadHDF5DatasetParameter::ValueType value = {parent, input.string(), {info}};
+  args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key, std::make_any<ReadHDF5DatasetParameter::ValueType>(value));
+  auto result = filter.preflight(ds, args);
+  if(expectedCode != 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors()[0].code == expectedCode);
+    REQUIRE(result.outputActions.errors()[0].message.find(phrase) != std::string::npos);
+    REQUIRE(result.outputActions.errors()[0].message.find("Values") != std::string::npos);
+    if(expectedCode == -20013)
+    {
+      const auto& message = result.outputActions.errors()[0].message;
+      CHECK(message.find("HDF5 dimensions: [X=6], element count: 6") != std::string::npos);
+      CHECK(message.find("Tuple dimensions: [X=2], tuple count: 2") != std::string::npos);
+      CHECK(message.find("Component dimensions: [X=3000000000], component count: 3000000000") != std::string::npos);
+    }
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    const bool empty = info.dataSetPath == "/Empty";
+    REQUIRE(result.outputActions.value().actions.size() == 1);
+    const auto* action = dynamic_cast<const CreateArrayAction*>(result.outputActions.value().actions[0].get());
+    REQUIRE(action != nullptr);
+    REQUIRE(action->dims() == ShapeType{empty ? usize{0} : usize{2}});
+    REQUIRE(action->componentDims() == ShapeType{3});
   }
 }

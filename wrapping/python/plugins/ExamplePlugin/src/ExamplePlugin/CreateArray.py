@@ -1,3 +1,4 @@
+import math
 from typing import List, Union
 import simplnx as nx
 
@@ -65,10 +66,16 @@ class CreateArrayFilter:
     if _convert_str_to_num(init_value, numeric_type_index) is None:
       return nx.IFilter.PreflightResult(errors=[nx.Error(-124, 'Init Value cannot be converted')])
 
+    if num_components == 0:
+      return nx.IFilter.PreflightResult(errors=[nx.Error(-127, f'Number of Components ({num_components}) must be at least 1.')])
+
     tuple_dims: List[int] = []
-    for value in table_data[0]:
+    for index, value in enumerate(table_data[0]):
       if value == 0.0:
         return nx.IFilter.PreflightResult(errors=[nx.Error(-125, 'Tuple dimension cannot be zero')])
+      # Each dimension must be a whole number from 1 to 2^64 - 1 before it is converted to an integer.
+      if not math.isfinite(value) or value < 1.0 or value != math.floor(value) or value >= 2.0**64:
+        return nx.IFilter.PreflightResult(errors=[nx.Error(-126, f'Tuple dimension {index} is {value}. Each tuple dimension must be a whole number from 1 to 2^64 - 1.')])
       tuple_dims.append(int(value))
 
     output_actions = nx.OutputActions()

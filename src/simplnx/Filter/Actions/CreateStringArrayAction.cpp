@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 
@@ -45,7 +46,19 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
 
   std::string name = path().getTargetName();
 
-  usize totalTuples = std::accumulate(m_Dims.cbegin(), m_Dims.cend(), static_cast<usize>(1), std::multiplies<>());
+  const std::string shapeContext = fmt::format("String array '{}' tuple", path().toString());
+  auto tupleCount = ComputeDimensionProduct(m_Dims, shapeContext, DimensionConversion::k_StringTupleOverflow);
+  if(tupleCount.invalid())
+  {
+    return ConvertResult(std::move(tupleCount));
+  }
+  const usize totalTuples = tupleCount.value();
+  const usize capacity = std::vector<std::string>().max_size();
+  if(totalTuples > capacity)
+  {
+    return MakeErrorResult(DimensionConversion::k_StringCapacity, fmt::format("String array '{}' tuple dimensions [{}] require {} strings, above storage capacity {}. Use a smaller shape.",
+                                                                              path().toString(), StringUtilities::formatDimensions(m_Dims), totalTuples, capacity));
+  }
 
   std::vector<std::string> values(totalTuples, m_InitializeValue);
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);

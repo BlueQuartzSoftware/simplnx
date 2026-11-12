@@ -60,6 +60,15 @@ This filter creates an array with a **single component dimension** (e.g., (1), (
 
 None. The array is created from user-supplied parameters; when the parent is an Attribute Matrix, the tuple dimensions are inherited from it.
 
+### Dimension values
+
+Explicit dimension-table values are dimensionless counts. Each value must be finite and whole, and must be less than 2^64.
+Each shape product must fit the platform's unsigned size count. Preflight rejects an unrepresentable shape before conversion.
+Explicit tuple dimensions must be at least 1.
+**Number of Components** must be at least 1. Preflight rejects 0.
+When the output parent is an **Attribute Matrix**, its tuple shape overrides the tuple table, including an empty matrix.
+The filter does not validate the ignored tuple table.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

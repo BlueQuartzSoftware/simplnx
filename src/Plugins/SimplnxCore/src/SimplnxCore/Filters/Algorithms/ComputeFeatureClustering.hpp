@@ -50,6 +50,17 @@ class SIMPLNXCORE_EXPORT ComputeFeatureClustering
 {
 public:
   /**
+   * @brief Computes an RDF cache offset without signed intermediate arithmetic.
+   * @param numberOfBins Specifies the number of components per ensemble.
+   * @param ensemble Identifies the ensemble tuple in the RDF cache.
+   * @param bin Identifies the component within the ensemble.
+   * @return Element index in the RDF cache.
+   * @pre The cache contains numberOfBins components per ensemble and bin is less than numberOfBins.
+   * @pre The requested ensemble exists in the cache.
+   */
+  static usize RdfCacheIndex(usize numberOfBins, usize ensemble, usize bin);
+
+  /**
    * @brief Initializes the feature-clustering algorithm.
    * @param dataStructure Contains the ImageGeom, feature arrays, and outputs.
    * @param mesgHandler Supplies filter messages.
@@ -72,6 +83,7 @@ public:
   /**
    * @brief Computes the selected phase RDF and neighbor lists.
    * @return Success, or a biased-feature mask error.
+   * @pre NumberOfBins is at least one.
    *
    * Cancellation returns success between outer feature iterations. Minimum and maximum values can
    * be written before cancellation prevents RDF or neighbor-list output.
