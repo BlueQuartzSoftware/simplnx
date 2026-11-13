@@ -50,8 +50,21 @@ public:
   ComputeGBCDMetricBased& operator=(ComputeGBCDMetricBased&&) noexcept = delete;
 
   /**
+   * @brief Checks the Fixed Misorientation. preflightImpl() and operator()() both call it.
+   * @param misorientationRotation The h, k and l axis components followed by the angle in degrees.
+   * @return k_InvalidMisorientationAngleError when the angle is not in (0, 180] (NaN included), or
+   * k_InvalidMisorientationAxisError when an axis component is NaN or infinite or the axis is [0, 0, 0].
+   */
+  static Result<> ValidateMisorientationRotation(const std::vector<float32>& misorientationRotation);
+
+  /// Error code for a Fixed Misorientation angle outside (0, 180] degrees.
+  static constexpr int32 k_InvalidMisorientationAngleError = -7230;
+  /// Error code for a Fixed Misorientation axis that is not finite or has length 0.
+  static constexpr int32 k_InvalidMisorientationAxisError = -7231;
+
+  /**
    * @brief Computes the metric-based GBCD section.
-   * @return An error for an invalid Laue index, file operation, or bulk I/O.
+   * @return An error for an invalid Fixed Misorientation, an invalid Laue index, a file operation, or bulk I/O.
    */
   Result<> operator()();
 

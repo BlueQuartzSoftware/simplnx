@@ -25,7 +25,7 @@ It samples the GBCD for the selected phase and misorientation and writes the res
 ### Parameter Guidance
 
 - **Phase of Interest** — the 1-based index of the **Ensemble** (phase) whose boundaries are plotted. A value of *1* selects the first real phase; index *0* is reserved for the unindexed/background ensemble. This value is a dimensionless index.
-- **Misorientation Axis-Angle** — selects which boundary misorientation to plot. The first value is the misorientation **angle in degrees**; the remaining three are the crystallographic axis **(h, k, l)**, a dimensionless crystal direction. For example, *60° about (1, 1, 1)* selects the Σ3 twin misorientation common in cubic materials.
+- **Misorientation Axis-Angle** — selects which boundary misorientation to plot. The first value is the misorientation **angle in degrees**; the remaining three are the crystallographic axis **(h, k, l)**, a dimensionless crystal direction. For example, *60° about (1, 1, 1)* selects the Σ3 twin misorientation common in cubic materials. This is the default. The axis must have finite components and must not be (0, 0, 0); otherwise preflight reports error -96714.
 - **Output GMT File** — the path of the `.dat` file to write. GMT reads this file to draw the pole figure.
 
 ![GMT visualization of the Small IN100 GBCD results. The contours show the distribution of grain-boundary plane normals (in MRD) for the selected misorientation.](Images/WriteGBCDGMTFile.png)

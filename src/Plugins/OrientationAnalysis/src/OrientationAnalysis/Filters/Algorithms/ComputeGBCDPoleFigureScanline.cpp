@@ -2,6 +2,8 @@
 
 #include "ComputeGBCDPoleFigureDirect.hpp" // for ComputeGBCDPoleFigureInputValues
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -71,9 +73,10 @@ public:
     ebsdlib::Matrix3X3<float32> sym2t;
 
     float32 misAngle = m_MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    nx::core::FloatVec3 normAxis = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
-    normAxis = normAxis.normalize();
-    ebsdlib::Matrix3X3<float32> dg = ebsdlib::AxisAngleFType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix().toGMatrix();
+    // operator()() rejected an axis that cannot be normalized.
+    const std::array<float64, 3> normAxis = OrientationUtilities::NormalizeDirection(m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]).value();
+    ebsdlib::Matrix3X3<float32> dg =
+        ebsdlib::AxisAngleFType(static_cast<float32>(normAxis[0]), static_cast<float32>(normAxis[1]), static_cast<float32>(normAxis[2]), misAngle).toOrientationMatrix().toGMatrix();
     ebsdlib::Matrix3X3<float32> dgt = dg.transpose();
 
     int32 nSym = m_OrientOps->getNumSymOps();
@@ -235,6 +238,11 @@ const std::atomic_bool& ComputeGBCDPoleFigureScanline::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeGBCDPoleFigureScanline::operator()()
 {
+  if(Result<> axisResult = ComputeGBCDPoleFigureDirect::ValidateMisorientationAxis(m_InputValues->MisorientationRotation); axisResult.invalid())
+  {
+    return axisResult;
+  }
+
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   DataPath cellIntensityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->CellIntensityArrayName);

@@ -73,8 +73,19 @@ public:
   ComputeMisorientations& operator=(ComputeMisorientations&&) noexcept = delete;
 
   /**
+   * @brief Checks the axis of the Reference Axis-Angle. preflightImpl() and operator()() both call it.
+   * @param inputValues Supplies ComputationType and ReferenceOrientation. The axis is checked only when ComputationType
+   * selects the reference mode.
+   * @return k_InvalidReferenceAxisError when an axis component is NaN or infinite or the axis is [0, 0, 0].
+   */
+  static Result<> ValidateReferenceAxis(const ComputeMisorientationsInputValues& inputValues);
+
+  /// Error code for a Reference Axis-Angle axis that is not finite or has length 0.
+  static constexpr int32 k_InvalidReferenceAxisError = -68005;
+
+  /**
    * @brief Computes misorientations.
-   * @return Success, or an error for invalid Phase or Laue indices or bulk I/O.
+   * @return Success, or an error for an invalid reference axis, invalid Phase or Laue indices, or bulk I/O.
    *
    * Cancellation returns success with completed chunks preserved.
    */

@@ -56,10 +56,19 @@ public:
   WriteGBCDGMTFile& operator=(WriteGBCDGMTFile&&) noexcept = delete;
 
   /**
+   * @brief Checks the axis of the Misorientation Axis-Angle. preflightImpl() and operator()() both call it.
+   * @param misorientationRotation Angle in degrees followed by the h, k and l axis components.
+   * @return k_InvalidMisorientationAxisError when an axis component is NaN or infinite or the axis is [0, 0, 0].
+   */
+  static Result<> ValidateMisorientationAxis(const std::vector<float32>& misorientationRotation);
+
+  /// Error code for a Misorientation Axis-Angle axis that is not finite or has length 0.
+  static constexpr int32 k_InvalidMisorientationAxisError = -96714;
+
+  /**
    * @brief Computes and writes the selected stereographic projection.
-   * @return Directory-creation or file-open errors.
+   * @return An invalid misorientation axis error, or directory-creation or file-open errors.
    * @pre PhaseOfInterest indexes both source arrays and its GBCD phase slice.
-   * @pre MisorientationRotation contains an angle and a nonzero three-component axis.
    * @pre The GBCD component shape has five positive dimensions whose products fit int32.
    * @pre The selected crystal structure identifies a valid LaueOps entry.
    */

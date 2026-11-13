@@ -146,14 +146,9 @@ IFilter::PreflightResult ComputeGBCDMetricBasedFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(pMisorientationRotationValue[3] <= 0.0f || pMisorientationRotationValue[3] > 180.0f)
+  if(Result<> rotationResult = ComputeGBCDMetricBased::ValidateMisorientationRotation(pMisorientationRotationValue); rotationResult.invalid())
   {
-    return MakePreflightErrorResult(-7230, fmt::format("The misorientation angle ({}) should be in the range (0, 180] degrees", pMisorientationRotationValue[3]));
-  }
-
-  if(pMisorientationRotationValue[0] == 0.0f && pMisorientationRotationValue[1] == 0.0f && pMisorientationRotationValue[2] == 0.0f)
-  {
-    return MakePreflightErrorResult(-7231, "All three indices of the misorientation axis cannot be 0");
+    return {ConvertResultTo<OutputActions>(std::move(rotationResult), {})};
   }
 
   if(pNumSamplePtsValue < 1)

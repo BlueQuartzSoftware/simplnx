@@ -110,6 +110,11 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  if(Result<> axisResult = ComputeGBCDPoleFigureDirect::ValidateMisorientationAxis(pMisorientationRotationValue); axisResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(axisResult), {})};
+  }
+
   const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
 
   const auto componentShape = gbcd.getComponentShape();

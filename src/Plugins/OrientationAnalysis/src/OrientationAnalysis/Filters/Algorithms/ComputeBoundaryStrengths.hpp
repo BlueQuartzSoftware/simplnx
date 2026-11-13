@@ -40,8 +40,18 @@ public:
   ComputeBoundaryStrengths& operator=(ComputeBoundaryStrengths&&) noexcept = delete;
 
   /**
+   * @brief Checks the Loading Direction. preflightImpl() and operator()() both call it.
+   * @param loading The x, y and z components of the loading direction.
+   * @return k_InvalidLoadingDirectionError when a component is NaN or infinite or the direction is [0, 0, 0].
+   */
+  static Result<> ValidateLoadingDirection(const std::vector<float64>& loading);
+
+  /// Error code for a Loading Direction that is not finite or has length 0.
+  static constexpr int32 k_InvalidLoadingDirectionError = -94744;
+
+  /**
    * @brief Computes boundary-strength metrics for internal feature faces.
-   * @return An error for an invalid phase or Laue index. Returns a warning
+   * @return An error for an invalid Loading Direction or an invalid phase or Laue index. Returns a warning
    *         when the algorithm processes a non-cubic phase.
    */
   Result<> operator()();
