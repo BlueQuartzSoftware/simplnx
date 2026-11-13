@@ -745,3 +745,50 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Float normalization axis", "[Orienta
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -67603);
 }
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Child preflight errors", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const TestFileSentinel sentinel(unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
+  const bool invalidEulerTransform = GENERATE(false, true);
+  CAPTURE(invalidEulerTransform);
+  const fs::path inputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_h5ebsd_invalid_transform.h5ebsd";
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
+  auto args = SmallArchiveArguments(k_FirstSlice, true);
+  auto input = args.value<ReadH5EbsdFileParameter::ValueType>(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key);
+  REQUIRE(fs::copy_file(input.inputFilePath, inputPath, fs::copy_options::overwrite_existing));
+  {
+    const hid_t fileId = H5Support::H5Utilities::openFile(inputPath.string(), false);
+    REQUIRE(fileId >= 0);
+    H5Support::H5ScopedFileSentinel fileSentinel(fileId, true);
+    namespace H5Lite = H5Support::H5Lite;
+    if(invalidEulerTransform)
+    {
+      REQUIRE(H5Ldelete(fileId, ebsdlib::H5Ebsd::EulerTransformationAngle.c_str(), H5P_DEFAULT) >= 0);
+      REQUIRE(H5Lite::writeScalarDataset<float32>(fileId, ebsdlib::H5Ebsd::EulerTransformationAngle, 45.0F) >= 0);
+      REQUIRE(H5Ldelete(fileId, ebsdlib::H5Ebsd::EulerTransformationAxis.c_str(), H5P_DEFAULT) >= 0);
+      REQUIRE(H5Lite::writeVectorDataset<float32>(fileId, ebsdlib::H5Ebsd::EulerTransformationAxis, {3}, {0.0F, 0.0F, 0.0F}) >= 0);
+    }
+    else
+    {
+      REQUIRE(H5Ldelete(fileId, ebsdlib::H5Ebsd::SampleTransformationAngle.c_str(), H5P_DEFAULT) >= 0);
+      REQUIRE(H5Lite::writeScalarDataset<float32>(fileId, ebsdlib::H5Ebsd::SampleTransformationAngle, 45.0F) >= 0);
+      REQUIRE(H5Ldelete(fileId, ebsdlib::H5Ebsd::SampleTransformationAxis.c_str(), H5P_DEFAULT) >= 0);
+      REQUIRE(H5Lite::writeVectorDataset<float32>(fileId, ebsdlib::H5Ebsd::SampleTransformationAxis, {3}, {0.0F, 0.0F, 1.0F}) >= 0);
+    }
+  }
+  input.inputFilePath = inputPath.string();
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+  ReadH5EbsdFilter filter;
+  DataStructure dataStructure;
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  // RotateEulerRefFrame rejects a zero axis; RotateSampleRefFrame rejects a non-principal rotation.
+  CHECK(executeResult.result.errors()[0].code == (invalidEulerTransform ? -96200 : -6850));
+}
