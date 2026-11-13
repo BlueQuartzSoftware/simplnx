@@ -142,6 +142,31 @@ Both are gaps in the shared HDF5 IO layer, not in `WriteDREAM3DFilter`'s own alg
 
 OOC recertification (2026-09-21): 22/22 entries pass in both DREAM3DNX CTest selections. The hidden `real HDF5 chunk-tail raw-read oracle` passes 27 assertions. The numeric source is HDF5-OOC with 65,536 four-component uint32 tuples per 1 MiB chunk and one extra tuple. WriteDREAM3DFilter runs with compression disabled/enabled. Direct HDF5 dataset reads, without a DataStructure round trip, match all 262,148 independently constructed integer values. The physical deflate flag also matches the requested compression option. The 22-entry CTest selection includes shared DREAM3D file-I/O cases. Upstream oracle expectations are retained. This campaign changes no production algorithms or historical sign-offs and claims no new legacy binary comparison.
 
+## Pipeline metadata regression coverage (issue #1807)
+
+The regression case `SimplnxCore::Pipeline persistent state: write extract replay` in
+`src/Plugins/SimplnxCore/test/PipelineTest.cpp` covers the embedded pipeline's persistent settings. It uses an empty
+`DataStructure`, a disabled reader with a missing input file, and fixed nonempty comments on the reader and writer.
+The case inspects the embedded JSON, extracts it through `ExtractPipelineToFileFilter`, loads the extracted pipeline,
+and preflights and executes it with a separate output path. The missing reader must remain skipped.
+
+The expected disabled flags and comments are fixed input values, independent of the copy code. The missing file also
+gives a behavioral check: an enabled reader makes replay fail. Core cases in `test/PipelineSaveTest.cpp` cover ordinary
+and null filter copies, nested pipeline state, both segment overloads, Pipeline value operations and placeholder state.
+
+Test-first evidence (2026-11-11): the controller built these tests against unchanged production code at
+`9cb9a456a66b11da59b702dc393c0d2b14d123c8` plus the regression tests. All six new CTest cases failed on the expected
+metadata assertions. The integration case also failed replay preflight because the copied reader became enabled.
+An additional core recovery case, `Pipeline persistent state: placeholder keeps malformed disabled payload`, checks
+string and null disabled flags in incomplete filter JSON. Placeholders retain that raw payload and remain enabled.
+The controller confirmed all four direct/fallback combinations failed before the local Boolean type guard.
+
+Validation after the fixes (2026-11-11): all seven regression cases for persistent pipeline state passed without
+failures or skips on Windows in-core Release/Debug and Release with OOC enabled. The integration case uses an empty
+`DataStructure` and verifies metadata preservation and replay. It does not verify disk backing for real arrays.
+These regression results do not constitute formal V&V recertification. This addendum does not change the historical
+results or sign-offs above.
+
 ## Exemplar archive
 
 None. Every test above builds its input `DataStructure` inline in C++ and never loads a downloaded `.tar.gz` exemplar — the Class 1 oracle's "expected output" is the test's own hand-built input, so no cached golden file is required or used. (`Small_IN100_dream3d_v3.tar.gz`, referenced elsewhere in this test file, backs unrelated `ReadDREAM3DFilter`-only test cases and is not consumed by any Write-side test.)

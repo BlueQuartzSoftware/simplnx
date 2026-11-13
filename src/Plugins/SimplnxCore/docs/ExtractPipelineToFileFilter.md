@@ -10,6 +10,10 @@ This **Filter** reads the pipeline from an hdf5 file with the .dream3d extension
 
 A `.dream3d` file *may* contain an embedded copy of the pipeline that produced it, but this is not guaranteed (for example, files written by external tools, or written with pipeline embedding disabled, will not have one). If the selected `.dream3d` file does not contain an embedded pipeline, this **Filter** has nothing to extract and will report an error rather than write an empty file.
 
+The extracted pipeline keeps the filter arguments, comments and disabled state present in the embedded JSON.
+When you load and run the extracted pipeline, disabled filters remain skipped.
+[Write DREAM3D-NX File](WriteDREAM3DFilter.md) embeds these settings for nodes up to and including the writer.
+
 ### Required Input Sources
 
 None -- the input is a `.dream3d` file selected by file path, not a **DataStructure** object created by an upstream filter.
