@@ -22,13 +22,14 @@ class RegularizeZSpacingArrayImpl
 {
 public:
   RegularizeZSpacingArrayImpl(RegularizeZSpacing* algorithm, const IDataArray& srcArray, IDataArray& destArray, const std::vector<usize>& newToOldZPlane, usize sliceSize,
-                              const std::atomic_bool& shouldCancel)
+                              const std::atomic_bool& shouldCancel, CopyFromArray::ParallelTaskResult& taskResult)
   : m_AlgorithmPtr(algorithm)
   , m_SrcArray(srcArray)
   , m_DestArray(destArray)
   , m_NewToOldZPlane(newToOldZPlane)
   , m_SliceSize(sliceSize)
   , m_ShouldCancel(shouldCancel)
+  , m_TaskResult(taskResult)
   {
   }
 
@@ -43,14 +44,20 @@ public:
     const usize numPlanes = m_NewToOldZPlane.size();
     for(usize destPlane = 0; destPlane < numPlanes; destPlane++)
     {
-      if(m_ShouldCancel)
+      if(m_ShouldCancel || m_TaskResult.shouldAbort())
       {
         return;
       }
 
       const usize destTupleStart = destPlane * m_SliceSize;
       const usize srcTupleStart = m_NewToOldZPlane[destPlane] * m_SliceSize;
-      destDataStoreRef.copyFrom(destTupleStart, srcDataStoreRef, srcTupleStart, m_SliceSize);
+      auto transferResult = destDataStoreRef.copyFrom(destTupleStart, srcDataStoreRef, srcTupleStart, m_SliceSize);
+      if(transferResult.invalid())
+      {
+        m_TaskResult.store(std::move(transferResult));
+        return;
+      }
+      m_TaskResult.store(std::move(transferResult));
 
       m_AlgorithmPtr->sendThreadSafeProgressMessage(1);
     }
@@ -63,6 +70,7 @@ private:
   const std::vector<usize>& m_NewToOldZPlane;
   usize m_SliceSize;
   const std::atomic_bool& m_ShouldCancel;
+  CopyFromArray::ParallelTaskResult& m_TaskResult;
 };
 } // namespace
 
@@ -169,14 +177,15 @@ Result<> RegularizeZSpacing::operator()()
 
   m_Throttle.reset(totalArrays * newZDim, "Copying Cell Data");
 
+  CopyFromArray::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
 
   for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   {
-    if(m_ShouldCancel)
+    if(m_ShouldCancel || taskResult.shouldAbort())
     {
-      return {};
+      break;
     }
 
     // Preflight rejects non-DataArray members (error -5561); guard here as well so a direct
@@ -193,10 +202,15 @@ Result<> RegularizeZSpacing::operator()()
       m_MessageHandler.sendInfoMessage(fmt::format("Copying Data Array: '{}'", srcName));
     }
 
-    ExecuteParallelFunction<RegularizeZSpacingArrayImpl>(oldDataArrayPtr->getDataType(), taskRunner, this, *oldDataArrayPtr, newDataArray, newToOldZPlane, sliceSize, m_ShouldCancel);
+    ExecuteParallelFunction<RegularizeZSpacingArrayImpl>(oldDataArrayPtr->getDataType(), taskRunner, this, *oldDataArrayPtr, newDataArray, newToOldZPlane, sliceSize, m_ShouldCancel, taskResult);
   }
 
   taskRunner.wait();
+  auto transferResult = taskResult.takeResult();
+  if(transferResult.invalid())
+  {
+    return transferResult;
+  }
 
   if(m_ShouldCancel)
   {

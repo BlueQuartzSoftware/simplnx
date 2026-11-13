@@ -1145,3 +1145,92 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject another geometry elemen
   CHECK(other->getVertexAttributeMatrix() == features);
   CHECK(features->getSize() > 0);
 }
+
+namespace
+{
+/**
+ * @class RegularizeFailingReadStore
+ * @brief Fails the second bulk read after one destination slice is written.
+ */
+class RegularizeFailingReadStore : public DataStore<int32>
+{
+public:
+  /** @brief Creates four source slices without enabling failure until bulk transfer. */
+  RegularizeFailingReadStore()
+  : DataStore<int32>(ShapeType{4, 1, 1}, ShapeType{1}, 0)
+  {
+  }
+  /** @brief Releases the resident test values. */
+  ~RegularizeFailingReadStore() noexcept override = default;
+  RegularizeFailingReadStore(const RegularizeFailingReadStore&) = delete;
+  RegularizeFailingReadStore(RegularizeFailingReadStore&&) = delete;
+  RegularizeFailingReadStore& operator=(const RegularizeFailingReadStore&) = delete;
+  RegularizeFailingReadStore& operator=(RegularizeFailingReadStore&&) = delete;
+
+  /**
+   * @brief Injects error -95120 on the second slice read.
+   * @param startIndex Specifies the first flat value index.
+   * @param buffer Receives the source slice values.
+   * @return The injected failure or the resident transfer result.
+   */
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
+  {
+    if(++readCalls == 2)
+    {
+      return MakeErrorResult(-95120, "Injected second slice transfer failure.");
+    }
+    return DataStore<int32>::copyIntoBuffer(startIndex, buffer);
+  }
+  mutable usize readCalls = 0;
+};
+} // namespace
+
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Transfer failure preserves source", "[SimplnxCore][RegularizeZSpacingFilter]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRegularizeFixture();
+  auto* source = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(source != nullptr);
+  const auto sourceId = source->getId();
+  auto* ids = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  REQUIRE(ids != nullptr);
+  const auto arrayId = ids->getId();
+  auto store = std::make_shared<RegularizeFailingReadStore>();
+  for(usize i = 0; i < 4; ++i)
+  {
+    store->setValue(i, static_cast<int32>(i + 1));
+  }
+  auto setResult = ids->setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(setResult);
+  auto args = MakeFeatureRegularizeArgs(true, true);
+  args.insertOrAssign(RegularizeZSpacingFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  RegularizeZSpacingFilter filter;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == -95120);
+  CHECK(store->readCalls == 2);
+  const auto* retained = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
+  REQUIRE(retained != nullptr);
+  CHECK(retained->getId() == sourceId);
+  CHECK(retained->getDimensions() == SizeVec3{1, 1, 4});
+  const auto* retainedIds = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  REQUIRE(retainedIds != nullptr);
+  CHECK(retainedIds->getId() == arrayId);
+  for(usize i = 0; i < 4; ++i)
+  {
+    CHECK((*retainedIds)[i] == static_cast<int32>(i + 1));
+  }
+  const auto* features = ds.getDataAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"}));
+  REQUIRE(features != nullptr);
+  CHECK(features->getNumberOfTuples() == 5);
+  CHECK(features->getSize() == 3);
+  // The successful first slice remains in the temporary output, without compaction.
+  const auto* partialIds = ds.getDataAs<Int32Array>(DataPath({".regularized_image_geometry", "Cell Data", "FeatureIds"}));
+  REQUIRE(partialIds != nullptr);
+  CHECK((*partialIds)[0] == 1);
+  CHECK((*partialIds)[1] == 0);
+  const auto* partialFeatures = ds.getDataAs<AttributeMatrix>(DataPath({".regularized_image_geometry", "Cell Feature Data"}));
+  REQUIRE(partialFeatures != nullptr);
+  CHECK(partialFeatures->getNumberOfTuples() == 5);
+}
