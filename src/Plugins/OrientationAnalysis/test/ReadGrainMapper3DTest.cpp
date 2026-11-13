@@ -950,6 +950,8 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Large finite headers can canc
   REQUIRE(geometry != nullptr);
   REQUIRE(geometry->getOrigin() == FloatVec3(0, 0, 0));
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:SpaceGroupSymmetry", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
   Application::GetOrCreateInstance();
