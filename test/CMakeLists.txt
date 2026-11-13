@@ -35,6 +35,7 @@ set(SIMPLNX_TEST_SRCS
   AtomicFileTest.cpp
   BitTest.cpp
   CheckedFlushTest.cpp
+  ChunkAlignedTransferTest.cpp
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   DimensionConversionTest.cpp

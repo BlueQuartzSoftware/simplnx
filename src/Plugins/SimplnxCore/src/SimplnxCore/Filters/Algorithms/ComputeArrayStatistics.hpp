@@ -70,6 +70,13 @@ struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
  * writes. Exact median, mode, and unique-value calculations use the registered
  * external-sort capability, with an exact bounded multi-pass fallback when no
  * provider is available.
+ *
+ * Bounded whole-array statistics read large pages serially and reduce each page
+ * on all cores. Boolean and 8/16-bit input uses one pass into a value histogram,
+ * which also gives exact median, mode, and unique counts. Other input types
+ * without a median, mode, or unique-count request use two passes. Each pass
+ * computes fixed-block partials that merge in block order, so the result does
+ * not depend on the thread count.
  */
 class SIMPLNXCORE_EXPORT ComputeArrayStatistics
 {
@@ -139,5 +146,51 @@ private:
   mutable std::mutex m_ProgressMessage_Mutex;
   ThrottledMessageHandler m_Throttle;
 };
+
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+/**
+ * @struct ComputeArrayStatisticsScanWitness
+ * @brief Counts the parallel page dispatches of the whole-array bounded statistics engines.
+ *
+ * Each count increments once for each page that the calling thread gives to the parallel block loop.
+ * A test uses the counts to prove which engine ran and that its parallel path ran.
+ */
+struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsScanWitness
+{
+  usize HistogramPages = 0;   ///< Pages reduced into value histograms (bool and 8/16-bit input).
+  usize MomentPages = 0;      ///< Pages reduced into count, extrema, and sum partials.
+  usize DeviationPages = 0;   ///< Pages reduced into squared-difference partials.
+  usize StandardizePages = 0; ///< Pages transformed into standardized values.
+};
+
+/**
+ * @brief Overrides the page size of the whole-array bounded statistics engines.
+ * @param pageBytes Page byte budget over every buffer that one page reads, or 0 to restore the production size.
+ *
+ * This is a plugin `*ForTesting` seam. Its storage is in ComputeArrayStatistics.cpp, so the plugin library and
+ * its test executable share one value on every platform. A header-inline seam would give each module its own copy.
+ * A reduction page is never smaller than one block.
+ */
+SIMPLNXCORE_EXPORT void SetComputeArrayStatisticsPageBytesForTesting(usize pageBytes);
+
+/**
+ * @brief Overrides the block size of the whole-array bounded statistics engines.
+ * @param blockTuples Tuples in one parallel block, or 0 to restore the production size.
+ *
+ * This is a plugin `*ForTesting` seam with the storage rule of SetComputeArrayStatisticsPageBytesForTesting().
+ */
+SIMPLNXCORE_EXPORT void SetComputeArrayStatisticsBlockTuplesForTesting(usize blockTuples);
+
+/**
+ * @brief Returns the parallel page dispatch counts since the last reset.
+ * @return Current counts.
+ */
+SIMPLNXCORE_EXPORT ComputeArrayStatisticsScanWitness GetComputeArrayStatisticsScanWitnessForTesting();
+
+/**
+ * @brief Sets every parallel page dispatch count to 0.
+ */
+SIMPLNXCORE_EXPORT void ResetComputeArrayStatisticsScanWitnessForTesting();
+#endif
 
 } // namespace nx::core

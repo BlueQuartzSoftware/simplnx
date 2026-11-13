@@ -64,6 +64,7 @@ repository, but contains no code from one.
   - [Lock one mutex around a filter's static header cache](#lock-one-mutex-around-a-filters-static-header-cache)
   - [Write out-of-core stores from one thread](#write-out-of-core-stores-from-one-thread)
   - [Check shape products before you allocate](#check-shape-products-before-you-allocate)
+  - [Charge large scratch buffers to the working-memory budget](#charge-large-scratch-buffers-to-the-working-memory-budget)
 - [Error codes and messages](#error-codes-and-messages)
   - [Give every condition its own error code](#give-every-condition-its-own-error-code)
   - [Name the right values in each message, and test the mask first](#name-the-right-values-in-each-message-and-test-the-mask-first)
@@ -963,6 +964,40 @@ overflows (issue #1884).
 before an allocation or a member change.
 
 **Pattern to use:** `EmptyDataStore::CheckedPlaceholderProduct()`; the checked `DataStore::resizeTuples()`.
+
+### Charge large scratch buffers to the working-memory budget
+
+**Rule:** a scratch buffer whose size grows with a chunk, a page, a piece or the thread count, and not only a fixed
+small page (1 MiB or less), takes its bytes from `CacheMemoryBudgetManager::instance().reserveWorkingMemory()`.
+
+- Size the buffer from the granted bytes (`reservation.sizeBytes()`), not from the requested bytes. Keep a small
+  minimum, such as one block or 1 MiB, and return an error that names the granted and required bytes when the grant
+  is below it.
+- Count every buffer that is alive at the same time: value and mask pages, per-thread histograms or accumulators,
+  and their merged copy.
+- This applies most to shared store utilities (`AbstractDataStore::copyFrom()`, store-copy helpers). Callers can run
+  them from `ParallelTaskAlgorithm` tasks, so one uncharged buffer is multiplied by the number of tasks.
+
+**Example of the broken rule:** the review of PR #1924 found that the chunk-aligned path of
+`AbstractDataStore::copyFrom()` allocated up to 128 MiB per copy, where the old loop used 1 MiB, without a reservation. `RegularizeZSpacing` calls `copyFrom()` from
+parallel tasks, so 16 tasks copying 8192 x 8192 float32 slices into out-of-core stores use about 2 GiB of scratch
+instead of about 16 MiB. The same PR read whole-array statistics in 32 MiB value and mask pages, with 512 KiB of
+histogram per thread for 16-bit input, also without a reservation (`ComputeArrayStatistics`).
+
+**Why:** the out-of-core memory budget sizes the chunk cache on the assumption that all other large allocations are
+reserved. Uncharged scratch is invisible to the budget, so the process can exceed the memory that the budget was
+sized to fit, and the out-of-core build no longer has bounded memory.
+
+**What to look for:**
+
+- `std::make_unique<T[]>`, `std::make_unique_for_overwrite<T[]>` or `std::vector<T>` sized from a byte constant larger
+  than 1 MiB (`k_...Bytes`, `32 * 1024 * 1024`) or from a chunk shape, with no `reserveWorkingMemory()` call before it.
+- `tbb::enumerable_thread_specific` or per-thread vectors whose size does not depend on the input size.
+- A comment that says a buffer "is not charged" or "is outside the budget".
+
+**Pattern to use:** `ComputeFeatureCentroids` (the periodic occupancy scan) reserves the bytes, checks
+`reservation.sizeBytes()` against a minimum, and sizes its buffer from the grant. `ExtractTripleLines` and
+`LaplacianSmoothing` do the same.
 
 ---
 
