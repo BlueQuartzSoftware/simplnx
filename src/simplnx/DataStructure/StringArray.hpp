@@ -104,7 +104,7 @@ public:
   /**
    * @brief Copies the array into the data structure.
    * @param copyPath Identifies the destination array.
-   * @return Inserted object, or nullptr when copyPath exists, store copying fails, or insertion fails.
+   * @return Inserted object, or nullptr when copyPath exists, the store is null, store copying fails, or insertion fails.
    * @throws std::bad_alloc If allocation fails.
    * @post The copy has its own store. The store holds an in-memory copy of the values.
    * If this array is a placeholder, the copy is a new placeholder with the same tuple shape.
@@ -243,6 +243,7 @@ protected:
   StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings);
   StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store);
   StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store, IdType importId);
 
 private:
   std::shared_ptr<AbstractStringStore> m_Strings = nullptr;

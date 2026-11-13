@@ -25,6 +25,8 @@ public:
 
   /**
    * @brief Creates a materialized store with the supplied shape and values.
+   * @param strings Supplies one value for each tuple.
+   * @param tupleShape Specifies tuple dimensions. An empty shape represents one tuple.
    * @throws std::invalid_argument If the shape product differs from the string count.
    */
   explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);

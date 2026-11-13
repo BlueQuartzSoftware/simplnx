@@ -1,6 +1,7 @@
 #include "StringArrayIO.hpp"
 
 #include "DataStructureReader.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
@@ -9,8 +10,10 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
+#include <fmt/format.h>
 #include <hdf5.h>
 
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 
@@ -65,7 +68,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     const hid_t datasetId = datasetReader.getId();
     hssize_t npoints = -1;
     {
-      std::lock_guard<std::mutex> hdf5Lock(nx::core::HDF5::Support::ApiLock());
+      const std::lock_guard<std::mutex> hdf5Lock(nx::core::HDF5::Support::ApiLock());
       const hid_t dataspaceId = H5Dget_space(datasetId);
       if(dataspaceId >= 0)
       {

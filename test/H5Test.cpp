@@ -1503,7 +1503,7 @@ TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][
 #endif
 }
 
-TEST_CASE("StringStore HDF5 finalization rejects mismatched values", "[StringStore]")
+TEST_CASE("StringStore HDF5 finalization rejects mismatched values", "[simplnx][StringStore]")
 {
   UnitTest::LoadPlugins();
   const auto filePath = GetDataDir() / "StringStoreMismatch.h5";
@@ -1533,7 +1533,7 @@ TEST_CASE("StringStore HDF5 finalization rejects mismatched values", "[StringSto
   REQUIRE(dataStructure.getDataRefAs<StringArray>(DataPath({"Strings"})).size() == 2);
 }
 
-TEST_CASE("H5 StringArray import without TupleDimensions uses the dataset size", "[H5][StringStore]")
+TEST_CASE("H5 StringArray import without TupleDimensions uses the dataset size", "[simplnx][H5][StringStore]")
 {
   UnitTest::LoadPlugins();
   const auto filePath = GetDataDir() / "StringArrayMissingTupleDimensions.dream3d";

@@ -1,10 +1,16 @@
 #include "StringArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
+#include <exception>
+#include <memory>
 #include <new>
-#include <numeric>
+#include <optional>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace nx::core
 {
@@ -15,7 +21,7 @@ StringArray* StringArray::Create(DataStructure& dataStructure, const std::string
 
 StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, std::string(name)));
   try
   {
     data->m_Strings = std::make_shared<StringStore>(std::move(strings), tupleShape);
@@ -36,7 +42,7 @@ StringArray* StringArray::Import(DataStructure& dataStructure, const std::string
   std::shared_ptr<StringArray> data;
   try
   {
-    data.reset(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
+    data.reset(new StringArray(dataStructure, std::string(name), tupleShape, importId, std::move(strings)));
   } catch(const std::invalid_argument&)
   {
     return nullptr;
@@ -55,9 +61,8 @@ StringArray* StringArray::CreateWithStore(DataStructure& dataStructure, const st
   {
     return nullptr;
   }
-  auto data =
-      importId.has_value() ? std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), {0}, *importId, {})) : std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
-  data->m_Strings = std::move(store);
+  auto data = importId.has_value() ? std::shared_ptr<StringArray>(new StringArray(dataStructure, std::string(name), std::move(store), *importId)) :
+                                     std::shared_ptr<StringArray>(new StringArray(dataStructure, std::string(name), store));
   return AttemptToAddObject(dataStructure, data, parentId) ? data.get() : nullptr;
 }
 
@@ -69,7 +74,7 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name)
 StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings)
 : IArray(dataStructure, std::move(name))
 {
-  m_Strings = std::make_shared<StringStore>(strings, tupleShape);
+  m_Strings = std::make_shared<StringStore>(std::move(strings), tupleShape);
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store)
@@ -81,7 +86,13 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name, std::sh
 StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings)
 : IArray(dataStructure, std::move(name), importId)
 {
-  m_Strings = std::make_shared<StringStore>(strings, tupleShape);
+  m_Strings = std::make_shared<StringStore>(std::move(strings), tupleShape);
+}
+
+StringArray::StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store, IdType importId)
+: IArray(dataStructure, std::move(name), importId)
+, m_Strings(std::move(store))
+{
 }
 
 StringArray::StringArray(const StringArray& other)
@@ -127,6 +138,11 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   if(dataStruct.containsData(copyPath))
+  {
+    return nullptr;
+  }
+  // A null store has no tuple shape, so no placeholder can describe it.
+  if(m_Strings == nullptr)
   {
     return nullptr;
   }

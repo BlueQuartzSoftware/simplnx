@@ -1981,7 +1981,7 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with all in-core data")
   }
 }
 
-TEST_CASE("Dream3dLoadingApi: legacy StringArray with more strings than tuples is reshaped")
+TEST_CASE("Dream3dLoadingApi: legacy StringArray with more strings than tuples is reshaped", "[simplnx][StringArray]")
 {
   UnitTest::LoadPlugins();
   ScopedTempFile fileGuard{GetTestOutputDir() / "Dream3dLoadingApiTest_LegacyStringCount.dream3d"};
