@@ -678,7 +678,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
 
-    if(m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
+    const bool sampleFeatureIds =
+        m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures && srcDataObject->getId() == m_DataStructure.getData(m_InputValues->FeatureIdsPath)->getId();
+    if(sampleFeatureIds || m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
     {
       filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 

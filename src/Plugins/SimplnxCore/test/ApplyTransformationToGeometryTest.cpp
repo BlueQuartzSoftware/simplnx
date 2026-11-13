@@ -1660,3 +1660,44 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: StrictFeatureIds pr
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Linear interpolation preserves source labels", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  auto ds = CreateTransformFeatureFixture();
+  auto* elements = ds.getDataAs<AttributeMatrix>(k_ElementAMPath);
+  REQUIRE(elements != nullptr);
+  auto* signal = UnitTest::CreateTestDataArray<float32>(ds, "Signal", {1, 1, 3}, {1}, elements->getId());
+  REQUIRE(signal != nullptr);
+  (*signal)[0] = 0;
+  (*signal)[1] = 20;
+  (*signal)[2] = 40;
+  auto* sourceIds = ds.getDataAs<Int32Array>(k_TransformFeatureIdsPath);
+  REQUIRE(sourceIds != nullptr);
+  (*sourceIds)[2] = 3;
+  auto args = MakeTransformFeatureArgs(true, true, 2);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key,
+                      std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1, 0.75, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}));
+  ApplyTransformationToGeometryFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  // The shear maps the box to [0,3.75]x[0,1]x[0,1], with Y spacing 1.25.
+  // Inverse centers have x=i+0.03125, y=0.625.
+  // Source cells are 0,1,2,outside: labels 1,3,3,0 become 1,2,2,0.
+  const std::array<int32, 4> expected = {1, 2, 2, 0};
+  const auto* ids = ds.getDataAs<Int32Array>(k_TransformFeatureIdsPath);
+  REQUIRE(ids != nullptr);
+  REQUIRE(ids->getSize() == expected.size());
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    CHECK((*ids)[i] == expected[i]);
+  }
+  const auto* outputSignal = ds.getDataAs<Float32Array>(k_ElementAMPath.createChildPath("Signal"));
+  REQUIRE(outputSignal != nullptr);
+  CHECK((*outputSignal)[1] == Approx(10.625));
+  CHECK((*outputSignal)[2] == Approx(30.625));
+  CheckTransformFeatureData(ds, true, {3});
+}

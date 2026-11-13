@@ -102,7 +102,8 @@ The empty Feature Attribute Matrix is resized to N+1 rows. Row 0 is for backgrou
 Renumbering does not compute new Feature values.
 For an Image Geometry, select Feature Ids in the selected Cell Attribute Matrix so they are resampled.
 For a node geometry, select Feature Ids in a Vertex, Edge, Face, or Polyhedron Attribute Matrix of that geometry. Other Attribute Matrices are not accepted.
-Use nearest neighbor resampling for Feature Ids. Linear interpolation can mix integer labels.
+When Renumber Features is on, the selected Feature Ids array uses nearest neighbor resampling.
+Other Cell arrays use the selected interpolation method. This prevents interpolation from creating new Feature labels.
 
 With Clear off, Feature data keeps its values. A replacement geometry receives a copy of this data.
 The Renumber setting is ignored. These Feature values can be incorrect for the transformed geometry.
