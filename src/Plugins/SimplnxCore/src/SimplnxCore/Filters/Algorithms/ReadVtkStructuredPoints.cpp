@@ -9,10 +9,12 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using namespace nx::core;
@@ -702,7 +704,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   {
     return result;
   }
-  // Cell dimensions subtract one from each point dimension.
+  // Read point dimensions before deriving cell dimensions.
   line = std::string(buf.data());
   auto tokens = StringUtilities::split(line, ' ');
   if(tokens.size() != 4)
@@ -737,9 +739,16 @@ Result<> ReadVtkStructuredPoints::readFile()
   pointDims[2] = convertResultSizeT.value();
 
   CreateImageGeometryAction::DimensionType cellDims(3, 0);
-  cellDims[0] = pointDims[0] - 1;
-  cellDims[1] = pointDims[1] - 1;
-  cellDims[2] = pointDims[2] - 1;
+  constexpr std::array<std::string_view, 3> k_AxisNames = {"X", "Y", "Z"};
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    if(pointDims[axis] == 0)
+    {
+      return MakeErrorResult(to_underlying(ErrorCodes::DimsValueErr),
+                             fmt::format("The {} value for the {} axis is 0. Each {} value must be at least 1.", k_DimensionsKeyword, k_AxisNames[axis], k_DimensionsKeyword));
+    }
+    cellDims[axis] = pointDims[axis] > 1 ? pointDims[axis] - 1 : 1;
+  }
 
   std::fill(buf.begin(), buf.end(), '\0');
   result = ReadLine(in, buf.data(), kBufferSize);
@@ -819,6 +828,15 @@ Result<> ReadVtkStructuredPoints::readFile()
     return ConvertResult(std::move(convertResultF32));
   }
   origin[2] = convertResultF32.value();
+
+  // Center the one-voxel slab on the VTK point along each singleton axis.
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    if(pointDims[axis] == 1)
+    {
+      origin[axis] -= 0.5f * spacing[axis];
+    }
+  }
 
   if(m_InputValues->ReadPointData && m_Preflight)
   {

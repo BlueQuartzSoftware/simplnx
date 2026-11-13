@@ -12,6 +12,8 @@ This filter reads data from a `.dream3d` file into the pipeline. A `.dream3d` fi
 
 The filter does not have to read the entire file. Through the *Import File Path* parameter, the user can browse the structure of the selected `.dream3d` file and choose exactly which data objects to import. Selecting only the objects that are needed avoids loading large arrays that the rest of the pipeline does not use, which saves memory and time. To import everything, simply select all objects.
 
+If an **Include List** path does not exist in the file, preflight reports a warning that names the missing path. Existing ancestors of that path are still imported. They may be empty groups. DREAM3D 6.5.171 did not report this warning.
+
 ### How Imported Objects Are Added
 
 The selected objects are added into the pipeline's current **DataStructure** at the same paths they had in the file. If an object being imported has the same path as an object already present in the current **DataStructure**, the existing object is replaced (overwritten) by the imported one, so take care when reading into a non-empty **DataStructure**. Any pipeline metadata stored in the file may also be read when the file is opened.

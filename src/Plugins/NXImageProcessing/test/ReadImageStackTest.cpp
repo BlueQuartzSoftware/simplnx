@@ -30,6 +30,7 @@
 #include <any>
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <string>
 #include <system_error>
@@ -1487,6 +1488,119 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   const auto& warnings = executeResult.result.warnings();
   const bool hasMultiPageWarning = std::any_of(warnings.cbegin(), warnings.cend(), [](const Warning& w) { return w.message.find("reading only the first page") != std::string::npos; });
   REQUIRE(hasMultiPageWarning);
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXImageProcessing][ReadImageStackFilter]")
+{
+  const bool firstSliceIsUint16 = GENERATE(false, true);
+  CAPTURE(firstSliceIsUint16);
+  const fs::path inputDir = fs::path(std::string(unit_test::k_BinaryTestOutputDir.view())) / "ReadImageStackMixedSliceDataTypes";
+  fs::create_directories(inputDir);
+  for(usize slice = 0; slice < 2; ++slice)
+  {
+    const fs::path path = inputDir / fmt::format("slice_{}.tif", slice);
+    if((slice == 0) == firstSliceIsUint16)
+    {
+      TIFF* tif = TIFFOpen(path.string().c_str(), "w");
+      REQUIRE(tif != nullptr);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, 2) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, 2) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 16) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+      REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
+      std::vector<uint16_t> pixels = {1000, 1000, 1000, 1000};
+      REQUIRE(TIFFWriteScanline(tif, pixels.data(), 0, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tif, pixels.data() + 2, 1, 0) >= 0);
+      TIFFClose(tif);
+    }
+    else
+    {
+      WriteMultiPageTiff(path, 2, 2, {{10, 10, 10, 10}});
+    }
+  }
+
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = inputDir.string();
+  fileList.filePrefix = "slice_";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = ".tif";
+  fileList.startIndex = 0;
+  fileList.endIndex = 1;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 1;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+  ReadImageStackFilter filter;
+  DataStructure ds;
+  Arguments args;
+  args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
+
+  SECTION("Reject mismatched slice data types")
+  {
+    // With conversion disabled, uint8 and uint16 cannot share a typed stack array.
+    // Preflight reads only file 0. Execute must report the mismatched slice without throwing.
+    DataStructure preflightDs;
+    IFilter::PreflightResult preflightResult;
+    REQUIRE_NOTHROW(preflightResult = filter.preflight(preflightDs, args));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    IFilter::ExecuteResult executeResult;
+    REQUIRE_NOTHROW(executeResult = filter.execute(ds, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    const auto& sliceError = executeResult.result.errors().front();
+    CAPTURE(sliceError.code, sliceError.message);
+    CHECK(sliceError.code == -23534);
+    CHECK(sliceError.message.find("slice_1.tif") != std::string::npos);
+    CHECK(sliceError.message.find("uint8") != std::string::npos);
+    CHECK(sliceError.message.find("uint16") != std::string::npos);
+  }
+
+  SECTION("Preflight does not read later slice headers")
+  {
+    // An existing file with an invalid TIFF header distinguishes header I/O from file-list checks.
+    {
+      std::ofstream invalidSlice(inputDir / "slice_1.tif", std::ios::binary | std::ios::trunc);
+      REQUIRE(invalidSlice.is_open());
+      invalidSlice << "not a TIFF";
+      REQUIRE(invalidSlice.good());
+    }
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
+
+  SECTION("Explicit conversion permits mixed types")
+  {
+    args.insertOrAssign(ReadImageStackFilter::k_ChangeDataType_Key, true);
+    args.insertOrAssign(ReadImageStackFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(1));
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto& store = ds.getDataRefAs<UInt16Array>(k_ImageDataPath).getDataStoreRef();
+    REQUIRE(store.getNumberOfTuples() == 8);
+    // Read Image's normalized conversion gives 10 * (65535 / 255) = 2570;
+    // uint16(1000) remains 1000 when the source and destination types match.
+    for(usize slice = 0; slice < 2; ++slice)
+    {
+      const uint16_t expected = ((slice == 0) == firstSliceIsUint16) ? 1000 : 2570;
+      for(usize pixel = 0; pixel < 4; ++pixel)
+      {
+        REQUIRE(store[slice * 4 + pixel] == expected);
+      }
+    }
+  }
+
+  SECTION("Z crop excludes the mismatched slice")
+  {
+    auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
+    crop.zBoundVoxels = {0, 0};
+    args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    VerifyGeometryDimensions(ds, k_ImageGeomPath, 2, 2, 1);
+  }
 }
 
 namespace

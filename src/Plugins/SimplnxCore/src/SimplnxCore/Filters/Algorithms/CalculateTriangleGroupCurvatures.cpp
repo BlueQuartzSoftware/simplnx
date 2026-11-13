@@ -223,7 +223,8 @@ void CalculateTriangleGroupCurvatures::operator()() const
     FindNRingNeighbors::UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
     if(triPatch.size() <= 1)
     {
-      throw std::runtime_error("NRingNeighbor failed to find more than one triangles.");
+      markOutputsInvalid(triId);
+      continue;
     }
 
     size_t beforeSize = triPatch.size();

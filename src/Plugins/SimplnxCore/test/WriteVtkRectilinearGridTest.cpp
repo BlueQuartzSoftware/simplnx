@@ -182,7 +182,7 @@ void AppendCoordinatesAscii(std::string& expected, const std::string& axis, usiz
   expected += fmt::format("{} {} float\n", axis, count);
   for(usize idx = 0; idx < count; idx++)
   {
-    expected += fmt::format("{:.6f} ", static_cast<float32>(idx) - 0.5F);
+    expected += fmt::format("{:.9g} ", static_cast<float32>(idx) - 0.5F);
     if(idx % 20 == 0 && idx != 0)
     {
       expected += "\n";
@@ -296,6 +296,72 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII comparison preserve
                 "X_COORDINATES 1 float\nversion\n3.583333\nSCALARS Values double 1\nLOOKUP_TABLE default\n3.583334\n"));
   CHECK_FALSE(compare("SCALARS Values float 1\nversion\n3.5833335\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1\n",
                       "SCALARS Values float 1\nversion\n3.583333\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1.000000\n"));
+}
+
+TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiCoordinates]")
+{
+  DataStructure dataStructure;
+  const DataPath imagePath({"SmallImage"});
+  const DataPath cellPath = imagePath.createChildPath("CellData");
+  const DataPath valuesPath = cellPath.createChildPath("Values");
+  auto* image = ImageGeom::Create(dataStructure, imagePath.getTargetName());
+  REQUIRE(image != nullptr);
+  image->setDimensions({3, 3, 3});
+  image->setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F});
+  image->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), ShapeType{3, 3, 3}, image->getId());
+  REQUIRE(cellData != nullptr);
+  image->setCellData(*cellData);
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, valuesPath, {3, 3, 3}, {1});
+  auto* values = Float32Array::Create(dataStructure, valuesPath.getTargetName(), store, cellData->getId());
+  REQUIRE(values != nullptr);
+  values->fill(0.0F);
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "VtkAsciiSmallCoordinates.vtk";
+  const WriteVtkRectilinearGridFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imagePath));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{valuesPath}));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::ifstream output(outputPath);
+  REQUIRE(output.is_open());
+  std::string line;
+  while(std::getline(output, line) && line != "X_COORDINATES 4 float")
+  {
+  }
+  REQUIRE(line == "X_COORDINATES 4 float");
+  // The writer uses origin + (i - 1/2) * spacing for its coordinates.
+  // The half-cell shift is tracked separately in #1878 (WriteVtkRectilinearGridFilter#1).
+  // For origin zero and spacing 1e-7, hand calculation gives these four values.
+  // The tolerance allows float arithmetic rounding, but not six-place truncation.
+  constexpr std::array<double, 4> k_Expected = {-5.0e-8, 5.0e-8, 1.5e-7, 2.5e-7};
+  for(const std::string axis : {"X", "Y", "Z"})
+  {
+    if(axis != "X")
+    {
+      std::string header;
+      usize count = 0;
+      std::string type;
+      REQUIRE(output >> header >> count >> type);
+      REQUIRE(header == axis + "_COORDINATES");
+      REQUIRE(count == 4);
+      REQUIRE(type == "float");
+    }
+    for(usize index = 0; index < k_Expected.size(); index++)
+    {
+      CAPTURE(axis, index);
+      double actual = 0.0;
+      REQUIRE(output >> actual);
+      CHECK(actual == Approx(k_Expected[index]).margin(2.0e-14));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating point round trip", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiFloats]", float32, float64)
@@ -552,4 +618,46 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibi
       // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component limits", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
+{
+  const usize components = GENERATE(1, 2, 3, 4, 5, 6, 9);
+  const bool binary = GENERATE(false, true);
+  CAPTURE(components, binary);
+  DataStructure dataStructure;
+  auto* image = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({1, 1, 1});
+  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, image->getId());
+  REQUIRE(cells != nullptr);
+  image->setCellData(*cells);
+  const DataPath arrayPath({"Image", "Cells", "Values"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
+  auto* values = Float32Array::Create(dataStructure, "Values", store, cells->getId());
+  REQUIRE(values != nullptr);
+
+  WriteVtkRectilinearGridFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_OutputFile_Key,
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "component_limits_RectilinearGrid.vtk"));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key, std::make_any<bool>(binary));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{arrayPath}));
+
+  // Independent format oracle: legacy VTK SCALARS permits 1 through 4 components.
+  // Counts 5, 6 and 9 must be rejected before a file can be written, for either encoding.
+  IFilter::PreflightResult result;
+  REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
+  if(components <= 4)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    REQUIRE(result.outputActions.errors()[0].code == -12073);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

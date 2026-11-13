@@ -118,7 +118,7 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
           g = 255.0f * ((120.0f - trend) / 120.0f);
           b = 255.0f * (trend / 120.0f);
         }
-        if(trend > 240.0f && trend < 360.0f)
+        if(trend > 240.0f && trend <= 360.0f)
         {
           trend -= 240.0f;
           r = 255.0f * (trend / 120.0f);

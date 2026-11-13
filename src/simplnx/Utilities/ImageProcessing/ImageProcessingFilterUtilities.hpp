@@ -665,7 +665,8 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  *            is impossible because the collapsed output array cannot be inserted into the still-full cell
  *            AttributeMatrix (tuple-count mismatch), and resizing the AttributeMatrix before executeImpl
  *            would destroy the input the engine still has to read. Because that swap replaces the whole
- *            original geometry, any OTHER arrays in its cell data are discarded; a warning enumerates them.
+ *            original geometry, any OTHER arrays in its cell data and other geometry children are
+ *            discarded; a warning enumerates them.
  *
  * The output element type is the input type mapped through @p OutTypeMap (SameAsInput for type-preserving
  * reducers like Max; a fixed float map for Mean/StdDev/Sum). The execute façade MUST be instantiated with
@@ -757,15 +758,15 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
     result.value().appendDeferredAction(std::make_unique<DeleteDataAction>(renamedOriginalPath));
     result.value().appendDeferredAction(std::make_unique<RenameDataAction>(targetGeomPath, originalName));
 
-    // In-place discards the whole original geometry, so any OTHER cell-data arrays are lost. They cannot
-    // survive the collapse (they have the original, non-collapsed tuple count), but say so rather than
-    // dropping them silently. The selected input (consumed by the projection) is not listed.
+    // In-place discards the original geometry. List its other children and cell-data arrays. The selected
+    // input is consumed by the projection, so it is not listed. The output array is created in the new
+    // geometry, so an old cell-data array with the output name is discarded and listed.
     const std::string inputArrayName = inputArrayPath.getTargetName();
     std::string discarded;
     for(const auto& [childId, childObject] : *cellData)
     {
       const std::string childName = childObject->getName();
-      if(childName == inputArrayName || childName == outputArrayName)
+      if(childName == inputArrayName)
       {
         continue;
       }
@@ -773,13 +774,25 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
       {
         discarded += ", ";
       }
-      discarded += childName;
+      discarded += imageGeom.getCellDataPath().createChildPath(childName).toString();
+    }
+    for(const auto& [childId, childObject] : imageGeom)
+    {
+      if(childId == cellData->getId() || childId == inputArray.getId())
+      {
+        continue;
+      }
+      if(!discarded.empty())
+      {
+        discarded += ", ";
+      }
+      discarded += imageGeomPath.createChildPath(childObject->getName()).toString();
     }
     if(!discarded.empty())
     {
-      result.warnings().push_back(Warning{-8343, fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection, so the following other array(s) in cell data '{}' will be "
-                                                             "discarded (they cannot be projected and do not fit the collapsed shape): {}. Disable 'Perform In-Place' to keep the original geometry.",
-                                                             imageGeomPath.toString(), cellDataName, discarded)});
+      result.warnings().push_back(Warning{-8343, fmt::format("Perform In-Place replaces Image Geometry '{}' with the collapsed projection. The following other data object(s), including their "
+                                                             "contents, will be discarded: {}. Disable 'Perform In-Place' to keep the original geometry.",
+                                                             imageGeomPath.toString(), discarded)});
     }
   }
 

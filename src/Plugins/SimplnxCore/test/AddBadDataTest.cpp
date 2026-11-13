@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -227,5 +228,55 @@ TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxC
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.errors().front().code == -76240);
   REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AddBadDataFilter: Reject nonnumeric cell arrays", "[SimplnxCore][AddBadDataFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool useStrings = GENERATE(true, false);
+  CAPTURE(useStrings);
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({1, 1, 1});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 1, 1}, imageGeom->getId());
+  REQUIRE(cellAM != nullptr);
+  imageGeom->setCellData(*cellAM);
+  REQUIRE(Int32Array::Create(dataStructure, "Distances", std::make_shared<DataStore<int32>>(ShapeType{1, 1, 1}, ShapeType{1}, 0), cellAM->getId()) != nullptr);
+  if(useStrings)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, "Unsupported", cellAM->getShape(), {"label"}, cellAM->getId()) != nullptr);
+  }
+  else
+  {
+    REQUIRE(NeighborList<int32>::Create(dataStructure, "Unsupported", cellAM->getShape(), cellAM->getId()) != nullptr);
+  }
+
+  AddBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(AddBadDataFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
+  args.insertOrAssign(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "Distances"})));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonNoise_Key, std::make_any<bool>(true));
+  args.insertOrAssign(AddBadDataFilter::k_PoissonVolFraction_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(AddBadDataFilter::k_UseSeed_Key, std::make_any<bool>(true));
+
+  // Type-contract oracle: zeroing numeric components is undefined for strings and variable-length lists.
+  // Reject either type in preflight, before execution can cast it to IDataArray.
+  const auto preflight = filter.preflight(dataStructure, args);
+  CHECK(preflight.outputActions.invalid());
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
+  REQUIRE(execute.result.errors().size() == 1);
+  CHECK(execute.result.errors()[0].code == -76239);
+  CHECK(execute.result.errors()[0].message.find("Image/Cell Data/Unsupported") != std::string::npos);
+  if(preflight.outputActions.invalid())
+  {
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors()[0].code == -76239);
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

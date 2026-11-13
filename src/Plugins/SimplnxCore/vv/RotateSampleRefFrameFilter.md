@@ -19,13 +19,13 @@
 | Code paths enumerated  | 11 (filter preflight guard + geometry setup, and the NN-resample execute). 10 of 12 exercised.          |
 | Tests today | 12 registered cases plus one hidden HDF5 boundary test. Paired CTest selections pass 12/12. |
 | Exemplar archive       | **`Rotate_Sample_Ref_Frame_Test_v2/v3.tar.gz` retired** — golden-file (regression) oracle replaced by an inlined Class 1 analytical oracle. No archive is downloaded. See `vv/provenance/RotateSampleRefFrameFilter.md`.                                               |
-| Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** — same dims and same voxel values. 1 deviation, on the *unsupported* arbitrary-rotation domain only.    |
-| Bug flags              | None. The single deviation (D1) is an intentional guard, not a bug.                                    |
+| Legacy comparison      | **Run** (SIMPLNX vs 6.5.171) on four isotropic principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y): **bit-identical** dims and voxel values. Two documented deviations: D1 rejects unsupported rotations; D2 corrects anisotropic three-cycle spacing (analytical evidence, no new legacy binary comparison). |
+| Bug flags              | KI-008 / L28 corrected (D2). D1 is an intentional guard. |
 | V&V phase | Historical status and sign-off retained. Section 4.3 adds real-HDF5 boundary verification and paired CTest evidence. |
 
 ## Summary
 
-`RotateSampleRefFrame` rotates the reference frame of an **Image Geometry** by nearest-neighbor resampling. V&V established that the operation is a *lossless voxel permutation* — the only correct meaning of a reference-frame rotation — **if and only if** the rotation maps the cubic voxel grid onto itself, i.e. it is a member of the octahedral rotation group (the 90/180/270-degree rotations about X/Y/Z, plus 180 about a face-diagonal and 120/240 about a body-diagonal); for any other rotation it silently produces a lossy, background-padded resample (empirically demonstrated: 45@Z turns 24 voxels into 50 with 24 introduced zeros). A preflight **guard** was added to enforce the supported domain (error `-6850`, plus `-6851` for a slice-reordering slice-by-slice combination), the golden-file exemplar was retired in favor of an inlined **Class 1 analytical-permutation** oracle (+ Class 4 invariants), and a legacy A/B on four principal-90 fixtures showed SIMPLNX is **bit-identical** to DREAM3D 6.5.171 on the standard EBSD sample transforms.
+`RotateSampleRefFrame` rotates the reference frame of an **Image Geometry** by nearest-neighbor resampling. V&V established that the operation is a *lossless voxel permutation* — the only correct meaning of a reference-frame rotation — **if and only if** the rotation maps the cubic voxel grid onto itself, i.e. it is a member of the octahedral rotation group (the 90/180/270-degree rotations about X/Y/Z, plus 180 about a face-diagonal and 120/240 about a body-diagonal); for any other rotation it silently produces a lossy, background-padded resample (empirically demonstrated: 45@Z turns 24 voxels into 50 with 24 introduced zeros). A preflight **guard** was added to enforce the supported domain (error `-6850`, plus `-6851` for a slice-reordering slice-by-slice combination), the golden-file exemplar was retired in favor of an inlined **Class 1 analytical-permutation** oracle (+ Class 4 invariants), and a legacy A/B showed identical dimensions and voxel values in simplnx and DREAM3D 6.5.171 on the four tested isotropic principal-axis fixtures.
 
 ## Algorithm Relationship
 
@@ -100,6 +100,17 @@ OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in ea
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison run on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y) — see `vv/comparisons/RotateSampleRefFrameFilter/results.md`. On the supported domain, **no deviations** (bit-identical dims and voxel values). One deviation on the unsupported domain:
+Comparison run on four principal-90 fixtures (90@Z, 180@Z, 90@X, 180@Y) — see `vv/comparisons/RotateSampleRefFrameFilter/results.md`. These four isotropic fixtures have bit-identical dims and voxel values. They do not cover anisotropic three-cycle rotations. The documented deviations are:
 
 - `RotateSampleRefFrameFilter-D1` — legacy silently runs arbitrary (non-principal-90) rotations as a lossy resample; SIMPLNX rejects them in preflight (`-6850`). Root cause: algorithmic choice (intentional; not a bug). See `vv/deviations/RotateSampleRefFrameFilter.md`.
+- `RotateSampleRefFrameFilter-D2` — corrected spacing and dimensions for anisotropic three-cycle rotations (KI-008 / L28). Independent analytical tests cover both algorithms on in-memory stores. No new legacy binary comparison was run. See `vv/deviations/RotateSampleRefFrameFilter.md`.
+
+## Bugs found and fixed: errata KI-008 (L28)
+
+`SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid` uses an inline analytical oracle. The map R(x,y,z)=(z,x,y) sends dimensions (2,3,4) to (4,2,3) and spacing (2,3,5) to (5,2,3). Output (i,j,k) has value 1+j+2*k+6*i. The test checks every cell in Direct and Scanline paths on in-memory stores. No exemplar is used.
+
+Test sensitivity verification: before the fix, both paths returned dimensions (7,1,5), spacing (3,5,2), and 35 cells instead of 24. For transforms classified as grid rotations, the shared helper uses the classified source axis and its column scale for each output axis. Other transformations keep the earlier spacing rule. This intentionally corrects DREAM3D 6.5.171 behavior; see `RotateSampleRefFrameFilter-D2`. No new legacy binary comparison or disk-backed OOC validation is claimed.
+
+To repeat the L28 check, run the `SimplnxCore::RotateSampleRefFrame` CTest entries serially. The historical A/B results above are unchanged and apply only to their four fixtures.
+
+The R5 helper regression and Apply Transformation to Geometry regression check uneven scaling with a small shear. For (x,y,z) to (x+5y,100000y,z), a 2×2×2 image with spacing (2,3,5) has transformed extents (34,600000,10). The analytical spacing is (2,3*sqrt(100000^2+5^2),5), or (2,300000,5) in float32. The expected dimensions are (17,2,2). Both regressions failed before R5 and pass after it; the filter test covers Direct and Scanline on in-memory stores. This is shared-helper evidence, not a new DREAM3D 6.5.171 comparison.

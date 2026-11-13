@@ -46,7 +46,7 @@ The `name` data line in the generated file ends with one ASCII space after `Phas
 
 The legacy DREAM.3D exporter required dimensions in non-increasing order (X >= Y >= Z), and this filter keeps that rule. If an **Image Geometry** does not have this order, the filter determines the required 90-degree axis rotations and runs the Rotate Sample Reference Frame **Filter** internally. The exported dimensions, spacing, origin, and feature IDs come from the reordered copy. The input **Data Structure** does not change.
 
-The filter validates two-axis reorders after rotation and reports an error if the rotated dimensions are not the sorted input dimensions. This problem occurs with anisotropic spacing because of a limitation in the current Rotate Sample Reference Frame implementation; resample to isotropic spacing or reorder the axes before this filter.
+Two-axis reorders preserve anisotropic spacing and all cells. This corrects DREAM3D 6.5.171 errata KI-008. The filter still checks that the rotated dimensions match the sorted input dimensions before export.
 
 A **Rectilinear Grid Geometry** with dimensions that require reordering is not supported. The filter rejects this geometry during preflight because a 90-degree image rotation cannot preserve its non-uniform bounds arrays.
 

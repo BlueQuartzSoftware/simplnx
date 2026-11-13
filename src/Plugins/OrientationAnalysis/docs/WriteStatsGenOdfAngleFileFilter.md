@@ -62,6 +62,8 @@ The *Delimiter* parameter provides the following choices:
 - **: (colon) [3]**: Uses a colon as the column separator.
 - **\t (tab) [4]**: Uses a tab character as the column separator.
 
+The Colon option now writes `:` between values. This intentionally differs from DREAM3D 6.5.171, which wrote double quotes for this option (errata KI-015).
+
 ## Required Input Sources
 
 - **Euler Angles** -- typically read from EBSD data via [Read H5EBSD File](ReadH5EbsdFilter.md), [Read EDAX EBSD Data (.ang)](ReadAngDataFilter.md), or [Read Oxford Instr. EBSD Data (.ctf)](ReadCtfDataFilter.md). Supplied in radians (Bunge Z-X-Z convention); use the *Convert to Degrees* option only if **StatsGenerator** will import them as degrees.

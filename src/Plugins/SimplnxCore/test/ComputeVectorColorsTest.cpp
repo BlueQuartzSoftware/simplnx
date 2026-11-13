@@ -27,6 +27,39 @@ DataPath eulerAnglesPath = ebsdPath.createChildPath(Constants::k_EulerAngles);
 const std::string k_VecColorsNX = "Vector Colors";
 } // namespace
 
+TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Rounded full-turn trend stays red", "[SimplnxCore][ComputeVectorColorsFilter]")
+{
+  DataStructure dataStructure;
+  const DataPath vectorsPath({"Vectors"});
+  auto vectorsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vectorsPath, {1}, {3});
+  REQUIRE(Float32Array::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
+  const std::array<float32, 3> vectors = {1.0f, -1.0e-8f, 0.0f};
+  const auto writeResult = vectorsStore->copyFromBuffer(0, nonstd::span<const float32>(vectors.data(), vectors.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  ComputeVectorColorsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeVectorColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(vectorsPath));
+  args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(k_VecColorsNX));
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // Hand calculation: atan2(-1e-8, 1) is about -5.73e-7 degrees.
+  // Adding 360 rounds to exactly 360 in float32, equivalent to trend 0.
+  // With Z=0, plunge is 90 degrees: the red endpoint is RGB (255, 0, 0).
+  const std::array<uint8, 3> expectedColors = {255, 0, 0};
+  const auto* colors = dataStructure.getDataAs<UInt8Array>(DataPath({k_VecColorsNX}));
+  REQUIRE(colors != nullptr);
+  std::array<uint8, 3> actualColors = {};
+  const auto readResult = colors->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  CHECK(actualColors == expectedColors);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Repeated unmasked execution creates only colors", "[SimplnxCore][ComputeVectorColorsFilter]")
 {
   UnitTest::LoadPlugins();

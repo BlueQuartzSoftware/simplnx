@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -173,6 +174,20 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   if(cellAM == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
+  }
+
+  const auto childArrayPaths = GetAllChildArrayDataPaths(dataStructure, imgGeomPtr->getCellDataPath());
+  if(childArrayPaths.has_value())
+  {
+    for(const auto& arrayPath : childArrayPaths.value())
+    {
+      if(dataStructure.getDataAs<IDataArray>(arrayPath) == nullptr)
+      {
+        return {MakeErrorResult<OutputActions>(
+            -76239, fmt::format("Cell array '{}' is not a numeric DataArray. Move StringArray and NeighborList objects out of the geometry's cell Attribute Matrix before adding bad data.",
+                                arrayPath.toString()))};
+      }
+    }
   }
 
   {

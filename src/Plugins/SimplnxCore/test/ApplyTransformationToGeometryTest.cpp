@@ -1024,6 +1024,59 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[Sim
   }
 }
 
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Uneven scaling keeps the classified source axis", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+
+  DataStructure dataStructure;
+  const DataPath inputGeometryPath({"Input"});
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  auto* image = ImageGeom::Create(dataStructure, "Input");
+  REQUIRE(image != nullptr);
+  image->setDimensions({2, 2, 2});
+  image->setSpacing({2.0F, 3.0F, 5.0F});
+  image->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_Cell_Data, {2, 2, 2}, image->getId());
+  REQUIRE(cellAM != nullptr);
+  image->setCellData(*cellAM);
+  auto* values = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Data", {2, 2, 2}, {1}, cellAM->getId());
+  REQUIRE(values != nullptr);
+  values->fill(1);
+
+  const ApplyTransformationToGeometryFilter filter;
+  Arguments args;
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+  const DynamicTableParameter::ValueType matrix{{1.0, 5.0, 0.0, 0.0}, {0.0, 100000.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}};
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(matrix));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<bool>(false));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Hand calculation: (x,y,z) -> (x+5y,100000y,z). The normalized Y column's
+  // off-axis entry is about 5e-5, so the classified source axes remain X, Y, Z.
+  // Spacing is (2, 3*sqrt(100000^2+5^2), 5), or (2,300000,5) in float32.
+  // Bounds have extents (4+5*6,100000*6,10) = (34,600000,10).
+  // Extents divided by spacing give dimensions (17,2,2).
+  const auto& output = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+  const FloatVec3 expectedSpacing = {2.0F, 300000.0F, 5.0F};
+  const SizeVec3 expectedDims = {17, 2, 2};
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    CAPTURE(axis);
+    CHECK(output.getSpacing()[axis] == Approx(expectedSpacing[axis]));
+    CHECK(output.getDimensions()[axis] == expectedDims[axis]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();

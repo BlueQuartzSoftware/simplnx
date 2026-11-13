@@ -78,6 +78,8 @@ The *Output Data Type* parameter provides the following choices:
 - **uint16 [1]**: Convert image data to 16-bit unsigned integer.
 - **uint32 [2]**: Convert image data to 32-bit unsigned integer.
 
+Preflight reads only the first file's image header. During execution, the filter checks each decoded slice kept by the Z crop before further processing or copying it into the stack. When *Set Image Data Type* is off, the first file in the list sets the stack's output type, also when the Z crop removes that file. If a slice cannot match the stack's output type, error `-23534` names the file and the expected and actual types. Earlier slices may already have been written when this error occurs. Mixed uint8 and uint16 slices can be read together when *Set Image Data Type* converts them to the same output type. This intentionally differs from the failure described in DREAM3D 6.5.171 errata KI-051.
+
 ### Cropping Caveats
 
 The user can crop the incoming image geometry using the Cropping Options section. The cropping type options are:

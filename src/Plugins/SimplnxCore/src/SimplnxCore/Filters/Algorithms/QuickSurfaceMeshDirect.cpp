@@ -1179,9 +1179,11 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh1];
           }
 
+          const MeshIndexType firstCell = featureIds[point] < featureIds[neigh1] ? point : neigh1;
+          const MeshIndexType secondCell = featureIds[point] < featureIds[neigh1] ? neigh1 : point;
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1201,7 +1203,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1291,9 +1293,11 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh2];
           }
 
+          const MeshIndexType firstCell = featureIds[point] < featureIds[neigh2] ? point : neigh2;
+          const MeshIndexType secondCell = featureIds[point] < featureIds[neigh2] ? neigh2 : point;
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1313,7 +1317,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1403,9 +1407,11 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh3];
           }
 
+          const MeshIndexType firstCell = featureIds[point] < featureIds[neigh3] ? point : neigh3;
+          const MeshIndexType secondCell = featureIds[point] < featureIds[neigh3] ? neigh3 : point;
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1425,7 +1431,7 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, firstCell, secondCell, faceLabelsStore);
           }
 
           triangleIndex++;

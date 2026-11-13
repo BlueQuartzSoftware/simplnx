@@ -155,6 +155,10 @@ std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string&
   std::vector<std::string> argumentList;
   for(int i = 0; i < arguments.size(); i++)
   {
+    if(arguments[i] == ' ')
+    {
+      continue;
+    }
     if(arguments[i] == '\"')
     {
       i++;

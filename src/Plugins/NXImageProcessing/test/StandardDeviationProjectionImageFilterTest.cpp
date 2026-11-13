@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/StandardDeviationProjectionImageFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ProjectionReducers.hpp"
 
@@ -263,4 +264,66 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: ITK real-i
 {
   projection_test::RunProjectionBaselineItkGolden<StandardDeviationProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_StandardDeviationProjectionImageFilter_z_projection.nrrd", /*projDim=*/2,
                                                                                           /*tolerance=*/0.0001);
+}
+
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
+  const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
+  DataStructure ds;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, 3, 0.0, 1.0);
+  const DataPath geomPath({"Image Geometry"});
+  auto& imageGeom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const DataPath featurePath = geomPath.createChildPath("Cell Feature Data");
+  REQUIRE(AttributeMatrix::Create(ds, "Cell Feature Data", {2}, imageGeom.getId()) != nullptr);
+  const DataPath extraPath = inputPath.getParent().createChildPath(extraName.empty() ? "Extra" : extraName);
+  if(!extraName.empty())
+  {
+    auto& cellAM = ds.getDataRefAs<AttributeMatrix>(inputPath.getParent());
+    auto store = DataStoreUtilities::CreateDataStore<int16>(ds, extraPath, cellAM.getShape(), {1});
+    REQUIRE(Int16Array::Create(ds, extraName, store, cellAM.getId()) != nullptr);
+  }
+  StandardDeviationProjectionImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+  args.insertOrAssign(StandardDeviationProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  std::string discardedWarning;
+  for(const auto& warning : preflightResult.outputActions.warnings())
+  {
+    if(warning.code == -8343)
+    {
+      discardedWarning += warning.message;
+    }
+  }
+  // The geometry swap deletes the original children. The warning excludes the consumed input,
+  // but must name the feature matrix even when it is the only other discarded object, using full paths.
+  CHECK(discardedWarning.find(featurePath.toString()) != std::string::npos);
+  CHECK(discardedWarning.find(inputPath.toString()) == std::string::npos);
+  if(!extraName.empty())
+  {
+    CHECK(discardedWarning.find(extraPath.toString()) != std::string::npos);
+  }
+  // Axis projection dispatches by store type; it has no Direct/Scanline override.
+  const auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  CHECK(ds.getData(featurePath) == nullptr);
+  if(extraName != "Output")
+  {
+    CHECK(ds.getData(extraPath) == nullptr);
+  }
+  REQUIRE(ds.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{1, 3, 3});
+  const auto& output = ds.getDataRefAs<Float64Array>(inputPath.getParent().createChildPath("Output"));
+  REQUIRE(output.getNumberOfTuples() == 9);
+  for(usize slot = 0; slot < 9; ++slot)
+  {
+    // X columns are {3*s, 3*s+1, 3*s+2}: sample variance = (1+0+1)/(3-1) = 1.
+    CHECK(output[slot] == Approx(1.0).margin(1.0e-12));
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

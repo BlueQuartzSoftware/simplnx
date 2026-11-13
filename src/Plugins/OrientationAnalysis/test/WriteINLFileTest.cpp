@@ -28,6 +28,7 @@
 #include <iterator>
 #include <memory>
 #include <nonstd/span.hpp>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -255,6 +256,116 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
   INFO(difference);
   REQUIRE(difference.empty());
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[OrientationAnalysis][WriteINLFileFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  // Independent oracle: the TSL Laue codes (AngConstants.h) are m-3m=43, m-3=23,
+  // 4/mmm=42, 4/m=4, mmm=22, 2/m (c axis)=2, -1=1, 6/mmm=62, 6/m=6, -3m=32,
+  // and -3=3. Unknown/unsupported structures and phase zero must use TSL unknown=999.
+  // Give phase zero a known structure to verify that it remains an unknown phase.
+  const std::array<uint32, 14> structures = {ebsdlib::CrystalStructure::Cubic_High,
+                                             ebsdlib::CrystalStructure::Cubic_High,
+                                             ebsdlib::CrystalStructure::Cubic_Low,
+                                             ebsdlib::CrystalStructure::Tetragonal_High,
+                                             ebsdlib::CrystalStructure::Tetragonal_Low,
+                                             ebsdlib::CrystalStructure::OrthoRhombic,
+                                             ebsdlib::CrystalStructure::Monoclinic,
+                                             ebsdlib::CrystalStructure::Triclinic,
+                                             ebsdlib::CrystalStructure::Hexagonal_High,
+                                             ebsdlib::CrystalStructure::Hexagonal_Low,
+                                             ebsdlib::CrystalStructure::Trigonal_High,
+                                             ebsdlib::CrystalStructure::Trigonal_Low,
+                                             ebsdlib::CrystalStructure::UnknownCrystalStructure,
+                                             12345};
+  const std::array<uint32, 14> expectedCodes = {999, 43, 23, 42, 4, 22, 2, 1, 62, 6, 32, 3, 999, 999};
+  const usize numCells = structures.size();
+
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({numCells, 1, 1});
+  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
+  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, numCells}, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {1, 1, numCells}, {1}, cellData->getId());
+  auto* phases = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {1, 1, numCells}, {1}, cellData->getId());
+  auto* eulers = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "EulerAngles", {1, 1, numCells}, {3}, cellData->getId());
+  REQUIRE(featureIds != nullptr);
+  REQUIRE(phases != nullptr);
+  REQUIRE(eulers != nullptr);
+  eulers->fill(0.0F);
+  auto* crystalStructures = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "CrystalStructures", {numCells}, {1});
+  auto* numFeatures = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "NumFeatures", {numCells}, {1});
+  REQUIRE(crystalStructures != nullptr);
+  REQUIRE(numFeatures != nullptr);
+  numFeatures->fill(1);
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Materials", {numCells}, std::vector<std::string>(numCells, "Phase")) != nullptr);
+  for(usize i = 0; i < numCells; ++i)
+  {
+    (*featureIds)[i] = static_cast<int32>(i);
+    (*phases)[i] = static_cast<int32>(i);
+    (*crystalStructures)[i] = structures[i];
+  }
+
+  const fs::path outputPath = fs::temp_directory_path() / "nx_all_laue_inl_writer.inl";
+  auto outputFileGuard = MakeScopeGuard([&outputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(outputPath, errorCode);
+  });
+  WriteINLFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
+  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "Cell Data", "FeatureIds"})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "Cell Data", "Phases"})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "Cell Data", "EulerAngles"})));
+  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"NumFeatures"})));
+  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"Materials"})));
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = scope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  std::ifstream inputStream(outputPath);
+  REQUIRE(inputStream.is_open());
+  usize rowCount = 0;
+  usize headerCount = 0;
+  std::string line;
+  while(std::getline(inputStream, line))
+  {
+    if(line.rfind("# Symmetry_", 0) == 0)
+    {
+      ++headerCount;
+      REQUIRE(headerCount < numCells);
+      CAPTURE(headerCount);
+      CHECK(line == fmt::format("# Symmetry_{}: {}", headerCount, expectedCodes[headerCount]));
+    }
+    if(line.empty() || line[0] == '#')
+    {
+      continue;
+    }
+    REQUIRE(rowCount < numCells);
+    CAPTURE(rowCount);
+    std::istringstream row(line);
+    float64 phi1 = 0, phi = 0, phi2 = 0, x = 0, y = 0, z = 0;
+    int32 featureId = -1, phaseId = -1;
+    uint32 symmetry = 0;
+    REQUIRE(static_cast<bool>(row >> phi1 >> phi >> phi2 >> x >> y >> z >> featureId >> phaseId >> symmetry));
+    CHECK(phaseId == static_cast<int32>(rowCount));
+    CHECK(symmetry == expectedCodes[rowCount]);
+    ++rowCount;
+  }
+  CHECK(headerCount == numCells - 1);
+  CHECK(rowCount == numCells);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

@@ -29,6 +29,7 @@ constexpr nx::core::int32 k_OutputRepresentationTypeError = -68002;
 constexpr nx::core::int32 k_InputComponentDimensionError = -68003;
 constexpr nx::core::int32 k_InputComponentCountError = -68004;
 constexpr nx::core::int32 k_OutOfRangeReferenceSliceValue = -68064;
+constexpr nx::core::int32 k_ReferenceSliceExceedsZDimension = -68073;
 
 } // namespace
 
@@ -156,17 +157,21 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
     return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
   }
 
+  const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(gridGeom == nullptr)
+  {
+    return MakePreflightErrorResult(-68070, fmt::format("The selected Image Geometry '{}' was not found or is not an Image Geometry.", inputImageGeometry.toString()));
+  }
+  const usize dims = gridGeom->getDimensions().getZ();
+  if(filterArgs.value<bool>(k_UseReferenceSlice_Key) && static_cast<usize>(pReferenceSliceValue) >= dims)
+  {
+    return MakePreflightErrorResult(k_ReferenceSliceExceedsZDimension, fmt::format("Reference Slice value ({}) is too large. Image Geometry '{}' has Z dimension {}. Use a value from 0 to {}.",
+                                                                                   pReferenceSliceValue, inputImageGeometry.toString(), dims, static_cast<int64>(dims) - 1));
+  }
+
   // Handle Array Creation
   if(pStoreAlignmentShifts)
   {
-    const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
-
-    if(gridGeom == nullptr)
-    {
-      return MakePreflightErrorResult(-68070, fmt::format("Store Alignment Shifts was selected, but an invalid image geometry was provided. Input Geometry Path :{}", inputImageGeometry.toString()));
-    }
-
-    const usize dims = gridGeom->getDimensions().getZ();
     auto pAlignmentAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key);
     const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
 

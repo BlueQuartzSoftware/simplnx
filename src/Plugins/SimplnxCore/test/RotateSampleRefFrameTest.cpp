@@ -810,3 +810,41 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", {2, 3, 4}, {2.0F, 3.0F, 5.0F});
+  RotateSampleRefFrameFilter filter;
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {1.0F, 1.0F, 1.0F, 120.0F});
+  // Closed-form oracle: R(x,y,z)=(z,x,y). Thus dimensions (2,3,4) and
+  // spacing (2,3,5) become (4,2,3) and (5,2,3). Output (i,j,k) samples
+  // input (j,k,i), whose sequential value is 1 + j + 2*k + 6*i.
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const ImageGeom* output = nullptr;
+  REQUIRE_NOTHROW(output = &dataStructure.getDataRefAs<ImageGeom>(k_OutputPath));
+  CHECK(output->getDimensions() == SizeVec3{4, 2, 3});
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    CHECK(output->getSpacing()[axis] == Approx(FloatVec3{5.0F, 2.0F, 3.0F}[axis]));
+  }
+  const auto values = ReadOutputValues(dataStructure, k_OutputPath);
+  REQUIRE(values.size() == 24);
+  for(usize k = 0; k < 3; k++)
+  {
+    for(usize j = 0; j < 2; j++)
+    {
+      for(usize i = 0; i < 4; i++)
+      {
+        CHECK(values[i + 4 * j + 8 * k] == static_cast<int32>(1 + j + 2 * k + 6 * i));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
