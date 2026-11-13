@@ -1,5 +1,6 @@
 include(GenerateExportHeader)
 include(GNUInstallDirs)
+include("${CMAKE_CURRENT_LIST_DIR}/DiscoverTests.cmake")
 
 # --------------------------------------------------------------------
 # This function optionally compiles a named plugin when compiling sandbox
@@ -407,8 +408,5 @@ function(create_simplnx_plugin_unit_test)
       ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}
   )
 
-  # Two discoveries register every visible test case once. Cases tagged [OOC] (Catch2 tags ignore case) also get the
-  # ctest label "ooc", so `ctest -L "^ooc$"` selects them.
-  catch_discover_tests(${UNIT_TEST_TARGET} TEST_SPEC "~[OOC]~[.]")
-  catch_discover_tests(${UNIT_TEST_TARGET} TEST_SPEC "[OOC]~[.]" TEST_LIST ${UNIT_TEST_TARGET}_OOC_TESTS PROPERTIES LABELS "ooc")
+  simplnx_discover_tests(${UNIT_TEST_TARGET})
 endfunction()

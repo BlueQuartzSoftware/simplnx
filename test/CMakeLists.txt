@@ -159,9 +159,8 @@ target_compile_options(simplnx_test
 
 target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
-# Two discoveries register every visible test case once; cases tagged [OOC] also get the ctest label "ooc".
-catch_discover_tests(simplnx_test TEST_SPEC "~[OOC]~[.]")
-catch_discover_tests(simplnx_test TEST_SPEC "[OOC]~[.]" TEST_LIST simplnx_test_OOC_TESTS PROPERTIES LABELS "ooc")
+include("${simplnx_SOURCE_DIR}/cmake/DiscoverTests.cmake")
+simplnx_discover_tests(simplnx_test)
 
 add_test(NAME "simplnx_test_profile_isolation"
   COMMAND ${CMAKE_COMMAND}
