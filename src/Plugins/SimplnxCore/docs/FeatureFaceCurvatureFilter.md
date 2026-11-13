@@ -18,6 +18,8 @@ The principal directions can have their signs flipped: they come from eigenvecto
 
 The fitting neighborhood contains the triangle itself and its neighbors within the **Neighborhood Ring Count**. Only neighbors with the same pair of **Face Labels** are included. If this neighborhood contains fewer than two triangles, all requested outputs for that triangle are NaN and the filter continues. This includes a Feature face with only one triangle. This differs from DREAM3D 6.5.171, which wrote invalid values for one-triangle faces. Triangles with a NaN component in their face normal or face centroid are excluded from the fit. If the evaluated triangle is excluded, all of its requested outputs are NaN. The outputs are also NaN if this exclusion leaves fewer than two triangles. The evaluated triangle counts toward this minimum.
 
+The fit also needs at least seven other triangles with usable rows when **Use Face Normals for Curve Fitting** is on. It needs at least three when this option is off. The evaluated triangle does not count toward this minimum. A usable row has finite values and at least one nonzero coefficient in the fit. If too few usable rows remain, all requested outputs for the evaluated triangle are NaN.
+
 ### Units
 
 Principal curvatures and mean curvature are reported in **1/length** (the reciprocal of the geometry length units; the radius of the best-fit circle is its reciprocal). Gaussian curvature, being a product of two curvatures, is reported in **1/length^2**. Principal directions are **dimensionless** unit 3-vectors.

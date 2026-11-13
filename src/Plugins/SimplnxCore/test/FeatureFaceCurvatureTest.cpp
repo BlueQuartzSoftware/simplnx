@@ -364,6 +364,130 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[Sim
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Patch solvability", "[FeatureFaceCurvatureFilter][PatchSolvability]")
+{
+  UnitTest::LoadPlugins();
+  const bool useNormals = GENERATE(false, true);
+  const bool optionalOutputs = GENERATE(false, true);
+  const usize nonSeedCount = GENERATE(1, 2, 3, 6, 7, 8);
+  const bool duplicateSeed = GENERATE(false, true);
+  const usize faceCount = nonSeedCount + 1 + (duplicateSeed ? 1 : 0);
+  CAPTURE(useNormals, optionalOutputs, nonSeedCount, duplicateSeed);
+
+  DataStructure dataStructure;
+  auto* geom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(geom != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "FaceData", {faceCount}, geom->getId());
+  REQUIRE(faceData != nullptr);
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* vertices = Float32Array::Create(dataStructure, "Vertices", std::make_unique<DataStore<float32>>(ShapeType{2 * faceCount + 1}, ShapeType{3}, 0.0F), geom->getId());
+  auto* faces = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, "Faces", std::make_unique<DataStore<IGeometry::MeshIndexType>>(ShapeType{faceCount}, ShapeType{3}, 0), geom->getId());
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  auto* labels = Int32Array::Create(dataStructure, "Labels", std::make_unique<DataStore<int32>>(ShapeType{faceCount}, ShapeType{2}, 1), faceData->getId());
+  auto* ids = Int32Array::Create(dataStructure, "Ids", std::make_unique<DataStore<int32>>(ShapeType{faceCount}, ShapeType{1}, 1), faceData->getId());
+  auto* normals = Float64Array::Create(dataStructure, "Normals", std::make_unique<DataStore<float64>>(ShapeType{faceCount}, ShapeType{3}, 0.0), faceData->getId());
+  auto* centroids = Float64Array::Create(dataStructure, "Centroids", std::make_unique<DataStore<float64>>(ShapeType{faceCount}, ShapeType{3}, 0.0), faceData->getId());
+  REQUIRE(labels != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(normals != nullptr);
+  REQUIRE(centroids != nullptr);
+
+  // All triangles share vertex 0, so the one-ring patch contains every face.
+  // Sample z=-(x*x+y*y)/(2R). At seed 0 the normal is +Z and both
+  // signed principal curvatures are +1/R. The quadratic is exact at this seed.
+  constexpr float64 radius = 10.0;
+  const std::array<std::array<float64, 2>, 9> samples = {{{0, 0}, {1, 0}, {0, 1}, {1, 1}, {-1, 1}, {2, 1}, {1, 2}, {-1, 2}, {2, -1}}};
+  vertices->setComponent(0, 2, 1.0F);
+  for(usize t = 0; t < faceCount; ++t)
+  {
+    const auto& sample = samples[t <= nonSeedCount ? t : 0];
+    const float64 x = sample[0];
+    const float64 y = sample[1];
+    const float64 z = -(x * x + y * y) / (2.0 * radius);
+    // Distinct vertices give each triangle the supplied centroid, including seed 0.
+    vertices->setComponent(2 * t + 1, 0, static_cast<float32>(3.0 * x + 1.0));
+    vertices->setComponent(2 * t + 1, 1, static_cast<float32>(3.0 * y + 1.0));
+    vertices->setComponent(2 * t + 1, 2, static_cast<float32>(3.0 * z - 0.5));
+    vertices->setComponent(2 * t + 2, 0, -1.0F);
+    vertices->setComponent(2 * t + 2, 1, -1.0F);
+    vertices->setComponent(2 * t + 2, 2, -0.5F);
+    faces->setComponent(t, 1, 2 * t + 1);
+    faces->setComponent(t, 2, 2 * t + 2);
+    labels->setComponent(t, 1, 2);
+    const float64 length = std::sqrt(1.0 + (x * x + y * y) / (radius * radius));
+    normals->setComponent(t, 0, x / (radius * length));
+    normals->setComponent(t, 1, y / (radius * length));
+    normals->setComponent(t, 2, 1.0 / length);
+    centroids->setComponent(t, 0, x);
+    centroids->setComponent(t, 1, y);
+    centroids->setComponent(t, 2, z);
+  }
+
+  const DataPath geomPath({"Triangles"});
+  const DataPath facePath = geomPath.createChildPath("FaceData");
+  Arguments args;
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrixPath_Key, std::make_any<DataPath>(facePath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseFaceNormals_Key, std::make_any<bool>(useNormals));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirection_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvaturePath_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeWeingartenMatrix_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Labels")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIdsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Ids")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Normals")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroidsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Centroids")));
+  const std::array outputKeys = {FeatureFaceCurvatureFilter::k_PrincipalCurvature1Path_Key, FeatureFaceCurvatureFilter::k_PrincipalCurvature2Path_Key,
+                                 FeatureFaceCurvatureFilter::k_GaussianCurvaturePath_Key,   FeatureFaceCurvatureFilter::k_MeanCurvaturePath_Key,
+                                 FeatureFaceCurvatureFilter::k_WeingartenMatrixPath_Key,    FeatureFaceCurvatureFilter::k_PrincipalDirection1Path_Key,
+                                 FeatureFaceCurvatureFilter::k_PrincipalDirection2Path_Key};
+  for(usize i = 0; i < outputKeys.size(); ++i)
+  {
+    args.insertOrAssign(outputKeys[i], std::make_any<DataPath>(facePath.createChildPath("Output" + std::to_string(i))));
+  }
+  FeatureFaceCurvatureFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  for(usize i = 0; i < (optionalOutputs ? outputKeys.size() : 2); ++i)
+  {
+    const auto* output = dataStructure.getDataAs<Float64Array>(facePath.createChildPath("Output" + std::to_string(i)));
+    REQUIRE(output != nullptr);
+    // Only seed 0 has a horizontal tangent plane and the closed-form 1/R fit.
+    for(usize c = 0; c < output->getNumberOfComponents(); ++c)
+    {
+      CAPTURE(i, c);
+      const float64 value = output->getDataStoreRef().getComponentValue(0, c);
+      if(nonSeedCount < (useNormals ? 7 : 3))
+      {
+        CHECK(std::isnan(value));
+      }
+      else if(i < 4)
+      {
+        const float64 expected = i == 2 ? 1.0 / (radius * radius) : 1.0 / radius;
+        // Exact polynomial fit at the origin, with absolute roundoff tolerance.
+        CHECK(value == Approx(expected).margin(1.0e-10));
+      }
+      else if(i == 4)
+      {
+        CHECK(value == Approx(c == 0 || c == 3 ? -1.0 / radius : 0.0).margin(1.0e-10));
+      }
+      else
+      {
+        CHECK(std::isfinite(value));
+      }
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 namespace
 {
 constexpr int32 k_InjectedError = -56991;
