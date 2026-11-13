@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -32,21 +33,6 @@
 
 namespace nx::core::ImageProcessing
 {
-/**
- * @brief The object-morphology operation to apply through a flat structuring element.
- *
- * Object morphology is a boundary-SCATTER (NOT the min/max SE-gather of grayscale/binary morphology): only
- * the BOUNDARY voxels of the object (voxels equal to the object value that touch at least one non-object
- * voxel in the fixed radius-1 full box) paint the structuring element around themselves into a SEPARATE
- * output that starts as a copy of the input. Dilate paints the object value; Erode paints the background
- * value. This reproduces ITK 5.4.4's itkObjectMorphologyImageFilter family exactly.
- */
-enum class ObjectMorphOp
-{
-  Dilate,
-  Erode
-};
-
 namespace detail
 {
 inline bool ObjectMorphologyCheckedMultiply(usize left, usize right, usize& product)

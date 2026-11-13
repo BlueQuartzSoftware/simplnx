@@ -130,6 +130,20 @@ if(MSVC)
 endif()
 
 set(PLUGIN_EXTRA_SOURCES
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterExecutors.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterTemplateExecutors.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterExecutorDetail.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MaskImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AdaptiveHistogramEqualizationExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MorphologyImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ObjectMorphologyImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/BinaryMorphologyImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ReconstructionImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/RegionalExtremaImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/DistanceMapImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/GaussianImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ComponentImageFilterExecutors.cpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/WatershedImageFilterExecutors.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FijiMontageUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FijiMontageUtilities.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MetaImageUtilities.hpp"

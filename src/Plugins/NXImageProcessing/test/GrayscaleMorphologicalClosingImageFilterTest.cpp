@@ -152,7 +152,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
 // ITK-sourced real-image md5 golden: duplicates the Ball r{1,1,1} case of ITKGrayscaleMorphologicalClosingImageTest
 // on STAPLE1.png (uint8, 200x150x1), Safe Border default (true). The test compares our output md5 with the
 // committed ITK hash. This is a regression for the composite Safe Border 2D size-1-axis pad defect (fixed by
-// SafeBorderPadRadius in ImageProcessingFilterUtilities.hpp): before the fix, padding the Z axis of this 2D image by
+// SafeBorderPadRadius in ImageFilterExecutorDetail.hpp): before the fix, padding the Z axis of this 2D image by
 // the SE Z-radius made the closing return the unchanged-input identity 095f00a68a84df4396914fa758f34dcc instead of
 // the committed 103130cc4caf40d9fb252fbabc531e15; clamping the pad to 0 on the size-1 axis reproduces ITK exactly.
 // -----------------------------------------------------------------------------

@@ -11,6 +11,7 @@
 #include "NXImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
 #include "NXImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
 #include "NXImageProcessing/Filters/WhiteTopHatImageFilter.hpp"
+#include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
 
 #include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"

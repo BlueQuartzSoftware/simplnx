@@ -1,5 +1,7 @@
 #include "SumProjectionImageFilter.hpp"
 
+#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"

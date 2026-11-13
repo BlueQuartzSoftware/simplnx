@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionOffsets.hpp"
 #include "simplnx/Utilities/ImageProcessing/SweepTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -26,17 +27,6 @@
 
 namespace nx::core::ImageProcessing
 {
-/**
- * @brief The morphological reconstruction direction. Reconstruction-by-dilation grows the marker toward maxima,
- *        bounded above by the mask (requires marker <= mask); reconstruction-by-erosion shrinks toward minima,
- *        bounded below by the mask (requires marker >= mask).
- */
-enum class ReconstructOp
-{
-  Dilation,
-  Erosion
-};
-
 enum class ReconstructionMarkerSource
 {
   Provided,

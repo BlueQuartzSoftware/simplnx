@@ -154,7 +154,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ramp ope
 // compares our output md5 with the committed ITK hash.
 //
 // The Ball/Cross cases are the regression for the composite Safe Border 2D size-1-axis pad defect (fixed by
-// SafeBorderPadRadius in ImageProcessingFilterUtilities.hpp). Before the fix, padding the Z axis of this 2D image
+// SafeBorderPadRadius in ImageFilterExecutorDetail.hpp). Before the fix, padding the Z axis of this 2D image
 // by the SE Z-radius gave Z real depth, so the 3D SE's out-of-plane offsets read materialized planes: Ball r{1,1,1}
 // produced abf21fbe... (wrong) and Cross r{20,5,2} produced the unchanged-input identity 095f00a6... (no change).
 // Clamping the pad to 0 on the size-1 axis (matching ITK's Z==1 => 2D collapse) makes all three reproduce ITK.
