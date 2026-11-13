@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
-      "baseline": "3349639eedcbd3324fd514a23d963da2076563f9",
+      "baseline": "dfd8779903446363b9bb2e94643f5a621892f00f",
       "packages": [
         "benchmark",
         "blosc",
