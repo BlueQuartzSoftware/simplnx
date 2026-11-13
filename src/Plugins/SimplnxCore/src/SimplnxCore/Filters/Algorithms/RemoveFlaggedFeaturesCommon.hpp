@@ -4,8 +4,10 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -32,6 +34,68 @@ inline std::string FirstRemoveFlaggedFeaturesErrorMessage(const std::vector<Erro
   return message;
 }
 
+/**
+ * @class ExtractionCropFilter
+ * @brief Crops extracted cells without copying aliases of their stale Feature Attribute Matrix.
+ *
+ * The adapter changes only copy actions. The crop filter retains its parameter checks, bounds cache and execution path.
+ */
+class SIMPLNXCORE_EXPORT ExtractionCropFilter : public CropImageGeometryFilter
+{
+public:
+  /**
+   * @brief Selects the source Feature Attribute Matrix to exclude from recursive copies.
+   * @param excludedPath Identifies the matrix by any source link.
+   */
+  explicit ExtractionCropFilter(DataPath excludedPath)
+  : m_ExcludedPath(std::move(excludedPath))
+  {
+  }
+  /** @brief Releases the adapter's saved path. */
+  ~ExtractionCropFilter() noexcept override = default;
+  ExtractionCropFilter(const ExtractionCropFilter&) = delete;
+  ExtractionCropFilter(ExtractionCropFilter&&) = delete;
+  ExtractionCropFilter& operator=(const ExtractionCropFilter&) = delete;
+  ExtractionCropFilter& operator=(ExtractionCropFilter&&) = delete;
+
+protected:
+  /**
+   * @brief Replaces crop copy actions with copies that exclude the selected Feature Attribute Matrix.
+   * @param dataStructure Supplies the source objects and their links.
+   * @param args Supplies the crop parameters.
+   * @param messageHandler Receives crop preflight messages.
+   * @param shouldCancel Stops crop preflight when requested.
+   * @param executionContext Supplies the crop execution context.
+   * @return The crop actions with Feature data excluded, or the original preflight error.
+   */
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override
+  {
+    auto result = CropImageGeometryFilter::preflightImpl(dataStructure, args, messageHandler, shouldCancel, executionContext);
+    if(result.outputActions.invalid())
+    {
+      return result;
+    }
+    OutputActions copies;
+    for(auto& action : result.outputActions.value().actions)
+    {
+      if(const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get()); copy != nullptr)
+      {
+        AppendCopyDataObjectAction(dataStructure, copies, copy->path(), copy->newPath(), m_ExcludedPath);
+      }
+      else
+      {
+        copies.actions.push_back(std::move(action));
+      }
+    }
+    result.outputActions.value().actions = std::move(copies.actions);
+    return result;
+  }
+
+private:
+  DataPath m_ExcludedPath;
+};
+
 class RunCropImageGeometryImpl
 {
 public:
@@ -43,7 +107,7 @@ public:
    * @param minVoxelVector Specifies inclusive minimum voxel indexes.
    * @param maxVoxelVector Specifies inclusive maximum voxel indexes.
    * @param createdImgGeomPath Identifies the cropped ImageGeom.
-   * @param featureAttributeMatrixName Identifies the Feature Attribute Matrix to remove from the crop.
+   * @param featureAttributeMatrixName Identifies the Feature Attribute Matrix to exclude from the crop.
    * @param taskResult Receives the delegated preflight or execute failure.
    */
   RunCropImageGeometryImpl(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const DataPath& imageGeometryPath, const std::vector<uint64>& minVoxelVector,
@@ -73,13 +137,13 @@ public:
    */
   void operator()() const
   {
-    CropImageGeometryFilter filter;
+    ExtractionCropFilter filter(m_ImageGeometryPath.createChildPath(m_FeatureAttributeMatrixName));
 
     Arguments args;
 
     args.insertOrAssign(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_ImageGeometryPath));
-    // Remove the copied Feature AM after the crop. Keep Clear=false to avoid creating an empty AM only to delete it.
+    // Exclude the Feature AM from copy actions. Clear=false avoids creating an empty replacement.
     args.insertOrAssign(CropImageGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insertOrAssign(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
@@ -111,8 +175,6 @@ public:
                                                              m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors()))));
       return;
     }
-
-    m_DataStructure.removeData(m_CreatedImgGeomPath.createChildPath(m_FeatureAttributeMatrixName));
   }
 
 private:
