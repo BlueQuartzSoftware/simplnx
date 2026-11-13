@@ -192,7 +192,7 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   /** @{ */
   float32 sclSlope{0.0f};           ///< `scl_slope` from the header; 0 means "no scaling" per spec.
   float32 sclInter{0.0f};           ///< `scl_inter` from the header.
-  bool hasNontrivialScaling{false}; ///< True when (slope != 0) and (slope != 1 or inter != 0); always false for RGB24/RGBA32.
+  bool hasNontrivialScaling{false}; ///< True for finite nonzero slope and non-identity scaling, treating a non-finite intercept as 0; always false for RGB24/RGBA32.
   /** @} */
 
   /** @name Orientation */
@@ -200,6 +200,7 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   int16 qformCode{0};                                  ///< NIFTI_XFORM_* code for the qform; 0 = not set.
   int16 sformCode{0};                                  ///< NIFTI_XFORM_* code for the sform; 0 = not set.
   std::array<std::array<float32, 4>, 3> sformMatrix{}; ///< 3x4 affine `[srow_x; srow_y; srow_z]` when sformCode > 0.
+  bool affineHasFlip{false};                           ///< True when the used sform, qfac or pixdim[1..3] has a negative axis direction that the reader ignores.
   bool affineHasRotation{false};                       ///< True if the selected transform has non-trivial rotation.
   /** @} */
 
@@ -241,6 +242,8 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
  * 6. Records whether the selected affine has a non-trivial rotation
  *    so the caller can warn the user that simplnx's axis-aligned
  *    `ImageGeom` cannot represent it.
+ * 7. Records whether the used sform, qfac or pixdim has a negative axis direction.
+ *    The caller can warn that positive spacing ignores this direction.
  *
  * ### Errors
  * Returned as `Result<NiftiMetadata>` invalid values. Error codes are

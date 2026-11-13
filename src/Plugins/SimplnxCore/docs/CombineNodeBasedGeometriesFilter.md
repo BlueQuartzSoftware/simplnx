@@ -15,6 +15,7 @@ The algorithm is governed by several rules:
 1. All input geometries must have the same geometry type. For example, combining only **Triangle Geometries** produces a combined **Triangle Geometry**, and combining only **Edge Geometries** produces a combined **Edge Geometry**.
 2. All input geometries must contain vertex and element data arrays with the exact same names, types, and component dimensions. For example, if one input has an edge data array, every input must have an edge data array with a matching name, type, and component dimension; the same requirement applies to vertex data arrays.
 3. A **higher-order** geometry (one whose elements are built from more vertices, such as a **Tetrahedral Geometry**) may also carry the data of its **lower-order** elements. For example, a tetrahedral geometry may include edge data, as long as every input tetrahedral geometry includes matching edge data.
+4. Each input geometry must have the element list for its type: edges for Edge, faces for Triangle and Quad, and polyhedra for Tetrahedral and Hexahedral geometries.
 
 *NOTE:* Any additional groups, attribute matrices, or arrays that are not one of the following:
 

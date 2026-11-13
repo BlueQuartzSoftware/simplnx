@@ -57,7 +57,7 @@ public:
   enum class ErrorCodes : int32
   {
     NoInputArray = -65400,                           ///< Input path does not identify an array.
-    SplitDimLessThanZero = -65401,                   ///< Split dimension is negative.
+    SplitDimLessThanZero = -65401,                   ///< This code is retired; do not reuse.
     SplitDimOutOfRange = -65402,                     ///< Split dimension exceeds the tuple rank.
     SplitCountLessThanZero = -65403,                 ///< An output extent is negative.
     SplitCountSumNotEqual = -65404,                  ///< Output extents do not cover the source dimension.

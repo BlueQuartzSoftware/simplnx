@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataObjectUtilities.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -1010,5 +1011,65 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(errorCode));
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[SimplnxCore][CombineNodeBasedGeometries]")
+{
+  // Every input has one vertex but none has the element list that defines its geometry type.
+  const auto geometryType = GENERATE(IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral);
+  CAPTURE(geometryType);
+  DataStructure dataStructure;
+  for(const auto& name : {k_Geometry1Name, k_Geometry2Name})
+  {
+    INodeGeometry0D* geom = nullptr;
+    switch(geometryType)
+    {
+    case IGeometry::Type::Edge:
+      geom = EdgeGeom::Create(dataStructure, name);
+      break;
+    case IGeometry::Type::Triangle:
+      geom = TriangleGeom::Create(dataStructure, name);
+      break;
+    case IGeometry::Type::Quad:
+      geom = QuadGeom::Create(dataStructure, name);
+      break;
+    case IGeometry::Type::Tetrahedral:
+      geom = TetrahedralGeom::Create(dataStructure, name);
+      break;
+    case IGeometry::Type::Hexahedral:
+      geom = HexahedralGeom::Create(dataStructure, name);
+      break;
+    default:
+      FAIL("Unexpected geometry type");
+    }
+    REQUIRE(geom != nullptr);
+    auto* vertices = CreateNodeArray<float32>(*geom, dataStructure, INodeGeometry0D::k_SharedVertexListName, 1, 3);
+    REQUIRE(vertices != nullptr);
+    geom->setVertices(*vertices);
+  }
+  const int32 expectedCode = to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoElements);
+  CombineNodeBasedGeometriesFilter filter;
+  Arguments args;
+  args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_InputGeometries_Key, std::vector<DataPath>{k_InputGeometry1Path, k_InputGeometry2Path});
+  args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_OutputGeometryPath_Key, k_OutputGeometryPath1);
+  auto preflight = filter.preflight(dataStructure, args);
+  // CHECK (not REQUIRE) so that execute also runs; execute must return the same error and not crash.
+  CHECK(preflight.outputActions.invalid());
+  if(preflight.outputActions.invalid())
+  {
+    CHECK((preflight.outputActions.errors().size() == 1 && preflight.outputActions.errors()[0].code == expectedCode));
+    if(!preflight.outputActions.errors().empty())
+    {
+      const auto& message = preflight.outputActions.errors()[0].message;
+      CHECK(message.find(k_InputGeometry1Path.toString()) != std::string::npos);
+      CHECK(message.find(k_InputGeometry2Path.toString()) != std::string::npos);
+      CHECK(message.find("has an element list (the array that defines its elements, usually '") != std::string::npos);
+      CHECK(message.find(fmt::format("Select {} geometries that have an element list.", GeometryTypeToString(geometryType))) != std::string::npos);
+    }
+  }
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors()[0].code == expectedCode);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

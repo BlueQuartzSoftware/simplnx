@@ -833,6 +833,48 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     polyDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Consistency checks above allow every input to omit a list. The geometry's defining element list is required.
+  std::string missingListName;
+  switch(geometryTypeOpt.value())
+  {
+  case IGeometry::Type::Edge:
+    if(!edgeArraysExist.front())
+    {
+      missingListName = INodeGeometry1D::k_SharedEdgeListName;
+    }
+    break;
+  case IGeometry::Type::Triangle:
+  case IGeometry::Type::Quad:
+    if(!faceArraysExist.front())
+    {
+      missingListName = INodeGeometry2D::k_SharedFacesListName;
+    }
+    break;
+  case IGeometry::Type::Tetrahedral:
+  case IGeometry::Type::Hexahedral:
+    if(!polyArraysExist.front())
+    {
+      missingListName = INodeGeometry3D::k_SharedPolyhedronListName;
+    }
+    break;
+  default:
+    break;
+  }
+  if(!missingListName.empty())
+  {
+    const auto typeName = GeometryTypeToString(geometryTypeOpt.value());
+    std::vector<std::string> geometryPaths;
+    geometryPaths.reserve(inputGeometryPaths.size());
+    for(const auto& path : inputGeometryPaths)
+    {
+      geometryPaths.push_back(fmt::format("'{}'", path.toString()));
+    }
+    return {MakeErrorResult<OutputActions>(
+        to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoElements),
+        fmt::format("None of the selected {} geometries ({}) has an element list (the array that defines its elements, usually '{}'). Select {} geometries that have an element list.", typeName,
+                    fmt::join(geometryPaths, ", "), missingListName, typeName))};
+  }
+
   // Create the output geometry with all its vertex, edge, face, and polyhedra attribute matrices and arrays
   OutputActions actions;
   IGeometry::Type geometryType = geometryTypeOpt.value();

@@ -993,6 +993,102 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Boundary Wra
   REQUIRE(runFilter(true) == std::vector<int32>{1, 2, 2, 1});
 }
 
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Periodic Cross Slice Diagonals", "[OrientationAnalysis][EBSDSegmentFeatures]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  const usize sourceZ = GENERATE(0, 1, 2);
+  const usize offset = GENERATE(2, 6, 8); // X, Y, and X+Y wraps into the next Z slice.
+  const usize source = sourceZ * 9;
+  const usize target = (sourceZ + 1) * 9 + offset;
+  CAPTURE(source, target);
+
+  // Only source and target match: 36 cells minus one merge gives 35 Features.
+  // Four Z slices prevent a Z-boundary wrap from hiding the missing link.
+  auto runFilter = [&scope, source, target](bool isPeriodic, ChoicesParameter::ValueType neighborScheme) -> std::vector<int32> {
+    CAPTURE(isPeriodic, neighborScheme);
+    DataStructure dataStructure;
+    auto* imageGeom = ImageGeom::Create(dataStructure, "Geometry");
+    imageGeom->setDimensions({3, 3, 4});
+    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{4, 3, 3}, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+    auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", ShapeType{4, 3, 3}, {4}, cellAM->getId());
+    auto* phasesArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", ShapeType{4, 3, 3}, {1}, cellAM->getId());
+    auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
+    auto* crystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", ShapeType{2}, {1}, ensembleAM->getId());
+
+    std::vector<float32> phiDegrees(36);
+    for(usize i = 0; i < phiDegrees.size(); i++)
+    {
+      phiDegrees[i] = static_cast<float32>(i * 2);
+    }
+    phiDegrees[target] = phiDegrees[source];
+    for(usize cellIdx = 0; cellIdx < phiDegrees.size(); cellIdx++)
+    {
+      const float32 halfAngleRad = (phiDegrees[cellIdx] * 0.5f) * Constants::k_PiOver180F;
+      (*quatsArrayPtr)[cellIdx * 4 + 0] = std::sin(halfAngleRad);
+      (*quatsArrayPtr)[cellIdx * 4 + 1] = 0.0f;
+      (*quatsArrayPtr)[cellIdx * 4 + 2] = 0.0f;
+      (*quatsArrayPtr)[cellIdx * 4 + 3] = std::cos(halfAngleRad);
+      (*phasesArrayPtr)[cellIdx] = 1;
+    }
+    (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
+
+    EBSDSegmentFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(0.1F));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Mask"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Geometry"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Quats"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellData", "Phases"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Geometry", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Geometry", "CellData", "FeatureIds"})).getDataStoreRef();
+    std::vector<int32> featureIds(featureIdsRef.getNumberOfTuples());
+    for(usize cellIdx = 0; cellIdx < featureIds.size(); cellIdx++)
+    {
+      featureIds[cellIdx] = featureIdsRef[cellIdx];
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    return featureIds;
+  };
+
+  const auto featureIds = runFilter(true, 1);
+  CHECK(featureIds[source] == featureIds[target]);
+  for(usize i = 0; i < featureIds.size(); i++)
+  {
+    const int32 expected = static_cast<int32>(i == target ? source + 1 : (i < target ? i + 1 : i));
+    CHECK(featureIds[i] == expected);
+  }
+  CHECK(*std::max_element(featureIds.begin(), featureIds.end()) == 35);
+
+  for(const auto& controlIds : {runFilter(false, 1), runFilter(true, 0)})
+  {
+    REQUIRE(controlIds.size() == 36);
+    for(usize i = 0; i < controlIds.size(); i++)
+    {
+      CHECK(controlIds[i] == static_cast<int32>(i + 1));
+    }
+    CHECK(*std::max_element(controlIds.begin(), controlIds.end()) == static_cast<int32>(36));
+  }
+}
+
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeaturesFilter: Execute Error - All Cells Masked (-87000)", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();

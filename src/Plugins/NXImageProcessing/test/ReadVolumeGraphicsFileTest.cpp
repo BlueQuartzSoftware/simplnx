@@ -3,6 +3,7 @@
 #include "NXImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -13,6 +14,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -121,5 +123,105 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
       CHECK(args.value<std::string>(ReadVolumeGraphicsFileFilter::k_CellAttributeMatrixName_Key) == "CellData");
       CHECK(args.value<std::string>(ReadVolumeGraphicsFileFilter::k_DensityArrayName_Key) == "Density");
     }
+  }
+}
+
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported voxel types", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
+{
+  const int32 bits = GENERATE(16, 32, 64);
+  const std::string datatype = bits == 64 ? "float" : "unsigned integer";
+  CAPTURE(bits, datatype);
+  const fs::path outputDir(nx::core::unit_test::k_BinaryTestOutputDir.str());
+  const fs::path volFile = outputDir / ("unsupported_voxel_" + std::to_string(bits) + ".vol");
+  const fs::path vgiFile = outputDir / ("unsupported_voxel_" + std::to_string(bits) + ".vgi");
+  auto cleanup = MakeScopeGuard([&vgiFile, &volFile]() noexcept {
+    std::error_code error;
+    fs::remove(vgiFile, error);
+    fs::remove(volFile, error);
+  });
+  fs::create_directories(outputDir);
+  {
+    std::ofstream vol(volFile, std::ios::binary);
+    REQUIRE(vol.is_open());
+    // Hand-set voxel values, including the unsigned range boundary.
+    if(bits == 16)
+    {
+      const std::array<uint16, 4> values = {0, 1, 32768, 65535};
+      vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    }
+    else if(bits == 64)
+    {
+      const std::array<float64, 4> values = {0.0, -1.5, 2.25, 1024.0};
+      vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    }
+    else
+    {
+      const std::array<uint32, 4> values = {0, 1, 2147483648U, 4294967295U};
+      vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    }
+    REQUIRE(vol.good());
+  }
+  {
+    std::ofstream vgi(vgiFile);
+    REQUIRE(vgi.is_open());
+    vgi << "[file1]\nSize = 4 1 1\nName = " << volFile.filename().string() << "\nDatatype = " << datatype << "\nBitsPerElement = " << bits << "\n[geometry]\nresolution = 1 1 1\n[ end ]\n";
+    REQUIRE(vgi.good());
+  }
+
+  const ReadVolumeGraphicsFileFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  CHECK(preflightResult.outputActions.errors()[0].code == -91505);
+  CHECK(preflightResult.outputActions.errors()[0].message.find("Datatype '" + (bits == 64 ? std::string("float") : std::string("unsigned")) + "'") != std::string::npos);
+  CHECK(preflightResult.outputActions.errors()[0].message.find("BitsPerElement " + std::to_string(bits)) != std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defaults", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
+{
+  const bool declareType = GENERATE(false, true);
+  CAPTURE(declareType);
+  const fs::path outputDir(nx::core::unit_test::k_BinaryTestOutputDir.str());
+  const fs::path volFile = outputDir / "float32_voxel.vol";
+  const fs::path vgiFile = outputDir / "float32_voxel.vgi";
+  auto cleanup = MakeScopeGuard([&vgiFile, &volFile]() noexcept {
+    std::error_code error;
+    fs::remove(vgiFile, error);
+    fs::remove(volFile, error);
+  });
+  fs::create_directories(outputDir);
+  const std::array<float32, 4> values = {0.0F, -1.5F, 2.25F, 1024.0F};
+  {
+    std::ofstream vol(volFile, std::ios::binary);
+    REQUIRE(vol.is_open());
+    vol.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    REQUIRE(vol.good());
+  }
+  {
+    std::ofstream vgi(vgiFile);
+    REQUIRE(vgi.is_open());
+    vgi << "[file1]\nSize = 4 1 1\nName = " << volFile.filename().string() << '\n';
+    if(declareType)
+    {
+      vgi << "Datatype = float\nBitsPerElement = 32\n";
+    }
+    vgi << "[geometry]\nresolution = 1 1 1\n[ end ]\n";
+    REQUIRE(vgi.good());
+  }
+  const ReadVolumeGraphicsFileFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+  args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"})));
+  const auto& density = dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"}));
+  REQUIRE(density.getSize() == values.size());
+  for(usize index = 0; index < values.size(); index++)
+  {
+    CHECK(density[index] == values[index]);
   }
 }
