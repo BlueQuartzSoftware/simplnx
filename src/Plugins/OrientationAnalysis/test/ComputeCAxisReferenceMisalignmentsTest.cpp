@@ -35,7 +35,6 @@ namespace
 {
 using FilterType = ComputeCAxisReferenceMisalignmentsFilter;
 using AlgorithmType = ComputeCAxisReferenceMisalignments;
-using InputValuesType = ComputeCAxisReferenceMisalignmentsInputValues;
 using EulerType = std::array<float64, 3>;
 constexpr float64 k_Radians = numbers::pi / 180.0;
 constexpr float32 k_NaN = std::numeric_limits<float32>::quiet_NaN();
@@ -184,38 +183,6 @@ void ExecuteAndCheck(DataStructure& ds, const Arguments& args, const UnitTest::A
 {
   const Result<> result = ExecuteInScope(ds, args, scope, groupName);
   REQUIRE(result.warnings().empty());
-}
-
-// Valid inputs for a direct algorithm call: two tuples, a uint8 mask, and the pre-created output.
-DataStructure MakeDirectCallData()
-{
-  DataStructure ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
-  const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
-  CreateArray<uint8>(ds, k_Mask, {2}, 1, parentId).fill(1);
-  CreateArray<float32>(ds, k_Output, {2}, 1, parentId);
-  REQUIRE(AttributeMatrix::Create(ds, "Other", {3}) != nullptr);
-  return ds;
-}
-
-InputValuesType MakeDirectCallInputValues()
-{
-  InputValuesType inputValues;
-  inputValues.ReferenceDirection = {0.0F, 0.0F, 1.0F};
-  inputValues.UseMask = true;
-  inputValues.QuatsArrayPath = k_Quats;
-  inputValues.PhasesArrayPath = k_Phases;
-  inputValues.MaskArrayPath = k_Mask;
-  inputValues.CrystalStructuresArrayPath = k_CrystalStructures;
-  inputValues.OutputArrayPath = k_Output;
-  return inputValues;
-}
-
-Result<> RunAlgorithm(DataStructure& ds, const InputValuesType& inputValues)
-{
-  const std::atomic_bool shouldCancel = false;
-  const IFilter::MessageHandler messageHandler{};
-  return AlgorithmType(ds, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace
 
@@ -648,18 +615,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: invalid refe
   auto ds = MakeData({{0, 30, 0}}, {1});
   auto result = FilterType().preflight(ds, MakeArgs(reference));
   REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_InvalidReferenceDirectionError);
+  REQUIRE(result.outputActions.errors()[0].code == FilterType::k_InvalidReferenceDirectionError);
   UnitTest::CheckArraysInheritTupleDims(ds);
-}
-
-TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: reference with wrong component count", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
-{
-  // VectorParameter rejects a wrong-sized vector before preflightImpl, so only a direct call reaches this check.
-  const auto reference = GENERATE(std::vector<float32>{}, std::vector<float32>{0.0F, 1.0F}, std::vector<float32>{0.0F, 0.0F, 1.0F, 0.0F});
-  const Result<> result = AlgorithmType::ValidateReferenceDirection(reference);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  REQUIRE(result.errors()[0].code == AlgorithmType::k_ReferenceDirectionSizeError);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: tuple mismatch", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
@@ -685,7 +642,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: tuple mismat
   }
   auto result = FilterType().preflight(ds, args);
   REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_TupleCountMismatchError);
+  REQUIRE(result.outputActions.errors()[0].code == FilterType::k_TupleCountMismatchError);
   const auto& messageRef = result.outputActions.errors()[0].message;
   REQUIRE(messageRef.find(mismatchMask ? "Mask array" : "Phases array") == 0);
   REQUIRE(messageRef.find("Quats") != std::string::npos);
@@ -747,7 +704,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: output name 
   auto result = FilterType().preflight(ds, args);
   REQUIRE(result.outputActions.invalid());
   REQUIRE(result.outputActions.errors().size() == 1);
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_OutputPathCollisionError);
+  REQUIRE(result.outputActions.errors()[0].code == FilterType::k_OutputPathCollisionError);
   REQUIRE(result.outputActions.errors()[0].message.find("Orientations/" + inputName) != std::string::npos);
   REQUIRE(ds.getDataRefAs<IDataArray>(k_Quats.replaceName(inputName)).getNumberOfComponents() == (inputName == "Quats" ? 4 : 1));
 }
@@ -761,18 +718,15 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
   const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
   const DataPath stringsPath({"Orientations", "Strings"});
   REQUIRE(StringArray::CreateWithValues(ds, stringsPath.getTargetName(), {2}, {"a", "b"}, parentId) != nullptr);
-  const bool useMask = GENERATE(false, true);
+  // Each row selects the StringArray for one input and gives the code of that input's type check.
+  const auto [inputKey, expectedCode] = GENERATE(std::make_pair(std::string(FilterType::k_QuatsArrayPath_Key), FilterType::k_InvalidQuatsArrayError),
+                                                 std::make_pair(std::string(FilterType::k_PhasesArrayPath_Key), FilterType::k_InvalidPhasesArrayError),
+                                                 std::make_pair(std::string(FilterType::k_MaskArrayPath_Key), FilterType::k_InvalidMaskArrayError),
+                                                 std::make_pair(std::string(FilterType::k_CrystalStructuresArrayPath_Key), FilterType::k_InvalidCrystalStructuresArrayError));
+  CAPTURE(inputKey);
+  const bool useMask = inputKey == FilterType::k_MaskArrayPath_Key;
   auto args = MakeArgs({0, 0, 1}, useMask);
-  int32 expectedCode = AlgorithmType::k_InvalidMaskArrayError;
-  if(useMask)
-  {
-    args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(stringsPath));
-  }
-  else
-  {
-    args.insertOrAssign(FilterType::k_QuatsArrayPath_Key, std::make_any<DataPath>(stringsPath));
-    expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
-  }
+  args.insertOrAssign(inputKey, std::make_any<DataPath>(stringsPath));
   IFilter::PreflightResult result;
   REQUIRE_NOTHROW(result = FilterType().preflight(ds, args));
   REQUIRE(result.outputActions.invalid());
@@ -780,142 +734,4 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
   REQUIRE(result.outputActions.errors()[0].code == expectedCode);
   REQUIRE(result.outputActions.errors()[0].message.find("has type 'StringArray'") != std::string::npos);
   REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
-}
-
-TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm validates its own inputs", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
-{
-  DataStructure ds = MakeDirectCallData();
-  InputValuesType inputValues = MakeDirectCallInputValues();
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
-  const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
-  REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(DataPath({"Other"})));
-  const auto otherId = ds.getDataRefAs<AttributeMatrix>(DataPath({"Other"})).getId();
-  const DataPath wrongPath({"Orientations", "Wrong"});
-  const DataPath otherPath({"Other", "Mismatched"});
-  // 0 means the inputs are valid and the call must succeed.
-  int32 expectedCode = 0;
-  // A phrase that only the message of the expected condition contains, when the code alone is not enough.
-  std::string expectedPhrase;
-
-  SECTION("Valid inputs succeed")
-  {
-  }
-  SECTION("Missing quaternion array")
-  {
-    inputValues.QuatsArrayPath = DataPath({"Orientations", "Missing"});
-    expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
-    expectedPhrase = "does not exist";
-  }
-  SECTION("Quaternion array of the wrong type")
-  {
-    CreateArray<float64>(ds, wrongPath, {2}, 4, parentId);
-    inputValues.QuatsArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
-    expectedPhrase = "has type 'float64', but type 'float32' is required";
-  }
-  SECTION("Quaternion array with five components")
-  {
-    CreateArray<float32>(ds, wrongPath, {2}, 5, parentId);
-    inputValues.QuatsArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_QuatsComponentShapeError;
-  }
-  SECTION("Phases array of the wrong type")
-  {
-    CreateArray<uint32>(ds, wrongPath, {2}, 1, parentId);
-    inputValues.PhasesArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_InvalidPhasesArrayError;
-  }
-  SECTION("Phases array with two components")
-  {
-    CreateArray<int32>(ds, wrongPath, {2}, 2, parentId);
-    inputValues.PhasesArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_PhasesComponentShapeError;
-  }
-  SECTION("Phases array with a different tuple count")
-  {
-    CreateArray<int32>(ds, otherPath, {3}, 1, otherId);
-    inputValues.PhasesArrayPath = otherPath;
-    expectedCode = AlgorithmType::k_TupleCountMismatchError;
-    expectedPhrase = "Phases array 'Other/Mismatched' has 3 tuples";
-  }
-  SECTION("Mask array of the wrong type")
-  {
-    CreateArray<int32>(ds, wrongPath, {2}, 1, parentId);
-    inputValues.MaskArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_InvalidMaskArrayError;
-    expectedPhrase = "has type 'int32', but type 'bool' or 'uint8' is required";
-  }
-  SECTION("Mask array with two components")
-  {
-    CreateArray<uint8>(ds, wrongPath, {2}, 2, parentId);
-    inputValues.MaskArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_MaskComponentShapeError;
-  }
-  SECTION("Mask array with a different tuple count")
-  {
-    CreateArray<bool>(ds, otherPath, {3}, 1, otherId);
-    inputValues.MaskArrayPath = otherPath;
-    expectedCode = AlgorithmType::k_TupleCountMismatchError;
-    expectedPhrase = "Mask array 'Other/Mismatched' has 3 tuples";
-  }
-  SECTION("Crystal Structures array of the wrong type")
-  {
-    CreateArray<int32>(ds, otherPath, {3}, 1, otherId);
-    inputValues.CrystalStructuresArrayPath = otherPath;
-    expectedCode = AlgorithmType::k_InvalidCrystalStructuresArrayError;
-  }
-  SECTION("Crystal Structures array with two components")
-  {
-    CreateArray<uint32>(ds, otherPath, {3}, 2, otherId);
-    inputValues.CrystalStructuresArrayPath = otherPath;
-    expectedCode = AlgorithmType::k_CrystalStructuresComponentShapeError;
-  }
-  SECTION("Missing output array")
-  {
-    inputValues.OutputArrayPath = DataPath({"Orientations", "Missing"});
-    expectedCode = AlgorithmType::k_InvalidOutputArrayError;
-  }
-  SECTION("Output array with two components")
-  {
-    CreateArray<float32>(ds, wrongPath, {2}, 2, parentId);
-    inputValues.OutputArrayPath = wrongPath;
-    expectedCode = AlgorithmType::k_OutputComponentShapeError;
-  }
-  SECTION("Output array with a different tuple count")
-  {
-    CreateArray<float32>(ds, otherPath, {3}, 1, otherId);
-    inputValues.OutputArrayPath = otherPath;
-    expectedCode = AlgorithmType::k_OutputTupleCountMismatchError;
-  }
-  SECTION("Non-finite reference direction")
-  {
-    inputValues.ReferenceDirection = {k_NaN, 0.0F, 1.0F};
-    expectedCode = AlgorithmType::k_InvalidReferenceDirectionError;
-  }
-  SECTION("Reference direction with two components")
-  {
-    inputValues.ReferenceDirection = {0.0F, 1.0F};
-    expectedCode = AlgorithmType::k_ReferenceDirectionSizeError;
-  }
-  SECTION("Phase outside the Crystal Structures array")
-  {
-    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-    ds.getDataRefAs<Int32Array>(k_Phases)[1] = 5;
-    expectedCode = AlgorithmType::k_PhaseOutOfRangeError;
-  }
-  CAPTURE(expectedCode);
-  Result<> result;
-  REQUIRE_NOTHROW(result = RunAlgorithm(ds, inputValues));
-  if(expectedCode == 0)
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-    return;
-  }
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  REQUIRE(result.errors()[0].code == expectedCode);
-  if(!expectedPhrase.empty())
-  {
-    REQUIRE(result.errors()[0].message.find(expectedPhrase) != std::string::npos);
-  }
 }
