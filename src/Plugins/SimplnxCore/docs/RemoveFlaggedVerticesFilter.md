@@ -43,6 +43,8 @@ When Clear is on, the selected Feature Attribute Matrix must be a direct child o
 
 - **Mask** -- a single-component boolean (or `uint8`) array, one value per vertex, where **TRUE** marks the vertices to remove. Typically produced by [Multi-Threshold Objects](MultiThresholdObjectsFilter.md).
 
+With Clear and Renumber on, error **-67425** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

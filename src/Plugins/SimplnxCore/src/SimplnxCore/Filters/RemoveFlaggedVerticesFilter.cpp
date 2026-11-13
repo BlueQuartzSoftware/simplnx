@@ -111,6 +111,13 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
 
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+  if(renumberFeatures && (featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1))
+  {
+    return MakePreflightErrorResult(
+        -67425, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()));
+  }
+
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -189,7 +196,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
             fmt::format("**Vertex Feature Ids** DataArray '{}' must be in the Vertex Attribute Matrix '{}' of the selected Vertex Geometry '{}'. Select the DataArray from that Attribute Matrix.",
                         featureIdsPath.toString(), vertexGeomPath.createChildPath(vertexAttrMatName).toString(), vertexGeomPath.toString()));
       }
-      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+      const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != numVertices)
       {
         return MakePreflightErrorResult(
