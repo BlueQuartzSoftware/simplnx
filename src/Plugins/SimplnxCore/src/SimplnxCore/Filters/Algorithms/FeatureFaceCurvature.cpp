@@ -139,16 +139,20 @@ Result<> FeatureFaceCurvature::operator()()
 
   const auto nonEmptyCount = static_cast<usize>(std::count_if(sharedFeatureFaces.begin(), sharedFeatureFaces.end(), [](const auto& featureFace) { return !featureFace.second.empty(); }));
 
-/*********************************
- * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all
- * the tasks while the first tasks start up. TBB will then grab a new task from it's own queue to work on it up to the
- * number of hardware limit of the machine. If we use ParallelTaskAlgorithm then at most we can only work on the number
- * of tasks that equal the number of cores on the machine. We spend a lot of overhead spinning up new threads to do each
- * task. This takes much longer (3x longer) in some cases.
- */
+  ParallelTaskAlgorithm taskAlgorithm;
+  taskAlgorithm.requireArraysInMemory({surfaceMeshPrincipalCurvature1sArrayPtr, surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr,
+                                       surfaceMeshPrincipalDirection2sArrayPtr, surfaceMeshMeanCurvaturesArrayPtr, surfaceMeshGaussianCurvaturesArrayPtr, surfaceMeshWeingartenMatrixArrayPtr,
+                                       surfaceMeshFaceLabelsArrayPtr, surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, surfaceMeshFeatureFaceIdsArrayPtr,
+                                       triangleGeomPtr->getVertices(), triangleGeomPtr->getFaces()});
+
 #ifdef SIMPLNX_ENABLE_MULTICORE
+  // Keep the existing all-task queue for resident arrays. Shared stores that are
+  // not resident must be accessed by one worker at a time.
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", nonEmptyCount));
+  if(taskAlgorithm.getParallelizationEnabled())
+  {
+    sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", nonEmptyCount));
+  }
 #endif
 
   m_Throttle.reset(nonEmptyCount, "Calculating Curvatures");
@@ -167,19 +171,23 @@ Result<> FeatureFaceCurvature::operator()()
                                           surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
+    if(taskAlgorithm.getParallelizationEnabled())
     {
       g->run(func);
     }
-#else
+    else
+#endif
     {
       func();
     }
-#endif
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  sendThreadSafeStatusMessage("Waiting on computations to complete.");
-  g->wait(); // Wait for all the threads to complete before moving on.
+  if(taskAlgorithm.getParallelizationEnabled())
+  {
+    sendThreadSafeStatusMessage("Waiting on computations to complete.");
+    g->wait();
+  }
 #endif
 
   // All workers have joined, so the throttle can send its final value before the cleanup step.

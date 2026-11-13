@@ -1101,7 +1101,7 @@ chunks, of the same store can still race.
 
 **Example of the broken rule:** `ComputeAvgOrientations::computeVmfWatsonAverage()` ran workers that wrote the
 per-feature output stores without a gate (PR #1645 made it serial). `ComputeFeatureFaceMisorientation` was fixed in
-PR #1618. `CombineStlFiles` (issue #1876), `ConvertOrientations`, `PointSampleEdgeGeometry` and `FeatureFaceCurvature`
+PR #1618. `CombineStlFiles` (issue #1876), `ConvertOrientations` and `PointSampleEdgeGeometry`
 still launch workers that write shared stores without a gate.
 
 **Why:** out-of-core stores do not support concurrent writes, and a race between two writers can lose values without
