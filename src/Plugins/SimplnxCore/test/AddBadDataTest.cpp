@@ -233,7 +233,6 @@ TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxC
 
 TEST_CASE("SimplnxCore::AddBadDataFilter: Reject nonnumeric cell arrays", "[SimplnxCore][AddBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);

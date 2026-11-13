@@ -184,9 +184,8 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple 
   }
 }
 
-TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference top slice", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference top slice", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool storeShifts = GENERATE(false, true);
   CAPTURE(scenario, storeShifts);
@@ -253,9 +252,8 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool storeShifts = GENERATE(false, true);
   const int emptyCase = GENERATE(0, 1, 2); // Empty top, middle, or fixed reference.
@@ -345,7 +343,6 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Rec
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice bounds", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  UnitTest::LoadPlugins();
   using FilterType = AlignSectionsFeatureCentroidFilter;
   const usize zDim = GENERATE(usize{1}, usize{3});
   const bool useReference = GENERATE(true, false);

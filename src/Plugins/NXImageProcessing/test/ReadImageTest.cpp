@@ -738,7 +738,6 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale_Rejected_Before_Copy", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool convertData = GENERATE(false, true);
   CAPTURE(convertData);
   const fs::path tiffPath = ReadImageOutputDir() / "rgb_then_grayscale.tif";

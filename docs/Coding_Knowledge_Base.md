@@ -1147,9 +1147,10 @@ set.
 **Rule:** a test calls `UnitTest::LoadPlugins();` only when it calls `createFilter()` on the filter list, loads a
 pipeline (`Pipeline::FromJson()`, `FromFile()`, `FromSIMPLJson()`, `FromSIMPLFile()`; every SIMPL
 backwards-compatibility test does), or runs a filter whose code gets other filters from the filter list (`ReadH5Ebsd`
-does). A test that constructs a filter or algorithm directly does not call it. A test that needs it calls it itself:
-ctest runs each visible, individually registered `TEST_CASE` in its own process (a few hidden groups, such as
-`[.OocStoreContract]`, run together in one).
+does), or uses `UnitTest::PreferencesSentinel`, which changes the preferences of the `Application` instance that the
+call creates. A test that constructs a filter or algorithm directly and does none of these does not call it. A test
+that needs it calls it itself: ctest runs each visible, individually registered `TEST_CASE` in its own process (a few
+hidden groups, such as `[.OocStoreContract]`, run together in one).
 
 **Example of the broken rule:** the synthetic tuple-mismatch cases of `ComputeAvgCAxesTest.cpp` and
 `ReplaceElementAttributesWithNeighborValuesTest.cpp` load the plugins although they construct the filter directly, and
@@ -1158,8 +1159,8 @@ ctest runs each visible, individually registered `TEST_CASE` in its own process 
 **Why:** the call loads every plugin library and fails the test when one does not load, so an unneeded call makes a
 test fail for a plugin it does not use.
 
-**What to look for:** `UnitTest::LoadPlugins()` in a test with no UUID lookup, pipeline load or registry-dependent
-subfilter.
+**What to look for:** `UnitTest::LoadPlugins()` in a test with no UUID lookup, pipeline load, registry-dependent
+subfilter or `PreferencesSentinel`. Without the call, a test that uses `PreferencesSentinel` crashes (PR #1915).
 
 **Pattern to use:** direct filter construction without plugin loading, as in `test/GeometryTest.cpp`.
 

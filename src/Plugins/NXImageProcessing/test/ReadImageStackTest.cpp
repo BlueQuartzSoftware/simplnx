@@ -1492,7 +1492,6 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
 
 TEST_CASE("ImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[ImageProcessing][ReadImageStackFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool firstSliceIsUint16 = GENERATE(false, true);
   CAPTURE(firstSliceIsUint16);
   const fs::path inputDir = fs::path(std::string(unit_test::k_BinaryTestOutputDir.view())) / "ReadImageStackMixedSliceDataTypes";

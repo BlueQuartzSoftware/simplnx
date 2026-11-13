@@ -62,7 +62,7 @@ TEST_CASE("ImageRotationUtilities: Octant offsets match the trilinear corner ord
   }
 }
 
-TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the scaled source axis", "[ImageRotationUtilities][CreateRotationArgs]")
+TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the scaled source axis", "[simplnx][ImageRotationUtilities][CreateRotationArgs]")
 {
   DataStructure dataStructure;
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
@@ -94,7 +94,7 @@ TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the sca
   }
 }
 
-TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source axis", "[ImageRotationUtilities][CreateRotationArgs]")
+TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source axis", "[simplnx][ImageRotationUtilities][CreateRotationArgs]")
 {
   DataStructure dataStructure;
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
@@ -125,7 +125,7 @@ TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source ax
   }
 }
 
-TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spacing", "[ImageRotationUtilities][CreateRotationArgs]")
+TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spacing", "[simplnx][ImageRotationUtilities][CreateRotationArgs]")
 {
   DataStructure dataStructure;
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
@@ -138,8 +138,8 @@ TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spaci
   ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
   transform.block<3, 3>(0, 0) << 2 * c, -c, 0, 2 * c, c, 0, 0, 0, 1;
 
-  // The column-based rule selects spacing by each column's largest absolute direction cosine,
-  // breaking the 45-degree tie toward X, then multiplies by that column's norm.
+  // Each column selects spacing from its largest absolute direction cosine. A 45-degree tie
+  // selects X. The result is multiplied by the column norm.
   // Column norms (2,1,1) therefore give spacing (2*2,2*1,5*1) = (4,2,5).
   // Source extents are (4,9,20). Rotated XY extents are (2*4+9)/sqrt(2).
   // nearbyint gives dimensions (round(17/(4*sqrt(2))),round(17/(2*sqrt(2))),4) = (3,6,4).
@@ -153,7 +153,7 @@ TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spaci
   }
 }
 
-TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Sample Reference Frame uses source-axis spacing", "[ImageRotationUtilities][CreateRotationArgs]")
+TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Sample Reference Frame uses source-axis spacing", "[simplnx][ImageRotationUtilities][CreateRotationArgs]")
 {
   DataStructure dataStructure;
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
@@ -164,8 +164,8 @@ TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Samp
 
   // 119.995 degrees about (111) differs from the exact three-cycle by about 5e-5 per entry.
   // Rotate Sample Reference Frame accepts it as a grid rotation (tolerance 1e-4).
-  // The exact map is R(x,y,z) = (z,x,y): output X comes from source Z, output Y from source X
-  // and output Z from source Y. Spacing (2,3,5) becomes (5,2,3) and dimensions (2,3,4) become (4,2,3).
+  // The exact map is R(x,y,z) = (z,x,y). Output axes X, Y and Z take source axes Z, X and Y.
+  // Spacing (2,3,5) becomes (5,2,3) and dimensions (2,3,4) become (4,2,3).
   const ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::GenerateRotationTransformationMatrix({1.0F, 1.0F, 1.0F, 119.995F});
   const auto args = ImageRotationUtilities::CreateRotationArgs(*image, transform);
   const std::array<float32, 3> expectedSpacing = {5.0F, 2.0F, 3.0F};
@@ -177,9 +177,8 @@ TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Samp
   }
 }
 
-TEST_CASE("ImageRotationUtilities: Raw grid tolerance accounts for column normalization", "[ImageRotationUtilities][CreateRotationArgs]")
+TEST_CASE("ImageRotationUtilities: Raw grid tolerance accounts for column normalization", "[simplnx][ImageRotationUtilities][CreateRotationArgs]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(imageGeomPtr != nullptr);

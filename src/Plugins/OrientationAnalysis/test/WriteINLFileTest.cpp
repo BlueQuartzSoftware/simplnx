@@ -262,7 +262,6 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[OrientationAnalysis][WriteINLFileFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);

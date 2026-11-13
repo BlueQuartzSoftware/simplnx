@@ -300,8 +300,6 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII comparison preserve
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiCoordinates]")
 {
-  UnitTest::LoadPlugins();
-
   DataStructure dataStructure;
   const DataPath imagePath({"SmallImage"});
   const DataPath cellPath = imagePath.createChildPath("CellData");
@@ -624,8 +622,6 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibi
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component limits", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const usize components = GENERATE(1, 2, 3, 4, 5, 6, 9);
   const bool binary = GENERATE(false, true);
   CAPTURE(components, binary);

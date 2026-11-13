@@ -177,7 +177,6 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Rectilinear Grid without a Cell 
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Transferred sides match face labels", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize axis = GENERATE(0, 1, 2);
   const bool ascending = GENERATE(false, true);

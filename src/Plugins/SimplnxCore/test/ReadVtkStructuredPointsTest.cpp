@@ -98,8 +98,6 @@ void WriteSectionValues(std::ostream& output, nonstd::span<const T> values, bool
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimensions", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const fs::path filePath = fs::path(unit_test::k_BinaryDir.view()) / "ReadVtkDimensions.vtk";
   auto fileGuard = MakeScopeGuard([&filePath]() noexcept {
     std::error_code errorCode;
@@ -201,13 +199,11 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical Position", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const bool binary = GENERATE(false, true);
   const usize grid = GENERATE(0, 1, 2, 3, 4);
   CAPTURE(binary, grid);
-  // Hand calculation: for origin (2, 6, 10) and spacing (2, 6, 4), a singleton
-  // axis needs origin - spacing/2 so its voxel center stays at the VTK point.
+  // Hand calculation: The origin is (2, 6, 10), and spacing is (2, 6, 4). On a singleton
+  // axis, subtract half the spacing to center the voxel on the VTK point.
   // The Z plane therefore has origin Z = 8 and center Z = 10. The next three
   // cases are X, Y and Z lines; the last is a 3D control with unchanged origin.
   // Active axes have n-1 cells and retain their original origin and spacing.

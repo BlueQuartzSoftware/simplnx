@@ -150,8 +150,6 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: Argument separator regression", "[SimplnxCore][ExecuteProcessFilter]")
 {
-  UnitTest::LoadPlugins();
-
   // Oracle: spaces outside quotes separate tokens; spaces inside quotes are literal.
   // Each command below therefore has exactly the explicitly listed arguments.
   const std::vector<std::pair<std::string, std::vector<std::string>>> cases = {

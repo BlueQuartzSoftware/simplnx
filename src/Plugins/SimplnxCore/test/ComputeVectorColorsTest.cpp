@@ -29,8 +29,6 @@ const std::string k_VecColorsNX = "Vector Colors";
 
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Rounded full-turn trend stays red", "[SimplnxCore][ComputeVectorColorsFilter]")
 {
-  UnitTest::LoadPlugins();
-
   DataStructure dataStructure;
   const DataPath vectorsPath({"Vectors"});
   auto vectorsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vectorsPath, {1}, {3});

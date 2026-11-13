@@ -268,9 +268,8 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: NaN patch data", "[FeatureFa
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[FeatureFaceCurvatureFilter][SingleTriangle]")
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[SimplnxCore][FeatureFaceCurvatureFilter][SingleTriangle]")
 {
-  UnitTest::LoadPlugins();
   const bool useNormals = GENERATE(false, true);
   const bool optionalOutputs = GENERATE(false, true);
   CAPTURE(useNormals, optionalOutputs);

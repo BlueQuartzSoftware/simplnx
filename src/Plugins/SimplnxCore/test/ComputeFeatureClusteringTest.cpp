@@ -340,7 +340,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: positive bin count domain", "[
 
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair normalization", "[SimplnxCore][ComputeFeatureClusteringFilter]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* geometry = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometry != nullptr);

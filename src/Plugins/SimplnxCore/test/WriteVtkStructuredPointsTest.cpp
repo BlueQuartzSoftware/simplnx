@@ -212,8 +212,6 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: ASCII correctness", "[Si
 
 TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Legacy scalar component limits", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const usize components = GENERATE(1, 2, 3, 4, 5, 6, 9);
   const bool binary = GENERATE(false, true);
   CAPTURE(components, binary);

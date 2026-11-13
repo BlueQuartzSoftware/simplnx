@@ -87,7 +87,6 @@ void RequireAcquisitionCoordinates(const DataStructure& dataStructure, usize sca
 
 TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Scan Stacking Order", "[OrientationAnalysis][ReadH5OimDataFilter]")
 {
-  UnitTest::LoadPlugins();
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files_v3.tar.gz", "7_read_oem_ebsd_h5_files_v3");
   const auto sourceFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files_v3/EdaxOIMData.h5", unit_test::k_TestFilesDir));
   const auto inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadH5OimData_StackingOrder.h5";

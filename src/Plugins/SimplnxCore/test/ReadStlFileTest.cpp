@@ -167,8 +167,6 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFil
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:CorruptTriangleCount", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest" / "corrupt_triangle_count.stl";
   WriteBinaryStlFile(inputFile, "Corrupt triangle count", 0x7FFFFFFF, std::vector<StlTriangleSpec>(1));
 
@@ -422,12 +420,10 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:ShortFileWithAttributePayload", "[Simp
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:TruncatedRecordAfterPayload", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
-
   const DataPath triangleGeomDataPath({"[Triangle Geometry]"});
 
-  // Triangle 0 carries 10 real payload bytes, so the file is larger than 84 + 50 * 2 = 184 bytes and
-  // passes the minimum size check with the attribute counts honored. Triangle 1 starts at byte
+  // Triangle 0 contains 10 payload bytes. The file exceeds the 184-byte minimum for two records,
+  // so the reader honors attribute counts. Triangle 1 starts at byte
   // 84 + 50 + 10 = 144 and is cut short, so the read loop itself must report where it stopped.
   // - 44 trailing bytes (file size 188): only 11 of the 12 floats can be read.
   // - 48 trailing bytes (file size 192): the 12 floats are read, the 2 byte attribute count is not.

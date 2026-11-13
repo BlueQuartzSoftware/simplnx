@@ -208,7 +208,6 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: analytical Bool
 
 TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Colon delimiter writes colon separated rows", "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);

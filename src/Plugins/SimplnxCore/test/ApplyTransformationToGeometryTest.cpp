@@ -1026,7 +1026,6 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[Sim
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Uneven scaling keeps the classified source axis", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
