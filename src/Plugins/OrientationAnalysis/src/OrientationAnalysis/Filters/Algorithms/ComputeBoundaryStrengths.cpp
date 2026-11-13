@@ -1,5 +1,7 @@
 #include "ComputeBoundaryStrengths.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -29,8 +31,25 @@ const std::atomic_bool& ComputeBoundaryStrengths::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+Result<> ComputeBoundaryStrengths::ValidateLoadingDirection(const std::vector<float64>& loading)
+{
+  if(!OrientationUtilities::NormalizeDirection(loading[0], loading[1], loading[2]).has_value())
+  {
+    return MakeErrorResult(k_InvalidLoadingDirectionError,
+                           fmt::format("The Loading Direction (XYZ) is [{}, {}, {}]. The direction needs finite components and a length greater than 0. Enter a direction such as [0, 0, 1].",
+                                       loading[0], loading[1], loading[2]));
+  }
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 Result<> ComputeBoundaryStrengths::operator()()
 {
+  if(Result<> loadingResult = ValidateLoadingDirection(m_InputValues->Loading); loadingResult.invalid())
+  {
+    return loadingResult;
+  }
+
   auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const auto& surfaceMeshFaceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
@@ -48,8 +67,9 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   float32 mPrime_1, mPrime_2, F1_1, F1_2, F1spt_1, F1spt_2, F7_1, F7_2;
 
-  nx::core::Vec3<float64> LD = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
-  LD = LD.normalize();
+  // ValidateLoadingDirection() rejected a direction that cannot be normalized.
+  const std::array<float64, 3> normalizedLoading = OrientationUtilities::NormalizeDirection(m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]).value();
+  nx::core::Vec3<float64> LD = {normalizedLoading[0], normalizedLoading[1], normalizedLoading[2]};
 
   bool emitLaueClassWarning = false;
 

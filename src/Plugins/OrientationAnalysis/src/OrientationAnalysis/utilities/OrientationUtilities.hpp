@@ -5,6 +5,10 @@
 
 #include <Eigen/Dense>
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <optional>
 #include <string>
 
 namespace nx::core
@@ -114,6 +118,34 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(const T oM
   return g1t;
 }
 #endif
+
+/**
+ * @brief Normalizes an axis or direction that a parameter gives.
+ *
+ * The components are divided by the largest absolute component before the length is computed, so a finite direction
+ * does not overflow or underflow during normalization.
+ * @param x X component.
+ * @param y Y component.
+ * @param z Z component.
+ * @return The unit vector, or std::nullopt when a component is NaN or infinite or every component is 0.
+ */
+inline std::optional<std::array<double, 3>> NormalizeDirection(double x, double y, double z)
+{
+  if(!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
+  {
+    return std::nullopt;
+  }
+  const double largest = std::max({std::abs(x), std::abs(y), std::abs(z)});
+  if(largest == 0.0)
+  {
+    return std::nullopt;
+  }
+  const double scaledX = x / largest;
+  const double scaledY = y / largest;
+  const double scaledZ = z / largest;
+  const double length = std::sqrt(scaledX * scaledX + scaledY * scaledY + scaledZ * scaledZ);
+  return std::array<double, 3>{scaledX / length, scaledY / length, scaledZ / length};
+}
 
 } // namespace OrientationUtilities
 } // namespace nx::core

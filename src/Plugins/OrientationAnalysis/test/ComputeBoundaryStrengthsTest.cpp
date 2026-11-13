@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
@@ -193,4 +194,48 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Phase and Laue I
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Invalid Loading Direction", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")
+{
+  const std::vector<float64> loading = GENERATE(std::vector<float64>{0.0, 0.0, 0.0}, std::vector<float64>{std::numeric_limits<float64>::quiet_NaN(), 0.0, 1.0},
+                                                std::vector<float64>{0.0, std::numeric_limits<float64>::infinity(), 1.0});
+  CAPTURE(loading);
+
+  DataStructure dataStructure;
+  auto* faceLabels = UnitTest::CreateTestDataArray<int32>(dataStructure, "FaceLabels", {1}, {2});
+  (*faceLabels)[0] = 1;
+  (*faceLabels)[1] = 2;
+  auto* avgQuats = UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgQuats", {3}, {4});
+  avgQuats->fill(0.0F);
+  (*avgQuats)[7] = 1.0F;
+  (*avgQuats)[11] = 1.0F;
+  auto* featurePhases = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeaturePhases", {3}, {1});
+  featurePhases->fill(1);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  ComputeBoundaryStrengthsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(loading));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceLabels"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"AvgQuats"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"FeaturePhases"})));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -94744);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -94744);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Default Loading Direction", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")
+{
+  // DREAM3D 6.5 FindBoundaryStrengths used [1, 1, 1] as the default loading direction.
+  const auto loading = ComputeBoundaryStrengthsFilter().getDefaultArguments().value<VectorFloat64Parameter::ValueType>(ComputeBoundaryStrengthsFilter::k_Loading_Key);
+  REQUIRE(loading == std::vector<float64>{1.0, 1.0, 1.0});
 }

@@ -1,5 +1,7 @@
 #include "WriteGBCDGMTFile.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -72,8 +74,24 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
   return m_ShouldCancel;
 }
 
+Result<> WriteGBCDGMTFile::ValidateMisorientationAxis(const std::vector<float32>& misorientationRotation)
+{
+  if(!OrientationUtilities::NormalizeDirection(misorientationRotation[1], misorientationRotation[2], misorientationRotation[3]).has_value())
+  {
+    return MakeErrorResult(k_InvalidMisorientationAxisError,
+                           fmt::format("The axis of the Misorientation Axis-Angle is [{}, {}, {}]. The axis needs finite components and a length greater than 0. Enter an axis such as [1, 1, 1].",
+                                       misorientationRotation[1], misorientationRotation[2], misorientationRotation[3]));
+  }
+  return {};
+}
+
 Result<> WriteGBCDGMTFile::operator()()
 {
+  if(Result<> axisResult = ValidateMisorientationAxis(m_InputValues->MisorientationRotation); axisResult.invalid())
+  {
+    return axisResult;
+  }
+
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
@@ -127,8 +145,9 @@ Result<> WriteGBCDGMTFile::operator()()
 
   {
     const float32 misAngle = m_InputValues->MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    nx::core::FloatVec3 normAxis = {m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]};
-    normAxis = normAxis.normalize();
+    // ValidateMisorientationAxis() rejected an axis that cannot be normalized.
+    const std::array<float64, 3> normAxis =
+        OrientationUtilities::NormalizeDirection(m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]).value();
     // Convert the normalized degree-axis input to a misorientation matrix.
     auto out = ebsdlib::AxisAngleDType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix();
     dg = Matrix3X3Type(out.data());

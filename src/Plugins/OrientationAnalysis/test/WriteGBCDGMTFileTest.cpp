@@ -18,9 +18,13 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+#include <limits>
 #include <optional>
 
 namespace fs = std::filesystem;
@@ -505,4 +509,89 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid GBCD Component S
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -96713);
+}
+
+namespace
+{
+DataStructure CreateSyntheticGMTGBCD()
+{
+  DataStructure dataStructure;
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, "GBCD", {2}, {3, 3, 3, 4, 4, 2});
+  for(usize index = 0; index < gbcd->getSize(); index++)
+  {
+    (*gbcd)[index] = static_cast<float64>(index % 97) + 1.0;
+  }
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Crystal Structures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  return dataStructure;
+}
+
+Arguments CreateSyntheticGMTArguments(const std::vector<float32>& misorientationRotation, const fs::path& outputPath)
+{
+  Arguments args = WriteGBCDGMTFileFilter().getDefaultArguments();
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(misorientationRotation));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath({"GBCD"})));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Crystal Structures"})));
+  return args;
+}
+
+std::string ReadWholeFile(const fs::path& path)
+{
+  std::ifstream inputStream(path, std::ios::binary);
+  REQUIRE(inputStream.is_open());
+  return {std::istreambuf_iterator<char>(inputStream), std::istreambuf_iterator<char>()};
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid Misorientation Axis", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  const std::vector<float32> misorientationRotation =
+      GENERATE(std::vector<float32>{60.0F, 0.0F, 0.0F, 0.0F}, std::vector<float32>{60.0F, std::numeric_limits<float32>::quiet_NaN(), 1.0F, 1.0F},
+               std::vector<float32>{60.0F, 1.0F, std::numeric_limits<float32>::infinity(), 1.0F}, std::vector<float32>{60.0F, 1.0F, 1.0F, -std::numeric_limits<float32>::infinity()});
+  CAPTURE(misorientationRotation);
+
+  DataStructure dataStructure = CreateSyntheticGMTGBCD();
+  WriteGBCDGMTFileFilter filter;
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_invalid_axis_1.dat";
+  const Arguments args = CreateSyntheticGMTArguments(misorientationRotation, outputPath);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -96714);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -96714);
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Default Misorientation Axis-Angle", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  const auto defaultRotation = WriteGBCDGMTFileFilter().getDefaultArguments().value<VectorFloat32Parameter::ValueType>(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key);
+  REQUIRE(defaultRotation == std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F});
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Misorientation Axis Scale", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  // The axis [1e20, 1e20, 1e20] is the axis [1, 1, 1]. Its squared length overflows float32.
+  DataStructure dataStructure = CreateSyntheticGMTGBCD();
+  WriteGBCDGMTFileFilter filter;
+  const fs::path unitOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_unit_axis_1.dat";
+  const fs::path scaledOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_scaled_axis_1.dat";
+
+  auto unitResult = filter.execute(dataStructure, CreateSyntheticGMTArguments({60.0F, 1.0F, 1.0F, 1.0F}, unitOutput));
+  SIMPLNX_RESULT_REQUIRE_VALID(unitResult.result);
+  auto scaledResult = filter.execute(dataStructure, CreateSyntheticGMTArguments({60.0F, 1.0e20F, 1.0e20F, 1.0e20F}, scaledOutput));
+  SIMPLNX_RESULT_REQUIRE_VALID(scaledResult.result);
+
+  const std::string unitContents = ReadWholeFile(unitOutput);
+  const std::string scaledContents = ReadWholeFile(scaledOutput);
+  // The first line repeats the parameter values. Compare the projection values that follow it.
+  const usize unitHeaderEnd = unitContents.find('\n');
+  const usize scaledHeaderEnd = scaledContents.find('\n');
+  REQUIRE(unitHeaderEnd != std::string::npos);
+  REQUIRE(scaledHeaderEnd != std::string::npos);
+  REQUIRE(unitContents.substr(unitHeaderEnd) == scaledContents.substr(scaledHeaderEnd));
 }

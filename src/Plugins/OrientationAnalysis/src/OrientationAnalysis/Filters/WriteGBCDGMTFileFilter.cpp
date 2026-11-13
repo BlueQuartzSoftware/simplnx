@@ -60,8 +60,8 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Axis-Angle", "Axis-Angle pair values for drawing GBCD", std::vector<float32>(4, 0),
-                                                         std::vector<std::string>{"Angle", "h", "k", "l"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Axis-Angle", "Axis-Angle pair values for drawing GBCD",
+                                                         std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F}, std::vector<std::string>{"Angle", "h", "k", "l"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output GMT File", "The output .dat file path", FileSystemPathParameter::ValueType{},
                                                           FileSystemPathParameter::ExtensionsType{".dat"}, FileSystemPathParameter::PathType::OutputFile, false));
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
@@ -107,6 +107,11 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
   {
     fileName = fileName + "_1.dat";
     pOutputFileValue = pOutputFileValue.parent_path() / fileName;
+  }
+
+  if(Result<> axisResult = WriteGBCDGMTFile::ValidateMisorientationAxis(pMisorientationRotationValue); axisResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(axisResult), {})};
   }
 
   const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
