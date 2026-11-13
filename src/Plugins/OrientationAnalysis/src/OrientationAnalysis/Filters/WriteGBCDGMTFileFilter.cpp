@@ -124,10 +124,12 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
                                                                pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
   }
 
-  auto numEnsembles = gbcd.getNumberOfTuples();
-  if(pPhaseOfInterestValue >= numEnsembles)
+  const auto* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
+  const usize numCrystalStructures = crystalStructures != nullptr ? crystalStructures->getNumberOfTuples() : 0;
+  if(Result<> phaseResult = WriteGBCDGMTFile::ValidatePhaseOfInterest(pPhaseOfInterestValue, gbcd.getNumberOfTuples(), numCrystalStructures, pGBCDArrayPathValue, pCrystalStructuresArrayPathValue);
+     phaseResult.invalid())
   {
-    return {MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
+    return {ConvertResultTo<OutputActions>(std::move(phaseResult), {})};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

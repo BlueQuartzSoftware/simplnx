@@ -66,11 +66,30 @@ public:
   static constexpr int32 k_InvalidMisorientationAxisError = -96714;
 
   /**
+   * @brief Checks Phase of Interest against the ensemble counts. preflightImpl() and operator()() both call it.
+   * @param phaseOfInterest One-based phase index.
+   * @param numGbcdPhases Number of tuples of the GBCD array.
+   * @param numCrystalStructures Number of tuples of the Crystal Structures array.
+   * @param gbcdArrayPath GBCD array path, for the message.
+   * @param crystalStructuresArrayPath Crystal Structures array path, for the message.
+   * @return k_PhaseNotPositiveError, k_PhaseNotInGbcdError or k_PhaseNotInCrystalStructuresError, or a valid result.
+   */
+  static Result<> ValidatePhaseOfInterest(int32 phaseOfInterest, usize numGbcdPhases, usize numCrystalStructures, const DataPath& gbcdArrayPath, const DataPath& crystalStructuresArrayPath);
+
+  /// Error code for a Phase of Interest that is 0 or negative.
+  static constexpr int32 k_PhaseNotPositiveError = -96715;
+  /// Error code for a Phase of Interest that the GBCD array does not contain.
+  static constexpr int32 k_PhaseNotInGbcdError = -96712;
+  /// Error code for a Phase of Interest that the Crystal Structures array does not contain.
+  static constexpr int32 k_PhaseNotInCrystalStructuresError = -96716;
+  /// Error code for a Crystal Structures value of the Phase of Interest that has no Laue operations (for example 999, Unknown).
+  static constexpr int32 k_InvalidLaueIndexError = -96717;
+
+  /**
    * @brief Computes and writes the selected stereographic projection.
-   * @return An invalid misorientation axis error, or directory-creation or file-open errors.
-   * @pre PhaseOfInterest indexes both source arrays and its GBCD phase slice.
+   * @return An invalid misorientation axis error, Phase of Interest errors, an error when the crystal structure of the
+   * Phase of Interest has no Laue operations, or directory-creation or file-open errors.
    * @pre The GBCD component shape has five positive dimensions whose products fit int32.
-   * @pre The selected crystal structure identifies a valid LaueOps entry.
    */
   Result<> operator()();
 
