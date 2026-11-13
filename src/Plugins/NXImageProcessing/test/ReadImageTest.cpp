@@ -1736,3 +1736,101 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_SinglePageOnly", 
   std::error_code error;
   fs::remove_all(dir, error);
 }
+
+TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_ZCrop", "[NXImageProcessing][ReadImageFilter]")
+{
+  // A Z crop decodes only the pages inside the crop. Page 0 sets the output type and component count,
+  // so each decoded page must match page 0, and pages outside the crop are not checked.
+  const auto path = ReadImageOutputDir() / "page_layout_zcrop.tif";
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+  crop.cropX = false;
+  crop.cropY = false;
+  crop.cropZ = true;
+  bool expectError = false;
+  std::vector<nx::core::uint16> expected;
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    SECTION("Different page after the crop is not checked")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {11, 12, 13, 14});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+      crop.zBoundVoxels = {0, 1};
+      expected = {1, 2, 3, 4, 11, 12, 13, 14};
+    }
+    SECTION("Different page before a one-page crop is not checked")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {21, 22, 23, 24});
+      crop.zBoundVoxels = {2, 2};
+      expected = {21, 22, 23, 24};
+    }
+    SECTION("Physical crop skips a different page before the crop")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {21, 22, 23, 24});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {31, 32, 33, 34});
+      // Default TIFF origin 0 and spacing 1: Z [2.5, 3.5] selects pages 2 and 3.
+      crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+      crop.zBoundPhysical = {2.5f, 3.5f};
+      expected = {21, 22, 23, 24, 31, 32, 33, 34};
+    }
+    SECTION("Different page inside the crop is rejected")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {21, 22, 23, 24});
+      crop.zBoundVoxels = {0, 1};
+      expectError = true;
+    }
+    SECTION("Cropped pages that differ from page 0 are rejected")
+    {
+      // The output type comes from page 0, so matching cropped pages are not enough.
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::int16>(tiff.get(), 1, SAMPLEFORMAT_INT, {-1, -2, -3, -4});
+      WriteLayoutPage<nx::core::int16>(tiff.get(), 1, SAMPLEFORMAT_INT, {-5, -6, -7, -8});
+      crop.zBoundVoxels = {1, 2};
+      expectError = true;
+    }
+    SECTION("One-page crop that differs from page 0 is rejected")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {11, 12, 13, 14});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+      crop.zBoundVoxels = {2, 2};
+      expectError = true;
+    }
+  }
+  DataStructure ds;
+  ReadImageFilter filter;
+  const DataPath geomPath({"Layout"});
+  const auto args = MakeReadImageNrrdArgs(path, geomPath, "Cell Data", "Pixels", crop);
+  if(expectError)
+  {
+    const auto preflight = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    const auto& error = preflight.outputActions.errors().front();
+    REQUIRE(error.code == -50579);
+    REQUIRE(error.message.find("page 0 is") != std::string::npos);
+    REQUIRE(ds.getDataAs<ImageGeom>(geomPath) == nullptr);
+  }
+  else
+  {
+    const auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const auto arrayPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt16Array>(arrayPath));
+    const auto& array = ds.getDataRefAs<UInt16Array>(arrayPath);
+    REQUIRE(array.getSize() == expected.size());
+    for(usize i = 0; i < expected.size(); ++i)
+    {
+      CAPTURE(i);
+      REQUIRE(array[i] == expected[i]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}

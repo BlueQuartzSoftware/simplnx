@@ -326,12 +326,6 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   // Z is the number of real (non-pyramid/non-mask) pages the metadata reports. A single-page hint
   // (set programmatically by ReadImageStack) forces Z == 1 so each stacked file yields one slice.
   const usize resolvedDepth = m_ReadSinglePageOnly ? usize{1} : metadata.numPages;
-  // A single-page read never decodes the other pages, so only the pages that are read are validated.
-  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, fileName, resolvedDepth);
-  if(layoutResult.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(layoutResult), {})};
-  }
   std::vector<usize> dims = {metadata.width, metadata.height, resolvedDepth};
   FloatVec3 origin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
   FloatVec3 spacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});
@@ -346,6 +340,8 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   bool cropImage = croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping;
   const bool zCropActive = cropImage && croppingOptions.cropZ && dims[2] > 1;
   bool cropAnyDim = cropImage && (croppingOptions.cropX || croppingOptions.cropY || zCropActive);
+  // First source page that the read decodes. A Z crop moves it; otherwise the read starts at page 0.
+  usize firstPage = 0;
   if(cropAnyDim)
   {
     DataStructure tmpDs;
@@ -377,6 +373,17 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     dims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
     spacing = croppedGeom.getSpacing().toContainer<std::vector<float32>>();
     origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
+    if(zCropActive)
+    {
+      firstPage = static_cast<usize>(cropBounds.zMin);
+    }
+  }
+
+  // Only the decoded pages are validated. Page 0 sets the output layout, so each decoded page is compared with it.
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, fileName, firstPage, dims[2]);
+  if(layoutResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(layoutResult), {})};
   }
 
   if(originSpacingProcessing == OriginSpacingProcessing::Postprocessed)

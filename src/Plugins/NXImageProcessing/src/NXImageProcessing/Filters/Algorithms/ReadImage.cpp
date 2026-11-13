@@ -197,12 +197,6 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     return ConvertResult(std::move(metadataResult));
   }
   const auto& metadata = metadataResult.value();
-  // A single-page read never decodes the other pages, so only the pages that are read are validated.
-  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, inputValues.readSinglePageOnly ? usize{1} : metadata.numPages);
-  if(layoutResult.invalid())
-  {
-    return layoutResult;
-  }
 
   auto& imageArray = dataStructure.getDataRefAs<IDataArray>(inputValues.imageDataArrayPath);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.imageGeometryPath);
@@ -308,6 +302,12 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   {
     return MakeErrorResult(-2001, fmt::format("Crop window (start=[{},{},{}], size=[{},{},{}]) does not fit within the source image (size=[{},{},{}])", stream.xStart, stream.yStart, stream.zStart,
                                               stream.dstWidth, stream.dstHeight, stream.dstDepth, stream.srcWidth, stream.srcHeight, metadata.numPages));
+  }
+  // Only the decoded pages are validated. Page 0 sets the output layout, so each decoded page is compared with it.
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, stream.singlePageOnly ? usize{0} : stream.zStart, stream.dstDepth);
+  if(layoutResult.invalid())
+  {
+    return layoutResult;
   }
 
   const DataType destType = imageArray.getDataType();
@@ -482,9 +482,10 @@ Result<> ReadImage::operator()()
 }
 
 // -----------------------------------------------------------------------------
-Result<> ReadImage::ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize numPages)
+Result<> ReadImage::ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize firstPage, usize pageCount)
 {
-  if(numPages <= 1)
+  // Page 0 sets the output layout. A read of page 0 alone has nothing to compare.
+  if(pageCount == 0 || (firstPage == 0 && pageCount == 1))
   {
     return {};
   }
@@ -494,18 +495,20 @@ Result<> ReadImage::ValidatePageLayouts(const IImageIO& imageIO, const std::file
     return ConvertResult(std::move(result));
   }
   const auto& layouts = result.value();
-  if(layouts.size() <= 1)
+  if(layouts.empty())
   {
     return {};
   }
   const auto& first = layouts.front();
-  for(usize page = 1; page < layouts.size(); ++page)
+  const usize endPage = std::min(layouts.size(), firstPage + pageCount);
+  for(usize page = std::max(firstPage, usize{1}); page < endPage; ++page)
   {
     const auto& current = layouts[page];
     if(current.numComponents != first.numComponents || current.bitsPerSample != first.bitsPerSample || current.sampleFormat != first.sampleFormat)
     {
-      return MakeErrorResult(-50579, fmt::format("TIFF '{}': page {} is {}, page 0 is {}. All pages must have the same component count and data type. Use a TIFF with matching page layouts.",
-                                                 filePath.string(), page, DescribePageLayout(current), DescribePageLayout(first)));
+      return MakeErrorResult(
+          -50579, fmt::format("TIFF '{}': page {} is {}, page 0 is {}. Each page that is read must have the same component count and data type as page 0. Use a TIFF with matching page layouts.",
+                              filePath.string(), page, DescribePageLayout(current), DescribePageLayout(first)));
     }
   }
   return {};

@@ -79,10 +79,18 @@ public:
   Result<> operator()();
 
   /**
-   * @brief Checks that every page layout matches page 0 before output arrays are created or written.
-   * @param numPages Number of pages the read uses. A value of 1 (a single-page read) skips the check.
+   * @brief Checks that each page the read decodes has the component count and sample type of page 0.
+   *
+   * Page 0 sets the output array layout, so it is the reference even when it is outside the read.
+   * Pages outside [firstPage, firstPage + pageCount) are not checked. A read of page 0 alone returns
+   * success. Page dimensions are not compared here; they are checked when each page is decoded.
+   * @param imageIO Image backend that reads the page layouts.
+   * @param filePath Image file to check.
+   * @param firstPage First decoded page (the Z crop start, or 0).
+   * @param pageCount Number of decoded pages (1 for a single-page read).
+   * @return Success, the backend's metadata error, or error -50579 for the first decoded page that differs.
    */
-  static Result<> ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize numPages);
+  static Result<> ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize firstPage, usize pageCount);
 
 private:
   DataStructure& m_DataStructure;
