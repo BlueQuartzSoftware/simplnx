@@ -78,7 +78,10 @@ public:
    */
   Result<> operator()();
 
-  /** @brief Checks every page layout before creating or writing output arrays. */
+  /**
+   * @brief Checks that every page layout matches page 0 before output arrays are created or written.
+   * @param numPages Number of pages the read uses. A value of 1 (a single-page read) skips the check.
+   */
   static Result<> ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize numPages);
 
 private:

@@ -322,15 +322,16 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const auto& metadata = metadataResult.value();
-  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, fileName, metadata.numPages);
-  if(layoutResult.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(layoutResult), {})};
-  }
 
   // Z is the number of real (non-pyramid/non-mask) pages the metadata reports. A single-page hint
   // (set programmatically by ReadImageStack) forces Z == 1 so each stacked file yields one slice.
   const usize resolvedDepth = m_ReadSinglePageOnly ? usize{1} : metadata.numPages;
+  // A single-page read never decodes the other pages, so only the pages that are read are validated.
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, fileName, resolvedDepth);
+  if(layoutResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(layoutResult), {})};
+  }
   std::vector<usize> dims = {metadata.width, metadata.height, resolvedDepth};
   FloatVec3 origin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
   FloatVec3 spacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});

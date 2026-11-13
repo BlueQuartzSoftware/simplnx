@@ -1698,3 +1698,41 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout", "[NXImageProces
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
+
+TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_SinglePageOnly", "[NXImageProcessing][ReadImageFilter]")
+{
+  // Read Image Stack reads only page 0 of each file. Pages it never reads must not be validated.
+  UnitTest::LoadPlugins();
+  const fs::path dir = fs::temp_directory_path() / "ReadImage_PageLayout_SinglePage";
+  fs::create_directories(dir);
+  const auto path = dir / "page_layout_single_page.tif";
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    WriteLayoutPage<nx::core::uint8>(tiff.get(), 4, SAMPLEFORMAT_UINT, {1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255});
+    WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+  }
+  DataStructure ds;
+  ReadImageFilter filter;
+  filter.setReadSinglePageOnly(true);
+  const DataPath geomPath({"Layout"});
+  const auto args = MakeReadImageNrrdArgs(path, geomPath, "Cell Data", "Pixels");
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto arrayPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(arrayPath));
+  const auto& array = ds.getDataRefAs<UInt8Array>(arrayPath);
+  REQUIRE(array.getNumberOfComponents() == 4);
+  const std::array<nx::core::uint8, 16> expected = {1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255};
+  REQUIRE(array.getSize() == expected.size());
+  for(usize i = 0; i < expected.size(); ++i)
+  {
+    CAPTURE(i);
+    REQUIRE(array[i] == expected[i]);
+  }
+  const auto& warnings = result.result.warnings();
+  REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.message.find("reading only the first page") != std::string::npos; }));
+  UnitTest::CheckArraysInheritTupleDims(ds);
+  std::error_code error;
+  fs::remove_all(dir, error);
+}

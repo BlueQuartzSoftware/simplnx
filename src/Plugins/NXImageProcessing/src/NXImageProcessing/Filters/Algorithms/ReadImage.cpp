@@ -197,7 +197,8 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     return ConvertResult(std::move(metadataResult));
   }
   const auto& metadata = metadataResult.value();
-  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, metadata.numPages);
+  // A single-page read never decodes the other pages, so only the pages that are read are validated.
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, inputValues.readSinglePageOnly ? usize{1} : metadata.numPages);
   if(layoutResult.invalid())
   {
     return layoutResult;
