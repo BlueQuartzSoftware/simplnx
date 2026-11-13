@@ -324,7 +324,7 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
     {
       preflightUpdatedValues.push_back(
           {fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                  ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
+                                                                  ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
 }
