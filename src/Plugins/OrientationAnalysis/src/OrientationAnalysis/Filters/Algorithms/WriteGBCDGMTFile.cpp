@@ -21,6 +21,9 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_UnsupportedCrystalStructure = -96714;
+constexpr int32 k_PhaseOutsideCrystalStructures = -96715;
+
 /**
  * @brief Maps a crystal normal to Lambert square coordinates.
  * @tparam T Floating-point value type.
@@ -138,10 +141,27 @@ Result<> WriteGBCDGMTFile::operator()()
 
   // Cache ensemble metadata and only the selected GBCD phase slice.
   const usize numCrystalStructures = crystalStructures.getSize();
+  if(m_InputValues->PhaseOfInterest < 0 || static_cast<usize>(m_InputValues->PhaseOfInterest) >= numCrystalStructures)
+  {
+    return MakeErrorResult(k_PhaseOutsideCrystalStructures,
+                           fmt::format("The selected phase index {} is outside Crystal Structures array '{}', which contains {} values. Select a phase index in [0, {}).",
+                                       m_InputValues->PhaseOfInterest, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+  }
   auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
   if(Result<> ioResult = crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures)); ioResult.invalid())
   {
     return ConvertResult(std::move(ioResult));
+  }
+
+  const auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const uint32 crystalStructure = crystalStructuresCache[m_InputValues->PhaseOfInterest];
+  if(crystalStructure >= orientationOps.size())
+  {
+    return MakeErrorResult(
+        k_UnsupportedCrystalStructure,
+        fmt::format(
+            "The selected phase index {} has unsupported crystal-structure value {} in Crystal Structures array '{}'. The valid range is 0-{}. Select a phase with a supported crystal structure.",
+            m_InputValues->PhaseOfInterest, crystalStructure, m_InputValues->CrystalStructuresArrayPath.toString(), orientationOps.size() - 1));
   }
 
   const auto totalGBCDBins = (gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2] * gbcdSizes[3] * gbcdSizes[4] * 2);
@@ -152,7 +172,7 @@ Result<> WriteGBCDGMTFile::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  const ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructuresCache[m_InputValues->PhaseOfInterest]];
+  const ebsdlib::LaueOps::Pointer orientOps = orientationOps[crystalStructure];
 
   const int32 nSym = orientOps->getNumSymOps();
 
