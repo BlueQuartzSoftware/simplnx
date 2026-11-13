@@ -302,7 +302,14 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     }
     if(shouldRenumberFeatures)
     {
-      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+      const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+      if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
+      {
+        return {MakeErrorResult<OutputActions>(
+            -67415,
+            fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()))};
+      }
+      const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != srcEdgeGeom.getNumberOfEdges())
       {
         return {MakeErrorResult<OutputActions>(

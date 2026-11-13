@@ -135,6 +135,8 @@ represents the 4x4 matrix:
 - **Pre-Computed Transformation Matrix** (only for Transformation Type 1) -- typically produced by [Combine Transformation Matrices](CombineTransformationMatricesFilter.md).
 - **Cell Attribute Matrix** (Image Geometry only) -- the cell-level data to be re-gridded.
 
+With Clear and Renumber on, error **-67455** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
+
 % Auto generated parameter table will be inserted here
 
 ## Preflight Information and Errors

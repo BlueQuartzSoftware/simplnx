@@ -863,3 +863,34 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Feature AM nested alias reg
     }
   }
 }
+
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject nonnumeric Feature Ids", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const bool strings = GENERATE(true, false);
+  auto ds = CreateFeatureRemovalFixture();
+  const auto idsPath = DataPath({"Vertex", "Vertex Data", "FeatureIds"});
+  const auto* original = ds.getDataAs<Int32Array>(idsPath);
+  REQUIRE(original != nullptr);
+  const auto shape = original->getTupleShape();
+  const auto tuples = original->getNumberOfTuples();
+  const auto parentId = ds.getData(idsPath.getParent())->getId();
+  REQUIRE(ds.removeData(idsPath));
+  if(strings)
+  {
+    REQUIRE(StringArray::CreateWithValues(ds, idsPath.getTargetName(), shape, std::vector<std::string>(tuples), parentId) != nullptr);
+  }
+  else
+  {
+    REQUIRE(NeighborList<int32>::Create(ds, idsPath.getTargetName(), shape, parentId) != nullptr);
+  }
+  RemoveFlaggedVerticesFilter filter;
+  auto args = MakeFeatureRemovalArgs(true, true);
+  REQUIRE_NOTHROW(filter.preflight(ds, args));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67425);
+  CHECK(result.outputActions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
+}

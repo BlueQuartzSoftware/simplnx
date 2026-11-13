@@ -1701,3 +1701,34 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Linear interpolatio
   CHECK((*outputSignal)[2] == Approx(30.625));
   CheckTransformFeatureData(ds, true, {3});
 }
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject nonnumeric Feature Ids", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const bool strings = GENERATE(true, false);
+  auto ds = CreateTransformFeatureFixture();
+  const auto idsPath = k_TransformFeatureIdsPath;
+  const auto* original = ds.getDataAs<Int32Array>(idsPath);
+  REQUIRE(original != nullptr);
+  const auto shape = original->getTupleShape();
+  const auto tuples = original->getNumberOfTuples();
+  const auto parentId = ds.getData(idsPath.getParent())->getId();
+  REQUIRE(ds.removeData(idsPath));
+  if(strings)
+  {
+    REQUIRE(StringArray::CreateWithValues(ds, idsPath.getTargetName(), shape, std::vector<std::string>(tuples), parentId) != nullptr);
+  }
+  else
+  {
+    REQUIRE(NeighborList<int32>::Create(ds, idsPath.getTargetName(), shape, parentId) != nullptr);
+  }
+  ApplyTransformationToGeometryFilter filter;
+  auto args = MakeTransformFeatureArgs(true, true);
+  REQUIRE_NOTHROW(filter.preflight(ds, args));
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67455);
+  CHECK(result.outputActions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
+}
