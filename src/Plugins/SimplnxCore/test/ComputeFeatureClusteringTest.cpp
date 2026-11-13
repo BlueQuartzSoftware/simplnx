@@ -264,7 +264,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: four bins control", "[SimplnxC
   REQUIRE(maxMin.getSize() == 4);
   // Distances 1, 2, and 3 each occur twice. The last distance stays in the last bin.
   // Independent lattice-cell population enumeration gives these ordered reference-pair counts for seed 5489.
-  const std::array<float32, 4> referencePairs = {175186, 53046, 292346, 46722};
+  // The enumeration includes all 999000 ordered pairs of the 1000 sample points, including pairs with sample 0.
+  const std::array<float32, 4> referencePairs = {175500, 53124, 292846, 46806};
   const std::array<float32, 4> observedPairs = {2, 0, 2, 2};
   for(usize bin = 0; bin < 4; bin++)
   {
