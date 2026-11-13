@@ -105,7 +105,7 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
   const std::vector<ebsdlib::CtfPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
-    return {reader->getErrorCode(), reader->getErrorMessage()};
+    return {k_NoPhasesError, fmt::format("The [Phases] section of '{}' lists no phases. The file needs at least one phase.", m_InputValues->InputFile.string())};
   }
 
   const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);

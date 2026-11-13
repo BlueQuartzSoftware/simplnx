@@ -67,6 +67,23 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
     return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
   }
 
+  // Each phase writes one tuple of the Ensemble arrays at its phase index and reads six lattice constants.
+  for(const auto& phase : phases)
+  {
+    const int32 phaseID = phase->getPhaseIndex();
+    if(phaseID <= 0 || static_cast<usize>(phaseID) > phases.size())
+    {
+      return {nx::core::MakeErrorResult(
+          -50029, fmt::format("File '{}' has phase index {}, but its {} phases must use the indices 1 to {}.", mInputValues->inputFilePath, phaseID, phases.size(), phases.size()))};
+    }
+    const usize numLatticeConstants = phase->getLatticeConstants().size();
+    if(numLatticeConstants < 6)
+    {
+      return {nx::core::MakeErrorResult(
+          -50028, fmt::format("File '{}' phase {} has {} lattice constants. Each phase needs 6 (a, b, c, alpha, beta, gamma).", mInputValues->inputFilePath, phaseID, numLatticeConstants))};
+    }
+  }
+
   // Reserve index zero for invalid phase data.
   ShapeType tDims = {phases.size() + 1};
 

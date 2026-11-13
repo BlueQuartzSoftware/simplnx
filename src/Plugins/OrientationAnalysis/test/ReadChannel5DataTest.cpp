@@ -21,6 +21,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -889,5 +890,71 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data: StructuralValidation required 
     auto alignedDirect = ReadChannel5Data(directDs, {}, cancel, &values)();
     SIMPLNX_RESULT_REQUIRE_INVALID(alignedDirect);
     REQUIRE(alignedDirect.errors().front().code == -67615);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ReadChannel5Data: Empty phase list", "[OrientationAnalysis][ReadChannel5Data]")
+{
+  const fs::path cprPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadChannel5Data_NoPhases.cpr";
+  const fs::path crcPath = cprPath.parent_path() / "ReadChannel5Data_NoPhases.crc";
+  const auto fileGuard = MakeScopeGuard([&cprPath, &crcPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(cprPath, errorCode);
+    fs::remove(crcPath, errorCode);
+  });
+  REQUIRE(WriteSyntheticChannel5Files(cprPath, crcPath, 2, 2));
+
+  // Replace the phase sections with an empty [Phases] section.
+  std::string cprText;
+  {
+    std::ifstream cprFile(cprPath, std::ios::binary);
+    REQUIRE(cprFile.is_open());
+    cprText.assign(std::istreambuf_iterator<char>(cprFile), std::istreambuf_iterator<char>());
+  }
+  const usize phasesStart = cprText.find("[Phases]");
+  const usize fieldsStart = cprText.find("[Fields]");
+  REQUIRE(phasesStart != std::string::npos);
+  REQUIRE(fieldsStart != std::string::npos);
+  cprText.replace(phasesStart, fieldsStart - phasesStart, "[Phases]\nCount=0\n\n");
+  {
+    std::ofstream cprFile(cprPath, std::ios::binary | std::ios::trunc);
+    REQUIRE(cprFile.is_open());
+    cprFile << cprText;
+  }
+
+  ReadChannel5DataFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadChannel5DataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(cprPath));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
+
+  SECTION("Preflight and execute report the empty phase list")
+  {
+    DataStructure dataStructure;
+    auto preflightResult = filter.preflight(dataStructure, args).outputActions;
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult);
+    REQUIRE(preflightResult.errors()[0].code == -66502);
+    auto executeResult = filter.execute(dataStructure, args).result;
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult);
+    REQUIRE(executeResult.errors()[0].code == -66502);
+  }
+
+  SECTION("The algorithm reports the empty phase list without the filter")
+  {
+    DataStructure dataStructure;
+    ReadChannel5DataInputValues inputValues;
+    inputValues.InputFile = cprPath;
+    inputValues.CreateCompatibleArrays = false;
+    inputValues.EdaxHexagonalAlignment = false;
+    inputValues.DataContainerName = k_DataContainerPath;
+    inputValues.CellAttributeMatrixName = k_Cell_Data;
+    inputValues.CellEnsembleAttributeMatrixName = k_EnsembleAttributeMatrix;
+    const std::atomic_bool shouldCancel = false;
+    const Result<> result = ReadChannel5Data(dataStructure, {}, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors()[0].code == -66502);
   }
 }

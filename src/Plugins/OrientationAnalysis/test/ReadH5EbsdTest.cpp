@@ -792,3 +792,49 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Child preflight errors", "[Orientati
   // RotateEulerRefFrame rejects a zero axis; RotateSampleRefFrame rejects a non-principal rotation.
   CHECK(executeResult.result.errors()[0].code == (invalidEulerTransform ? -96200 : -6850));
 }
+
+TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Phase table validation", "[OrientationAnalysis][ReadH5Ebsd]")
+{
+  UnitTest::LoadPlugins();
+  const auto inputPath = WriteHexagonalH5EbsdFixture();
+  auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputPath, errorCode);
+  });
+
+  int32 expectedCode = 0;
+  {
+    const hid_t fileId = H5Support::H5Utilities::openFile(inputPath.string(), false);
+    REQUIRE(fileId >= 0);
+    H5Support::H5ScopedFileSentinel sentinel(fileId, false);
+    SECTION("Fewer than six lattice constants")
+    {
+      REQUIRE(H5Ldelete(fileId, "0/Header/Phases/1/LatticeConstants", H5P_DEFAULT) >= 0);
+      REQUIRE(H5Support::H5Lite::writeVectorDataset<float32>(fileId, "0/Header/Phases/1/LatticeConstants", {3}, {2.5F, 2.5F, 4.25F}) >= 0);
+      expectedCode = -50028;
+    }
+    SECTION("Phase index past the phase count")
+    {
+      REQUIRE(H5Lmove(fileId, "0/Header/Phases/2", fileId, "0/Header/Phases/3", H5P_DEFAULT, H5P_DEFAULT) >= 0);
+      expectedCode = -50029;
+    }
+  }
+
+  ReadH5EbsdFileParameter::ValueType input;
+  input.inputFilePath = inputPath.string();
+  input.startSlice = 0;
+  input.endSlice = 0;
+  input.eulerRepresentation = ebsdlib::AngleRepresentation::Degrees;
+  input.useRecommendedTransform = false;
+  input.selectedArrayNames = {Constants::k_EulerAngles, Constants::k_Phases};
+  Arguments args;
+  args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
+  ReadH5EbsdFilter filter;
+  DataStructure dataStructure;
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors()[0].code == expectedCode);
+}

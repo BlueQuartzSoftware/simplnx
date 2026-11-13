@@ -269,6 +269,12 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
 
   // Create the Ensemble AttributeMatrix
   std::vector<std::shared_ptr<ebsdlib::CtfPhase>> angPhases = reader.getPhaseVector();
+  if(angPhases.empty())
+  {
+    return {
+        MakeErrorResult<OutputActions>(ReadChannel5Data::k_NoPhasesError, fmt::format("The [Phases] section of '{}' lists no phases. The file needs at least one phase.", pInputFileValue.string())),
+        std::move(preflightUpdatedValues)};
+  }
   tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
