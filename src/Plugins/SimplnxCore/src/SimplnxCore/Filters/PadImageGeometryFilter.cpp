@@ -265,6 +265,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
+            hasCopiedAttributeMatrix = hasCopiedAttributeMatrix || dataStructure.getDataAs<AttributeMatrix>(sourcePath) != nullptr;
             allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
           }
         }

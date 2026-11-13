@@ -744,3 +744,22 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::PadImageGeometryFilter: Nested Feature AM padding warning", "[SimplnxCore][PadImageGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreatePadFeatureFixture(false, false);
+  auto* geom = ds.getDataAs<ImageGeom>(DataPath({"Geom"}));
+  REQUIRE(geom != nullptr);
+  auto* group = DataGroup::Create(ds, "Nested", geom->getId());
+  REQUIRE(group != nullptr);
+  auto* features = AttributeMatrix::Create(ds, "Feature Data", {2}, group->getId());
+  REQUIRE(features != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<float32>(ds, "Centroids", {2}, {3}, features->getId()) != nullptr);
+  PadImageGeometryFilter filter;
+  const bool updateOrigin = GENERATE(false, true);
+  auto args = MakePadArgs(true, true, true, {2, 0}, {0, 0}, {0, 0}, 0, updateOrigin);
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  CHECK(CountWarnings(result.outputActions.warnings(), -67402) == (updateOrigin ? 0 : 1));
+}
