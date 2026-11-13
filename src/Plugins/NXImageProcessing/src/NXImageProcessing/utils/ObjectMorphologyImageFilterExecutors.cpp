@@ -4,6 +4,7 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologyLayout.hpp"
 #include "simplnx/Utilities/ImageProcessing/ObjectMorphologyEngine.hpp"
 
 #include <atomic>

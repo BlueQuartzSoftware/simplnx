@@ -13,7 +13,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
-#include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologyLayout.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
