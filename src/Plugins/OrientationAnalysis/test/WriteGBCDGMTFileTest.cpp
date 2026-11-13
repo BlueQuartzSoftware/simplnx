@@ -18,6 +18,8 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <atomic>
 #include <filesystem>
 #include <fstream>
@@ -505,4 +507,67 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid GBCD Component S
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -96713);
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  DataStructure dataStructure;
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, "GBCD", {3}, {3, 3, 3, 4, 4, 2});
+  for(usize index = 0; index < gbcd->getSize(); index++)
+  {
+    (*gbcd)[index] = static_cast<float64>(index % 97) + 1.0;
+  }
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Crystal Structures", {3}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  (*crystalStructures)[2] = ebsdlib::CrystalStructure::Cubic_High;
+  auto* shortCrystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Short Crystal Structures", {2}, {1});
+  (*shortCrystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*shortCrystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_laue_bounds_1.dat";
+  WriteGBCDGMTFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath({"GBCD"})));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Crystal Structures"})));
+
+  SECTION("Phase 0 (Unknown crystal structure) is rejected in preflight")
+  {
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(0));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -96715);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -96715);
+  }
+
+  SECTION("Phase missing from Crystal Structures is rejected in preflight")
+  {
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(2));
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Short Crystal Structures"})));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -96716);
+  }
+
+  SECTION("Unknown crystal structure of the Phase of Interest is rejected in execute")
+  {
+    (*crystalStructures)[1] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -96717);
+  }
+
+  SECTION("Valid Phase of Interest writes the file")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(fs::exists(outputPath));
+  }
 }

@@ -72,10 +72,36 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
   return m_ShouldCancel;
 }
 
+Result<> WriteGBCDGMTFile::ValidatePhaseOfInterest(int32 phaseOfInterest, usize numGbcdPhases, usize numCrystalStructures, const DataPath& gbcdArrayPath, const DataPath& crystalStructuresArrayPath)
+{
+  if(phaseOfInterest <= 0)
+  {
+    return MakeErrorResult(k_PhaseNotPositiveError,
+                           fmt::format("Phase of Interest is {}. Phase 0 is the unknown phase and has no crystal symmetry. Enter a phase index of 1 or more.", phaseOfInterest));
+  }
+  if(static_cast<usize>(phaseOfInterest) >= numGbcdPhases)
+  {
+    return MakeErrorResult(k_PhaseNotInGbcdError,
+                           fmt::format("The phase index {} is larger than the number of Ensembles {} in the GBCD array '{}'", phaseOfInterest, numGbcdPhases, gbcdArrayPath.toString()));
+  }
+  if(static_cast<usize>(phaseOfInterest) >= numCrystalStructures)
+  {
+    return MakeErrorResult(k_PhaseNotInCrystalStructuresError, fmt::format("Phase of Interest {} is not in the Crystal Structures array '{}', which has {} tuples. Enter a phase index in [1, {}).",
+                                                                           phaseOfInterest, crystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+  }
+  return {};
+}
+
 Result<> WriteGBCDGMTFile::operator()()
 {
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  if(Result<> phaseResult = ValidatePhaseOfInterest(m_InputValues->PhaseOfInterest, gbcd.getNumberOfTuples(), crystalStructures.getNumberOfTuples(), m_InputValues->GBCDArrayPath,
+                                                    m_InputValues->CrystalStructuresArrayPath);
+     phaseResult.invalid())
+  {
+    return phaseResult;
+  }
 
   // Create the destination directory before the file handle truncates the output.
   Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
@@ -152,7 +178,16 @@ Result<> WriteGBCDGMTFile::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  const ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructuresCache[m_InputValues->PhaseOfInterest]];
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const uint32 laueIndex = crystalStructuresCache[m_InputValues->PhaseOfInterest];
+  if(laueIndex >= orientationOps.size())
+  {
+    return MakeErrorResult(k_InvalidLaueIndexError,
+                           fmt::format("Crystal Structures array '{}' has value {} at Phase of Interest {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}). Select a "
+                                       "phase with a known crystal structure.",
+                                       m_InputValues->CrystalStructuresArrayPath.toString(), laueIndex, m_InputValues->PhaseOfInterest, orientationOps.size(), orientationOps.size()));
+  }
+  const ebsdlib::LaueOps::Pointer orientOps = orientationOps[laueIndex];
 
   const int32 nSym = orientOps->getNumSymOps();
 
