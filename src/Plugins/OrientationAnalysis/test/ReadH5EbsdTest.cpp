@@ -803,6 +803,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Phase table validation", "[Orientati
   });
 
   int32 expectedCode = 0;
+  std::string expectedText;
   {
     const hid_t fileId = H5Support::H5Utilities::openFile(inputPath.string(), false);
     REQUIRE(fileId >= 0);
@@ -814,6 +815,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Phase table validation", "[Orientati
       // EbsdLib rejects a LatticeConstants dataset without 6 values, so the reader returns no phases (-50027) before
       // the filter's own lattice-constant check (-50028) runs.
       expectedCode = -50027;
+      expectedText = "-90350";
     }
     SECTION("Phase index past the phase count")
     {
@@ -839,4 +841,5 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Phase table validation", "[Orientati
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors()[0].code == expectedCode);
+  CHECK_THAT(result.result.errors()[0].message, Catch::Matchers::Contains(expectedText));
 }

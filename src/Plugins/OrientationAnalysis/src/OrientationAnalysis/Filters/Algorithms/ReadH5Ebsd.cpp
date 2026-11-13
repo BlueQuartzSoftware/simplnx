@@ -64,6 +64,11 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
   if(phases.empty())
   {
+    if(reader->getErrorCode() < 0)
+    {
+      return {nx::core::MakeErrorResult(
+          -50027, fmt::format("Error reading phase information from file '{}'. The reader reported error {}: {}", mInputValues->inputFilePath, reader->getErrorCode(), reader->getErrorMessage()))};
+    }
     return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
   }
 
