@@ -116,6 +116,7 @@ void checkTransformDescendantPaths(UnitTest::AlgorithmTestScope* algorithmTestSc
 
   const ApplyTransformationToGeometryFilter filter;
   Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Grain Group", "Grain", "Grain Cells"})));
   // The manual identity path creates a replacement geometry and copies non-cell children.
@@ -328,6 +329,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry matrix contract", "[Simpln
   };
   const auto makeArgs = [&]() {
     Arguments args = filter.getDefaultArguments();
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
