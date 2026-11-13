@@ -82,6 +82,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | 17 | Feature AM | Selection through a second parent is accepted; all paths excluded from generic copy, also a link inside another child group | `Clear ON accepts shared parent paths`, `Feature AM nested alias regression` |
 | 18 | Feature AM | Clear ON with deferred in-place rename/delete keeps empty matrix at source path | `Clear ON in place` |
 | 19 | Conversion | SIMPL 6.x conversion sets Clear off and preflights without a Feature AM | `SIMPL Backwards Compatibility` (6.4 and 6.5) |
+| 20 | Feature AM | Matrix is also registered as another geometry's element data → `-67460`. | `Reject another geometry element Feature AM` checks object identity through a link. |
 
 ## Test inventory
 
@@ -109,6 +110,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/RotateSampleRefFrameFil
 | `SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent paths` | new | Select via Aliases/Cell Feature Data; empty output matrix, no duplicate copy; both source paths retain their children; cell and Ensemble oracle unchanged. |
 | `SimplnxCore::RotateSampleRefFrame: Clear ON in place` | new | Empty matrix at Input; dims {2,2,1}; exact Ids and Ensemble values; no Output, .Input, or .rotated_image_geometry remains. |
 | `SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regression` | new | The Feature AM is also linked in `Input/Misc`, and `Misc` is also linked in `Outside`. Clear and the selected path (direct or nested) are each on and off. With Clear on, the output matrix has no children and `Misc` has no copy of the matrix; with Clear off, it has 3 children and the nested copy keeps the original counts. `Misc/Keep` is 123 in every case. The source matrix keeps its ID, parents, shape, 3 children, counts and the `Outside` link. |
+| `Reject another geometry element Feature AM` | review regression | Rejects a linked Vertex Attribute Matrix owned by a second geometry; asserts `-67460` and both paths in the message. |
 
 There are 22 TEST_CASEs, including 21 registered cases and one hidden HDF5 case. The former duplicate per-slice inventory row is removed; the child-name regression is now listed. Status is relative to this change: 14 modified, 8 new, 0 unchanged.
 
@@ -117,6 +119,7 @@ Current validation (2026-10-29): rebuilt `NX-Com-Qt69-Vtk96-Rel`, `SIMPLNX_TEST_
 Historical validation before the Feature AM change: all non-retired tests passed in-core. Full `NX-Com-Qt69-Vtk96-Rel` build: affected tests pass, including `ReadH5Ebsd`, all EBSD readers, `ITKImportImageStack`, and this filter's SIMPL compat test. OOC dual-build run outstanding (guard is preflight-only; negligible OOC risk).
 
 OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in each DREAM3DNX build. The hidden `real HDF5 1MiB-page permutation oracle` passed 528,425 assertions in the OOC binary. The existing sequential-image builder creates 257×257×4 values. A half turn about Z must reverse each XY plane without changing Z order; every output value is checked. The 264,196 int32 values cross a full 262,144-element source-cache page and a partial second page. Both whole-volume and slice modes use HDF5 input/output and target-only OOC dispatch witnesses. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
+
 
 ## Test sensitivity verification
 
