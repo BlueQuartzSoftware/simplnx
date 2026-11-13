@@ -86,6 +86,7 @@ set(SIMPLNX_TEST_SRCS
   UpdateImageGeomActionTest.cpp
   Vec3Test.cpp
   StringUtilitiesTest.cpp
+  StructuringElementValidationTest.cpp
   StbImageIOTest.cpp
   StoreResizeContractsTest.cpp
   ThrottledMessageHandlerTest.cpp

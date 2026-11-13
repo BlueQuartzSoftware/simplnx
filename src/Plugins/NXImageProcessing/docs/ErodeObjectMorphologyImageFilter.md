@@ -43,6 +43,8 @@ For a true 3D image with an out-of-core input or output, the filter first asks t
 
 For a true 2D image, a checked planner keeps the combined input halo, boundary mask, and output below a 64 MiB target. Normal-width images use full-width row blocks; exceptionally wide images use X tiles with halos. Both routes preserve the same boundary classification, kernel-offset order, exact-value comparisons, and non-cascading output as the in-core path.
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

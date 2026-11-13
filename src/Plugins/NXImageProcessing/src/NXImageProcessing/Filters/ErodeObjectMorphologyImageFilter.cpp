@@ -98,6 +98,18 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
+  const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
+  if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
+  }
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const auto& layoutInputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
+  if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(layoutInputArray.getDataType())); layoutResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath), OutputActions{})};
+  }
+
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
@@ -153,8 +165,18 @@ Result<> ErodeObjectMorphologyImageFilter::executeImpl(DataStructure& dataStruct
   auto objectValue = filterArgs.value<float64>(k_ObjectValue_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
-  const ImageProcessing::StructuringElement se = ImageProcessing::MakeStructuringElement(
-      static_cast<ImageProcessing::KernelType>(kernelType), {static_cast<int32>(kernelRadius[0]), static_cast<int32>(kernelRadius[1]), static_cast<int32>(kernelRadius[2])});
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
+  if(auto layoutResult = ImageProcessing::ValidateMorphologyLayout(imageGeom.getDimensions(), kernelRadius, false, GetDataTypeSize(inputArray.getDataType())); layoutResult.invalid())
+  {
+    return ImageProcessing::AddMorphologyLayoutGeometryContext(std::move(layoutResult), imageGeomPath);
+  }
+  auto kernelResult = ImageProcessing::MakeCheckedStructuringElement(static_cast<ImageProcessing::KernelType>(kernelType), kernelRadius);
+  if(kernelResult.invalid())
+  {
+    return ConvertInvalidResult<void>(std::move(kernelResult));
+  }
+  const ImageProcessing::StructuringElement& se = kernelResult.value();
 
   return ImageProcessing::ExecuteObjectMorphologyImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, se, ImageProcessing::ObjectMorphOp::Erode, objectValue, backgroundValue,
                                                              shouldCancel, messageHandler);

@@ -36,6 +36,8 @@ The filter erodes the binary foreground and reconstructs the surviving marker wi
 
 ![Binary opening by reconstruction.](Images/OpeningByReconstruction.png)
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -1,3 +1,5 @@
+#include "MorphologyFilterTestUtils.hpp"
+
 #include "ReconstructionFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
@@ -346,4 +348,14 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real
   const auto executeResult = filter.execute(ds, args);
   REQUIRE(executeResult.result.invalid());                      // non-strictly-binary input (value 100) is rejected
   REQUIRE(executeResult.result.errors().front().code == -8002); // the documented binary-input contract error
+}
+
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<BinaryOpeningByReconstructionImageFilter>();
+}
+
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<BinaryOpeningByReconstructionImageFilter>({0, 0, 0});
 }

@@ -1,3 +1,5 @@
+#include "MorphologyFilterTestUtils.hpp"
+
 #include "ObjectMorphologyFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/DilateObjectMorphologyImageFilter.hpp"
@@ -384,4 +386,14 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image 
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   omt::RequirePreflightRejectsNonScalar<DilateObjectMorphologyImageFilter, uint8>(-8520, omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0));
+}
+
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Kernel Radius representability", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<DilateObjectMorphologyImageFilter>();
+}
+
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<DilateObjectMorphologyImageFilter>({5, 5, 5});
 }

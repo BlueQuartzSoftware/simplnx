@@ -186,3 +186,13 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Prefligh
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleMorphologicalOpeningImageFilter, float32>(
       -8390, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
 }
+
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Kernel Radius representability", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<GrayscaleMorphologicalOpeningImageFilter>();
+}
+
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<GrayscaleMorphologicalOpeningImageFilter>({0, 0, 0});
+}

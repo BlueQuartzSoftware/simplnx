@@ -37,6 +37,8 @@ The `MorphGradientScanline` out-of-core path keeps store reads and writes serial
 
 For a single-slice image, the path uses a checked 64 MiB aggregate target. A fitting out-of-core input may use a fixed 48 MiB input buffer and at most 16 MiB of output staging; otherwise the image is processed as full-width row blocks or, for exceptionally wide rows, X tiles with their clipped X/Y halos. Empty structuring elements emit zero through the same bounded-write policy. No datastore access occurs inside the parallel voxel loop.
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

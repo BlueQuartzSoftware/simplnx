@@ -1,3 +1,4 @@
+#include "MorphologyFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/BinaryDilateImageFilter.hpp"
 #include "NXImageProcessing/Filters/BinaryErodeImageFilter.hpp"
@@ -2516,4 +2517,84 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract u
   auto copyIntoBufferResult = outputStore->copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
   REQUIRE(actual == expected);
+}
+
+TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius flat-fold representability", "[NXImageProcessing][MorphologyEngine]")
+{
+  using namespace ImageProcessing;
+  SECTION("Delta exceeds int64")
+  {
+    StructuringElement se;
+    se.radius = {0, 0, 1073741823};
+    se.offsets = {{0, 0, -1073741823}, {0, 0, 1073741823}};
+    const std::array<uint32, 3> radius = {0, 0, 1073741823};
+    auto layout = ValidateMorphologyLayout({131072, 131072, 2}, radius, false, 1);
+    SIMPLNX_RESULT_REQUIRE_VALID(layout);
+    REQUIRE_FALSE(ImageProcessing::detail::ShouldUseMorphologyResidentFlatFold({131072, 131072, 2}, se));
+  }
+  SECTION("Delta plus volume exceeds int64")
+  {
+    StructuringElement se;
+    se.radius = {0, 0, 4};
+    se.offsets = {{0, 0, -4}, {0, 0, 4}};
+    const std::array<uint32, 3> radius = {0, 0, 4};
+    auto layout = ValidateMorphologyLayout({usize{1} << 30, usize{1} << 30, 4}, radius, false, 1);
+    SIMPLNX_RESULT_REQUIRE_VALID(layout);
+    REQUIRE_FALSE(ImageProcessing::detail::ShouldUseMorphologyResidentFlatFold({usize{1} << 30, usize{1} << 30, 4}, se));
+  }
+}
+
+TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allocation", "[NXImageProcessing][MorphologyEngine]")
+{
+  const std::atomic_bool cancel = false;
+  const IFilter::MessageHandler handler;
+  SECTION("Safe Border volume")
+  {
+    DataStructure ds;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {3, 3, 1024});
+    const auto geomPath = inputPath.getParent().getParent();
+    const auto outputPath = inputPath.replaceName("Output");
+    ImageProcessing::StructuringElement se;
+    se.radius = {100000000, 100000000, 0};
+    // The invalid layout returns before resolving or allocating an output or scratch store.
+    auto grayscale = ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler);
+    SIMPLNX_RESULT_REQUIRE_INVALID(grayscale);
+    REQUIRE(grayscale.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
+    morph_test::RequireSingleGeometryContext(grayscale.errors().front().message, geomPath);
+    auto binary = ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler);
+    SIMPLNX_RESULT_REQUIRE_INVALID(binary);
+    REQUIRE(binary.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
+    morph_test::RequireSingleGeometryContext(binary.errors().front().message, geomPath);
+    REQUIRE_FALSE(ds.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+  SECTION("All seven execution helpers")
+  {
+    DataStructure ds;
+    const auto inputPath = morph_test::BuildKernelRadiusMetadata(ds, {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1});
+    const auto geomPath = inputPath.getParent().getParent();
+    const auto outputPath = inputPath.replaceName("Output");
+    const auto se = ImageProcessing::MakeStructuringElement(ImageProcessing::KernelType::Box, {2, 0, 0});
+    // These checks return before dispatch, so no algorithm-path witness or value store is needed.
+    std::vector<Result<>> results;
+    results.push_back(ImageProcessing::ExecuteMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteObjectMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::ObjectMorphOp::Dilate, 5, 0, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryMorphologyImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Dilate, 5, 0, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphCompositeOp::Closing, true, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryMorphologyCompositeImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::BinaryCompositeOp::Closing, 5, 0, true, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteReconstructionOpenCloseImageFilter(ds, geomPath, inputPath, outputPath, se, ImageProcessing::MorphOp::Erode, false, false, cancel, handler));
+    results.push_back(ImageProcessing::ExecuteBinaryOpeningByReconstructionImageFilter(ds, geomPath, inputPath, outputPath, se, 5, 0, false, cancel, handler));
+    for(usize i = 0; i < results.size(); ++i)
+    {
+      DYNAMIC_SECTION("Execution helper " << i)
+      {
+        const auto& result = results[i];
+        SIMPLNX_RESULT_REQUIRE_INVALID(result);
+        REQUIRE(result.errors().front().code == ImageProcessing::k_MorphologyCoordinateError);
+        morph_test::RequireSingleGeometryContext(result.errors().front().message, geomPath);
+      }
+    }
+    REQUIRE_FALSE(ds.containsData(outputPath));
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
 }

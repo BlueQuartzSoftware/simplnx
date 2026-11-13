@@ -69,6 +69,25 @@
 
 namespace nx::core::ImageProcessing
 {
+/**
+ * @brief Adds the selected geometry path to layout errors at a filter boundary.
+ * @param result Layout validation result. Error codes and warnings remain unchanged.
+ * @param imageGeomPath Selected Image Geometry path.
+ * @return Result with quoted geometry context on each error, or the unchanged valid result.
+ */
+inline Result<> AddMorphologyLayoutGeometryContext(Result<> result, const DataPath& imageGeomPath)
+{
+  if(result.invalid())
+  {
+    const auto context = fmt::format(" Image Geometry: '{}'.", imageGeomPath.toString());
+    for(auto& error : result.errors())
+    {
+      error.message += context;
+    }
+  }
+  return result;
+}
+
 // Element-type dispatch policies. Each reuses a core ExecuteDataFunction* helper + its matching
 // allowed-DataType set — no duplicated type switch.
 struct AllNumeric
@@ -4834,6 +4853,11 @@ Result<> ExecuteMorphologyImageFilter(DataStructure& dataStructure, const DataPa
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::MorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
@@ -4862,6 +4886,11 @@ Result<> ExecuteObjectMorphologyImageFilter(DataStructure& dataStructure, const 
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   const std::vector<SEOffset> boxOffsets = detail::MakeFullBoxNeighborOffsets();
   detail::ObjectMorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, boxOffsets, op, objectValue, backgroundValue, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
@@ -4925,6 +4954,11 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::BinaryMorphologyExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, foreground, background, boundaryToForeground, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
@@ -4950,6 +4984,11 @@ Result<> ExecuteMorphologyCompositeImageFilter(DataStructure& dataStructure, con
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder && op != MorphCompositeOp::Gradient, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::MorphologyCompositeExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, safeBorder, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
@@ -4983,6 +5022,11 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder && op == BinaryCompositeOp::Closing, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::BinaryMorphologyCompositeExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, op, foreground, background, safeBorder, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
@@ -5073,6 +5117,11 @@ Result<> ExecuteReconstructionOpenCloseImageFilter(DataStructure& dataStructure,
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::ReconstructionOpenCloseExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, firstOp, fullyConnected, preserveIntensities, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
@@ -5092,6 +5141,11 @@ Result<> ExecuteBinaryOpeningByReconstructionImageFilter(DataStructure& dataStru
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
+  if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
+  {
+    return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
+  }
+
   detail::BinaryReconstructionOpeningExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, foreground, background, fullyConnected, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }

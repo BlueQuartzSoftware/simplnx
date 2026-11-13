@@ -242,3 +242,18 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
 {
   morph_test::RequirePreflightRejectsNonScalar<ClosingFilter, uint8>(-8490, ClosingKernelParamSetter(1.0, /*safeBorder=*/true));
 }
+
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<BinaryMorphologicalClosingImageFilter>();
+}
+
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<BinaryMorphologicalClosingImageFilter>({5, 5, 5});
+}
+
+TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Kernel Radius layout preflight", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
+{
+  morph_test::RequireKernelRadiusLayoutPreflight<BinaryMorphologicalClosingImageFilter>();
+}

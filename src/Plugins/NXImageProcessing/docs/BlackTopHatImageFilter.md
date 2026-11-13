@@ -44,6 +44,8 @@ The out-of-core composite path uses Z-rings bounded by the kernel radius and ser
 ![Black top-hat example.](Images/BlackTopHat_1.png)
 ![Black top-hat example.](Images/BlackTopHat_2.png)
 
+**Kernel Radius** accepts 0–2147483646 cells per axis when kernel counts and image layouts are representable.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

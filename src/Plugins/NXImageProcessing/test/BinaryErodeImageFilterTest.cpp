@@ -256,3 +256,13 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Preflight rejects non-scal
 {
   morph_test::RequirePreflightRejectsNonScalar<BinaryErodeImageFilter, uint8>(-8440, morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }
+
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryErodeImageFilter]")
+{
+  morph_test::RequireKernelRadiusPreflight<BinaryErodeImageFilter>();
+}
+
+TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryErodeImageFilter]")
+{
+  morph_test::RequireOrdinaryKernelRadius<BinaryErodeImageFilter>({0, 0, 0});
+}
