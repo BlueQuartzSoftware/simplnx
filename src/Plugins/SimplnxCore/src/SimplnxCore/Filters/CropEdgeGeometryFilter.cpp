@@ -292,6 +292,11 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
                                       featureAmPath.toString(), srcEdgeGeomPath.toString())),
               preflightUpdatedValues};
     }
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *srcEdgeGeom.getEdgeAttributeMatrix()))
     {
       return {
