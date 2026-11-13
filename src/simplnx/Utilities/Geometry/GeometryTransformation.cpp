@@ -146,6 +146,15 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
                                                                    featureAmPath.toString(), imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
     }
 
+    if(saveTransform && dataStructure.getData(transformMatrixDataPath.getParent()) == sourceFeatureAm)
+    {
+      return IFilter::MakePreflightErrorResult(
+          -67456,
+          fmt::format(
+              "Transform matrix output '{}' is inside the Feature Attribute Matrix '{}' that will be cleared. Save the matrix under a different parent, or turn off 'Clear Feature Attribute Matrix'.",
+              transformMatrixDataPath.toString(), featureAmPath.toString()));
+    }
+
     // Each registered element AM has its own element count, including lower-dimensional node data.
     std::vector<std::pair<const AttributeMatrix*, usize>> elementMatrices;
     if(const auto* grid = dynamic_cast<const IGridGeometry*>(&geometry); grid != nullptr)

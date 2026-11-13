@@ -137,6 +137,8 @@ represents the 4x4 matrix:
 
 With Clear and Renumber on, error **-67455** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
 
+Error **-67456** rejects a transform-matrix output whose parent is the Feature Attribute Matrix that will be cleared. This also applies to another link to that matrix. Save the transform matrix under a different parent, or turn Clear off.
+
 % Auto generated parameter table will be inserted here
 
 ## Preflight Information and Errors

@@ -1732,3 +1732,33 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject nonnumeric F
   CHECK(result.outputActions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
 }
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject matrix output in cleared Feature AM", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  const bool alias = GENERATE(false, true);
+  auto ds = CreateTransformFeatureFixture();
+  auto* features = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+  REQUIRE(features != nullptr);
+  auto resizeResult = features->resizeTuples({16});
+  SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+  DataPath parentPath = k_FeatureAMPath;
+  if(alias)
+  {
+    auto* other = DataGroup::Create(ds, "Alias");
+    REQUIRE(other != nullptr);
+    REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
+    parentPath = DataPath({"Alias", "Feature Data"});
+  }
+  auto args = MakeTransformFeatureArgs(true, false, 4);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SaveTransformMatrix_Key, std::make_any<bool>(true));
+  const auto outputPath = parentPath.createChildPath("Matrix");
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformMatrixOutputPath_Key, std::make_any<DataPath>(outputPath));
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67456);
+  CHECK(result.outputActions.errors()[0].message.find(outputPath.toString()) != std::string::npos);
+  CHECK(ds.getData(outputPath) == nullptr);
+}
