@@ -1147,10 +1147,10 @@ set.
 **Rule:** a test calls `UnitTest::LoadPlugins();` only when it calls `createFilter()` on the filter list, loads a
 pipeline (`Pipeline::FromJson()`, `FromFile()`, `FromSIMPLJson()`, `FromSIMPLFile()`; every SIMPL
 backwards-compatibility test does), or runs a filter whose code gets other filters from the filter list (`ReadH5Ebsd`
-does), or uses `UnitTest::PreferencesSentinel`, which changes the preferences of the `Application` instance that the
-call creates. A test that constructs a filter or algorithm directly and does none of these does not call it. A test
-that needs it calls it itself: ctest runs each visible, individually registered `TEST_CASE` in its own process (a few
-hidden groups, such as `[.OocStoreContract]`, run together in one).
+does). Each test that needs plugin loading calls it itself. CTest runs each visible, individually registered
+`TEST_CASE` in its own process. A few hidden groups, such as `[.OocStoreContract]`, run together in one process.
+`UnitTest::PreferencesSentinel` needs an existing `Application` instance. If the test only needs that instance,
+call `Application::GetOrCreateInstance()` before constructing the sentinel.
 
 **Example of the broken rule:** the synthetic tuple-mismatch cases of `ComputeAvgCAxesTest.cpp` and
 `ReplaceElementAttributesWithNeighborValuesTest.cpp` load the plugins although they construct the filter directly, and
@@ -1160,9 +1160,11 @@ hidden groups, such as `[.OocStoreContract]`, run together in one).
 test fail for a plugin it does not use.
 
 **What to look for:** `UnitTest::LoadPlugins()` in a test with no UUID lookup, pipeline load, registry-dependent
-subfilter or `PreferencesSentinel`. Without the call, a test that uses `PreferencesSentinel` crashes (PR #1915).
+subfilter, or other need for plugin registration. A `PreferencesSentinel` constructed before the `Application`
+instance exists dereferences a null pointer (PR #1915).
 
-**Pattern to use:** direct filter construction without plugin loading, as in `test/GeometryTest.cpp`.
+**Pattern to use:** construct filters directly as in `test/GeometryTest.cpp`. For a test that also uses a sentinel,
+initialize the `Application` directly as in the projection warning cases in `MaximumProjectionImageFilterTest.cpp`.
 
 ### Give Catch2 a bool when you compare file times
 

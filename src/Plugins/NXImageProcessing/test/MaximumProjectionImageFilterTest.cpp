@@ -3,6 +3,8 @@
 
 #include "NXImageProcessing/Filters/MaximumProjectionImageFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
+
 #include <memory>
 
 using namespace nx::core;
@@ -127,7 +129,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golde
 
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
   const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
@@ -189,7 +191,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discar
 
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning excludes an input outside cell data", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure ds;
   const DataPath cellInputPath = ip_test::BuildRampImage<float32>(ds, 3, 0.0, 1.0);

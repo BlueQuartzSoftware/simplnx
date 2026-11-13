@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/StandardDeviationProjectionImageFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Utilities/ImageProcessing/AxisProjectionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ProjectionReducers.hpp"
 
@@ -267,7 +268,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: ITK real-i
 
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
   const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
