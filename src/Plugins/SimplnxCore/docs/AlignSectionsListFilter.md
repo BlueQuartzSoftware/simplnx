@@ -29,7 +29,7 @@ If your shifts are stored in an external file, you need to import them into a Da
 
 **Requirements:**
 - The number of shift entries must equal the number of slices (Z dimension of the geometry)
-- Slices must be ordered from bottom to top
+- Shift rows must be ordered from the top section to the bottom section
 
 **Recommended file format** (space-delimited, two values per line):
 
@@ -52,7 +52,21 @@ For more complex file formats (e.g., legacy DREAM3D alignment files with 6 colum
 
 ### Note on Legacy Files
 
-Alignment shift files from DREAM3D/DREAM3DNX versions 7.0.3 and earlier used a 6-column format with both relative and cumulative shifts. If using these files, import via the [Read CSV File](ReadCSVFileFilter.md) filter and select the appropriate columns. Files produced by the legacy `AlignSectionsFeatureCentroid` contained zeros for relative shifts -- use cumulative shifts for those.
+Legacy DREAM3D 6.5.171 shift files have six tab-separated columns: section, next section, relative X, relative Y, cumulative X, and cumulative Y. All shifts are in cells. These files have one row fewer than the number of sections. They have no row for the top section.
+
+For *Cumulative* input, add a zero row at the start of the file, before importing it. Row 0 is the first data row, not a header. Set its cumulative X and Y shifts to zero. For the 117-section example, the added row is:
+
+```text
+116	117	0	0	0	0
+```
+
+Import all 117 rows with [Read CSV File](ReadCSVFileFilter.md). Use custom column names and start at the first data row. Combine the cumulative X and Y columns, in that order, into one two-component int64 array.
+
+For a volume with N sections, array row 0 represents the top section, N - 1, which stays fixed. Row i supplies the cumulative shift for section N - 1 - i. The last row supplies the shift for section 0. Without the added zero row, the first legacy row is unused and the remaining shifts are assigned to the wrong sections.
+
+See `Align_Sections_Backwards_Compatibility.d3dpipeline` in `Align_Sections_Examples` for the complete example. Its input file already includes the zero row. Do not add another row to that file.
+
+Legacy `AlignSectionsFeatureCentroid` files contain zeros in the relative shift columns. Use the cumulative shift columns for those files.
 
 ### Required Input Sources
 
@@ -66,7 +80,7 @@ Alignment shift files from DREAM3D/DREAM3DNX versions 7.0.3 and earlier used a 6
 - align_sections_no_file (meant for visualizing)
 - align_sections_backwards_compatibility
 
-Note the backwards compatibility also demonstrates how it a more complex user input could be done as well (Using the Read CSV Data Filter).
+The backwards compatibility example also shows how to import a more complex input file with Read CSV File.
 
 ## License & Copyright
 
