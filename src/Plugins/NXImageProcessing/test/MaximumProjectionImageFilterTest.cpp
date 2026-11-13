@@ -125,7 +125,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golde
   projection_test::RunProjectionMd5ItkGolden<MaximumProjectionImageFilter>("Ramp-Up-Short.nrrd", /*projDim=*/1, /*removeOriginalGeometry=*/true, "5390344262c91e83bc9208b0991a2fc9");
 }
 
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Warning names discarded objects", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
@@ -187,7 +187,7 @@ TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Warning names discarde
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
-TEST_CASE("ImageProcessing::MaximumProjectionImageFilter: Warning excludes an input outside cell data", "[ImageProcessing][MaximumProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning excludes an input outside cell data", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);

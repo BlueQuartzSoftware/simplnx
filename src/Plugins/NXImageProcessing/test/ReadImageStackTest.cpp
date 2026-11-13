@@ -1490,7 +1490,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   REQUIRE(hasMultiPageWarning);
 }
 
-TEST_CASE("ImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[ImageProcessing][ReadImageStackFilter]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXImageProcessing][ReadImageStackFilter]")
 {
   const bool firstSliceIsUint16 = GENERATE(false, true);
   CAPTURE(firstSliceIsUint16);

@@ -265,7 +265,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: ITK real-i
                                                                                           /*tolerance=*/0.0001);
 }
 
-TEST_CASE("ImageProcessing::StandardDeviationProjectionImageFilter: Warning names discarded objects", "[ImageProcessing][StandardDeviationProjectionImageFilter]")
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
 {
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
