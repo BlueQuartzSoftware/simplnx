@@ -322,6 +322,11 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const auto& metadata = metadataResult.value();
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, fileName, metadata.numPages);
+  if(layoutResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(layoutResult), {})};
+  }
 
   // Z is the number of real (non-pyramid/non-mask) pages the metadata reports. A single-page hint
   // (set programmatically by ReadImageStack) forces Z == 1 so each stacked file yields one slice.

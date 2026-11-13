@@ -8,6 +8,8 @@ IO (Input)
 
 Reads an image file into a newly created **Image Geometry**. This filter is dimension-aware: a single-page raster file is read as a 2D image (`Z = 1`), a multi-page TIFF is read as a 3D Z-stack (one page per Z slice), and a NRRD file is read as its native 2D or 3D volume. This filter does not depend on ITK. It uses stb_image for PNG/JPEG/BMP files, libtiff for TIFF files, and an ITK-free (zlib-only) reader for NRRD files.
 
+All pages of a multi-page TIFF must have the same dimensions, component count and data type. Otherwise, the filter returns an error.
+
 The following image types are supported:
 
 - PNG (via stb)

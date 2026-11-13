@@ -4,12 +4,14 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
 
 #include <filesystem>
 #include <functional>
 #include <set>
 #include <span>
+#include <vector>
 
 namespace nx::core
 {
@@ -28,6 +30,49 @@ namespace nx::core
 class SIMPLNX_EXPORT IImageIO
 {
 public:
+  /** @brief Stored sample layout, including TIFF sample-format tag values (1 unsigned, 2 signed, 3 IEEE float). */
+  struct PageMetadata
+  {
+    usize width = 0;
+    usize height = 0;
+    usize numComponents = 0;
+    usize bitsPerSample = 0;
+    uint16 sampleFormat = 1;
+  };
+
+  /**
+   * @brief Reads all logical page layouts without decoding pixels.
+   * @param filePath Identifies the image file.
+   * @return Layouts in readPixelDataRows() page order, or a metadata error.
+   * The default is for single-page backends; multi-page backends override it.
+   */
+  virtual Result<std::vector<PageMetadata>> readPageLayouts(const std::filesystem::path& filePath) const
+  {
+    auto result = readMetadata(filePath);
+    if(result.invalid())
+    {
+      return ConvertResultTo<std::vector<PageMetadata>>(ConvertResult(std::move(result)), {});
+    }
+    const auto& metadata = result.value();
+    uint16 format = 1;
+    switch(metadata.dataType)
+    {
+    case DataType::int8:
+    case DataType::int16:
+    case DataType::int32:
+    case DataType::int64:
+      format = 2;
+      break;
+    case DataType::float32:
+    case DataType::float64:
+      format = 3;
+      break;
+    default:
+      break;
+    }
+    return {std::vector<PageMetadata>{{metadata.width, metadata.height, metadata.numComponents, GetDataTypeSize(metadata.dataType) * 8, format}}};
+  }
+
   /**
    * @typedef ReadRowCallback
    * @brief Receives one contiguous segment of a decoded image row.

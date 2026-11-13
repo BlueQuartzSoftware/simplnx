@@ -375,6 +375,49 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
 }
 
 // -----------------------------------------------------------------------------
+Result<std::vector<IImageIO::PageMetadata>> TiffImageIO::readPageLayouts(const std::filesystem::path& filePath) const
+{
+  const std::string pathStr = filePath.string();
+  TiffFile file(pathStr, "r");
+  if(!file.valid())
+  {
+    return MakeErrorResult<std::vector<PageMetadata>>(k_ErrorOpenFailed, fmt::format("Failed to open TIFF '{}': {}", pathStr, file.errorMessage()));
+  }
+  TIFF* tiff = file.get();
+  const auto directories = CollectPageDirectories(tiff);
+  std::vector<PageMetadata> layouts;
+  layouts.reserve(directories.size());
+  usize directory = 0;
+  for(usize page = 0; page < directories.size(); ++page)
+  {
+    // CollectPageDirectories restores directory 0. Advance only forwards so reading
+    // layouts does not repeatedly traverse the IFD chain from the beginning.
+    while(directory < directories[page])
+    {
+      if(TIFFReadDirectory(tiff) == 0)
+      {
+        return MakeErrorResult<std::vector<PageMetadata>>(k_ErrorReadMetadataFailed, fmt::format("Cannot select page {} of TIFF '{}': {}", page, pathStr, file.errorMessage()));
+      }
+      ++directory;
+    }
+    nx::core::uint32 width = 0;
+    nx::core::uint32 height = 0;
+    nx::core::uint16 components = 1;
+    nx::core::uint16 bits = 1;
+    nx::core::uint16 format = SAMPLEFORMAT_UINT;
+    if(TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width) == 0 || TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height) == 0)
+    {
+      return MakeErrorResult<std::vector<PageMetadata>>(k_ErrorReadMetadataFailed, fmt::format("Cannot read dimensions of page {} of TIFF '{}': {}", page, pathStr, file.errorMessage()));
+    }
+    TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLESPERPIXEL, &components);
+    TIFFGetFieldDefaulted(tiff, TIFFTAG_BITSPERSAMPLE, &bits);
+    TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLEFORMAT, &format);
+    layouts.push_back({width, height, components, bits, format});
+  }
+  return {std::move(layouts)};
+}
+
+// -----------------------------------------------------------------------------
 Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8_t> buffer, usize pageIndex) const
 {
   Result<ImageMetadata> metadataResult = readMetadata(filePath);

@@ -21,6 +21,7 @@
 #include <tiffio.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
@@ -1608,4 +1609,92 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", 
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+template <typename T>
+void WriteLayoutPage(TIFF* tiff, nx::core::uint16 components, nx::core::uint16 format, const std::vector<T>& pixels)
+{
+  REQUIRE(pixels.size() == usize{4} * components);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, 2) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, 2) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, components) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, static_cast<nx::core::uint16>(sizeof(T) * 8)) == 1);
+  if(format != 0) // Exercise TIFF's default unsigned sample format too.
+  {
+    REQUIRE(TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, format) == 1);
+  }
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, components == 4 ? PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK) == 1);
+  if(components == 4)
+  {
+    nx::core::uint16 extra = EXTRASAMPLE_UNASSALPHA;
+    REQUIRE(TIFFSetField(tiff, TIFFTAG_EXTRASAMPLES, 1, &extra) == 1);
+  }
+  for(nx::core::uint32 row = 0; row < 2; ++row)
+  {
+    REQUIRE(TIFFWriteScanline(tiff, const_cast<T*>(pixels.data() + row * 2 * components), row, 0) == 1);
+  }
+  REQUIRE(TIFFWriteDirectory(tiff) == 1);
+}
+} // namespace
+
+TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout", "[NXImageProcessing][ReadImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path dir = fs::temp_directory_path() / "ReadImage_PageLayout";
+  fs::create_directories(dir);
+  const auto path = dir / "page_layout.tif";
+  bool mismatch = true;
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    SECTION("RGBA uint8 versus grayscale float32")
+    {
+      WriteLayoutPage<nx::core::uint8>(tiff.get(), 4, SAMPLEFORMAT_UINT, {1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255});
+      WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+    }
+    SECTION("uint16 versus int16")
+    {
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, 0, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::int16>(tiff.get(), 1, SAMPLEFORMAT_INT, {-1, -2, -3, -4});
+    }
+    SECTION("identical uint16 layouts")
+    {
+      mismatch = false;
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, 0, {1, 2, 3, 4});
+      WriteLayoutPage<nx::core::uint16>(tiff.get(), 1, SAMPLEFORMAT_UINT, {11, 12, 13, 14});
+    }
+  }
+  DataStructure ds;
+  ReadImageFilter filter;
+  const DataPath geomPath({"Layout"});
+  const auto args = MakeReadImageNrrdArgs(path, geomPath, "Cell Data", "Pixels");
+  if(mismatch)
+  {
+    const auto preflight = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    const auto& error = preflight.outputActions.errors().front();
+    REQUIRE(error.code == -50579);
+    REQUIRE(error.message.find(path.string()) != std::string::npos);
+    REQUIRE(error.message.find("page 1 is") != std::string::npos);
+    REQUIRE(error.message.find("page 0 is") != std::string::npos);
+    REQUIRE(ds.getDataAs<ImageGeom>(geomPath) == nullptr); // Preflight rejects before output creation.
+  }
+  else
+  {
+    const auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const auto arrayPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt16Array>(arrayPath));
+    const auto& array = ds.getDataRefAs<UInt16Array>(arrayPath);
+    const std::array<nx::core::uint16, 8> expected = {1, 2, 3, 4, 11, 12, 13, 14};
+    REQUIRE(array.getSize() == expected.size());
+    for(usize i = 0; i < expected.size(); ++i)
+    {
+      REQUIRE(array[i] == expected[i]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

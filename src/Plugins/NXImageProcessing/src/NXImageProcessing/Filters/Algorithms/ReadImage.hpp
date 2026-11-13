@@ -15,6 +15,7 @@
 
 namespace nx::core
 {
+class IImageIO;
 
 /**
  * @struct ReadImageInputValues
@@ -76,6 +77,9 @@ public:
    * Cancellation returns success and retains destination segments written before the callback stops.
    */
   Result<> operator()();
+
+  /** @brief Checks every page layout before creating or writing output arrays. */
+  static Result<> ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize numPages);
 
 private:
   DataStructure& m_DataStructure;

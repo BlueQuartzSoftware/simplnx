@@ -30,6 +30,12 @@ namespace fs = std::filesystem;
 
 namespace
 {
+std::string DescribePageLayout(const IImageIO::PageMetadata& layout)
+{
+  const std::string type = layout.sampleFormat == 1 ? "uint" : layout.sampleFormat == 2 ? "int" : layout.sampleFormat == 3 ? "float" : fmt::format("sample-format-{}-bits-", layout.sampleFormat);
+  return fmt::format("{}-component {}{}", layout.numComponents, type, layout.bitsPerSample);
+}
+
 /**
  * @brief Geometry of one raster read (2D raster or multi-page TIFF Z-stack).
  *
@@ -191,6 +197,11 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     return ConvertResult(std::move(metadataResult));
   }
   const auto& metadata = metadataResult.value();
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, metadata.numPages);
+  if(layoutResult.invalid())
+  {
+    return layoutResult;
+  }
 
   auto& imageArray = dataStructure.getDataRefAs<IDataArray>(inputValues.imageDataArrayPath);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.imageGeometryPath);
@@ -467,4 +478,34 @@ Result<> ReadImage::operator()()
   }
 
   return ReadRasterBackend(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel);
+}
+
+// -----------------------------------------------------------------------------
+Result<> ReadImage::ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize numPages)
+{
+  if(numPages <= 1)
+  {
+    return {};
+  }
+  auto result = imageIO.readPageLayouts(filePath);
+  if(result.invalid())
+  {
+    return ConvertResult(std::move(result));
+  }
+  const auto& layouts = result.value();
+  if(layouts.size() <= 1)
+  {
+    return {};
+  }
+  const auto& first = layouts.front();
+  for(usize page = 1; page < layouts.size(); ++page)
+  {
+    const auto& current = layouts[page];
+    if(current.numComponents != first.numComponents || current.bitsPerSample != first.bitsPerSample || current.sampleFormat != first.sampleFormat)
+    {
+      return MakeErrorResult(-50579, fmt::format("TIFF '{}': page {} is {}, page 0 is {}. All pages must have the same component count and data type. Use a TIFF with matching page layouts.",
+                                                 filePath.string(), page, DescribePageLayout(current), DescribePageLayout(first)));
+    }
+  }
+  return {};
 }

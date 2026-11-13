@@ -27,6 +27,7 @@ public:
   ~TiffImageIO() noexcept override = default;
 
   Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const override;
+  Result<std::vector<PageMetadata>> readPageLayouts(const std::filesystem::path& filePath) const override;
   /**
    * @brief Reads the requested TIFF page into the destination buffer.
    */
