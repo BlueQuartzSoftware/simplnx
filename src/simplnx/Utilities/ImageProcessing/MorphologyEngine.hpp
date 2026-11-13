@@ -150,6 +150,19 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
   return true;
 }
 
+// A single-slice image has no Z neighbors. Normalize before testing for an empty kernel
+// so each operation retains its existing empty-kernel result. Leave 3D kernels unchanged.
+inline std::optional<StructuringElement> MakeInPlaneMorphologyKernel(const SizeVec3& dims, const StructuringElement& se)
+{
+  if(dims[2] != 1 || std::none_of(se.offsets.begin(), se.offsets.end(), [](const SEOffset& offset) { return offset.dz != 0; }))
+  {
+    return std::nullopt;
+  }
+  StructuringElement inPlaneSE = se;
+  std::erase_if(inPlaneSE.offsets, [](const SEOffset& offset) { return offset.dz != 0; });
+  return inPlaneSE;
+}
+
 inline bool ShouldUseMorphologyResidentFlatFold(const SizeVec3& dims, const StructuringElement& se)
 {
   // Larger kernels use the moving histogram, whose work scales with the entering and leaving boundary.
@@ -3176,6 +3189,11 @@ public:
       return layout;
     }
 
+    if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(m_Dims, m_SE); inPlaneSE.has_value())
+    {
+      return MorphScanline<T>{m_In, m_Out, m_Dims, *inPlaneSE, m_Op, m_ShouldCancel, m_MessageHandler, m_TargetBufferBytes}();
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -3419,6 +3437,11 @@ public:
     if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
     {
       return layout;
+    }
+
+    if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(m_Dims, m_SE); inPlaneSE.has_value())
+    {
+      return MorphDirect<T>{m_In, m_Out, m_Dims, *inPlaneSE, m_Op, m_ShouldCancel, m_MessageHandler}();
     }
 
     // Dispatch the runtime op to a compile-time bool so the histogram's comparator/extremum are fixed at
@@ -3842,6 +3865,10 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
   if(shouldCancel)
   {
     return {};
+  }
+  if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(dims, se); inPlaneSE.has_value())
+  {
+    return ApplyMorphologyCompositePipeline<T>(input, output, dims, *inPlaneSE, firstOp, secondOp, safeBorder, outputMode, shouldCancel, grantedWorkingMemoryBytes);
   }
   auto requiredBytesResult = CalculateMorphologyCompositePipelineWorkingMemoryBytes<T>(dims, se, safeBorder);
   if(requiredBytesResult.invalid())
@@ -4272,6 +4299,11 @@ public:
       return layout;
     }
 
+    if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(m_Dims, m_SE); inPlaneSE.has_value())
+    {
+      return MorphGradientScanline<T>{m_In, m_Out, m_Dims, *inPlaneSE, m_ShouldCancel, m_MessageHandler, m_TargetBufferBytes}();
+    }
+
     const usize dimX = m_Dims[0];
     const usize dimY = m_Dims[1];
     const usize dimZ = m_Dims[2];
@@ -4508,6 +4540,11 @@ public:
     if(auto layout = ValidateMorphologyLayout(m_Dims, m_SE, false, sizeof(T)); layout.invalid())
     {
       return layout;
+    }
+
+    if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(m_Dims, m_SE); inPlaneSE.has_value())
+    {
+      return MorphGradientDirect<T>{m_In, m_Out, m_Dims, *inPlaneSE, m_ShouldCancel, m_MessageHandler}();
     }
 
     const usize dimX = m_Dims[0];
