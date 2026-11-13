@@ -1720,3 +1720,40 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[
     }
   }
 }
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested Feature AM aliases", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
+  DataStructure ds;
+  BuildFixture(ds, FixtureSpec{{3, 1, 1}, {1, 2, 3}, 4, {false, true, false, true}});
+  const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
+  REQUIRE(sourceFeatures != nullptr);
+  auto* nested = DataGroup::Create(ds, "Nested", ds.getData(k_ImageGeomPath)->getId());
+  REQUIRE(nested != nullptr);
+  REQUIRE(ds.setAdditionalParent(sourceFeatures->getId(), nested->getId()));
+  auto* ensemble = AttributeMatrix::Create(ds, "Ensemble", {2}, nested->getId());
+  REQUIRE(ensemble != nullptr);
+  auto* phases = UnitTest::CreateTestDataArray<int32>(ds, "Phases", {2}, {1}, ensemble->getId());
+  REQUIRE(phases != nullptr);
+  (*phases)[0] = 42;
+  (*phases)[1] = 99;
+  RemoveFlaggedFeaturesFilter filter;
+  auto result = scope.executeFilter(filter, ds, MakeArgs(operation, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(const auto feature : {1, 3})
+  {
+    const DataPath output({fmt::format("{}-{}", k_NewImgGeomPrefix, feature)});
+    REQUIRE(ds.getDataAs<ImageGeom>(output) != nullptr);
+    CHECK(ds.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
+    CHECK(ds.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
+    const auto* outputPhases = ds.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
+    REQUIRE(outputPhases != nullptr);
+    CHECK((*outputPhases)[0] == 42);
+    CHECK((*outputPhases)[1] == 99);
+  }
+  CHECK(ds.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeatures);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
