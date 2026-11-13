@@ -29,7 +29,6 @@
 #include <memory>
 #include <nonstd/span.hpp>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
