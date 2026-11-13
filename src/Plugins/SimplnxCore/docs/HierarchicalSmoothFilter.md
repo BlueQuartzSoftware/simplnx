@@ -82,6 +82,8 @@ After all boundaries have been smoothed, the algorithm performs a post-processin
 
 where the edge lengths come from the first triangle in the mesh. This approximates the characteristic size scale of one mesh element (the height of an equilateral triangle with side length equal to the shortest edge).
 
+If this reference length is zero or is not a finite number, the filter stops with an error before smoothing. Check for coincident nodes on the edge from the first to the second corner of the first triangle and the edge from the second to the third corner, or NaN/infinite coordinates in the first triangle, and repair the mesh.
+
 Each vertex's displacement is normalized by this reference length:
 
 ```

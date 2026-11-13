@@ -136,7 +136,8 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
   if(const int err = reader->readHeaderOnly(); err < 0)
   {
-    return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
+    return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header of scan '{}' in '{}'.\n  Error Code: {}\n  Message: {}", pSelectedScanNamesValue.scanNames.front(),
+                                                       pSelectedScanNamesValue.inputFilePath.string(), err, reader->getErrorMessage()));
   }
 
   if(auto headerResult = EbsdReaderUtilities::ValidateOemHeader(*reader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); headerResult.invalid())
@@ -157,7 +158,8 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     scanReader->setReadPatternData(pReadPatternDataValue);
     if(const int err = scanReader->readHeaderOnly(); err < 0)
     {
-      return MakePreflightErrorResult(-9682, fmt::format("Could not read scan '{}' in file '{}': {}", scanName, pSelectedScanNamesValue.inputFilePath.string(), scanReader->getErrorMessage()));
+      return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header of scan '{}' in '{}'.\n  Error Code: {}\n  Message: {}", scanName,
+                                                         pSelectedScanNamesValue.inputFilePath.string(), err, scanReader->getErrorMessage()));
     }
     if(auto result = EbsdReaderUtilities::ValidateOemHeader(*scanReader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); result.invalid())
     {

@@ -417,3 +417,116 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: CTF suffix is case i
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -44601);
 }
+
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: ANG extension in any letter case is converted", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
+{
+  const UnitTest::TestFileSentinel sentinel(unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
+  const std::string extension = GENERATE(".ang", ".Ang", ".ANG");
+  const bool multipleFiles = GENERATE(false, true);
+  CAPTURE(extension, multipleFiles);
+  const fs::path root = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "extension_case";
+  auto cleanup = MakeScopeGuard([&root]() noexcept {
+    std::error_code error;
+    fs::remove_all(root, error);
+  });
+  fs::remove_all(root);
+  fs::create_directories(root);
+  const fs::path sourceRoot = fs::path(unit_test::k_TestFilesDir.view()) / k_HexToSqrTestFilesDir;
+  const fs::path input = root / ("probe1" + extension);
+  fs::copy_file(sourceRoot / "single/hex_grid.ang", input);
+  if(multipleFiles)
+  {
+    fs::copy_file(sourceRoot / "single/hex_grid.ang", root / ("probe2" + extension));
+  }
+
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure dataStructure;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(multipleFiles));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key, std::make_any<fs::path>(input));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(root / "output"));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = root.string();
+  fileList.filePrefix = "probe";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = extension;
+  fileList.startIndex = 1;
+  fileList.endIndex = 2;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 0;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  for(int32 index = 1; index <= (multipleFiles ? 2 : 1); ++index)
+  {
+    const std::string filename = "Sqr_probe" + std::to_string(index) + extension;
+    REQUIRE(CompareFiles((sourceRoot / "single/exemplar/Sqr_SIMPL_hex_grid.ang").string(), (root / "output" / filename).string()));
+    // Inspect directory entries as existence checks alone cannot verify case on macOS.
+    REQUIRE(std::any_of(fs::directory_iterator(root / "output"), fs::directory_iterator{}, [&](const auto& entry) { return entry.path().filename().string() == filename; }));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Unsupported extensions in any letter case are rejected", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
+{
+  const UnitTest::TestFileSentinel sentinel(unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz", k_HexToSqrTestFilesDir);
+  UnitTest::LoadPlugins();
+
+  const auto [extension, expectedCode] = GENERATE(table<std::string, int32>({{".ctf", -44601}, {".Ctf", -44601}, {".CTF", -44601}, {".txt", -44602}, {".Txt", -44602}}));
+  const int32 fileCount = GENERATE(1, 2);
+  CAPTURE(extension, fileCount);
+  const fs::path root = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "extension_case";
+  auto cleanup = MakeScopeGuard([&root]() noexcept {
+    std::error_code error;
+    fs::remove_all(root, error);
+  });
+  fs::remove_all(root);
+  fs::create_directories(root);
+  const fs::path sourceRoot = fs::path(unit_test::k_TestFilesDir.view()) / k_HexToSqrTestFilesDir;
+  const fs::path input = root / ("probe1" + extension);
+  fs::copy_file(sourceRoot / "single/hex_grid.ang", input);
+  if(fileCount == 2)
+  {
+    fs::copy_file(sourceRoot / "single/hex_grid.ang", root / ("probe2" + extension));
+  }
+
+  ConvertHexGridToSquareGridFilter filter;
+  DataStructure dataStructure;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_MultipleFiles_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_InputPath_Key, std::make_any<fs::path>(input));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPath_Key, std::make_any<fs::path>(root / "output"));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_OutputPrefix_Key, std::make_any<std::string>("Sqr_"));
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = root.string();
+  fileList.filePrefix = "probe";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = extension;
+  fileList.startIndex = 1;
+  fileList.endIndex = fileCount;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 0;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  args.insertOrAssign(ConvertHexGridToSquareGridFilter::k_GeneratedFileList_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+
+  // The single-file parameter accepts ANG only; use the generated list to reach the filter's extension diagnostics.
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE_FALSE(preflight.outputActions.errors().empty());
+  const auto& error = preflight.outputActions.errors().front();
+  REQUIRE(error.code == expectedCode);
+  if(expectedCode == -44602)
+  {
+    // The path also contains the extension, so match the phrase that reports it.
+    CHECK(error.message.find(fmt::format("has the extension '{}'", extension)) != std::string::npos);
+    CHECK(error.message.find(".ang") != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

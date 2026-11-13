@@ -146,14 +146,16 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(EbsdReaderUtilities::NormalizedExtension(inputPath) != ("." + ebsdlib::Ang::FileExt))
+  if(!ConvertHexGridToSquareGrid::IsAngFile(inputPath))
   {
-    return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
+    return MakePreflightErrorResult(
+        -44602, fmt::format("The file '{}' has the extension '{}'. This filter reads only TSL .ang files. The extension can use any letter case, for example .ang or .ANG. Select an .ang file.",
+                            inputPath.string(), inputPath.extension().string()));
   }
 
   if(!fs::exists(inputPath))
   {
-    return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
+    return MakePreflightErrorResult(-44603, "Please select a valid file path to run");
   }
 
   const auto outputDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);

@@ -7,6 +7,7 @@
 #include <catch2/catch.hpp>
 #include <limits>
 
+#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -20,12 +21,19 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
-#include "EbsdLib/IO/BrukerNano/EspritConstants.h"
-
+#include <EbsdLib/IO/BrukerNano/EspritConstants.h>
+#include <EbsdLib/IO/BrukerNano/H5EspritReader.h>
 #include <EbsdLib/IO/TSL/AngFields.h>
+#include <H5Support/H5Lite.h>
+#include <H5Support/H5ScopedSentinel.h>
+#include <H5Support/H5Utilities.h>
 
 #include <filesystem>
 #include <fstream>
+#include <string>
+#include <system_error>
+#include <utility>
+#include <vector>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -33,9 +41,55 @@ using namespace nx::core::Constants;
 
 namespace
 {
+const std::string k_ScanName_1 = "Scan 1";
+const std::string k_ScanName_2 = "Scan 2";
 const std::string k_ScanName_435 = "Section_435";
 const std::string k_ScanName_436 = "Section_436";
 const std::string k_ScanName_437 = "Section_437";
+
+void WriteEspritScans(const fs::path& path, int32 columns, int32 rows)
+{
+  using namespace ebsdlib::H5Esprit;
+  const hid_t fileId = H5Support::H5Utilities::createFile(path.string());
+  REQUIRE(fileId >= 0);
+  H5Support::H5ScopedFileSentinel sentinel(fileId, false);
+  REQUIRE(H5Support::H5Lite::writeStringDataset(fileId, Manufacturer, BrukerNano) >= 0);
+  REQUIRE(H5Support::H5Lite::writeStringDataset(fileId, Version, "Esprit 2.X") >= 0);
+  const auto group = [&](hid_t parent, const std::string& name) {
+    const hid_t id = H5Support::H5Utilities::createGroup(parent, name);
+    REQUIRE(id >= 0);
+    sentinel.addGroupId(id);
+    return id;
+  };
+  const auto scan = [&](const std::string& name, int32 x, int32 y) {
+    const hid_t ebsd = group(group(fileId, name), EBSD);
+    const hid_t header = group(ebsd, Header);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(header, NCOLS, x) >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(header, NROWS, y) >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(header, NPoints, x * y) >= 0);
+    for(const auto& key : {PatternWidth, PatternHeight})
+    {
+      REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(header, key, 0) >= 0);
+    }
+    for(const auto& key : {XSTEP, YSTEP, SEPixelSizeX, SEPixelSizeY, ZOffset, CameraTilt, KV, MADMax, Magnification, MapStepFactor, SampleTilt, TopClip, WD})
+    {
+      REQUIRE(H5Support::H5Lite::writeScalarDataset<float64>(header, key, 1.0) >= 0);
+    }
+    REQUIRE(H5Support::H5Lite::writeStringDataset(header, GridType, Isometric) >= 0);
+    REQUIRE(H5Support::H5Lite::writeStringDataset(header, OriginalFile, "inline.bcf") >= 0);
+    const hid_t phase = group(group(header, Phases), "1");
+    REQUIRE(H5Support::H5Lite::writeStringDataset(phase, Formula, "Ni") >= 0);
+    REQUIRE(H5Support::H5Lite::writeStringDataset(phase, Name, "Nickel") >= 0);
+    REQUIRE(H5Support::H5Lite::writeStringDataset(phase, SpaceGroup, "F m#ovl3m") >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(phase, IT, 225) >= 0);
+    REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(phase, Setting, 1) >= 0);
+    REQUIRE(H5Support::H5Lite::writeVectorDataset<float32>(phase, LatticeConstants, {6}, {3.52f, 3.52f, 3.52f, 90.0f, 90.0f, 90.0f}) >= 0);
+    group(phase, "AtomPositions");
+  };
+  scan(k_ScanName_1, 4, 3);
+  scan(k_ScanName_2, columns, rows);
+}
+
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[OrientationAnalysis][ReadH5EspritDataFilter]")
@@ -609,4 +663,56 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritData: StructuralValidation valid pat
     REQUIRE(patterns[1] == 29);
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Scans With Different Dimensions", "[OrientationAnalysis][ReadH5EspritDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path h5TestFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadH5EspritData_Dimensions.h5";
+  fs::create_directories(h5TestFile.parent_path());
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(h5TestFile, ec);
+  });
+  const auto [columns, rows] = GENERATE(std::pair<int32, int32>{2, 2}, std::pair<int32, int32>{3, 4}, std::pair<int32, int32>{4, 2}, std::pair<int32, int32>{2, 3}, std::pair<int32, int32>{4, 3});
+  CAPTURE(columns, rows);
+  WriteEspritScans(h5TestFile, columns, rows);
+  for(const auto& scan : {k_ScanName_1, k_ScanName_2})
+  {
+    auto reader = ebsdlib::H5EspritReader::New();
+    reader->setFileName(h5TestFile.string());
+    reader->setHDF5Path(scan);
+    const auto readResult = reader->readHeaderOnly();
+    INFO(reader->getErrorMessage());
+    REQUIRE(readResult >= 0);
+    REQUIRE(reader->getXDimension() == (scan == k_ScanName_1 ? 4 : columns));
+    REQUIRE(reader->getYDimension() == (scan == k_ScanName_1 ? 3 : rows));
+    REQUIRE(reader->getPhaseVector().size() == 1);
+  }
+  DataStructure dataStructure;
+  ReadH5EspritDataFilter filter;
+  Arguments args;
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1, k_ScanName_2}};
+  args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+  auto result = filter.preflight(dataStructure, args);
+  if(columns == 4 && rows == 3)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    // -67606 is the scan grid mismatch code that the OIM and Esprit readers share.
+    REQUIRE(result.outputActions.errors().front().code == -67606);
+    const auto& message = result.outputActions.errors().front().message;
+    REQUIRE(message.find("Scan '" + k_ScanName_2 + "' in file '" + h5TestFile.string() + "' has " + std::to_string(columns) + " columns and " + std::to_string(rows) + " rows") != std::string::npos);
+    REQUIRE(message.find("first selected scan '" + k_ScanName_1 + "' has 4 columns and 3 rows") != std::string::npos);
+  }
 }

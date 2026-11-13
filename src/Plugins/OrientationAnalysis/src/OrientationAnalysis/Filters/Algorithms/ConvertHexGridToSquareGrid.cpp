@@ -50,7 +50,7 @@ public:
     }
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
-    if(EbsdReaderUtilities::NormalizedExtension(inputPath) == ("." + ebsdlib::Ang::FileExt))
+    if(ConvertHexGridToSquareGrid::IsAngFile(inputPath))
     {
       ebsdlib::AngReader reader;
       reader.setFileName(inputPath.string());
@@ -334,6 +334,12 @@ private:
   }
 };
 } // namespace
+
+// -----------------------------------------------------------------------------
+bool ConvertHexGridToSquareGrid::IsAngFile(const fs::path& inputPath)
+{
+  return EbsdReaderUtilities::NormalizedExtension(inputPath) == ("." + ebsdlib::Ang::FileExt);
+}
 
 // -----------------------------------------------------------------------------
 ConvertHexGridToSquareGrid::ConvertHexGridToSquareGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
