@@ -32,17 +32,9 @@
         },
         "selected_scan_names": {
           "value": {
-            "input_file_path": "Data/Hikari_Ni_Sequence.h5",
+            "input_file_path": "Data/OrientationAnalysis/EdaxOIMData.h5",
             "scan_names": [
-              "Scan 1",
-              "Scan 2",
-              "Scan 3",
-              "Scan 4",
-              "Scan 5",
-              "Scan 6",
-              "Scan 7",
-              "Scan 8",
-              "Scan 9"
+              "Scan 1"
             ],
             "stacking_order": 0
           },

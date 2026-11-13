@@ -216,3 +216,8 @@ values.
 and on the www.dream3d.io mirror unchanged, and its `download_test_data()` entry stays in
 `test/CMakeLists.txt` because the `.h5oina` input is still needed. Should the archive ever be
 regenerated, the `.dream3d` and `.xdmf` members can be dropped: nothing reads them.
+
+
+## Preflight regression fixtures
+
+The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle requires finite Origin components. No archive or generated exemplar was added or changed.

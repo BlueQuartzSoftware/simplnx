@@ -1,5 +1,7 @@
 # Convert EDAX Hex Grid to Square Grid (.ang)
 
+File extensions are case-insensitive; conversion preserves short header comments, refreshes suggested spacing when the input timestamp changes, and rejects output paths that resolve to an input file.
+
 ## Group (Subgroup)
 
 Processing (Conversion)

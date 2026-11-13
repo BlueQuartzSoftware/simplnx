@@ -2,6 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include <array>
+
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -34,6 +36,13 @@ public:
   ReadEnsembleInfo(ReadEnsembleInfo&&) noexcept = delete;
   ReadEnsembleInfo& operator=(const ReadEnsembleInfo&) = delete;
   ReadEnsembleInfo& operator=(ReadEnsembleInfo&&) noexcept = delete;
+
+  /**
+   * @brief Read and validate INI phase metadata before creating or filling outputs.
+   * @param file Input ensemble INI file path.
+   * @return Crystal structure and phase type for each phase, including phase zero, or the first validation error.
+   */
+  static Result<std::vector<std::array<uint32, 2>>> ReadEnsembleFile(const std::string& file);
 
   Result<> operator()();
 

@@ -139,7 +139,52 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
   }
 
-  // create the Image Geometry and it's attribute matrices
+  if(auto headerResult = EbsdReaderUtilities::ValidateOemHeader(*reader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); headerResult.invalid())
+  {
+    return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
+  }
+
+  // Later scans also write ensemble data, so every selected header must pass the same checks.
+  for(const auto& scanName : pSelectedScanNamesValue.scanNames)
+  {
+    if(scanName == pSelectedScanNamesValue.scanNames.front())
+    {
+      continue;
+    }
+    auto scanReader = ebsdlib::H5EspritReader::New();
+    scanReader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
+    scanReader->setHDF5Path(scanName);
+    scanReader->setReadPatternData(pReadPatternDataValue);
+    if(const int err = scanReader->readHeaderOnly(); err < 0)
+    {
+      return MakePreflightErrorResult(-9682, fmt::format("Could not read scan '{}' in file '{}': {}", scanName, pSelectedScanNamesValue.inputFilePath.string(), scanReader->getErrorMessage()));
+    }
+    if(auto result = EbsdReaderUtilities::ValidateOemHeader(*scanReader, pReadPatternDataValue, EbsdReaderUtilities::k_EspritMissingPatternDimensions); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+    if(auto result = EbsdReaderUtilities::ValidateOemScanCompatibility(*reader, *scanReader, pReadPatternDataValue); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+    if(pReadPatternDataValue)
+    {
+      if(auto result = EbsdReaderUtilities::ValidateOemPatternDataset(*scanReader); result.invalid())
+      {
+        return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+      }
+    }
+  }
+
+  if(pReadPatternDataValue)
+  {
+    if(auto result = EbsdReaderUtilities::ValidateOemPatternDataset(*reader); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+  }
+
+  // Create the Image Geometry and its attribute matrices.
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
@@ -153,7 +198,10 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   }
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
+  if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues); phaseResult.invalid())
+  {
+    return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+  }
 
   const auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -205,10 +253,6 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   {
     std::array<int32, 2> patternDims = {{0, 0}};
     reader->getPatternDims(patternDims);
-    if(patternDims[0] == 0 || patternDims[1] == 0)
-    {
-      return MakePreflightErrorResult(-9683, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
-    }
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
                                                                  cellAMPath.createChildPath(ebsdlib::H5Esprit::RawPatterns));
     resultOutputActions.value().appendAction(std::move(createArrayAction));

@@ -1,5 +1,7 @@
 #include "ConvertHexGridToSquareGrid.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -41,9 +43,14 @@ public:
 
   Result<> operator()(const fs::path& inputPath)
   {
+    const fs::path finalOutput = fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string());
+    if(auto result = EbsdReaderUtilities::ValidateHexOutputPath(inputPath, finalOutput); result.invalid())
+    {
+      return result;
+    }
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
-    if(inputPath.extension() == ("." + ebsdlib::Ang::FileExt))
+    if(EbsdReaderUtilities::NormalizedExtension(inputPath) == ("." + ebsdlib::Ang::FileExt))
     {
       ebsdlib::AngReader reader;
       reader.setFileName(inputPath.string());
@@ -73,7 +80,7 @@ public:
       }
 
       std::istringstream headerStream(origHeader, std::ios_base::in | std::ios_base::binary);
-      m_AtomicFiles.push_back(AtomicFile::Create(fs::absolute(m_OutputPath) / (m_FilePrefix + inputPath.filename().string())));
+      m_AtomicFiles.push_back(AtomicFile::Create(finalOutput));
       if(m_AtomicFiles[m_Index].invalid())
       {
         return ConvertResult(std::move(m_AtomicFiles[m_Index]));
@@ -88,12 +95,6 @@ public:
           m_Valid = false;
           return ConvertResult(std::move(m_AtomicFiles[m_Index]));
         }
-      }
-
-      if(outPath == inputPath)
-      {
-        m_Valid = false;
-        return MakeErrorResult(-201, "New ang file is the same as the old ang file. Overwriting is NOT allowed");
       }
 
       std::ofstream outFile(outPath, std::ios_base::out | std::ios_base::binary);
@@ -275,12 +276,12 @@ private:
     }
     // Start at the first character and walk until you find another non-space character
     usize i = 1;
-    while(buf.at(i) == ' ')
+    while(i < buf.size() && buf.at(i) == ' ')
     {
       ++i;
     }
     usize wordStart = i;
-    while(true)
+    while(i < buf.size())
     {
       if(buf.at(i) == 45 || buf.at(i) == 95 || (buf.at(i) >= 65 && buf.at(i) <= 90) || (buf.at(i) >= 97 && buf.at(i) <= 122))
       {
@@ -359,7 +360,11 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   if(!m_InputValues->MultiFile)
   {
     auto converter = ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
-    converter(m_InputValues->InputPath);
+    auto result = converter(m_InputValues->InputPath);
+    if(result.invalid())
+    {
+      return result;
+    }
     return converter.commitAllFiles();
   }
 

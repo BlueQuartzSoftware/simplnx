@@ -76,81 +76,72 @@ Result<> ReadEnsembleInfo::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadEnsembleInfo::readFile()
 {
-  auto& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellEnsembleAttributeMatrixName);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayName);
   auto& phaseTypes = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->PhaseTypesArrayName);
 
-  int32 numPhases = 0;
-  ini::IniFile inputIni;
-  inputIni.load(m_InputValues->InputFile);
-  numPhases = inputIni[k_EnsembleInfo][k_NumberPhases].as<int32>(); // read number of phases from input file
-
-  // Figure out if we are reading contiguous groups
-  std::vector<bool> visited(numPhases + 1, false);
-  visited[0] = true; // this is DREAM3D's internal, which is always visited.
-
-  crystalStructures.fill(ebsdlib::CrystalStructure::UnknownCrystalStructure);
-  phaseTypes.fill(static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown));
-  for(int32 index = 1; index < numPhases + 1; index++)
+  auto phases = ReadEnsembleFile(m_InputValues->InputFile);
+  if(phases.invalid())
   {
-    std::string group = StringUtilities::number(index);
+    return ConvertResult(std::move(phases));
+  }
+  crystalStructures.fill(ebsdlib::CrystalStructure::UnknownCrystalStructure);
+  phaseTypes.fill(static_cast<uint32>(PhaseType::Type::Unknown));
+  for(usize index = 0; index < phases.value().size(); ++index)
+  {
+    crystalStructures[index] = phases.value()[index][0];
+    phaseTypes[index] = phases.value()[index][1];
+  }
+  return {};
+}
 
-    // Check to make sure the user has something for each of the Crystal Structure and Phase Type
+Result<std::vector<std::array<uint32, 2>>> ReadEnsembleInfo::ReadEnsembleFile(const std::string& file)
+{
+  using PhaseValuesType = std::vector<std::array<uint32, 2>>;
+  ini::IniFile inputIni;
+  inputIni.load(file);
+  if(inputIni.count(k_EnsembleInfo) == 0)
+  {
+    return MakeErrorResult<PhaseValuesType>(-13001, fmt::format("File '{}' has no group '{}'.", file, k_EnsembleInfo));
+  }
+  if(inputIni[k_EnsembleInfo].count(k_NumberPhases) == 0)
+  {
+    return MakeErrorResult<PhaseValuesType>(-13002, fmt::format("File '{}' group '{}' has no key '{}'.", file, k_EnsembleInfo, k_NumberPhases));
+  }
+  const int32 numPhases = inputIni[k_EnsembleInfo][k_NumberPhases].as<int32>();
+  if(numPhases <= 0)
+  {
+    return MakeErrorResult<PhaseValuesType>(-13003, fmt::format("File '{}' has Number_Phases = {}. Use a positive phase count.", file, numPhases));
+  }
+  PhaseValuesType values{{ebsdlib::CrystalStructure::UnknownCrystalStructure, static_cast<uint32>(PhaseType::Type::Unknown)}};
+  for(int64 index = 1; index <= numPhases; ++index)
+  {
+    const std::string group = std::to_string(index);
     if(inputIni.count(group) == 0)
     {
-      return MakeErrorResult(-13004, fmt::format("Could not find the group name {} from the input file '{}'", group, m_InputValues->InputFile));
+      return MakeErrorResult<PhaseValuesType>(-13004, fmt::format("File '{}' has no phase group '{}'. Number phases consecutively from 1.", file, group));
     }
     if(inputIni[group].count(k_CrystalStructure) == 0)
     {
-      return MakeErrorResult(-13005, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_CrystalStructure, m_InputValues->InputFile));
+      return MakeErrorResult<PhaseValuesType>(-13005, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_CrystalStructure));
     }
     if(inputIni[group].count(k_PhaseType) == 0)
     {
-      return MakeErrorResult(-13006, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_PhaseType, m_InputValues->InputFile));
+      return MakeErrorResult<PhaseValuesType>(-13006, fmt::format("File '{}' phase group '{}' has no key '{}'.", file, group, k_PhaseType));
     }
-
-    auto crystalString = inputIni[group][k_CrystalStructure].as<std::string>();
-    auto phaseTypeString = inputIni[group][k_PhaseType].as<std::string>();
-
-    uint32 crystalStruct = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-    if(k_EnsembleCrystalInfoLookup.count(crystalString) > 0)
+    const auto crystalString = inputIni[group][k_CrystalStructure].as<std::string>();
+    const auto phaseString = inputIni[group][k_PhaseType].as<std::string>();
+    const auto crystal = k_EnsembleCrystalInfoLookup.find(crystalString);
+    const auto phase = k_EnsemblePhaseTypeInfoLookup.find(phaseString);
+    if(crystal == k_EnsembleCrystalInfoLookup.end())
     {
-      crystalStruct = k_EnsembleCrystalInfoLookup[crystalString];
+      return MakeErrorResult<PhaseValuesType>(
+          -13007, fmt::format("File '{}' phase '{}' has invalid CrystalStructure '{}'. Use a crystal structure listed in the filter documentation.", file, group, crystalString));
     }
-    auto pType = static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown);
-    if(k_EnsemblePhaseTypeInfoLookup.count(phaseTypeString) > 0)
+    if(phase == k_EnsemblePhaseTypeInfoLookup.end() || phase->second == static_cast<uint32>(PhaseType::Type::Unknown))
     {
-      pType = k_EnsemblePhaseTypeInfoLookup[phaseTypeString];
+      return MakeErrorResult<PhaseValuesType>(-13008, fmt::format("File '{}' phase '{}' has invalid PhaseType '{}'. Use a phase type listed in the filter documentation.", file, group, phaseString));
     }
-
-    // Check to see if the Crystal Structure string was valid
-    if(crystalStruct == ebsdlib::CrystalStructure::UnknownCrystalStructure) // The crystal structure name read from the file was not found in the lookup table
-    {
-      return MakeErrorResult(-13007, fmt::format("Incorrect crystal structure name '{}'", crystalString));
-    }
-
-    crystalStructures[index] = crystalStruct;
-
-    // now check to see if the Phase type string was valid.
-    if(pType == static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown))
-    {
-      return MakeErrorResult(-13008, fmt::format("Incorrect phase type name '{}'", phaseTypeString));
-    }
-
-    phaseTypes[index] = pType;
-
-    visited[index] = true;
+    values.push_back({crystal->second, phase->second});
   }
-
-  // Make sure we visited all the groups.
-  for(std::vector<bool>::size_type i = 0; i < visited.size(); i++)
-  {
-    if(!visited[i])
-    {
-      return MakeErrorResult(-13009, fmt::format("Phase '{}' did not have entries in the file. Phase numbering must start at 1 and no phases may be skipped",
-                                                 i)); // The phase type name read from the file was not found in the lookup table
-    }
-  }
-
-  return {};
+  return {std::move(values)};
 }

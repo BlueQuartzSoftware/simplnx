@@ -1,3 +1,4 @@
+#include "simplnx/Common/ScopeGuard.hpp"
 /*
  * This suite validates the ReadAngDataFilter value-add independently of EbsdLib parsing.
  * The inline oracle checks geometry construction, array creation, phase remapping,
@@ -497,5 +498,96 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility
       CHECK(args.value<std::string>(ReadAngDataFilter::k_CellAttributeMatrixName_Key) == "CellData");
       CHECK(args.value<std::string>(ReadAngDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "CellEnsembleData");
     }
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ReadAngData: HeaderValidation symmetry", "[OrientationAnalysis][ReadAngData]")
+{
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_header.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto phase = k_PhaseBlock;
+  phase.replace(phase.find("43"), 2, "999");
+  WriteAngFile(path.filename().string(), k_HeaderPrefix + phase + SqrGridBlock() + k_DataBlock);
+  DataStructure ds;
+  ReadAngDataFilter filter;
+  const auto argsForValidation = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67600);
+  REQUIRE(result.errors()[0].message.find("999") != std::string::npos);
+  REQUIRE(result.errors()[0].message.find(path.string()) != std::string::npos);
+}
+TEST_CASE("OrientationAnalysis::ReadAngData: HeaderValidation steps", "[OrientationAnalysis][ReadAngData]")
+{
+  const auto value = GENERATE("-1", "0", "nan", "1e999");
+  const auto key = GENERATE("XSTEP", "YSTEP");
+  CAPTURE(value, key);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_step.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto grid = SqrGridBlock();
+  const auto pos = grid.find(std::string(key) + ": ") + std::string(key).size() + 2;
+  grid.replace(pos, grid.find('\n', pos) - pos, value);
+  WriteAngFile(path.filename().string(), k_HeaderPrefix + k_PhaseBlock + grid + k_DataBlock);
+  DataStructure ds;
+  ReadAngDataFilter filter;
+  const auto argsForValidation = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67602);
+  REQUIRE(result.errors()[0].message.find(key) != std::string::npos);
+}
+
+TEST_CASE("OrientationAnalysis::ReadAngData: HeaderValidation dimensions", "[OrientationAnalysis][ReadAngData]")
+{
+  UnitTest::LoadPlugins();
+  const auto value = GENERATE("-1", "0", "valid");
+  const auto key = GENERATE("NCOLS_EVEN", "NROWS");
+  CAPTURE(value, key);
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_dimension.ang";
+  const auto cleanup = MakeScopeGuard([&]() noexcept {
+    std::error_code ec;
+    fs::remove(path, ec);
+  });
+  auto grid = SqrGridBlock();
+  const auto pos = grid.find(std::string(key) + ": ") + std::string(key).size() + 2;
+  if(std::string(value) != "valid")
+  {
+    grid.replace(pos, grid.find('\n', pos) - pos, value);
+  }
+  WriteAngFile(path.filename().string(), k_HeaderPrefix + k_PhaseBlock + grid + k_DataBlock);
+  DataStructure ds;
+  ReadAngDataFilter filter;
+  const auto argsForValidation = MakeDefaultArgs(path);
+  auto result = filter.preflight(ds, argsForValidation).outputActions;
+  if(std::string(value) == "valid")
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    const auto executeResult = filter.execute(ds, argsForValidation);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    UnitTest::CheckArraysInheritTupleDims(ds);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  const auto executeResult = filter.execute(ds, argsForValidation);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
+  REQUIRE(result.errors()[0].code == -67601);
+  for(const auto& error : {result.errors()[0], executeResult.result.errors()[0]})
+  {
+    REQUIRE(error.message.find(key) != std::string::npos);
+    REQUIRE(error.message.find(value) != std::string::npos);
+    REQUIRE(error.message.find(path.string()) != std::string::npos);
   }
 }

@@ -21,8 +21,11 @@
 #include <EbsdLib/IO/HKL/CtfFields.h>
 #include <EbsdLib/IO/HKL/CtfPhase.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Utilities/inipp.h>
 
 #include <filesystem>
+#include <fstream>
+#include <limits>
 
 namespace fs = std::filesystem;
 
@@ -124,6 +127,35 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
     return {MakeErrorResult<OutputActions>(-66501, fmt::format("Attempting to figure out if '{}' exists threw a std::exception. Please report this to the developers.", crcPath.string())), {}};
   }
 
+  // EbsdLib 3.1.3 multiplies xCells * yCells as int32 during header reading.
+  // Check the raw counts first, before that multiplication can overflow.
+  {
+    std::ifstream input(pInputFileValue);
+    inipp::Ini<char> header;
+    header.parse(input);
+    std::array<int64, 2> counts = {0, 0};
+    const std::array<std::string, 2> keys = {"xCells", "yCells"};
+    for(usize axis = 0; axis < counts.size(); ++axis)
+    {
+      inipp::get_value(header.sections["Job"], keys[axis], counts[axis]);
+      if(auto result = EbsdReaderUtilities::ValidateHeaderDimension(pInputFileValue.string(), keys[axis], counts[axis]); result.invalid())
+      {
+        return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+      }
+      if(counts[axis] > std::numeric_limits<int32>::max())
+      {
+        return MakePreflightErrorResult(EbsdReaderUtilities::k_HeaderCountExceedsReader, fmt::format("File '{}' has header '{}' = {}, which exceeds the reader limit {}.", pInputFileValue.string(),
+                                                                                                     keys[axis], counts[axis], std::numeric_limits<int32>::max()));
+      }
+    }
+    if(counts[0] > std::numeric_limits<int32>::max() / counts[1])
+    {
+      return MakePreflightErrorResult(EbsdReaderUtilities::k_HeaderCountProductExceedsReader,
+                                      fmt::format("File '{}' has header xCells = {} and yCells = {}. Their product exceeds the reader limit {}.", pInputFileValue.string(), counts[0], counts[1],
+                                                  std::numeric_limits<int32>::max()));
+    }
+  }
+
   // Read the CPR file to gather the Geometry information and what arrays are present in the file.
   ebsdlib::CprReader reader;
   reader.setFileName(pInputFileValue.string());
@@ -131,6 +163,16 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   if(err < 0)
   {
     return {MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+  }
+
+  if(auto headerResult = EbsdReaderUtilities::ValidateHeaderGrid(reader); headerResult.invalid())
+  {
+    return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
+  }
+
+  if(auto result = EbsdReaderUtilities::ValidateChannel5Fields(reader, pCreateCompatibleTypes, filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key)); result.invalid())
+  {
+    return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
   }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
@@ -144,7 +186,10 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   // user interface.
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
+  if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues); phaseResult.invalid())
+  {
+    return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+  }
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

@@ -57,6 +57,12 @@ An excellent reference for this is the following PDF file:
 
 Once the reference frames are correct, the imported Euler angles (three angles, in the Bunge Z-X-Z convention, describing each crystal's orientation relative to the sample) are typically converted to other orientation representations (quaternions, and so on) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
 
+### Header validation
+
+The file must contain supported phase Symmetry or Laue Group values. Max X Points and Max Y Points must be positive. X Resolution and Y Resolution must be finite and greater than zero. When the recommended sample rotation is active, SampleTransformationAxis must normalize to finite, nonzero float32 values. Preflight reports invalid header values before it creates geometry actions.
+
+The selected start and end slices must be within the inclusive slice range stored in the file.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

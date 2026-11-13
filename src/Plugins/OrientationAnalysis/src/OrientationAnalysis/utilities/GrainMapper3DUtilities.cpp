@@ -4,6 +4,8 @@
 
 #include "GrainMapper3DUtilities.hpp"
 
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
+
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
@@ -14,6 +16,30 @@ using namespace nx::core;
 using namespace H5Support;
 
 namespace GM3DConst = GrainMapper3DUtilities::Constants;
+
+namespace
+{
+constexpr int32 k_InvalidOriginHeader = -67621;
+constexpr int32 k_InvalidOriginVectorSize = -67622;
+
+Result<> ValidateOriginHeader(const std::string& file, const std::string& group, const std::string& key, const std::vector<float64>& values, bool requireFloat32Range, const std::string& geometryValue)
+{
+  if(values.size() != 3)
+  {
+    return MakeErrorResult(k_InvalidOriginVectorSize, fmt::format("File '{}' header '{}/{}' has {} values. Supply three values (X, Y, Z).", file, group, key, values.size()));
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(!std::isfinite(values[axis]) || (requireFloat32Range && std::abs(values[axis]) > std::numeric_limits<float32>::max()))
+    {
+      return MakeErrorResult(k_InvalidOriginHeader,
+                             fmt::format("File '{}' header '{}/{}[{}]' = {} cannot define finite Image Geometry {}. Supply finite values that produce {} within the float32 range.", file, group, key,
+                                         axis, values[axis], geometryValue, geometryValue));
+    }
+  }
+  return {};
+}
+} // namespace
 
 namespace GrainMapper3DUtilities
 {
@@ -177,6 +203,18 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
     return MakeErrorResult(-38604, "GrainMapperReader: Error reading data set /LabDCT/Spacing");
   }
 
+  if(m_LabDctSpacing.size() != 3)
+  {
+    return ValidateOriginHeader(m_FileName, "LabDCT", "Spacing", m_LabDctSpacing, true, "spacing");
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(auto result = EbsdReaderUtilities::ValidateHeaderSpacing(m_FileName, fmt::format("LabDCT/Spacing[{}]", axis), m_LabDctSpacing[axis]); result.invalid())
+    {
+      return result;
+    }
+  }
+
   // Get the Image Geometry dimensions by looking for the "Completeness" data set
   // which according to Xnovo documentation is a required data set. So it **should** be
   // in the file. We used to calculate the dims from the spacing and extent but due
@@ -203,9 +241,26 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
     return MakeErrorResult(-38608, "GrainMapperReader: Error reading data set /LabDCT/VirtualShift");
   }
 
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Extent", extents, false, "origin"); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "Center", center, false, "origin"); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "VirtualShift", virtualShift, false, "origin"); result.invalid())
+  {
+    return result;
+  }
+
   m_LabDctOrigin[0] = (center[0] - (extents[0] * 0.5)) + virtualShift[0];
   m_LabDctOrigin[1] = (center[1] - (extents[1] * 0.5)) + virtualShift[1];
   m_LabDctOrigin[2] = (center[2] - (extents[2] * 0.5)) + virtualShift[2];
+  if(auto result = ValidateOriginHeader(m_FileName, "LabDCT", "computed origin", m_LabDctOrigin, true, "origin"); result.invalid())
+  {
+    return result;
+  }
 
   error = findAvailableDctDatasets(labDctGid);
   if(error < 0)
@@ -264,9 +319,22 @@ nx::core::Result<> GrainMapperReader::readAbsorptionHeader(hid_t fileId)
     return MakeErrorResult(-38608, "GrainMapperReader: Error reading data set /AbsorptionCT/VirtualShift");
   }
 
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "Center", center, false, "origin"); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "VirtualShift", virtualShift, false, "origin"); result.invalid())
+  {
+    return result;
+  }
+
   m_AbsorptionCTOrigin[0] = (center[0] - (extents[0] * 0.5)) + virtualShift[0];
   m_AbsorptionCTOrigin[1] = (center[1] - (extents[1] * 0.5)) + virtualShift[1];
   m_AbsorptionCTOrigin[2] = (center[2] - (extents[2] * 0.5)) + virtualShift[2];
+  if(auto result = ValidateOriginHeader(m_FileName, "AbsorptionCT", "computed origin", m_AbsorptionCTOrigin, true, "origin"); result.invalid())
+  {
+    return result;
+  }
 
   return {};
 }

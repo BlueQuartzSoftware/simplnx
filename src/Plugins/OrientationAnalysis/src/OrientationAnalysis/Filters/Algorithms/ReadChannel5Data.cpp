@@ -71,6 +71,11 @@ Result<> ReadChannel5Data::operator()()
 {
   ebsdlib::CprReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
+  if(auto result = EbsdReaderUtilities::ValidateChannel5Fields(reader, m_InputValues->CreateCompatibleArrays, m_InputValues->EdaxHexagonalAlignment); result.invalid())
+  {
+    return result;
+  }
+
   const int32_t err = reader.readFile();
   if(err < 0)
   {

@@ -56,6 +56,12 @@ Once the reference frames are correct, the imported Euler angles are typically c
 
 None — this filter reads directly from a `.h5` file on disk.
 
+### Header validation
+
+Every selected scan must contain supported phase Symmetry values and positive nColumns and nRows. Step X and Step Y must be finite and greater than zero. When Import Pattern Data is enabled, Pattern Height and Pattern Width must be positive. Preflight reports invalid header values before it creates the geometry.
+
+Scans must share grid dimensions, spacing, and phase tables; imported patterns require matching unsigned 8-bit datasets shaped (points, height, width) in every scan.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright
