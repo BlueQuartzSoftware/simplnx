@@ -3204,3 +3204,28 @@ TEST_CASE("CopyDataObjectExcludingAction: missing excluded object copies everyth
   CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
   CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
+
+TEST_CASE("CopyDataObjectExcludingAction: preserves destination under an excluded parent", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
+{
+  UnitTest::LoadPlugins();
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure ds;
+  auto* source = DataGroup::Create(ds, "Source");
+  auto* target = DataGroup::Create(ds, "Target");
+  REQUIRE(source != nullptr);
+  REQUIRE(target != nullptr);
+  auto* excluded = AttributeMatrix::Create(ds, "Feature", {3}, source->getId());
+  REQUIRE(excluded != nullptr);
+  REQUIRE(ds.setAdditionalParent(excluded->getId(), target->getId()));
+  const auto parents = excluded->getParentIds();
+  OutputActions actions;
+  AppendCopyDataObjectAction(ds, actions, DataPath({"Source"}), DataPath({"Target", "Copy"}), DataPath({"Source", "Feature"}));
+  REQUIRE(actions.actions.size() == 1);
+  auto result = actions.actions[0]->apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(ds.getData(DataPath({"Target", "Copy"})) != nullptr);
+  CHECK(ds.getData(DataPath({"Target", "Copy", "Feature"})) == nullptr);
+  CHECK(ds.getData(DataPath({"Source", "Feature"})) == excluded);
+  CHECK(ds.getData(DataPath({"Target", "Feature"})) == excluded);
+  CHECK(excluded->getParentIds() == parents);
+}
