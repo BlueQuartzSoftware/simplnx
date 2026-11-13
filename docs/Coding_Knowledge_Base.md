@@ -31,7 +31,7 @@ repository, but contains no code from one.
 - [Public code](#public-code)
   - [Keep private implementations out of simplnx](#keep-private-implementations-out-of-simplnx)
 - [Filter inputs and preflight](#filter-inputs-and-preflight)
-  - [Make every algorithm callable without its filter](#make-every-algorithm-callable-without-its-filter)
+  - [Run a filter, not its algorithm](#run-a-filter-not-its-algorithm)
   - [Put each check at the earliest point that can see its data](#put-each-check-at-the-earliest-point-that-can-see-its-data)
   - [Declare the component shape the algorithm reads](#declare-the-component-shape-the-algorithm-reads)
   - [Support every type and value that a parameter accepts](#support-every-type-and-value-that-a-parameter-accepts)
@@ -108,76 +108,62 @@ that cannot be withdrawn.
 
 ## Filter inputs and preflight
 
-### Make every algorithm callable without its filter
+### Run a filter, not its algorithm
 
-**Rule:** an algorithm class (the class that a filter's `executeImpl()` constructs and runs) must be safe to call
-directly, without its filter: another algorithm, a test or a future API can run it without parameter validation and
-`preflightImpl()`. The algorithm checks every input property it relies on and returns an error `Result` when one does
-not hold, also when the filter's parameters or preflight already enforce it: component counts and shapes, tuple counts
-that must match, data types, and index ranges that come from data.
+**Rule:** a filter checks its inputs in one place: parameter validation and `preflightImpl()`. The algorithm class (the
+class that the filter's `executeImpl()` constructs and runs) relies on those checks and does not repeat them, because
+`IFilter::execute()` runs them before every `executeImpl()` and a second copy would check the same inputs twice on
+every run. An algorithm class is therefore not an entry point for other code. Code that needs a filter's work (another
+filter, an algorithm or a test) constructs the filter and runs it: `IFilter::execute()` validates the arguments and
+runs `preflightImpl()` before `executeImpl()`, and returns the preflight errors when they fail. `ReadImageStack` runs
+`ReadImageFilter` this way for each file of the stack.
 
-Write the checks that preflight can make once, in a static `ValidateInputs()` of the algorithm class, and call it from
-both places: `preflightImpl()` before it builds its output actions, and the algorithm's `operator()()` before its first
-read and before any dispatch to in-core and out-of-core branches. Build the input values in one function of the filter
-that `preflightImpl()` and `executeImpl()` both call.
-
-- `ValidateInputs()` checks every condition that parameter values and metadata can answer: scalar ranges and option
-  combinations, existence and type of each input, component shapes, tuple and element counts, a file header. It checks
-  an optional input only when its option is on.
-- It checks inputs only; outputs do not exist yet during preflight. When the filter's own actions move an input, the
-  caller passes the path where the input is at that point.
+- The algorithm still checks what preflight cannot see: array values used as indices, such as feature ids and phases,
+  and the result of every read and write (a file can change after preflight).
 - A count that an upstream filter computes in execute is only a placeholder in preflight: `QuickSurfaceMeshFilter`
   creates its Triangle Geometry with 0 faces. Do not reject that placeholder in preflight; a check that needs the final
   count (an empty mesh, for example) runs in execute, as `SliceTriangleGeometryFilter` does with warning -62105.
-- A check that a parameter already makes (for example `AllowedComponentShapes`) still belongs in `ValidateInputs()`.
-- Build it from the shared utilities, such as `CheckArraysHaveSameTupleCount()` and `ValidateCellTupleCount()`. A
-  reader checks the file header with the same function in both places; execute still handles a failed read, because
-  the file can change after preflight.
-- Checks that only the filter needs stay in `preflightImpl()`, for example checks of output names and of parameters
-  that the algorithm does not read.
-- When a filter dispatches straight to two algorithm classes, as `ComputeGBCDPoleFigureFilter` does, one class owns
-  `ValidateInputs()` and both call it first. A check that only one branch needs stays in that branch, before its first
-  read. A filter whose actions do all of its work, such as `DeleteDataFilter`, needs no algorithm class.
-- Write preconditions as properties of the inputs (`@pre Epsilon and MinPoints are positive.`), never as "the filter
-  validated X".
+- Do not call `IFilter::preflight()` before `IFilter::execute()`; `execute()` runs preflight itself. Call `preflight()`
+  on its own only when the caller needs the preflight result without running the filter.
+- Construct an algorithm class directly from other code only in the rare case where its filter cannot do the work.
+  That caller then establishes every precondition that the filter's parameters and preflight would have checked, and a
+  comment at the call names them.
+- Document what the algorithm relies on with `@pre`, written as properties of its inputs
+  (`@pre Epsilon and MinPoints are positive.`).
+- Test an input check through the filter and assert its error code. Construct the algorithm in a test only when the
+  test needs something that the filter hides, and then pass it inputs that preflight accepts.
+- A report that an algorithm accepts an input that its filter's preflight rejects, when the algorithm is called
+  without the filter, is not a defect. Issue #1887 reported this for the DBSCAN Epsilon; only its NaN case was a
+  defect, because the preflight check `Epsilon <= 0` lets a NaN through.
 
-**Example of the broken rule:** `ComputeShapes::operator()()` takes typed references to its inputs before it checks that
-they exist, so a direct call with a missing Feature Ids array throws instead of returning an error;
-`ComputeShapesTriangleGeom` does the same, and `ComputeKMeansDirect` dereferences a nullable clustering array. During
-the review of PR #1763, a new empty-mesh check in preflight broke every pipeline that used **Create Surface Mesh
+**Example of the broken rule:** an algorithm's `operator()()` called the same static `ValidateInputs()` that its
+filter's `preflightImpl()` had already called, so every run checked its inputs twice. During the review of PR #1763, a new empty-mesh check in preflight broke every pipeline that used **Create Surface Mesh
 (QuickMesh)**, **Create Surface Mesh (Surface Nets)** or M3C before it ran.
 
-**Why:** a check that only the filter makes protects only the callers that go through the filter. Two copies of a check
-(one in preflight, one in the algorithm) drift apart in their conditions, codes and messages.
+**Why:** `IFilter::execute()` always runs preflight before `executeImpl()`, so an input check in the algorithm never
+fails for a caller that runs the filter; it only costs time on every run and adds a second error code and message for
+one condition. A caller that bypasses the filter also bypasses parameter validation, which the algorithm cannot
+replace.
 
 **What to look for:**
 
-- `getDataRefAs<T>()` or a dereference in `operator()()` before any validation.
-- A check written twice, once in `preflightImpl()` and once in the algorithm.
+- An algorithm that repeats a parameter or preflight check, including a static `ValidateInputs()` that both
+  `preflightImpl()` and `operator()()` call.
+- Code outside a filter that constructs the filter's algorithm class instead of running the filter.
+- A test that calls an algorithm's `operator()()` to reach an input check.
 - A preflight check that rejects a count that an upstream action sets to 0 on purpose.
-- `@pre` text that names the filter.
 
 **Pattern to use:**
 
 ```cpp
-Result<> ExampleAlgorithm::operator()()
+// Run another filter from inside an algorithm or a filter.
+const ReadImageFilter imageReader;
+IFilter::ExecuteResult executeResult = imageReader.execute(importedDataStructure, BuildReadImageFilterArgs(subConfig));
+if(executeResult.result.invalid())
 {
-  Result<> validationResult = ValidateInputs(m_DataStructure, *m_InputValues);
-  if(validationResult.invalid())
-  {
-    return validationResult;
-  }
-  // ... dispatch and compute, merging each Result into validationResult
-  return validationResult;
+  return executeResult.result;
 }
-
-// ExampleFilter.cpp, in preflightImpl()
-const ExampleAlgorithmInputValues inputValues = CreateInputValues(filterArgs);
-Result<OutputActions> resultOutputActions = ConvertResultTo<OutputActions>(ExampleAlgorithm::ValidateInputs(dataStructure, inputValues), {});
 ```
-
-Test each check of `ValidateInputs()` by calling the algorithm's `operator()()` directly and asserting its error code:
-a test through the filter stops at parameter validation first.
 
 ### Put each check at the earliest point that can see its data
 
@@ -189,8 +175,7 @@ a test through the filter stops at parameter validation first.
    file metadata. Preflight cannot see array values.
 3. **Execute:** checks that need array values, such as feature ids or phases used as indices.
 
-Do not repeat a parameter or preflight check in the filter's `executeImpl()`. The algorithm's `ValidateInputs()` is the
-same check, not a second copy.
+Do not repeat a parameter or preflight check in the filter's `executeImpl()` or in its algorithm class.
 
 **Example of the broken rule:** PR #1535 removed geometry and Attribute Matrix existence checks that
 `ComputeFeatureSizesFilter`, `ComputeFeaturePhasesFilter` and `ErodeDilateBadDataFilter` repeated in preflight although
@@ -202,7 +187,7 @@ user run a pipeline that preflight could have rejected.
 **What to look for:** preflight code that repeats what a selection parameter guarantees; execute code that first
 checks metadata that preflight could have checked.
 
-**Pattern to use:** parameter validation in `IFilter::preflight()`; relational checks in `ValidateInputs()`;
+**Pattern to use:** parameter validation in `IFilter::preflight()`; relational checks in `preflightImpl()`;
 value-dependent checks in the algorithm.
 
 ### Declare the component shape the algorithm reads
