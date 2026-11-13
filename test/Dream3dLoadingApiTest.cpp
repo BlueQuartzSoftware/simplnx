@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/EmptyListStore.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
@@ -693,6 +694,32 @@ fs::path CreateMalformedLegacyArrayFile(const std::string& fileName)
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult12);
   auto writeVectorAttributeResult8 = dataset.writeVectorAttribute("TupleDimensions", ShapeType{3});
   SIMPLNX_RESULT_REQUIRE_VALID(writeVectorAttributeResult8);
+  return outputPath;
+}
+
+fs::path CreateLegacyStringCountFile(const std::string& fileName, const std::vector<std::string>& values)
+{
+  const fs::path outputPath = GetTestOutputDir() / fileName;
+  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  REQUIRE(fileWriter.isValid());
+  auto result = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto containers = fileWriter.createGroup("DataContainers");
+  auto container = containers.createGroup("StringContainer");
+  auto attributeMatrix = container.createGroup("StringAM");
+  result = attributeMatrix.writeVectorAttribute("TupleDimensions", ShapeType{2});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto dataset = attributeMatrix.createDataset("Strings");
+  result = dataset.writeVectorOfStrings(values);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeStringAttribute(Constants::k_ObjectTypeTag, "StringDataArray");
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeVectorAttribute("TupleDimensions", ShapeType{2});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  result = dataset.writeVectorAttribute("ComponentDimensions", ShapeType{1});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
   return outputPath;
 }
 
@@ -1952,4 +1979,74 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with all in-core data")
   {
     CHECK(smallStore[i] == static_cast<int32>(i * 3));
   }
+}
+
+TEST_CASE("Dream3dLoadingApi: legacy StringArray rejects Attribute Matrix count mismatch with preflight", "[simplnx][Dream3dLoadingApi][LegacyStringArray]")
+{
+  UnitTest::LoadPlugins();
+  ScopedTempFile fileGuard{CreateLegacyStringCountFile("LegacyStringCount_Preflight.dream3d", {"alpha", "beta", "gamma"})};
+  auto loaded = DREAM3D::LoadDataStructure(fileGuard.path);
+  if(loaded.valid())
+  {
+    auto* array = loaded.value().getDataAs<StringArray>(DataPath({"StringContainer", "StringAM", "Strings"}));
+    REQUIRE(array != nullptr);
+    INFO("Import incorrectly succeeded with " << array->getNumberOfTuples() << " string tuples in a 2-tuple Attribute Matrix");
+    FAIL("Expected legacy string count mismatch error -4210430");
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(loaded);
+  REQUIRE(loaded.errors().front().code == -4210430);
+  REQUIRE(loaded.errors().front().message ==
+          "Cannot import legacy string array 'Strings'. The file has 3 strings, but the Attribute Matrix has 2 tuples. Correct the file so the string count equals the Attribute Matrix tuple count.");
+}
+
+TEST_CASE("Dream3dLoadingApi: legacy StringArray rejects Attribute Matrix count mismatch without preflight", "[simplnx][Dream3dLoadingApi][LegacyStringArray]")
+{
+  UnitTest::LoadPlugins();
+  ScopedTempFile fileGuard{CreateLegacyStringCountFile("LegacyStringCount_NoPreflight.dream3d", {"alpha", "beta", "gamma"})};
+  auto loaded = DREAM3D::ImportDataStructureFromFile(fileGuard.path, false);
+  if(loaded.valid())
+  {
+    INFO("Import incorrectly succeeded; array present: " << loaded.value().containsData(DataPath({"StringContainer", "StringAM", "Strings"})));
+    FAIL("Expected legacy string count mismatch error -4210430");
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(loaded);
+  REQUIRE(loaded.errors().front().code == -4210430);
+  REQUIRE(loaded.errors().front().message ==
+          "Cannot import legacy string array 'Strings'. The file has 3 strings, but the Attribute Matrix has 2 tuples. Correct the file so the string count equals the Attribute Matrix tuple count.");
+}
+
+TEST_CASE("Dream3dLoadingApi: legacy StringArray matching Attribute Matrix count loads in both modes", "[simplnx][Dream3dLoadingApi][LegacyStringArray]")
+{
+  UnitTest::LoadPlugins();
+  ScopedTempFile fileGuard{CreateLegacyStringCountFile("LegacyStringCount_Matching.dream3d", {"alpha", "beta"})};
+  const bool preflight = GENERATE(true, false);
+  auto loaded = preflight ? DREAM3D::LoadDataStructure(fileGuard.path) : DREAM3D::ImportDataStructureFromFile(fileGuard.path, false);
+  SIMPLNX_RESULT_REQUIRE_VALID(loaded);
+  auto* array = loaded.value().getDataAs<StringArray>(DataPath({"StringContainer", "StringAM", "Strings"}));
+  REQUIRE(array != nullptr);
+  REQUIRE(array->getNumberOfTuples() == 2);
+  REQUIRE(array->getTupleShape() == ShapeType{2});
+  REQUIRE(array->values() == std::vector<std::string>{"alpha", "beta"});
+  UnitTest::CheckArraysInheritTupleDims(loaded.value());
+}
+
+TEST_CASE("Dream3dLoadingApi: legacy StringArray under a DataGroup retains string-count reshape", "[simplnx][Dream3dLoadingApi][LegacyStringArray]")
+{
+  UnitTest::LoadPlugins();
+  ScopedTempFile fileGuard{CreateLegacyStringCountFile("LegacyStringCount_DataGroup.dream3d", {"alpha", "beta", "gamma"})};
+  DataStructure dataStructure;
+  auto* container = DataGroup::Create(dataStructure, "StringContainer");
+  REQUIRE(container != nullptr);
+  auto* group = DataGroup::Create(dataStructure, "StringAM", container->getId());
+  REQUIRE(group != nullptr);
+  REQUIRE(StringArray::CreateWithStore(dataStructure, "Strings", std::make_shared<EmptyStringStore>(ShapeType{2}), group->getId()) != nullptr);
+  auto reader = HDF5::FileIO::ReadFile(fileGuard.path);
+  REQUIRE(reader.isValid());
+  const DataPath path({"StringContainer", "StringAM", "Strings"});
+  auto result = DREAM3D::detail::MaterializeImportedPaths(dataStructure, reader, {path});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto* array = dataStructure.getDataAs<StringArray>(path);
+  REQUIRE(array != nullptr);
+  REQUIRE(array->getTupleShape() == ShapeType{3});
+  REQUIRE(array->values() == std::vector<std::string>{"alpha", "beta", "gamma"});
 }

@@ -1,12 +1,21 @@
 #include "StringArrayIO.hpp"
 
 #include "DataStructureReader.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
+#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
+
+#include <fmt/format.h>
+#include <hdf5.h>
+
+#include <memory>
+#include <mutex>
+#include <stdexcept>
 
 namespace
 {
@@ -52,18 +61,32 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   {
     tupleShape = std::move(tupleShapeResult.value());
   }
+  else
+  {
+    // Older files omit TupleDimensions; their dataspace gives the string count.
+    // getDimensions() returns the string type size for string datasets, so use the dataspace.
+    const hid_t datasetId = datasetReader.getId();
+    hssize_t npoints = -1;
+    {
+      const std::lock_guard<std::mutex> hdf5Lock(nx::core::HDF5::Support::ApiLock());
+      const hid_t dataspaceId = H5Dget_space(datasetId);
+      if(dataspaceId >= 0)
+      {
+        npoints = H5Sget_simple_extent_npoints(dataspaceId);
+        H5Sclose(dataspaceId);
+      }
+    }
+    if(npoints < 0)
+    {
+      return MakeErrorResult(-151203, fmt::format("Cannot read the string count of dataset '{}' because it has no TupleDimensions attribute and its dataspace cannot be read.", dataArrayName));
+    }
+    tupleShape = ShapeType{static_cast<usize>(npoints)};
+  }
 
   StringArray* data = nullptr;
   if(useEmptyDataStore)
   {
-    // Metadata-only import replaces its temporary empty store before access.
-    // This avoids allocating strings that finalization loads later.
-    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
-    if(data != nullptr)
-    {
-      auto emptyStore = std::make_shared<EmptyStringStore>(tupleShape);
-      data->setStore(emptyStore);
-    }
+    data = StringArray::CreateWithStore(dataStructureReader.getDataStructure(), dataArrayName, std::make_shared<EmptyStringStore>(tupleShape), parentId, importId);
   }
   else
   {
@@ -73,7 +96,8 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 
   if(data == nullptr)
   {
-    return MakeErrorResult(-404, fmt::format("Error importing DataArray with name '{}' that is a child of group '{}'", dataArrayName, parentGroup.getName()));
+    return MakeErrorResult(-404, fmt::format("Error importing StringArray '{}' in group '{}'. Check that TupleDimensions matches the string count and the parent accepts the array", dataArrayName,
+                                             parentGroup.getName()));
   }
 
   return {};
@@ -118,8 +142,14 @@ Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const 
 
   auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
   std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArray->getTupleShape());
-  stringArray->setStore(stringStore);
+  try
+  {
+    auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArray->getTupleShape());
+    stringArray->setStore(stringStore);
+  } catch(const std::invalid_argument& error)
+  {
+    return MakeErrorResult(-151202, fmt::format("Cannot import strings at '{}': {}. Check the dataset values and TupleDimensions attribute.", dataPath.toString(), error.what()));
+  }
   return {};
 }
 

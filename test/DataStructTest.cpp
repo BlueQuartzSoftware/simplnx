@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
@@ -24,6 +25,7 @@
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/StringStore.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -3105,3 +3107,104 @@ TEST_CASE("Import publication: complete rollback permits checkpoint reuse withou
   UnitTest::CheckArraysInheritTupleDims(prepared);
 }
 #endif
+
+TEST_CASE("StringArray deepCopy preserves independent values", "[simplnx][DataStructure][StringArray]")
+{
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"a", "b"});
+  REQUIRE(original != nullptr);
+  auto copiedObject = original->deepCopy(DataPath({"Copy"}));
+  REQUIRE(copiedObject != nullptr);
+  auto* copy = dataStructure.getDataAs<StringArray>(DataPath({"Copy"}));
+  REQUIRE(copy != nullptr);
+  REQUIRE(copy != original);
+  REQUIRE(copy->getTupleShape() == ShapeType{2});
+  REQUIRE(copy->values() == std::vector<std::string>{"a", "b"});
+  (*copy)[0] = "z";
+  REQUIRE((*copy)[0] == "z");
+  REQUIRE((*original)[0] == "a");
+  (*original)[1] = "y";
+  REQUIRE((*original)[1] == "y");
+  REQUIRE((*copy)[1] == "b");
+}
+
+TEST_CASE("StringArray deepCopy gives a placeholder its own placeholder", "[simplnx][DataStructure][StringArray]")
+{
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"", ""});
+  REQUIRE(original != nullptr);
+  original->setStore(std::make_shared<EmptyStringStore>(ShapeType{2}));
+  REQUIRE(original->isPlaceholder());
+  auto copiedObject = original->deepCopy(DataPath({"Copy"}));
+  REQUIRE(copiedObject != nullptr);
+  auto* copy = dataStructure.getDataAs<StringArray>(DataPath({"Copy"}));
+  REQUIRE(copy != nullptr);
+  REQUIRE(copy != original);
+  REQUIRE(copy->isPlaceholder());
+  REQUIRE(copy->getTupleShape() == ShapeType{2});
+  // A shared placeholder would also change the shape of the original.
+  REQUIRE(copy->resizeTuples(ShapeType{5}).valid());
+  REQUIRE(copy->getTupleShape() == ShapeType{5});
+  REQUIRE(original->getTupleShape() == ShapeType{2});
+}
+
+TEST_CASE("StringStore rejects mismatched tuple shape", "[simplnx][StringStore][DataStruct]")
+{
+  UnitTest::LoadPlugins();
+  REQUIRE_THROWS_AS((StringStore({"one"}, ShapeType{2})), std::invalid_argument);
+  REQUIRE_NOTHROW((StringStore({"one", "two"}, ShapeType{2})));
+  REQUIRE_NOTHROW((StringStore({"one"}, ShapeType{})));
+  REQUIRE_NOTHROW((StringStore({}, ShapeType{0})));
+  DataStructure dataStructure;
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Bad", {2}, {"one"}) == nullptr);
+  REQUIRE(StringArray::Import(dataStructure, "BadImport", {2}, 1234, {"one"}) == nullptr);
+  REQUIRE(dataStructure.getAllDataPaths().empty());
+}
+
+TEST_CASE("StringArray deepCopy of a null store returns nullptr", "[simplnx][DataStructure][StringArray]")
+{
+  DataStructure dataStructure;
+  auto* original = StringArray::CreateWithValues(dataStructure, "Original", {2}, {"a", "b"});
+  REQUIRE(original != nullptr);
+  original->setStore(nullptr);
+  REQUIRE(original->isPlaceholder());
+  REQUIRE(original->deepCopy(DataPath({"Copy"})) == nullptr);
+  REQUIRE_FALSE(dataStructure.containsData(DataPath({"Copy"})));
+}
+
+TEST_CASE("StringArray factories use only the characters of a bounded name view", "[simplnx][DataStructure][StringArray]")
+{
+  // The view covers "Wanted" and leaves "Trailing" outside it.
+  const std::string buffer = "WantedTrailing";
+  const std::string_view name(buffer.data(), 6);
+  const DataPath expectedPath({"Wanted"});
+
+  SECTION("CreateWithValues")
+  {
+    DataStructure dataStructure;
+    REQUIRE(StringArray::CreateWithValues(dataStructure, name, {1}, {"a"}) != nullptr);
+    REQUIRE(dataStructure.getDataAs<StringArray>(expectedPath) != nullptr);
+  }
+  SECTION("Import")
+  {
+    DataStructure dataStructure;
+    REQUIRE(StringArray::Import(dataStructure, name, {1}, 1234, {"a"}) != nullptr);
+    REQUIRE(dataStructure.getDataAs<StringArray>(expectedPath) != nullptr);
+  }
+  SECTION("CreateWithStore without an import ID")
+  {
+    DataStructure dataStructure;
+    REQUIRE(StringArray::CreateWithStore(dataStructure, name, std::make_shared<EmptyStringStore>(ShapeType{3})) != nullptr);
+    auto* array = dataStructure.getDataAs<StringArray>(expectedPath);
+    REQUIRE(array != nullptr);
+    REQUIRE(array->getTupleShape() == ShapeType{3});
+  }
+  SECTION("CreateWithStore with an import ID")
+  {
+    DataStructure dataStructure;
+    auto* created = StringArray::CreateWithStore(dataStructure, name, std::make_shared<EmptyStringStore>(ShapeType{3}), {}, DataObject::IdType{1234});
+    REQUIRE(created != nullptr);
+    REQUIRE(created->getId() == 1234);
+    REQUIRE(dataStructure.getDataAs<StringArray>(expectedPath) != nullptr);
+  }
+}

@@ -14,17 +14,21 @@ namespace nx::core
  *
  * StringStore owns a std::vector<std::string>. Import finalization replaces an
  * EmptyStringStore placeholder with this store before string access. Tuple-shape
- * products must fit usize. The value constructor derives the data count from
- * strings. For a materialized nonzero array, the tuple-shape product must equal
- * strings.size(). A metadata-only import can supply no strings only when it
- * immediately replaces the store. resizeTuples() retains leading values and
- * value-initializes new values.
+ * products must fit usize. The tuple-shape product must equal strings.size().
+ * An empty shape represents one tuple. resizeTuples() retains leading values
+ * and value-initializes new values.
  */
 class SIMPLNX_EXPORT StringStore : public AbstractStringStore
 {
 public:
   explicit StringStore(const ShapeType& tupleShape);
 
+  /**
+   * @brief Creates a materialized store with the supplied shape and values.
+   * @param strings Supplies one value for each tuple.
+   * @param tupleShape Specifies tuple dimensions. An empty shape represents one tuple.
+   * @throws std::invalid_argument If the shape product differs from the string count.
+   */
   explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);
 
   ~StringStore() override;
