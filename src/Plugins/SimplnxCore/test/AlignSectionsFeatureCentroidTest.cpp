@@ -1,4 +1,5 @@
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
+#include "SimplnxCore/Filters/AlignSectionsListFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -9,6 +10,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -120,9 +122,29 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
   UnitTest::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
 
   const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_RelativeShiftsArrayName);
-  REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
+  {
+    // Stored Relative Shifts predate #1908 L77; derive expected values from the exemplar's Cumulative Shifts instead.
+    const DataPath exemplarCumulativePath = alignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName);
+    REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<Int64Array>(exemplarCumulativePath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(relativeShiftsPath));
+    const auto& exemplarCumulative = exemplarDataStructure.getDataRefAs<Int64Array>(exemplarCumulativePath);
+    const auto& relative = dataStructure.getDataRefAs<Int64Array>(relativeShiftsPath);
+    REQUIRE(relative.getTupleShape() == exemplarCumulative.getTupleShape());
+    REQUIRE(relative.getNumberOfComponents() == 2);
+    REQUIRE(exemplarCumulative.getNumberOfComponents() == 2);
+    REQUIRE(relative.getNumberOfTuples() > 0);
+    REQUIRE(relative[0] == 0);
+    REQUIRE(relative[1] == 0);
+    for(usize iter = 1; iter < relative.getNumberOfTuples(); iter++)
+    {
+      for(usize component = 0; component < 2; component++)
+      {
+        CAPTURE(iter, component);
+        const usize index = iter * 2 + component;
+        REQUIRE(relative[index] == exemplarCumulative[index] - exemplarCumulative[index - 2]);
+      }
+    }
+  }
 
   const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
@@ -241,12 +263,19 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
     const DataPath shiftsPath({"Image", "Shifts", "Cumulative"});
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(shiftsPath));
     const auto& shifts = dataStructure.getDataRefAs<Int64Array>(shiftsPath);
+    const DataPath relativePath({"Image", "Shifts", "Relative Shifts"});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(relativePath));
+    const auto& relative = dataStructure.getDataRefAs<Int64Array>(relativePath);
     const std::array<int64, 4> expectedShifts = {1, 0, -1, 0};
+    // Row 0 has no previous row, so its relative shift equals its cumulative shift.
+    const std::array<int64, 4> expectedRelative = {1, -1, -1, 1};
     for(usize iter = 0; iter < 4; iter++)
     {
       CAPTURE(iter);
       CHECK(shifts[iter * 2] == expectedShifts[iter]);
       CHECK(shifts[(iter * 2) + 1] == expectedShifts[iter]);
+      CHECK(relative[iter * 2] == expectedRelative[iter]);
+      CHECK(relative[(iter * 2) + 1] == expectedRelative[iter]);
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -277,7 +306,8 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   // Empty middle (index 2), consecutive: relative [0,-1,0,0], cumulative [0,-1,-1,-1].
   // Both axes have the same values. A zero relative shift preserves the previous cumulative shift.
   std::array<int64, 4> expectedShifts = emptyCase == 0 ? std::array<int64, 4>{0, 0, -1, 0} : emptyCase == 1 ? std::array<int64, 4>{0, -1, -1, -1} : std::array<int64, 4>{0, 0, 0, 0};
-  std::array<int64, 4> expectedRelative = emptyCase == 1 ? std::array<int64, 4>{0, -1, 0, 0} : expectedShifts;
+  // Relative shifts are slice-to-slice differences of the cumulative shifts: [0,0,-1,1] for an empty top.
+  std::array<int64, 4> expectedRelative = emptyCase == 0 ? std::array<int64, 4>{0, 0, -1, 1} : emptyCase == 1 ? std::array<int64, 4>{0, -1, 0, 0} : std::array<int64, 4>{0, 0, 0, 0};
   const usize emptyZ = emptyCase == 0 ? 3 : emptyCase == 1 ? 1 : 2;
   const std::array<usize, 4> markXY = {4, 0, 4, 8};
   for(usize z = 0; z < 4; z++)
@@ -385,4 +415,103 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice relative shifts round trip", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const DataPath imagePath({"Image"});
+  const DataPath maskPath({"Image", "Cells", "Mask"});
+  const DataPath valuesPath({"Image", "Cells", "Values"});
+  const DataPath relativePath({"Image", "Alignment", "Relative"});
+  const DataPath cumulativePath({"Image", "Alignment", "Cumulative"});
+  const auto buildInput = [&]() {
+    DataStructure data;
+    auto* image = ImageGeom::Create(data, "Image");
+    REQUIRE(image != nullptr);
+    image->setDimensions({9, 9, 4});
+    image->setSpacing({1.0F, 1.0F, 1.0F});
+    image->setUnits(IGeometry::LengthUnit::Micrometer);
+    auto* cells = AttributeMatrix::Create(data, "Cells", {4, 9, 9}, image->getId());
+    REQUIRE(cells != nullptr);
+    image->setCellData(*cells);
+    auto* mask = UInt8Array::Create(data, "Mask", DataStoreUtilities::CreateDataStore<uint8>(data, maskPath, {4, 9, 9}, {1}), cells->getId());
+    auto* values = Int32Array::Create(data, "Values", DataStoreUtilities::CreateDataStore<int32>(data, valuesPath, {4, 9, 9}, {1}), cells->getId());
+    REQUIRE(mask != nullptr);
+    REQUIRE(values != nullptr);
+    mask->fill(0);
+    // Centroids in descending Z order: (3,3), (5,4), (4,6), (6,5).
+    const std::array<usize, 4> x = {6, 4, 5, 3};
+    const std::array<usize, 4> y = {5, 6, 4, 3};
+    for(usize z = 0; z < 4; z++)
+    {
+      (*mask)[z * 81 + y[z] * 9 + x[z]] = 1;
+    }
+    for(usize i = 0; i < values->getSize(); i++)
+    {
+      (*values)[i] = static_cast<int32>(i + 1);
+    }
+    return data;
+  };
+  auto data = buildInput();
+  using Filter = AlignSectionsFeatureCentroidFilter;
+  Arguments args;
+  args.insertOrAssign(Filter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(imagePath));
+  args.insertOrAssign(Filter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(Filter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
+  args.insertOrAssign(Filter::k_ReferenceSlice_Key, std::make_any<int32>(0));
+  args.insertOrAssign(Filter::k_StoreAlignmentShifts_Key, std::make_any<bool>(true));
+  args.insertOrAssign(Filter::k_AlignmentAMName_Key, std::make_any<std::string>("Alignment"));
+  args.insertOrAssign(Filter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>("Relative"));
+  args.insertOrAssign(Filter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>("Cumulative"));
+  auto result = scope.executeFilter(Filter{}, data, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(data.getDataRefAs<Int64Array>(relativePath));
+  REQUIRE_NOTHROW(data.getDataRefAs<Int64Array>(cumulativePath));
+  const auto& relative = data.getDataRefAs<Int64Array>(relativePath);
+  const auto& cumulative = data.getDataRefAs<Int64Array>(cumulativePath);
+  SECTION("Literal shift oracle")
+  {
+    const std::array<int64, 8> expectedRelative = {0, 0, 2, 1, -1, 2, 2, -1};
+    const std::array<int64, 8> expectedCumulative = {0, 0, 2, 1, 1, 3, 3, 2};
+    for(usize i = 0; i < expectedRelative.size(); i++)
+    {
+      CAPTURE(i);
+      CHECK(relative[i] == expectedRelative[i]);
+      CHECK(cumulative[i] == expectedCumulative[i]);
+    }
+  }
+  SECTION("List relative and cumulative inputs align identically")
+  {
+    auto relativeData = buildInput();
+    auto cumulativeData = buildInput();
+    const auto runList = [&](DataStructure& target, const Int64Array& shifts, ChoicesParameter::ValueType type) {
+      auto* array = Int64Array::Create(target, "Shifts", DataStoreUtilities::CreateDataStore<int64>(target, DataPath({"Shifts"}), {4}, {2}));
+      REQUIRE(array != nullptr);
+      for(usize i = 0; i < 8; i++)
+      {
+        (*array)[i] = shifts[i];
+      }
+      Arguments listArgs;
+      listArgs.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(imagePath));
+      listArgs.insertOrAssign(AlignSectionsListFilter::k_ShiftsArrayPath_Key, std::make_any<DataPath>(DataPath({"Shifts"})));
+      listArgs.insertOrAssign(AlignSectionsListFilter::k_InputArrayType_Key, std::make_any<ChoicesParameter::ValueType>(type));
+      auto listResult = scope.executeFilter(AlignSectionsListFilter{}, target, listArgs);
+      SIMPLNX_RESULT_REQUIRE_VALID(listResult.result);
+      UnitTest::CheckArraysInheritTupleDims(target);
+    };
+    runList(relativeData, relative, 0);
+    runList(cumulativeData, cumulative, 1);
+    for(const auto& path : {maskPath, valuesPath})
+    {
+      REQUIRE_NOTHROW(relativeData.getDataRefAs<IDataArray>(path));
+      REQUIRE_NOTHROW(cumulativeData.getDataRefAs<IDataArray>(path));
+    }
+    UnitTest::CompareDataArrays<uint8>(relativeData.getDataRefAs<IDataArray>(maskPath), cumulativeData.getDataRefAs<IDataArray>(maskPath));
+    UnitTest::CompareDataArrays<int32>(relativeData.getDataRefAs<IDataArray>(valuesPath), cumulativeData.getDataRefAs<IDataArray>(valuesPath));
+  }
+  UnitTest::CheckArraysInheritTupleDims(data);
 }

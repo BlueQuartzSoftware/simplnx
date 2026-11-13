@@ -146,11 +146,12 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       slice = (dims[2] - 1) - iter;
       if(m_InputValues->UseReferenceSlice)
       {
-        // Reference-relative and cumulative shifts are identical in this mode.
-        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
-        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
-        xShifts[iter] = relativexshift;
-        yShifts[iter] = relativeyshift;
+        // Difference the integer reference-relative shifts so relative input accumulates exactly.
+        // Row 0 (present for a nonzero reference) has no previous row, so its relative shift is its cumulative shift.
+        xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
+        yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
+        relativexshift = iter == 0 ? xShifts[iter] : xShifts[iter] - xShifts[iter - 1];
+        relativeyshift = iter == 0 ? yShifts[iter] : yShifts[iter] - yShifts[iter - 1];
       }
       else
       {
@@ -400,8 +401,9 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       int64 relativeyshift = 0;
       if(m_InputValues->UseReferenceSlice)
       {
-        relativexshift = xShifts[iter];
-        relativeyshift = yShifts[iter];
+        // Row 0 (present for a nonzero reference) has no previous row, so its relative shift is its cumulative shift.
+        relativexshift = iter == 0 ? xShifts[iter] : xShifts[iter] - xShifts[iter - 1];
+        relativeyshift = iter == 0 ? yShifts[iter] : yShifts[iter] - yShifts[iter - 1];
       }
       else
       {
