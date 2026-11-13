@@ -20,6 +20,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
+#include "SimplnxCore/Filters/Algorithms/DBSCANCommon.hpp"
 #include "SimplnxCore/Filters/Algorithms/DBSCANScanline.hpp"
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
 
@@ -1040,7 +1041,6 @@ TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxC
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[SimplnxCore][DBSCAN]")
 {
-  UnitTest::LoadPlugins();
   DataStructure dataStructure;
   auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
   REQUIRE(points != nullptr);
@@ -1078,36 +1078,214 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[Simpl
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::DBSCAN: Reject nonpositive Minimum Points before dispatch", "[SimplnxCore][DBSCAN]")
+namespace
 {
-  UnitTest::LoadPlugins();
+/**
+ * @brief Creates a 2D or 3D float32 clustering array whose points are the corners of a cube from 0 to 1000.
+ * @param dataStructure Receives the array "points".
+ * @param dimensions Number of coordinate components (2 or 3).
+ * @return The array.
+ */
+Float32Array& CreateCornerPoints(DataStructure& dataStructure, usize dimensions)
+{
+  const usize pointCount = usize{1} << dimensions;
+  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {pointCount}, {dimensions});
+  REQUIRE(points != nullptr);
+  for(usize pointIdx = 0; pointIdx < pointCount; pointIdx++)
+  {
+    for(usize axis = 0; axis < dimensions; axis++)
+    {
+      (*points)[pointIdx * dimensions + axis] = ((pointIdx >> axis) & 1) != 0 ? 1000.0F : 0.0F;
+    }
+  }
+  return *points;
+}
+
+/**
+ * @brief Creates DBSCAN arguments for the "points" array.
+ * @param epsilon Epsilon value.
+ * @param maskPath Mask array path, or nothing for no mask.
+ * @return The arguments.
+ */
+Arguments CreateCornerPointsArgs(float32 epsilon, const std::optional<DataPath>& maskPath)
+{
+  Arguments args;
+  args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+  args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilon));
+  args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(1));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(maskPath.has_value()));
+  if(maskPath.has_value())
+  {
+    args.insertOrAssign(DBSCANFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(*maskPath));
+  }
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath({"points"})));
+  args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("cluster_ids"));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"cluster_am"})));
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::DBSCAN: Reject a search grid too large to index", "[SimplnxCore][DBSCAN]")
+{
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
+  const usize dimensions = GENERATE(usize{2}, usize{3});
+  CAPTURE(dimensions);
+
+  // The points span 0 to 1000 on every axis, and every case passes preflight.
+  // - Axis: with Epsilon 1e-30, one axis spans about 1e33 grid cells.
+  // - Axis span overflow: with Epsilon 1e-36, the padded extent is finite, but
+  //   its cell span is larger than the largest float32 value.
+  // - Cell count: each axis fits (about 1e10 cells in 2D, 2e7 in 3D), but the
+  //   cell count of the dense grid does not fit in usize.
+  // - Byte count: the cell count fits in usize (about 3e18), but the bytes of
+  //   one usize per cell do not.
+  // - Float overflow: with the largest float32 Epsilon, the bounds padded by one
+  //   grid cell leave the float32 range, so the axis span is infinite.
+  enum class GridLimit
+  {
+    Axis,
+    AxisSpanOverflow,
+    CellCount,
+    ByteCount,
+    FloatOverflow
+  };
+  const GridLimit limit = GENERATE(GridLimit::Axis, GridLimit::AxisSpanOverflow, GridLimit::CellCount, GridLimit::ByteCount, GridLimit::FloatOverflow);
+  CAPTURE(to_underlying(limit));
+  float32 epsilon = 1.0e-30F;
+  std::string expectedText = "Increase Epsilon";
+  if(limit == GridLimit::AxisSpanOverflow)
+  {
+    epsilon = 1.0e-36F;
+  }
+  else if(limit == GridLimit::CellCount)
+  {
+    epsilon = dimensions == 2 ? 1.0e-7F : 1.0e-4F;
+  }
+  else if(limit == GridLimit::ByteCount)
+  {
+    epsilon = dimensions == 2 ? 8.0e-7F : 1.2e-3F;
+  }
+  else if(limit == GridLimit::FloatOverflow)
+  {
+    epsilon = std::numeric_limits<float32>::max();
+    expectedText = "exceed the 32-bit floating-point range. Rescale the coordinates and Epsilon to smaller values.";
+  }
+  const int32 expectedCode = limit == GridLimit::CellCount || limit == GridLimit::ByteCount ? DBSCANCommon::k_GridCellCountTooLargeError : DBSCANCommon::k_GridAxisTooLargeError;
+
   UnitTest::AlgorithmTestScope scope(scenario);
-  const int32 minPoints = GENERATE(0, -1);
-  CAPTURE(minPoints);
-
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
-  REQUIRE(points != nullptr);
-  points->fill(0.0f);
-  auto* clusterIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "cluster_ids", {4}, {1});
-  REQUIRE(clusterIds != nullptr);
-  REQUIRE(AttributeMatrix::Create(dataStructure, "cluster_am", {1}) != nullptr);
+  CreateCornerPoints(dataStructure, dimensions);
+  DBSCANFilter filter;
+  auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(epsilon, std::nullopt));
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == expectedCode);
+  REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("'points'"));
+  REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains(expectedText));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 
-  DBSCANInputValues inputs{};
-  inputs.ClusteringArrayPath = DataPath({"points"});
-  inputs.FeatureIdsArrayPath = DataPath({"cluster_ids"});
-  inputs.FeatureAM = DataPath({"cluster_am"});
-  inputs.Epsilon = 1.0f;
-  inputs.MinPoints = minPoints;
-  inputs.ParseOrder = to_underlying(DBSCAN::ParseOrder::LowDensityFirst);
-  const std::atomic_bool shouldCancel = false;
-  // Rejection precedes dispatch, so no algorithm-path execution witness is expected.
-  auto result = DBSCAN(dataStructure, {}, shouldCancel, &inputs)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  REQUIRE(result.errors()[0].code == -54063);
-  REQUIRE_THAT(result.errors()[0].message, Catch::Matchers::Contains(std::to_string(minPoints)));
+TEST_CASE("SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate", "[SimplnxCore][DBSCAN]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  const usize dimensions = GENERATE(usize{2}, usize{3});
+  CAPTURE(dimensions);
+  const float32 badValue = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
+  CAPTURE(badValue);
+
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  Float32Array& points = CreateCornerPoints(dataStructure, dimensions);
+  const usize pointCount = points.getNumberOfTuples();
+  DBSCANFilter filter;
+  // The corners are 1000 apart, so Epsilon 100 keeps each one its own cluster
+  // and the valid run's grid small (21 cells per axis in 3D).
+  constexpr float32 k_Epsilon = 100.0F;
+
+  SECTION("One unmasked value")
+  {
+    // Tuple 2, Y axis. The bounds scan ignores a NaN in min/max, so only the
+    // coordinate check can stop it before binning.
+    points[2 * dimensions + 1] = badValue;
+    auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, std::nullopt));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    REQUIRE(executeResult.result.errors()[0].code == DBSCANCommon::k_NonFiniteCoordinateError);
+    REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("Tuple 2 of the clustering array 'points'"));
+    REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("on the Y axis"));
+  }
+  SECTION("Every value")
+  {
+    points.fill(badValue);
+    auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, std::nullopt));
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    REQUIRE(executeResult.result.errors()[0].code == DBSCANCommon::k_NonFiniteCoordinateError);
+    REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("Tuple 0 of the clustering array 'points'"));
+  }
+  SECTION("A masked value is ignored")
+  {
+    points[2 * dimensions + 1] = badValue;
+    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {pointCount}, {1});
+    REQUIRE(mask != nullptr);
+    mask->fill(1);
+    (*mask)[2] = 0;
+    auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, DataPath({"mask"})));
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    // Each remaining corner is its own one-point cluster; the masked tuple keeps Feature Id 0.
+    const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"cluster_ids"}));
+    REQUIRE(clusterIds[2] == 0);
+    for(usize pointIdx = 0; pointIdx < pointCount; pointIdx++)
+    {
+      if(pointIdx != 2)
+      {
+        REQUIRE(clusterIds[pointIdx] > 0);
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 search grid and coordinate checks", "[SimplnxCore][DBSCAN][.OocStoreContract]")
+{
+  REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  // Axis: with Epsilon 1e-30, the X axis from 0 to 1000 spans about 1e33 grid cells.
+  // NaN: the second point has a NaN X coordinate, which the bounds scan would otherwise ignore.
+  const bool axisTooLarge = GENERATE(true, false);
+  CAPTURE(axisTooLarge);
+  DataStructure dataStructure;
+  const DataPath pointsPath({"Wide Points"});
+  const DataPath idsPath({"Wide ClusterIds"});
+  const DataPath featurePath({"Wide Clusters"});
+  auto pointStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, pointsPath, {2}, {2});
+  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  REQUIRE(points != nullptr);
+  REQUIRE(pointStore->getDataFormat() == "HDF5-OOC");
+  (*points)[0] = 0.0F;
+  (*points)[1] = 0.0F;
+  (*points)[2] = axisTooLarge ? 1000.0F : std::numeric_limits<float32>::quiet_NaN();
+  (*points)[3] = 0.0F;
+
+  DBSCANFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+  args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(axisTooLarge ? 1.0e-30F : 1.0F));
+  args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(1));
+  args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(pointsPath));
+  args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(idsPath.getTargetName()));
+  args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(featurePath));
+  const auto before = GetAlgorithmPathExecutionCounts();
+  auto executeResult = filter.execute(dataStructure, args);
+  const auto after = GetAlgorithmPathExecutionCounts();
+  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
+  REQUIRE(after.InCore == before.InCore);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == (axisTooLarge ? DBSCANCommon::k_GridAxisTooLargeError : DBSCANCommon::k_NonFiniteCoordinateError));
+  REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("'Wide Points'"));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

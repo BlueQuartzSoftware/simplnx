@@ -1,6 +1,7 @@
 #include "DBSCANScanline.hpp"
 
 #include "DBSCAN.hpp"
+#include "DBSCANCommon.hpp"
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -316,8 +317,8 @@ public:
    * though filter preflight also enforces them, because DBSCANScanline can be
    * called without its filter. Grid coordinates hold at most three axes, and
    * the mask is read as one value per coordinate tuple.
-   * @pre Epsilon and MinPoints are positive.
-   * @return Success, a no-cluster warning, or the first provider, validation, or record-I/O failure.
+   * @pre Epsilon is finite and positive, and MinPoints is positive.
+   * @return Success, a no-cluster warning, or the first provider, validation, coordinate, grid-size, or record-I/O failure.
    */
   Result<> initialize()
   {
@@ -338,6 +339,7 @@ public:
                                          tupleCount, m_MaskStore->getNumberOfTuples(), m_MaskStore->getNumberOfComponents()));
     }
     std::array<float32, 3> minimum = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
+    std::array<float32, 3> maximum = minimum;
     auto values = std::make_unique<T[]>(k_ExternalBatchRecords * m_Dimensions);
     auto masks = m_MaskStore == nullptr ? nullptr : std::make_unique<MaskT[]>(k_ExternalBatchRecords);
     for(usize offset = 0; offset < tupleCount; offset += k_ExternalBatchRecords)
@@ -369,7 +371,12 @@ public:
         for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
         {
           const float32 value = static_cast<float32>(values[index * m_Dimensions + dimension]);
+          if(!std::isfinite(value))
+          {
+            return DBSCANCommon::MakeNonFiniteCoordinateError(m_InputValues.ClusteringArrayPath, offset + index, dimension, value);
+          }
           minimum[dimension] = std::isnan(minimum[dimension]) ? value : std::min(minimum[dimension], value);
+          maximum[dimension] = std::isnan(maximum[dimension]) ? value : std::max(maximum[dimension], value);
         }
       }
     }
@@ -383,6 +390,12 @@ public:
     for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
     {
       m_Origin[dimension] = minimum[dimension] - m_SideLength;
+      // Every unmasked value is finite and lies between the minimum and the maximum, so a valid span keeps each grid coordinate cast defined.
+      Result<float32> spanResult = DBSCANCommon::ComputeAxisCellSpan(m_InputValues.ClusteringArrayPath, dimension, minimum[dimension], maximum[dimension], m_SideLength, false);
+      if(spanResult.invalid())
+      {
+        return ConvertResult(std::move(spanResult));
+      }
     }
 
     ExternalSortConfig membershipConfig;
@@ -2374,8 +2387,8 @@ public:
   std::vector<std::vector<usize>> gridVoxels = {}; // Maps each occupied grid to its source tuple indices.
 
   /**
-   * @brief Moves the constructor-time bulk-I/O result to the caller.
-   * @return The first coordinate-store error.
+   * @brief Moves the constructor-time bulk-I/O, coordinate or grid-sizing result to the caller.
+   * @return The first coordinate-store, coordinate or grid-sizing error, or success.
    *
    * A constructor cannot return Result, so RunAlgorithm retrieves this status explicitly.
    */
@@ -2416,14 +2429,18 @@ public:
    * @tparam T Coordinate value type.
    * @param shouldCancel Cancellation flag.
    * @param inputArray In-memory coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    *
    * Fixed coordinate windows exercise bulk access without a full coordinate
-   * buffer. The fallback stops construction when shouldCancel is set.
+   * buffer. The fallback stops construction when shouldCancel is set, or when
+   * a read fails, an unmasked coordinate is not finite, or the grid is too
+   * large to index; takeInitializationResult() returns that error.
    */
   template <typename T>
-  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
+                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -2459,6 +2476,12 @@ public:
         auto xVal = static_cast<float32>(chunkBuf[local * numComps + 0]);
         auto yVal = static_cast<float32>(chunkBuf[local * numComps + 1]);
         auto zVal = static_cast<float32>(chunkBuf[local * numComps + 2]);
+        Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<3>(arrayPath, startTup + local, {xVal, yVal, zVal});
+        if(finiteResult.invalid())
+        {
+          m_InitializationResult = std::move(finiteResult);
+          return;
+        }
 
         bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
         bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -2485,10 +2508,13 @@ public:
     origin[1] = bounds[1] - buffer;
     origin[2] = bounds[2] - buffer;
 
-    std::array<usize, 3> dims = {};
-    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 2;
-    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 2;
-    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 2;
+    Result<std::array<usize, 3>> dimsResult = DBSCANCommon::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
+    if(dimsResult.invalid())
+    {
+      m_InitializationResult = ConvertResult(std::move(dimsResult));
+      return;
+    }
+    const std::array<usize, 3> dims = dimsResult.value();
 
     {
       std::vector<std::array<usize, 3>> positions = {};
@@ -2657,14 +2683,18 @@ public:
    * @tparam T Coordinate value type.
    * @param shouldCancel Cancellation flag.
    * @param inputArray In-memory coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    *
    * Fixed coordinate windows exercise bulk access without a full coordinate
-   * buffer. The fallback stops construction when shouldCancel is set.
+   * buffer. The fallback stops construction when shouldCancel is set, or when
+   * a read fails, an unmasked coordinate is not finite, or the grid is too
+   * large to index; takeInitializationResult() returns that error.
    */
   template <typename T>
-  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
+                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -2699,6 +2729,12 @@ public:
 
         auto xVal = static_cast<float32>(chunkBuf[local * numComps + 0]);
         auto yVal = static_cast<float32>(chunkBuf[local * numComps + 1]);
+        Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<2>(arrayPath, startTup + local, {xVal, yVal});
+        if(finiteResult.invalid())
+        {
+          m_InitializationResult = std::move(finiteResult);
+          return;
+        }
 
         bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
         bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -2722,9 +2758,13 @@ public:
     origin[0] = bounds[0] - buffer;
     origin[1] = bounds[1] - buffer;
 
-    std::array<usize, 2> dims = {};
-    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
-    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
+    Result<std::array<usize, 2>> dimsResult = DBSCANCommon::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
+    if(dimsResult.invalid())
+    {
+      m_InitializationResult = ConvertResult(std::move(dimsResult));
+      return;
+    }
+    const std::array<usize, 2> dims = dimsResult.value();
 
     {
       std::vector<std::array<usize, 2>> positions = {};
@@ -3089,13 +3129,14 @@ public:
    * @brief Creates a resident fallback clustering operation.
    * @param shouldCancel Cancellation flag.
    * @param inputArray In-memory coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    * @param distMetric Distance metric for pairwise tests.
    */
-  GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+  GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
        ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, inputArray, epsilon, mask))
+  : hyperGridBitMap(HGBPT(shouldCancel, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
@@ -3105,7 +3146,7 @@ public:
 
   /**
    * @brief Moves the fallback-grid construction result to the caller.
-   * @return The first coordinate-store bulk-read error.
+   * @return The first coordinate-store bulk-read, coordinate or grid-sizing error, or success.
    *
    * GDCF forwards the constructor status without exposing its grid implementation.
    */
@@ -3480,13 +3521,13 @@ private:
  * @param mask Selects coordinate tuples.
  * @param featureIds Receives final feature identifiers.
  * @param shouldCancel Cancellation flag.
- * @return Warning, error, or success from clustering and labeling.
+ * @return Warning, error, or success from grid construction, clustering, and labeling.
  */
 template <class AlgorithmT, typename T>
 Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
                       const std::atomic_bool& shouldCancel)
 {
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, inputArray, inputValues->ClusteringArrayPath, inputValues->Epsilon, mask, inputValues->DistanceMetric);
 
   Result<> initializationResult = algorithm.takeInitializationResult();
   if(initializationResult.invalid())

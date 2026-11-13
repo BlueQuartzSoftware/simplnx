@@ -16,8 +16,8 @@
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Rewrite** — SIMPLNX implements GDCF (Grid-based DBSCAN, Boonchoo et al. 2019, DOI 10.1016/j.patcog.2019.01.034) in place of the traditional point-by-point DBSCAN in legacy DREAM3D. UUID changed from `c2d4f1e8` to `763dad44` (legacy UUID retained via SIMPL mapper). |
 | Oracle (confirmed)     | **Class 2 (Reference — scikit-learn 1.7.1 DBSCAN) primary + Class 4 (Invariant) companion.** Input data independently generated from deterministic sklearn scripts in `dbscan_vv/dbscan_data_proj/`. Phase 6 reconciliation complete: 4/6 datasets exact match; 2 deviations (ansio, varied) fully explained by DBSCAN-D1 (GDCF vs. traditional DBSCAN). See Phase 5 + Phase 6. |
-| Code paths enumerated | 18 of 21 enumerated paths exercised. The untested invalid-component, unvisited-border, and empty-forest paths remain identified below. |
-| Tests today | 12 registered tests in this file plus 1 hidden HDF5 batch-tail test. The OOC build also registers seven external-storage tests. Existing analytical and regression assertions are preserved. |
+| Code paths enumerated | 23 of 26 enumerated paths exercised. The untested invalid-component, unvisited-border, and empty-forest paths remain identified below. |
+| Tests today | 19 registered tests in this file plus 2 hidden HDF5 tests (batch tail, grid and coordinate checks). The OOC build also registers seven external-storage tests. Existing analytical and regression assertions are preserved. |
 | Exemplar archive       | **`dbscan_test.tar.gz` — promoted to regression fixtures (Phase 6/10).** Originally circular oracle; independently verified via Class 2 sklearn oracle (Phase 6). LDF arrays now pin verified-correct SIMPLNX output. See provenance sidecar. |
 | Legacy comparison | Historical comparison used a local legacy proof build and the sklearn oracle. It supports the documented GDCF-versus-traditional DBSCAN differences. This OOC recertification does not establish a new stock DREAM3D 6.5.171 binary comparison. |
 | Bug flags              | ✅ Circular oracle resolved (Phase 6) — `dbscan_test.tar.gz` LDF arrays promoted to regression fixtures; Class 2 sklearn oracle confirms correctness. 2 expected GDCF deviations (ansio, varied) documented as DBSCAN-D1. **1 SIMPLNX bug found and fixed during V&V:** `ParseOrder::Random` fed the user-supplied seed to the shuffle instead of the documented time-based seed, making "Random" a silent duplicate of "Seeded Random" (see Phase 7). **1 robustness defect found and fixed:** an all-false mask left the grid bounds NaN and those NaNs were cast to `usize` while computing grid dimensions (undefined behavior). |
@@ -82,9 +82,11 @@ The existing fixes remain in the branch. This boundary recertification changes n
 
 The prior Random-seed and all-false-mask fixes are described in Phase 7. They have no stable deviation IDs in the existing sidecar; this update does not invent IDs or release coverage.
 
+Two later robustness fixes have no deviation IDs either. Preflight now rejects a NaN or infinite Epsilon (`-7584`), which the earlier `Epsilon <= 0` check let through (issue #1887). A very small finite Epsilon made the grid dimensions overflow: the cast of an axis cell count to `usize` was undefined and the dense-grid cell count could wrap, so the grid was too small for the points binned into it. Execute now rejects such a grid with `-54091` (one axis too long) or `-54092` (cell count too large) before it allocates the grid (code paths #23 and #24). An unmasked NaN coordinate was also cast to an integer during binning, because the bounds scan ignores NaN; execute now rejects an unmasked NaN or infinite coordinate with `-54093` (code path #25), as scikit-learn rejects NaN input.
+
 ## Code path coverage
 
-18 of 21 enumerated paths exercised.
+23 of 26 enumerated paths exercised.
 
 
 Source: `Algorithms/DBSCAN.cpp` (34 lines), `DBSCANDirect.cpp` (1,274 lines), and `DBSCANScanline.cpp` (3,655 lines). Scanline selects ExternalGDCF when a routed array is on disk; forced Scanline on resident arrays uses its resident fallback.
@@ -114,6 +116,11 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | 18 | External I/O | A 65,536-point input batch and a two-point partial tail | `genuine HDF5 65536-batch tail oracle` |
 | 19 | External clustering | Adjacent core grids merge across the input-batch boundary | `genuine HDF5 65536-batch tail oracle` — four active points form one cluster and every other label is zero |
 | 20 | Preflight | No-mask mode avoids a cell-sized temporary mask | `No-mask preflight does not create a cell-sized temporary mask` |
+| 21 | Preflight | Epsilon is not finite or is not greater than 0 → error `-7584` | `Reject invalid parameters in preflight` (0, -1, NaN, infinity) |
+| 22 | Preflight | Minimum Points is not greater than 0 → error `-7585` | `Reject invalid parameters in preflight` (0, -1) |
+| 23 | (a) Grid size | One axis spans too many grid cells for a grid index, or its extent padded by one cell leaves the float32 range → error `-54091`, in the resident 2D and 3D grids and in ExternalGDCF | `Reject a search grid too large to index` (Epsilon 1e-30, 1e-36 and the largest float32 Epsilon, 2D and 3D, both algorithm paths); hidden `genuine HDF5 search grid and coordinate checks` (ExternalGDCF) |
+| 24 | (a) Grid size | Each axis fits, but the cell count of the dense resident grid, or its byte count at one `usize` per cell, does not fit in `usize` → error `-54092` | `Reject a search grid too large to index`: cell count (2D Epsilon 1e-7, 3D 1e-4) and byte count only (2D 8e-7, 3D 1.2e-3), both algorithm paths |
+| 25 | (a) Bounds | An unmasked coordinate is NaN or infinite as a float32 → error `-54093` in the bounds scan, before any grid cast; a masked one is ignored | `Reject a non-finite unmasked coordinate` (NaN and infinity, 2D and 3D, both algorithm paths, one value, every value, masked value); hidden `genuine HDF5 search grid and coordinate checks` (ExternalGDCF NaN) |
 
 
 ## Test inventory
@@ -134,6 +141,10 @@ Logical phases: **(a) Grid construction** — build HyperGridBitMap and bin poin
 | Class 4 invariant assertions | new-for-V&V | `CheckClusterInvariants()` hooked into `LDFTestCase2D` and `RandomTestCase2D` — covers all 18 2D test runs — and into F1/F2/F3. 3D test has inline AM tuple check but not the full helper. |
 | `SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-sized temporary mask` | kept | Checks action allocation in no-mask mode. |
 | `SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle` | new-for-V&V | 65,538 points, of which five are active. Four points form two adjacent core grids spanning the batch boundary; the fifth is distant noise. All labels and the feature count are checked. |
+| `SimplnxCore::DBSCAN: Reject invalid parameters in preflight` | new | Covers code paths #21 and #22. Asserts the single preflight error code for each rejected value. |
+| `SimplnxCore::DBSCAN: Reject a search grid too large to index` | new | Covers code paths #23 and #24 through the filter on both algorithm paths, for 2D and 3D corner points spanning 0 to 1000. A byte-count-only case keeps the `usize`-per-cell limit tested. |
+| `SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate` | new | Covers code path #25 through the filter on both algorithm paths, and checks that a masked NaN or infinity is ignored. |
+| `SimplnxCore::DBSCAN: genuine HDF5 search grid and coordinate checks` | new | Hidden OOC store test. Covers code paths #23 and #25 in ExternalGDCF on an HDF5-OOC point store; the runtime counter proves the OOC algorithm ran. |
 
 
 The hidden test uses HDF5-OOC point, mask, and output stores. The runtime counter proves the OOC algorithm executes on disk-backed arrays, which selects ExternalGDCF. With epsilon=1 and minPoints=2, the four points at x=[10,10.125,10.75,10.875], y=10 form one cluster; the active origin point is noise. Expected labels are literal 1 for those four points and 0 everywhere else. Existing upstream/develop oracle expectations are preserved.

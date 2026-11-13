@@ -1,6 +1,7 @@
 #include "DBSCANDirect.hpp"
 
 #include "DBSCAN.hpp"
+#include "DBSCANCommon.hpp"
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -158,11 +159,24 @@ class HyperGridBitMap
 public:
   std::vector<std::vector<usize>> gridVoxels = {}; // Maps each occupied grid to its source tuple indices.
 
+  /**
+   * @brief Moves the constructor-time coordinate and grid-sizing result to the caller.
+   * @return The coordinate or grid-sizing error, or success.
+   *
+   * A constructor cannot return Result, so RunAlgorithm retrieves this status explicitly.
+   */
+  Result<> takeInitializationResult()
+  {
+    return std::move(m_InitializationResult);
+  }
+
 protected:
   /**
    * @brief Creates empty resident grid membership.
    */
   HyperGridBitMap() = default;
+
+  Result<> m_InitializationResult;
 };
 
 /**
@@ -189,14 +203,17 @@ public:
    * @param shouldCancel Cancellation flag.
    * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    *
    * The direct path makes per-tuple reads because its caller selects resident
-   * storage. It stops construction when shouldCancel is set.
+   * storage. It stops construction when shouldCancel is set, or when an
+   * unmasked coordinate is not finite or the grid is too large to index;
+   * takeInitializationResult() returns that error.
    */
   template <typename T>
-  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
@@ -222,6 +239,12 @@ public:
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
       auto zVal = static_cast<float32>(inputArray[tup * numComps + 2]);
+      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<3>(arrayPath, tup, {xVal, yVal, zVal});
+      if(finiteResult.invalid())
+      {
+        m_InitializationResult = std::move(finiteResult);
+        return;
+      }
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -248,10 +271,13 @@ public:
     origin[1] = bounds[1] - buffer;
     origin[2] = bounds[2] - buffer;
 
-    std::array<usize, 3> dims = {};
-    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 2;
-    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 2;
-    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 2;
+    Result<std::array<usize, 3>> dimsResult = DBSCANCommon::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
+    if(dimsResult.invalid())
+    {
+      m_InitializationResult = ConvertResult(std::move(dimsResult));
+      return;
+    }
+    const std::array<usize, 3> dims = dimsResult.value();
 
     messageHandler.sendInfoMessage(" - Binning values into a regular grid...");
     {
@@ -402,14 +428,17 @@ public:
    * @param shouldCancel Cancellation flag.
    * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    *
    * The direct path makes per-tuple reads because its caller selects resident
-   * storage. It stops construction when shouldCancel is set.
+   * storage. It stops construction when shouldCancel is set, or when an
+   * unmasked coordinate is not finite or the grid is too large to index;
+   * takeInitializationResult() returns that error.
    */
   template <typename T>
-  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
@@ -434,6 +463,12 @@ public:
 
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
+      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<2>(arrayPath, tup, {xVal, yVal});
+      if(finiteResult.invalid())
+      {
+        m_InitializationResult = std::move(finiteResult);
+        return;
+      }
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -457,9 +492,13 @@ public:
     origin[0] = bounds[0] - buffer;
     origin[1] = bounds[1] - buffer;
 
-    std::array<usize, 2> dims = {};
-    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
-    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
+    Result<std::array<usize, 2>> dimsResult = DBSCANCommon::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
+    if(dimsResult.invalid())
+    {
+      m_InitializationResult = ConvertResult(std::move(dimsResult));
+      return;
+    }
+    const std::array<usize, 2> dims = dimsResult.value();
 
     messageHandler.sendInfoMessage(" - Binning values into a regular grid...");
     {
@@ -806,19 +845,31 @@ public:
    * @param shouldCancel Cancellation flag.
    * @param messageHandler Sends progress messages.
    * @param inputArray Resident coordinate store.
+   * @param arrayPath Path of the clustering array, named in error messages.
    * @param epsilon DBSCAN neighborhood radius.
    * @param mask Selects coordinate tuples.
    * @param distMetric Distance metric for pairwise tests.
    */
-  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
        const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, epsilon, mask))
+  : hyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
+  }
+
+  /**
+   * @brief Moves the grid construction result to the caller.
+   * @return The coordinate or grid-sizing error, or success.
+   *
+   * GDCF forwards the constructor status without exposing its grid implementation.
+   */
+  Result<> takeInitializationResult()
+  {
+    return hyperGridBitMap.takeInitializationResult();
   }
 
   /**
@@ -1143,14 +1194,20 @@ private:
  * @param featureIds Receives final feature identifiers.
  * @param messageHandler Sends progress messages.
  * @param shouldCancel Cancellation flag.
- * @return Warning, error, or success from clustering and labeling.
+ * @return Warning, error, or success from grid construction, clustering, and labeling.
  */
 template <class AlgorithmT, typename T>
 Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
                       const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   messageHandler.sendInfoMessage("Partitioning Input Data:");
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->ClusteringArrayPath, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+
+  Result<> initializationResult = algorithm.takeInitializationResult();
+  if(initializationResult.invalid())
+  {
+    return initializationResult;
+  }
 
   if(shouldCancel)
   {

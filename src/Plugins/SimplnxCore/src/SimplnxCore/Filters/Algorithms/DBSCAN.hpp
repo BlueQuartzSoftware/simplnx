@@ -78,8 +78,8 @@ public:
 
   /**
    * @brief Executes the selected DBSCAN implementation.
-   * @return Success or a no-cluster warning, or a validation, mask, storage, or record-I/O error.
-   * @pre Epsilon and MinPoints are positive.
+   * @return Success or a no-cluster warning, or a validation, mask, coordinate, grid-size, storage, or record-I/O error.
+   * @pre Epsilon is finite and positive, and MinPoints is positive.
    * @pre The coordinate array has two or three components.
    *
    * Cancellation returns success. Completed Feature ID writes remain, but the
