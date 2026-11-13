@@ -895,6 +895,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data: StructuralValidation required 
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data: Empty phase list", "[OrientationAnalysis][ReadChannel5Data]")
 {
+  constexpr int32 k_CprNoPhasesError = -102300;
   const fs::path cprPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadChannel5Data_NoPhases.cpr";
   const fs::path crcPath = cprPath.parent_path() / "ReadChannel5Data_NoPhases.crc";
   const auto fileGuard = MakeScopeGuard([&cprPath, &crcPath]() noexcept {
@@ -936,10 +937,11 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data: Empty phase list", "[Orientati
     DataStructure dataStructure;
     auto preflightResult = filter.preflight(dataStructure, args).outputActions;
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult);
-    REQUIRE(preflightResult.errors()[0].code == -66502);
+    // EbsdLib's CprReader reports a .cpr file without phases (-102300) before the filter's own check (-66502) runs.
+    REQUIRE(preflightResult.errors()[0].code == k_CprNoPhasesError);
     auto executeResult = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult);
-    REQUIRE(executeResult.errors()[0].code == -66502);
+    REQUIRE(executeResult.errors()[0].code == k_CprNoPhasesError);
   }
 
   SECTION("The algorithm reports the empty phase list without the filter")
@@ -955,6 +957,6 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data: Empty phase list", "[Orientati
     const std::atomic_bool shouldCancel = false;
     const Result<> result = ReadChannel5Data(dataStructure, {}, shouldCancel, &inputValues)();
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors()[0].code == -66502);
+    REQUIRE(result.errors()[0].code == k_CprNoPhasesError);
   }
 }

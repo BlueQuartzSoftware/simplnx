@@ -811,7 +811,9 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Phase table validation", "[Orientati
     {
       REQUIRE(H5Ldelete(fileId, "0/Header/Phases/1/LatticeConstants", H5P_DEFAULT) >= 0);
       REQUIRE(H5Support::H5Lite::writeVectorDataset<float32>(fileId, "0/Header/Phases/1/LatticeConstants", {3}, {2.5F, 2.5F, 4.25F}) >= 0);
-      expectedCode = -50028;
+      // EbsdLib rejects a LatticeConstants dataset without 6 values, so the reader returns no phases (-50027) before
+      // the filter's own lattice-constant check (-50028) runs.
+      expectedCode = -50027;
     }
     SECTION("Phase index past the phase count")
     {

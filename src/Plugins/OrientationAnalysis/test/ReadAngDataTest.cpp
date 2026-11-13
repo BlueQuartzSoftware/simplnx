@@ -545,7 +545,10 @@ TEST_CASE("OrientationAnalysis::ReadAngData: HeaderValidation steps", "[Orientat
   const auto executeResult = filter.execute(ds, argsForValidation);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == result.errors()[0].code);
-  REQUIRE(result.errors()[0].code == -67602);
+  // EbsdLib's AngReader reports a step that does not parse as a finite float ("nan", "1e999") as a header parse error
+  // (-115). The filter's own step check (-67602) rejects the values that parse.
+  const bool parseError = std::string(value) == "nan" || std::string(value) == "1e999";
+  REQUIRE(result.errors()[0].code == (parseError ? -115 : -67602));
   REQUIRE(result.errors()[0].message.find(key) != std::string::npos);
 }
 
