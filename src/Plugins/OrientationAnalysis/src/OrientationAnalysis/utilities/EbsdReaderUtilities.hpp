@@ -504,14 +504,14 @@ Result<> GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilt
 
     if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
     {
-      if(phaseInfo.SpaceGroup < 1 || phaseInfo.SpaceGroup > 230 || ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup) == nullptr)
+      // Same check, code (-67600) and message as the import (ReadGrainMapper3D) uses.
+      if(auto result = GrainMapper3DUtilities::ValidateSpaceGroups({phaseInfo}, filePath); result.invalid())
       {
-        return MakeErrorResult(k_InvalidPhaseSymmetry,
-                               fmt::format("File '{}' phase {} has invalid Space Group {}. Use a space group from 1 to 230.", filePath, phaseInfo.PhaseIndex, phaseInfo.SpaceGroup));
+        return result;
       }
-      preflightUpdatedValues.push_back(
-          {fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                  ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
+      const auto ops = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(static_cast<usize>(phaseInfo.SpaceGroup));
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.PhaseIndex),
+                                        fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name, ops->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
   return {};

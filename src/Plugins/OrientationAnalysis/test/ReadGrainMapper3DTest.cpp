@@ -1,6 +1,8 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -15,10 +17,17 @@
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5Utilities.h"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
+
+#include <any>
 #include <array>
 #include <atomic>
 #include <cmath>
 #include <filesystem>
+#include <limits>
+#include <map>
+#include <utility>
 #include <vector>
 namespace fs = std::filesystem;
 
@@ -47,6 +56,12 @@ struct GrainMapperFixtureSpec
   usize rodriguesComponentCount = 3;
   usize phaseTupleCount = 0;
   std::array<IpfStorage, 3> ipfStorage = {IpfStorage::Float32, IpfStorage::Float32, IpfStorage::Float32};
+  std::string MalformedHeaderPath;
+  bool WriteAbsorption = false;
+  bool OmitCompleteness = false;
+  bool RankTwoCompleteness = false;
+  int32 SpaceGroup = 1;
+  std::vector<float64> UnitCell = {1.0, 1.0, 1.0, 90.0, 90.0, 90.0};
 };
 
 template <typename T>
@@ -126,6 +141,27 @@ float32 QuaternionValue(usize tupleIndex, usize componentIndex)
   return static_cast<float32>(tupleIndex * 4 + componentIndex + 1) * 0.25F;
 }
 
+void writeGrainMapperHeader(hid_t groupId, const std::string& groupName, const GrainMapperFixtureSpec& spec)
+{
+  for(const auto& name : {"Extent", "Spacing", "Center", "VirtualShift"})
+  {
+    std::vector<float64> values = {0.0, 0.0, 0.0};
+    if(std::string(name) == "Extent")
+    {
+      values = {static_cast<float64>(spec.dimensions[0]), static_cast<float64>(spec.dimensions[1]), static_cast<float64>(spec.dimensions[2])};
+    }
+    else if(std::string(name) == "Spacing")
+    {
+      values = {1.0, 1.0, 1.0};
+    }
+    if(spec.MalformedHeaderPath == "/" + groupName + "/" + name)
+    {
+      values.resize(2);
+    }
+    WriteVector<float64>(groupId, name, {values.size()}, values);
+  }
+}
+
 fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperFixtureSpec& spec)
 {
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
@@ -139,17 +175,21 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
 
   const hid_t labDctGroupId = OpenOrCreateGroup(fileId, "LabDCT");
   const auto labDctGroupGuard = MakeScopeGuard([labDctGroupId]() noexcept { H5Gclose(labDctGroupId); });
-  WriteVector<float64>(labDctGroupId, "Extent", {3}, {static_cast<float64>(spec.dimensions[0]), static_cast<float64>(spec.dimensions[1]), static_cast<float64>(spec.dimensions[2])});
-  WriteVector<float64>(labDctGroupId, "Spacing", {3}, {1.0, 1.0, 1.0});
-  WriteVector<float64>(labDctGroupId, "Center", {3}, {0.0, 0.0, 0.0});
-  WriteVector<float64>(labDctGroupId, "VirtualShift", {3}, {0.0, 0.0, 0.0});
+  writeGrainMapperHeader(labDctGroupId, "LabDCT", spec);
+  if(spec.WriteAbsorption)
+  {
+    const hid_t absorptionId = OpenOrCreateGroup(fileId, "AbsorptionCT");
+    const auto absorptionGuard = MakeScopeGuard([absorptionId]() noexcept { H5Gclose(absorptionId); });
+    writeGrainMapperHeader(absorptionId, "AbsorptionCT", spec);
+    WriteVector<uint16>(absorptionId, "Data", scalarDimensions, std::vector<uint16>(tupleCount, 1));
+  }
 
   const hid_t phaseGroupId = OpenOrCreateGroup(fileId, "PhaseInfo/Phase01");
   const auto phaseGroupGuard = MakeScopeGuard([phaseGroupId]() noexcept { H5Gclose(phaseGroupId); });
   REQUIRE(H5Support::H5Lite::writeStringDataset(phaseGroupId, "Name", "Synthetic Phase") >= 0);
   REQUIRE(H5Support::H5Lite::writeStringDataset(phaseGroupId, "UniversalHermannMauguin", "P 1") >= 0);
-  REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(phaseGroupId, "SpaceGroup", 1) >= 0);
-  WriteVector<float64>(phaseGroupId, "UnitCell", {6}, {1.0, 1.0, 1.0, 90.0, 90.0, 90.0});
+  REQUIRE(H5Support::H5Lite::writeScalarDataset<int32>(phaseGroupId, "SpaceGroup", spec.SpaceGroup) >= 0);
+  WriteVector<float64>(phaseGroupId, "UnitCell", {spec.UnitCell.size()}, spec.UnitCell);
 
   const hid_t dataGroupId = OpenOrCreateGroup(fileId, "LabDCT/Data");
   const auto dataGroupGuard = MakeScopeGuard([dataGroupId]() noexcept { H5Gclose(dataGroupId); });
@@ -174,7 +214,11 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
     phases[tupleIndex] = static_cast<uint8>(tupleIndex % 251);
   }
 
-  WriteVector<float32>(dataGroupId, "Completeness", scalarDimensions, completeness);
+  if(!spec.OmitCompleteness)
+  {
+    const auto completenessDimensions = spec.RankTwoCompleteness ? std::vector<hsize_t>{1, tupleCount} : scalarDimensions;
+    WriteVector<float32>(dataGroupId, "Completeness", completenessDimensions, completeness);
+  }
   const std::vector<hsize_t> phaseDimensions = phaseTupleCount == tupleCount ? scalarDimensions : std::vector<hsize_t>{1, 1, phaseTupleCount};
   WriteVector<uint8>(dataGroupId, "PhaseId", phaseDimensions, phases);
   auto vectorDimensions = scalarDimensions;
@@ -254,6 +298,25 @@ void ApplyGrainMapperRegularActions(DataStructure& dataStructure, const fs::path
   SIMPLNX_RESULT_REQUIRE_VALID(assertionResult);
   auto valueResult = preflightResult.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(valueResult);
+}
+
+template <typename T>
+void checkHeaderReadError(const Result<T>& result, int32 expectedCode, const fs::path& inputFile, const std::string& datasetPath)
+{
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == expectedCode);
+  CHECK(result.errors().front().message.find(inputFile.string()) != std::string::npos);
+  CHECK(result.errors().front().message.find(datasetPath) != std::string::npos);
+  CHECK(result.errors().front().message.find("expected 3") != std::string::npos);
+  CHECK(result.errors().front().message.find("Check that the file was written by GrainMapper3D and is not truncated.") != std::string::npos);
+  if(expectedCode != -38618)
+  {
+    CHECK(result.errors().front().message.find(expectedCode == -38619 ? "rank 2" : "2 values") != std::string::npos);
+  }
+  else
+  {
+    CHECK(result.errors().front().message.find("missing or unreadable") != std::string::npos);
+  }
 }
 
 template <typename T>
@@ -796,7 +859,9 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Header vector size", "[Orient
   ReadGrainMapper3DFilter filter;
   auto result = filter.preflight(ds, GrainMapperArguments(path, DataPath({"Header"})));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == -67622);
+  // The reader checks the value count of each LabDCT vector when it reads it (-38610 to -38613).
+  const std::map<std::string, int32> expectedCodes = {{"Extent", -38610}, {"Spacing", -38611}, {"Center", -38612}, {"VirtualShift", -38613}};
+  REQUIRE(result.outputActions.errors().front().code == expectedCodes.at(key));
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Computed origin fits geometry", "[OrientationAnalysis][ReadGrainMapper3D]")
@@ -885,4 +950,260 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D: Large finite headers can canc
   REQUIRE(geometry != nullptr);
   REQUIRE(geometry->getOrigin() == FloatVec3(0, 0, 0));
   UnitTest::CheckArraysInheritTupleDims(ds);
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:SpaceGroupSymmetry", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  using namespace ebsdlib;
+  const auto [spaceGroup, expected] =
+      GENERATE(std::make_pair(2, CrystalStructure::Triclinic), std::make_pair(10, CrystalStructure::Monoclinic), std::make_pair(47, CrystalStructure::OrthoRhombic),
+               std::make_pair(83, CrystalStructure::Tetragonal_Low), std::make_pair(123, CrystalStructure::Tetragonal_High), std::make_pair(147, CrystalStructure::Trigonal_Low),
+               std::make_pair(162, CrystalStructure::Trigonal_High), std::make_pair(175, CrystalStructure::Hexagonal_Low), std::make_pair(194, CrystalStructure::Hexagonal_High),
+               std::make_pair(200, CrystalStructure::Cubic_Low), std::make_pair(225, CrystalStructure::Cubic_High));
+  CAPTURE(spaceGroup, expected);
+  GrainMapperFixtureSpec spec;
+  spec.SpaceGroup = spaceGroup;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_Symmetry.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Symmetry"});
+  const auto args = GrainMapperArguments(inputFile, geometryPath);
+  const ReadGrainMapper3DFilter filter;
+  const auto preflight = filter.preflight(dataStructure, args);
+  auto actions = preflight.outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(actions);
+  const std::string expectedName = LaueOps::GetAllOrientationOps()[expected]->getSymmetryName();
+  bool foundSymmetry = false;
+  for(const auto& value : preflight.outputValues)
+  {
+    if(value.value.find("Crystal Symmetry: " + expectedName + "    |") != std::string::npos)
+    {
+      foundSymmetry = true;
+    }
+  }
+  CHECK(foundSymmetry);
+  const auto result = filter.execute(dataStructure, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto& structures = RequireDataArray<uint32>(dataStructure, geometryPath.createChildPath(k_CellEnsembleAttributeMatrixName).createChildPath("CrystalStructures"));
+  CHECK(structures[1] == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:InvalidSpaceGroup", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const int32 spaceGroup = GENERATE(-1, 0, 231, std::numeric_limits<int32>::max());
+  GrainMapperFixtureSpec spec;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_InvalidSpaceGroup.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Invalid SpaceGroup"});
+  ApplyGrainMapperRegularActions(dataStructure, inputFile, geometryPath);
+  const auto structuresPath = geometryPath.createChildPath(k_CellEnsembleAttributeMatrixName).createChildPath("CrystalStructures");
+  auto* structures = dataStructure.getDataAs<UInt32Array>(structuresPath);
+  REQUIRE(structures != nullptr);
+  structures->fill(42);
+  spec.SpaceGroup = spaceGroup;
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  const std::string expectedMessage = "File '" + inputFile.string() + "' phase 0 has invalid Space Group " + std::to_string(spaceGroup) + ". Use a space group from 1 to 230.";
+
+  SECTION("Preflight")
+  {
+    const ReadGrainMapper3DFilter filter;
+    const auto args = GrainMapperArguments(inputFile, geometryPath);
+    const DataStructure preflightData;
+    const auto preflight = filter.preflight(preflightData, args);
+    const auto& result = preflight.outputActions;
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -67600);
+    CHECK(result.errors().front().message == expectedMessage);
+    CHECK(preflight.outputValues.empty());
+  }
+  SECTION("Execute without preflight")
+  {
+    const IFilter::MessageHandler messageHandler = {};
+    const std::atomic_bool shouldCancel = false;
+    auto inputValues = GrainMapperInputValues(inputFile, geometryPath);
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -67600);
+    CHECK(result.errors().front().message == expectedMessage);
+    CHECK((*structures)[0] == 42);
+    CHECK((*structures)[1] == 42);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:InvalidUnitCell", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  GrainMapperFixtureSpec spec;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_InvalidUnitCell.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  DataStructure dataStructure;
+  const DataPath geometryPath({"Invalid UnitCell"});
+  ApplyGrainMapperRegularActions(dataStructure, inputFile, geometryPath);
+  // Direct execute reads and validates the header before it copies the cached phases.
+  spec.UnitCell = {1.0, 1.0, 1.0};
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+
+  SECTION("Preflight")
+  {
+    const ReadGrainMapper3DFilter filter;
+    const auto args = GrainMapperArguments(inputFile, geometryPath);
+    const DataStructure preflightData;
+    const auto result = filter.preflight(preflightData, args).outputActions;
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -38609);
+    CHECK(result.errors().front().message.find(inputFile.string()) != std::string::npos);
+    CHECK(result.errors().front().message.find("Phase01") != std::string::npos);
+    CHECK(result.errors().front().message.find("3 values; expected 6") != std::string::npos);
+  }
+  SECTION("Execute without preflight")
+  {
+    const IFilter::MessageHandler messageHandler = {};
+    const std::atomic_bool shouldCancel = false;
+    auto inputValues = GrainMapperInputValues(inputFile, geometryPath);
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -38609);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:InvalidHeaderReads", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto [datasetPath, expectedCode] = GENERATE(table<std::string, int32>({{"/LabDCT/Extent", -38610},
+                                                                               {"/LabDCT/Spacing", -38611},
+                                                                               {"/LabDCT/Center", -38612},
+                                                                               {"/LabDCT/VirtualShift", -38613},
+                                                                               {"/AbsorptionCT/Extent", -38614},
+                                                                               {"/AbsorptionCT/Spacing", -38615},
+                                                                               {"/AbsorptionCT/Center", -38616},
+                                                                               {"/AbsorptionCT/VirtualShift", -38617},
+                                                                               {"/LabDCT/Data/Completeness", -38619},
+                                                                               {"/LabDCT/Data/Completeness", -38618}}));
+  CAPTURE(datasetPath, expectedCode);
+  GrainMapperFixtureSpec spec;
+  spec.WriteAbsorption = true;
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_InvalidHeaderReads.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  const DataPath geometryPath({"Invalid Header"});
+  const ReadGrainMapper3DFilter filter;
+  auto args = GrainMapperArguments(inputFile, geometryPath);
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(true));
+  DataStructure dataStructure;
+  const auto validPreflight = filter.preflight(dataStructure, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(validPreflight);
+  auto actionResult = validPreflight.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
+  spec.MalformedHeaderPath = datasetPath;
+  spec.OmitCompleteness = expectedCode == -38618;
+  spec.RankTwoCompleteness = expectedCode == -38619;
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+
+  SECTION("Execute without preflight")
+  {
+    const IFilter::MessageHandler messageHandler = {};
+    const std::atomic_bool shouldCancel = false;
+    auto inputValues = GrainMapperInputValues(inputFile, geometryPath);
+    inputValues.ReadAbsorptionData = true;
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    checkHeaderReadError(result, expectedCode, inputFile, datasetPath);
+  }
+  SECTION("Preflight")
+  {
+    const DataStructure preflightData;
+    const auto result = filter.preflight(preflightData, args).outputActions;
+    checkHeaderReadError(result, expectedCode, inputFile, datasetPath);
+  }
+}
+
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:ReadSelections", "[OrientationAnalysis][ReadGrainMapper3D]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto [readDct, readAbsorption] = GENERATE(table<bool, bool>({{false, false}, {false, true}, {true, false}, {true, true}}));
+  CAPTURE(readDct, readAbsorption);
+  GrainMapperFixtureSpec spec;
+  spec.WriteAbsorption = true;
+  // An invalid phase header must be ignored when LabDCT is disabled.
+  if(!readDct)
+  {
+    spec.UnitCell = {1.0, 1.0, 1.0};
+  }
+  const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadGrainMapper3D_ReadSelections.h5";
+  const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
+    std::error_code errorCode;
+    fs::remove(inputFile, errorCode);
+  });
+  WriteGrainMapperFixture(inputFile.filename().string(), spec);
+  const DataPath geometryPath({"Selected LabDCT"});
+  auto args = GrainMapperArguments(inputFile, geometryPath);
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(readDct));
+  args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(readAbsorption));
+  const ReadGrainMapper3DFilter filter;
+  DataStructure dataStructure;
+  const auto preflight = filter.preflight(dataStructure, args).outputActions;
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight);
+  auto actions = preflight.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(actions);
+  auto inputValues = GrainMapperInputValues(inputFile, geometryPath);
+  inputValues.ReadDctData = readDct;
+  inputValues.ReadAbsorptionData = readAbsorption;
+  const IFilter::MessageHandler messageHandler = {};
+  const std::atomic_bool shouldCancel = false;
+
+  SECTION("Valid selected headers")
+  {
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    if(readAbsorption)
+    {
+      const auto& absorption = RequireDataArray<uint16>(dataStructure, inputValues.AbsorptionImageGeometryPath.createChildPath(k_CellAttributeMatrixName).createChildPath("Data"));
+      REQUIRE(absorption.getSize() == 1);
+      CHECK(absorption[0] == 1);
+    }
+    if(readDct)
+    {
+      const auto& structures = RequireDataArray<uint32>(dataStructure, geometryPath.createChildPath(k_CellEnsembleAttributeMatrixName).createChildPath("CrystalStructures"));
+      CHECK(structures[1] == ebsdlib::CrystalStructure::Triclinic);
+    }
+  }
+  SECTION("Short AbsorptionCT vector")
+  {
+    spec.MalformedHeaderPath = "/AbsorptionCT/Extent";
+    WriteGrainMapperFixture(inputFile.filename().string(), spec);
+    const DataStructure preflightData;
+    const auto preflightResult = filter.preflight(preflightData, args).outputActions;
+    const auto result = ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
+    if(readAbsorption)
+    {
+      checkHeaderReadError(preflightResult, -38614, inputFile, spec.MalformedHeaderPath);
+      checkHeaderReadError(result, -38614, inputFile, spec.MalformedHeaderPath);
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+    }
+  }
 }

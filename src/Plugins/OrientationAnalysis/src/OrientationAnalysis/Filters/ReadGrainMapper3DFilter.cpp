@@ -146,6 +146,12 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     return badResult;
   }
 
+  result = ValidateSpaceGroups(reader.getPhaseVector(), pInputFileValue.string());
+  if(result.invalid())
+  {
+    return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+  }
+
   if(!pReadLabDCT && !pReadAbsorptionCT)
   {
     resultOutputActions.warnings().push_back({-65432, "WARNING: No data is being read by this filter because both Read DCT and Read Absorption are both FALSE."});
