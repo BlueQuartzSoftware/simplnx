@@ -139,6 +139,8 @@ represents the 4x4 matrix:
 
 With Clear and Renumber on, error **-67455** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
 
+Error **-67456** rejects a transform-matrix output whose parent is the Feature Attribute Matrix that will be cleared. This also applies to another link to that matrix. Save the transform matrix under a different parent, or turn Clear off.
+
 ### Numeric input constraints
 
 For *Translation*, each **Translation** component must be finite. For *Scale*, each **Scale** component must be finite. Image Geometry scale factors must also be greater than 0. Node geometries permit zero and negative scale factors, including reflections. For *Rotation*, **Rotation** must contain a finite nonzero XYZ axis and a finite angle in degrees. Large and small finite axes are normalized safely. Inactive transformation vectors are ignored. Image translation and scale results must have finite origins and positive finite spacing where assigned. Preflight warns about unrepresentable results with the current geometry metadata. Execution checks the final results before changing the geometry.
