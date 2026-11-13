@@ -100,6 +100,9 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | 23 | (d) | Clear + Renumber, source Feature Id negative → `-5355`, or ≥ Feature Attribute Matrix tuple count → `-5351`; unused slices are checked too | `Renumber validates source Feature Id range` (both codes asserted) |
 | 24 | (d) | Clear + Renumber → Feature Ids compacted, empty matrix resized (new geometry and in place) | `Clear ON, renumber ON execute`, `Clear ON in place`, `Clear ON accepts shared parent paths`, `StrictFeatureIds preflight` (alias section) |
 | 25 | (d) | SIMPL 6.x conversion sets Clear off; converted pipeline preflights on a geometry with only cell data | `SIMPL Backwards Compatibility` |
+| 26 | (d) | Feature Attribute Matrix is registered as another geometry's element data → error `-67460` | `Reject another geometry element Feature AM` checks a linked Vertex Attribute Matrix. |
+| 27 | (c) | Slice transfer fails → return the store error before compaction or deferred source replacement. | `Transfer failure preserves source` injects `-95120` on the second slice; checks source identity, dimensions, arrays and uncompacted partial output. |
+| 28 | (b) | Feature Ids is a StringArray or NeighborList → existing error `-5561`, without an exception. | `Reject nonnumeric Feature Ids` checks both types. |
 
 ## Test inventory
 
@@ -127,10 +130,14 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | `Clear OFF execute copies Feature AM unchanged` | new on `topic/correct_feature_am_updates` | Renumber off and on (ignored). Asserts the copied matrix has shape {5} and 3 arrays, `NumElements` {0,1,1,1,1}, the NeighborList and names unchanged, Ids {1,3}, and Ensemble {999, 1}. |
 | `Clear ON in place` | new on `topic/correct_feature_am_updates` | Clear and Renumber on, in place. Asserts `Image/Cell Feature Data` is empty with shape {3}, dims (1,1,2), Ids {1,2}, no temporary or output geometry left, and Ensemble {999, 1}. |
 | `Feature AM nested alias regression` | new on `topic/correct_feature_am_updates` | The Feature matrix is also linked in `Image/Misc`, and `Misc` is also linked in `Outside`. Clear, Renumber and the selected path (direct or nested) are each on and off. With Clear on, the output matrix has no arrays and `Misc` has no copy of the matrix; with Clear off, it has 3 arrays and the nested copy keeps the original counts. `Misc/Keep` is 123 in every case. The source matrix keeps its ID, parents, shape, 3 arrays, counts and the `Outside` link. |
+| `Reject another geometry element Feature AM` | review regression | Rejects clearing a linked matrix registered by a second geometry; asserts `-67460`. |
+| `Transfer failure preserves source` | review regression | One successful slice precedes the injected read error. Asserts `-95120`, unchanged source data and no destination feature compaction. |
+| `Reject nonnumeric Feature Ids` | review regression | StringArray and NeighborList inputs return the existing `-5561` error without throwing. |
 
-There are 22 `TEST_CASE`s: 6 from the V&V cycle (all modified on `topic/correct_feature_am_updates`), 13 new on that branch, and 3 from upstream #1897. 21 are registered with CTest; `real HDF5 slice-copy oracle` is hidden. The 21 registered cases pass in the in-core build (`NX-Com-Qt69-Vtk96-Rel`, 2026-11-04).
+There are 25 `TEST_CASE`s: 6 from the V&V cycle (all modified on `topic/correct_feature_am_updates`), 13 new on that branch, 3 from upstream #1897, and 3 review regressions. 24 are registered with CTest; `real HDF5 slice-copy oracle` is hidden. The earlier 21-case in-core result is from 2026-11-04. The review validation results are recorded separately.
 
 OOC recertification (2026-09-21): serial CTest passed 5/5 target entries in each DREAM3DNX build. The hidden `real HDF5 slice-copy oracle` passed 67 assertions in the OOC binary. The existing source fixture and Z-boundary writer produce the analytical source-plane map [0,1,2,2,3]. HDF5 input and output stores preserve [0,1,2,3,4,5,4,5,6,7] across plane-copy boundaries. In-place and new-geometry modes both pass, including the loose child array. The new case is included in the plugin's OOC store-contract CTest group. Upstream oracle assertions and tolerances remain intact. No new legacy binary comparison is claimed.
+
 
 ## Exemplar archive
 
