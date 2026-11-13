@@ -1,5 +1,7 @@
 #include "RotateSampleRefFrameFilter.hpp"
 
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.hpp"
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -327,6 +329,11 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
                       cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
 
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     // Ignore every path to the Feature AM, including selections through another parent.
     const auto featureAmPaths = srcCellFeatureData->getDataPaths();
     ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());

@@ -262,6 +262,11 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
                       cellFeatureAttributeMatrixPath.toString(), srcImagePath.toString()));
     }
 
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     if(renumberFeatures)
     {
       auto locationResult = ValidateArrayInGeometryCellData(dataStructure, srcImagePath, featureIdsArrayPath, -67433, "Cell Feature Ids");

@@ -187,6 +187,11 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
                                                           "off 'Clear Feature Attribute Matrix'.",
                                                           featureAmPath.toString(), vertexGeomPath.toString()));
     }
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     if(renumberFeatures)
     {
       if(!IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *inputVertexGeom.getVertexAttributeMatrix()))

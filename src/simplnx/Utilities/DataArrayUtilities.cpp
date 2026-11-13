@@ -5,6 +5,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -238,6 +239,50 @@ std::vector<DataPath> MapToGeometryCellDataPath(const DataPath& cellDataPath, co
     mappedPaths.push_back(MapToGeometryCellDataPath(cellDataPath, arrayPath));
   }
   return mappedPaths;
+}
+
+Result<> ValidateFeatureAttributeMatrixNotElementData(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath)
+{
+  const auto* features = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  for(const auto id : dataStructure.getAllDataObjectIds())
+  {
+    const auto* geometry = dataStructure.getDataAs<IGeometry>(id);
+    if(geometry == nullptr)
+    {
+      continue;
+    }
+    std::array<const AttributeMatrix*, 5> elementMatrices = {};
+    if(const auto* grid = dynamic_cast<const IGridGeometry*>(geometry); grid != nullptr)
+    {
+      elementMatrices[0] = grid->getCellData();
+    }
+    if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(geometry); nodes != nullptr)
+    {
+      elementMatrices[1] = nodes->getVertexAttributeMatrix();
+    }
+    if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(geometry); edges != nullptr)
+    {
+      elementMatrices[2] = edges->getEdgeAttributeMatrix();
+    }
+    if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(geometry); faces != nullptr)
+    {
+      elementMatrices[3] = faces->getFaceAttributeMatrix();
+    }
+    if(const auto* cells = dynamic_cast<const INodeGeometry3D*>(geometry); cells != nullptr)
+    {
+      elementMatrices[4] = cells->getPolyhedraAttributeMatrix();
+    }
+    for(const auto* matrix : elementMatrices)
+    {
+      if(matrix != nullptr && matrix->getId() == features->getId())
+      {
+        return MakeErrorResult(-67460, fmt::format("Feature Attribute Matrix '{}' is registered as element data by geometry '{}'. Clearing it would delete that geometry's element arrays. Select a "
+                                                   "Feature Attribute Matrix that is not registered as element data by any geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                   featureAttributeMatrixPath.toString(), (geometry->getDataPaths().empty() ? geometry->getName() : geometry->getDataPaths().front().toString())));
+      }
+    }
+  }
+  return {};
 }
 
 Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,

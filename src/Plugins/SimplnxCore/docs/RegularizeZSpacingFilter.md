@@ -64,6 +64,8 @@ When Clear is on, the selected Feature Attribute Matrix must be a direct child o
 - **-67433**: With Clear and Renumber on, Cell Feature Ids must belong to the geometry's Cell Attribute Matrix. Select the array from that matrix.
 - **-67434**: With Clear and Renumber on, Cell Feature Ids must have one tuple per cell. Select an array with the same tuple count as the geometry's cell count.
 
+When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -135,6 +135,8 @@ represents the 4x4 matrix:
 - **Pre-Computed Transformation Matrix** (only for Transformation Type 1) -- typically produced by [Combine Transformation Matrices](CombineTransformationMatricesFilter.md).
 - **Cell Attribute Matrix** (Image Geometry only) -- the cell-level data to be re-gridded.
 
+When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
+
 With Clear and Renumber on, error **-67455** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
 
 Error **-67456** rejects a transform-matrix output whose parent is the Feature Attribute Matrix that will be cleared. This also applies to another link to that matrix. Save the transform matrix under a different parent, or turn Clear off.

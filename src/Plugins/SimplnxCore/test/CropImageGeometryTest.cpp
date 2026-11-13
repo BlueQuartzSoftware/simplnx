@@ -1,6 +1,7 @@
 #include "SimplnxCore/Filters/Algorithms/CropImageGeometry.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -2781,4 +2782,29 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: SIMPL conversion uses voxel bou
   const auto* cropped = ds.getDataAs<ImageGeom>(DataPath({"Cropped"}));
   REQUIRE(cropped != nullptr);
   CHECK(cropped->getDimensions() == SizeVec3(2, 2, 1));
+}
+
+TEST_CASE("SimplnxCore::CropImageGeometryFilter: Reject another geometry element Feature AM", "[SimplnxCore][CropImageGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureCropFixture();
+  const auto featurePath = DataPath({"Image", "Cell Feature Data"});
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  auto* other = VertexGeom::Create(ds, "OtherGeometry");
+  REQUIRE(other != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
+  REQUIRE(vertices != nullptr);
+  other->setVertices(*vertices);
+  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
+  other->setVertexAttributeMatrix(*features);
+  CropImageGeometryFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67460);
+  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  CHECK(other->getVertexAttributeMatrix() == features);
+  CHECK(features->getSize() > 0);
 }

@@ -210,6 +210,15 @@ SIMPLNX_EXPORT DataPath MapToGeometryCellDataPath(const DataPath& cellDataPath, 
 SIMPLNX_EXPORT std::vector<DataPath> MapToGeometryCellDataPath(const DataPath& cellDataPath, const std::vector<DataPath>& arrayPaths);
 
 /**
+ * @brief Rejects a Feature Attribute Matrix registered as element data by any geometry, including linked matrices.
+ * @param dataStructure Supplies every geometry to check by object identity.
+ * @param featureAttributeMatrixPath Identifies the selected Feature Attribute Matrix.
+ * @return Error -67460 if clearing the matrix would remove registered element data; otherwise a valid result.
+ * @pre featureAttributeMatrixPath resolves to an AttributeMatrix.
+ */
+[[nodiscard]] SIMPLNX_EXPORT Result<> ValidateFeatureAttributeMatrixNotElementData(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath);
+
+/**
  * @brief Validates a Feature Attribute Matrix directly under the selected grid geometry.
  * @param dataStructure Resolves the selected objects.
  * @param geometryPath Identifies the grid geometry.

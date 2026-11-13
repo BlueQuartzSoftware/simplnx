@@ -800,6 +800,8 @@ NeighborLists they cannot keep; the geometry-changing filters clear or flag thei
 shared helpers in `simplnx/Utilities/FilterUtilities.hpp` rather than a new message of your own, and say in the filter's
 documentation which Feature data must be computed again.
 
+Before clearing a Feature Attribute Matrix, check its object ID against the registered element Attribute Matrices of **every** geometry in the DataStructure. A link can make one geometry's Feature matrix another geometry's element matrix. Checking only the selected geometry can delete the second geometry's arrays (PR #1913). Use `ValidateFeatureAttributeMatrixNotElementData` before scheduling the clear. During recursive copies, exclude every link to stale Feature data by object identity; deleting only the top-level copy leaves nested aliases behind (PR #1913).
+
 ### Use the same population in every pass of a statistic
 
 **Rule:** counting, gathering, summing and variance passes use the same eligibility test. Reset the denominator of each

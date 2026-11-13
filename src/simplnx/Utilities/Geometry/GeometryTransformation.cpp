@@ -187,6 +187,11 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
                         featureAmPath.toString(), imageGeomPtr != nullptr ? "Cell" : "Vertex, Edge, Face, or Polyhedron", pSelectedGeometryPathValue.toString()));
       }
     }
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     if(renumberFeatures)
     {
       const auto& featureIdsPath = inputValues.FeatureIdsPath;

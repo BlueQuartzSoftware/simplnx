@@ -894,3 +894,28 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject nonnumeric Feature I
   CHECK(result.outputActions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
 }
+
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Reject another geometry element Feature AM", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateFeatureRemovalFixture();
+  const auto featurePath = DataPath({"Vertex", "Vertex Feature Data"});
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  auto* other = VertexGeom::Create(ds, "OtherGeometry");
+  REQUIRE(other != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
+  REQUIRE(vertices != nullptr);
+  other->setVertices(*vertices);
+  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
+  other->setVertexAttributeMatrix(*features);
+  RemoveFlaggedVerticesFilter filter;
+  auto result = filter.preflight(ds, MakeFeatureRemovalArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67460);
+  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  CHECK(other->getVertexAttributeMatrix() == features);
+  CHECK(features->getSize() > 0);
+}

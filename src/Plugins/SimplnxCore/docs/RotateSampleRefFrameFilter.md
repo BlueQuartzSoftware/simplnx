@@ -79,6 +79,8 @@ When Clear is on, the selected Feature Attribute Matrix must be a direct child o
 - **-67441**: The Feature Attribute Matrix is not a direct child of the selected Image Geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
 - **-67442**: The selected matrix is the geometry's Cell Attribute Matrix. Select the matrix that holds Feature data, or turn Clear off.
 
+When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

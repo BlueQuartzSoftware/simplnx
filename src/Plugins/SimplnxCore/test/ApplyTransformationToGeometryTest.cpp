@@ -1762,3 +1762,28 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject matrix outpu
   CHECK(result.outputActions.errors()[0].message.find(outputPath.toString()) != std::string::npos);
   CHECK(ds.getData(outputPath) == nullptr);
 }
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject another geometry element Feature AM", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  UnitTest::LoadPlugins();
+  auto ds = CreateTransformFeatureFixture();
+  const auto featurePath = k_FeatureAMPath;
+  const auto* features = ds.getDataAs<AttributeMatrix>(featurePath);
+  REQUIRE(features != nullptr);
+  auto* other = VertexGeom::Create(ds, "OtherGeometry");
+  REQUIRE(other != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {features->getNumberOfTuples()}, {3}, other->getId());
+  REQUIRE(vertices != nullptr);
+  other->setVertices(*vertices);
+  REQUIRE(ds.setAdditionalParent(features->getId(), other->getId()));
+  other->setVertexAttributeMatrix(*features);
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.preflight(ds, MakeTransformFeatureArgs(true, false, 4));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -67460);
+  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  CHECK(other->getVertexAttributeMatrix() == features);
+  CHECK(features->getSize() > 0);
+}

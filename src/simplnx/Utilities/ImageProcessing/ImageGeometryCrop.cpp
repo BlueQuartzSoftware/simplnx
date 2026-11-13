@@ -303,6 +303,11 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
       featureAmResult.errors().front().message += " Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.";
       return {ConvertInvalidResult<OutputActions>(std::move(featureAmResult)), preflightUpdatedValues};
     }
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAmPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+    }
     if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, options.featureIdsPath, *srcImageGeomPtr->getCellData()))
     {
       return {

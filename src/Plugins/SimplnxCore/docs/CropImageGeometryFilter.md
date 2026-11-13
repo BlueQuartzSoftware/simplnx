@@ -109,6 +109,8 @@ When Clear is on, the selected Feature Attribute Matrix must be a direct child o
 
 - **Input Image Geometry** -- the geometry to crop. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
+When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
