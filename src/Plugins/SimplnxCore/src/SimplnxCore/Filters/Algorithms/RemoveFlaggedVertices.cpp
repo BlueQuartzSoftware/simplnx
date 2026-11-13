@@ -1,9 +1,12 @@
 #include "RemoveFlaggedVertices.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/SamplingUtils.hpp"
 
 using namespace nx::core;
 
@@ -139,6 +142,24 @@ Result<> RemoveFlaggedVertices::operator()()
     {
       return copyResult;
     }
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
+  {
+    // Validate all source IDs, including vertices removed by the mask, as Crop Image does.
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFeatureIdsPath);
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, false, m_MessageHandler);
+    if(validateResult.invalid())
+    {
+      return validateResult;
+    }
+    const DataPath destFeatureAmPath = m_InputValues->OutputVertexGeometryPath.createChildPath(m_InputValues->FeatureAttributeMatrixPath.getTargetName());
+    const DataPath destFeatureIdsPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(m_InputValues->VertexFeatureIdsPath.getTargetName());
+    return Sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->VertexFeatureIdsPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};

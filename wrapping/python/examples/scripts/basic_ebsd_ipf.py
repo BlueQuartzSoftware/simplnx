@@ -74,6 +74,7 @@ nxtest.check_filter_result(nxor.RotateEulerRefFrameFilter, result)
 # Rotate the Sample Reference Frame 180@010
 #------------------------------------------------------------------------------
 result = nx.RotateSampleRefFrameFilter.execute(data_structure=data_structure,
+    clear_feature_attribute_matrix=False,
     # output_image_geometry_path=nx.DataPath(["Small IN100 Rotated"]),
     remove_original_geometry=True,
     rotate_slice_by_slice=False,

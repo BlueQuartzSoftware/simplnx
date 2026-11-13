@@ -19,7 +19,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
@@ -131,6 +130,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   auto pPadXDim = filterArgs.value<BoolParameter::ValueType>(k_PadXDim_Key);
   auto pPadYDim = filterArgs.value<BoolParameter::ValueType>(k_PadYDim_Key);
   auto pPadZDim = filterArgs.value<BoolParameter::ValueType>(k_PadZDim_Key);
+  auto pDefaultFillValue = filterArgs.value<int32>(k_DefaultFillValue_Key);
 
   if(!pPadXDim && !pPadYDim && !pPadZDim)
   {
@@ -247,10 +247,15 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  bool hasCopiedAttributeMatrix = false;
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())
     {
+      if(dataStructure.getDataAs<AttributeMatrix>(childPath) != nullptr)
+      {
+        hasCopiedAttributeMatrix = true;
+      }
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
@@ -260,6 +265,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
           {
+            hasCopiedAttributeMatrix = hasCopiedAttributeMatrix || dataStructure.getDataAs<AttributeMatrix>(sourcePath) != nullptr;
             allCreatedPaths.push_back(sourcePath.rebase(srcImagePath, destImagePath).value());
           }
         }
@@ -271,11 +277,28 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
       }
     }
   }
-  AppendCopiedAMStaleWarning(dataStructure, childPaths.value_or(std::vector<DataPath>{}), resultOutputActions);
 
   if(pPerformInPlace)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+  }
+
+  if(pDefaultFillValue != 0 &&
+     ((pPadXDim && (pXMinMaxValue[0] > 0 || pXMinMaxValue[1] > 0)) || (pPadYDim && (pYMinMaxValue[0] > 0 || pYMinMaxValue[1] > 0)) || (pPadZDim && (pZMinMaxValue[0] > 0 || pZMinMaxValue[1] > 0))))
+  {
+    resultOutputActions.warnings().emplace_back(Warning{
+        -67401,
+        fmt::format("Default Padding Value is {}. This value is written into every Cell Data Array, including any Feature Ids array. The added cells then belong to Feature {}, so any Feature "
+                    "data computed before this filter is no longer correct for that Feature. A negative value, or a value larger than the last Feature Id, creates Feature Ids that are not valid. "
+                    "Use 0 to add background cells.",
+                    pDefaultFillValue, pDefaultFillValue)});
+  }
+
+  if(!pUpdateOriginValue && hasCopiedAttributeMatrix && ((pPadXDim && pXMinMaxValue[0] > 0) || (pPadYDim && pYMinMaxValue[0] > 0) || (pPadZDim && pZMinMaxValue[0] > 0)))
+  {
+    resultOutputActions.warnings().emplace_back(Warning{
+        -67402, "Update Origin is OFF and padding is added on the minimum side. The existing cells move to new physical coordinates. Values stored in physical coordinates in the copied Attribute "
+                "Matrices, such as Feature Centroids, no longer match the cells. Turn on Update Origin to keep the cells in place, or recompute those values."});
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

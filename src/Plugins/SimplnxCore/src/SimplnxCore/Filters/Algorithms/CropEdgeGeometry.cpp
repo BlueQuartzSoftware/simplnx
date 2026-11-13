@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/SamplingUtils.hpp"
 
 #include <map>
 
@@ -480,5 +481,24 @@ Result<> CropEdgeGeometry::operator()()
     destEdges[newIndex++] = static_cast<uint64>(newV1);
   }
 
-  return CopyAttributeArrays(srcEdgesAttrMatrix, destEdgesAttrMatrix, edgeSources, m_ShouldCancel, m_MessageHandler);
+  copyResult = CopyAttributeArrays(srcEdgesAttrMatrix, destEdgesAttrMatrix, edgeSources, m_ShouldCancel, m_MessageHandler);
+  if(copyResult.invalid() || m_ShouldCancel)
+  {
+    return copyResult;
+  }
+
+  if(m_InputValues->clearFeatureAttributeMatrix && m_InputValues->renumberFeatures)
+  {
+    // Validate all source IDs, including edges removed by the crop, as Crop Image does.
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->edgeFeatureIdsPath);
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->featureAttributeMatrixPath, featureIds, false, m_MessageHandler);
+    if(validateResult.invalid())
+    {
+      return validateResult;
+    }
+    const auto destFeatureAmPath = destEdgeGeomPath.createChildPath(m_InputValues->featureAttributeMatrixPath.getTargetName());
+    const auto destFeatureIdsPath = destEdgeGeomPath.createChildPath(srcEdgesAttrMatrix.getName()).createChildPath(m_InputValues->edgeFeatureIdsPath.getTargetName());
+    return Sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->edgeFeatureIdsPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+  }
+  return {};
 }

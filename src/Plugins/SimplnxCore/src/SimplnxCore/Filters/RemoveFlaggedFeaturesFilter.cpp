@@ -152,13 +152,13 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
 
   DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
+
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // If we are in any way removing features, inform the user
   if(operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove))
   {
-    // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion for Remove/ExtractThenRemove below
-    nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues, false);
+    nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, cellFeatureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues);
 
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified

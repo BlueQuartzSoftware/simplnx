@@ -14,6 +14,17 @@
 namespace nx::core
 {
 /**
+ * @brief Appends a recursive copy action, excluding every alias of excludedPath and its descendants from the copy and created paths.
+ * If source is itself an alias of excludedPath, or is inside one, nothing is appended.
+ * @param dataStructure Source structure used to enumerate paths.
+ * @param actions Receives the copy action, if one is appended.
+ * @param source Source object to copy.
+ * @param destination Path of the new copy.
+ * @param excludedPath Object to exclude. An empty or unresolved path copies everything.
+ */
+SIMPLNX_EXPORT void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputActions& actions, const DataPath& source, const DataPath& destination, const DataPath& excludedPath = {});
+
+/**
  * @struct FeatureRenumbering
  * @brief Holds the stable compaction mapping for inactive feature removal.
  *

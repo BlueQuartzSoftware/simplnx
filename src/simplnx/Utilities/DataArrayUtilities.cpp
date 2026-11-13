@@ -5,6 +5,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -240,6 +241,50 @@ std::vector<DataPath> MapToGeometryCellDataPath(const DataPath& cellDataPath, co
   return mappedPaths;
 }
 
+Result<> ValidateFeatureAttributeMatrixNotElementData(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath)
+{
+  const auto* features = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  for(const auto id : dataStructure.getAllDataObjectIds())
+  {
+    const auto* geometry = dataStructure.getDataAs<IGeometry>(id);
+    if(geometry == nullptr)
+    {
+      continue;
+    }
+    std::array<const AttributeMatrix*, 5> elementMatrices = {};
+    if(const auto* grid = dynamic_cast<const IGridGeometry*>(geometry); grid != nullptr)
+    {
+      elementMatrices[0] = grid->getCellData();
+    }
+    if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(geometry); nodes != nullptr)
+    {
+      elementMatrices[1] = nodes->getVertexAttributeMatrix();
+    }
+    if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(geometry); edges != nullptr)
+    {
+      elementMatrices[2] = edges->getEdgeAttributeMatrix();
+    }
+    if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(geometry); faces != nullptr)
+    {
+      elementMatrices[3] = faces->getFaceAttributeMatrix();
+    }
+    if(const auto* cells = dynamic_cast<const INodeGeometry3D*>(geometry); cells != nullptr)
+    {
+      elementMatrices[4] = cells->getPolyhedraAttributeMatrix();
+    }
+    for(const auto* matrix : elementMatrices)
+    {
+      if(matrix != nullptr && matrix->getId() == features->getId())
+      {
+        return MakeErrorResult(-67460, fmt::format("Feature Attribute Matrix '{}' is registered as element data by geometry '{}'. Clearing it would delete that geometry's element arrays. Select a "
+                                                   "Feature Attribute Matrix that is not registered as element data by any geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                                   featureAttributeMatrixPath.toString(), (geometry->getDataPaths().empty() ? geometry->getName() : geometry->getDataPaths().front().toString())));
+      }
+    }
+  }
+  return {};
+}
+
 Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
                                                   std::string_view sourceParameterName, const DataPath& sourceArrayPath)
 {
@@ -257,6 +302,25 @@ Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStruc
                            fmt::format("The Feature Attribute Matrix '{}' (the parent of **{}** '{}') must be an Attribute Matrix directly under the selected geometry '{}' "
                                        "and must not be its Cell Attribute Matrix '{}'. Select a feature DataArray from a different Attribute Matrix directly under that geometry.",
                                        featureAttributeMatrixPath.toString(), sourceParameterName, sourceArrayPath.toString(), geometryPath.toString(), gridGeomPtr->getCellDataPath().toString()));
+  }
+  return {};
+}
+
+Result<> ValidateFeatureAttributeMatrixInGeometry(const DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& featureAttributeMatrixPath, int32 errorCode,
+                                                  std::string_view parameterName)
+{
+  const auto* gridGeomPtr = dataStructure.getDataAs<IGridGeometry>(geometryPath);
+  if(gridGeomPtr == nullptr || gridGeomPtr->getCellData() == nullptr)
+  {
+    return MakeErrorResult(
+        errorCode, fmt::format("The Attribute Matrix '{}' selected for **{}** requires a Cell Attribute Matrix in the selected grid geometry '{}'. Select a geometry with a Cell Attribute Matrix.",
+                               featureAttributeMatrixPath.toString(), parameterName, geometryPath.toString()));
+  }
+  const auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrixPtr == nullptr || featureAttributeMatrixPtr->getId() == gridGeomPtr->getCellData()->getId() || !gridGeomPtr->contains(featureAttributeMatrixPtr))
+  {
+    return MakeErrorResult(errorCode, fmt::format("The Attribute Matrix '{}' selected for **{}** must be a direct child of the selected geometry '{}' and must not be its Cell Attribute Matrix '{}'.",
+                                                  featureAttributeMatrixPath.toString(), parameterName, geometryPath.toString(), gridGeomPtr->getCellDataPath().toString()));
   }
   return {};
 }

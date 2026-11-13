@@ -157,6 +157,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
+  nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, numNeighborsPath.getParent(), featureIdsPath, preflightUpdatedValues);
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -191,9 +192,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
   // Feature Data arrays are modified.
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
-
-  // Warn about stale IDataArrays in the Feature AM; NeighborListRemovalPreflightCode handles NeighborList deletion below
-  nx::core::AppendRenumberedFeatureAMWarnings(dataStructure, numNeighborsPath.getParent(), featureIdsPath, preflightUpdatedValues, false);
 
   // Report removed NeighborList arrays.
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numNeighborsPath, resultOutputActions);

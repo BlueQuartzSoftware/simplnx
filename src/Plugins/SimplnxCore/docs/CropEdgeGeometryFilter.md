@@ -26,9 +26,46 @@ The *Boundary Intersection Behavior* parameter provides the following choices:
 
 **NOTE:** When the **Interpolate Outside Vertex** boundary intersection behavior is chosen, this filter DOES NOT interpolate any vertex data, only the vertex position!
 
+Edge data of clipped edges, such as edge lengths, also keeps its old values. Recompute values that depend on the clipped geometry.
+
 When one vertex outside the crop bounds is shared by edges that cross the bounds at different points, the vertex is duplicated, one copy per crossing. Vertex DataArray values are copied from the source vertex to each duplicate.
 
 StringArray and NeighborList data in the Vertex and Edge Attribute Matrices are copied with the kept vertices and edges.
+
+## Feature Attribute Matrix
+
+A **Feature** is a group of edges with the same Feature Id. A **Feature Attribute Matrix** stores one row of values for each Feature Id. Cropping changes which edges belong to each feature. Features cut by the crop boundary can change size, shape, centroid, neighbors, surface status, and average values. Nothing marks which rows were affected. Treat every value computed before the crop as invalid for the cropped geometry.
+
+Renumbering alone does not correct these values. It changes Feature Ids. It does not recompute feature values.
+
+*Clear Feature Attribute Matrix* is on by default. It recreates the selected matrix in the cropped geometry with no arrays. This removes numeric arrays, string arrays, and **NeighborLists** (lists of neighboring features). Recompute any arrays needed by later filters. A later filter that selects a cleared array fails preflight until that array is created again.
+
+### Clearing and Renumbering Modes
+
+| Clear Feature Attribute Matrix | Renumber Features | Result |
+|---|---|---|
+| On | On | Dense matrix with no arrays. Remaining feature IDs become 1 through N, where N is the number of remaining features. The matrix has N+1 rows, including row 0. |
+| On | Off (default) | Sparse matrix with no arrays. It keeps the source tuple shape and original Feature Ids. Rows for removed features are unused. Use this mode to track features between the original and cropped geometries. |
+| Off | Hidden and ignored | All Attribute Matrices other than the Edge and Vertex Attribute Matrices are copied unchanged. Feature Ids are unchanged. Use this mode for raw data without features, or for debugging. Copied feature values still describe the original geometry. |
+
+*Feature Attribute Matrix*, *Renumber Features*, and *Edge Feature Ids* are shown only when *Clear Feature Attribute Matrix* is on. *Renumber Features* is off by default. Both selection paths are required when Clear is on, even when Renumber is off. Select an `int32` array with one component for *Edge Feature Ids*. When Clear and Renumber are both on, *Edge Feature Ids* must be in the selected Edge Geometry's Edge Attribute Matrix. When Clear is off, the filter ignores both selections and any saved Renumber setting.
+
+Other Attribute Matrices, including the **Ensemble Attribute Matrix** (data for each phase), are copied unchanged in every mode.
+
+### Keep the Original Values for Debugging
+
+Turn *Perform In Place* off and set *Created Edge Geometry* to a new path. The source geometry keeps its original feature values. The new geometry contains the cropped edges and follows the selected clearing mode. When *Perform In Place* is on, the cropped geometry replaces the source and keeps its name.
+
+### Preflight Information and Errors
+
+The preflight value **Cleared Feature Data** lists the full paths of the arrays that will be cleared. Use this list to decide what to recompute after Crop. Recompute neighbor lists if later filters need them. When Clear is off, **Feature Data Not Cleared** explains that copied feature values describe the uncropped geometry. These values are information, not warnings.
+
+When Clear is on, the selected Feature Attribute Matrix must be a direct child of *Selected Edge Geometry*. It must not be the geometry's Edge or Vertex Attribute Matrix.
+
+- **-67411**: The Feature Attribute Matrix is not a direct child of the selected geometry. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.
+- **-67412**: The selected matrix is the geometry's Edge or Vertex Attribute Matrix. Select the matrix that holds feature data, or turn Clear off.
+- **-67413**: With Renumber on, Edge Feature Ids must be in the selected geometry's Edge Attribute Matrix. Select the array from that matrix.
+- **-67414**: With Renumber on, Edge Feature Ids must have one tuple per edge. Select an array with the same tuple count as the edge count.
 
 ## Examples
 In the following examples, an edge geometry with bounds (-1, 1), (-1, 1), (0, 1) is being used:
@@ -100,6 +137,10 @@ The original edge geometry is orange, the cropped edge geometry (which overlaps 
 Three outside vertices, that have been interpolated to lie within the boundary, are circled in blue.
 
 As you can see, the edges that intersect the ROI boundary have been interpolated so that the outside vertex lies exactly on the boundary edge.  Edges that have both vertices outside the boundary are cropped out completely.
+
+When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
+
+With Clear and Renumber on, error **-67415** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

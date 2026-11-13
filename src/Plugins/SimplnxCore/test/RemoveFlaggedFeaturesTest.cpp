@@ -407,7 +407,7 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   }
 }
 
-void ValidateNewGeom(const Int32Array& featureIdsResult, const AttributeMatrix& cellFeatureAMResult, const Int32Array& testArrayResult)
+void ValidateNewGeom(const Int32Array& featureIdsResult)
 {
   REQUIRE(featureIdsResult[0] == 3);
   REQUIRE(featureIdsResult[1] == 3);
@@ -813,11 +813,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract cr
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{113, 114});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_IgnoredValueName)) == std::vector<int32>{513, 514});
 
-  // The Feature Attribute Matrix is carried over unchanged (features are not renumbered).
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(newGeomPath.createChildPath(k_CellFeatureData)));
-  const auto& newFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(newGeomPath.createChildPath(k_CellFeatureData));
-  REQUIRE(newFeatureAM.getNumberOfTuples() == 4);
-  REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellFeatureData).createChildPath(k_Int32DataSet)) == Sequence(1000, 4));
+  // Extracted geometries have no Feature Attribute Matrix.
+  REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData)) == nullptr);
 
   // The temporary bounds array is deleted and is not copied into the extracted geometry.
   REQUIRE(dataStructure.getData(k_FeatureAMPath.createChildPath("tempBounds")) == nullptr);
@@ -849,6 +846,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract ze
     REQUIRE(newGeom.getOrigin() == FloatVec3{static_cast<float32>(featureId), 0.0f, 0.0f});
     REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_FeatureIds)) == std::vector<int32>{featureId});
     REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{100 + featureId});
+    REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData)) == nullptr);
   }
   // Unflagged features produce no geometry.
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-01"})) == nullptr);
@@ -899,7 +897,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
   REQUIRE(newGeom.getOrigin() == FloatVec3{1.0f, 3.0f, 0.0f});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_FeatureIds)) == std::vector<int32>{3, 3});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{113, 114});
-  REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellFeatureData).createChildPath(k_Int32DataSet)) == Sequence(1000, 4));
+  REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData)) == nullptr);
 
   // Then removal with fill, on the original: same expectations as the FeatureId 0 fill test.
   REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == std::vector<int32>{0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 2, 0, 0});
@@ -915,33 +913,6 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
 // =====================================================================================================
 // Preflight
 // =====================================================================================================
-
-TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays Only When Modifying", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
-{
-  UnitTest::LoadPlugins();
-  DataStructure dataStructure;
-  BuildFixture(dataStructure, FixtureA());
-  RemoveFlaggedFeaturesFilter filter;
-
-  for(const uint64 functionality : {k_Extract, k_Remove, k_ExtractThenRemove})
-  {
-    CAPTURE(functionality);
-    const auto preflightResult = filter.preflight(dataStructure, MakeArgs(functionality, false));
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    const bool hasStaleArrays =
-        std::any_of(preflightResult.outputValues.begin(), preflightResult.outputValues.end(), [](const IFilter::PreflightValue& value) { return value.name == "Stale Arrays"; });
-    if(functionality == k_Extract)
-    {
-      CHECK_FALSE(hasStaleArrays);
-    }
-    else
-    {
-      CHECK(hasStaleArrays);
-    }
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Error - flag array parent is not an Attribute Matrix (-9895)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
@@ -1254,12 +1225,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   ValidateResults<false>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet})));
+  REQUIRE(dataStructure.getData(DataPath({k_NewImgGeom, k_CellFeatureData})) == nullptr);
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
-  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
-  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
-  ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
+  ValidateNewGeom(newFeatureIdsResult);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1463,12 +1431,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   ValidateResults<true>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet})));
+  REQUIRE(dataStructure.getData(DataPath({k_NewImgGeom, k_CellFeatureData})) == nullptr);
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
-  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
-  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
-  ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
+  ValidateNewGeom(newFeatureIdsResult);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1720,4 +1685,75 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
       CHECK(args.value<DataPath>(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][RemoveFlaggedFeaturesFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+  for(const uint64 operation : {k_Extract, k_Remove, k_ExtractThenRemove})
+  {
+    DYNAMIC_SECTION("Operation=" << operation)
+    {
+      DataStructure dataStructure;
+      BuildFixture(dataStructure, {{3, 1, 1}, {1, 2, 3}, 4, {false, false, true, false}});
+      const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+      REQUIRE(featureAM != nullptr);
+      const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
+      REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+
+      RemoveFlaggedFeaturesFilter filter;
+      auto preflightResult = filter.preflight(dataStructure, MakeArgs(operation, false));
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      usize staleArrayCount = 0;
+      for(const auto& value : preflightResult.outputValues)
+      {
+        if(value.name == "Stale Arrays")
+        {
+          ++staleArrayCount;
+          CHECK(value.value.find(k_FeatureValuePath.toString()) != std::string::npos);
+          CHECK(value.value.find(k_FlaggedFeaturesPath.toString()) != std::string::npos);
+          CHECK(value.value.find(neighborListPath.toString()) == std::string::npos);
+        }
+      }
+      CHECK(staleArrayCount == (operation == k_Extract ? 0 : 1));
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested Feature AM aliases", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
+  DataStructure ds;
+  BuildFixture(ds, FixtureSpec{{3, 1, 1}, {1, 2, 3}, 4, {false, true, false, true}});
+  const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FlaggedFeaturesPath.getParent());
+  REQUIRE(sourceFeatures != nullptr);
+  auto* nested = DataGroup::Create(ds, "Nested", ds.getData(k_ImageGeomPath)->getId());
+  REQUIRE(nested != nullptr);
+  REQUIRE(ds.setAdditionalParent(sourceFeatures->getId(), nested->getId()));
+  auto* ensemble = AttributeMatrix::Create(ds, "Ensemble", {2}, nested->getId());
+  REQUIRE(ensemble != nullptr);
+  auto* phases = UnitTest::CreateTestDataArray<int32>(ds, "Phases", {2}, {1}, ensemble->getId());
+  REQUIRE(phases != nullptr);
+  (*phases)[0] = 42;
+  (*phases)[1] = 99;
+  RemoveFlaggedFeaturesFilter filter;
+  auto result = scope.executeFilter(filter, ds, MakeArgs(operation, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  for(const auto feature : {1, 3})
+  {
+    const DataPath output({fmt::format("{}-{}", k_NewImgGeomPrefix, feature)});
+    REQUIRE(ds.getDataAs<ImageGeom>(output) != nullptr);
+    CHECK(ds.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
+    CHECK(ds.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
+    const auto* outputPhases = ds.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
+    REQUIRE(outputPhases != nullptr);
+    CHECK((*outputPhases)[0] == 42);
+    CHECK((*outputPhases)[1] == 99);
+  }
+  CHECK(ds.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeatures);
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
