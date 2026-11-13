@@ -22,20 +22,20 @@ Result<> CopyDataObjectExcludingAction::apply(DataStructure& dataStructure, Mode
     // Nothing links to a missing object, so a plain copy excludes it.
     return CopyDataObjectAction::apply(dataStructure, mode);
   }
-  std::vector<std::pair<BaseGroup*, DataMap>> parentMaps;
+  std::vector<BaseGroup*> parents;
   for(const auto parentId : excluded->getParentIds())
   {
     auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
-    parentMaps.emplace_back(parent, parent->getDataMap());
+    parents.push_back(parent);
   }
   // Keep parent IDs intact. Only this copy reads the temporary view.
-  const auto restore = MakeScopeGuard([&parentMaps]() noexcept {
-    for(auto& [parent, dataMap] : parentMaps)
+  const auto restore = MakeScopeGuard([&parents, &excluded]() noexcept {
+    for(auto* parent : parents)
     {
-      parent->getDataMap() = std::move(dataMap);
+      parent->getDataMap().insert(excluded);
     }
   });
-  for(auto& [parent, dataMap] : parentMaps)
+  for(auto* parent : parents)
   {
     parent->getDataMap().remove(excluded->getId());
   }
