@@ -154,12 +154,12 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: ITK real-image
   });
 }
 
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: Kernel Radius representability", "[ImageProcessing][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: Kernel Radius representability", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<ClosingByReconstructionImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::ClosingByReconstructionImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][ClosingByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<ClosingByReconstructionImageFilter>({5, 5, 5});
 }

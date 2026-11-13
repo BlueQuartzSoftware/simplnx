@@ -388,12 +388,12 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight rejec
   omt::RequirePreflightRejectsNonScalar<DilateObjectMorphologyImageFilter, uint8>(-8520, omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0));
 }
 
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Kernel Radius representability", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Kernel Radius representability", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<DilateObjectMorphologyImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::DilateObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][DilateObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<DilateObjectMorphologyImageFilter>({5, 5, 5});
 }

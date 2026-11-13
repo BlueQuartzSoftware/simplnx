@@ -277,7 +277,7 @@ void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic huge-radius clipped neighborhood", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic huge-radius clipped neighborhood", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
   // One unfixed X-only traversal can finish within the 60-second RED timeout on a fast machine.
   // Repeat the same approved fixture so that skipped-radius work reliably exceeds that process limit.
@@ -288,7 +288,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic hu
   }
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationImageFilter: LUT huge-radius clipped neighborhood", "[ImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: LUT huge-radius clipped neighborhood", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
   constexpr uint32 huge = std::numeric_limits<uint32>::max();
   CheckHugeRadiusFilter<uint16>(3, 3, 2, {huge, huge, huge}, {2, 2, 1});

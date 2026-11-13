@@ -169,12 +169,12 @@ TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Preflight rejects non-scal
   morph_test::RequirePreflightRejectsNonScalar<WhiteTopHatImageFilter, float32>(-8410, morph_test::CompositeKernelParamSetter<WhiteTopHatImageFilter>(/*safeBorder=*/true));
 }
 
-TEST_CASE("ImageProcessing::WhiteTopHatImageFilter: Kernel Radius representability", "[ImageProcessing][WhiteTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Kernel Radius representability", "[NXImageProcessing][WhiteTopHatImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<WhiteTopHatImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::WhiteTopHatImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][WhiteTopHatImageFilter]")
+TEST_CASE("NXImageProcessing::WhiteTopHatImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][WhiteTopHatImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<WhiteTopHatImageFilter>({5, 0, 5});
 }

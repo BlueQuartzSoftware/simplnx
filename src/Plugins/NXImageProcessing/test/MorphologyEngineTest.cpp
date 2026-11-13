@@ -2519,7 +2519,7 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: fused SafeBorder crop-subtract u
   REQUIRE(actual == expected);
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: Kernel Radius flat-fold representability", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius flat-fold representability", "[NXImageProcessing][MorphologyEngine]")
 {
   using namespace ImageProcessing;
   SECTION("Delta exceeds int64")
@@ -2544,7 +2544,7 @@ TEST_CASE("ImageProcessing::MorphologyEngine: Kernel Radius flat-fold representa
   }
 }
 
-TEST_CASE("ImageProcessing::MorphologyEngine: Kernel Radius layout before allocation", "[ImageProcessing][MorphologyEngine]")
+TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allocation", "[NXImageProcessing][MorphologyEngine]")
 {
   const std::atomic_bool cancel = false;
   const IFilter::MessageHandler handler;

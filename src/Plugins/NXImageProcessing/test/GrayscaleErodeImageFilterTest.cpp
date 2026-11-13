@@ -160,12 +160,12 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Preflight rejects non-s
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleErodeImageFilter, float32>(-8360, morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
 }
 
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Kernel Radius representability", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Kernel Radius representability", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<GrayscaleErodeImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::GrayscaleErodeImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][GrayscaleErodeImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<GrayscaleErodeImageFilter>({0, 0, 0});
 }

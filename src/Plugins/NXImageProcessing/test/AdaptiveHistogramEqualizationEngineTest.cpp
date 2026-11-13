@@ -708,27 +708,27 @@ void CheckBoundedTraversalIdentity()
 }
 } // namespace
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: generic plane operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: generic plane operation-order identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   CheckPlaneTraversalIdentity<float32>();
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: LUT plane operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: LUT plane operation-order identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   CheckPlaneTraversalIdentity<uint16>();
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: generic 2D block operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: generic 2D block operation-order identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   CheckBlockTraversalIdentity<float32>();
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: LUT 2D block operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: LUT 2D block operation-order identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   CheckBlockTraversalIdentity<uint16>();
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded-store operation-order identity", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded-store operation-order identity", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   SECTION("generic tiled route")
   {
@@ -740,7 +740,7 @@ TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: bounded-store o
   }
 }
 
-TEST_CASE("ImageProcessing::AdaptiveHistogramEqualizationEngine: linear uint8 huge-radius positive control", "[ImageProcessing][AdaptiveHistogramEqualizationEngine]")
+TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: linear uint8 huge-radius positive control", "[NXImageProcessing][AdaptiveHistogramEqualizationEngine]")
 {
   constexpr usize huge = std::numeric_limits<uint32>::max();
   SECTION("3D ring")

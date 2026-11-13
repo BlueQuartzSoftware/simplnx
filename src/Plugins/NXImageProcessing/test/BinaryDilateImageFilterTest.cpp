@@ -234,12 +234,12 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-sca
   morph_test::RequirePreflightRejectsNonScalar<BinaryDilateImageFilter, uint8>(-8460, morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }
 
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Kernel Radius representability", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<BinaryDilateImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::BinaryDilateImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][BinaryDilateImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<BinaryDilateImageFilter>({5, 5, 5});
 }

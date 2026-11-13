@@ -203,12 +203,12 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Preflight reject
   morph_test::RequirePreflightRejectsNonScalar<MorphologicalGradientImageFilter, float32>(-8380, morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>());
 }
 
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Kernel Radius representability", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Kernel Radius representability", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<MorphologicalGradientImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::MorphologicalGradientImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][MorphologicalGradientImageFilter]")
+TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<MorphologicalGradientImageFilter>({5, 5, 5});
 }

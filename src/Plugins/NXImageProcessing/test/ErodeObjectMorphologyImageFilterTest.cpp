@@ -389,12 +389,12 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight reject
   omt::RequirePreflightRejectsNonScalar<ErodeObjectMorphologyImageFilter, uint8>(-8530, omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0));
 }
 
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Kernel Radius representability", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Kernel Radius representability", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<ErodeObjectMorphologyImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::ErodeObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][ErodeObjectMorphologyImageFilter]")
+TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<ErodeObjectMorphologyImageFilter>({0, 0, 0});
 }

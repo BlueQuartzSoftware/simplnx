@@ -172,17 +172,17 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Prefligh
       -8400, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalClosingImageFilter>(/*safeBorder=*/true));
 }
 
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius representability", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius representability", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<GrayscaleMorphologicalClosingImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<GrayscaleMorphologicalClosingImageFilter>({5, 5, 5});
 }
 
-TEST_CASE("ImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius layout preflight", "[ImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
+TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Kernel Radius layout preflight", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
   morph_test::RequireKernelRadiusLayoutPreflight<GrayscaleMorphologicalClosingImageFilter>();
 }

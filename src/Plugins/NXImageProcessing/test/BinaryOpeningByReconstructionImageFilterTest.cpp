@@ -350,12 +350,12 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real
   REQUIRE(executeResult.result.errors().front().code == -8002); // the documented binary-input contract error
 }
 
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: Kernel Radius representability", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   morph_test::RequireKernelRadiusPreflight<BinaryOpeningByReconstructionImageFilter>();
 }
 
-TEST_CASE("ImageProcessing::BinaryOpeningByReconstructionImageFilter: Ordinary Kernel Radius control", "[ImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<BinaryOpeningByReconstructionImageFilter>({0, 0, 0});
 }
