@@ -587,10 +587,10 @@ Result<> ValidateOemScanCompatibility(ReaderType& first, ReaderType& scan, bool 
   const auto context = fmt::format("File '{}' scans '{}' and '{}'", scan.getFileName(), first.getHDF5Path(), scan.getHDF5Path());
   if(first.getXDimension() != scan.getXDimension() || first.getYDimension() != scan.getYDimension())
   {
-    return MakeErrorResult(k_ScanGridMismatch, fmt::format("Scan '{}' in file '{}' has {} columns and {} rows, but the first selected scan '{}' has {} columns and {} rows. "
-                                                           "All selected scans must have the same number of columns and rows. Select scans with the same dimensions.",
-                                                           scan.getHDF5Path(), scan.getFileName(), scan.getXDimension(), scan.getYDimension(), first.getHDF5Path(), first.getXDimension(),
-                                                           first.getYDimension()));
+    return MakeErrorResult(k_ScanGridMismatch,
+                           fmt::format("Scan '{}' in file '{}' has {} columns and {} rows, but the first selected scan '{}' has {} columns and {} rows. "
+                                       "All selected scans must have the same number of columns and rows. Select scans with the same dimensions.",
+                                       scan.getHDF5Path(), scan.getFileName(), scan.getXDimension(), scan.getYDimension(), first.getHDF5Path(), first.getXDimension(), first.getYDimension()));
   }
   const auto normalizedStep = [](auto value) {
     if constexpr(std::is_same_v<ReaderType, ebsdlib::H5EspritReader>)
