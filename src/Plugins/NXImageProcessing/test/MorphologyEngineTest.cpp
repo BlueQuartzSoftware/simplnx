@@ -2599,3 +2599,85 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
     UnitTest::CheckArraysInheritTupleDims(ds);
   }
 }
+
+TEMPLATE_TEST_CASE("NXImageProcessing::Grayscale morphology: 2D out-of-plane Annulus passthrough", "[NXImageProcessing][L73]", GrayscaleDilateImageFilter, GrayscaleErodeImageFilter,
+                   GrayscaleMorphologicalOpeningImageFilter, GrayscaleMorphologicalClosingImageFilter, MorphologicalGradientImageFilter, WhiteTopHatImageFilter, BlackTopHatImageFilter)
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const uint32 radiusZ = GENERATE(0, 1, 2);
+  CAPTURE(radiusZ);
+  DataStructure ds;
+  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 7, 3, 1);
+  TestType filter;
+  Arguments args;
+  args.insertOrAssign(TestType::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+  args.insertOrAssign(TestType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(TestType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  morph_test::DefaultKernelParamSetter<TestType>()(args, static_cast<uint64>(morph_test::KernelType::Annulus), {0, 0, radiusZ});
+  if constexpr(std::is_same_v<TestType, GrayscaleMorphologicalOpeningImageFilter> || std::is_same_v<TestType, GrayscaleMorphologicalClosingImageFilter> ||
+               std::is_same_v<TestType, WhiteTopHatImageFilter> || std::is_same_v<TestType, BlackTopHatImageFilter>)
+  {
+    args.insertOrAssign(TestType::k_SafeBorder_Key, std::make_any<bool>(GENERATE(false, true)));
+  }
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  args.insertOrAssign(TestType::k_OutputImageArrayName_Key, std::make_any<std::string>("Empty"));
+  morph_test::DefaultKernelParamSetter<TestType>()(args, static_cast<uint64>(morph_test::KernelType::Annulus), {0, 0, 0});
+  auto emptyResult = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(emptyResult.result);
+  const UInt8Array* empty = nullptr;
+  REQUIRE_NOTHROW(empty = &ds.getDataRefAs<UInt8Array>(inputPath.replaceName("Empty")));
+  const UInt8Array* input = nullptr;
+  const UInt8Array* output = nullptr;
+  REQUIRE_NOTHROW(input = &ds.getDataRefAs<UInt8Array>(inputPath));
+  REQUIRE_NOTHROW(output = &ds.getDataRefAs<UInt8Array>(inputPath.replaceName("Output")));
+  for(usize i = 0; i < 21; ++i)
+  {
+    CAPTURE(i);
+    REQUIRE((*output)[i] == (*empty)[i]);
+    if constexpr(std::is_same_v<TestType, MorphologicalGradientImageFilter> || std::is_same_v<TestType, WhiteTopHatImageFilter> || std::is_same_v<TestType, BlackTopHatImageFilter>)
+    {
+      REQUIRE((*output)[i] == 0);
+    }
+    else
+    {
+      REQUIRE((*output)[i] == (*input)[i]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("NXImageProcessing::MorphologyEngine: 2D out-of-plane Annulus composite pipeline", "[NXImageProcessing][MorphologyEngine][L73]")
+{
+  const bool safeBorder = GENERATE(false, true);
+  const auto firstOp = GENERATE(MorphOp::Erode, MorphOp::Dilate);
+  const auto outputMode = GENERATE(ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology, ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology,
+                                   ImageProcessing::detail::MorphologyCompositeOutputMode::MorphologyMinusOriginal);
+  const uint32 radiusZ = GENERATE(0, 1, 2);
+  CAPTURE(safeBorder, firstOp, outputMode, radiusZ);
+  const SizeVec3 dims{7, 3, 1};
+  std::vector<uint8> values(21);
+  for(usize i = 0; i < values.size(); ++i)
+  {
+    values[i] = static_cast<uint8>(3 + (i * 17) % 251);
+  }
+  auto input = MakeStore(values, 7, 3, 1);
+  auto output = MakeStore(std::vector<uint8>(21, 99), 7, 3, 1);
+  const auto se = MakeStructuringElement(KernelType::Annulus, {0, 0, static_cast<int32>(radiusZ)});
+  auto bytes = CalculateMorphologyCompositePipelineWorkingMemoryBytes<uint8>(dims, se, safeBorder);
+  SIMPLNX_RESULT_REQUIRE_VALID(bytes);
+  const std::atomic_bool shouldCancel = false;
+  auto result =
+      ApplyMorphologyCompositePipeline<uint8>(input, output, dims, se, firstOp, firstOp == MorphOp::Erode ? MorphOp::Dilate : MorphOp::Erode, safeBorder, outputMode, shouldCancel, bytes.value());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  for(usize i = 0; i < values.size(); ++i)
+  {
+    CAPTURE(i);
+    const uint8 expected = outputMode == ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology ? values[i] : 0;
+    REQUIRE(output.getValue(i) == expected);
+  }
+}

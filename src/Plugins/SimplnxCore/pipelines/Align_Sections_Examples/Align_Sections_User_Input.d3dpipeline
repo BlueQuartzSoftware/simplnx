@@ -57,7 +57,7 @@
           "version": 1
         },
         "input_file": {
-          "value": "Data/align_sections_input/example_relative_shifts.txt",
+          "value": "Data/align_sections_input_v2/example_relative_shifts.txt",
           "version": 1
         },
         "number_comp": {

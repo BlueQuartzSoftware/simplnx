@@ -20,6 +20,8 @@ The input array must be single-component (scalar); the output element type match
 
 The structuring element shape (Annulus, Ball, Box, or Cross) and its per-axis radius, used by the dilation.
 
+On a 2D image (Z = 1), the filter ignores the kernel offsets along Z. If the kernel has only Z offsets (for example an Annulus with radius `{0, 0, 2}`), the output is a copy of the input, with **Preserve Intensities** on or off.
+
 ### Fully Connected
 
 Selects the connectivity of the reconstruction: **Off** (default) uses face connectivity only; **On** uses face + edge + vertex connectivity.

@@ -8,6 +8,8 @@ IO (Input)
 
 Reads an image file into a newly created **Image Geometry**. This filter is dimension-aware: a single-page raster file is read as a 2D image (`Z = 1`), a multi-page TIFF is read as a 3D Z-stack (one page per Z slice), and a NRRD file is read as its native 2D or 3D volume. This filter does not depend on ITK. It uses stb_image for PNG/JPEG/BMP files, libtiff for TIFF files, and an ITK-free (zlib-only) reader for NRRD files.
 
+In a multi-page TIFF, the first page (page 0) sets the component count and the stored data type. The output array has this data type, unless **Set Image Data Type** is on: then the filter converts the values to the **Output Data Type**. Each page that the filter reads must have the same component count, stored data type, width and height as page 0. Otherwise, the filter returns an error. The filter reads only the pages inside the Z crop. When it reads a single page (as Read Image Stack does), it reads only page 0. It does not check the pages that it does not read.
+
 The following image types are supported:
 
 - PNG (via stb)
@@ -16,9 +18,7 @@ The following image types are supported:
 - TIFF / TIF, including multi-page TIFF read as a 3D Z-stack (via libtiff)
 - NRRD (`.nrrd` attached, `.nhdr` detached) (ITK-free, zlib only)
 
-All pages of a multi-page TIFF must have the same dimensions, component count, and scalar type. The filter compares the number of bytes per pixel and the dimensions of each page it reads with page 0. It does not compare component counts or scalar types. A change in component count or scalar type can go undetected when the number of bytes per pixel stays the same. This can cause incorrect pixel values.
-
-If the first page is 8-bit RGB and a later page is 8-bit grayscale, the filter fails with error `-2007` when it reads that later page. The number of bytes per pixel differs (3 and 1), so it fails before it copies any pixels of that page. This intentionally differs from DREAM3D 6.5.171, which could crash on mixed-page TIFF files (KI-053).
+All pages of a multi-page TIFF that the filter reads must have the same dimensions, component count, and scalar type. Before it reads any pixels, the filter compares the component count and stored data type of each of these pages with page 0. A difference is error `-50579`, for example when page 0 is 8-bit RGB and a later page is 8-bit grayscale. While it reads, the filter compares the dimensions of each page with page 0. A difference is error `-2007`. This intentionally differs from DREAM3D 6.5.171, which could crash on mixed-page TIFF files (KI-053).
 
 ### NRRD Volumes
 
