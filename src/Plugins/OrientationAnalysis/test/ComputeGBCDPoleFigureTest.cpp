@@ -1,3 +1,5 @@
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureDirect.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureScanline.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
@@ -15,8 +17,12 @@
 
 #include <catch2/catch.hpp>
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
+#include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -295,4 +301,99 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Compon
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -34645);
+}
+
+namespace
+{
+DataStructure CreateSyntheticGBCD()
+{
+  DataStructure dataStructure;
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, "GBCD", {2}, {3, 3, 3, 4, 4, 2});
+  for(usize index = 0; index < gbcd->getSize(); index++)
+  {
+    (*gbcd)[index] = static_cast<float64>(index % 97) + 1.0;
+  }
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Crystal Structures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  return dataStructure;
+}
+
+Arguments CreateSyntheticGBCDArguments(const std::vector<float32>& misorientationRotation, const std::string& geometryName)
+{
+  Arguments args = ComputeGBCDPoleFigureFilter().getDefaultArguments();
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(misorientationRotation));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(16));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath({"GBCD"})));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Crystal Structures"})));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({geometryName})));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Cell Data"));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<std::string>("MRD"));
+  return args;
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid Misorientation Axis", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
+{
+  const std::vector<float32> misorientationRotation =
+      GENERATE(std::vector<float32>{60.0F, 0.0F, 0.0F, 0.0F}, std::vector<float32>{60.0F, std::numeric_limits<float32>::quiet_NaN(), 1.0F, 1.0F},
+               std::vector<float32>{60.0F, 1.0F, std::numeric_limits<float32>::infinity(), 1.0F}, std::vector<float32>{60.0F, 1.0F, 1.0F, -std::numeric_limits<float32>::infinity()});
+  CAPTURE(misorientationRotation);
+
+  DataStructure dataStructure = CreateSyntheticGBCD();
+  ComputeGBCDPoleFigureFilter filter;
+  const Arguments args = CreateSyntheticGBCDArguments(misorientationRotation, "Pole Figure");
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -34646);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -34646);
+
+  // Each executor rejects the axis when it runs without the filter.
+  ComputeGBCDPoleFigureInputValues inputValues;
+  inputValues.PhaseOfInterest = 1;
+  inputValues.MisorientationRotation = misorientationRotation;
+  inputValues.GBCDArrayPath = DataPath({"GBCD"});
+  inputValues.CrystalStructuresArrayPath = DataPath({"Crystal Structures"});
+  inputValues.OutputImageDimension = 16;
+  inputValues.ImageGeometryPath = DataPath({"Pole Figure"});
+  inputValues.CellAttributeMatrixName = "Cell Data";
+  inputValues.CellIntensityArrayName = "MRD";
+  const std::atomic_bool shouldCancel = false;
+  Result<> directResult = ComputeGBCDPoleFigureDirect(dataStructure, {}, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(directResult);
+  REQUIRE(directResult.errors()[0].code == -34646);
+  Result<> scanlineResult = ComputeGBCDPoleFigureScanline(dataStructure, {}, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(scanlineResult);
+  REQUIRE(scanlineResult.errors()[0].code == -34646);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Misorientation Axis Scale", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  // The axis [1e20, 1e20, 1e20] is the axis [1, 1, 1]. Its squared length overflows float32.
+  DataStructure dataStructure = CreateSyntheticGBCD();
+  ComputeGBCDPoleFigureFilter filter;
+  auto unitResult = scope.executeFilter(filter, dataStructure, CreateSyntheticGBCDArguments({60.0F, 1.0F, 1.0F, 1.0F}, "Unit Axis"));
+  SIMPLNX_RESULT_REQUIRE_VALID(unitResult.result);
+  auto scaledResult = scope.executeFilter(filter, dataStructure, CreateSyntheticGBCDArguments({60.0F, 1.0e20F, 1.0e20F, 1.0e20F}, "Scaled Axis"));
+  SIMPLNX_RESULT_REQUIRE_VALID(scaledResult.result);
+
+  const auto& unitMrd = dataStructure.getDataRefAs<Float64Array>(DataPath({"Unit Axis", "Cell Data", "MRD"}));
+  const auto& scaledMrd = dataStructure.getDataRefAs<Float64Array>(DataPath({"Scaled Axis", "Cell Data", "MRD"}));
+  REQUIRE(unitMrd.getSize() == scaledMrd.getSize());
+  usize nonzeroCount = 0;
+  for(usize index = 0; index < unitMrd.getSize(); index++)
+  {
+    REQUIRE(scaledMrd[index] == Approx(unitMrd[index]).margin(1.0e-9));
+    nonzeroCount += unitMrd[index] != 0.0 ? 1 : 0;
+  }
+  REQUIRE(nonzeroCount > 0);
 }

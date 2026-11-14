@@ -39,6 +39,9 @@ public:
   ConvertHexGridToSquareGrid& operator=(const ConvertHexGridToSquareGrid&) = delete;
   ConvertHexGridToSquareGrid& operator=(ConvertHexGridToSquareGrid&&) noexcept = delete;
 
+  /** @brief Returns true when the file extension is .ang, regardless of case. */
+  static bool IsAngFile(const std::filesystem::path& inputPath);
+
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

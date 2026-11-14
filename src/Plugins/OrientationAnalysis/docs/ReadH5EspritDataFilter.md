@@ -8,6 +8,8 @@ IO (Input)
 
 This filter reads a single `.h5` file (the HDF5-based EBSD export from Bruker Nano's Esprit software) into a new **Image Geometry**. Reading the file directly lets the data be used immediately by other filters, instead of having to first build an intermediate `.h5ebsd` file. A **Cell Attribute Matrix** (per-pixel data) and an **Ensemble Attribute Matrix** (per-phase data) are created to hold the imported EBSD information. The user currently has no control over the names of the created **Attribute Arrays**.
 
+All selected scans must have the same number of columns and rows; otherwise, the filter reports an error.
+
 Each measurement is placed at the grid cell named by its own `X BEAM` and `Y BEAM` values, not at its position in the file. Esprit can store measurements in acquisition order, which differs from grid order for a few percent of the points. If the beam coordinates do not cover every cell of the `NCOLS` x `NROWS` grid exactly once, the filter stops with an error that names the first offending point.
 
 The scan stores an **orientation** at every pixel as three **Euler angles** (three angles, in the Bunge Z-X-Z convention, describing how the measured crystal at that pixel is rotated relative to the sample).
@@ -47,6 +49,12 @@ Once the reference frames are correct, the imported Euler angles are typically c
 ### Required Input Sources
 
 None — this filter reads directly from a `.h5` file on disk.
+
+### Header validation
+
+Every selected scan must contain phase IT numbers from 1 through 230 and positive scan dimensions. XSTEP and YSTEP must be finite and positive; an exact zero retains the default spacing of 1 micrometer. When Import Pattern Data is enabled, PatternHeight and PatternWidth must be positive. Preflight reports invalid header values before it creates the geometry.
+
+Scans must share grid dimensions, spacing, and phase tables; imported patterns require matching unsigned 8-bit datasets shaped (points, height, width) in every scan.
 
 % Auto generated parameter table will be inserted here
 

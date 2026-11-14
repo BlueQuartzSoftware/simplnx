@@ -18,9 +18,13 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+#include <limits>
 #include <optional>
 
 namespace fs = std::filesystem;
@@ -534,18 +538,171 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid selected phase m
   args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_gbcd_crystal_structure.dat"));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
+  if(missingPhase)
+  {
+    // A phase outside the Crystal Structures array is rejected in preflight.
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -96716);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    return;
+  }
+  // EbsdLib 3.1.4 has no Laue operation for value 11 (its old slot) or 999 (unknown), so execute rejects both.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
-  REQUIRE(executeResult.result.errors()[0].code == (missingPhase ? -96715 : -96714));
+  REQUIRE(executeResult.result.errors()[0].code == -96717);
   const auto& message = executeResult.result.errors()[0].message;
-  REQUIRE(message.find("phase index 1") != std::string::npos);
+  REQUIRE(message.find("Phase of Interest 1") != std::string::npos);
   REQUIRE(message.find(crystalStructuresPath.toString()) != std::string::npos);
-  if(!missingPhase)
-  {
-    REQUIRE(message.find(std::to_string(crystalStructure)) != std::string::npos);
-    REQUIRE(message.find("0-10") != std::string::npos);
-  }
+  REQUIRE(message.find(std::to_string(crystalStructure)) != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+DataStructure CreateSyntheticGMTGBCD()
+{
+  DataStructure dataStructure;
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, "GBCD", {2}, {3, 3, 3, 4, 4, 2});
+  for(usize index = 0; index < gbcd->getSize(); index++)
+  {
+    (*gbcd)[index] = static_cast<float64>(index % 97) + 1.0;
+  }
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Crystal Structures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  return dataStructure;
+}
+
+Arguments CreateSyntheticGMTArguments(const std::vector<float32>& misorientationRotation, const fs::path& outputPath)
+{
+  Arguments args = WriteGBCDGMTFileFilter().getDefaultArguments();
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(misorientationRotation));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath({"GBCD"})));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Crystal Structures"})));
+  return args;
+}
+
+std::string ReadWholeFile(const fs::path& path)
+{
+  std::ifstream inputStream(path, std::ios::binary);
+  REQUIRE(inputStream.is_open());
+  return {std::istreambuf_iterator<char>(inputStream), std::istreambuf_iterator<char>()};
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid Misorientation Axis", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  const std::vector<float32> misorientationRotation =
+      GENERATE(std::vector<float32>{60.0F, 0.0F, 0.0F, 0.0F}, std::vector<float32>{60.0F, std::numeric_limits<float32>::quiet_NaN(), 1.0F, 1.0F},
+               std::vector<float32>{60.0F, 1.0F, std::numeric_limits<float32>::infinity(), 1.0F}, std::vector<float32>{60.0F, 1.0F, 1.0F, -std::numeric_limits<float32>::infinity()});
+  CAPTURE(misorientationRotation);
+
+  DataStructure dataStructure = CreateSyntheticGMTGBCD();
+  WriteGBCDGMTFileFilter filter;
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_invalid_axis_1.dat";
+  const Arguments args = CreateSyntheticGMTArguments(misorientationRotation, outputPath);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -96714);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -96714);
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Default Misorientation Axis-Angle", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  const auto defaultRotation = WriteGBCDGMTFileFilter().getDefaultArguments().value<VectorFloat32Parameter::ValueType>(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key);
+  REQUIRE(defaultRotation == std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F});
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Misorientation Axis Scale", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  // The axis [1e20, 1e20, 1e20] is the axis [1, 1, 1]. Its squared length overflows float32.
+  DataStructure dataStructure = CreateSyntheticGMTGBCD();
+  WriteGBCDGMTFileFilter filter;
+  const fs::path unitOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_unit_axis_1.dat";
+  const fs::path scaledOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_scaled_axis_1.dat";
+
+  auto unitResult = filter.execute(dataStructure, CreateSyntheticGMTArguments({60.0F, 1.0F, 1.0F, 1.0F}, unitOutput));
+  SIMPLNX_RESULT_REQUIRE_VALID(unitResult.result);
+  auto scaledResult = filter.execute(dataStructure, CreateSyntheticGMTArguments({60.0F, 1.0e20F, 1.0e20F, 1.0e20F}, scaledOutput));
+  SIMPLNX_RESULT_REQUIRE_VALID(scaledResult.result);
+
+  const std::string unitContents = ReadWholeFile(unitOutput);
+  const std::string scaledContents = ReadWholeFile(scaledOutput);
+  // The first line repeats the parameter values. Compare the projection values that follow it.
+  const usize unitHeaderEnd = unitContents.find('\n');
+  const usize scaledHeaderEnd = scaledContents.find('\n');
+  REQUIRE(unitHeaderEnd != std::string::npos);
+  REQUIRE(scaledHeaderEnd != std::string::npos);
+  REQUIRE(unitContents.substr(unitHeaderEnd) == scaledContents.substr(scaledHeaderEnd));
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  DataStructure dataStructure;
+  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, "GBCD", {3}, {3, 3, 3, 4, 4, 2});
+  for(usize index = 0; index < gbcd->getSize(); index++)
+  {
+    (*gbcd)[index] = static_cast<float64>(index % 97) + 1.0;
+  }
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Crystal Structures", {3}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+  (*crystalStructures)[2] = ebsdlib::CrystalStructure::Cubic_High;
+  auto* shortCrystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "Short Crystal Structures", {2}, {1});
+  (*shortCrystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*shortCrystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_laue_bounds_1.dat";
+  WriteGBCDGMTFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(DataPath({"GBCD"})));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Crystal Structures"})));
+
+  SECTION("Phase 0 (Unknown crystal structure) is rejected in preflight")
+  {
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(0));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -96715);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -96715);
+  }
+
+  SECTION("Phase missing from Crystal Structures is rejected in preflight")
+  {
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(2));
+    args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Short Crystal Structures"})));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -96716);
+  }
+
+  SECTION("Unknown crystal structure of the Phase of Interest is rejected in execute")
+  {
+    (*crystalStructures)[1] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -96717);
+  }
+
+  SECTION("Valid Phase of Interest writes the file")
+  {
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    REQUIRE(fs::exists(outputPath));
+  }
 }

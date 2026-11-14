@@ -116,12 +116,47 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   std::vector<int64_t> dims = {0, 0, 0};
   reader->getDims(dims.at(0), dims.at(1), dims.at(2));
 
+  for(usize axis = 0; axis < 2; ++axis)
+  {
+    if(auto result = EbsdReaderUtilities::ValidateHeaderDimension(pReadH5EbsdFilterValue.inputFilePath, axis == 0 ? "Max X Points" : "Max Y Points", dims[axis]); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+  }
+
+  if(pReadH5EbsdFilterValue.startSlice < reader->getZStart() || pReadH5EbsdFilterValue.endSlice > reader->getZEnd())
+  {
+    return MakePreflightErrorResult(EbsdReaderUtilities::k_SliceRangeOutsideFile,
+                                    fmt::format("File '{}' has slice range [{}, {}], but selected slices are [{}, {}]. Select slices within the file range.", pReadH5EbsdFilterValue.inputFilePath,
+                                                reader->getZStart(), reader->getZEnd(), pReadH5EbsdFilterValue.startSlice, pReadH5EbsdFilterValue.endSlice));
+  }
+
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(dims[0]), static_cast<size_t>(dims[1]),
                                                             static_cast<size_t>(pReadH5EbsdFilterValue.endSlice - pReadH5EbsdFilterValue.startSlice + 1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   CreateImageGeometryAction::SpacingType spacing = {1.0F, 1.0F, 1.0F};
   reader->getSpacing(spacing.at(0), spacing.at(1), spacing.at(2));
+  for(usize axis = 0; axis < 2; ++axis)
+  {
+    if(auto result = EbsdReaderUtilities::ValidateHeaderSpacing(pReadH5EbsdFilterValue.inputFilePath, axis == 0 ? "X Resolution" : "Y Resolution", spacing[axis]); result.invalid())
+    {
+      return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+    }
+  }
+  // Validate the active transform before calculating bounds or creating origin actions.
+  if(pReadH5EbsdFilterValue.useRecommendedTransform && reader->getSampleTransformationAngle() > 0)
+  {
+    const auto axis = reader->getSampleTransformationAxis();
+    const auto normalizedAxis = FloatVec3(axis[0], axis[1], axis[2]).normalize();
+    const float32 norm = normalizedAxis.magnitude();
+    if(!std::isfinite(norm) || norm == 0)
+    {
+      return MakePreflightErrorResult(EbsdReaderUtilities::k_InvalidSampleTransform,
+                                      fmt::format("File '{}' has invalid header 'SampleTransformationAxis' = ({}, {}, {}). Use a rotation axis that normalizes to finite, nonzero float32 values.",
+                                                  pReadH5EbsdFilterValue.inputFilePath, axis[0], axis[1], axis[2]));
+    }
+  }
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
@@ -147,7 +182,11 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
 
     EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+       phaseResult.invalid())
+    {
+      return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+    }
   }
   else if(m_Manufacturer == ebsdlib::OEM::Oxford)
   {
@@ -156,7 +195,11 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
     EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+       phaseResult.invalid())
+    {
+      return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+    }
   }
   else
   {

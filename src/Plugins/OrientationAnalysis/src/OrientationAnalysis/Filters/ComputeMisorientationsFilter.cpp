@@ -127,6 +127,14 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
   auto computationType = filterArgs.value<ChoicesParameter::ValueType>(k_ComputationType_Key);
   auto outputMisorientationPath = inputPath1.replaceName(filterArgs.value<std::string>(k_OutputMisorientationArrayName_Key));
 
+  ComputeMisorientationsInputValues axisValues;
+  axisValues.ComputationType = computationType;
+  axisValues.ReferenceOrientation = pReferenceDirValue;
+  if(Result<> axisResult = ComputeMisorientations::ValidateReferenceAxis(axisValues); axisResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(axisResult), {})};
+  }
+
   if(computationType == compute_misorientations_constants::k_UseArraysIndex)
   {
     std::vector<DataPath> dataPaths;

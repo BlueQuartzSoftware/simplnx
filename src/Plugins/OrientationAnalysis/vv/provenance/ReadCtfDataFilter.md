@@ -43,3 +43,8 @@ This retirement **removes** a legacy-generated oracle. The replacement was deriv
 ## Archive disposition
 
 The tar.gz remains in the GitHub [Data_Archive release](https://github.com/BlueQuartzSoftware/simplnx/releases/tag/Data_Archive) for historical checkouts of older commits; it must not be referenced by new code.
+
+
+## Preflight regression fixtures
+
+The preflight validation regressions use synthetic fixtures written into the unit-test output directory and removed by scope guards. The oracle requires a positive slice count. No archive or generated exemplar was added or changed.

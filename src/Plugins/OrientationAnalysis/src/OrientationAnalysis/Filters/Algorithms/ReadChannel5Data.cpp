@@ -71,6 +71,11 @@ Result<> ReadChannel5Data::operator()()
 {
   ebsdlib::CprReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
+  if(auto result = EbsdReaderUtilities::ValidateChannel5Fields(reader, m_InputValues->CreateCompatibleArrays, m_InputValues->EdaxHexagonalAlignment); result.invalid())
+  {
+    return result;
+  }
+
   const int32_t err = reader.readFile();
   if(err < 0)
   {
@@ -100,7 +105,7 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
   const std::vector<ebsdlib::CtfPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
-    return {reader->getErrorCode(), reader->getErrorMessage()};
+    return {k_NoPhasesError, fmt::format("The [Phases] section of '{}' lists no phases. The file needs at least one phase.", m_InputValues->InputFile.string())};
   }
 
   const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);

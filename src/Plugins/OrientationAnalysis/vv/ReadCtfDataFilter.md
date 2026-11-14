@@ -36,7 +36,7 @@
 ### Port-time deltas (each mapped to a Deviation entry where user-visible)
 
 1. **Unindexed-point remap removed** (D1, and consequence D2). Legacy remaps phase `< 1 → 1` in the reader buffer before storing `Phases`, which also routes unindexed points into the hex +30° branch; SIMPLNX copies the phase column verbatim (deliberate change, PR #937, May 2024). Changes `Phases` and unindexed-point `EulerAngles` output.
-2. **3D multi-slice support restored** (D4, resolved). Legacy sizes the geometry `XCells × YCells × ZCells` with `ZStep` slice thickness; the NX port had hard-coded z=1/1.0 and silently imported only slice 0. Preflight now mirrors legacy (`ZCells` clamped to ≥1; `ZStep` of 0 → 1.0). Bit-identical to legacy on the 3D fixture.
+2. **3D multi-slice support restored** (D4, resolved). Legacy sizes the geometry `XCells × YCells × ZCells` with `ZStep` slice thickness; the NX port had hard-coded z=1/1.0 and silently imported only slice 0. Preflight uses the header dimensions (absent `ZCells` defaults to 1; explicit zero is rejected with `-67601`; `ZStep` of 0 → 1.0). Bit-identical to legacy on the 3D fixture.
 3. **Malformed-input guards added** (D3): empty phase list (−19600), missing data column (−19601), out-of-range phase value (−19602), reader/geometry cell-count mismatch (−19603), zero XCells/YCells at preflight (−19604), and a file-changed phase-count guard in the ensemble fill (−19605, the ReadAngData −19504 analog). Legacy segfaults or silently produces heap-dependent output on these inputs (demonstrated where statically reachable). Rejection paths only; no effect on well-formed files.
 4. **Double-precision Euler intermediates.** Legacy computes `+30.0` and `× M_PI/180.0` with double intermediates (float operands promoted); the NX port used float32 arithmetic throughout. Restored double intermediates this pass — more accurate (correctly-rounded float32 results) and bit-identical to legacy on all indexed points of every fixture. No deviation entry needed.
 5. **`determineLaueGroup()` → `determineOrientationOpsIndex()`** — the EbsdLib Laue-group→structure mapping was diffed function-body-for-function-body against the 6.5.171 bundled EbsdLib: **identical bodies and identical enum values** (pure rename). No output effect.
@@ -61,8 +61,8 @@ Hand-authored toy `.ctf` fixtures live as string literals in the test source: a 
 - `test/ReadCtfDataTest.cpp::"…Class 1 Analytical Oracle"` — full Class 1+4 assertion set (geometry, 9 cell arrays element-wise, 3 ensemble arrays element-wise).
 - `…::"Euler Conversion Combinations"` — DYNAMIC_SECTION over the 2×2 DegreesToRadians × EdaxHexagonalAlignment grid, 18 Euler values each, hex shift scoped to Hexagonal_High points only.
 - `…::"3D Multi-Slice CTF"` — DYNAMIC_SECTION over ZStep present/absent; dims/spacing/arrays for the 2-slice fixture (regression pin for D4).
-- `…::"Empty Phases rejected (-19600)"`, `…::"Missing Data Column rejected (-19601)"`, `…::"Out-of-Range Phase Value rejected (-19602)"`, `…::"Reader/Geometry Cell Count Mismatch rejected (-19603)"`, `…::"Invalid Cells Preflight Error (-19604)"` — value-add guards.
-- `…::"EbsdLib Error Passthrough - Zero Step (-102)"`, `…- Truncated Data (-105)"`, `…- Unknown Column (-107)"` — error propagation from the trusted boundary (three distinct return points in `CtfReader`).
+- `…::"Empty Phases rejected (-19600)"`, `…::"Missing Data Column rejected (-19601)"`, `…::"Out-of-Range Phase Value rejected (-19602)"`, `…::"Zero ZCells preflight rejected (-67601)"`, `…::"Invalid Cells Preflight Error (-19604)"` — value-add guards.
+- `…::"EbsdLib Error Passthrough - Truncated Data (-105)"`, `…::"EbsdLib Error Passthrough - Unknown Column (-107)"` — error propagation from the trusted boundary (two distinct return points in `CtfReader`).
 - `…::"SIMPL Backwards Compatibility"` — UUID + argument conversion (6.4 and 6.5 fixtures; DYNAMIC_SECTION).
 
 All 12 pass in `simplnx-Rel` and `simplnx-ooc-Rel`. Reconciliation found zero SIMPLNX-vs-oracle discrepancies (the pre-identified fixes — 3D support, guards, double intermediates — were implemented before the first oracle run). Every fixed delta has a regression pin that fails against the pre-fix code: the guard error codes did not exist, the 3D dims assertion cannot pass against the z=1 hard-code, and — added after the adversarial review found the original angles blind to it — four Euler fixture values (7.125°, 3.375°, 6.75°, and 37.125° via the hex shift) whose correctly-rounded results differ between float32 arithmetic and the double-precision intermediates.
@@ -102,17 +102,17 @@ No new defect was found during this storage recertification. Existing fixes and 
 | #  | Phase | Path | Test case |
 |----|-------|------|-----------|
 | 1  | (a) Preflight | `readHeaderOnly` error → passthrough | *Not directly tested — `FileSystemPathParameter` rejects missing files first; an unreadable-but-present file needs permission manipulation. Same gap accepted for ReadAngDataFilter row 1.* |
-| 2  | (a) Preflight | `XCells/YCells < 1` or `ZCells < 0` → `-19604` | `Invalid Cells Preflight Error (-19604)` (DYNAMIC_SECTION: zero XCells; negative ZCells) |
+| 2  | (a) Preflight | `XCells/YCells < 1` or `ZCells < 0` → `-19604`; explicit `ZCells == 0` → `-67601` | `Invalid Cells Preflight Error (-19604)` (DYNAMIC_SECTION: zero XCells; negative ZCells); `Zero ZCells preflight rejected (-67601)` |
 | 3  | (a) Preflight | Geometry action: dims (X,Y,Z≥1), spacing (XStep,YStep,ZStep or 1.0), origin (0,0,0), Micrometer | `Class 1 Analytical Oracle` (2D defaults) + `3D Multi-Slice CTF` (both ZStep variants) |
 | 4  | (a) Preflight | Per-column array creation with int32/float32 type dispatch from `CtfFields` | `Class 1 Analytical Oracle` (all 9 cell arrays exist with right types) |
 | 5  | (a) Preflight | Ensemble AM sized `phases + 1`; CrystalStructures/LatticeConstants/MaterialName actions | `Class 1 Analytical Oracle` (3 tuples) + `3D Multi-Slice CTF` (2 tuples) |
 | 6  | (a) Preflight | Scan/phase preflight-info values (incl. Z line when ZCells > 1) | *Exercised implicitly by every preflight; display-only values, not asserted.* |
-| 7  | (b) Execute | `readFile()` error → passthrough (with error-code fallback) | `Zero Step (-102)` (fallback path), `Truncated Data (-105)`, `Unknown Column (-107)` *(other reader codes are the same return statement)* |
+| 7  | (b) Execute | `readFile()` error → passthrough (with error-code fallback) | `Truncated Data (-105)`, `Unknown Column (-107)` *(other reader codes are the same return statement)* |
 | 8  | (b) Execute | `phases.empty()` → `-19600` | `Empty Phases rejected (-19600)` |
 | 9  | (b) Execute | All-slot Invalid-Phase default initialization | `Class 1 Analytical Oracle` (slot 0). *Uncovered-slot case is unreachable for CTF — CtfReader assigns indices 1..N contiguously.* |
 | 9b | (b) Execute | phase index `>= numTuples` → `-19605` | *Not directly tested. Only reachable if the file gains a phase between the execute-time preflight and the algorithm's re-read — requires file-mutation injection inside a single execute call. Mirrors ReadAngDataFilter's untested `-19504`.* |
 | 10 | (b) Execute | Per-phase fill: Laue→structure index, name, lattice constants | `Class 1 Analytical Oracle` (2 phases, 2 Laue classes) |
-| 11 | (c) Copy | reader element count `< totalCells` → `-19603` | `Reader/Geometry Cell Count Mismatch rejected (-19603)` — static `ZCells 0` fixture trips it deterministically |
+| 11 | (c) Copy | reader element count `< totalCells` → `-19603` | *Not directly tested. The static `ZCells 0` fixture is now rejected in preflight; the execute guard remains for a file changed after preflight.* |
 | 12 | (c) Copy | missing data column → `-19601` | `Missing Data Column rejected (-19601)` |
 | 13 | (c) Copy | phase value out of `[0, phases]` → `-19602` | `Out-of-Range Phase Value rejected (-19602)` |
 | 14 | (c) Copy | Phase verbatim copy (Phase 0 preserved) | `Class 1 Analytical Oracle` (points 2, 5) |
@@ -135,9 +135,9 @@ No new defect was found during this storage recertification. Existing fixes and 
 | `…: Empty Phases rejected (-19600)` | new-for-V&V | Value-add guard. Legacy segfaults on this fixture (demonstrated, D3). |
 | `…: Missing Data Column rejected (-19601)` | new-for-V&V | Value-add guard. Legacy segfaults on this fixture (demonstrated, D3). |
 | `…: Out-of-Range Phase Value rejected (-19602)` | new-for-V&V | Value-add guard. Legacy silently succeeds with heap-dependent output (demonstrated, D3). |
-| `…: Reader/Geometry Cell Count Mismatch rejected (-19603)` | new-for-V&V | Value-add guard. Static `ZCells 0` fixture — no file-mutation injection needed. |
+| `…: Zero ZCells preflight rejected (-67601)` | new-for-V&V | Preflight rejects explicit zero with `-67601`; public execute propagates that error. |
 | `…: Invalid Cells Preflight Error (-19604)` | new-for-V&V | Value-add preflight rejection (`XCells 0`). |
-| `…: EbsdLib Error Passthrough - Zero Step (-102)` | new-for-V&V | Exercises the error-code fallback (reader sets message only). |
+| `…: Zero Step Preflight Error (-67602)` | Header validation regression | Rejects zero XStep during preflight and public execute. |
 | `…: EbsdLib Error Passthrough - Truncated Data (-105)` | new-for-V&V | Premature-EOF return point. |
 | `…: EbsdLib Error Passthrough - Unknown Column (-107)` | new-for-V&V | Column-allocation return point. |
 | `…: SIMPL Backwards Compatibility` | new-for-V&V | DYNAMIC_SECTION over the existing 6.4/6.5 conversion fixtures — the filter previously had **no** conversion test despite shipping the fixtures. |
@@ -161,3 +161,10 @@ OOC recertification (2026-09-21): serial CTest passed 12/12 target entries in ea
 - `ReadCtfDataFilter-D3` — Malformed-input behavior: legacy segfaults (missing column; empty phases — both demonstrated, exit 139) or silently emits heap-dependent output (out-of-range phase value — demonstrated, exit 0); SIMPLNX rejects with −19600…−19604. Trust SIMPLNX.
 - `ReadCtfDataFilter-D4` — *(retired)* Multi-slice `.ctf` silently truncated to slice 0 by earlier DREAM3D-NX releases; resolved, now bit-identical to legacy 3D output. Trust SIMPLNX (current).
 **Fixed in DREAM3D-NX 7.4.2:** `ReadCtfDataFilter-D4`.
+
+
+## Preflight validation correction
+
+`ReadCtfDataFilter-D7` rejects explicit zero ZCells in preflight with shared error `-67601`. CtfReader initializes ZCells to one, so the absent key needs no header-map probe. Negative ZCells keeps `-19604`. Test sensitivity verification: the zero-ZCells regression failed before the production change; existing analytical and negative-dimension cases preserve the other two contracts. This replaces the historical execute-time `-101105` raster-grid rejection.
+
+Paired Release validation for these preflight corrections: the combined `OrientationAnalysis::Read(CtfData|H5OinaData|AngData|H5Ebsd)` selection passed 55/55 in-core and 56/56 in the OOC build. Both builds used `OrientationAnalysisUnitTest`; CTest ran serially.

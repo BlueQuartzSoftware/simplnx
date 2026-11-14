@@ -146,6 +146,12 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     return badResult;
   }
 
+  result = ValidateSpaceGroups(reader.getPhaseVector(), pInputFileValue.string());
+  if(result.invalid())
+  {
+    return MakePreflightErrorResult(result.errors().front().code, result.errors().front().message);
+  }
+
   if(!pReadLabDCT && !pReadAbsorptionCT)
   {
     resultOutputActions.warnings().push_back({-65432, "WARNING: No data is being read by this filter because both Read DCT and Read Absorption are both FALSE."});
@@ -202,7 +208,10 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     DataPath cellEnsembleAMPath = pLabDCTImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
 
     EbsdReaderUtilities::GeneratePreflightScanInformation<GrainMapperReader>(reader, preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+    if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues, pInputFileValue.string()); phaseResult.invalid())
+    {
+      return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+    }
 
     auto phases = reader.getPhaseVector();
     std::vector<usize> ensembleTupleDims{phases.size() + 1};

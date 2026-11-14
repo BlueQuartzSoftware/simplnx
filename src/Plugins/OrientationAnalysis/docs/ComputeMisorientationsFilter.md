@@ -28,6 +28,7 @@ of the input Euler Angle arrays.
 
 In this mode the user will supply a reference orientation in the form of an Axis-Angle, where the angle portion is in degrees.
 Then, for every Euler Angle in the input array, the misorientation with the reference orientation will be computed.
+The axis must have finite components and must not be (0, 0, 0); otherwise preflight reports error -68005.
 
 
 % Auto generated parameter table will be inserted here

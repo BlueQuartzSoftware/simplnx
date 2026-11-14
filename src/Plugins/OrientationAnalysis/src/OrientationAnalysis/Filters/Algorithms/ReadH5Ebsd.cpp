@@ -64,7 +64,29 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
   if(phases.empty())
   {
+    if(reader->getErrorCode() < 0)
+    {
+      return {nx::core::MakeErrorResult(
+          -50027, fmt::format("Error reading phase information from file '{}'. The reader reported error {}: {}", mInputValues->inputFilePath, reader->getErrorCode(), reader->getErrorMessage()))};
+    }
     return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
+  }
+
+  // Each phase writes one tuple of the Ensemble arrays at its phase index and reads six lattice constants.
+  for(const auto& phase : phases)
+  {
+    const int32 phaseID = phase->getPhaseIndex();
+    if(phaseID <= 0 || static_cast<usize>(phaseID) > phases.size())
+    {
+      return {nx::core::MakeErrorResult(
+          -50029, fmt::format("File '{}' has phase index {}, but its {} phases must use the indices 1 to {}.", mInputValues->inputFilePath, phaseID, phases.size(), phases.size()))};
+    }
+    const usize numLatticeConstants = phase->getLatticeConstants().size();
+    if(numLatticeConstants < 6)
+    {
+      return {nx::core::MakeErrorResult(
+          -50028, fmt::format("File '{}' phase {} has {} lattice constants. Each phase needs 6 (a, b, c, alpha, beta, gamma).", mInputValues->inputFilePath, phaseID, numLatticeConstants))};
+    }
   }
 
   // Reserve index zero for invalid phase data.
@@ -411,12 +433,7 @@ Result<> ReadH5Ebsd::operator()()
       auto preflightResult = rotEuler.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          result.errors().push_back(error);
-        }
-        return result;
+        return {nonstd::make_unexpected(preflightResult.outputActions.errors())};
       }
 
       auto executeResult = rotEuler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
@@ -456,12 +473,7 @@ Result<> ReadH5Ebsd::operator()()
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
-        Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          result.errors().push_back(error);
-        }
-        return result;
+        return {nonstd::make_unexpected(preflightResult.outputActions.errors())};
       }
 
       m_MessageHandler.sendMessage(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});

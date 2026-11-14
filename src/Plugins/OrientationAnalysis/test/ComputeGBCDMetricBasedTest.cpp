@@ -16,6 +16,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -344,4 +345,47 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Laue Index Bounds"
   REQUIRE(executeResult.result.errors()[0].code == -7240);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Nonfinite Fixed Misorientation", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter]")
+{
+  constexpr float32 k_NaN = std::numeric_limits<float32>::quiet_NaN();
+  constexpr float32 k_Inf = std::numeric_limits<float32>::infinity();
+  const auto [misorientationRotation, expectedCode] =
+      GENERATE_COPY(std::make_pair(std::vector<float32>{k_NaN, 1.0F, 1.0F, 60.0F}, -7231), std::make_pair(std::vector<float32>{1.0F, k_Inf, 1.0F, 60.0F}, -7231),
+                    std::make_pair(std::vector<float32>{1.0F, 1.0F, -k_Inf, 60.0F}, -7231), std::make_pair(std::vector<float32>{0.0F, 0.0F, 0.0F, 60.0F}, -7231),
+                    std::make_pair(std::vector<float32>{1.0F, 1.0F, 1.0F, k_NaN}, -7230));
+  CAPTURE(misorientationRotation, expectedCode);
+
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+  const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_gbcd_metric_based" / "compute_gbcd_metric_based.dream3d";
+  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+
+  const fs::path distributionOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_metric_axis_distribution.dat";
+  const fs::path errorsOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_metric_axis_errors.dat";
+
+  ComputeGBCDMetricBasedFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(misorientationRotation));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(distributionOutput));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(errorsOutput));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleDataContainerPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(k_FaceNormalsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(k_FaceAreasPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FeatureFaceLabelsPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AvgEulerAnglesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == expectedCode);
 }

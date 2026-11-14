@@ -12,6 +12,10 @@ This filter computes the same metrics as the [Compute Neighbor Slip Transmission
 
 For a detailed explanation of the slip transmission concept and the individual metrics, see the [Compute Neighbor Slip Transmission Metrics](ComputeSlipTransmissionMetricsFilter.md) documentation.
 
+### Loading Direction
+
+The **Loading Direction (XYZ)** is normalized before use. Each component must be finite and the direction must not be [0, 0, 0]; otherwise preflight reports error -94744. The default is [1, 1, 1], the default of DREAM3D 6.5.
+
 ### Cubic Materials Only
 
 This filter supports **cubic m-3m Laue classes**. For a boundary with two positive **Face Labels** in the same phase, warning `-94739` follows the phase's **Crystal Structures** value, not its phase number. If this value is not cubic m-3m, the filter emits the warning once after processing the faces. This rule also applies to accepted phase 0.

@@ -251,6 +251,9 @@ output-type option that the writing code ignores.
   Get the cell count from the geometry, never from `getCellData()->getNumberOfTuples()`.
 - **Sibling inputs** that the algorithm reads with the same index have the same tuple count:
   `CheckArraysHaveSameTupleCount()`. Include an optional input (a mask) only when its option is on.
+- **Scans stacked into one Image Geometry:** compare every selected scan's columns and rows separately with the
+  first scan, using header-only reads in preflight. Recheck the loaded scan against the destination geometry before
+  copying cell data, because the file can change after preflight. Equal point counts do not imply equal dimensions.
 - **Outputs sized from an Attribute Matrix:** every input that sets the loop count has that matrix's tuple count.
 - **A filter that changes Feature Ids, their sibling cell arrays or the Feature Attribute Matrix in place** requires
   Feature Ids in the geometry's own Cell Attribute Matrix. Check membership by object ID, not by path: one DataObject
@@ -264,7 +267,8 @@ Every message names both paths and both counts.
 **Example of the broken rule:** `AddBadData` did not check its Boundary Euclidean Distances input against the
 geometry's cell count, nor did `ComputeFeatureSizes` and `WriteINLFile` (PR #1840). `ErodeDilateBadData`, `FillBadData`
 and `RemoveFlaggedFeatures` took the arrays to change from `featureIds.getParent()` without checking that parent, and
-compared selected paths as strings (PR #1829).
+compared selected paths as strings (PR #1829). `ReadH5OimDataFilter` and `ReadH5EspritDataFilter` sized a volume from
+only the first scan, then copied that many points from smaller later scans without rejecting them (issue #1882).
 
 **Why:** an array with the wrong tuple count is indexed past its end or reads unrelated tuples. A path comparison misses
 an array selected through another path to the same Attribute Matrix, and an unrelated parent selects the wrong arrays
@@ -273,6 +277,7 @@ to change.
 **What to look for:**
 
 - A geometry-indexed input checked only against its siblings, or not at all.
+- A multi-scan reader that checks only the first header or compares only the product of columns and rows.
 - `featureIdsPath.getParent()` used to find the arrays to change.
 - `==` between selected `DataPath`s to decide membership.
 
@@ -291,11 +296,16 @@ that pass reads each value before it uses it and writes no output until the pass
 `Int32Array`, call the `ValidateFeatureIdsToFeatureAttributeMatrixIndexing()` overload that takes `shouldCancel`. For
 other inputs, scan the minimum and maximum. A masked filter checks only the ids it uses, with the same mask and sentinel
 rules as execute. A negative value is out of range unless the code skips it before it indexes. An index that comes from
-a parameter value (for example **Phase Index**) is checked in preflight.
+a parameter value (for example **Phase Index**) is checked in preflight. Header values are also available in preflight.
+Check a file-derived symmetry index before a preview lookup, including the unknown-structure sentinel. Check signed
+dimensions before conversion to shapes and require finite, positive steps before geometry creation. Preserve an explicit
+format-specific zero default only where the reader documents it.
 
 **Example of the broken rule:** `ComputeNumFeatures` indexed its ensemble output with unchecked Feature Phases
 (PR #1766). The Direct algorithms of QuickSurfaceMesh and SurfaceNets transferred selected feature data without the
-bounds check that their Scanline algorithms had (PR #1765).
+bounds check that their Scanline algorithms had (PR #1765). The EBSD reader phase previews indexed orientation operations
+with an unsupported symmetry sentinel, which caused preflight crashes (issue #1867). Their unchecked header dimensions
+and steps also reached Image Geometry creation (issue #1877).
 
 **Why:** a value read from data can be anything; an unchecked index writes or reads out of bounds.
 

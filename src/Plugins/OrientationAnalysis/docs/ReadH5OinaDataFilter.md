@@ -142,6 +142,12 @@ un-indexed points refer to.
 | `LatticeConstants` | float32 | 6 | a, b, c then alpha, beta, gamma in **degrees**; all zero in tuple 0 |
 | `MaterialName` | string | 1 | `"Invalid Phase"` in tuple 0 |
 
+### Header validation
+
+Each Origin component (x, y, z) must be a finite float32 value; preflight rejects NaN and infinity.
+
+Each phase must have a supported Laue Group. Preflight rejects an unsupported value with the file, phase and value in the error message. The informational Space Group remains optional and does not determine the crystal structure.
+
 % Auto generated parameter table will be inserted here
 
 ## Migration Notes

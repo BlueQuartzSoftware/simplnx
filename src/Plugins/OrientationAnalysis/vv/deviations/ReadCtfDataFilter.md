@@ -60,7 +60,7 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 | `Phases 0` header (no phase definitions) | **Segfault** (exit 139; reads a zero-tuple ensemble array out of bounds) | Error `-19600` |
 | Data row phase value out of range (`Phase 7` with 2 phases) | **Silent success** (exit 0) — the +30° decision reads `CrystalStructures[7]` out of bounds, so the output depends on heap contents | Error `-19602` naming the point and valid range |
 | Header `XCells`/`YCells` missing or 0 | Error at execute after a zero-sized preflight | Rejected at preflight with `-19604` |
-| Header `ZCells 0` | Not run (legacy sizes the geometry from the same header) | Rejected at execute with `-19603` |
+| Header `ZCells 0` | Not run (legacy sizes the geometry from the same header) | Rejected at preflight with `-67601` (D7) |
 
 **Root cause:** Bug in 6.5.171 (out-of-bounds access on malformed input) — fixed in SIMPLNX by value-add guards added during this V&V pass. On well-formed files the guards never fire and outputs are unaffected.
 
@@ -106,3 +106,51 @@ Comparison run 2026-07-24 against the official DREAM3D 6.5.171 release (`Pipelin
 **Correct behavior:** Both hexagonal Laue classes receive the same shift, before optional conversion to radians. Cubic and unindexed points remain unchanged; trigonal phases are outside this correction. Covered by `test/ReadCtfDataTest.cpp::"Euler Conversion Combinations"`.
 
 **Recommendation:** Re-import 6/m data when EDAX alignment is required.
+
+
+---
+
+## ReadCtfDataFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D6` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Header validation defect, reproduced with EbsdLib 3.1.3 |
+
+**Symptom:** An unsupported Laue Group causes a segmentation fault in the preflight preview. Negative or non-finite XStep and YStep values reach the Image Geometry, including in multi-slice files.
+
+**Root cause:** The preview uses a file-derived orientation-operations index without a bounds check. Geometry creation also requires validation of header dimensions and steps before unsigned conversion or spacing assignment.
+
+**Affected users:** Users importing malformed or edited EBSD files. Valid input files retain their symmetry mappings and geometry.
+
+**Correct behavior:** Preflight rejects unsupported Laue Group with error `-67600` and invalid steps with `-67602`. The messages identify the file, header key and value; the symmetry error also identifies the phase. Public execute also rejects the invalid header through its preflight check.
+
+**Test sensitivity verification:** Synthetic files in `test/ReadCtfDataTest.cpp` reproduce the failure before the fix. The regression cases are `OrientationAnalysis::ReadCtfData: HeaderValidation symmetry` and `ReadCtfData: HeaderValidation steps`. The oracle is the supported symmetry domain and the finite, positive grid contract. The legacy executable was not run for these new malformed inputs.
+
+**Recommendation:** Correct the named header value or export the file again from the acquisition software.
+
+
+---
+
+## ReadCtfDataFilter-D7
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadCtfDataFilter-D7` |
+| **Filter UUID** | `7751923c-afb9-4032-8372-8078325c69a4` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Preflight validation defect |
+
+**Symptom:** An explicit ZCells 0 header passed preflight and failed only during data reading.
+
+**Root cause:** The preflight clamped zero to one, although CtfReader retains explicit zero and initializes an absent ZCells key to one.
+
+**Affected users:** Users importing malformed CTF files with an explicit zero slice count.
+
+**Correct behavior:** Preflight rejects explicit zero with the shared dimension error `-67601`, naming the file, ZCells and value. The absent-key default remains one slice, and negative ZCells retains error `-19604`.
+
+**Test sensitivity verification:** `Zero ZCells preflight rejected (-67601)` failed on the unchanged parent production code because preflight succeeded. The existing analytical oracle verifies the absent-key one-slice import; `Invalid Cells Preflight Error (-19604)` retains negative coverage. The oracle is the positive dimension contract. No new legacy comparison was run.
+
+**Recommendation:** Correct ZCells to a positive slice count, or omit it for a 2D file.
