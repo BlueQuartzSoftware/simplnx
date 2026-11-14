@@ -1,5 +1,6 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/StoreCopyConfig.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
@@ -30,9 +31,7 @@
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 #include <iterator>
 
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
-#include "SimplnxOoc/OocDataIOManager.hpp"
-#endif
+#include "simplnx/UnitTest/PlaceholderPlanManager.hpp"
 
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -137,22 +136,6 @@ private:
   bool m_ThrowBadAllocation = false;
 };
 
-class PlaceholderPlanManager : public IDataIOManager
-{
-public:
-  PlaceholderPlanManager()
-  {
-    addDataStoreCreationFnc(k_SelectedFormat.str(), [](DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode) -> std::unique_ptr<IDataStore> {
-      throw std::runtime_error("The metadata-only import must not invoke the value-store factory");
-    });
-  }
-
-  std::string formatName() const override
-  {
-    return k_SelectedFormat.str();
-  }
-};
-
 struct ScopedTempFile
 {
   explicit ScopedTempFile(fs::path filePath)
@@ -213,9 +196,32 @@ void CreateLargeMetadataFile(const fs::path& filePath)
 }
 } // namespace
 
+TEST_CASE("StorageFormatPlan: placeholder registration preserves an existing manager", "[simplnx][StorageFormatPlan]")
+{
+  DataIOCollection collection;
+  const std::string format = "HDF5-OOC";
+  auto registration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
+  auto firstManager = collection.getManager(format);
+  REQUIRE(firstManager != nullptr);
+  REQUIRE(firstManager->hasDataStoreCreationFnc(format));
+
+  auto repeatedRegistration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  SIMPLNX_RESULT_REQUIRE_VALID(repeatedRegistration);
+  REQUIRE(collection.getManager(format) == firstManager);
+
+  // Model an application-provided manager replacing the placeholder.
+  auto applicationManager = std::make_shared<UnitTest::PlaceholderPlanManager>(format);
+  auto applicationRegistration = collection.addIOManager(applicationManager);
+  SIMPLNX_RESULT_REQUIRE_VALID(applicationRegistration);
+  auto preservedRegistration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  SIMPLNX_RESULT_REQUIRE_VALID(preservedRegistration);
+  REQUIRE(collection.getManager(format) == applicationManager);
+}
+
 TEST_CASE("StorageFormatPlan: numeric selection validates capability without allocating", "[StorageFormatPlan][T04][T08][T09]")
 {
-  auto manager = std::make_shared<PlaceholderPlanManager>();
+  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
@@ -264,7 +270,7 @@ TEST_CASE("StorageFormatPlan: numeric selection reports unsupported formats and 
 {
   const std::string unavailableFormat = "storage-format-plan-unavailable";
   auto unavailable = ValidateNumericStorageFormat(unavailableFormat);
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
   REQUIRE(unavailable.invalid());
   REQUIRE(unavailable.errors().size() == 1);
   REQUIRE(unavailable.errors()[0].code == -10600);
@@ -312,7 +318,7 @@ TEST_CASE("StorageFormatPlan: factory creates validated memory and registered OO
   REQUIRE(namedMemoryResult.value()->getDataFormat().empty());
   REQUIRE(namedMemoryResult.value()->memoryUsage() == 48);
 
-  auto manager = std::make_shared<PlaceholderPlanManager>();
+  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
   auto registeredResult = EmptyDataStore<uint8>::Create(ShapeType{6}, ShapeType{1}, k_SelectedFormat.str());
@@ -322,8 +328,9 @@ TEST_CASE("StorageFormatPlan: factory creates validated memory and registered OO
   REQUIRE(registeredResult.value()->getDataFormat() == k_SelectedFormat.str());
   REQUIRE(registeredResult.value()->memoryUsage() == 0);
 
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
-  SimplnxOoc::registerIOManager(Application::GetOrCreateInstance()->getIOCollection());
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
+  auto placeholderRegistration = UnitTest::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
+  SIMPLNX_RESULT_REQUIRE_VALID(placeholderRegistration);
   auto oocResult = EmptyDataStore<float32>::Create(ShapeType{2, 3}, ShapeType{2}, "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);
   REQUIRE(oocResult.value()->getStoreType() == IDataStore::StoreType::Empty);
@@ -443,7 +450,7 @@ TEST_CASE("StorageFormatPlan: obsolete store getters are unavailable", "[Storage
 
 TEST_CASE("StorageFormatPlan: common getter preserves the recorded source plan", "[StorageFormatPlan]")
 {
-  auto manager = std::make_shared<PlaceholderPlanManager>();
+  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
   REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager).valid());
   auto sourceResult = EmptyDataStore<float32>::Create(ShapeType{4}, ShapeType{1}, k_SelectedFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(sourceResult);
@@ -454,7 +461,7 @@ TEST_CASE("StorageFormatPlan: common getter preserves the recorded source plan",
 
 TEST_CASE("StorageFormatPlan: Empty conversion selects metadata without allocating values", "[StorageFormatPlan][T20]")
 {
-  auto manager = std::make_shared<PlaceholderPlanManager>();
+  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
   REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager).valid());
   auto sourceResult = EmptyDataStore<float32>::Create(ShapeType{3}, ShapeType{1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(sourceResult);
@@ -493,7 +500,7 @@ TEST_CASE("StorageFormatPlan: import resolver receives 100 GB logical bytes from
     DataStructure::setDefaultFormatResolver(inMemoryResolver);
   });
 
-  auto manager = std::make_shared<PlaceholderPlanManager>();
+  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
   DataStructure::setDefaultFormatResolver(std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str()));
@@ -741,7 +748,7 @@ void CheckSelectedImportDefaultResolver(const std::shared_ptr<const IDataStoreFo
 TEST_CASE("StorageFormatPlan: selected import does not consult process policy", "[StorageFormatPlan][SelectedImportPolicy]")
 {
   UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
   const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
@@ -821,7 +828,7 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
 TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata before values", "[StorageFormatPlan][SelectedImportPolicy]")
 {
   UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
   const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
@@ -928,7 +935,7 @@ public:
 TEST_CASE("Selected import test context restores nested resolver ownership", "[StorageFormatPlan][SelectedImportPolicy][FormatResolver]")
 {
   UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<PlaceholderPlanManager>());
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const bool throwFromNestedScope = GENERATE(false, true);
   CAPTURE(throwFromNestedScope);
@@ -1255,7 +1262,7 @@ TEST_CASE("C8 rollback preserves an existing destination parent and its other ch
 }
 #endif
 
-#if !defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) || !SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if !SIMPLNX_STORE_COPY_STRICT_FORMAT
 namespace
 {
 const DataPath k_C8FinalizerLists({"SelectedGroup", "Lists"});

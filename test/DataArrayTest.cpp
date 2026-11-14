@@ -1,6 +1,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/StoreCopyConfig.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -1839,7 +1840,7 @@ TEST_CASE("Unknown store-copy formats obey the compiled build policy", "[simplnx
   ListStore<int32> lists(ShapeType{3});
   lists.setList(0, std::vector<int32>{4, 5});
   StringStore strings({"first", "second"}, {2});
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
   REQUIRE_THROWS_WITH(numeric.deepCopy(unknown), Catch::Contains(unknown));
   REQUIRE_THROWS_WITH(placeholderResult.value()->deepCopy(unknown), Catch::Contains(unknown));
   REQUIRE_THROWS_WITH(lists.deepCopy(unknown), Catch::Contains(unknown));

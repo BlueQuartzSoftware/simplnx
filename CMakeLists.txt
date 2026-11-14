@@ -31,6 +31,8 @@ enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_PYTHON FEATURE "python")
 option(SIMPLNX_BUILD_TESTS "Enable buildingtests" ON)
 enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_TESTS FEATURE "tests")
 
+option(SIMPLNX_STORE_COPY_STRICT_FORMAT "Fail a store copy to a storage format with no registered I/O manager instead of falling back to in-memory storage" OFF)
+
 # ------------------------------------------------------------------------------
 # are multithreading algorithms enabled
 # ------------------------------------------------------------------------------
@@ -317,6 +319,10 @@ set(SIMPLNX_GENERATED_DIR ${simplnx_BINARY_DIR}/generated)
 configure_file(
   ${simplnx_SOURCE_DIR}/cmake/SimplnxConfig.hpp.in
   ${SIMPLNX_GENERATED_DIR}/simplnx/Common/SimplnxConfig.hpp
+  @ONLY)
+configure_file(
+  ${simplnx_SOURCE_DIR}/cmake/StoreCopyConfig.hpp.in
+  ${SIMPLNX_GENERATED_DIR}/simplnx/Common/StoreCopyConfig.hpp
   @ONLY)
 set(SIMPLNX_GENERATED_HEADER_DIR ${simplnx_BINARY_DIR}/generated/simplnx)
 set(SIMPLNX_EXPORT_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/simplnx_export.hpp)
@@ -668,6 +674,7 @@ set(SIMPLNX_HDRS
 )
 
 set(SIMPLNX_GENERATED_HEADERS
+  ${SIMPLNX_GENERATED_DIR}/simplnx/Common/StoreCopyConfig.hpp
   ${SIMPLNX_EXPORT_HEADER}
 )
 
@@ -982,6 +989,11 @@ endif()
 # ------------------------------------------------------------------------------
 # CLI Executables (nxrunner, nxinfo)
 # ------------------------------------------------------------------------------
+# Define BUILD_TESTING before configuring directories and tests that use it.
+if(SIMPLNX_BUILD_TESTS)
+  include(CTest)
+endif()
+
 add_subdirectory(${simplnx_SOURCE_DIR}/src/apps)
 
 #------------------------------------------------------------------------------
@@ -1163,7 +1175,6 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
-  include(CTest)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_BUILD_TESTS=1")
   add_subdirectory(test)
 endif()
