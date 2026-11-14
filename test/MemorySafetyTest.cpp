@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/StoreCopyConfig.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -9,8 +10,9 @@
 #include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
-#include "SimplnxOoc/OocDataIOManager.hpp"
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
+#include "simplnx/UnitTest/PlaceholderPlanManager.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #endif
 
 #include <algorithm>
@@ -21,10 +23,11 @@ using namespace nx::core;
 
 namespace
 {
-void RegisterOocManagerForStrictBuild()
+void RegisterPlaceholderManagerForStrictBuild()
 {
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
-  SimplnxOoc::registerIOManager(Application::GetOrCreateInstance()->getIOCollection());
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
+  auto registration = UnitTest::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
+  SIMPLNX_RESULT_REQUIRE_VALID(registration);
 #endif
 }
 } // namespace
@@ -59,7 +62,7 @@ TEST_CASE("MemorySafety: WouldExceedAvailableMemory pure overload", "[MemorySafe
 
 TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySafety]")
 {
-  RegisterOocManagerForStrictBuild();
+  RegisterPlaceholderManagerForStrictBuild();
   using StoreT = EmptyDataStore<float32>;
   const ShapeType tupleShape{100}; // 100 tuples
   const ShapeType compShape{4};    // x4 components
@@ -70,7 +73,7 @@ TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySa
   REQUIRE(inCore.valid());
   REQUIRE(inCore.value()->memoryUsage() == logicalBytes);
 
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
   // Non-empty format (OOC placeholder) -> 0 (data lives on disk).
   auto ooc = StoreT::Create(tupleShape, compShape, "HDF5-OOC");
   REQUIRE(ooc.valid());
@@ -85,7 +88,7 @@ TEST_CASE("MemorySafety: EmptyDataStore::memoryUsage in-core vs OOC", "[MemorySa
 
 TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-available in-core arrays", "[MemorySafety]")
 {
-  RegisterOocManagerForStrictBuild();
+  RegisterPlaceholderManagerForStrictBuild();
   // A tuple count whose float32 size (~4 PB) exceeds available RAM on any machine,
   // but is far below uint64 overflow. Preflight never allocates, so this is safe.
   const std::vector<usize> hugeTupleShape{uint64{1} * 1000 * 1000 * 1000 * 1000}; // 1e12 tuples
@@ -113,7 +116,7 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
     Result<> r = ArrayCreationUtilities::CreateArray<float32>(ds, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "HDF5-OOC");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
     REQUIRE(count == 0);
 #else
     REQUIRE(count == 1);
@@ -134,7 +137,7 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
 
 TEST_CASE("MemorySafety: DataStructure::memoryUsage counts OOC preflight arrays as 0", "[MemorySafety]")
 {
-  RegisterOocManagerForStrictBuild();
+  RegisterPlaceholderManagerForStrictBuild();
   DataStructure ds;
   DataGroup::Create(ds, "Group");
   const std::vector<usize> tupleShape{1000};
@@ -145,7 +148,7 @@ TEST_CASE("MemorySafety: DataStructure::memoryUsage counts OOC preflight arrays 
   REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(ds, tupleShape, compShape, DataPath({"Group", "Ooc"}), IDataAction::Mode::Preflight, "HDF5-OOC").invalid());
 
   // In-core builds normalize an unavailable OOC request to memory. Strict OOC builds preserve the OOC plan.
-#if defined(SIMPLNX_STORE_COPY_STRICT_FORMAT) && SIMPLNX_STORE_COPY_STRICT_FORMAT
+#if SIMPLNX_STORE_COPY_STRICT_FORMAT
   REQUIRE(ds.memoryUsage() == inCoreBytes);
 #else
   REQUIRE(ds.memoryUsage() == 2 * inCoreBytes);

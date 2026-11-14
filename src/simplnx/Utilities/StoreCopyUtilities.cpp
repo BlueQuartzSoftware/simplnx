@@ -1,5 +1,6 @@
 #include "StoreCopyUtilities.hpp"
 
+#include "simplnx/Common/StoreCopyConfig.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -17,10 +18,6 @@
 #include <fmt/format.h>
 #include <limits>
 #include <stdexcept>
-
-#ifndef SIMPLNX_STORE_COPY_STRICT_FORMAT
-#define SIMPLNX_STORE_COPY_STRICT_FORMAT 0
-#endif
 
 namespace nx::core
 {

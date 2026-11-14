@@ -65,6 +65,7 @@ else()
 endif()
 
 message(STATUS "* -------------- Simplnx Configuration Options -------------------------------------")
+message(STATUS "* SIMPLNX_STORE_COPY_STRICT_FORMAT: ${SIMPLNX_STORE_COPY_STRICT_FORMAT}")
 message(STATUS "* SIMPLNX_BUILD_TESTS: ${SIMPLNX_BUILD_TESTS}")
 message(STATUS "* SIMPLNX_ENABLE_MULTICORE: ${SIMPLNX_ENABLE_MULTICORE}")
 message(STATUS "* SIMPLNX_ENABLE_COMPRESSORS: ${SIMPLNX_ENABLE_COMPRESSORS}")
