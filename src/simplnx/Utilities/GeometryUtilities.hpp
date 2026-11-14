@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <string_view>
+
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
@@ -11,6 +14,43 @@
 
 namespace nx::core::GeometryUtilities
 {
+/**
+ * @brief Identifies overflow in one padded extent.
+ */
+inline constexpr int32 k_PaddedExtentOverflowError = -86025;
+/**
+ * @brief Identifies overflow in the padded tuple product.
+ */
+inline constexpr int32 k_PaddedTupleOverflowError = -86026;
+
+/**
+ * @brief Rejects nonfinite vector components.
+ * @param values Supplies components in XYZ order.
+ * @param parameterName Identifies the parameter in diagnostics.
+ * @param errorCode Identifies the rejected domain.
+ * @return Error naming the first nonfinite component.
+ */
+SIMPLNX_EXPORT Result<> ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode);
+
+/**
+ * @brief Requires finite, strictly positive vector components.
+ * @param values Supplies components in XYZ order.
+ * @param parameterName Identifies the parameter in diagnostics.
+ * @param errorCode Identifies the rejected domain.
+ * @return Error naming the first invalid component.
+ */
+SIMPLNX_EXPORT Result<> ValidatePositiveFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode);
+
+/**
+ * @brief Computes padded extents and checks their tuple product without allocation.
+ * @param dims Supplies source extents in XYZ order.
+ * @param padding Supplies minimum and maximum padding per axis.
+ * @param active Selects the axes to pad.
+ * @pre Active padding values are nonnegative.
+ * @return Padded dimensions, or an extent or tuple-product overflow error.
+ */
+SIMPLNX_EXPORT Result<SizeVec3> ComputePaddedDimensions(const SizeVec3& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active);
+
 /**
  * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
  * unique vertices in a given geometry

@@ -99,6 +99,10 @@ represents the 4x4 matrix:
 - **Pre-Computed Transformation Matrix** (only for Transformation Type 1) -- typically produced by [Combine Transformation Matrices](CombineTransformationMatricesFilter.md).
 - **Cell Attribute Matrix** (Image Geometry only) -- the cell-level data to be re-gridded.
 
+### Numeric input constraints
+
+For *Translation*, each **Translation** component must be finite. For *Scale*, each **Scale** component must be finite. Image Geometry scale factors must also be greater than 0. Node geometries permit zero and negative scale factors, including reflections. For *Rotation*, **Rotation** must contain a finite nonzero XYZ axis and a finite angle in degrees. Large and small finite axes are normalized safely. Inactive transformation vectors are ignored. Image translation and scale results must have finite origins and positive finite spacing where assigned. Preflight warns about unrepresentable results with the current geometry metadata. Execution checks the final results before changing the geometry.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

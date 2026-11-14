@@ -21,6 +21,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -3171,4 +3172,59 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: SIMPL Backwards Compatibility", "[
       CHECK(args.value<DataPath>(CreateGeometryFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateGeometryFilter: Numeric domain regression", "[SimplnxCore][CreateGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3);
+  CAPTURE(row);
+  DataStructure ds;
+  CreateGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {-1, 1, 1}, {nan, 1, 1}, {1, 1, 1}};
+  args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, spacings[row]);
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86008 : -86007));
+  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Y" : "X") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[SimplnxCore][CreateGeometryFilter][NumericDomainRed]")
+{
+  DataStructure ds;
+  CreateGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::infinity(), 0, 0});
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
+  CHECK(pre.outputActions.errors()[0].code == -86008);
+  CHECK(pre.outputActions.errors()[0].message.find("Origin") != std::string::npos);
+  CHECK(pre.outputActions.errors()[0].message.find("X") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image vectors", "[SimplnxCore][CreateGeometryFilter]")
+{
+  DataStructure ds;
+  auto* vertices = Float32Array::CreateWithStore<Float32DataStore>(ds, "Vertices", {4}, {3});
+  REQUIRE(vertices != nullptr);
+  vertices->fill(1);
+  CreateGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{2});
+  args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, DataPath({"Vertices"}));
+  args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, VectorFloat32Parameter::ValueType{0, 0, 0});
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
 }

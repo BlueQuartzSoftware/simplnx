@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <limits>
 #include <utility>
 
 using namespace nx::core;
@@ -667,4 +668,72 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   } // END SLICE LOOP
 
   return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
+}
+
+// -----------------------------------------------------------------------------
+Result<> GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
+{
+  for(usize axis = 0; axis < values.size(); ++axis)
+  {
+    if(!std::isfinite(values[axis]))
+    {
+      return MakeErrorResult(errorCode,
+                             fmt::format("Parameter '{}' {} value {} must be finite.", parameterName, axis < 3 ? std::string(1, "XYZ"[axis]) : fmt::format("component {}", axis), values[axis]));
+    }
+  }
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
+{
+  for(usize axis = 0; axis < values.size(); ++axis)
+  {
+    if(!std::isfinite(values[axis]) || !(values[axis] > 0))
+    {
+      return MakeErrorResult(errorCode, fmt::format("Parameter '{}' {} value {} must be finite and greater than 0.", parameterName,
+                                                    axis < 3 ? std::string(1, "XYZ"[axis]) : fmt::format("component {}", axis), values[axis]));
+    }
+  }
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active)
+{
+  SizeVec3 output = dims;
+  constexpr usize max = std::numeric_limits<usize>::max();
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(!active[axis])
+    {
+      continue;
+    }
+    for(usize side = 0; side < 2; ++side)
+    {
+      const usize amount = static_cast<usize>(padding[axis][side]);
+      if(amount > max - output[axis])
+      {
+        return MakeErrorResult<SizeVec3>(k_PaddedExtentOverflowError, fmt::format("Parameter '{} Min & Max Padding' {} value {} with dimension {} produces an extent above {}.", "XYZ"[axis],
+                                                                                  side == 0 ? "Min" : "Max", amount, output[axis], max));
+      }
+      output[axis] += amount;
+    }
+  }
+  if(output[0] == 0 || output[1] == 0 || output[2] == 0)
+  {
+    return {output};
+  }
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(output[axis] > max / product)
+    {
+      return MakeErrorResult<SizeVec3>(k_PaddedTupleOverflowError,
+                                       fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
+                                                   padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], max));
+    }
+    product *= output[axis];
+  }
+  return {output};
 }

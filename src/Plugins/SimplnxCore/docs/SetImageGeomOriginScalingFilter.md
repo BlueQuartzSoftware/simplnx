@@ -36,6 +36,10 @@ If *Put Input Origin at the Center of Geometry* is enabled, the user-supplied or
 
 - **Input Image Geometry** -- the geometry to modify in place. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
+### Numeric input constraints
+
+When **Set Spacing** is enabled, each **Spacing** component must be finite and greater than 0. When **Set Origin** is enabled, each **Origin** component must be finite. **Put Input Origin at the Center of Geometry** is active only when **Set Origin** is enabled. Inactive vectors are ignored. Preflight warns if centering with the current geometry metadata produces a nonfinite origin. Execution checks the final centered origin before changing spacing or origin.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

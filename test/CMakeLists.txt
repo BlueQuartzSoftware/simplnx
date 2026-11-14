@@ -53,6 +53,7 @@ set(SIMPLNX_TEST_SRCS
   DynamicFilterInstantiationTest.cpp
   EmptyStringStoreTest.cpp
   ExtentTest.cpp
+  GeometryUtilitiesTest.cpp
   ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
   FilterTest.cpp
