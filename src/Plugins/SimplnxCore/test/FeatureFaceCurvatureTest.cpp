@@ -364,9 +364,8 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[Sim
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Patch solvability", "[FeatureFaceCurvatureFilter][PatchSolvability]")
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Patch solvability", "[SimplnxCore][FeatureFaceCurvatureFilter][PatchSolvability]")
 {
-  UnitTest::LoadPlugins();
   const bool useNormals = GENERATE(false, true);
   const bool optionalOutputs = GENERATE(false, true);
   const usize nonSeedCount = GENERATE(1, 2, 3, 6, 7, 8);
@@ -1093,27 +1092,40 @@ void CheckMultiFeatureCurvature(bool diskBacked, bool optionalOutputs)
       REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
     }
   }
-  Arguments args;
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrixPath_Key, std::make_any<DataPath>(facePath));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, std::make_any<int32>(1));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseFaceNormals_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirection_Key, std::make_any<bool>(optionalOutputs));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(optionalOutputs));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvaturePath_Key, std::make_any<bool>(optionalOutputs));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeWeingartenMatrix_Key, std::make_any<bool>(optionalOutputs));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Labels")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIdsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Ids")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Normals")));
-  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroidsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Centroids")));
-  const std::array outputKeys = {FeatureFaceCurvatureFilter::k_PrincipalCurvature1Path_Key, FeatureFaceCurvatureFilter::k_PrincipalCurvature2Path_Key,
-                                 FeatureFaceCurvatureFilter::k_GaussianCurvaturePath_Key,   FeatureFaceCurvatureFilter::k_MeanCurvaturePath_Key,
-                                 FeatureFaceCurvatureFilter::k_WeingartenMatrixPath_Key,    FeatureFaceCurvatureFilter::k_PrincipalDirection1Path_Key,
-                                 FeatureFaceCurvatureFilter::k_PrincipalDirection2Path_Key};
-  for(usize i = 0; i < outputKeys.size(); ++i)
+  // Run the algorithm on output arrays that already hold a sentinel. The expected curvatures of a plane are 0, the
+  // same value an unwritten store returns, so the sentinel makes every lost or skipped write fail the checks below.
+  constexpr float64 k_Sentinel = 999.0;
+  constexpr usize k_OutputCount = 7;
+  const std::array<usize, k_OutputCount> outputComponents = {1, 1, 1, 1, 4, 3, 3};
+  std::array<DataPath, k_OutputCount> outputPaths;
+  for(usize i = 0; i < k_OutputCount; ++i)
   {
-    args.insertOrAssign(outputKeys[i], std::make_any<DataPath>(facePath.createChildPath("Output" + std::to_string(i))));
+    outputPaths[i] = facePath.createChildPath("Output" + std::to_string(i));
+    if(i >= 2 && !optionalOutputs)
+    {
+      continue;
+    }
+    auto* output = Float64Array::Create(dataStructure, outputPaths[i].getTargetName(), DataStoreUtilities::CreateDataStore<float64>(dataStructure, outputPaths[i], {faceCount}, {outputComponents[i]}),
+                                        faceData->getId());
+    REQUIRE(output != nullptr);
+    output->fill(k_Sentinel);
   }
+  FeatureFaceCurvatureInputValues inputValues;
+  inputValues.NRingCount = 1;
+  inputValues.useNormalsForCurveFitting = true;
+  inputValues.triangleGeomPath = geomPath;
+  inputValues.surfaceMeshFaceLabelsPath = facePath.createChildPath("Labels");
+  inputValues.surfaceMeshFeatureFaceIdsPath = facePath.createChildPath("Ids");
+  inputValues.surfaceMeshFaceNormalsPath = facePath.createChildPath("Normals");
+  inputValues.surfaceMeshTriangleCentroidsPath = facePath.createChildPath("Centroids");
+  inputValues.surfaceMeshPrincipalCurvature1Path = outputPaths[0];
+  inputValues.surfaceMeshPrincipalCurvature1sPath = outputPaths[0];
+  inputValues.surfaceMeshPrincipalCurvature2sPath = outputPaths[1];
+  inputValues.surfaceMeshGaussianCurvaturesPath = outputPaths[2];
+  inputValues.surfaceMeshMeanCurvaturesPath = outputPaths[3];
+  inputValues.surfaceMeshWeingartenMatrixPath = outputPaths[4];
+  inputValues.surfaceMeshPrincipalDirection1sPath = outputPaths[5];
+  inputValues.surfaceMeshPrincipalDirection2sPath = outputPaths[6];
   // This existing status message is emitted only when tasks are queued to TBB.
   // It witnesses the gate decision without relying on a race corrupting data.
   std::atomic_bool queued = false;
@@ -1123,17 +1135,17 @@ void CheckMultiFeatureCurvature(bool diskBacked, bool optionalOutputs)
       queued = true;
     }
   }};
-  FeatureFaceCurvatureFilter filter;
-  const auto result = filter.execute(dataStructure, args, nullptr, handler);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const std::atomic_bool shouldCancel = false;
+  const auto result = FeatureFaceCurvature(dataStructure, handler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 #ifdef SIMPLNX_ENABLE_MULTICORE
   CHECK(queued.load() == !diskBacked);
 #else
   CHECK_FALSE(queued.load());
 #endif
-  for(usize i = 0; i < (optionalOutputs ? outputKeys.size() : 2); ++i)
+  for(usize i = 0; i < (optionalOutputs ? k_OutputCount : 2); ++i)
   {
-    const auto& output = dataStructure.getDataRefAs<Float64Array>(facePath.createChildPath("Output" + std::to_string(i)));
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPaths[i]);
     REQUIRE((output.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore) == diskBacked);
     if(diskBacked)
     {
@@ -1168,6 +1180,7 @@ void CheckMultiFeatureCurvature(bool diskBacked, bool optionalOutputs)
 
 TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: multi-feature planes", "[SimplnxCore][FeatureFaceCurvatureFilter]")
 {
+  // Storage-aware array creation and the storage preferences need the application that LoadPlugins() creates.
   UnitTest::LoadPlugins();
   const bool optionalOutputs = GENERATE(false, true);
   CheckMultiFeatureCurvature(false, optionalOutputs);

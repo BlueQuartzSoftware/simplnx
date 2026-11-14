@@ -419,7 +419,6 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice relative shifts round trip", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);

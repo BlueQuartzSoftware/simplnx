@@ -1,12 +1,15 @@
 #include <catch2/catch.hpp>
 
+#include "NXImageProcessing/Filters/Algorithms/ReadImage.hpp"
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 #include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -1638,14 +1641,41 @@ void WriteLayoutPage(TIFF* tiff, nx::core::uint16 components, nx::core::uint16 f
   }
   REQUIRE(TIFFWriteDirectory(tiff) == 1);
 }
+
+// A TIFF path that is unique to one test run and is removed when the test ends, also when an assertion fails.
+class ScopedLayoutTiffPath
+{
+public:
+  explicit ScopedLayoutTiffPath(const std::string& stem)
+  : m_Path(ReadImageOutputDir() / fmt::format("{}_{}.tif", stem, Uuid::GenerateV4().str()))
+  {
+  }
+
+  ~ScopedLayoutTiffPath() noexcept
+  {
+    std::error_code errorCode;
+    fs::remove(m_Path, errorCode);
+  }
+
+  ScopedLayoutTiffPath(const ScopedLayoutTiffPath&) = delete;
+  ScopedLayoutTiffPath(ScopedLayoutTiffPath&&) = delete;
+  ScopedLayoutTiffPath& operator=(const ScopedLayoutTiffPath&) = delete;
+  ScopedLayoutTiffPath& operator=(ScopedLayoutTiffPath&&) = delete;
+
+  const fs::path& path() const
+  {
+    return m_Path;
+  }
+
+private:
+  fs::path m_Path;
+};
 } // namespace
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const fs::path dir = fs::temp_directory_path() / "ReadImage_PageLayout";
-  fs::create_directories(dir);
-  const auto path = dir / "page_layout.tif";
+  const ScopedLayoutTiffPath tiffPath("page_layout");
+  const fs::path& path = tiffPath.path();
   bool mismatch = true;
   {
     std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
@@ -1702,10 +1732,8 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout", "[NXImageProces
 TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_SinglePageOnly", "[NXImageProcessing][ReadImageFilter]")
 {
   // Read Image Stack reads only page 0 of each file. Pages it never reads must not be validated.
-  UnitTest::LoadPlugins();
-  const fs::path dir = fs::temp_directory_path() / "ReadImage_PageLayout_SinglePage";
-  fs::create_directories(dir);
-  const auto path = dir / "page_layout_single_page.tif";
+  const ScopedLayoutTiffPath tiffPath("page_layout_single_page");
+  const fs::path& path = tiffPath.path();
   {
     std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(path.string().c_str(), "w"), TIFFClose);
     REQUIRE(tiff != nullptr);
@@ -1733,15 +1761,14 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_SinglePageOnly", 
   const auto& warnings = result.result.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.message.find("reading only the first page") != std::string::npos; }));
   UnitTest::CheckArraysInheritTupleDims(ds);
-  std::error_code error;
-  fs::remove_all(dir, error);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_ZCrop", "[NXImageProcessing][ReadImageFilter]")
 {
   // A Z crop decodes only the pages inside the crop. Page 0 sets the output type and component count,
   // so each decoded page must match page 0, and pages outside the crop are not checked.
-  const auto path = ReadImageOutputDir() / "page_layout_zcrop.tif";
+  const ScopedLayoutTiffPath tiffPath("page_layout_zcrop");
+  const fs::path& path = tiffPath.path();
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
   crop.cropX = false;
@@ -1833,4 +1860,49 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: TIFF_PageLayout_ZCrop", "[NXImage
     }
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("NXImageProcessing::ReadImage: TIFF_PageLayout rejected in execute", "[NXImageProcessing][ReadImageFilter]")
+{
+  // A direct caller of the ReadImage algorithm (as Import Fiji Montage is) gets no ReadImageFilter preflight.
+  // The algorithm must reject a decoded page whose layout differs from page 0 before it writes any output value.
+  const ScopedLayoutTiffPath tiffPath("page_layout_execute");
+  {
+    std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(tiffPath.path().string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    // Both pages use 4 bytes per pixel, so only the layout check can tell them apart.
+    WriteLayoutPage<nx::core::uint8>(tiff.get(), 4, SAMPLEFORMAT_UINT, {1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255});
+    WriteLayoutPage<float32>(tiff.get(), 1, SAMPLEFORMAT_IEEEFP, {1, 2, 3, 4});
+  }
+
+  // Destination for both pages, typed from page 0 (4-component uint8) and filled with a sentinel.
+  constexpr nx::core::uint8 k_Sentinel = 77;
+  DataStructure ds;
+  auto* geom = ImageGeom::Create(ds, "Layout");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions({2, 2, 2});
+  auto* cellData = AttributeMatrix::Create(ds, "Cell Data", {2, 2, 2}, geom->getId());
+  REQUIRE(cellData != nullptr);
+  geom->setCellData(*cellData);
+  auto* pixels = UInt8Array::CreateWithStore<DataStore<nx::core::uint8>>(ds, "Pixels", {2, 2, 2}, {4}, cellData->getId());
+  REQUIRE(pixels != nullptr);
+  pixels->fill(k_Sentinel);
+
+  ReadImageInputValues inputValues;
+  inputValues.inputFilePath = tiffPath.path();
+  inputValues.imageGeometryPath = DataPath({"Layout"});
+  inputValues.imageDataArrayPath = DataPath({"Layout", "Cell Data", "Pixels"});
+  inputValues.cellDataName = "Cell Data";
+  inputValues.croppingOptions.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
+  const std::atomic_bool shouldCancel = false;
+  const IFilter::MessageHandler messageHandler{[](const IFilter::Message&) {}};
+  const auto result = ReadImage(ds, messageHandler, shouldCancel, inputValues)();
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -50579);
+  REQUIRE(result.errors().front().message.find("page 1 is 1-component float32, page 0 is 4-component uint8") != std::string::npos);
+  for(usize i = 0; i < pixels->getSize(); ++i)
+  {
+    CAPTURE(i);
+    REQUIRE((*pixels)[i] == k_Sentinel);
+  }
 }

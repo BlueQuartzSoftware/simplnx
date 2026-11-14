@@ -32,8 +32,18 @@ namespace
 {
 std::string DescribePageLayout(const IImageIO::PageMetadata& layout)
 {
-  const std::string type = layout.sampleFormat == 1 ? "uint" : layout.sampleFormat == 2 ? "int" : layout.sampleFormat == 3 ? "float" : fmt::format("sample-format-{}-bits-", layout.sampleFormat);
-  return fmt::format("{}-component {}{}", layout.numComponents, type, layout.bitsPerSample);
+  switch(layout.sampleFormat)
+  {
+  case IImageIO::SampleFormat::Unsigned:
+    return fmt::format("{}-component uint{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Signed:
+    return fmt::format("{}-component int{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Float:
+    return fmt::format("{}-component float{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Unknown:
+    break;
+  }
+  return fmt::format("{}-component {}-bit samples of an unsupported type", layout.numComponents, layout.bitsPerSample);
 }
 
 /**

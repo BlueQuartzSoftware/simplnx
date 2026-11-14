@@ -290,6 +290,24 @@ std::vector<uint16_t> CollectPageDirectories(TIFF* tiff)
   }
   return pages;
 }
+
+/**
+ * @brief Maps a TIFF SampleFormat tag value to the format-neutral page sample format.
+ */
+IImageIO::SampleFormat ToPageSampleFormat(uint16_t tiffSampleFormat)
+{
+  switch(tiffSampleFormat)
+  {
+  case SAMPLEFORMAT_UINT:
+    return IImageIO::SampleFormat::Unsigned;
+  case SAMPLEFORMAT_INT:
+    return IImageIO::SampleFormat::Signed;
+  case SAMPLEFORMAT_IEEEFP:
+    return IImageIO::SampleFormat::Float;
+  default:
+    return IImageIO::SampleFormat::Unknown;
+  }
+}
 } // namespace
 
 Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& filePath) const
@@ -412,7 +430,7 @@ Result<std::vector<IImageIO::PageMetadata>> TiffImageIO::readPageLayouts(const s
     TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLESPERPIXEL, &components);
     TIFFGetFieldDefaulted(tiff, TIFFTAG_BITSPERSAMPLE, &bits);
     TIFFGetFieldDefaulted(tiff, TIFFTAG_SAMPLEFORMAT, &format);
-    layouts.push_back({width, height, components, bits, format});
+    layouts.push_back({width, height, components, bits, ToPageSampleFormat(format)});
   }
   return {std::move(layouts)};
 }

@@ -1,5 +1,6 @@
 #include "simplnx/Utilities/ImageIO/TiffImageIO.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ImageIO/StbImageIO.hpp"
 
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -11,7 +12,9 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <system_error>
@@ -431,4 +434,158 @@ TEST_CASE("TiffImageIO:: direct read rejects a short buffer without mutation", "
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().code == -20105);
   REQUIRE(std::all_of(poison.cbegin(), poison.cend(), [](uint8_t value) { return value == 0xCD; }));
+}
+
+namespace
+{
+// Appends one stripped page whose samples are firstValue, firstValue + 1, ... in row-major order. An empty
+// sampleFormat leaves the tag out (TIFF then defaults to unsigned); an empty subfileType leaves that tag out.
+template <class T>
+void WriteLayoutDirectory(TIFF* tiff, uint32_t width, uint32_t height, uint16_t components, std::optional<uint16_t> sampleFormat, std::optional<uint32_t> subfileType, T firstValue)
+{
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, width) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, height) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, components) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, static_cast<uint16_t>(sizeof(T) * 8)) == 1);
+  if(sampleFormat.has_value())
+  {
+    REQUIRE(TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, *sampleFormat) == 1);
+  }
+  if(subfileType.has_value())
+  {
+    REQUIRE(TIFFSetField(tiff, TIFFTAG_SUBFILETYPE, *subfileType) == 1);
+  }
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, components == 3 ? PHOTOMETRIC_RGB : PHOTOMETRIC_MINISBLACK) == 1);
+  REQUIRE(TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
+  std::vector<T> row(static_cast<usize>(width) * components);
+  for(uint32_t y = 0; y < height; ++y)
+  {
+    for(usize i = 0; i < row.size(); ++i)
+    {
+      row[i] = static_cast<T>(firstValue + static_cast<T>(y * row.size() + i));
+    }
+    REQUIRE(TIFFWriteScanline(tiff, row.data(), y, 0) == 1);
+  }
+  REQUIRE(TIFFWriteDirectory(tiff) == 1);
+}
+
+void RequireLayout(const IImageIO::PageMetadata& layout, usize width, usize height, usize components, usize bits, IImageIO::SampleFormat format)
+{
+  CHECK(layout.width == width);
+  CHECK(layout.height == height);
+  CHECK(layout.numComponents == components);
+  CHECK(layout.bitsPerSample == bits);
+  CHECK(layout.sampleFormat == format);
+}
+} // namespace
+
+TEST_CASE("TiffImageIO:: readPageLayouts returns each page in order", "[simplnx][TiffImageIO]")
+{
+  TemporaryTiffFile file("TiffImageIO_page_layouts.tif");
+  {
+    TiffHandle tiff(TIFFOpen(file.path().string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    WriteLayoutDirectory<uint8_t>(tiff.get(), 2, 3, 1, std::nullopt, std::nullopt, 1);        // no SampleFormat tag
+    WriteLayoutDirectory<uint16_t>(tiff.get(), 4, 1, 1, SAMPLEFORMAT_UINT, std::nullopt, 10); // explicit unsigned
+    WriteLayoutDirectory<int16_t>(tiff.get(), 1, 2, 1, SAMPLEFORMAT_INT, std::nullopt, -5);
+    WriteLayoutDirectory<float32>(tiff.get(), 3, 2, 1, SAMPLEFORMAT_IEEEFP, std::nullopt, 0.5F);
+    WriteLayoutDirectory<uint8_t>(tiff.get(), 2, 2, 3, SAMPLEFORMAT_VOID, std::nullopt, 7);
+  }
+
+  TiffImageIO imageIO;
+  const auto result = imageIO.readPageLayouts(file.path());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto& layouts = result.value();
+  REQUIRE(layouts.size() == 5);
+  RequireLayout(layouts[0], 2, 3, 1, 8, IImageIO::SampleFormat::Unsigned); // TIFF default sample format
+  RequireLayout(layouts[1], 4, 1, 1, 16, IImageIO::SampleFormat::Unsigned);
+  RequireLayout(layouts[2], 1, 2, 1, 16, IImageIO::SampleFormat::Signed);
+  RequireLayout(layouts[3], 3, 2, 1, 32, IImageIO::SampleFormat::Float);
+  RequireLayout(layouts[4], 2, 2, 3, 8, IImageIO::SampleFormat::Unknown);
+}
+
+TEST_CASE("TiffImageIO:: readPageLayouts skips the same subfiles as readPixelDataRows", "[simplnx][TiffImageIO]")
+{
+  // Directories: 0 page, 1 reduced-resolution image, 2 transparency mask, 3 page. Only directories 0 and 3 are pages.
+  TemporaryTiffFile file("TiffImageIO_page_layouts_subfiles.tif");
+  {
+    TiffHandle tiff(TIFFOpen(file.path().string().c_str(), "w"), TIFFClose);
+    REQUIRE(tiff != nullptr);
+    WriteLayoutDirectory<uint16_t>(tiff.get(), 2, 2, 1, SAMPLEFORMAT_UINT, 0, 100);
+    WriteLayoutDirectory<uint8_t>(tiff.get(), 1, 1, 3, SAMPLEFORMAT_UINT, FILETYPE_REDUCEDIMAGE, 1);
+    WriteLayoutDirectory<uint8_t>(tiff.get(), 2, 2, 1, SAMPLEFORMAT_UINT, FILETYPE_MASK, 2);
+    WriteLayoutDirectory<uint16_t>(tiff.get(), 2, 2, 1, SAMPLEFORMAT_UINT, 0, 200);
+  }
+
+  TiffImageIO imageIO;
+  const auto metadata = imageIO.readMetadata(file.path());
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().numPages == 2);
+  const auto result = imageIO.readPageLayouts(file.path());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(result.value().size() == metadata.value().numPages);
+  RequireLayout(result.value()[0], 2, 2, 1, 16, IImageIO::SampleFormat::Unsigned);
+  RequireLayout(result.value()[1], 2, 2, 1, 16, IImageIO::SampleFormat::Unsigned);
+
+  // readPixelDataRows maps page 1 to directory 3: its first sample is 200, not a value of the skipped subfiles.
+  std::vector<uint16_t> page1;
+  const auto readResult = imageIO.readPixelDataRows(
+      file.path(),
+      [&page1](usize, usize, usize, std::span<const uint8_t> segment) -> Result<> {
+        const usize start = page1.size();
+        page1.resize(start + segment.size() / sizeof(uint16_t));
+        std::memcpy(page1.data() + start, segment.data(), segment.size());
+        return {};
+      },
+      1);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  REQUIRE(page1 == std::vector<uint16_t>{200, 201, 202, 203});
+}
+
+TEST_CASE("TiffImageIO:: readPageLayouts reports a file that cannot be read", "[simplnx][TiffImageIO]")
+{
+  TiffImageIO imageIO;
+  SECTION("Missing file")
+  {
+    const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "TiffImageIO_page_layouts_missing.tif";
+    std::error_code errorCode;
+    fs::remove(path, errorCode);
+    const auto result = imageIO.readPageLayouts(path);
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().front().code == -20100);
+    REQUIRE(result.errors().front().message.find(path.string()) != std::string::npos);
+  }
+  SECTION("File that is not a TIFF")
+  {
+    TemporaryTiffFile file("TiffImageIO_page_layouts_not_a_tiff.tif");
+    {
+      std::ofstream stream(file.path(), std::ios::binary);
+      stream << "This is not a TIFF file.";
+    }
+    const auto result = imageIO.readPageLayouts(file.path());
+    REQUIRE(result.invalid());
+  }
+}
+
+TEST_CASE("TiffImageIO:: IImageIO default readPageLayouts returns the single page", "[simplnx][TiffImageIO]")
+{
+  // StbImageIO has no override, so it uses the IImageIO default built from readMetadata().
+  const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "IImageIO_default_page_layout.png";
+  std::error_code errorCode;
+  fs::remove(path, errorCode);
+  StbImageIO imageIO;
+  ImageMetadata metadata;
+  metadata.width = 3;
+  metadata.height = 2;
+  metadata.numComponents = 3;
+  metadata.dataType = DataType::uint8;
+  const std::vector<uint8_t> pixels(18, 42);
+  const auto writeResult = imageIO.writePixelData(path, pixels, metadata);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const auto result = imageIO.readPageLayouts(path);
+  fs::remove(path, errorCode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(result.value().size() == 1);
+  RequireLayout(result.value()[0], 3, 2, 3, 8, IImageIO::SampleFormat::Unsigned);
 }

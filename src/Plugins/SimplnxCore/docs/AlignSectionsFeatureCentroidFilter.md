@@ -62,7 +62,7 @@ In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
 - Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
-- Relative Shifts (DataArray | 2 component) - The slice's shift relative to the previous slice in both modes (stored as int64s). The first row has no previous slice, so its relative shift equals its cumulative shift. [*previously known as `newxshift` and `newyshift`*]
+- Relative Shifts (DataArray | 2 component) - The slice's shift relative to the slice above it (the slice with the next higher Z index), in both modes (stored as int64s). The first row has no slice above it, so its relative shift equals its cumulative shift. [*previously known as `newxshift` and `newyshift`*]
 - Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s). With **Use Reference Slice** on, this shift is relative to the reference slice.
 - Centroids (DataArray | 2 component) - The xy centroids of the corresponding slice
 

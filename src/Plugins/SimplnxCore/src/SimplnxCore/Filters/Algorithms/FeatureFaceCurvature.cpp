@@ -10,6 +10,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 
@@ -146,11 +147,14 @@ Result<> FeatureFaceCurvature::operator()()
                                        triangleGeomPtr->getVertices(), triangleGeomPtr->getFaces()});
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  // Keep the existing all-task queue for resident arrays. Shared stores that are
-  // not resident must be accessed by one worker at a time.
-  std::shared_ptr<tbb::task_group> g(new tbb::task_group);
+  // Resident arrays use a raw TBB task_group instead of ParallelTaskAlgorithm. All feature faces are queued at once,
+  // and TBB starts the next task as soon as a thread is free. ParallelTaskAlgorithm runs at most one batch of tasks per
+  // core at a time, which was about 3x slower for this many small tasks. Shared stores that are not resident must be
+  // accessed by one worker at a time, so then the workers run inline and no additional task_group is created.
+  std::unique_ptr<tbb::task_group> g;
   if(taskAlgorithm.getParallelizationEnabled())
   {
+    g = std::make_unique<tbb::task_group>();
     sendThreadSafeStatusMessage(fmt::format("Adding {} Feature Faces to the work queue....", nonEmptyCount));
   }
 #endif
@@ -171,7 +175,7 @@ Result<> FeatureFaceCurvature::operator()()
                                           surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-    if(taskAlgorithm.getParallelizationEnabled())
+    if(g != nullptr)
     {
       g->run(func);
     }
@@ -183,7 +187,7 @@ Result<> FeatureFaceCurvature::operator()()
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  if(taskAlgorithm.getParallelizationEnabled())
+  if(g != nullptr)
   {
     sendThreadSafeStatusMessage("Waiting on computations to complete.");
     g->wait();

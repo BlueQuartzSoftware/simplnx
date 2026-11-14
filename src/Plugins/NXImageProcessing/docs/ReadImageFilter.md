@@ -8,7 +8,7 @@ IO (Input)
 
 Reads an image file into a newly created **Image Geometry**. This filter is dimension-aware: a single-page raster file is read as a 2D image (`Z = 1`), a multi-page TIFF is read as a 3D Z-stack (one page per Z slice), and a NRRD file is read as its native 2D or 3D volume. This filter does not depend on ITK. It uses stb_image for PNG/JPEG/BMP files, libtiff for TIFF files, and an ITK-free (zlib-only) reader for NRRD files.
 
-In a multi-page TIFF, page 0 sets the component count and data type of the output array. Each page that the filter reads must have the same component count and data type as page 0, and the same width and height. Otherwise, the filter returns an error. The filter reads only the pages inside the Z crop, and only page 0 when it reads a single page (as Read Image Stack does). Pages that it does not read are not checked.
+In a multi-page TIFF, the first page (page 0) sets the component count and the stored data type. The output array has this data type, unless **Set Image Data Type** is on: then the filter converts the values to the **Output Data Type**. Each page that the filter reads must have the same component count, stored data type, width and height as page 0. Otherwise, the filter returns an error. The filter reads only the pages inside the Z crop. When it reads a single page (as Read Image Stack does), it reads only page 0. It does not check the pages that it does not read.
 
 The following image types are supported:
 

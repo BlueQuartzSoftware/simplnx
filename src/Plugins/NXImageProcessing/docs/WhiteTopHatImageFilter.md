@@ -25,6 +25,8 @@ The *Kernel Type* parameter selects the structuring element used for the morphol
 
 **Note on a zero radius component (e.g. `{2, 1, 0}`) with a Box kernel on a 3D image:** This filter computes the correct grayscale morphology (a radius of 0 on an axis simply means the kernel has extent 1 on that axis). The legacy ITK filter's decomposable-Box (van Herk–Gil–Werman anchor) path produces an incorrect result for a zero-radius axis on a 3D image, reaching values outside the intended neighborhood. Results therefore differ from the legacy filter *by design* for this case; a radius of 0 on the Z axis of a genuinely 2D (single-slice) image is unaffected.
 
+**Note on a 2D image (Z = 1):** The filter ignores the kernel offsets along Z. If the kernel has only Z offsets (for example an Annulus with radius `{0, 0, 2}`), the output is zero everywhere.
+
 ### Safe Border
 
 When *Safe Border* is enabled (the default), the internal opening pads the image by the kernel radius before its erosion/dilation passes and crops back afterward, matching the legacy ITK filter and avoiding boundary artifacts near the image edge. When disabled, the opening runs directly on the image with out-of-bounds neighbors skipped (equivalent to ITK's `SafeBorder = false`); results are identical in the image interior and differ only within one kernel radius of the border.

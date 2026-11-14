@@ -195,7 +195,6 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
 
 TEST_CASE("SimplnxCore::AlignSectionsListFilter: Legacy cumulative file requires zero row", "[SimplnxCore][AlignSectionsListFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);

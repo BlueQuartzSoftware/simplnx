@@ -2603,7 +2603,6 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: Kernel Radius layout before allo
 TEMPLATE_TEST_CASE("NXImageProcessing::Grayscale morphology: 2D out-of-plane Annulus passthrough", "[NXImageProcessing][L73]", GrayscaleDilateImageFilter, GrayscaleErodeImageFilter,
                    GrayscaleMorphologicalOpeningImageFilter, GrayscaleMorphologicalClosingImageFilter, MorphologicalGradientImageFilter, WhiteTopHatImageFilter, BlackTopHatImageFilter)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -2654,7 +2653,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Grayscale morphology: 2D out-of-plane Ann
 
 TEST_CASE("NXImageProcessing::MorphologyEngine: 2D out-of-plane Annulus composite pipeline", "[NXImageProcessing][MorphologyEngine][L73]")
 {
-  UnitTest::LoadPlugins();
   const bool safeBorder = GENERATE(false, true);
   const auto firstOp = GENERATE(MorphOp::Erode, MorphOp::Dilate);
   const auto outputMode = GENERATE(ImageProcessing::detail::MorphologyCompositeOutputMode::Morphology, ImageProcessing::detail::MorphologyCompositeOutputMode::OriginalMinusMorphology,

@@ -5718,11 +5718,9 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   }
   // A single-slice image has no Z neighbors. Drop out-of-plane offsets like the other binary routes.
   // If none remain, the existing empty-kernel branches copy the input.
-  if(dims[2] == 1 && std::any_of(se.offsets.begin(), se.offsets.end(), [](const SEOffset& offset) { return offset.dz != 0; }))
+  if(auto inPlaneSE = detail::MakeInPlaneMorphologyKernel(dims, se); inPlaneSE.has_value())
   {
-    StructuringElement inPlaneSE = se;
-    std::erase_if(inPlaneSE.offsets, [](const SEOffset& offset) { return offset.dz != 0; });
-    return ApplyBinaryMorphologyCompositePipeline<T>(input, output, dims, inPlaneSE, firstOp, secondOp, safeBorder, foreground, background, shouldCancel, grantedWorkingMemoryBytes);
+    return ApplyBinaryMorphologyCompositePipeline<T>(input, output, dims, *inPlaneSE, firstOp, secondOp, safeBorder, foreground, background, shouldCancel, grantedWorkingMemoryBytes);
   }
   auto requiredBytesResult = CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes<T>(dims, se, safeBorder);
   if(requiredBytesResult.invalid())

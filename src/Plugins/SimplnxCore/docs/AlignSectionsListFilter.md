@@ -54,15 +54,15 @@ For more complex file formats (e.g., legacy DREAM3D alignment files with 6 colum
 
 Legacy DREAM3D 6.5.171 shift files have six tab-separated columns: section, next section, relative X, relative Y, cumulative X, and cumulative Y. All shifts are in cells. These files have one row fewer than the number of sections. They have no row for the top section.
 
-For *Cumulative* input, add a zero row at the start of the file, before importing it. Row 0 is the first data row, not a header. Set its cumulative X and Y shifts to zero. For the 117-section example, the added row is:
+For either input type, add a zero row at the start of the file, before importing it. Row 0 is the first data row, not a header. Set all four of its shifts to zero. For the 117-section example, the added row is:
 
 ```text
 116	117	0	0	0	0
 ```
 
-Import all 117 rows with [Read CSV File](ReadCSVFileFilter.md). Use custom column names and start at the first data row. Combine the cumulative X and Y columns, in that order, into one two-component int64 array.
+Import all 117 rows with [Read CSV File](ReadCSVFileFilter.md). Use custom column names and start at the first data row. For *Cumulative* input, combine the cumulative X and Y columns, in that order, into one two-component int64 array. For *Relative* input, combine the relative X and Y columns in the same way.
 
-For a volume with N sections, array row 0 represents the top section, N - 1, which stays fixed. Row i supplies the cumulative shift for section N - 1 - i. The last row supplies the shift for section 0. Without the added zero row, the first legacy row is unused and the remaining shifts are assigned to the wrong sections.
+For a volume with N sections, array row 0 represents the top section, N - 1, which stays fixed. The filter does not read row 0. Row i supplies the shift for section N - 1 - i: its cumulative shift for *Cumulative* input, or its shift relative to the section above it for *Relative* input. The last row supplies the shift for section 0. Without the added zero row, *Cumulative* input does not use the first legacy row and assigns the remaining shifts to the wrong sections. *Relative* input without the zero row returns an error, because the number of rows is not equal to the number of sections.
 
 See `Align_Sections_Backwards_Compatibility.d3dpipeline` in `Align_Sections_Examples` for the complete example. Its input file already includes the zero row. Do not add another row to that file.
 
