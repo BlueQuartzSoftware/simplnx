@@ -7,6 +7,7 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   # ReadDeformKeyFileV12Test.cpp
+  ReadDeformKeyFileV12RegressionTest.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
@@ -231,6 +232,14 @@ if(SIMPLNX_ENABLE_IDENTIFY_SAMPLE_YZ_RESIDENT_BENCHMARKS)
   endif()
 endif()
 
+add_executable(${PLUGIN_NAME}ProcessOutputTestChild ExecuteProcessTestChild.cpp)
+set_target_properties(${PLUGIN_NAME}ProcessOutputTestChild PROPERTIES
+  DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
+  RUNTIME_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
+)
+simplnx_enable_warnings(TARGET ${PLUGIN_NAME}ProcessOutputTestChild)
+add_dependencies(${PLUGIN_NAME}UnitTest ${PLUGIN_NAME}ProcessOutputTestChild)
+
 if(DREAM3DNX_ENABLE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
@@ -342,7 +351,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME LosAlamosFFTExemplar.tar.gz SHA512 c4f2f6cbdaea4512ca2911cb0c3169e62449fcdb7cb99a5e64640601239a08cc09ea35f81f17b056fd38da85add95a37b244b7f844fe0abc944c1ba2f7514812)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PartitionGeometryTest.tar.gz SHA512 8074dbcff86ed206d9185065a56258b766eb24367b3481e8600e9b48542de23dbd715ef8f9eca1c9718ca5e05a9c48997f613bde6f4357b8bba206241caecbbd)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME point_sample_edge_geometry.tar.gz SHA512 86ee348aac83da0b29c820851bf3cfb03d94d17c8249c8754b3471db3566467c814ce5868526fa35389d32832fbf2991d62c8a5a8de815594bac34176e17d3d6)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME QuickSurfaceMeshTest_v2.tar.gz SHA512 03c283cf3cc5d8c03ec75a18ffbf568f71ed3e690c8b746349dad3d59ee2d76fffcba9faa2fc859849c2ca7b1a8b11295c8fa4975246f6b9bc7eff1a15cb10c7)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME quick_surface_mesh_test_v3.tar.gz SHA512 1f7c340614db4e74c942d68cfa8355ecf351cfa205901daa49a227af05dba316ecac9959ccf50cec0d62ee89be590f0a1a399b938bc0285fe6eaa335c7799d07)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME remove_flagged_elements_data.tar.gz SHA512 6bd5b1d93a100bcf8e6d9aa88243cadf51c9f0dee85fc3c054f5fe489b6720991b41390cf4682862483dfee11595a2e384d8698f68c0245cf0521d275db450ee)

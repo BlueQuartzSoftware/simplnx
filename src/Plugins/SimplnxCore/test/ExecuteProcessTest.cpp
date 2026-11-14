@@ -17,8 +17,30 @@
 
 #include <filesystem>
 #include <fstream>
-namespace fs = std::filesystem;
+#include <sstream>
+#include <string>
+#include <string_view>
 using namespace nx::core;
+namespace fs = std::filesystem;
+
+namespace
+{
+/**
+ * @brief Counts the non-overlapping occurrences of a marker in a text.
+ * @param text Text to search.
+ * @param marker Non-empty marker to count.
+ * @return Number of occurrences.
+ */
+usize CountOccurrences(std::string_view text, std::string_view marker)
+{
+  usize count = 0;
+  for(usize position = text.find(marker); position != std::string_view::npos; position = text.find(marker, position + marker.size()))
+  {
+    ++count;
+  }
+  return count;
+}
+} // namespace
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 {
@@ -164,4 +186,35 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Argument separator regression", "[
       REQUIRE(actual == expected);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ExecuteProcessFilter: Execution captures standard error", "[SimplnxCore][ExecuteProcessFilter]")
+{
+  const bool blocking = GENERATE(true, false);
+  CAPTURE(blocking);
+  ExecuteProcessFilter filter;
+  DataStructure dataStructure;
+  auto args = filter.getDefaultArguments();
+  const fs::path logPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("c01-process-{}.log", blocking ? "blocking" : "nonblocking");
+#if NDEBUG
+  const fs::path childPath = fs::path(unit_test::k_BuildDir.view()) / "SimplnxCoreProcessOutputTestChild";
+#else
+  const fs::path childPath = fs::path(unit_test::k_BuildDir.view()) / "SimplnxCoreProcessOutputTestChild_d";
+#endif
+  args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<std::string>(fmt::format("\"{}\"", childPath.string())));
+  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(blocking));
+  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(5000));
+  args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<fs::path>(logPath));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  std::ifstream log(logPath);
+  REQUIRE(log.is_open());
+  std::stringstream content;
+  content << log.rdbuf();
+  const std::string logText = content.str();
+  // The deterministic child writes each fixed marker once to its own stream and returns zero.
+  // The log must therefore hold each marker exactly once.
+  CHECK(CountOccurrences(logText, "C01_STDOUT") == 1);
+  CHECK(CountOccurrences(logText, "C01_STDERR") == 1);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

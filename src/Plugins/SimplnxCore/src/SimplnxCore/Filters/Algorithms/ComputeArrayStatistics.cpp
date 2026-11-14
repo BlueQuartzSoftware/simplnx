@@ -183,14 +183,7 @@ public:
       float32 meanValue = 0.0f;
       if(length[localFeatureIndex] > 0)
       {
-        if constexpr(std::is_same_v<T, bool>)
-        {
-          meanValue = static_cast<float32>(summation[localFeatureIndex] >= (numTuples - summation[localFeatureIndex]));
-        }
-        else
-        {
-          meanValue = summation[localFeatureIndex] / static_cast<float32>(length[localFeatureIndex]);
-        }
+        meanValue = summation[localFeatureIndex] / static_cast<float32>(length[localFeatureIndex]);
       }
 
       if(m_Mean)
@@ -459,14 +452,7 @@ public:
       {
         continue;
       }
-      if constexpr(std::is_same_v<T, bool>)
-      {
-        meanValues[k] = static_cast<float32>(sums[k] >= (numTuples - sums[k]));
-      }
-      else
-      {
-        meanValues[k] = static_cast<float32>(sums[k]) / static_cast<float32>(counts[k]);
-      }
+      meanValues[k] = static_cast<float32>(sums[k]) / static_cast<float32>(counts[k]);
     }
 
     // Variance requires completed means, so standard deviation uses a second page scan.
@@ -1908,7 +1894,10 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
   std::vector<uint64> lengths(groupCount, 0);
   auto minimums = std::make_unique<T[]>(groupCount);
   auto maximums = std::make_unique<T[]>(groupCount);
-  std::vector<float32> sums(groupCount, 0.0F);
+  // Boolean true counts must remain exact beyond float32's consecutive-integer range.
+  using GroupSumType = std::conditional_t<std::is_same_v<T, bool>, uint64, float32>;
+  using MeanType = std::conditional_t<std::is_same_v<T, bool>, float64, float32>;
+  std::vector<GroupSumType> sums(groupCount, 0);
   std::vector<float32> means(groupCount, 0.0F);
   std::vector<float32> medians(groupCount, 0.0F);
   std::vector<float32> standardDeviations(groupCount, 0.0F);
@@ -2037,7 +2026,7 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
       }
       if(layout.ComputeByIndex)
       {
-        sums[groupIndex] = sums[groupIndex] + static_cast<float32>(value);
+        sums[groupIndex] = sums[groupIndex] + static_cast<GroupSumType>(value);
       }
       else
       {
@@ -2074,7 +2063,7 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
 
   if(!layout.ComputeByIndex && groupCount == 1)
   {
-    sums[0] = static_cast<float32>(globalSum);
+    sums[0] = static_cast<GroupSumType>(globalSum);
     if(lengths[0] == 0)
     {
       minimums[0] = T{};
@@ -2091,21 +2080,7 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
     {
       continue;
     }
-    if constexpr(std::is_same_v<T, bool>)
-    {
-      if(layout.ComputeByIndex)
-      {
-        means[group] = static_cast<float32>(sums[group] >= (static_cast<float32>(tupleCount) - sums[group]));
-      }
-      else
-      {
-        means[group] = sums[group] / static_cast<float32>(lengths[group]);
-      }
-    }
-    else
-    {
-      means[group] = sums[group] / static_cast<float32>(lengths[group]);
-    }
+    means[group] = static_cast<float32>(static_cast<MeanType>(sums[group]) / static_cast<MeanType>(lengths[group]));
   }
 
   // Variance needs completed means, so it uses a second page scan.
@@ -2564,7 +2539,17 @@ Result<> generateScanlineStatistics(DataStructure& dataStructure, const IDataArr
   }
   if(inputValues.FindSummation)
   {
-    Result<> writeResult = writeStatisticsOutput(summationArray, sums.data(), groupCount, inputValues.SummationArrayName);
+    Result<> writeResult;
+    if constexpr(std::is_same_v<T, bool>)
+    {
+      std::vector<float32> summationValues(groupCount);
+      std::transform(sums.cbegin(), sums.cend(), summationValues.begin(), [](uint64 count) { return static_cast<float32>(count); });
+      writeResult = writeStatisticsOutput(summationArray, summationValues.data(), groupCount, inputValues.SummationArrayName);
+    }
+    else
+    {
+      writeResult = writeStatisticsOutput(summationArray, sums.data(), groupCount, inputValues.SummationArrayName);
+    }
     if(writeResult.invalid())
     {
       return writeResult;

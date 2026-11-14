@@ -40,7 +40,7 @@ Enabling XDMF costs almost nothing (the file is small and fast to write) and is 
 
 ### Required Input Sources
 
-None — this filter writes whatever currently exists in the **DataStructure** to the output file. If the file already exists it is overwritten.
+None — this filter writes whatever currently exists in the **DataStructure** to the output file. If the file already exists it is overwritten. The one exception is geometry connectivity: the vertex-incidence and element-neighbor lists that some filters build for an Edge, Triangle, Quad, Tetrahedral or Hexahedral geometry. These lists are not saved. Filters that need them rebuild them after the file is read. The geometry's vertex, edge, face and cell lists are always saved.
 
 % Auto generated parameter table will be inserted here
 

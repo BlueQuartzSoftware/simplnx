@@ -7,6 +7,8 @@
 #ifndef MM_CELL_MAP_H
 #define MM_CELL_MAP_H
 
+#include "SimplnxCore/SimplnxCore_export.hpp"
+
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -16,7 +18,7 @@
 
 #include <array>
 
-class MMCellMap
+class SIMPLNXCORE_EXPORT MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels

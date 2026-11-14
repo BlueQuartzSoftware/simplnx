@@ -49,3 +49,20 @@ There is no gold-standard array in the archive. Correctness of the rendered pole
 ## Regenerated to fix a circular-oracle situation?
 
 No. The archive is inputs-only and pre-existing; no baked filter output is used as an oracle, so there is no circular-oracle situation to remediate. The legacy comparison input was authored independently — minted by `build_legacy_input.py` (image geometry + `MaterialName` StringDataArray, SIMPL v7.0 layout) from the same 502 orientations — not derived from any filter output.
+
+## Synthetic tuple-shape regression provenance
+
+These tests construct synthetic inputs at runtime and do not consume or modify `Pole_Figure_Exemplars_v6.tar.gz`.
+
+| Field | Value |
+|---|---|
+| **Test source** | `test/WritePoleFigureTest.cpp::CheckTwoPhaseIntensityTupleShapes` |
+| **Tests** | `OrientationAnalysis::WritePoleFigureFilter: two populated phases preserve count array tuple shape`; `OrientationAnalysis::WritePoleFigureFilter: real HDF5 two populated phases preserve count array tuple shape` |
+| **Input construction** | Two Euler tuples `{0,0,0}`, phase IDs `{1,2}`, crystal structures `{999,1,1}`, and material names `Invalid`, `Cubic One`, `Cubic Two`. Both populated phases use Cubic_High. |
+| **Parameters** | Discrete counts; image size 32; Lambert size 64; no mask; no MRD normalization; intensity arrays enabled; composite geometry and disk image output disabled. |
+| **Oracle** | Class 4 structural invariant. Image dimensions `{32,32,1}` require cell tuple shape `{1,32,32}`. Each of the six `Counts/Cell Data/Phase_<1 or 2>_<001,011,111>` arrays must inherit that matrix shape, contain 1024 tuples, and have component shape `{1}`. Whole-DataStructure tuple validation must pass. |
+| **Storage evidence required** | The visible case forces and checks in-memory numeric stores. The hidden case requires `HDF5-OOC` stores for the Euler, phase, and crystal-structure inputs and all six intensity outputs. String metadata has no numeric backing store. |
+| **Validation state** | Fail before the correction and pass after it in in-core and out-of-core Release builds. These tests make no intensity-value or rendering claim. |
+| **Review scope** | The regression design received independent design review. The completed change received independent review; the historical expert sign-off above does not cover these new tests. |
+
+The tuple-shape oracle comes from the image-cell data contract, independently of filter output. No new DREAM3D 6.5.171 comparison or legacy deviation is claimed.

@@ -12,7 +12,7 @@ This **Filter** characterizes the 3D shape of each **Feature** (grain or particl
 
 - **Semi-Axis Lengths** -- The half-lengths of the three principal axes of the best-fit ellipsoid (a &ge; b &ge; c). These describe the size and elongation of the grain.
 - **Aspect Ratios** -- The ratios b/a and c/a, which describe the grain's shape independent of its size. An equiaxed (roughly spherical) grain has aspect ratios near 1.0; an elongated grain has lower values.
-- **Axis Euler Angles** -- The orientation of the ellipsoid's principal axes in the sample reference frame, stored as Euler angles. These describe which direction the grain is elongated.
+- **Axis Euler Angles** -- For a 3D Image Geometry, the orientation of the ellipsoid's principal axes in the sample reference frame, stored as Euler angles. These describe which direction the grain is elongated. For a planar (one-cell-thick) Image Geometry, the Axis Euler Angles use the plane's own 2D frame. The first and second frame axes map to sample axes as follows: XY maps to (X,Y), YZ maps to (Y,Z), and XZ maps to (X,Z).
 - **Omega3** -- A dimensionless shape invariant derived from the second-order moments [2]. Omega3 is 1.0 for a perfect sphere and decreases for shapes that deviate from spherical. It provides a single-number summary of how "round" a grain is, independent of its size or orientation.
 
 ### How This Filter Works

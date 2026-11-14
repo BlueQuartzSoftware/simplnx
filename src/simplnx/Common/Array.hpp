@@ -1509,7 +1509,7 @@ public:
   template <typename OutType>
   Vec7<OutType> convertType()
   {
-    return Vec6<OutType>(static_cast<OutType>((*this)[0]), static_cast<OutType>((*this)[1]), static_cast<OutType>((*this)[2]), static_cast<OutType>((*this)[3]), static_cast<OutType>((*this)[4]),
+    return Vec7<OutType>(static_cast<OutType>((*this)[0]), static_cast<OutType>((*this)[1]), static_cast<OutType>((*this)[2]), static_cast<OutType>((*this)[3]), static_cast<OutType>((*this)[4]),
                          static_cast<OutType>((*this)[5]), static_cast<OutType>((*this)[6]));
   }
 };

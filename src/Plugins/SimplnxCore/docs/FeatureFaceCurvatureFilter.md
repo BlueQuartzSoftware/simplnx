@@ -47,6 +47,16 @@ Principal curvatures and mean curvature are reported in **1/length** (the recipr
 - Compute_Feature_Face_Curvature
 - Compute_Feature_Face_Curvature_2
 
+## Connectivity lifetime and saving
+
+This filter reuses supplied connectivity without recalculating it. Supplied support objects keep their identity, geometry associations, parent paths, and contents. A named support child that exists without an association also remains caller-owned.
+
+The filter preserves supplied vertex incidence and leaves element neighbors unchanged. Cleanup also runs after the existing worker join when cancellation is set. A connectivity producer failure returns its original error before worker setup.
+
+Only support objects created by this invocation are temporary. The filter removes these objects on success and returned errors. Cleanup can throw if allocation or DataStructure removal fails. Cleanup during arbitrary exception unwinding is outside this guarantee. Existing output changes are not rolled back.
+
+Saving to a `.dream3d` file omits the connectivity lists and their geometry associations. Saving leaves the lists in memory unchanged. A geometry read back from the file has no connectivity. Filters that need it rebuild it from the vertex and face lists.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

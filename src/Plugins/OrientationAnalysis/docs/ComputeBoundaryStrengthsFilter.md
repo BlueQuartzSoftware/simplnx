@@ -14,7 +14,9 @@ For a detailed explanation of the slip transmission concept and the individual m
 
 ### Cubic Materials Only
 
-This filter only works on **cubic m-3m Laue classes**.
+This filter supports **cubic m-3m Laue classes**. For a boundary with two positive **Face Labels** in the same phase, warning `-94739` follows the phase's **Crystal Structures** value, not its phase number. If this value is not cubic m-3m, the filter emits the warning once after processing the faces. This rule also applies to accepted phase 0.
+
+The warning identifies the selected **Crystal Structures** array. The warning does not change numerical calculations or force unsupported crystal structures to zero. Boundaries whose two features both belong to phase 0 retain zero metrics. Exterior faces also retain zero metrics.
 
 ### How This Filter Works
 

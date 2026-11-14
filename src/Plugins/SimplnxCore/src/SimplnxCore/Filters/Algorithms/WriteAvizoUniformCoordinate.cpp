@@ -4,7 +4,10 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
+#include <fmt/format.h>
+
 #include <ctime>
+#include <string>
 #include <utility>
 
 using namespace nx::core;
@@ -122,9 +125,9 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  if(auto outputResult = printOutput(outputFile, "     BoundingBox %f %f %f %f %f %f\n", origin[0], origin[0] + (res[0] * dims[0]), origin[1], origin[1] + (res[1] * dims[1]), origin[2],
-                                     origin[2] + (res[2] * dims[2]));
-     outputResult.invalid())
+  const std::string boundingBox = fmt::format("     BoundingBox {} {} {} {} {} {}\n", origin[0] + 0.5 * res[0], origin[0] + (static_cast<float64>(dims[0]) - 0.5) * res[0], origin[1] + 0.5 * res[1],
+                                              origin[1] + (static_cast<float64>(dims[1]) - 0.5) * res[1], origin[2] + 0.5 * res[2], origin[2] + (static_cast<float64>(dims[2]) - 0.5) * res[2]);
+  if(auto outputResult = printOutput(outputFile, "%s", boundingBox.c_str()); outputResult.invalid())
   {
     return outputResult;
   }

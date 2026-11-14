@@ -70,6 +70,12 @@ These attributes are on every DataObject:
 
 `+`: These theoretically should **never** show up as they are abstract classes.
 
+simplnx does not write `DynamicListArray` geometry connectivity. It leaves out the vertex-incidence and element-neighbor
+lists of an Edge, Triangle, Quad, Tetrahedral or Hexahedral geometry. It also leaves out the geometry's
+`Element Containing Vertex ID` and `Element Neighbors ID` attributes for those lists. A reader treats a missing
+attribute as "not computed". The lists can be rebuilt from the vertex list and the edge, face or cell list. Any other
+`DynamicListArray` cannot be written.
+
 ### Specific ObjectType Attributes
 
 Based on the ObjectType, there can be additional attributes that can be read based on the ObjectType value

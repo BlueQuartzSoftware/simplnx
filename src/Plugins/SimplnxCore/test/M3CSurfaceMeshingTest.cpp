@@ -206,8 +206,8 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   UnitTest::LoadPlugins();
 
   // The QuickSurfaceMesh fixture supplies a segmented Small IN100 volume.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
-  auto baseDataFilePath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
+  auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath gridGeomDataPath({k_DataContainer});
@@ -658,7 +658,7 @@ void RunM3COnSmallIn100(DataStructure& dataStructure)
  */
 DataStructure LoadSmallIn100Input()
 {
-  auto inputPath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto inputPath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
   return UnitTest::LoadDataStructure(inputPath);
 }
 } // namespace
@@ -760,7 +760,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGenerateExemplar]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
@@ -782,7 +782,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Small IN100 structural validati
   UnitTest::LoadPlugins();
   // Only the INPUT dataset is needed. The M3CSurfaceMeshingExemplar_v2 archive is no longer read -
   // see the note below on why the golden comparison was replaced.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
@@ -1378,7 +1378,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[Si
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on Small IN100", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Real segmented data: hundreds of Features, so triple lines and quad points run into every wall and
   // box edge. The option is on by default, which is what RunM3COnSmallIn100 uses.

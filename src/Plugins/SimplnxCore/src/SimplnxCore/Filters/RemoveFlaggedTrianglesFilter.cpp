@@ -121,7 +121,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(pInitialGeometryPathValue);
 
   std::string reducedVertexAttributeMatrixName = (initialGeomPtr->getVertexAttributeMatrix() == nullptr ? "Vertex Data" : initialGeomPtr->getVertexAttributeMatrix()->getName());
-  std::string reducedFaceAttributeMatrixName = (initialGeomPtr->getEdgeAttributeMatrix() == nullptr ? "Face Data" : initialGeomPtr->getEdgeAttributeMatrix()->getName());
+  std::string reducedFaceAttributeMatrixName = (initialGeomPtr->getFaceAttributeMatrix() == nullptr ? "Face Data" : initialGeomPtr->getFaceAttributeMatrix()->getName());
 
   DataPath reducedVertexAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(reducedVertexAttributeMatrixName);
   DataPath reducedFaceAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(reducedFaceAttributeMatrixName);

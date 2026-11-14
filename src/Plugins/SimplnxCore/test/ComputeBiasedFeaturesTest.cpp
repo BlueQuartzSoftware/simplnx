@@ -4,6 +4,8 @@
 #include <fstream>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -161,4 +163,84 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: SIMPL Backwards Compatibili
       CHECK(args.value<std::string>(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key) == "TestName");
     }
   }
+}
+
+namespace
+{
+void CheckPlanarBias(usize plane, bool spacingFixture)
+{
+  const std::array<std::array<usize, 2>, 3> activeAxes = {{{0, 1}, {1, 2}, {0, 2}}};
+  const auto axes = activeAxes[plane];
+  SizeVec3 dims = {1, 1, 1};
+  dims[axes[0]] = 2;
+  dims[axes[1]] = 3;
+  FloatVec3 spacing = {8, 8, 8};
+  FloatVec3 origin = {0, 0, 0};
+  std::array<float32, 3> centroid = {4, 4, 4};
+  if(spacingFixture)
+  {
+    spacing = {2, 4, 8};
+    const std::array<FloatVec3, 3> origins = {FloatVec3{18, 10, 16}, FloatVec3{19, 14, 0}, FloatVec3{18, 18, 0}};
+    origin = origins[plane];
+    centroid = {20, 20, 20};
+  }
+  else
+  {
+    spacing[axes[0]] = 2;
+    spacing[axes[1]] = 4;
+    origin[axes[0]] = 10;
+    origin[axes[1]] = 20;
+    centroid[axes[0]] = 12;
+    centroid[axes[1]] = 22;
+  }
+  DataStructure dataStructure;
+  const DataPath geomPath({"Planar"});
+  const DataPath featurePath = geomPath.createChildPath("Features");
+  auto* geom = ImageGeom::Create(dataStructure, "Planar");
+  geom->setDimensions(dims);
+  geom->setSpacing(spacing);
+  geom->setOrigin(origin);
+  auto* features = AttributeMatrix::Create(dataStructure, "Features", {2}, geom->getId());
+  auto* centroids = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, features->getId());
+  auto* surface = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, features->getId());
+  auto* phases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {2}, {1}, features->getId());
+  surface->fill(false);
+  phases->fill(1);
+  centroids->fill(0);
+  for(usize axis = 0; axis < 3; axis++)
+  {
+    (*centroids)[3 + axis] = centroid[axis];
+  }
+  ComputeBiasedFeaturesFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CalcByPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Centroids")));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Surface")));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Phases")));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>("Biased"));
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* biased = dataStructure.getDataAs<BoolArray>(featurePath.createChildPath("Biased"));
+  REQUIRE(biased != nullptr);
+  // Active-axis bounds are [10,14] x [20,32]; (12,22) is strictly inside.
+  // Spacing fixtures: XY [18,22] x [10,22], YZ [14,22] x [0,24], XZ [18,22] x [0,24].
+  // The centroid (20,20) is strictly inside each spacing fixture. No surface feature shrinks the bounds.
+  CHECK_FALSE((*biased)[1]);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Planar bias classification uses active centroid axes", "[SimplnxCore][ComputeBiasedFeaturesFilter]")
+{
+  const usize plane = GENERATE(0, 1, 2);
+  CAPTURE(plane);
+  CheckPlanarBias(plane, false);
+}
+
+TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Planar bias bounds use active spacing", "[SimplnxCore][ComputeBiasedFeaturesFilter]")
+{
+  const usize plane = GENERATE(0, 1, 2);
+  CAPTURE(plane);
+  CheckPlanarBias(plane, true);
 }

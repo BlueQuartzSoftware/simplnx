@@ -8,6 +8,7 @@
 #include <memory>
 #include <new>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -355,6 +356,39 @@ Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangl
   }
   return result;
 }
+// Index 0 is neighbors, index 1 is incidence: remove dependent temporary data first.
+void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry, const DataPath& geometryPath, const std::array<std::optional<DataObject::IdType>, 2>& entryIds,
+                           const std::array<bool, 2>& childExisted)
+{
+  const std::array supportPaths = {geometryPath.createChildPath(TriangleGeom::k_EltNeighbors), geometryPath.createChildPath(TriangleGeom::k_EltsContainingVert)};
+  // Failed recalculation can alter supplied lists and clear their associations. Do not restore those IDs.
+  for(usize index = 0; index < supportPaths.size(); ++index)
+  {
+    if(childExisted[index])
+    {
+      continue;
+    }
+    // A failed producer can leave a new child after it clears the association.
+    const auto* child = dataStructure.getData(supportPaths[index]);
+    if(child != nullptr && entryIds[index] != child->getId())
+    {
+      const auto createdId = child->getId();
+      if(!dataStructure.removeData(createdId))
+      {
+        throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
+      }
+      if(index == 0)
+      {
+        geometry.setElementNeighborsId(std::nullopt);
+      }
+      else
+      {
+        geometry.setElementContainingVertId(std::nullopt);
+      }
+    }
+  }
+}
+
 class ReverseWindingImpl
 {
 public:
@@ -484,15 +518,19 @@ Result<> VerifyTriangleWinding::operator()()
   // Load mesh grouping (face labels or regions)
   const Int32AbstractDataStore& idsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->LabelsPath)->getDataStoreRef();
 
-  // Scoped because we invalidate connectivity at the end
+  // Cleanup removes only invocation-created connectivity before volume assessment.
   Result<> windingResult = {};
   {
+    const std::array entryIds = {triGeom.getElementNeighborsId(), triGeom.getElementContainingVertId()};
+    const std::array childExisted = {m_DataStructure.getData(m_InputValues->TargetGeometryPath.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
+                                     m_DataStructure.getData(m_InputValues->TargetGeometryPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
     // Generate Connectivity
     m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triGeom.findElementNeighbors(true);
     const auto optionalId = triGeom.getElementNeighborsId();
     if(!optionalId.has_value())
     {
+      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
       return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
     }
     const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
@@ -502,12 +540,11 @@ Result<> VerifyTriangleWinding::operator()()
     windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, idsStore, m_ShouldCancel, m_MessageHandler);
     if(windingResult.invalid())
     {
+      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
       return windingResult;
     }
 
-    // Purge connectivity
-    m_DataStructure.removeData(triGeom.getElementContainingVertId().value());
-    m_DataStructure.removeData(triGeom.getElementNeighborsId().value());
+    CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
   }
 
   m_MessageHandler.sendInfoMessage("Assessing reversal - calculating feature volumes");

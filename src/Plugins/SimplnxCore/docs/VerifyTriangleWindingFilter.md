@@ -66,6 +66,14 @@ The pipeline for multi-object meshes should look something like this:
 
 % Auto generated parameter table will be inserted here
 
+## Connectivity lifetime and saving
+
+This filter recalculates supplied element neighbors and vertex incidence in place. After successful recalculation, supplied objects keep their IDs, parent paths, and geometry associations. Their memberships remain valid when winding changes the vertex order within each face. A failed recalculation can alter supplied contents and clear their associations. Cleanup preserves that invalidation. A named support child without an association also remains caller-owned.
+
+The filter removes only support objects created by this invocation, including partial children on returned errors. Temporary neighbors are removed before temporary incidence. Cleanup can throw if allocation or DataStructure removal fails. Cleanup during arbitrary exception unwinding is outside this guarantee. Existing output changes are not rolled back.
+
+Saving to a `.dream3d` file omits the connectivity lists and their geometry associations. Saving leaves the lists in memory unchanged. A geometry read back from the file has no connectivity. Filters that need it rebuild it from the vertex and face lists.
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

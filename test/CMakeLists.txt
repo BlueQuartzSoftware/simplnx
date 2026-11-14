@@ -66,6 +66,8 @@ set(SIMPLNX_TEST_SRCS
   HistogramUtilitiesTest.cpp
   ImageGeometryResampleTest.cpp
   IntersectionUtilitiesTest.cpp
+  StatisticsCalculationsTest.cpp
+  RayTest.cpp
   IOFormat.cpp
   IParallelAlgorithmTest.cpp
   CacheMemoryBudgetManagerTest.cpp

@@ -4,7 +4,6 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -131,18 +130,14 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  ShapeType tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
+  ShapeType imageDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
+  ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
   {
-    auto createDataGroupAction =
-        std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pImageGeomPathValue.getTargetName());
+    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, imageDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   DataPath cellAMPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
-  {
-    auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellAMPath, tupleDims);
-    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
-  }
   DataPath featIdsPath = cellAMPath.createChildPath(pFeatureIdsArrayNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateArrayAction>(static_cast<DataType>(pOutputTypeValue), tupleDims, std::vector<usize>{1}, featIdsPath);

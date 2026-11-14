@@ -1,16 +1,30 @@
+#include "SimplnxCore/Filters/Algorithms/FeatureFaceCurvature.hpp"
 #include "SimplnxCore/Filters/FeatureFaceCurvatureFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <chrono>
 #include <cmath>
+#include <filesystem>
+#include <iostream>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 using namespace nx::core;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -348,4 +362,534 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[Sim
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+namespace
+{
+constexpr int32 k_InjectedError = -56991;
+const DataPath k_MeshGeomPath({"Triangles"});
+const DataPath k_MeshFacePath = k_MeshGeomPath.createChildPath("FaceData");
+using SupportListType = TriangleGeom::ElementDynamicList;
+using SupportIndexType = IGeometry::MeshIndexType;
+
+// These stores inject ordinary Result failures only. They do not simulate OOC or allocation failure.
+template <typename T>
+class InjectedFailureStore : public DataStore<T>
+{
+public:
+  using DataStore<T>::DataStore;
+  ~InjectedFailureStore() noexcept override = default;
+  InjectedFailureStore(const InjectedFailureStore&) = delete;
+  InjectedFailureStore(InjectedFailureStore&&) = delete;
+  InjectedFailureStore& operator=(const InjectedFailureStore&) = delete;
+  InjectedFailureStore& operator=(InjectedFailureStore&&) = delete;
+
+  bool RejectResize = false;
+  usize FailingRead = 0;
+  mutable std::vector<std::pair<usize, usize>> Reads;
+
+  Result<> resizeTuples(const ShapeType& shape) override
+  {
+    return RejectResize ? MakeErrorResult(k_InjectedError, "injected resize failure") : DataStore<T>::resizeTuples(shape);
+  }
+
+  Result<> copyIntoBuffer(usize start, nonstd::span<T> buffer) const override
+  {
+    Reads.emplace_back(start, buffer.size());
+    return Reads.size() == FailingRead ? MakeErrorResult(k_InjectedError, "injected face read failure") : DataStore<T>::copyIntoBuffer(start, buffer);
+  }
+};
+
+struct SupportSnapshot
+{
+  SupportSnapshot() = default;
+  ~SupportSnapshot() noexcept = default;
+  SupportSnapshot(const SupportSnapshot&) = default;
+  SupportSnapshot(SupportSnapshot&&) noexcept = default;
+  SupportSnapshot& operator=(const SupportSnapshot&) = default;
+  SupportSnapshot& operator=(SupportSnapshot&&) noexcept = default;
+
+  std::optional<DataObject::IdType> Id;
+  std::optional<DataObject::IdType> Association;
+  const SupportListType* Object = nullptr;
+  std::vector<DataPath> Paths;
+  std::vector<std::vector<SupportIndexType>> Lists;
+};
+
+DataPath SupportDataPath(bool neighbors)
+{
+  return k_MeshGeomPath.createChildPath(neighbors ? TriangleGeom::k_EltNeighbors : TriangleGeom::k_EltsContainingVert);
+}
+
+SupportSnapshot CaptureSupportSnapshot(const DataStructure& dataStructure, bool neighbors)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath));
+  const auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath);
+  SupportSnapshot snapshot;
+  snapshot.Association = neighbors ? geometry.getElementNeighborsId() : geometry.getElementContainingVertId();
+  snapshot.Object = dataStructure.getDataAs<SupportListType>(SupportDataPath(neighbors));
+  if(snapshot.Object != nullptr)
+  {
+    snapshot.Id = snapshot.Object->getId();
+    snapshot.Paths = snapshot.Object->getDataPaths();
+    for(usize i = 0; i < snapshot.Object->size(); ++i)
+    {
+      std::vector<SupportIndexType> list;
+      for(usize j = 0; j < snapshot.Object->getNumberOfElements(i); ++j)
+      {
+        list.push_back(snapshot.Object->getElementListPointer(i)[j]);
+      }
+      snapshot.Lists.push_back(std::move(list));
+    }
+  }
+  return snapshot;
+}
+
+void RequireSupportSnapshot(const DataStructure& dataStructure, bool neighbors, const SupportSnapshot& expected)
+{
+  const auto actual = CaptureSupportSnapshot(dataStructure, neighbors);
+  CHECK(actual.Association == expected.Association);
+  REQUIRE(actual.Id == expected.Id);
+  CHECK(actual.Object == expected.Object);
+  CHECK(actual.Paths == expected.Paths);
+  CHECK(actual.Lists == expected.Lists);
+}
+
+void CreateSupportData(DataStructure& dataStructure, bool neighbors, const std::vector<std::vector<SupportIndexType>>& lists, bool associate = true)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath));
+  auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath);
+  auto* support = SupportListType::Create(dataStructure, neighbors ? TriangleGeom::k_EltNeighbors : TriangleGeom::k_EltsContainingVert, geometry.getId());
+  REQUIRE(support != nullptr);
+  support->allocateLists(std::vector<uint16>(lists.size(), 0));
+  for(usize i = 0; i < lists.size(); ++i)
+  {
+    auto list = lists[i];
+    if(!list.empty())
+    {
+      REQUIRE(support->setElementList(i, static_cast<uint16>(list.size()), list.data()));
+    }
+  }
+  if(associate)
+  {
+    if(neighbors)
+    {
+      geometry.setElementNeighborsId(support->getId());
+    }
+    else
+    {
+      geometry.setElementContainingVertId(support->getId());
+    }
+  }
+  REQUIRE(CaptureSupportSnapshot(dataStructure, neighbors).Lists == lists);
+}
+
+template <typename T>
+DataArray<T>& CreateSupportFixtureArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, DataObject::IdType parent)
+{
+  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
+  REQUIRE(store != nullptr);
+  store->fill(T{});
+  auto* array = DataArray<T>::Create(dataStructure, path.getTargetName(), std::move(store), parent);
+  REQUIRE(array != nullptr);
+  return *array;
+}
+
+void ApplySupportFixtureActions(DataStructure& dataStructure, const IFilter& filter, const Arguments& args)
+{
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto applied = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(applied);
+}
+
+void RequireInjectedFailure(const Result<>& result, const std::string& message)
+{
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == k_InjectedError);
+  CHECK(result.errors()[0].message == message);
+}
+
+void RequireSupportFixtureOocStores(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
+{
+  for(const auto& path : paths)
+  {
+    CAPTURE(path);
+    const auto* array = dataStructure.getDataAs<IDataArray>(path);
+    REQUIRE(array != nullptr);
+    REQUIRE(array->getDataFormat() == "HDF5-OOC");
+    REQUIRE(array->getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+  }
+}
+
+// A fresh destination stays separate from the backing stores.
+class SupportSaveFiles
+{
+public:
+  explicit SupportSaveFiles(const std::string& label)
+  {
+    const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
+    for(usize i = 0; i < Paths.size(); ++i)
+    {
+      Paths[i] = fs::temp_directory_path() / fmt::format("support-ownership-{}-{}-{}.dream3d", label, nonce, i);
+      REQUIRE_FALSE(fs::exists(Paths[i]));
+    }
+  }
+  ~SupportSaveFiles() noexcept
+  {
+    for(const auto& path : Paths)
+    {
+      std::error_code error;
+      fs::remove(path, error);
+    }
+  }
+  SupportSaveFiles(const SupportSaveFiles&) = delete;
+  SupportSaveFiles(SupportSaveFiles&&) = delete;
+  SupportSaveFiles& operator=(const SupportSaveFiles&) = delete;
+  SupportSaveFiles& operator=(SupportSaveFiles&&) = delete;
+  std::array<fs::path, 1> Paths;
+};
+
+} // namespace
+
+namespace
+{
+const std::array k_CurvatureOutputKeys = {FeatureFaceCurvatureFilter::k_PrincipalCurvature1Path_Key, FeatureFaceCurvatureFilter::k_PrincipalCurvature2Path_Key,
+                                          FeatureFaceCurvatureFilter::k_GaussianCurvaturePath_Key,   FeatureFaceCurvatureFilter::k_MeanCurvaturePath_Key,
+                                          FeatureFaceCurvatureFilter::k_WeingartenMatrixPath_Key,    FeatureFaceCurvatureFilter::k_PrincipalDirection1Path_Key,
+                                          FeatureFaceCurvatureFilter::k_PrincipalDirection2Path_Key};
+
+DataPath CurvatureOutputPath(usize index)
+{
+  return k_MeshFacePath.createChildPath("Output" + std::to_string(index));
+}
+
+Arguments CreateCurvatureFixture(DataStructure& dataStructure, bool incidence, bool optionalOutputs, bool neighbors = false)
+{
+  auto* geometry = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(geometry != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "FaceData", {9}, geometry->getId());
+  REQUIRE(faceData != nullptr);
+  geometry->setFaceAttributeMatrix(*faceData);
+  auto& vertices = CreateSupportFixtureArray<float32>(dataStructure, k_MeshGeomPath.createChildPath("Vertices"), 19, 3, geometry->getId());
+  auto& faces = CreateSupportFixtureArray<SupportIndexType>(dataStructure, k_MeshGeomPath.createChildPath("Faces"), 9, 3, geometry->getId());
+  geometry->setVertices(vertices);
+  geometry->setFaceList(faces);
+  auto& labels = CreateSupportFixtureArray<int32>(dataStructure, k_MeshFacePath.createChildPath("Labels"), 9, 2, faceData->getId());
+  auto& ids = CreateSupportFixtureArray<int32>(dataStructure, k_MeshFacePath.createChildPath("Ids"), 9, 1, faceData->getId());
+  auto& normals = CreateSupportFixtureArray<float64>(dataStructure, k_MeshFacePath.createChildPath("Normals"), 9, 3, faceData->getId());
+  auto& centroids = CreateSupportFixtureArray<float64>(dataStructure, k_MeshFacePath.createChildPath("Centroids"), 9, 3, faceData->getId());
+  for(usize t = 0; t < 9; ++t)
+  {
+    const float64 x = 1.0 + static_cast<float64>(t % 3);
+    const float64 y = 1.0 + static_cast<float64>((t / 3) * (t / 3));
+    vertices.setComponent(2 * t + 1, 0, static_cast<float32>(1.5 * x + y));
+    vertices.setComponent(2 * t + 1, 1, static_cast<float32>(1.5 * y - x));
+    vertices.setComponent(2 * t + 2, 0, static_cast<float32>(1.5 * x - y));
+    vertices.setComponent(2 * t + 2, 1, static_cast<float32>(1.5 * y + x));
+    faces.setComponent(t, 1, 2 * t + 1);
+    faces.setComponent(t, 2, 2 * t + 2);
+    labels.setComponent(t, 0, 11);
+    labels.setComponent(t, 1, 13);
+    ids[t] = 1;
+    normals.setComponent(t, 2, 1.0);
+    centroids.setComponent(t, 0, x);
+    centroids.setComponent(t, 1, y);
+  }
+  if(incidence)
+  {
+    // Literal independent vertex incidence, in vertex order 0..18.
+    CreateSupportData(dataStructure, false, {{0, 1, 2, 3, 4, 5, 6, 7, 8}, {0}, {0}, {1}, {1}, {2}, {2}, {3}, {3}, {4}, {4}, {5}, {5}, {6}, {6}, {7}, {7}, {8}, {8}});
+  }
+  if(neighbors)
+  {
+    CreateSupportData(dataStructure, true, {{}, {}, {}, {}, {}, {}, {}, {}, {}});
+  }
+  Arguments args;
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(k_MeshGeomPath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrixPath_Key, std::make_any<DataPath>(k_MeshFacePath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseFaceNormals_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirection_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvaturePath_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeWeingartenMatrix_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(k_MeshFacePath.createChildPath("Labels")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIdsPath_Key, std::make_any<DataPath>(k_MeshFacePath.createChildPath("Ids")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(k_MeshFacePath.createChildPath("Normals")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroidsPath_Key, std::make_any<DataPath>(k_MeshFacePath.createChildPath("Centroids")));
+  for(usize i = 0; i < k_CurvatureOutputKeys.size(); ++i)
+  {
+    args.insertOrAssign(k_CurvatureOutputKeys[i], std::make_any<DataPath>(CurvatureOutputPath(i)));
+  }
+  return args;
+}
+
+Result<> RunCurvature(DataStructure& dataStructure, bool cancelled)
+{
+  FeatureFaceCurvatureInputValues inputs{};
+  inputs.NRingCount = 1;
+  inputs.triangleGeomPath = k_MeshGeomPath;
+  inputs.surfaceMeshPrincipalCurvature1Path = CurvatureOutputPath(0);
+  inputs.surfaceMeshFeatureFaceIdsPath = k_MeshFacePath.createChildPath("Ids");
+  inputs.surfaceMeshFaceLabelsPath = k_MeshFacePath.createChildPath("Labels");
+  inputs.surfaceMeshFaceNormalsPath = k_MeshFacePath.createChildPath("Normals");
+  inputs.surfaceMeshTriangleCentroidsPath = k_MeshFacePath.createChildPath("Centroids");
+  inputs.useNormalsForCurveFitting = true;
+  inputs.surfaceMeshPrincipalCurvature1sPath = CurvatureOutputPath(0);
+  inputs.surfaceMeshPrincipalCurvature2sPath = CurvatureOutputPath(1);
+  inputs.surfaceMeshGaussianCurvaturesPath = CurvatureOutputPath(2);
+  inputs.surfaceMeshMeanCurvaturesPath = CurvatureOutputPath(3);
+  inputs.surfaceMeshWeingartenMatrixPath = CurvatureOutputPath(4);
+  inputs.surfaceMeshPrincipalDirection1sPath = CurvatureOutputPath(5);
+  inputs.surfaceMeshPrincipalDirection2sPath = CurvatureOutputPath(6);
+  const std::atomic_bool cancel = cancelled;
+  return FeatureFaceCurvature(dataStructure, {}, cancel, &inputs)();
+}
+
+void CheckCurvatureInputs(const DataStructure& dataStructure)
+{
+  const auto* vertices = dataStructure.getDataAs<Float32Array>(k_MeshGeomPath.createChildPath("Vertices"));
+  const auto* faces = dataStructure.getDataAs<DataArray<SupportIndexType>>(k_MeshGeomPath.createChildPath("Faces"));
+  const auto* labels = dataStructure.getDataAs<Int32Array>(k_MeshFacePath.createChildPath("Labels"));
+  const auto* ids = dataStructure.getDataAs<Int32Array>(k_MeshFacePath.createChildPath("Ids"));
+  const auto* normals = dataStructure.getDataAs<Float64Array>(k_MeshFacePath.createChildPath("Normals"));
+  const auto* centroids = dataStructure.getDataAs<Float64Array>(k_MeshFacePath.createChildPath("Centroids"));
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  REQUIRE(labels != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(normals != nullptr);
+  REQUIRE(centroids != nullptr);
+  REQUIRE(vertices->getNumberOfTuples() == 19);
+  REQUIRE(faces->getNumberOfTuples() == 9);
+  for(usize c = 0; c < 3; ++c)
+  {
+    CHECK(vertices->getDataStoreRef().getComponentValue(0, c) == 0.0F);
+  }
+  for(usize t = 0; t < 9; ++t)
+  {
+    const float64 x = 1.0 + static_cast<float64>(t % 3);
+    const float64 y = 1.0 + static_cast<float64>((t / 3) * (t / 3));
+    const std::array<float32, 6> expectedVertices = {static_cast<float32>(1.5 * x + y), static_cast<float32>(1.5 * y - x), 0, static_cast<float32>(1.5 * x - y), static_cast<float32>(1.5 * y + x), 0};
+    for(usize i = 0; i < expectedVertices.size(); ++i)
+    {
+      CHECK((*vertices)[(2 * t + 1) * 3 + i] == expectedVertices[i]);
+    }
+    CHECK(faces->getDataStoreRef().getComponentValue(t, 0) == 0);
+    CHECK(faces->getDataStoreRef().getComponentValue(t, 1) == 2 * t + 1);
+    CHECK(faces->getDataStoreRef().getComponentValue(t, 2) == 2 * t + 2);
+    CHECK(labels->getDataStoreRef().getComponentValue(t, 0) == 11);
+    CHECK(labels->getDataStoreRef().getComponentValue(t, 1) == 13);
+    CHECK((*ids)[t] == 1);
+    const std::array<float64, 3> expectedNormal = {0, 0, 1};
+    const std::array<float64, 3> expectedCentroid = {x, y, 0};
+    for(usize c = 0; c < 3; ++c)
+    {
+      CHECK(normals->getDataStoreRef().getComponentValue(t, c) == expectedNormal[c]);
+      CHECK(centroids->getDataStoreRef().getComponentValue(t, c) == expectedCentroid[c]);
+    }
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath));
+  const auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(k_MeshGeomPath);
+  CHECK(geometry.getVertices() == vertices);
+  CHECK(geometry.getFaces() == faces);
+}
+
+std::vector<float64> CheckCurvatureOutputs(const DataStructure& dataStructure, bool optionalOutputs)
+{
+  std::vector<float64> values;
+  for(usize i = 0; i < (optionalOutputs ? k_CurvatureOutputKeys.size() : 2); ++i)
+  {
+    const auto* output = dataStructure.getDataAs<Float64Array>(CurvatureOutputPath(i));
+    REQUIRE(output != nullptr);
+    REQUIRE(output->getNumberOfTuples() == 9);
+    for(usize j = 0; j < output->getSize(); ++j)
+    {
+      const float64 value = (*output)[j];
+      // A plane has zero Hessian. Direction signs remain unconstrained.
+      if(i < 5)
+      {
+        CHECK(value == Approx(0.0).margin(1.0e-12));
+      }
+      else
+      {
+        CHECK(std::isfinite(value));
+      }
+      values.push_back(value);
+    }
+  }
+  return values;
+}
+
+void CheckCurvatureSave(DataStructure& dataStructure, const SupportSnapshot& incidence)
+{
+  SupportSaveFiles files("curvature");
+  const auto outputs = CheckCurvatureOutputs(dataStructure, false);
+  // The writer omits supplied connectivity and leaves the caller's objects in place.
+  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
+  SIMPLNX_RESULT_REQUIRE_VALID(save);
+  RequireSupportSnapshot(dataStructure, false, incidence);
+  CheckCurvatureInputs(dataStructure);
+  CHECK(CheckCurvatureOutputs(dataStructure, false) == outputs);
+  const auto read = HDF5::DataStructureReader::ReadFile(files.Paths[0]);
+  SIMPLNX_RESULT_REQUIRE_VALID(read);
+  CheckCurvatureInputs(read.value());
+  CHECK(CheckCurvatureOutputs(read.value(), false) == outputs);
+  RequireSupportSnapshot(read.value(), false, {});
+  RequireSupportSnapshot(read.value(), true, {});
+  UnitTest::CheckArraysInheritTupleDims(read.value());
+}
+
+void CheckCurvatureSuccess(bool incidence, bool cancelled, bool optionalOutputs, bool save, bool ooc)
+{
+  DataStructure dataStructure;
+  const auto args = CreateCurvatureFixture(dataStructure, incidence, optionalOutputs, !save);
+  const auto incidenceBefore = CaptureSupportSnapshot(dataStructure, false);
+  const auto neighborsBefore = CaptureSupportSnapshot(dataStructure, true);
+  FeatureFaceCurvatureFilter filter;
+  if(cancelled)
+  {
+    ApplySupportFixtureActions(dataStructure, filter, args);
+    const auto result = RunCurvature(dataStructure, true);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else
+  {
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    CheckCurvatureOutputs(dataStructure, optionalOutputs);
+  }
+  CheckCurvatureInputs(dataStructure);
+  RequireSupportSnapshot(dataStructure, true, neighborsBefore);
+  if(ooc)
+  {
+    std::vector<DataPath> paths = {k_MeshGeomPath.createChildPath("Vertices"), k_MeshGeomPath.createChildPath("Faces"),   k_MeshFacePath.createChildPath("Labels"),
+                                   k_MeshFacePath.createChildPath("Ids"),      k_MeshFacePath.createChildPath("Normals"), k_MeshFacePath.createChildPath("Centroids")};
+    for(usize i = 0; i < (optionalOutputs ? k_CurvatureOutputKeys.size() : 2); ++i)
+    {
+      paths.push_back(CurvatureOutputPath(i));
+    }
+    RequireSupportFixtureOocStores(dataStructure, paths);
+  }
+  if(save)
+  {
+    CheckCurvatureSave(dataStructure, incidenceBefore);
+  }
+  else
+  {
+    RequireSupportSnapshot(dataStructure, false, incidenceBefore);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: support ownership", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  CAPTURE(incidence);
+  CheckCurvatureSuccess(incidence, false, false, false, false);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: finite planar control", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  CheckCurvatureSuccess(false, false, true, false, false);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: cancelled cleanup", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  CAPTURE(incidence);
+  CheckCurvatureSuccess(incidence, true, false, false, false);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: support creation failure", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  DataStructure dataStructure;
+  const auto args = CreateCurvatureFixture(dataStructure, false, false);
+  ApplySupportFixtureActions(dataStructure, FeatureFaceCurvatureFilter{}, args);
+  for(usize i = 0; i < 2; ++i)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(CurvatureOutputPath(i)));
+    dataStructure.getDataRefAs<Float64Array>(CurvatureOutputPath(i)).fill(73.0);
+  }
+  auto store = std::make_shared<InjectedFailureStore<SupportIndexType>>(ShapeType{9}, ShapeType{3}, 0);
+  for(usize t = 0; t < 9; ++t)
+  {
+    (*store)[3 * t + 1] = 2 * t + 1;
+    (*store)[3 * t + 2] = 2 * t + 2;
+  }
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<SupportIndexType>>(k_MeshGeomPath.createChildPath("Faces")));
+  const auto replacement = dataStructure.getDataRefAs<DataArray<SupportIndexType>>(k_MeshGeomPath.createChildPath("Faces")).setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(replacement);
+  store->Reads.clear();
+  store->FailingRead = 1;
+  const auto result = RunCurvature(dataStructure, false);
+  RequireInjectedFailure(result, "injected face read failure");
+  const std::vector<std::pair<usize, usize>> expectedReads = {{0, 27}};
+  REQUIRE(store->Reads == expectedReads);
+  RequireSupportSnapshot(dataStructure, false, {});
+  RequireSupportSnapshot(dataStructure, true, {});
+  for(usize i = 0; i < 2; ++i)
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(CurvatureOutputPath(i)));
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(CurvatureOutputPath(i));
+    for(usize t = 0; t < output.getSize(); ++t)
+    {
+      CHECK(output[t] == 73.0);
+    }
+  }
+  CheckCurvatureInputs(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: unassociated named child", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  DataStructure dataStructure;
+  const auto args = CreateCurvatureFixture(dataStructure, false, false);
+  CreateSupportData(dataStructure, false, {{42, 7}}, false);
+  const auto before = CaptureSupportSnapshot(dataStructure, false);
+  ApplySupportFixtureActions(dataStructure, FeatureFaceCurvatureFilter{}, args);
+  const auto result = RunCurvature(dataStructure, false);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == -2231);
+  RequireSupportSnapshot(dataStructure, false, before);
+  RequireSupportSnapshot(dataStructure, true, {});
+  CheckCurvatureInputs(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: retained support save compatibility", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const bool incidence = GENERATE(false, true);
+  CAPTURE(incidence);
+  CheckCurvatureSuccess(incidence, false, false, true, false);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: real store support ownership", "[SimplnxCore][.OocStoreContract]")
+{
+  REQUIRE(Application::GetOrCreateInstance() != nullptr);
+  REQUIRE(Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr);
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const bool incidence = GENERATE(false, true);
+  CAPTURE(incidence);
+  CheckCurvatureSuccess(incidence, false, false, true, true);
+  std::cout << fmt::format(
+      "Curvature ownership/save/recovery complete incidence={} vertices=HDF5-OOC faces=HDF5-OOC labels=HDF5-OOC ids=HDF5-OOC normals=HDF5-OOC centroids=HDF5-OOC outputs=HDF5-OOC\n", incidence);
 }

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
@@ -85,11 +86,11 @@ Result<> ComputeBoundaryStrengths::operator()()
                                            m_InputValues->FeaturePhasesArrayPath.toString(), feature2PhaseIdx, feature2Idx, faceIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
                                            numCrystalStructures, numCrystalStructures));
       }
-      if(feature1PhaseIdx == feature2PhaseIdx && feature1PhaseIdx != 1)
+      const uint32 currentLaueIndex = crystalStructuresArrayRef[feature1PhaseIdx];
+      if(feature1PhaseIdx == feature2PhaseIdx && currentLaueIndex != ebsdlib::CrystalStructure::Cubic_High)
       {
         emitLaueClassWarning = true;
       }
-      const uint32 currentLaueIndex = crystalStructuresArrayRef[feature1PhaseIdx];
       const uint32 neighborLaueIndex = crystalStructuresArrayRef[feature2PhaseIdx];
       if(currentLaueIndex == neighborLaueIndex && feature1PhaseIdx > 0)
       {
@@ -146,7 +147,8 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   if(emitLaueClassWarning)
   {
-    return MakeWarningVoidResult(-94739, fmt::format("A phase other then Cubic m-3m is being analyzed. This filter only works on Cubic m-3m Laue classes. Those phases have a result of 0.0."));
+    return MakeWarningVoidResult(-94739, fmt::format("Compute Boundary Strengths supports Cubic m-3m. A same-phase boundary uses another crystal structure. Check the Crystal Structures array '{}'.",
+                                                     m_InputValues->CrystalStructuresArrayPath.toString()));
   }
 
   return {};
