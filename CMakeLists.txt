@@ -989,6 +989,11 @@ endif()
 # ------------------------------------------------------------------------------
 # CLI Executables (nxrunner, nxinfo)
 # ------------------------------------------------------------------------------
+# Define BUILD_TESTING before configuring directories and tests that use it.
+if(SIMPLNX_BUILD_TESTS)
+  include(CTest)
+endif()
+
 add_subdirectory(${simplnx_SOURCE_DIR}/src/apps)
 
 #------------------------------------------------------------------------------
@@ -1170,7 +1175,6 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
-  include(CTest)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_BUILD_TESTS=1")
   add_subdirectory(test)
 endif()
