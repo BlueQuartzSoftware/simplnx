@@ -506,3 +506,46 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid GBCD Component S
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -96713);
 }
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Invalid selected phase metadata", "[OrientationAnalysis][WriteGBCDGMTFile]")
+{
+  UnitTest::LoadPlugins();
+
+  const uint32 crystalStructure = GENERATE(11U, 999U);
+  const bool missingPhase = GENERATE(false, true);
+  CAPTURE(crystalStructure, missingPhase);
+  DataStructure dataStructure;
+  const DataPath gbcdPath({"GBCD"});
+  const DataPath crystalStructuresPath({"Crystal Structures"});
+  REQUIRE(UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, {1, 1, 1, 1, 1, 2}) != nullptr);
+  REQUIRE(UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {missingPhase ? 1ULL : 2ULL}, {1}) != nullptr);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath));
+  auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath);
+  if(!missingPhase)
+  {
+    crystalStructures[1] = crystalStructure;
+  }
+
+  WriteGBCDGMTFileFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(gbcdPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+  args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "invalid_gbcd_crystal_structure.dat"));
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == (missingPhase ? -96715 : -96714));
+  const auto& message = executeResult.result.errors()[0].message;
+  REQUIRE(message.find("phase index 1") != std::string::npos);
+  REQUIRE(message.find(crystalStructuresPath.toString()) != std::string::npos);
+  if(!missingPhase)
+  {
+    REQUIRE(message.find(std::to_string(crystalStructure)) != std::string::npos);
+    REQUIRE(message.find("0-10") != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}

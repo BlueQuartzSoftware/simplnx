@@ -431,13 +431,10 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value reje
 }
 
 //------------------------------------------------------------------------------
-// A "ZCells 0" header prevents the reader's z loop from running, leaving its
-// X/Y buffers zero-filled. CtfReader::applyRasterOrder() rejects the file with
-// -101105 because those positions span a 1 x 1 extent instead of the header grid.
-// The simplnx -19603 cell-count guard remains as a backstop for a file that
-// changes between preflight and execute.
+// Header-only preflight accepts ZCells 0. EbsdLib 3.1.4 rejects it during
+// readFile(), and execute propagates -102312 before raster-order validation.
 //------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Reader/Geometry Cell Count Mismatch rejected (-101105)", "[OrientationAnalysis][ReadCtfDataFilter]")
+TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells rejected at execute (-102312)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -452,8 +449,9 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Reader/Geometry Cell Count Mi
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors()[0].code == -101105);
-  REQUIRE(executeResult.result.errors()[0].message.find("raster grid") != std::string::npos);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  REQUIRE(executeResult.result.errors()[0].code == -102312);
+  REQUIRE(executeResult.result.errors()[0].message.find("ZCells") != std::string::npos);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
