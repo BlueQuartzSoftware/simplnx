@@ -33,6 +33,7 @@ An advantage of DBSCAN over other clustering approaches (e.g., [Compute K Means]
 ### Required Input Sources
 
 - **Input Data Array** -- any 2D or 3D scalar/multi-component array (other than `bool`) to be clustered. This may already exist in your **DataStructure**, or be assembled from coordinate components using [Combine Attribute Arrays](CombineAttributeArraysFilter.md) (see the **Visualization Tips** section).
+  Every unmasked value must be a finite number in the 32-bit floating-point range: the filter stops with an error at the first unmasked NaN or infinite value. Mask out the tuples that do not have a valid position.
 
 ### Examples
 
@@ -165,6 +166,8 @@ Memory usage scales with the total number of grid cells — occupied and empty a
 
 - **Small `Epsilon`**: reduces cell size, increasing total cell count across the bounding box.
 - **Extreme outlier points**: a single unmasked outlier far from the main dataset inflates the bounding box in one or more axes, multiplying total cell count. Consider masking or removing outliers before running the filter.
+
+When the grid would have more cells on one axis, or in total, than the computer can address, the filter stops with an error before it allocates the grid. Increase `Epsilon` or remove the outliers. When `Epsilon` is so large that the grid extent, padded by one grid cell, leaves the 32-bit floating-point range, the filter also stops with an error; rescale the coordinates and `Epsilon` to smaller values.
 
 **If your algorithm spends more time in "cluster expansion pass:" than "Identifying Qualifying Independent Clusters".** See output window.
 There are many datasets that this is normal in such as `No Structure` from **Examples**. This typically happens when `Minimum Points` is too high. This results in too few Core grids being identified. Since few clusters are able to be formed, most of the time is spent in iterative loops expanding the clusters rather than just performing the early merges in the Core grid step.

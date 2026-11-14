@@ -448,6 +448,9 @@ set(PLUGIN_EXTRA_SOURCES
     # Shared header for the RemoveFlaggedFeatures direct/scanline variants (no .cpp,
     # so the AlgorithmList stem-expansion does not pick it up).
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/RemoveFlaggedFeaturesCommon.hpp"
+    # Shared grid-sizing checks for the DBSCAN direct/scanline variants (no .cpp,
+    # so the AlgorithmList stem-expansion does not pick it up).
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/DBSCANCommon.hpp"
 
 )
 
