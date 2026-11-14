@@ -731,7 +731,9 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: real OOC tuple masks", "[SimplnxC
   const NeighborList<int32>* modesPtr = nullptr;
   REQUIRE_NOTHROW(modesPtr = &dataStructure.getDataRefAs<NeighborList<int32>>(DataPath({"Histograms", "\"Input\" Histogram", "Modal Bin Ranges"})));
   REQUIRE(modesPtr != nullptr);
-  const std::vector<int32> expectedModes = {4, 5, 6, 7};
+  // Masked values {0,2,4,4,6,6} have modes 4 and 6. The custom range [0,8) puts them in bins 2 and 3, and each mode
+  // reports the stored pair of its counting bin: {4,6} and {6,8}.
+  const std::vector<int32> expectedModes = {4, 6, 6, 8};
   REQUIRE(modesPtr->getList(0) == expectedModes);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
