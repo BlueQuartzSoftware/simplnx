@@ -1,12 +1,37 @@
+#include "C15CompatibilityTestUtils.hpp"
+#include "NXImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
+#include "NXImageProcessing/Filters/RegionalMinimaImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/HMinimaImageFilter.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/UnitTest/AlgorithmTestScope.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
+#include <catch2/catch.hpp>
+
+#include <algorithm>
+#include <any>
 #include <array>
+#include <cmath>
 #include <limits>
 #include <memory>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 using namespace nx::core;
@@ -17,7 +42,317 @@ namespace
 // Filter-local error codes for the Height guards (kept in sync with HMinimaImageFilter.cpp).
 constexpr int32 k_NonFiniteHeight = -8552;
 constexpr int32 k_NegativeHeight = -8555;
+
+Arguments makeHMinimaArguments(const DataPath& inputPath, float64 height, bool fullyConnected = false)
+{
+  Arguments args;
+  args.insertOrAssign(HMinimaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(HMinimaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(HMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(height));
+  args.insertOrAssign(HMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  return args;
+}
 } // namespace
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional Height fails preflight", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
+                   int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  const float64 height = GENERATE(0.5, 2.5);
+  CAPTURE(height);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 3, 1, 1, {0, 2, 0});
+  const HMinimaImageFilter filter;
+  const auto wholeHeightPreflightResult = filter.preflight(dataStructure, makeHMinimaArguments(inputPath, 2.0));
+  SIMPLNX_RESULT_REQUIRE_VALID(wholeHeightPreflightResult.outputActions);
+
+  // Integer images require a whole Height. Stop at preflight: the baseline must never execute this request.
+  const auto preflightResult = filter.preflight(dataStructure, makeHMinimaArguments(inputPath, height));
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -1874111);
+  REQUIRE(preflightResult.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
+  REQUIRE(preflightResult.outputActions.errors().front().message.find(height == 0.5 ? "0.5" : "2.5") != std::string::npos);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves values and type", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
+                   int64, uint64, float32, float64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  const bool fullyConnected = GENERATE(false, true);
+  CAPTURE(fullyConnected);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 3, 2, 1, {1, 3, 2, 4, 0, 5});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const Arguments args = makeHMinimaArguments(inputPath, 0.0, fullyConnected);
+  const HMinimaImageFilter filter;
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+  REQUIRE(actionPtr != nullptr);
+  REQUIRE(actionPtr->type() == GetDataType<TestType>());
+  REQUIRE(actionPtr->dims() == ShapeType{1, 2, 3});
+  REQUIRE(actionPtr->componentDims() == ShapeType{1});
+
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 2, 3});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == 6);
+  // Height 0 makes the marker equal to the mask, so reconstruction preserves every input value.
+  const std::array<TestType, 6> expected = {1, 3, 2, 4, 0, 5};
+  for(usize index = 0; index < outputStore.getSize(); ++index)
+  {
+    CAPTURE(index);
+    REQUIRE(outputStore.getValue(index) == expected.at(index));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: floating fractional Height retains fractional minima", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", float32, float64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  const bool fullyConnected = GENERATE(false, true);
+  CAPTURE(fullyConnected);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 3, 3, 1, {2, 2, 2, 2, 0, 2, 2, 2, 2});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const Arguments args = makeHMinimaArguments(inputPath, 0.5, fullyConnected);
+  const HMinimaImageFilter filter;
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 3, 3});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  // For an isolated zero-valued minimum on background 2, erosion reconstructs 0.5 at the minimum and 2 elsewhere.
+  const std::array<TestType, 9> expected = {2, 2, 2, 2, 0.5, 2, 2, 2, 2};
+  REQUIRE(outputStore.getSize() == expected.size());
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    REQUIRE(outputStore.getValue(index) == expected.at(index));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: native 64-bit marker preserves units above double precision", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  constexpr TestType inputValue = TestType{1} << 54;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {inputValue});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const HMinimaImageFilter filter;
+  const Arguments args = makeHMinimaArguments(inputPath, 1.0);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 1, 1});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == 1);
+  // A one-pixel marker has no neighbor that can lower it: reconstruction remains the exact inputValue + 1.
+  // The baseline double conversion rounds the marker back to inputValue. Both values are safely inside T's range.
+  REQUIRE(outputStore.getValue(0) == inputValue + TestType{1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves native integer bounds", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32,
+                   uint32, int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool fullyConnected = GENERATE(false, true);
+  CAPTURE(scenario, fullyConnected);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  constexpr TestType minimum = std::numeric_limits<TestType>::lowest();
+  constexpr TestType maximum = std::numeric_limits<TestType>::max();
+  const std::array<TestType, 4> expected = {minimum, minimum + TestType{1}, maximum - TestType{1}, maximum};
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 2, 2, 1, {minimum, minimum + TestType{1}, maximum - TestType{1}, maximum});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const HMinimaImageFilter filter;
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, makeHMinimaArguments(inputPath, 0.0, fullyConnected));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 2, 2});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == expected.size());
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    REQUIRE(outputStore.getValue(index) == expected.at(index));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height raises or saturates native integer markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16,
+                   int32, uint32, int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool fullyConnected = GENERATE(false, true);
+  const bool atMaximum = GENERATE(false, true);
+  const float64 height = GENERATE(1.0, std::ldexp(1.0, 64), std::numeric_limits<float64>::max());
+  CAPTURE(scenario, fullyConnected, atMaximum, height);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  constexpr TestType minimum = std::numeric_limits<TestType>::lowest();
+  constexpr TestType maximum = std::numeric_limits<TestType>::max();
+  const TestType inputValue = atMaximum ? maximum : minimum;
+  // A single pixel retains its marker. One raises MIN by one; a Height of at least 2^64 saturates every integer type.
+  const TestType expected = atMaximum || height > 1.0 ? maximum : static_cast<TestType>(minimum + TestType{1});
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {inputValue});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const HMinimaImageFilter filter;
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, makeHMinimaArguments(inputPath, height, fullyConnected));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 1, 1});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == 1);
+  REQUIRE(outputStore.getValue(0) == expected);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: large whole Height retains exact native 64-bit markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool fullyConnected = GENERATE(false, true);
+  const float64 height = GENERATE(std::ldexp(1.0, 63), 0x1.fffffffffffffp63);
+  CAPTURE(scenario, fullyConnected, height);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {std::numeric_limits<TestType>::lowest()});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const HMinimaImageFilter filter;
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, makeHMinimaArguments(inputPath, height, fullyConnected));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == GetDataType<TestType>());
+  REQUIRE(output.getTupleShape() == ShapeType{1, 1, 1});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == 1);
+  // The second Height is exactly 2^64 - 2048, the largest float64 Height below 2^64.
+  if constexpr(std::is_signed_v<TestType>)
+  {
+    REQUIRE(outputStore.getValue(0) == (height == std::ldexp(1.0, 63) ? int64{0} : int64{9223372036854773760LL}));
+  }
+  else
+  {
+    REQUIRE(outputStore.getValue(0) == (height == std::ldexp(1.0, 63) ? uint64{9223372036854775808ULL} : uint64{18446744073709549568ULL}));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height is stable under a signed baseline shift", "[NXImageProcessing][Issue1874][HMinimaImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool fullyConnected = GENERATE(false, true);
+  const bool positiveBaseline = GENERATE(false, true);
+  CAPTURE(scenario, fullyConnected, positiveBaseline);
+  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  const std::vector<int32> input = positiveBaseline ? std::vector<int32>{50, 30, 50} : std::vector<int32>{-50, -70, -50};
+  const std::array<int32, 3> expected = positiveBaseline ? std::array<int32, 3>{50, 40, 50} : std::array<int32, 3>{-50, -60, -50};
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 3, 1, 1, input);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
+  const HMinimaImageFilter filter;
+  const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, makeHMinimaArguments(inputPath, 10.0, fullyConnected));
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath outputPath = inputPath.replaceName("Output");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<IDataArray>(outputPath);
+  algorithmTestScope.requireExpectedStore(output);
+  REQUIRE(output.getDataType() == DataType::int32);
+  REQUIRE(output.getTupleShape() == ShapeType{1, 1, 3});
+  REQUIRE(output.getComponentShape() == ShapeType{1});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(outputPath));
+  const auto& outputStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  REQUIRE(outputStore.getSize() == expected.size());
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CAPTURE(index);
+    REQUIRE(outputStore.getValue(index) == expected.at(index));
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // -----------------------------------------------------------------------------
 // (2) Hand-computed behavior on a small 2D image: a flat background with two isolated dark dents. The dent
@@ -48,6 +383,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(outputPath));
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
   REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == deepDent + static_cast<int32>(height)); // 30 -> 40 (raised by Height)
@@ -84,6 +420,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(inputPath));
   scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
 
   HMinimaImageFilter filter;
@@ -98,6 +435,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(outputPath));
   auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
@@ -127,6 +465,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[N
   rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<int32>>(outputPath));
   const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == pattern.size());
   for(usize i = 0; i < outStore.getSize(); ++i)
@@ -160,6 +499,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to 
   rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<uint8>>(outputPath));
   const auto& outStore = ds.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
@@ -221,6 +561,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height gu
 
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[NXImageProcessing][HMinimaImageFilter]")
 {
+  UnitTest::LoadPlugins();
   const nlohmann::json json = {{"Height", 3.5},
                                {"FullyConnected", true},
                                {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}},
@@ -242,6 +583,60 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[NXImageProce
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima)", "[NXImageProcessing][ItkGolden][HMinimaImageFilter]")
 {
+  UnitTest::LoadPlugins();
   rt::RunReconstructionMd5ItkGolden<HMinimaImageFilter>("RA-Short.nrrd", "7778067eeb752b6ac396dd9e362e8346",
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
 }
+
+// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
+TEST_CASE("NXImageProcessing::C15Compatibility resident fractional minima produce watershed markers", "[NXImageProcessing][C15Compatibility][Issue1874][HMinimaImageFilter]")
+{
+  UnitTest::LoadPlugins();
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const auto input = ip_test::BuildScalarValuesImage<uint8>(dataStructure, {0, 1, 2, 3, 2, 1, 0});
+  c15_test::SetGeometry(dataStructure);
+  const ShapeType shape{1, 1, 7};
+  REQUIRE(c15_test::Read<uint8>(dataStructure, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  const auto converted = c15_test::ConvertToFloat32(dataStructure, input);
+  REQUIRE(c15_test::Read<float32>(dataStructure, converted, shape, scope) == std::vector<float32>{0, 1, 2, 3, 2, 1, 0});
+  const HMinimaImageFilter minimaFilter;
+  auto args = c15_test::ImageArguments(minimaFilter, converted, "RaisedMinima");
+  args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(0.5));
+  args.insertOrAssign(HMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  c15_test::Execute(minimaFilter, dataStructure, args, scope);
+  const auto raised = input.replaceName("RaisedMinima");
+  const std::vector<float32> expectedRaised{0.5F, 1, 2, 3, 2, 1, 0.5F};
+  REQUIRE(c15_test::Read<float32>(dataStructure, raised, shape, scope) == expectedRaised);
+  const RegionalMinimaImageFilter regional;
+  args = c15_test::ImageArguments(regional, raised, "RegionalMinima");
+  args.insertOrAssign(RegionalMinimaImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RegionalMinimaImageFilter::k_FlatIsMinima_Key, std::make_any<bool>(true));
+  c15_test::Execute(regional, dataStructure, args, scope);
+  const auto regionalPath = input.replaceName("RegionalMinima");
+  REQUIRE(c15_test::Read<uint32>(dataStructure, regionalPath, shape, scope) == std::vector<uint32>{1, 0, 0, 0, 0, 0, 1});
+  const auto markers = c15_test::Components(dataStructure, regionalPath, "Markers");
+  const std::vector<uint32> expectedMarkers{1, 0, 0, 0, 0, 0, 2};
+  REQUIRE(c15_test::Read<uint32>(dataStructure, markers, shape, scope) == expectedMarkers);
+  const MorphologicalWatershedFromMarkersImageFilter watershed;
+  args = c15_test::ImageArguments(watershed, raised, "Basins");
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markers));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkWatershedLine_Key, std::make_any<bool>(true));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
+  args.insertOrAssign(MorphologicalWatershedFromMarkersImageFilter::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  c15_test::ExecuteChecked(watershed, dataStructure, args);
+  const auto labels = c15_test::Read<uint32>(dataStructure, input.replaceName("Basins"), shape, scope);
+  // The unique central ridge separates three cells in each basin. Zero marks the watershed line.
+  REQUIRE(labels == std::vector<uint32>{1, 1, 1, 0, 2, 2, 2});
+  REQUIRE(std::count(labels.begin(), labels.end(), uint32{1}) == 3);
+  REQUIRE(std::count(labels.begin(), labels.end(), uint32{2}) == 3);
+  REQUIRE(c15_test::Read<float32>(dataStructure, raised, shape, scope) == expectedRaised);
+  REQUIRE(c15_test::Read<uint32>(dataStructure, markers, shape, scope) == expectedMarkers);
+  REQUIRE(c15_test::Read<uint8>(dataStructure, input, shape, scope) == std::vector<uint8>{0, 1, 2, 3, 2, 1, 0});
+  c15_test::CheckGeometry(dataStructure, {7, 1, 1});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison)

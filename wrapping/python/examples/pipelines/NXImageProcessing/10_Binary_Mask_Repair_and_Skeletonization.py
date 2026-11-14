@@ -129,6 +129,7 @@ simplnx_utilities.check_filter_result(nximgproc.NotImageFilter, result)
 # Filter 9: Connected Component Image Filter
 result = nximgproc.ConnectedComponentImageFilter.execute(
     data_structure=data_structure,
+    provisional_label_limit_handling_index=0,
     fully_connected=True,
     input_image_data_path=nx.DataPath('Binary Mask/Cell Data/Mask'),
     input_image_geometry_path=nx.DataPath('Binary Mask'),

@@ -130,6 +130,8 @@ if(MSVC)
 endif()
 
 set(PLUGIN_EXTRA_SOURCES
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/WriteImageColorUtilities.hpp"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MathOutputUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterExecutors.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterTemplateExecutors.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ImageFilterExecutorDetail.hpp"

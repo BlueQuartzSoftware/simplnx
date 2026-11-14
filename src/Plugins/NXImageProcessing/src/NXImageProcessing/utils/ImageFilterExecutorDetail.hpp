@@ -3,9 +3,11 @@
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -608,8 +610,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight offset every voxel by +/-height through @ref SaturateCastFromDouble, so an offset that
- * leaves the type range saturates (ITK-faithful clamp) instead of wrapping.
+ * MinusHeight/PlusHeight use @ref SaturateCastFromDouble by default. The exactIntegerHeight opt-in preserves native
+ * integer units with saturating addition or subtraction. Floating values retain the default arithmetic.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -619,10 +621,20 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * rule, including "needle" geometries where a non-collapsed axis has extent 1 (every voxel is then a border voxel
  * and the image is left unchanged).
  *
- * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
+ * @tparam T Scalar marker type.
+ * @param inStore Original mask values.
+ * @param markerStore Receives marker values; has the input's tuple and element layout.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param kind Selects a height or border marker.
+ * @param height Finite offset in intensity units; nonnegative and whole for the integer opt-in.
+ * @param shouldCancel Requests cancellation between transfers.
+ * @param exactIntegerHeight Opt-in to exact, saturating integer offsets for a validated whole Height.
+ * @return The first transfer or dimension error, or a valid result.
+ * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel,
+                                   bool exactIntegerHeight = false)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
@@ -643,9 +655,19 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      for(usize i = 0; i < count; ++i)
+      if(exactIntegerHeight && std::is_integral_v<T>)
       {
-        buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        if constexpr(std::is_integral_v<T>)
+        {
+          ApplyExactIntegerReconstructionHeight<T>(nonstd::span<T>(buffer.get(), count), height, kind == ReconMarker::MinusHeight);
+        }
+      }
+      else
+      {
+        for(usize i = 0; i < count; ++i)
+        {
+          buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
+        }
       }
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
@@ -863,6 +885,386 @@ inline usize SelectRelabelStagingValues(usize numValues, uint64 grantedBytes, us
   const usize grantSlabs = static_cast<usize>(std::min<uint64>(grantedBytes / slabPlan->slabBytes, std::numeric_limits<usize>::max()));
   const usize stagingSlabs = std::min(fullSlabs, grantSlabs);
   return stagingSlabs == 0 ? fallbackValues : stagingSlabs * slabPlan->slabValues;
+}
+
+/**
+ * @brief Subtracts HConvex reconstruction values in one owned resident range without signed overflow.
+ * @tparam T Signed integer scalar type.
+ * @param inputValues Original image values.
+ * @param reconstructionValues Reconstruction values, each no greater than the corresponding input.
+ * @param outputValues Contrast output; may alias either input span.
+ * @param start Global tuple offset for diagnostics.
+ * @param inputPath Original array path for diagnostics.
+ * @return The first contrast overflow, or a valid result.
+ */
+template <class T>
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters) -- The two read-only spans have the same type but distinct subtraction roles.
+Result<> SubtractHConvexContrastRange(nonstd::span<const T> inputValues, nonstd::span<const T> reconstructionValues, nonstd::span<T> outputValues, usize start, const DataPath& inputPath)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize count = inputValues.size();
+  std::atomic<usize> firstInvalid{count};
+  ParallelDataAlgorithm parallelAlgorithm;
+  parallelAlgorithm.setRange(0, count);
+  parallelAlgorithm.execute([=, &firstInvalid](const Range& range) {
+    for(usize index = range.min(); index < range.max(); ++index)
+    {
+      const T inputValue = inputValues[index];
+      const T reconstructionValue = reconstructionValues[index];
+      // max + a negative value is representable. Check before subtracting, including for int64 minima.
+      if(reconstructionValue < 0 && inputValue > std::numeric_limits<T>::max() + reconstructionValue)
+      {
+        PublishSmallerIndex(firstInvalid, index);
+        continue;
+      }
+      outputValues[index] = static_cast<T>(inputValue - reconstructionValue);
+    }
+  });
+  const usize invalid = firstInvalid.load(std::memory_order_relaxed);
+  if(invalid != count)
+  {
+    return MakeErrorResult(-1874102, fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
+                                                 "floating-point type before this filter.",
+                                                 start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
+  }
+  return {};
+}
+
+/**
+ * @brief Computes signed HConvex contrast through bounded chunks with serial store transfers.
+ * @tparam T Signed integer scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation between chunks.
+ * @param chunkValues Maximum number of values in each owned buffer.
+ * @return The first transfer or contrast error, with warnings from completed transfers.
+ */
+template <class T>
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters) -- The input and reconstruction are distinct stores of the same element type.
+Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                        const std::atomic_bool& shouldCancel, usize chunkValues = k_ElementwiseChunkValues<T>)
+{
+  static_assert(std::is_integral_v<T> && std::is_signed_v<T>);
+  const usize size = input.getSize();
+  chunkValues = std::max<usize>(1, chunkValues);
+  auto inputBuffer = std::make_unique<std::vector<T>>(std::min(chunkValues, size));
+  auto reconstructionBuffer = std::make_unique<std::vector<T>>(std::min(chunkValues, size));
+  Result<> accumulatedResult;
+  for(usize start = 0; start < size; start += chunkValues)
+  {
+    if(shouldCancel)
+    {
+      return accumulatedResult;
+    }
+    const usize count = std::min(chunkValues, size - start);
+    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer->data(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer->data(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult =
+        MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange<T>(nonstd::span<const T>(inputBuffer->data(), count), nonstd::span<const T>(reconstructionBuffer->data(), count),
+                                                                                   nonstd::span<T>(inputBuffer->data(), count), start, inputPath));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer->data(), count)));
+    if(accumulatedResult.invalid())
+    {
+      return accumulatedResult;
+    }
+  }
+  return accumulatedResult;
+}
+
+/**
+ * @brief Computes HConvex contrast, preserving the resident fast path and bounded serial store transfers.
+ * @tparam T Numeric scalar type.
+ * @param input Original image store.
+ * @param reconstruction Reconstruction store.
+ * @param output Contrast output; may alias reconstruction.
+ * @param inputPath Original array path for diagnostics.
+ * @param shouldCancel Requests cancellation before resident work or between chunks.
+ * @return The first transfer or signed contrast error, with warnings from completed transfers.
+ *
+ * Unsigned and floating arrays retain the existing subtraction. Signed arrays check before each subtraction.
+ * Completed chunks may already contain contrast when a later chunk fails; this operation does not promise atomic output.
+ */
+template <class T>
+Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const AbstractDataStore<T>& reconstruction, AbstractDataStore<T>& output, const DataPath& inputPath,
+                                 const std::atomic_bool& shouldCancel)
+{
+  if constexpr(!std::is_integral_v<T> || !std::is_signed_v<T>)
+  {
+    return SubtractStores<T>(input, reconstruction, output, shouldCancel);
+  }
+  else
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+    const auto* residentInputPtr = dynamic_cast<const DataStore<T>*>(&input);
+    const auto* residentReconstructionPtr = dynamic_cast<const DataStore<T>*>(&reconstruction);
+    auto* residentOutputPtr = dynamic_cast<DataStore<T>*>(&output);
+    if(residentInputPtr != nullptr && residentReconstructionPtr != nullptr && residentOutputPtr != nullptr)
+    {
+      const auto inputValues = residentInputPtr->createSpan();
+      const auto reconstructionValues = residentReconstructionPtr->createSpan();
+      auto outputValues = residentOutputPtr->createSpan();
+      return SubtractHConvexContrastRange<T>(inputValues, reconstructionValues, outputValues, 0, inputPath);
+    }
+
+    return SubtractHConvexContrastChunked<T>(input, reconstruction, output, inputPath, shouldCancel);
+  }
+}
+
+/** @brief Constant-size native context for the existing bounded marker-copy pass. */
+template <class T>
+class MarkerIdConversionState
+{
+public:
+  MarkerIdConversionState() = default;
+  ~MarkerIdConversionState() noexcept = default;
+  MarkerIdConversionState(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState(MarkerIdConversionState&&) = delete;
+  MarkerIdConversionState& operator=(const MarkerIdConversionState&) = delete;
+  MarkerIdConversionState& operator=(MarkerIdConversionState&&) = delete;
+
+  bool observe(usize index, T nativeValue, uint32 encodedValue) noexcept
+  {
+    const T restoredValue = static_cast<T>(encodedValue);
+    if(restoredValue == nativeValue)
+    {
+      return false;
+    }
+    if(m_ChangedCount == 0)
+    {
+      m_FirstIndex = index;
+      m_FirstNativeValue = nativeValue;
+      m_FirstRestoredValue = restoredValue;
+    }
+    ++m_ChangedCount;
+    return true;
+  }
+
+  Result<> finish(const DataPath& markerPath, MarkerIdConversionHandling handling, Result<> result = {}) const
+  {
+    if(m_ChangedCount == 0)
+    {
+      return result;
+    }
+    const auto context = fmt::format("Marker array '{}' has {} changed marker occurrence(s) observed. First change at flat index {}: native ID {} restores as {} after uint32 conversion. ",
+                                     markerPath.toString(), m_ChangedCount, m_FirstIndex, m_FirstNativeValue, m_FirstRestoredValue);
+    if(handling == MarkerIdConversionHandling::Error)
+    {
+      return MergeResults(std::move(result),
+                          MakeErrorResult(-79073, context +
+                                                      "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
+                                                      "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
+    }
+    return MergeResults(std::move(result),
+                        MakeWarningVoidResult(79074, context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
+                                                               "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
+  }
+
+private:
+  usize m_ChangedCount = 0;
+  usize m_FirstIndex = 0;
+  T m_FirstNativeValue = {};
+  T m_FirstRestoredValue = {};
+};
+
+/**
+ * @brief Functor that copies an integer marker array's values into a uint32 store, dispatched on
+ *        the source element type S via the IntegerOnly policy (which calls operator()<S>() through
+ *        ExecuteDataFunctionIntType). The source is read through the SAFE typed accessor
+ *        getDataRefAs<DataArray<S>> -- not a raw dynamic_cast -- so a type mismatch throws rather than being UB.
+ *        Single-component is guaranteed by the caller's preflight, so getSize() (values) == the tuple count.
+ */
+struct WidenIntegerArrayToUInt32Fn
+{
+  const DataStructure& dataStructure;
+  const DataPath& srcPath;
+  AbstractDataStore<uint32>& dst;
+  const std::atomic_bool& shouldCancel;
+  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
+
+  template <class S>
+  Result<> operator()() const
+  {
+    const AbstractDataStore<S>& s = dataStructure.getDataRefAs<DataArray<S>>(srcPath).getDataStoreRef();
+    const usize total = s.getSize();
+    MarkerIdConversionState<S> conversionState;
+    Result<> accumulated;
+    try
+    {
+      constexpr usize chunkValues = 65536;
+      std::vector<S> inputValues(std::min(chunkValues, total));
+      std::vector<uint32> encodedValues(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
+      {
+        if(shouldCancel)
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inputValues.data(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          const S nativeValue = inputValues[index];
+          // Promote narrow signed IDs without changing the legacy conversion modulo 2^32.
+          const uint32 encodedValue = static_cast<uint32>(+nativeValue);
+          if(conversionState.observe(start + index, nativeValue, encodedValue) && ConversionHandling == MarkerIdConversionHandling::Error)
+          {
+            // Stop before writing this chunk or entering either flood route.
+            return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+          }
+          encodedValues[index] = encodedValue;
+        }
+        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(encodedValues.data(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+        }
+        // count <= total - start, so both the next offset and start + index remain in range.
+        start += count;
+      }
+      return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
+    } catch(const std::bad_alloc&)
+    {
+      return conversionState.finish(srcPath, ConversionHandling,
+                                    MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while copying marker IDs.")));
+    }
+  }
+};
+
+/**
+ * @brief Copies the integer marker array at @p srcPath (any of the 8 integer element types) into @p dst as uint32.
+ *        The flood runs in uint32 (see @ref ApplyWatershedFromMarkers) but the marker array may be any integer
+ *        type. All native 8/16/32-bit integers round-trip, including negative signed values. The lossless int64/uint64
+ *        domain is 0 through UINT32_MAX, inclusive. Error stops during this copy before the affected chunk is written;
+ *        Warn keeps the legacy encoding and returns one summary warning, also on cancellation or a later transfer error.
+ */
+inline Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel,
+                                          MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error)
+{
+  const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
+  return IntegerOnly::dispatch(srcArray.getDataType(),
+                               WidenIntegerArrayToUInt32Fn{.dataStructure = dataStructure, .srcPath = srcPath, .dst = dst, .shouldCancel = shouldCancel, .ConversionHandling = conversionHandling});
+}
+
+/**
+ * @brief Functor that copies a uint32 store's values into an integer output array (narrowing cast), dispatched on
+ *        the destination element type D via the IntegerOnly policy. The destination is written through the SAFE
+ *        typed accessor getDataRefAs<DataArray<D>> -- not a raw dynamic_cast. The output is created of the marker's
+ *        type by preflight. This is the legacy conversion back from the internal uint32 labels; Warn may have already
+ *        removed, aliased, or renamed native 64-bit marker identities during the initial copy.
+ */
+struct NarrowUInt32StoreToIntegerArrayFn
+{
+  const AbstractDataStore<uint32>& src;
+  DataStructure& dataStructure;
+  const DataPath& dstPath;
+  const std::atomic_bool& shouldCancel;
+
+  template <class D>
+  Result<> operator()() const
+  {
+    AbstractDataStore<D>& d = dataStructure.getDataRefAs<DataArray<D>>(dstPath).getDataStoreRef();
+    const usize total = src.getSize();
+    Result<> accumulated;
+    try
+    {
+      constexpr usize chunkValues = 65536;
+      std::vector<uint32> encodedValues(std::min(chunkValues, total));
+      std::vector<D> outputValues(std::min(chunkValues, total));
+      for(usize start = 0; start < total;)
+      {
+        if(shouldCancel)
+        {
+          return accumulated;
+        }
+        const usize count = std::min(chunkValues, total - start);
+        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(encodedValues.data(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        for(usize index = 0; index < count; ++index)
+        {
+          outputValues[index] = static_cast<D>(encodedValues[index]);
+        }
+        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outputValues.data(), count));
+        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        if(accumulated.invalid())
+        {
+          return accumulated;
+        }
+        start += count; // count <= total - start, including the final short chunk.
+      }
+      return accumulated;
+    } catch(const std::bad_alloc&)
+    {
+      return MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while restoring marker IDs."));
+    }
+  }
+};
+
+/**
+ * @brief Narrows the uint32 flood output into the integer output array at @p dstPath (whose element type is the
+ *        marker's type, set by the filter's preflight). Inverse of @ref WidenIntegerArrayToUInt32.
+ */
+inline Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>& src, DataStructure& dataStructure, const DataPath& dstPath, const std::atomic_bool& shouldCancel)
+{
+  const auto& dstArray = dataStructure.getDataRefAs<IDataArray>(dstPath);
+  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{src, dataStructure, dstPath, shouldCancel});
+}
+
+/**
+ * @brief The border sentinel for the uint32 flood: static_cast<uint32>(NumericTraits<markerType>::max()). ITK's
+ *        MorphologicalWatershedFromMarkers uses NumericTraits<TLabel>::max() as the out-of-bounds marker-image
+ *        boundary constant. This value substitutes only out-of-bounds neighbors; UINT32_MAX is a valid in-bounds seed.
+ *        For uint32/int64/uint64 the integer cast yields 0xFFFFFFFF. It does not saturate marker values.
+ */
+inline uint32 MarkerTypeMaxAsUInt32(DataType markerType)
+{
+  switch(markerType)
+  {
+  case DataType::int8:
+    return static_cast<uint32>(std::numeric_limits<int8>::max());
+  case DataType::uint8:
+    return static_cast<uint32>(std::numeric_limits<uint8>::max());
+  case DataType::int16:
+    return static_cast<uint32>(std::numeric_limits<int16>::max());
+  case DataType::uint16:
+    return static_cast<uint32>(std::numeric_limits<uint16>::max());
+  case DataType::int32:
+    return static_cast<uint32>(std::numeric_limits<int32>::max());
+  case DataType::uint32:
+    return static_cast<uint32>(std::numeric_limits<uint32>::max());
+  case DataType::int64:
+    return static_cast<uint32>(std::numeric_limits<int64>::max());
+  case DataType::uint64:
+    return static_cast<uint32>(std::numeric_limits<uint64>::max());
+  default:
+    return std::numeric_limits<uint32>::max();
+  }
 }
 
 } // namespace detail

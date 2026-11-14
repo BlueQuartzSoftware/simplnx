@@ -398,7 +398,11 @@
           "value": "Object Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "provisional_label_limit_handling_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "Assign one label to each mask object.",
       "filter": {

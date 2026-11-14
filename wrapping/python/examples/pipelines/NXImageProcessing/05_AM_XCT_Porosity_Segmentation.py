@@ -99,6 +99,7 @@ simplnx_utilities.check_filter_result(nximgproc.BinaryMorphologicalClosingImageF
 # Filter 7: Connected Component Image Filter
 result = nximgproc.ConnectedComponentImageFilter.execute(
     data_structure=data_structure,
+    provisional_label_limit_handling_index=0,
     fully_connected=False,
     input_image_data_path=nx.DataPath('AM XCT/Cell Data/Closed Pore Mask'),
     input_image_geometry_path=nx.DataPath('AM XCT'),
@@ -145,6 +146,7 @@ simplnx_utilities.check_filter_result(nximgproc.SignedMaurerDistanceMapImageFilt
 # Filter 11: Write Image
 result = nximgproc.WriteImageFilter.execute(
     data_structure=data_structure,
+    nonfinite_input_handling_index=0,
     add_scale_bar=False,
     create_color_table=False,
     file_name='Data/Output/ImageProcessing_Examples/01_AM_XCT/pore_contours.tif',

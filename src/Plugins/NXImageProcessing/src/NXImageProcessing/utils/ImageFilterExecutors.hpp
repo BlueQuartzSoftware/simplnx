@@ -15,6 +15,13 @@
 
 namespace nx::core::ImageProcessing
 {
+/** @brief Policy for native marker IDs that change during uint32 encoding and restoration. */
+enum class MarkerIdConversionHandling : uint8
+{
+  Error = 0,
+  WarnAndContinueLegacy = 1
+};
+
 /**
  * @brief The composite grayscale-morphology operation to apply, each built from the Dilate/Erode
  *        primitives (and, for the three difference forms, a single elementwise store subtraction):
@@ -199,11 +206,26 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryMorphologyCompositeImageFilter(Da
  *        reconstruction result is subtracted from the input in place after reconstruction (output = input -
  *        reconstruction). Output type == input type (SameAsInput). The caller's preflight must have enforced a
  *        scalar input (@ref PreflightImageFilter requireScalar=true) and, for the height markers, a finite
- *        @p height.
+ *        @p height. The opt-in @p exactIntegerHeight also requires a nonnegative whole Height for integer images;
+ *        it preserves native integer units and saturates markers at the type bounds. Other callers default to their existing arithmetic.
+ * @param dataStructure Owns the selected arrays and geometry.
+ * @param imageGeomPath Image geometry used for dimensions.
+ * @param inputArrayPath Scalar input image and reconstruction mask.
+ * @param outputArrayPath Receives reconstruction or contrast in the input type.
+ * @param op Selects reconstruction by dilation or erosion.
+ * @param fullyConnected Enables face, edge and vertex neighbors instead of faces only.
+ * @param markerKind Selects a height or border marker.
+ * @param height Validated finite height in intensity units.
+ * @param shouldCancel Requests cancellation during reconstruction and between transfers.
+ * @param messageHandler Receives progress messages.
+ * @param differenceFromInput Selects HConvex contrast with checked signed subtraction.
+ * @param exactIntegerHeight Selects exact native integer markers for a validated whole, nonnegative Height.
+ * @return A reconstruction, contrast or transfer error, or a valid result.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                 const DataPath& outputArrayPath, ReconstructOp op, bool fullyConnected, detail::ReconMarker markerKind, float64 height,
-                                                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false);
+                                                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false,
+                                                                                bool exactIntegerHeight = false);
 
 /**
  * @brief Execute opening-by-reconstruction (@p firstOp == Erode) or closing-by-reconstruction (@p firstOp ==
@@ -364,11 +386,12 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteApproximateSignedDistanceMapImageFilter
  * @brief Execute the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels of an integer scalar
  *        image into consecutive uint32 components (background 0), via the streaming scanline union-find @ref
  *        LabelConnectedComponents engine. The output is a FIXED uint32 label image, not the input element type.
- *        Reproduces legacy ITK's ConnectedComponentImageFilter label VALUES exactly (see the Parity model). The
- *        caller's preflight must have enforced an integer scalar input.
+ *        Below the provisional uint32 capacity limit, preserves the legacy label values. Only this filter exposes
+ *        legacy overflow continuation; shared consumers retain Error. The caller must enforce an integer scalar input.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
-                                                                       bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                       bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                       ConnectedComponentLabelLimitHandling labelLimitHandling = ConnectedComponentLabelLimitHandling::Error);
 
 /**
  * @brief Execute the (ITK-free) ZeroCrossing filter: marks the voxels closest to sign changes (zero crossings) among
@@ -416,29 +439,30 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryThinningImageFilter(DataStructure
                                                                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
 
 /**
- * @brief Execute the (ITK-free) ThresholdMaximumConnectedComponents filter: bisection-searches the threshold value
- *        that MAXIMIZES the number of connected components (size >= MinimumObjectSizeInPixels) via @ref
+ * @brief Execute the native ThresholdMaximumConnectedComponents heuristic using component scores (size >= MinimumObjectSizeInPixels) via @ref
  *        detail::ThresholdMaxCCExecuteFn (which uses @ref CountConnectedComponents each iteration), then writes the
  *        final binary threshold [ThresholdValue, UpperBoundary] as a FIXED uint8 image (InsideValue/OutsideValue).
- *        Reproduces legacy ITK's ThresholdMaximumConnectedComponentsImageFilter output exactly (see the Parity
- *        model). The caller's preflight must have enforced a scalar input.
+ *        Uses native safe arithmetic, the absolute two-unit stop and an explicit image nonfinite policy.
+ *        The caller's preflight must have enforced a scalar input.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                         const DataPath& outputArrayPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue,
-                                                                                        uint8 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                                        uint8 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                                        bool warnOnNonfinite = false);
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled
- *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers).
- *        Dispatches the grayscale input over the 10 numeric scalar types in @c AllNumeric. The marker array is
- *        any integer type and the output is created of the marker's type by the filter's preflight. Reproduces legacy
- *        ITK's MorphologicalWatershedFromMarkersImageFilter output EXACTLY, including label values (see the Parity
- *        model and the direct-ITK oracle test). The caller's preflight must have validated the grayscale (scalar,
+ *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers). Dispatches on the grayscale
+ *        input element type (all 10 scalar types); the marker array is
+ *        any integer type and the output is created of the marker's type by preflight. Error protects native marker
+ *        identity before flooding; Warn retains the legacy conversion and flood with one conversion diagnostic.
+ *        The caller's preflight must have validated the grayscale (scalar,
  *        allowed type, tuple==cells) and the marker (integer scalar, tuple==grayscale).
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                       const DataPath& markerArrayPath, const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected,
-                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                                      MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error);
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershed filter: the ITK composite (HMinima ->

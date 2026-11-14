@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ZeroCrossingEngine.hpp"
 
 #include <algorithm>
@@ -39,7 +40,8 @@ namespace
  * @brief Dispatched execute body for the (ITK-free) ConnectedComponent filter: labels foreground (non-zero) voxels
  *        into consecutive uint32 components via the streaming scanline union-find @ref LabelConnectedComponents
  *        engine. Output is a FIXED uint32 label image, background 0. Input must be an integer scalar type (the
- *        caller's preflight enforces this via the IntegerOnly policy).
+ *        caller's preflight enforces this via the IntegerOnly policy). Explicit legacy overflow can lose foreground
+ *        or merge components through zero and reused IDs.
  */
 struct ConnectedComponentExecuteFn
 {
@@ -51,13 +53,16 @@ struct ConnectedComponentExecuteFn
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
+  ConnectedComponentLabelLimitHandling LabelLimitHandling;
+
   template <class T>
   Result<> operator()() const
   {
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
-    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler);
+    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler, k_ConnectedComponent2DTargetBytes,
+                                       LabelLimitHandling);
   }
 };
 
@@ -673,207 +678,37 @@ struct RelabelComponentExecuteFn
   }
 };
 
-/**
- * @brief Clamps the user's Float64 Upper Boundary parameter to the input pixel type T's representable range,
- *        mirroring the legacy ITK bridge functor's SetUpperBoundary call
- *        (ITKThresholdMaximumConnectedComponentsImageFilter.cpp::createFilter): `static_cast<PixelType>(
- *        std::min<MinType>(upperBoundary, itk::NumericTraits<PixelType>::max()))`, where MinType is PixelType
- *        itself for int64/uint64 (whose max cannot be represented exactly as a float64, so the comparison is done
- *        in T to avoid that precision loss) and float64 for every other scalar type (all other integers plus
- *        float32/float64). This is the ONE-TIME clamp applied before the bisection (ITK's `m_UpperBoundary`),
- *        distinct from the per-run LOCAL bisection bound computed in @ref ThresholdMaxCCExecuteFn.
- */
-template <class T>
-T ClampThresholdMaxCCUpperBoundary(float64 upperBoundary)
-{
-  if constexpr(std::is_same_v<T, int64> || std::is_same_v<T, uint64>)
-  {
-    return std::min(static_cast<T>(upperBoundary), std::numeric_limits<T>::max());
-  }
-  else
-  {
-    return static_cast<T>(std::min(upperBoundary, static_cast<float64>(std::numeric_limits<T>::max())));
-  }
-}
-
-/**
- * @brief Dispatched execute body for the (ITK-free) ThresholdMaximumConnectedComponents filter: bisection-searches
- *        the threshold value that MAXIMIZES the number of connected components with size >=
- *        @c minimumObjectSizeInPixels, then writes the final binary threshold at the converged value. Transcribed
- *        VERBATIM from itk::ThresholdMaximumConnectedComponentsImageFilter::GenerateData + ComputeConnectedComponents
- *        (itkThresholdMaximumConnectedComponentsImageFilter.hxx):
- *          - lowerBound/upperBound = input min/max (one streaming @ref ComputeArrayMinMax pass); upperBound is
- *            then clamped to the (type-clamped) Upper Boundary parameter -- @ref ClampThresholdMaxCCUpperBoundary.
- *          - midpoint = (upperBound-lowerBound)/2; midpointL = lowerBound+(midpoint-lowerBound)/2; midpointR =
- *            upperBound-(upperBound-midpoint)/2 -- PixelType (T) arithmetic (integer division for integer T, so
- *            this is NOT the true midpoint of [lowerBound,upperBound] when lowerBound != 0); this is ITK's own
- *            formula, transcribed exactly as written, not "fixed".
- *          - while((upperBound-lowerBound) > 2): count components at midpointR and midpointL (each count binary-
- *            thresholds [candidateThreshold, UpperBoundary] and counts connected components with size >=
- *            minimumObjectSizeInPixels, via @ref CountConnectedComponents); if the RIGHT count is STRICTLY greater
- *            than the LEFT count, move lowerBound=midpoint, midpoint=midpointR; otherwise (right <= left, i.e. a
- *            TIE TAKES THE LOWER/LEFT branch, matching ITK's `if (connectedComponentsRight > connectedComponentsLeft)`
- *            exactly) move upperBound=midpoint, midpoint=midpointL. Recompute midpointL/midpointR each iteration.
- *          - final: thresholdValue = midpoint; out = (v >= thresholdValue && v <= UpperBoundary) ? insideValue :
- *            outsideValue.
- *        The internal ConnectedComponentImageFilter connectivity is ITK's own default, FullyConnected=false (the
- *        bridge never calls SetFullyConnected; itkScanlineFilterCommon.h's m_FullyConnected member defaults to
- *        false). Output is a FIXED uint8 binary image. Input may be ANY scalar type (the caller's preflight
- *        enforces this via the AllNumeric policy).
- */
+/** @brief Native threshold search adapter; the scoped engine owns validation, warnings and bounded I/O. */
 struct ThresholdMaxCCExecuteFn
 {
   DataStructure& dataStructure;
   const DataPath& inputArrayPath;
   const DataPath& outputArrayPath;
   SizeVec3 dims;
-  uint32 minimumObjectSizeInPixels;
-  float64 upperBoundary;
-  uint8 insideValue;
-  uint8 outsideValue;
+  ThresholdMaxCCOptions Options;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
-
-    // Input min/max (itk::MinimumMaximumImageCalculator equivalent): one streaming bulk-I/O pass. Only min/max
-    // are consumed, so the parallel min/max reduction replaces the full statistics pass.
-    Result<ArrayMinMax<T>> statsResult = ComputeArrayMinMax<T>(inStore, shouldCancel);
-    if(statsResult.invalid())
-    {
-      return ConvertResult(std::move(statsResult));
-    }
-    if(shouldCancel)
-    {
-      return {};
-    }
-    const ArrayMinMax<T>& stats = statsResult.value();
-
-    // m_UpperBoundary (ITK): the Upper Boundary parameter clamped to T's representable range -- FIXED for the
-    // whole run (unlike the local bisection `upperBound` below, which the loop mutates).
-    const T upperBoundaryFixed = ClampThresholdMaxCCUpperBoundary<T>(upperBoundary);
-
-    T lowerBound = stats.min;
-    T upperBound = std::min(stats.max, upperBoundaryFixed);
-
-    T midpoint = (upperBound - lowerBound) / 2;
-    T midpointL = lowerBound + (midpoint - lowerBound) / 2;
-    T midpointR = upperBound - (upperBound - midpoint) / 2;
-
-    const uint64 minSize = static_cast<uint64>(minimumObjectSizeInPixels);
-    // ITK's ComputeConnectedComponents (itkThresholdMaximumConnectedComponentsImageFilter.hxx:76-81,108-110) counts
-    // components on the BINARY-THRESHOLD OUTPUT, whose foreground is `value != 0`: the internal BinaryThresholdImageFilter
-    // writes m_InsideValue to in-band pixels [thr, m_UpperBoundary] and m_OutsideValue elsewhere, then the
-    // ConnectedComponentImageFilter (background=0) labels every NONZERO pixel. So a pixel is counted-foreground iff its
-    // threshold output would be nonzero -- (in-band ? InsideValue!=0 : OutsideValue!=0) -- NOT simply "in-band". For the
-    // DEFAULT (InsideValue=1, OutsideValue=0) this reduces to exactly (in-band ? true : false) = in-band, unchanged; for
-    // non-default Inside/Outside (e.g. Inside=0/Outside=1) ITK instead maximizes components in the OUT-of-band region.
-    // The internal ConnectedComponentImageFilter connectivity is ITK's default (FullyConnected=false).
-    const bool insideNonZero = (insideValue != 0);
-    const bool outsideNonZero = (outsideValue != 0);
-    auto countAt = [&](T thr) -> Result<uint32> {
-      const auto pred = [thr, upperBoundaryFixed, insideNonZero, outsideNonZero](T v) { return (v >= thr && v <= upperBoundaryFixed) ? insideNonZero : outsideNonZero; };
-      return CountConnectedComponents<T>(inStore, dims, pred, /*fullyConnected=*/false, minSize, shouldCancel);
-    };
-
-    while((upperBound - lowerBound) > T{2})
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      Result<uint32> rightResult = countAt(midpointR);
-      if(rightResult.invalid())
-      {
-        return ConvertResult(std::move(rightResult));
-      }
-      Result<uint32> leftResult = countAt(midpointL);
-      if(leftResult.invalid())
-      {
-        return ConvertResult(std::move(leftResult));
-      }
-
-      // itkThresholdMaximumConnectedComponentsImageFilter.hxx::GenerateData: ties (right <= left) take the ELSE
-      // branch -- i.e. the LOWER threshold wins on a tie.
-      if(rightResult.value() > leftResult.value())
-      {
-        lowerBound = midpoint;
-        midpoint = midpointR;
-      }
-      else
-      {
-        upperBound = midpoint;
-        midpoint = midpointL;
-      }
-
-      midpointL = lowerBound + (midpoint - lowerBound) / 2;
-      midpointR = upperBound - (upperBound - midpoint) / 2;
-    }
-
-    const T thresholdValue = midpoint;
-
-    // Final binary threshold [thresholdValue, upperBoundaryFixed] -> insideValue/outsideValue, streamed in a
-    // bounded, working-memory-derived band instead of a fixed 64 KiB chunk (identical in-core and out-of-core).
-    // A 64 KiB call is smaller than one store chunk at the certified geometry (a Z-plane is exactly one 1 MiB
-    // chunk), so every call touched only part of a single chunk and the codec never left its serial branch.
-    // Reserving from the shared working-memory budget widens each call to many whole chunks when the grant
-    // allows it, and degrades to exactly the previous 64 KiB floor -- never smaller -- under a tight grant.
-    const usize total = inStore.getSize();
-    constexpr usize k_FinalPassMinimumValues = 65536;
-    constexpr usize k_FinalPassPreferredBytes = 32ULL * 1024ULL * 1024ULL;
-    constexpr usize k_FinalPassValueBytes = sizeof(T) + sizeof(uint8);
-    const bool finalPassByteCountFits = total <= std::numeric_limits<usize>::max() / k_FinalPassValueBytes;
-    const uint64 usefulFinalPassBytes = finalPassByteCountFits ? static_cast<uint64>(total) * k_FinalPassValueBytes : std::numeric_limits<uint64>::max();
-    auto finalPassReservation = ReserveWorkingMemory(k_FinalPassPreferredBytes, usefulFinalPassBytes);
-    const usize chunkValues =
-        std::max<usize>(k_FinalPassMinimumValues, std::min(total, static_cast<usize>(std::min<uint64>(finalPassReservation.sizeBytes() / k_FinalPassValueBytes, std::numeric_limits<usize>::max()))));
-    // shrinkTo is a no-op when the actual footprint is not smaller than the grant (e.g. the k_FinalPassMinimumValues
-    // floor under a tight grant), and otherwise releases the unused portion back to the shared budget immediately,
-    // rather than holding it for this call's remaining lifetime.
-    finalPassReservation.shrinkTo(static_cast<uint64>(std::min(chunkValues, total)) * k_FinalPassValueBytes);
-    auto inBuffer = std::make_unique<T[]>(std::min(chunkValues, total));
-    auto outBuffer = std::make_unique<uint8[]>(std::min(chunkValues, total));
-    for(usize start = 0; start < total; start += chunkValues)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      const usize count = std::min(chunkValues, total - start);
-      if(Result<> r = inStore.copyIntoBuffer(start, nonstd::span<T>(inBuffer.get(), count)); r.invalid())
-      {
-        return r;
-      }
-      for(usize i = 0; i < count; ++i)
-      {
-        const T v = inBuffer[i];
-        outBuffer[i] = (v >= thresholdValue && v <= upperBoundaryFixed) ? insideValue : outsideValue;
-      }
-      if(Result<> r = outStore.copyFromBuffer(start, nonstd::span<const uint8>(outBuffer.get(), count)); r.invalid())
-      {
-        return r;
-      }
-    }
-    return {};
+    const auto& input = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
+    auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
+    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler);
   }
 };
-
 } // namespace
 } // namespace detail
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool fullyConnected,
-                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                              const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ConnectedComponentLabelLimitHandling labelLimitHandling)
 {
   using TypeSetPolicy = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler};
+  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler, labelLimitHandling};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
@@ -929,14 +764,21 @@ Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const Da
 // -----------------------------------------------------------------------------
 Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                                uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue, const std::atomic_bool& shouldCancel,
-                                                               const IFilter::MessageHandler& messageHandler)
+                                                               const IFilter::MessageHandler& messageHandler, bool warnOnNonfinite)
 {
   using TypeSetPolicy = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ThresholdMaxCCExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), minimumObjectSizeInPixels, upperBoundary, insideValue,
-                                            outsideValue,  shouldCancel,   messageHandler};
+  const ThresholdMaxCCOptions options{
+      .MinimumObjectSize = minimumObjectSizeInPixels, .UpperBoundary = upperBoundary, .InsideValue = insideValue, .OutsideValue = outsideValue, .WarnOnNonfinite = warnOnNonfinite};
+  const detail::ThresholdMaxCCExecuteFn executeFn{.dataStructure = dataStructure,
+                                                  .inputArrayPath = inputArrayPath,
+                                                  .outputArrayPath = outputArrayPath,
+                                                  .dims = imageGeom.getDimensions(),
+                                                  .Options = options,
+                                                  .shouldCancel = shouldCancel,
+                                                  .messageHandler = messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
