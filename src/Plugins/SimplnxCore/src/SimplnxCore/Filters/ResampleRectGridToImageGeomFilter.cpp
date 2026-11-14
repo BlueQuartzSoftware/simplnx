@@ -17,7 +17,43 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <array>
+#include <limits>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr std::array<int32, 3> k_ZeroDimensions = {-86156, -86157, -86158};
+constexpr std::array<int32, 3> k_NegativeDimensions = {-7362, -7363, -7364};
+constexpr int32 k_DimensionProduct = -86174;
+/**
+ * @brief Checks requested positive dimensions and their product before output actions.
+ * @param dimensions Gives signed XYZ counts.
+ * @pre dimensions has three components.
+ * @return A dimension or tuple-product error, otherwise success.
+ */
+Result<> ValidateResampleDimensions(nonstd::span<const int32> dimensions)
+{
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(dimensions[axis] <= 0)
+    {
+      return MakeErrorResult(dimensions[axis] < 0 ? k_NegativeDimensions[axis] : k_ZeroDimensions[axis], fmt::format("Dimensions {} value {} must be at least 1.", "XYZ"[axis], dimensions[axis]));
+    }
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(static_cast<usize>(dimensions[axis]) > std::numeric_limits<usize>::max() / product)
+    {
+      return MakeErrorResult(k_DimensionProduct, fmt::format("Dimensions tuple product cannot fit usize: X={}, Y={}, Z={}.", dimensions[0], dimensions[1], dimensions[2]));
+    }
+    product *= static_cast<usize>(dimensions[axis]);
+  }
+  return {};
+}
+} // namespace
 
 namespace nx::core
 {
@@ -110,17 +146,9 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     return {MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  if(pDimensionsValue[0] < 0)
+  if(auto validation = ValidateResampleDimensions(pDimensionsValue); validation.invalid())
   {
-    return MakePreflightErrorResult(-7362, fmt::format("The x dimension value ({}) for the created image geometry must be positive", pDimensionsValue[0]));
-  }
-  if(pDimensionsValue[1] < 0)
-  {
-    return MakePreflightErrorResult(-7363, fmt::format("The y dimension value ({}) for the created image geometry must be positive", pDimensionsValue[1]));
-  }
-  if(pDimensionsValue[2] < 0)
-  {
-    return MakePreflightErrorResult(-7364, fmt::format("The z dimension value ({}) for the created image geometry must be positive", pDimensionsValue[2]));
+    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
   }
 
   const std::vector<usize> dims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};

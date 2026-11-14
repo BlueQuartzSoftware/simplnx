@@ -61,6 +61,16 @@ When *Renumber Features* is enabled and the Cell Feature Attribute Matrix contai
 
 - **Input Image Geometry** -- the geometry to be resampled. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
+### Spatial Parameter Limits
+
+In Spacing mode, every **Spacing** component must be finite and greater than zero in the geometry length units. In Scaling mode, every **Scaling Factor** component must be finite and greater than zero, in percent. Each mode ignores the inactive resampling vectors.
+
+A layout can depend on geometry metadata that an earlier filter changes during execution. If derived spacing, dimensions or their product cannot be represented during preflight, preflight warns and uses dimensions 1 by 1 by 1 with unit spacing as stand-ins. Execution recomputes the layout from final source metadata. If that layout remains invalid, execution returns an error before cell copying and deferred replacement. Small placeholder outputs can remain after failure. No workload limit is imposed.
+
+### Count Parameter Limits
+
+In Exact Dimensions mode, every **Exact Dimensions** component must be an integer of at least 1. The dimensions and their XYZ product must fit the geometry size type. Preflight checks this parameter before layout computation or output actions. Other modes ignore Exact Dimensions. The geometry-derived warning and failure rules above still apply.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

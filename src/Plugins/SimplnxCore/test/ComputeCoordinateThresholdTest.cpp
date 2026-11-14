@@ -977,3 +977,99 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
+#include <limits>
+
+namespace
+{
+void CreateSamplingVertices(DataStructure& ds)
+{
+  auto result = CreateVertexGeometryAction(DataPath({"Points"}), 2, "Vertex Data", "Vertices").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  const std::array<float32, 6> coords = {0, 0, 0, 2, 0, 0};
+  auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Spatial parameter domains", "[SimplnxCore][ComputeCoordinateThresholdFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  ComputeCoordinateThresholdFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, DataPath({"Points", "Vertex Data", "Mask"}));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, uint64{1});
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, false);
+  const auto axis = GENERATE(0, 1, 2, 3);
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  std::vector<float32> sphere = {0, 0, 0, 1};
+  sphere[axis] = value;
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, sphere);
+  const int32 expectedCode = axis == 3 ? -86110 : -86109;
+  const std::string parameter = "Sphere Information";
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(axis == 3 ? "radius" : std::string(1, "XYZ"[axis])) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere and inactive controls", "[SimplnxCore][ComputeCoordinateThresholdFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  ComputeCoordinateThresholdFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, DataPath({"Points", "Vertex Data", "Mask"}));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, uint64{1});
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, false);
+  const auto row = GENERATE(0, 1, 2, 3, 4);
+  CAPTURE(row);
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::vector<float32>{0, 0, 0, row == 0 ? 0.0F : row == 1 ? -1.0F : 1.0F});
+  if(row == 2)
+  {
+    args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::vector<float32>{0, 0, 0});
+  }
+  if(row == 3)
+  {
+    args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, uint64{0});
+    args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::vector<float32>{});
+    args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::vector<float32>{-1, -1, -1});
+    args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::vector<float32>{1, 1, 1});
+  }
+  if(row < 3)
+  {
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == (row == 2 ? -1 : -24713));
+    if(row == 2)
+    {
+      CHECK(filter.parameters().at(ComputeCoordinateThresholdFilter::k_SphereInfo_Key)->humanName() == "Sphere centroid and Radius (Physical Units)");
+      CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 4. Received size 3.");
+    }
+  }
+  else
+  {
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(DataPath({"Points", "Vertex Data", "Mask"})));
+    const auto& mask = ds.getDataRefAs<UInt8Array>(DataPath({"Points", "Vertex Data", "Mask"}));
+    CHECK(mask[0] == 1);
+    CHECK(mask[1] == 0);
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}

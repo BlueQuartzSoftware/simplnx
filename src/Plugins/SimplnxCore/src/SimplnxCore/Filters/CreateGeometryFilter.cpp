@@ -20,6 +20,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>
@@ -28,6 +29,13 @@
 using namespace std::string_literals;
 
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_DimensionsDomain = -86154;
+constexpr int32 k_SpacingDomain = -86007;
+constexpr int32 k_OriginDomain = -86008;
+} // namespace
 
 namespace nx::core
 {
@@ -206,6 +214,21 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
     auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
     auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+    auto dimensionValidation = GeometryUtilities::ValidateImageDimensions(pDimensionsValue, "Dimensions", k_DimensionsDomain);
+    if(dimensionValidation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(dimensionValidation))};
+    }
+    auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
+    if(spacingValidation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+    }
+    auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
+    if(originValidation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+    }
 
     std::stringstream ss;
     ss << "Extents:\n"

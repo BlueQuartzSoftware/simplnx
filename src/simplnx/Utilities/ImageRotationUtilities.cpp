@@ -219,15 +219,62 @@ Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueT
 }
 
 //------------------------------------------------------------------------------
+namespace
+{
+constexpr int32 k_RotationLength = -86050;
+constexpr int32 k_RotationNonfiniteAxis = -86051;
+constexpr int32 k_RotationZeroAxis = -86052;
+constexpr int32 k_RotationNonfiniteAngle = -86053;
+} // namespace
+
+//------------------------------------------------------------------------------
+Result<> ValidateRotationAxisAngle(const VectorFloat32Parameter::ValueType& axisAngle, std::string_view parameterName)
+{
+  if(axisAngle.size() != 4)
+  {
+    return MakeErrorResult(k_RotationLength, fmt::format("Parameter '{}' must contain 4 values (XYZ axis and angle), but contains {}.", parameterName, axisAngle.size()));
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(!std::isfinite(axisAngle[axis]))
+    {
+      return MakeErrorResult(k_RotationNonfiniteAxis, fmt::format("Parameter '{}' {} axis value {} must be finite.", parameterName, "XYZ"[axis], axisAngle[axis]));
+    }
+  }
+  if(axisAngle[0] == 0 && axisAngle[1] == 0 && axisAngle[2] == 0)
+  {
+    return MakeErrorResult(k_RotationZeroAxis, fmt::format("Parameter '{}' XYZ axis [{}, {}, {}] must be nonzero.", parameterName, axisAngle[0], axisAngle[1], axisAngle[2]));
+  }
+  if(!std::isfinite(axisAngle[3]))
+  {
+    return MakeErrorResult(k_RotationNonfiniteAngle, fmt::format("Parameter '{}' angle value {} degrees must be finite.", parameterName, axisAngle[3]));
+  }
+  return {};
+}
+
+//------------------------------------------------------------------------------
 Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
 {
   Matrix4fR transformationMatrix;
+  if(ValidateRotationAxisAngle(pRotationValue, "Rotation").invalid())
+  {
+    transformationMatrix.fill(std::numeric_limits<float32>::quiet_NaN());
+    return transformationMatrix;
+  }
   transformationMatrix.fill(0.0F);
 
   // Convert Degrees to Radians for the last element
   const float rotAngle = pRotationValue[3] * nx::core::Constants::k_PiOver180F;
   // Ensure the axis part is normalized
-  FloatVec3 normalizedAxis = FloatVec3(pRotationValue[0], pRotationValue[1], pRotationValue[2]).normalize();
+  // Scaling in float64 avoids squared-norm overflow and subnormal loss.
+  std::array<float64, 3> axis = {pRotationValue[0], pRotationValue[1], pRotationValue[2]};
+  const float64 largest = std::max({std::abs(axis[0]), std::abs(axis[1]), std::abs(axis[2])});
+  for(auto& component : axis)
+  {
+    component /= largest;
+  }
+  const float64 norm = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+  const FloatVec3 normalizedAxis = {static_cast<float32>(axis[0] / norm), static_cast<float32>(axis[1] / norm), static_cast<float32>(axis[2] / norm)};
 
   const float cosTheta = cos(rotAngle);
   const float oneMinusCosTheta = 1 - cosTheta;

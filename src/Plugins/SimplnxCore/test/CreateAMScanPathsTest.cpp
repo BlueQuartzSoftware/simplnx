@@ -137,3 +137,138 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: SIMPL Backwards Compatibility",
     }
   }
 }
+
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
+#include <cmath>
+#include <limits>
+
+namespace
+{
+void CreateSamplingEdges(DataStructure& ds, bool squares = false)
+{
+  auto result = CreateEdgeGeometryAction(DataPath({"Edges"}), squares ? 8 : 1, squares ? 8 : 2, "Vertex Data", "Edge Data", "Vertices", "Edges").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(DataPath({"Edges"})));
+  auto& geom = ds.getDataRefAs<EdgeGeom>(DataPath({"Edges"}));
+  auto& vertices = geom.getVerticesRef();
+  auto& edges = geom.getEdgesRef();
+  if(squares)
+  {
+    const std::array<float32, 24> coords = {0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1};
+    auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+    SIMPLNX_RESULT_REQUIRE_VALID(write);
+    for(usize i = 0; i < 8; ++i)
+    {
+      edges[2 * i] = i;
+      edges[2 * i + 1] = (i / 4) * 4 + (i + 1) % 4;
+    }
+    for(const auto& name : {"Layers", "Regions"})
+    {
+      auto array = CreateArrayAction(DataType::int32, {8}, {1}, DataPath({"Edges", "Edge Data", name})).apply(ds, IDataAction::Mode::Execute);
+      SIMPLNX_RESULT_REQUIRE_VALID(array);
+      REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Edges", "Edge Data", name})));
+      auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Edges", "Edge Data", name}));
+      for(usize i = 0; i < 8; ++i)
+      {
+        values[i] = std::string(name) == "Layers" ? static_cast<int32>(i / 4) : 0;
+      }
+    }
+  }
+  else
+  {
+    const std::array<float32, 6> coords = {0, 0, 0, 2, 0, 0};
+    auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+    SIMPLNX_RESULT_REQUIRE_VALID(write);
+    edges[0] = 0;
+    edges[1] = 1;
+  }
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[SimplnxCore][CreateAMScanPathsFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingEdges(ds, true);
+  CreateAMScanPathsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, DataPath({"Edges"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Layers"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Regions"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, DataPath({"Hatches"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, 0.5F);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, 0.0F);
+  int32 expectedCode;
+  std::string parameter;
+  std::string actual;
+  SECTION("Hatch Spacing")
+  {
+    auto value = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+    CAPTURE(value);
+    actual = fmt::format("{}", value);
+    args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, value);
+    expectedCode = -86100;
+    parameter = "Hatch Spacing";
+  }
+  SECTION("Hatch Rotation Angle")
+  {
+    auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+    CAPTURE(value);
+    actual = fmt::format("{}", value);
+    args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, value);
+    expectedCode = -86101;
+    parameter = "Hatch Rotation Angle";
+  }
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(actual) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Finite hatch controls", "[SimplnxCore][CreateAMScanPathsFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingEdges(ds, true);
+  CreateAMScanPathsFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, DataPath({"Edges"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Layers"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Regions"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, DataPath({"Hatches"}));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, 0.5F);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, 0.0F);
+  const auto angle = GENERATE(0.0F, -90.0F);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, angle);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(DataPath({"Hatches"})));
+  const auto& output = ds.getDataRefAs<EdgeGeom>(DataPath({"Hatches"}));
+  REQUIRE(output.getNumberOfEdges() > 0);
+  const auto& vertices = output.getVerticesRef();
+  const auto& edges = output.getEdgesRef();
+  for(usize edge = 0; edge < output.getNumberOfEdges(); ++edge)
+  {
+    for(usize end = 0; end < 2; ++end)
+    {
+      const auto vertex = edges[2 * edge + end];
+      const auto x = vertices[3 * vertex];
+      const auto y = vertices[3 * vertex + 1];
+      const auto z = vertices[3 * vertex + 2];
+      CHECK(x >= -1e-6F);
+      CHECK(x <= 1 + 1e-6F);
+      CHECK(y >= -1e-6F);
+      CHECK(y <= 1 + 1e-6F);
+      CHECK((z == 0 || z == 1));
+      CHECK((std::abs(x) < 1e-6F || std::abs(x - 1) < 1e-6F || std::abs(y) < 1e-6F || std::abs(y - 1) < 1e-6F));
+    }
+    if(angle == 0)
+    {
+      CHECK(vertices[3 * edges[2 * edge] + 1] == Approx(vertices[3 * edges[2 * edge + 1] + 1]));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}

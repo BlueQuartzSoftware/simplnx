@@ -16,7 +16,6 @@ const std::string k_TempGeometryName = ".cropped_image_geometry";
 
 namespace nx::core
 {
-
 struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
 {
   DataPath SelectedImageGeometryPath;
@@ -49,6 +48,11 @@ public:
   PadImageGeometry& operator=(const PadImageGeometry&) = delete;
   PadImageGeometry& operator=(PadImageGeometry&&) noexcept = delete;
 
+  /**
+   * @brief Copies the source cell data into the padded destination geometry.
+   * @return An error when the padded dimensions or origin computed from the final geometry cannot be represented.
+   * @pre Each enabled axis has two padding values, and both are at least 0.
+   */
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

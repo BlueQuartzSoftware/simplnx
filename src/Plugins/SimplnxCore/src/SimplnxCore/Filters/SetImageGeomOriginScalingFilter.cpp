@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
@@ -15,6 +16,13 @@
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_SpacingDomain = -86011;
+constexpr int32 k_OriginDomain = -86012;
+constexpr int32 k_CenterOriginWarning = -86013;
+} // namespace
+
 //------------------------------------------------------------------------------
 std::string SetImageGeomOriginScalingFilter::name() const
 {
@@ -94,8 +102,9 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   std::optional<FloatVec3> optOrigin;
   std::optional<FloatVec3> optSpacing;
 
-  FloatVec3 originVec = FloatVec3(origin[0], origin[1], origin[2]);
-  FloatVec3 spacingVec = FloatVec3(spacing[0], spacing[1], spacing[2]);
+  const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  FloatVec3 originVec = srcImageGeom->getOrigin();
+  FloatVec3 spacingVec = srcImageGeom->getSpacing();
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -104,19 +113,50 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   bool centerOrigin = false;
   if(shouldChangeOrigin)
   {
+    auto validation = GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_OriginDomain);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+    originVec = {origin[0], origin[1], origin[2]};
     optOrigin = originVec;
     centerOrigin = shouldCenterOrigin;
   }
   if(shouldChangeSpacing)
   {
+    auto validation = GeometryUtilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+    spacingVec = {spacing[0], spacing[1], spacing[2]};
     optSpacing = spacingVec;
   }
 
-  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, optSpacing, imageGeomPath, centerOrigin);
+  auto action = std::make_unique<UpdateImageGeomAction>(optOrigin, optSpacing, imageGeomPath, centerOrigin, true);
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  if(centerOrigin)
+  {
+    const auto dims = srcImageGeom->getDimensions();
+    const BoundingBox3Df bounds(
+        std::array<float32, 6>{originVec[0], originVec[1], originVec[2], originVec[0] + dims[0] * spacingVec[0], originVec[1] + dims[1] * spacingVec[1], originVec[2] + dims[2] * spacingVec[2]});
+    const auto center = bounds.center();
+    const auto min = bounds.getMinPoint();
+    for(usize axis = 0; axis < 3; ++axis)
+    {
+      const float32 result = originVec[axis] - (center[axis] - min[axis]);
+      if(!std::isfinite(result))
+      {
+        resultOutputActions.warnings().push_back(
+            {k_CenterOriginWarning,
+             fmt::format("Parameter 'Put Input Origin at the Center of Geometry' {} origin {}, spacing {}, dimension {} produce centered result {}. Execution requires a finite origin.", "XYZ"[axis],
+                         originVec[axis], spacingVec[axis], dims[axis], result)});
+        break;
+      }
+    }
+  }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
   preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(),

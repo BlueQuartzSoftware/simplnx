@@ -121,6 +121,8 @@ public:
   /**
    * @brief Reads and appends all selected slices in file order.
    * @return Validation, delegated-filter, or bulk-I/O error, or accumulated warnings.
+   * @pre Active Exact X/Y Dimensions has two positive representable counts with a representable product.
+   * @pre Active Scaling is finite and at least 1 percent; file and output selections are valid.
    *
    * Cancellation returns success after the current slice and retains earlier slices.
    */

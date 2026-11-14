@@ -30,6 +30,7 @@
 
 #include <any>
 #include <atomic>
+#include <limits>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -40,6 +41,65 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_NegativePartitionCount = -86150;
+constexpr int32 k_PartitionCountProduct = -86152;
+/**
+ * @brief Checks only active requested counts before conversion and output actions.
+ * @param mode Selects creation or an existing partition grid.
+ * @param counts Gives signed XYZ partition counts.
+ * @pre counts has three components in a mode that creates a grid.
+ * @return Representable dimensions or an axis/product error; existing-grid mode ignores counts.
+ */
+Result<SizeVec3> ValidatePartitionCounts(ChoicesParameter::ValueType mode, nonstd::span<const int32> counts)
+{
+  if(mode == static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid))
+  {
+    return {SizeVec3{0, 0, 0}};
+  }
+  SizeVec3 dimensions;
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(counts[axis] <= 0)
+    {
+      return MakeErrorResult<SizeVec3>(counts[axis] < 0 ? k_NegativePartitionCount : -3012 - static_cast<int32>(axis),
+                                       counts[axis] < 0 ? fmt::format("Number Of Cells Per Axis {} value {} must be at least 1.", "XYZ"[axis], counts[axis]) :
+                                                          fmt::format("Number Of Cells Per Axis: The {} dimension ({}) must be greater than 0.", "XYZ"[axis], counts[axis]));
+    }
+    dimensions[axis] = static_cast<usize>(counts[axis]);
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
+    {
+      return MakeErrorResult<SizeVec3>(k_PartitionCountProduct, fmt::format("Number Of Cells Per Axis tuple product cannot fit usize: X={}, Y={}, Z={}.", counts[0], counts[1], counts[2]));
+    }
+    product *= dimensions[axis];
+  }
+  return {dimensions};
+}
+
+constexpr int32 k_CellLengthDomain = -86014;
+constexpr int32 k_GridOriginDomain = -86015;
+constexpr std::array<int32, 3> k_NegativeCellLength = {-3003, -3004, -3005};
+
+// -----------------------------------------------------------------------------
+Result<> ValidateAdvancedParameters(const FloatVec3& cellLength, const FloatVec3& gridOrigin)
+{
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(cellLength[axis] < 0)
+    {
+      return MakeErrorResult(k_NegativeCellLength[axis], fmt::format("Parameter 'Cell Length' {} value {} cannot be negative.", "XYZ"[axis], cellLength[axis]));
+    }
+  }
+  auto validation = GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const float32>(&cellLength[0], 3), "Cell Length", k_CellLengthDomain);
+  if(validation.invalid())
+  {
+    return validation;
+  }
+  return GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32>(&gridOrigin[0], 3), "Partition Grid Origin", k_GridOriginDomain);
+}
 
 const std::string k_BasicMode("Basic (0)");
 const std::string k_AdvancedMode("Advanced (1)");
@@ -159,6 +219,8 @@ std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const 
 /**
  * @brief Generates the partitioning scheme information (dimensions, origin, spacing, units)
  * that the filter will use to create the partitioning scheme image geometry.
+ * @tparam Geom Supplies the selected geometry metadata type.
+ * @param dataStructure Contains an existing partition grid when selected.
  * @param geometry The input geometry
  * @param filterArgs The arguments from the filter, some filter variables are needed.
  * @return Returns a result that either contains a PSGeomInfo object with the data inside,
@@ -170,14 +232,14 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(PartitionGeometryFilter::k_PartitioningMode_Key);
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key);
 
-  const SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
-                                                static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
-
   PartitionGeometry::PSGeomInfo psGeomMetadata;
 
   switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
   case PartitionGeometryFilter::PartitioningMode::Basic: {
+    const SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
+                                                  static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+
     Result<FloatVec3> originResult;
     if constexpr(std::is_same_v<Geom, ImageGeom> || std::is_same_v<Geom, RectGridGeom>)
     {
@@ -209,6 +271,9 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     break;
   }
   case PartitionGeometryFilter::PartitioningMode::BoundingBox: {
+    const SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
+                                                  static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+
     auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_MinGridCoord_Key);
     auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_MaxGridCoord_Key);
 
@@ -387,10 +452,32 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   auto pPartitionIdsArrayNameValue = filterArgs.value<std::string>(k_PartitionIdsArrayName_Key);
   auto pUseVertexMask = filterArgs.value<bool>(k_UseVertexMask_Key);
 
-  const SizeVec3 numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+  auto counts = ValidatePartitionCounts(pPartitioningModeValue, pNumberOfCellsPerAxisValue);
+  if(counts.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(counts))};
+  }
+  if(pPartitioningModeValue != k_ExistingSchemeModeIndex)
+  {
+    const auto& dimensions = counts.value();
+    auto idRange = detail::CheckPartitionIdRange(dimensions[0] * dimensions[1] * dimensions[2], filterArgs.value<int32>(k_StartingFeatureID_Key));
+    if(idRange.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(idRange))};
+    }
+  }
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
+  if(pPartitioningModeValue == k_AdvancedModeIndex)
+  {
+    auto validation = ValidateAdvancedParameters(pCellLengthValue, pPartitionGridOriginValue);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+  }
+
   if(iGeom.getGeomType() == IGeometry::Type::Image && pPartitioningModeValue == k_ExistingSchemeModeIndex)
   {
     const auto& geometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryToPartitionValue);
@@ -614,10 +701,6 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
   auto partitioningMode = static_cast<PartitioningMode>(pPartitioningModeValue);
 
-  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumberOfCellsPerAxis_Key);
-  SizeVec3 numOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
-
-  auto pCellLengthValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
   auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
   auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxGridCoord_Key);
 
@@ -628,11 +711,11 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
   switch(partitioningMode)
   {
   case PartitioningMode::Basic:
-    return dataCheckBasicMode<GeomType>(numOfPartitionsPerAxis, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
+    return dataCheckBasicMode<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::Advanced:
-    return dataCheckAdvancedMode<GeomType>(numOfPartitionsPerAxis, pCellLengthValue, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
+    return dataCheckAdvancedMode<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::BoundingBox:
-    return dataCheckBoundingBoxMode<GeomType>(numOfPartitionsPerAxis, pMinGridCoordValue, pMaxGridCoordValue, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
+    return dataCheckBoundingBoxMode<GeomType>(pMinGridCoordValue, pMaxGridCoordValue, geometryToPartition, attrMatrix, geometryToPartitionPath, pInputGeomCellAMPathValue);
   case PartitioningMode::ExistingPartitionGrid:
     return DataCheckExistingGeometryMode();
   }
@@ -642,16 +725,10 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
-                                                     const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
+Result<> PartitionGeometryFilter::dataCheckBasicMode(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+                                                     const DataPath& attrMatrixPath) const
 {
-  Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
+  Result<> result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -662,29 +739,10 @@ Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartit
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& lengthPerPartition, const GeomType& geometryToPartition,
-                                                        const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
+Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+                                                        const DataPath& attrMatrixPath) const
 {
-  Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  if(lengthPerPartition.getX() < 0)
-  {
-    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value ({}) cannot be negative.", humanName(), lengthPerPartition.getX()));
-  }
-  if(lengthPerPartition.getY() < 0)
-  {
-    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value ({}) cannot be negative.", humanName(), lengthPerPartition.getY()));
-  }
-  if(lengthPerPartition.getZ() < 0)
-  {
-    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value ({}) cannot be negative.", humanName(), lengthPerPartition.getZ()));
-  }
-
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
+  Result<> result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -695,15 +753,9 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
-                                                           const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
+Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
+                                                           const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
-  Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
-  if(result.invalid())
-  {
-    return result;
-  }
-
   if(llCoord.getX() > urCoord.getX())
   {
     return MakeErrorResult(-3006, fmt::format("{}: Lower Left Coordinate - X value ({}) is larger than the upper right coordinate X value ({}).", humanName(), llCoord.getX(), urCoord.getX()));
@@ -719,7 +771,7 @@ Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOf
     return MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value ({}) is larger than the upper right coordinate Z value ({}).", humanName(), llCoord.getZ(), urCoord.getZ()));
   }
 
-  result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
+  Result<> result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix, geometryToPartitionPath, attrMatrixPath);
   if(result.invalid())
   {
     return result;
@@ -748,27 +800,6 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
   {
     return validateVertexTupleCount(geometryToPartition, geometryToPartitionPath, attrMatrix.getNumberOfTuples(), attrMatrixPath);
   }
-}
-
-// -----------------------------------------------------------------------------
-Result<> PartitionGeometryFilter::DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis)
-{
-  if(numberOfPartitionsPerAxis.getX() <= 0)
-  {
-    return MakeErrorResult(-3012, fmt::format("Number of Partitions Per Axis: The X dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getX()));
-  }
-
-  if(numberOfPartitionsPerAxis.getY() <= 0)
-  {
-    return MakeErrorResult(-3013, fmt::format("Number of Partitions Per Axis: The Y dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getY()));
-  }
-
-  if(numberOfPartitionsPerAxis.getZ() <= 0)
-  {
-    return MakeErrorResult(-3014, fmt::format("Number of Partitions Per Axis: The Z dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getZ()));
-  }
-
-  return {};
 }
 
 //------------------------------------------------------------------------------

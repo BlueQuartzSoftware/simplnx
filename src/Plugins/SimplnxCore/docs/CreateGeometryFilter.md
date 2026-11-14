@@ -58,6 +58,14 @@ The *Array Handling* parameter controls what happens to the input arrays passed 
 
 The filter validates that the supplied arrays "make sense" for the chosen geometry type (e.g., bounds arrays for a Rectilinear Grid have at least 2 values; no vertex ID in a connectivity list exceeds the vertex count). Checks that require reading actual values run at execute time. By default these checks produce warnings; enable *Treat Geometry Warnings as Errors* to make them fail the pipeline.
 
+### Numeric input constraints
+
+For *Image Geometry*, **Spacing** must contain finite values greater than 0. **Origin** must contain finite values. Other geometry types do not use these values.
+
+### Count Parameter Limits
+
+When creating an Image Geometry, every **Dimensions** component must be an integer of at least 1. Each dimension and the XYZ tuple product must fit the geometry size type. Preflight rejects invalid dimensions before output actions or extent previews. Other geometry types ignore Image dimensions, spacing and origin.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

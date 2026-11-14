@@ -10,6 +10,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
@@ -118,4 +119,104 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility
       // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "[SimplnxCore][CreateImageGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3);
+  CAPTURE(row);
+  DataStructure ds;
+  CreateImageGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
+
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, spacings[row]);
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
+  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Positive creation dimensions", "[SimplnxCore][CreateImageGeometryFilter][CountParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateImageGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  const auto axis = GENERATE(0, 1, 2);
+  CAPTURE(axis);
+  std::vector<uint64> dims = {1, 1, 1};
+  dims[axis] = 0;
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, dims);
+  const int32 expectedCode = -86155;
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("Dimensions") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("value 0") != std::string::npos);
+}
+
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include <limits>
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Creation count boundaries", "[SimplnxCore][GeometryCountControls]")
+{
+
+  DataStructure ds;
+  CreateImageGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::vector<uint64>{2, 3, 1});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::vector<float32>{2, 3, 4});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::vector<float32>{-1, 0, 1});
+  SECTION("Upper metadata boundary")
+  {
+    args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::vector<uint64>{std::numeric_limits<uint64>::max(), 1, 1});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    const auto* action = dynamic_cast<const CreateImageGeometryAction*>(result.outputActions.value().actions[0].get());
+    REQUIRE(action != nullptr);
+    CHECK(action->dims() == std::vector<usize>{std::numeric_limits<usize>::max(), 1, 1});
+  }
+  SECTION("Ordinary geometry")
+  {
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Created"})));
+    const auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Created"}));
+    CHECK(geom.getDimensions() == SizeVec3{2, 3, 1});
+    CHECK(geom.getSpacing() == FloatVec3{2, 3, 4});
+    CHECK(geom.getOrigin() == FloatVec3{-1, 0, 1});
+    CHECK(geom.getCellDataRef().getShape() == ShapeType{1, 3, 2});
+    const auto bounds = geom.getBoundingBoxf();
+    CHECK(bounds.getMinPoint() == Point3Df{-1, 0, 1});
+    CHECK(bounds.getMaxPoint() == Point3Df{3, 9, 5});
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Public count vector length", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  CreateImageGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::vector<uint64>{1, 1});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -1);
+  CHECK(filter.parameters().at(CreateImageGeometryFilter::k_Dimensions_Key)->humanName() == "Dimensions");
+  CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
 }

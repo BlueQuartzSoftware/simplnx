@@ -1,4 +1,5 @@
 #include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -34,11 +35,54 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_TranslationLength = -86000;
+constexpr int32 k_ScaleLength = -86001;
+constexpr int32 k_TranslationFinite = -86002;
+constexpr int32 k_NodeScaleFinite = -86003;
+constexpr int32 k_ImageScalePositive = -86004;
+constexpr int32 k_TranslationResultWarning = -86005;
+constexpr int32 k_ScaleResultWarning = -86006;
 const std::string k_UnknownPrecomputedMatrixDescription = "Precomputed transformation matrix unknown during preflight.";
+
+Result<> ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
+{
+  if(inputValues.TransformationSelection == detail::k_RotationIdx)
+  {
+    return ImageRotationUtilities::ValidateRotationAxisAngle(inputValues.Rotation, "Rotation");
+  }
+  if(inputValues.TransformationSelection == detail::k_TranslationIdx)
+  {
+    if(inputValues.Translation.size() != 3)
+    {
+      return MakeErrorResult(k_TranslationLength, fmt::format("Parameter 'Translation' must contain 3 XYZ values, but contains {}.", inputValues.Translation.size()));
+    }
+    return GeometryUtilities::ValidateFiniteVector(inputValues.Translation, "Translation", k_TranslationFinite);
+  }
+  if(inputValues.TransformationSelection == detail::k_ScaleIdx)
+  {
+    if(inputValues.Scale.size() != 3)
+    {
+      return MakeErrorResult(k_ScaleLength, fmt::format("Parameter 'Scale' must contain 3 XYZ values, but contains {}.", inputValues.Scale.size()));
+    }
+    if(dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath) != nullptr)
+    {
+      return GeometryUtilities::ValidatePositiveFiniteVector(inputValues.Scale, "Scale", k_ImageScalePositive);
+    }
+    return GeometryUtilities::ValidateFiniteVector(inputValues.Scale, "Scale", k_NodeScaleFinite);
+  }
+  return {};
 }
 
+} // namespace
+
+// -----------------------------------------------------------------------------
 IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
 {
+  auto validation = ValidateTransformationParameters(dataStructure, inputValues);
+  if(validation.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+  }
   const auto pTransformationMatrixTypeValue = inputValues.TransformationSelection;
   const auto& tableData = inputValues.ManualMatrixTableData;
   const DataPath& pComputedTransformationMatrixPath = inputValues.ComputedTransformationMatrix;
@@ -219,8 +263,17 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       auto pTranslationValue = inputValues.Translation;
       FloatVec3 originVec = imageGeomPtr->getOrigin();
       originVec = {originVec[0] + pTranslationValue[0], originVec[1] + pTranslationValue[1], originVec[2] + pTranslationValue[2]};
-      auto spacingVec = imageGeomPtr->getSpacing();
-      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
+      for(usize axis = 0; axis < 3; ++axis)
+      {
+        if(!std::isfinite(originVec[axis]))
+        {
+          resultOutputActions.warnings().push_back(
+              {k_TranslationResultWarning, fmt::format("Parameter 'Translation' {} value {} with origin {} produces result {}. Execution requires a finite origin.", "XYZ"[axis],
+                                                       pTranslationValue[axis], imageGeomPtr -> getOrigin()[axis], originVec[axis])});
+          break;
+        }
+      }
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, std::nullopt, pSelectedGeometryPathValue, false, true));
     }
     else if(pTransformationMatrixTypeValue == detail::k_ScaleIdx)
     {
@@ -230,7 +283,18 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       spacingVec = {spacingVec[0] * pScaleValue[0], spacingVec[1] * pScaleValue[1], spacingVec[2] * pScaleValue[2]};
       auto minMaxCoords = ImageRotationUtilities::DetermineMinMaxCoords(*imageGeomPtr, transformationMatrix);
       std::vector<float32> originVec = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
-      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
+      for(usize axis = 0; axis < 3; ++axis)
+      {
+        if(!std::isfinite(spacingVec[axis]) || !(spacingVec[axis] > 0) || !std::isfinite(originVec[axis]))
+        {
+          resultOutputActions.warnings().push_back(
+              {k_ScaleResultWarning,
+               fmt::format("Parameter 'Scale' {} value {} with spacing {} and origin {} produces spacing {} and origin {}. Execution requires positive finite spacing and finite origin.", "XYZ"[axis],
+                           pScaleValue[axis], imageGeomPtr -> getSpacing()[axis], imageGeomPtr -> getOrigin()[axis], spacingVec[axis], originVec[axis])});
+          break;
+        }
+      }
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue, false, true));
     }
     else // We are Rotating or manual transformation or precomputed. we need to create a brand new Image Geometry
     {

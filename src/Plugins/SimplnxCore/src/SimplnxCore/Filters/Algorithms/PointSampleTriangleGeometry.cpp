@@ -73,6 +73,11 @@ Result<> PointSampleTriangleGeometry::operator()()
     return resizeResult;
   }
 
+  if(m_Inputs->pNumberOfSamples == 0)
+  {
+    return {};
+  }
+
   std::mt19937_64 generator(m_Inputs->Seed);
   std::uniform_real_distribution<> distribution(0.0f, 1.0f);
 

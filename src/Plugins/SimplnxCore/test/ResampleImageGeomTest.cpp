@@ -780,3 +780,387 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include <limits>
+
+namespace
+{
+void CreateSamplingImage(DataStructure& ds)
+{
+  auto result = CreateImageGeometryAction(DataPath({"Image"}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({"Image", "Cell Data", "Marker"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(array);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}));
+  values[0] = 7;
+  values[1] = 9;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Spatial parameter domains", "[SimplnxCore][ResampleImageGeomFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{std::numeric_limits<float32>::infinity(), 1, 1});
+  const int32 expectedCode = -86113;
+  const std::string parameter = "Spacing";
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("X value inf") != std::string::npos);
+}
+
+#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include <cmath>
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Parameter boundaries", "[SimplnxCore][ResampleImageGeomFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+  CAPTURE(row);
+  int32 expectedCode = -86113;
+  if(row < 3)
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{row == 0 ? 0.0F : row == 1 ? std::numeric_limits<float32>::quiet_NaN() : -1.0F, 1, 1});
+    if(row == 2)
+    {
+      expectedCode = -11502;
+    }
+  }
+  else if(row < 6)
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{1});
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::vector<float32>{row == 3 ? std::numeric_limits<float32>::quiet_NaN() :
+                                                                                     row == 4 ? std::numeric_limits<float32>::infinity() :
+                                                                                                0.0F,
+                                                                                     100, 100});
+    expectedCode = row == 5 ? -11500 : -86114;
+  }
+  else
+  {
+    expectedCode = -1;
+    if(row == 6)
+    {
+      args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{1, 1});
+    }
+    else
+    {
+      args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{1});
+      args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::vector<float32>{100, 100});
+    }
+  }
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  if(row >= 6)
+  {
+    const auto key = row == 6 ? ResampleImageGeomFilter::k_Spacing_Key : ResampleImageGeomFilter::k_Scaling_Key;
+    CHECK(filter.parameters().at(key)->humanName() == (row == 6 ? "New Spacing" : "Scale Factor (percentages)"));
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+  const auto& message = result.outputActions.errors()[0].message;
+  if(row < 6)
+  {
+    CHECK(message.find(row >= 3 ? "Scaling Factor" : "Spacing") != std::string::npos);
+    CHECK(message.find("X") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Minimum corner mapping", "[SimplnxCore][ResampleImageGeomFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{0.5F, 1, 1});
+  args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::vector<float32>{});
+  args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::vector<uint64>{});
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+  const auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
+  CHECK(geom.getDimensions() == SizeVec3{4, 1, 1});
+  CHECK(geom.getSpacing() == FloatVec3{0.5F, 1, 1});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"})));
+  const auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"}));
+  REQUIRE(values.getNumberOfTuples() == 4);
+  CHECK(values[0] == 7);
+  CHECK(values[1] == 7);
+  CHECK(values[2] == 9);
+  CHECK(values[3] == 9);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  const auto& source = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}));
+  CHECK(source[0] == 7);
+  CHECK(source[1] == 9);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Derived spacing warnings", "[SimplnxCore][ResampleImageGeomFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+
+  const bool underflow = GENERATE(false, true);
+  CAPTURE(underflow);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& source = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  if(underflow)
+  {
+    source.setDimensions({1, 1, 1});
+    auto resize = source.getCellDataRef().resizeTuples({1, 1, 1});
+    SIMPLNX_RESULT_REQUIRE_VALID(resize);
+    source.setSpacing({std::numeric_limits<float32>::denorm_min(), 1, 1});
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{1});
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::vector<float32>{200, 100, 100});
+  }
+  else
+  {
+    source.setSpacing({3e38F, 1, 1});
+    args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{2});
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::vector<uint64>{1, 1, 1});
+  }
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings()[0].code == -86129);
+  CHECK(preflight.outputActions.warnings()[0].message.find("stand-in") != std::string::npos);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == -86126);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+  const auto& placeholder = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
+  CHECK(placeholder.getDimensions() == SizeVec3{1, 1, 1});
+  CHECK(placeholder.getSpacing() == FloatVec3{1, 1, 1});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}))[0] == 7);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Pipeline provisional spacing", "[SimplnxCore][ResampleImageGeomFilter][SpatialSamplingControls]")
+{
+
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  Pipeline pipeline;
+  ApplyTransformationToGeometryFilter transform;
+  auto first = transform.getDefaultArguments();
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, DataPath({"Image", "Cell Data"}));
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, uint64{1});
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, uint64{0});
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, DataPath({"Matrix"}));
+  REQUIRE(pipeline.push_back(std::make_unique<ApplyTransformationToGeometryFilter>(), first));
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{1});
+  args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::vector<float32>{5e-37F, 100, 100});
+  REQUIRE(pipeline.push_back(std::make_unique<ResampleImageGeomFilter>(), args));
+  for(bool execute : {false, true})
+  {
+    DataStructure ds;
+    CreateSamplingImage(ds);
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+    ds.getDataRefAs<ImageGeom>(DataPath({"Image"})).setSpacing({2, 1, 1});
+    auto array = CreateArrayAction(DataType::float32, {1}, {16}, DataPath({"Matrix"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Matrix"})));
+    auto& matrix = ds.getDataRefAs<Float32Array>(DataPath({"Matrix"}));
+    const std::array<float32, 16> entries = {0.5F, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    for(usize idx = 0; idx < 16; ++idx)
+    {
+      matrix[idx] = entries[idx];
+    }
+    if(!execute)
+    {
+      REQUIRE(pipeline.preflight(ds, false));
+      const auto* node = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+      REQUIRE(node != nullptr);
+      bool found = false;
+      for(const auto& warning : node->getWarnings())
+      {
+        if(warning.code == -86129)
+        {
+          found = true;
+        }
+      }
+      CHECK(found);
+    }
+    else
+    {
+      REQUIRE(scope.execute([&] { return pipeline.execute(ds, false); }));
+      REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+      const auto& output = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
+      CHECK(std::isfinite(output.getSpacing()[0]));
+      CHECK(output.getSpacing()[0] == Approx(2e38F));
+      REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"})));
+      CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"}))[0] == 7);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Exact dimension domains", "[SimplnxCore][ResampleImageGeomFilter][CountParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{2});
+  std::string component;
+  SECTION("Zero component")
+  {
+    const auto axis = GENERATE(0, 1, 2);
+    CAPTURE(axis);
+    component = std::string(1, "XYZ"[axis]);
+    std::vector<uint64> dims = {1, 1, 1};
+    dims[axis] = 0;
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, dims);
+  }
+  SECTION("Product overflow")
+  {
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::vector<uint64>{uint64{1} << 63, 2, 1});
+  }
+  const int32 expectedCode = -86153;
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  const auto& diagnostic = result.outputActions.errors()[0].message;
+  CHECK(diagnostic.find("Dimensions") != std::string::npos);
+  if(!component.empty())
+  {
+    CHECK(diagnostic.find(component) != std::string::npos);
+    CHECK(diagnostic.find("value 0") != std::string::npos);
+  }
+  else
+  {
+    CHECK(diagnostic.find("product") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Exact count boundaries", "[SimplnxCore][GeometryCountControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  const bool exact = GENERATE(false, true);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{exact ? 2ULL : 0ULL});
+  args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, exact ? std::vector<uint64>{4, 1, 1} : std::vector<uint64>{});
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+  const auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
+  CHECK(geom.getDimensions() == SizeVec3{exact ? 4ULL : 2ULL, 1, 1});
+  CHECK(geom.getSpacing() == FloatVec3{exact ? 0.5F : 1.0F, 1, 1});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"})));
+  const auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "Marker"}));
+  for(usize index = 0; index < values.getNumberOfTuples(); ++index)
+  {
+    CHECK(values[index] == (index < (exact ? 2ULL : 1ULL) ? 7 : 9));
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Derived dimension representation", "[SimplnxCore][GeometryCountControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& source = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  source.setDimensions({1, 1, 1});
+  auto resize = source.getCellDataRef().resizeTuples({1, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+  const bool product = GENERATE(false, true);
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, product ? std::vector<float32>{std::ldexp(1.0F, -32), std::ldexp(1.0F, -32), 1} : std::vector<float32>{std::ldexp(1.0F, -64), 1, 1});
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings()[0].code == (product ? -86131 : -86130));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  CHECK(result.result.errors()[0].code == (product ? -86128 : -86127));
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Public exact count vector length", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, DataPath({"Resampled"}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{2});
+  args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::vector<uint64>{1, 1});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -1);
+  CHECK(filter.parameters().at(ResampleImageGeomFilter::k_ExactDimensions_Key)->humanName() == "Exact Dimensions (pixels)");
+  CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+}

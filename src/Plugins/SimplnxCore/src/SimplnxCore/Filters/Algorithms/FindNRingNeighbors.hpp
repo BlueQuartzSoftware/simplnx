@@ -40,6 +40,13 @@ public:
   FindNRingNeighbors& operator=(const FindNRingNeighbors&) = delete;
   FindNRingNeighbors& operator=(FindNRingNeighbors&&) noexcept = delete;
 
+  /**
+   * @brief Finds the selected triangle neighborhood.
+   * @param mesgHandler Receives progress messages.
+   * @param shouldCancel Stops traversal when true.
+   * @pre Ring is at least 1; triangle and label selections are valid.
+   * @return The neighborhood traversal result.
+   */
   Result<> operator()(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel);
 
   UniqueFaceIds_t getNRingTriangles() const;

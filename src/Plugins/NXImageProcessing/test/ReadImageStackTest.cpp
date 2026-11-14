@@ -1857,3 +1857,215 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWar
   const auto& warnings = preflightResult.outputActions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
 }
+
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+
+namespace
+{
+/**
+ * @brief Writes two single-page scalar TIFFs for independent resampling tests.
+ * @param name Selects test-owned temporary output storage.
+ * @return Arguments for the 2 by 1 by 2 stack with pixels 7, 9, 11 and 13.
+ */
+Arguments CreateResamplingDomainStackArgs(const std::string& name)
+{
+  const fs::path inputDir = fs::path(std::string(unit_test::k_BinaryTestOutputDir.view())) / name;
+  fs::create_directories(inputDir);
+  WriteMultiPageTiff(inputDir / "stack_0.tif", 2, 1, {{7, 9}});
+  WriteMultiPageTiff(inputDir / "stack_1.tif", 2, 1, {{11, 13}});
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = inputDir.string();
+  fileList.filePrefix = "stack_";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = ".tif";
+  fileList.startIndex = 0;
+  fileList.endIndex = 1;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 1;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  ReadImageStackFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, fileList);
+  args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, DataPath({"Stack"}));
+  args.insertOrAssign(ReadImageStackFilter::k_CellDataName_Key, std::string("Cell Data"));
+  args.insertOrAssign(ReadImageStackFilter::k_ImageDataArrayPath_Key, std::string("Pixels"));
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, nx::core::uint64{0});
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, 100.0F);
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::vector<nx::core::uint64>{2, 1});
+  args.insertOrAssign(ReadImageStackFilter::k_ConvertToGrayScale_Key, false);
+  args.insertOrAssign(ReadImageStackFilter::k_ImageTransformChoice_Key, nx::core::uint64{0});
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false));
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeOrigin_Key, false);
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, false);
+  args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeDataType_Key, false);
+  args.insertOrAssign(ReadImageStackFilter::k_ImageDataType_Key, nx::core::uint64{0});
+  return args;
+}
+} // namespace
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Positive requested dimensions", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackResamplingDomains");
+  ReadImageStackFilter filter;
+  auto native = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(native.outputActions);
+  const auto axis = GENERATE(0, 1);
+  CAPTURE(axis);
+  std::vector<nx::core::uint64> dimensions = {2, 1};
+  dimensions[axis] = 0;
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, nx::core::uint64{2});
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, dimensions);
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == -86153);
+  const auto& message = result.outputActions.errors()[0].message;
+  CHECK(message.find("Exact 2D Dimensions (Pixels)") != std::string::npos);
+  CHECK(message.find(std::string(1, "XY"[axis])) != std::string::npos);
+  CHECK(message.find("value 0") != std::string::npos);
+  CHECK(ds.getAllDataPaths().empty());
+}
+
+namespace
+{
+/**
+ * @brief Checks the geometry and every pixel against a hand-derived stack oracle.
+ * @param ds Contains the final stack.
+ * @param dimensions Gives expected XYZ counts.
+ * @param spacing Gives expected XYZ physical cell lengths.
+ * @param expected Gives expected pixels in slice order.
+ */
+void CheckResamplingDomainStack(const DataStructure& ds, const SizeVec3& dimensions, const FloatVec3& spacing, const std::vector<nx::core::uint8>& expected)
+{
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Stack"})));
+  const auto& geometry = ds.getDataRefAs<ImageGeom>(DataPath({"Stack"}));
+  CHECK(geometry.getDimensions() == dimensions);
+  CHECK(geometry.getSpacing() == spacing);
+  CHECK(geometry.getOrigin() == FloatVec3{0, 0, 0});
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(DataPath({"Stack", "Cell Data", "Pixels"})));
+  const auto& pixels = ds.getDataRefAs<UInt8Array>(DataPath({"Stack", "Cell Data", "Pixels"}));
+  CHECK(pixels.getNumberOfComponents() == 1);
+  REQUIRE(pixels.getNumberOfTuples() == expected.size());
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CHECK(pixels[index] == expected[index]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+} // namespace
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Requested dimension boundaries", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackResamplingBoundaries");
+  ReadImageStackFilter filter;
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{2});
+  SECTION("Active vector length")
+  {
+    args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{2});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -1);
+    CHECK(filter.parameters().at(ReadImageStackFilter::k_ExactXYDimensions_Key)->humanName() == "Exact 2D Dimensions (Pixels)");
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 2. Received size 1.");
+  }
+  SECTION("Requested product overflow")
+  {
+    args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{nx::core::uint64{1} << 63, 2});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -86153);
+    const auto& message = result.outputActions.errors()[0].message;
+    CHECK(message.find("Exact 2D Dimensions (Pixels)") != std::string::npos);
+    CHECK(message.find("tuple product") != std::string::npos);
+    CHECK(message.find(std::to_string(nx::core::uint64{1} << 63)) != std::string::npos);
+    CHECK(message.find("Y=2") != std::string::npos);
+    CHECK(message.find("Z=1") != std::string::npos);
+  }
+  SECTION("Representable large requested dimension")
+  {
+    const usize count = usize{1} << 32;
+    args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{count, 1});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+    bool found = false;
+    for(const auto& action : result.outputActions.value().actions)
+    {
+      const auto* geometry = dynamic_cast<const CreateImageGeometryAction*>(action.get());
+      if(geometry != nullptr && geometry->path() == DataPath({"Stack_resampled"}))
+      {
+        CHECK(geometry->dims() == std::vector<usize>{count, 1, 2});
+        found = true;
+      }
+    }
+    CHECK(found);
+  }
+  CHECK(ds.getAllDataPaths().empty());
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Scaling parameter domains", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackScalingDomains");
+  ReadImageStackFilter filter;
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{1});
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{});
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5);
+  const float32 value = row == 0 ? std::numeric_limits<float32>::quiet_NaN() :
+                        row == 1 ? std::numeric_limits<float32>::infinity() :
+                        row == 2 ? -std::numeric_limits<float32>::infinity() :
+                        row == 3 ? 0.5F :
+                        row == 4 ? 0.0F :
+                                   -1.0F;
+  CAPTURE(row, value);
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, value);
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == (row < 3 ? -86114 : -23508));
+  CHECK(result.outputActions.errors()[0].message.find("Scaling (%)") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(ds.getAllDataPaths().empty());
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Exact resampling pixel oracle", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackExactPixelOracle");
+  ReadImageStackFilter filter;
+  const bool minimum = GENERATE(false, true);
+  CAPTURE(minimum);
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{2});
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{minimum ? 1ULL : 4ULL, 1});
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  if(minimum)
+  {
+    CheckResamplingDomainStack(ds, {1, 1, 2}, {2, 1, 1}, {7, 11});
+  }
+  else
+  {
+    CheckResamplingDomainStack(ds, {4, 1, 2}, {0.5F, 1, 1}, {7, 7, 9, 9, 11, 11, 13, 13});
+  }
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Inactive resampling parameters", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackInactiveResampling");
+  ReadImageStackFilter filter;
+  const auto row = GENERATE(0, 1, 2);
+  CAPTURE(row);
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{row == 0 ? 0ULL : 1ULL});
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, row == 2 ? VectorUInt64Parameter::ValueType{0, 0} : VectorUInt64Parameter::ValueType{});
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, row == 0 ? std::numeric_limits<float32>::quiet_NaN() : 100.0F);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckResamplingDomainStack(ds, {2, 1, 2}, {1, 1, 1}, {7, 9, 11, 13});
+}

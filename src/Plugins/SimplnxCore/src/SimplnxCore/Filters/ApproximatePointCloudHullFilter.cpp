@@ -8,9 +8,44 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
+
+using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_EmptyNeighborRange = -86104;
+constexpr int32 k_GridResolutionFinite = -86103;
+
+/**
+ * @brief Checks the active spatial parameter domains before output actions.
+ * @param resolution Gives physical voxel lengths in XYZ order.
+ * @param threshold Gives the required empty-neighbor count.
+ * @pre resolution has three components.
+ * @return The first active parameter error, otherwise success.
+ */
+Result<> ValidateHullParameters(nonstd::span<const float32> resolution, uint64 threshold)
+{
+  auto finite = GeometryUtilities::ValidateFiniteVector(resolution, "Grid Resolution", k_GridResolutionFinite);
+  if(finite.invalid())
+  {
+    return finite;
+  }
+  auto positive = GeometryUtilities::ValidatePositiveFiniteVector(resolution, "Grid Resolution", -11001);
+  if(positive.invalid())
+  {
+    return positive;
+  }
+  if(threshold > 26)
+  {
+    return MakeErrorResult(k_EmptyNeighborRange, fmt::format("Minimum Number of Empty Neighbors value {} must be in the inclusive range 0 through 26.", threshold));
+  }
+  return {};
+}
+} // namespace
 
 namespace nx::core
 {
@@ -83,10 +118,9 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
   auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
   auto hullVertexGeomPath = filterArgs.value<DataPath>(k_HullVertexGeomPath_Key);
 
-  if(gridResolution[0] <= 0.0f || gridResolution[1] <= 0.0f || gridResolution[2] <= 0.0f)
+  if(auto validation = ValidateHullParameters(gridResolution, filterArgs.value<uint64>(k_MinEmptyNeighbors_Key)); validation.invalid())
   {
-    std::string ss = fmt::format("Grid resolutions must be greater than zero. Current values: X={}, Y={}, Z={}", gridResolution[0], gridResolution[1], gridResolution[2]);
-    return {MakeErrorResult<OutputActions>(-11001, ss)};
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
   }
 
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);

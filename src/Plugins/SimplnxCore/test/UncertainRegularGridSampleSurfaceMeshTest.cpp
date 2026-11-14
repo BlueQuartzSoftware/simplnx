@@ -204,3 +204,192 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Ray exits l
   CHECK(actual == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+#include <limits>
+
+namespace
+{
+void CreateSamplingTetrahedron(DataStructure& ds)
+{
+  auto result = CreateTriangleGeometryAction(DataPath({"Mesh"}), 4, 4, "Vertex Data", "Face Data", "Vertices", "Faces").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<TriangleGeom>(DataPath({"Mesh"})));
+  auto& geom = ds.getDataRefAs<TriangleGeom>(DataPath({"Mesh"}));
+  const std::array<float32, 12> coords = {0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 4};
+  const std::array<uint64, 12> faces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+  auto write = geom.getVerticesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  auto faceWrite = geom.getFacesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint64>(faces));
+  SIMPLNX_RESULT_REQUIRE_VALID(faceWrite);
+  auto labels = CreateArrayAction(DataType::int32, {4}, {2}, DataPath({"Mesh", "Face Data", "Labels"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(labels);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Face Data", "Labels"})));
+  auto& array = ds.getDataRefAs<Int32Array>(DataPath({"Mesh", "Face Data", "Labels"}));
+  for(usize i = 0; i < 4; ++i)
+  {
+    array[2 * i] = 1;
+    array[2 * i + 1] = 0;
+  }
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Spatial parameter domains", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  UncertainRegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  int32 expectedCode;
+  std::string parameter;
+  const auto axis = GENERATE(0, 1, 2);
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_UseSeed_Key, true);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SeedValue_Key, uint64{5489});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::vector<float32>{0, 0, 0});
+  SECTION("Spacing")
+  {
+    std::vector<float32> values = {1, 1, 1};
+    values[axis] = value;
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, values);
+    expectedCode = -86105;
+    parameter = "Spacing";
+  }
+  SECTION("Origin")
+  {
+    std::vector<float32> values = {0, 0, 0};
+    values[axis] = value;
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, values);
+    expectedCode = -86107;
+    parameter = "Origin";
+  }
+  SECTION("Uncertainty")
+  {
+    std::vector<float32> values = {0, 0, 0};
+    values[axis] = value;
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, values);
+    expectedCode = -86106;
+    parameter = "Uncertainty";
+  }
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+}
+TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Nonpositive sampling spacing", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  UncertainRegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  int32 expectedCode;
+  std::string parameter;
+  const auto axis = GENERATE(0, 1, 2);
+  const auto value = GENERATE(0.0F, -1.0F);
+  CAPTURE(axis, value);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_UseSeed_Key, true);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SeedValue_Key, uint64{5489});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::vector<float32>{0, 0, 0});
+  std::vector<float32> values = {1, 1, 1};
+  values[axis] = value;
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, values);
+  expectedCode = -86105;
+  parameter = "Spacing";
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Sampling boundary controls", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingTetrahedron(ds);
+  UncertainRegularGridSampleSurfaceMeshFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Mesh"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, DataPath({"Mesh", "Face Data", "Labels"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, DataPath({"Grid"}));
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1, 1});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_UseSeed_Key, true);
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SeedValue_Key, uint64{5489});
+  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::vector<float32>{0, 0, 0});
+  SECTION("Signed uncertainty")
+  {
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::vector<float32>{-0.1F, 0, 0});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  SECTION("Repeatable zero uncertainty")
+  {
+    for(usize run = 0; run < 2; ++run)
+    {
+      DataStructure repeated = ds;
+      auto result = filter.execute(repeated, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+      REQUIRE_NOTHROW(repeated.getDataRefAs<Int32Array>(DataPath({"Grid", "Cell Data", "Feature Ids"})));
+      const auto& ids = repeated.getDataRefAs<Int32Array>(DataPath({"Grid", "Cell Data", "Feature Ids"}));
+      REQUIRE(ids.getNumberOfTuples() == 1);
+      CHECK(ids[0] == 1);
+    }
+  }
+  SECTION("Spacing and uncertainty length")
+  {
+    const auto key = GENERATE(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key);
+    args.insertOrAssign(key, std::vector<float32>{1, 1});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -1);
+    CHECK(filter.parameters().at(key)->humanName() == (key.view() == UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key.view() ? "Spacing" : "Uncertainty"));
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+  SECTION("Origin length")
+  {
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::vector<float32>{0, 0});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -1);
+    CHECK(filter.parameters().at(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key)->humanName() == "Origin");
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+  SECTION("Dimensions length")
+  {
+    args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::vector<uint64>{1, 1});
+    auto result = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors()[0].code == -1);
+    CHECK(filter.parameters().at(UncertainRegularGridSampleSurfaceMeshFilter::k_Dimensions_Key)->humanName() == "Number of Cells per Axis");
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+}

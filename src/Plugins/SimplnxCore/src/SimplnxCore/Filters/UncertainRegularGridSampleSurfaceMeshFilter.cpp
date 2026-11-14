@@ -14,11 +14,42 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <random>
 
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_OriginFinite = -86107;
+constexpr int32 k_UncertaintyFinite = -86106;
+constexpr int32 k_SpacingDomain = -86105;
+
+/**
+ * @brief Checks the active spatial parameter domains before output actions.
+ * @param spacing Gives physical cell lengths in XYZ order.
+ * @param origin Gives grid origin coordinates in XYZ order.
+ * @param uncertainty Gives signed physical coordinate perturbations in XYZ order.
+ * @pre spacing, origin and uncertainty each have three components.
+ * @return The first active parameter error, otherwise success.
+ */
+Result<> ValidateUncertainSamplingParameters(nonstd::span<const float32> spacing, nonstd::span<const float32> origin, nonstd::span<const float32> uncertainty)
+{
+  auto result = GeometryUtilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_OriginFinite);
+  if(result.invalid())
+  {
+    return result;
+  }
+  return GeometryUtilities::ValidateFiniteVector(uncertainty, "Uncertainty", k_UncertaintyFinite);
+}
+} // namespace
 
 namespace nx::core
 {
@@ -128,6 +159,11 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
   auto pOutputTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
+
+  if(auto validation = ValidateUncertainSamplingParameters(pSpacingValue, pOriginValue, pUncertaintyValue); validation.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 

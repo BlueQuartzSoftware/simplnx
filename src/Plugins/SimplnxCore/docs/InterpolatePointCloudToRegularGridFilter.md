@@ -17,7 +17,7 @@ The *Interpolation Technique* parameter provides the following choices:
 
 ### Kernel
 
-The user defines the (x, y, z) radii of a kernel in *real space units*. The kernel radii are converted to voxel units based on the spacing of the **Image Geometry**. If the kernel radius in a given dimension is smaller than the voxel spacing, the kernel has a zero extent in that dimension (i.e., each point only affects its own voxel along that axis).
+**Kernel Size** gives the X, Y and Z physical extents in the geometry length units. If an extent is smaller than its cell spacing, its radius is 0. Otherwise, the radius in cells is `ceil((extent / spacing) * 0.5)`. Fractional physical extents are valid.
 
 ### Algorithm
 
@@ -88,6 +88,16 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 ### Voxel Index Computation
 
 The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
+
+### Spatial Parameter Limits
+
+With Gaussian interpolation, every **Gaussian Sigmas** component must be finite and greater than zero. Its square in float32 must be finite and nonzero. A nonzero subnormal square is valid. The sigmas measure the kernel offsets in cells. Uniform interpolation ignores Gaussian Sigmas, including empty or invalid inactive values.
+
+### Count Parameter Limits
+
+Each **Kernel Size** component must be finite and nonnegative in the geometry length units. Fractional extents and zero are valid. Zero produces a single center contribution.
+
+Kernel radii, widths, element counts and storage sizes depend on the Image Geometry spacing. If provisional metadata cannot produce a representable layout, preflight warns and defers kernel setup. Execution recomputes the layout from final spacing and returns an error before kernel allocation if it still cannot be represented. These checks impose no workload or memory-budget limit.
 
 % Auto generated parameter table will be inserted here
 
