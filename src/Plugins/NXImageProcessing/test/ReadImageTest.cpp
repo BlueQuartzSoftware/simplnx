@@ -784,34 +784,16 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, ChoicesParameter::ValueType{1});
   ReadImageFilter filter;
   DataStructure dataStructure;
+  // Page 1 has 1 component and page 0 has 3, so the page-layout check rejects the file
+  // before any output exists. Execute repeats the check, so no pixel is ever copied.
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors()[0].code == -50579);
   IFilter::ExecuteResult execute;
   REQUIRE_NOTHROW(execute = filter.execute(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
-  REQUIRE(execute.result.errors()[0].code == -2007); // The page-layout check must reject page 1, not another error path.
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{width, height, 2});
-
-  // Oracle: page 0 has 3*2*3 = 18 white components (255, or 65535 after conversion).
-  // Page 1 supplies only 3 bytes per row, but the RGB destination needs 3*3 = 9.
-  // Reject that segment before copying any bytes; its 18 destination components must
-  // retain their initial zero values. This detects a late error even without a sanitizer.
-  const auto checkPixels = [](const auto& pixels, auto white) {
-    REQUIRE(pixels.getSize() == 36);
-    for(usize i = 0; i < 18; ++i)
-    {
-      REQUIRE(pixels[i] == white);
-      REQUIRE(pixels[18 + i] == 0);
-    }
-  };
-  if(convertData)
-  {
-    checkPixels(dataStructure.getDataRefAs<UInt16Array>(arrayPath), uint16_t{65535});
-  }
-  else
-  {
-    checkPixels(dataStructure.getDataRefAs<UInt8Array>(arrayPath), uint8_t{255});
-  }
+  REQUIRE(execute.result.errors()[0].code == -50579);
+  CHECK(dataStructure.getData(arrayPath) == nullptr);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessing][ReadImageFilter]")
