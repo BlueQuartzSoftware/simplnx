@@ -206,8 +206,7 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryMorphologyCompositeImageFilter(Da
  *        reconstruction result is subtracted from the input in place after reconstruction (output = input -
  *        reconstruction). Output type == input type (SameAsInput). The caller's preflight must have enforced a
  *        scalar input (@ref PreflightImageFilter requireScalar=true) and, for the height markers, a finite
- *        @p height. The opt-in @p exactIntegerHeight also requires a nonnegative whole Height for integer images;
- *        it preserves native integer units and saturates markers at the type bounds. Other callers default to their existing arithmetic.
+ *        @p height. The marker offset uses floating-point arithmetic.
  * @param dataStructure Owns the selected arrays and geometry.
  * @param imageGeomPath Image geometry used for dimensions.
  * @param inputArrayPath Scalar input image and reconstruction mask.
@@ -219,13 +218,34 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryMorphologyCompositeImageFilter(Da
  * @param shouldCancel Requests cancellation during reconstruction and between transfers.
  * @param messageHandler Receives progress messages.
  * @param differenceFromInput Selects HConvex contrast with checked signed subtraction.
- * @param exactIntegerHeight Selects exact native integer markers for a validated whole, nonnegative Height.
  * @return A reconstruction, contrast or transfer error, or a valid result.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                 const DataPath& outputArrayPath, ReconstructOp op, bool fullyConnected, detail::ReconMarker markerKind, float64 height,
-                                                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false,
-                                                                                bool exactIntegerHeight = false);
+                                                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, bool differenceFromInput = false);
+
+namespace detail
+{
+/**
+ * @brief Reconstructs with a validated height. Integer images use an exact native offset.
+ * @param dataStructure Owns the selected arrays and geometry.
+ * @param imageGeomPath Image geometry used for dimensions.
+ * @param inputArrayPath Scalar input image and reconstruction mask.
+ * @param outputArrayPath Output image of the same type and shape as the input.
+ * @param op Reconstruction direction.
+ * @param fullyConnected Selects full connectivity when true.
+ * @param markerKind Selects the height marker.
+ * @param height Validated offset in intensity units.
+ * @param shouldCancel Requests cancellation during reconstruction and between transfers.
+ * @param messageHandler Receives progress messages.
+ * @param differenceFromInput Selects checked contrast subtraction when true.
+ * @return A reconstruction, contrast or transfer error, or a valid result.
+ * @pre Height is finite and nonnegative. Integer input requires a whole Height.
+ */
+Result<> ExecuteMorphologicalReconstructionWithValidatedHeight(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
+                                                               ReconstructOp op, bool fullyConnected, ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
+                                                               const IFilter::MessageHandler& messageHandler, bool differenceFromInput);
+} // namespace detail
 
 /**
  * @brief Execute opening-by-reconstruction (@p firstOp == Erode) or closing-by-reconstruction (@p firstOp ==

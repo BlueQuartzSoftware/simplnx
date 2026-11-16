@@ -100,8 +100,7 @@ IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& 
   auto height = filterArgs.value<float64>(k_Height_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  // The marker offsets every voxel by +Height through a saturating cast, which is undefined for a non-finite
-  // value; reject it here so the offset is always well-defined.
+  // The marker offset must be finite for reconstruction.
   if(!std::isfinite(height))
   {
     return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Minima requires a finite Height, but the supplied value was {}.", height))};
@@ -140,9 +139,9 @@ Result<> HMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arg
 
   // HMinima == reconstruct-by-erosion of the saturating (input + Height) marker under the input mask; unlike
   // HMaxima the legacy ITK filter exposes a FullyConnected option, so honor it here.
-  return ImageProcessing::ExecuteMorphologicalReconstructionImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Erosion, fullyConnected,
-                                                                        ImageProcessing::detail::ReconMarker::PlusHeight, height, shouldCancel, messageHandler, /*differenceFromInput=*/false,
-                                                                        /*exactIntegerHeight=*/true);
+  return ImageProcessing::detail::ExecuteMorphologicalReconstructionWithValidatedHeight(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Erosion,
+                                                                                        fullyConnected, ImageProcessing::detail::ReconMarker::PlusHeight, height, shouldCancel, messageHandler,
+                                                                                        /*differenceFromInput=*/false);
 }
 
 namespace

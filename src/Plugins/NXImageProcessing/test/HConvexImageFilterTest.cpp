@@ -39,6 +39,13 @@
 using namespace nx::core;
 namespace rt = recon_test;
 
+static_assert(std::is_constructible_v<ImageProcessing::ExactReconstructionHeight, uint64>);
+static_assert(!std::is_constructible_v<ImageProcessing::ExactReconstructionHeight, float64>);
+
+using ReconstructionExecutor = Result<> (*)(DataStructure&, const DataPath&, const DataPath&, const DataPath&, ImageProcessing::ReconstructOp, bool, ImageProcessing::detail::ReconMarker, float64,
+                                            const std::atomic_bool&, const IFilter::MessageHandler&, bool);
+static_assert(std::is_same_v<decltype(&ImageProcessing::ExecuteMorphologicalReconstructionImageFilter), ReconstructionExecutor>);
+
 namespace
 {
 // Filter-local error codes for the Height guards (kept in sync with HConvexImageFilter.cpp).
@@ -118,13 +125,17 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional He
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 3, 1, 1, {0, 2, 0});
   const HConvexImageFilter filter;
 
-  // Integer images require a whole Height. Stop at preflight: the baseline must never execute this request.
-  const auto preflightResult = filter.preflight(dataStructure, makeHConvexArguments(inputPath, height));
+  const Arguments args = makeHConvexArguments(inputPath, height);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().front().code == -1874101);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == preflightResult.outputActions.errors().front().code);
+  REQUIRE(dataStructure.getData(inputPath.replaceName("Output")) == nullptr);
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
@@ -209,17 +220,24 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: floating fractional H
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit unit contrast above double precision", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int64, uint64)
+TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit contrast for unit and large Heights above double precision", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int64,
+                   uint64)
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  constexpr TestType inputValue = TestType{1} << 54;
+  constexpr float64 belowUint64Limit = 0x1.fffffffffffffp63;
+  const float64 height = GENERATE(1.0, 0x1.fffffffffffffp63, std::ldexp(1.0, 64), std::numeric_limits<float64>::max());
+  CAPTURE(height);
+  constexpr TestType maximum = std::numeric_limits<TestType>::max();
+  // A signed input of -1 gives a representable contrast even if the marker reaches the native minimum.
+  constexpr TestType largeHeightInput = std::is_signed_v<TestType> ? static_cast<TestType>(-1) : maximum;
+  const TestType inputValue = height == 1.0 ? (TestType{1} << 54) : largeHeightInput;
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {inputValue});
   const HConvexImageFilter filter;
-  const Arguments args = makeHConvexArguments(inputPath, 1.0);
+  const Arguments args = makeHConvexArguments(inputPath, height);
   const auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
@@ -233,9 +251,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit unit co
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<TestType>>(outputPath));
   const auto& outputStore = dataStructure.getDataRefAs<DataArray<TestType>>(outputPath).getDataStoreRef();
   REQUIRE(outputStore.getSize() == 1);
-  // A one-pixel marker has no neighbor that can raise it: reconstruction is inputValue - 1, so contrast is 1.
-  // The baseline double conversion rounds the marker back to inputValue. Both values are safely inside T's range.
-  REQUIRE(outputStore.getValue(0) == TestType{1});
+  // With one pixel the reconstruction equals the marker. Below 2^64 the unsigned marker stays 2047 above zero.
+  const TestType expected = height == 1.0 ? TestType{1} : (!std::is_signed_v<TestType> && height == belowUint64Limit ? maximum - TestType{2047} : maximum);
+  REQUIRE(outputStore.getValue(0) == expected);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -251,8 +269,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact signed 64-bit marker bou
   const std::array<int64, 5> original = {minimum, minimum + 1, -1, 0, maximum};
   ImageProcessing::ReconstructionMarkerOptions options;
   options.source = lower ? ImageProcessing::ReconstructionMarkerSource::MaskMinusHeight : ImageProcessing::ReconstructionMarkerSource::MaskPlusHeight;
-  options.height = std::ldexp(1.0, 63);
-  options.ExactIntegerHeight = true;
+  options.height = ImageProcessing::ExactReconstructionHeight{uint64{1} << 63};
   ImageProcessing::detail::ApplyReconstructionMarkerOptions<int64>(nonstd::span<int64>(values.data(), values.size()), 0, {5, 1, 1}, options);
   // MIN + 2^63 = 0; MAX - 2^63 = -1. Other values saturate at the corresponding native bound.
   const std::array<int64, 5> expected = lower ? std::array<int64, 5>{minimum, minimum, minimum, minimum, -1} : std::array<int64, 5>{0, 1, maximum, maximum, maximum};
@@ -263,7 +280,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact signed 64-bit marker bou
   SIMPLNX_RESULT_REQUIRE_VALID(inputResult);
   const std::atomic_bool shouldCancel = false;
   const auto markerResult = ImageProcessing::detail::BuildReconstructionMarker<int64>(
-      input, marker, {5, 1, 1}, lower ? ImageProcessing::detail::ReconMarker::MinusHeight : ImageProcessing::detail::ReconMarker::PlusHeight, options.height, shouldCancel, true);
+      input, marker, {5, 1, 1}, lower ? ImageProcessing::detail::ReconMarker::MinusHeight : ImageProcessing::detail::ReconMarker::PlusHeight, options.height, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(markerResult);
   for(usize index = 0; index < expected.size(); ++index)
   {
@@ -280,20 +297,19 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: exact integer marker 
   constexpr TestType minimum = std::numeric_limits<TestType>::lowest();
   constexpr TestType maximum = std::numeric_limits<TestType>::max();
   const bool lower = GENERATE(false, true);
-  const float64 height = GENERATE(0.0, 1.0, std::ldexp(1.0, 64), std::numeric_limits<float64>::max());
+  const uint64 height = GENERATE(uint64{0}, uint64{1}, std::numeric_limits<uint64>::max());
   CAPTURE(lower, height);
   std::array<TestType, 3> values = {minimum, 0, maximum};
   ImageProcessing::ReconstructionMarkerOptions options;
   options.source = lower ? ImageProcessing::ReconstructionMarkerSource::MaskMinusHeight : ImageProcessing::ReconstructionMarkerSource::MaskPlusHeight;
-  options.height = height;
-  options.ExactIntegerHeight = true;
+  options.height = ImageProcessing::ExactReconstructionHeight{height};
   ImageProcessing::detail::ApplyReconstructionMarkerOptions<TestType>(nonstd::span<TestType>(values.data(), values.size()), 0, {3, 1, 1}, options);
-  if(height == 0.0)
+  if(height == 0)
   {
     const std::array<TestType, 3> expected = {minimum, 0, maximum};
     REQUIRE(values == expected);
   }
-  else if(height == 1.0)
+  else if(height == 1)
   {
     const TestType zeroLowered = std::is_signed_v<TestType> ? static_cast<TestType>(-1) : TestType{0};
     const std::array<TestType, 3> expected =
@@ -336,8 +352,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker Height immediatel
   UnitTest::LoadPlugins();
   ImageProcessing::ReconstructionMarkerOptions options;
   options.source = ImageProcessing::ReconstructionMarkerSource::MaskMinusHeight;
-  options.height = 0x1.fffffffffffffp63;
-  options.ExactIntegerHeight = true;
+  options.height = ImageProcessing::ExactReconstructionHeight{std::numeric_limits<uint64>::max() - uint64{2047}};
   std::array<uint64, 1> unsignedValues = {std::numeric_limits<uint64>::max()};
   ImageProcessing::detail::ApplyReconstructionMarkerOptions<uint64>(nonstd::span<uint64>(unsignedValues.data(), unsignedValues.size()), 0, {1, 1, 1}, options);
   REQUIRE(unsignedValues.at(0) == uint64{2047});
@@ -722,23 +737,38 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight non-finite Height gu
 
   SECTION("NaN Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
+    const Arguments args = makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN());
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 
   SECTION("Inf Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
+    const Arguments args = makeArgs(inputPath, std::numeric_limits<float64>::infinity());
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 
   SECTION("Negative Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, -1.0));
+    const Arguments args = makeArgs(inputPath, -1.0);
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NegativeHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NegativeHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 }
 

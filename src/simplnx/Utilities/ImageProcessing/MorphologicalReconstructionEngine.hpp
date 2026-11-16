@@ -19,10 +19,12 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -36,12 +38,31 @@ enum class ReconstructionMarkerSource
   MaskWithMaximumInterior
 };
 
+/** @brief A nonnegative marker offset in native integer intensity units. */
+class ExactReconstructionHeight
+{
+public:
+  template <std::same_as<uint64> T>
+  explicit constexpr ExactReconstructionHeight(T units) noexcept
+  : m_Units(units)
+  {
+  }
+
+  constexpr uint64 units() const noexcept
+  {
+    return m_Units;
+  }
+
+private:
+  uint64 m_Units;
+};
+
+using ReconstructionHeight = std::variant<float64, ExactReconstructionHeight>;
+
 struct ReconstructionMarkerOptions
 {
   ReconstructionMarkerSource source = ReconstructionMarkerSource::Provided;
-  float64 height = 0.0;
-  // Callers opt in only after validating a finite, nonnegative whole Height for integer images.
-  bool ExactIntegerHeight = false;
+  ReconstructionHeight height = 0.0;
 };
 
 namespace detail
@@ -120,22 +141,21 @@ T AddExactIntegerReconstructionHeight(T value, uint64 heightUnits)
 /**
  * @brief Offsets integer marker values exactly, saturating at the native type bounds.
  * @tparam T Integer scalar type.
- * @param values Owned marker buffer to update.
- * @param height Finite, nonnegative, whole Height, validated by the opting-in caller.
+ * @param values Marker buffer to update.
+ * @param height Prepared integer offset in intensity units.
  * @param lower Selects subtraction when true and addition when false.
- *
- * The Height conversion is once per buffer. Values never pass through floating point, and signed minima are never negated.
  */
 template <class T>
-void ApplyExactIntegerReconstructionHeight(nonstd::span<T> values, float64 height, bool lower)
+void ApplyExactIntegerReconstructionHeight(nonstd::span<T> values, ExactReconstructionHeight height, bool lower)
 {
   static_assert(std::is_integral_v<T>);
-  if(height >= std::ldexp(1.0, 64))
+  const uint64 heightUnits = height.units();
+  // The largest uint64 offset spans the full range of each supported integer pixel type.
+  if(heightUnits == std::numeric_limits<uint64>::max())
   {
     std::fill(values.begin(), values.end(), lower ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
     return;
   }
-  const uint64 heightUnits = static_cast<uint64>(height);
   for(T& value : values)
   {
     value = lower ? SubtractExactIntegerReconstructionHeight(value, heightUnits) : AddExactIntegerReconstructionHeight(value, heightUnits);
@@ -170,6 +190,33 @@ T SaturateReconstructionMarkerValue(float64 value)
   }
 }
 
+/**
+ * @brief Applies an offset to the marker buffer and saturates integer results at the native type bounds.
+ * @tparam T Marker pixel type.
+ * @param values Marker buffer to update.
+ * @param height Prepared offset in intensity units. A floating offset uses floating-point arithmetic.
+ * @param lower Selects subtraction when true and addition when false.
+ */
+template <class T>
+void ApplyReconstructionHeight(nonstd::span<T> values, const ReconstructionHeight& height, bool lower)
+{
+  const auto* exactHeight = std::get_if<ExactReconstructionHeight>(&height);
+  if constexpr(std::is_integral_v<T>)
+  {
+    if(exactHeight != nullptr)
+    {
+      ApplyExactIntegerReconstructionHeight(values, *exactHeight, lower);
+      return;
+    }
+  }
+  const float64 offset = exactHeight != nullptr ? static_cast<float64>(exactHeight->units()) : std::get<float64>(height);
+  const float64 signedHeight = lower ? -offset : offset;
+  for(T& value : values)
+  {
+    value = SaturateReconstructionMarkerValue<T>(static_cast<float64>(value) + signedHeight);
+  }
+}
+
 template <class T>
 void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const SizeVec3& dims, const ReconstructionMarkerOptions& options)
 {
@@ -179,19 +226,7 @@ void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const
   }
   if(options.source == ReconstructionMarkerSource::MaskMinusHeight || options.source == ReconstructionMarkerSource::MaskPlusHeight)
   {
-    if constexpr(std::is_integral_v<T>)
-    {
-      if(options.ExactIntegerHeight)
-      {
-        ApplyExactIntegerReconstructionHeight<T>(values, options.height, options.source == ReconstructionMarkerSource::MaskMinusHeight);
-        return;
-      }
-    }
-    const float64 signedHeight = options.source == ReconstructionMarkerSource::MaskMinusHeight ? -options.height : options.height;
-    for(T& value : values)
-    {
-      value = SaturateReconstructionMarkerValue<T>(static_cast<float64>(value) + signedHeight);
-    }
+    ApplyReconstructionHeight(values, options.height, options.source == ReconstructionMarkerSource::MaskMinusHeight);
     return;
   }
 

@@ -99,8 +99,7 @@ IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& 
   auto height = filterArgs.value<float64>(k_Height_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  // The marker offsets every voxel by -Height through a saturating cast, which is undefined for a non-finite
-  // value; reject it here so the offset is always well-defined.
+  // The marker offset must be finite for reconstruction.
   if(!std::isfinite(height))
   {
     return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
@@ -140,9 +139,9 @@ Result<> HConvexImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   // HConvex == input - HMaxima(input, Height): reconstruct-by-dilation of the saturating (input - Height) marker,
   // then subtract that h-maxima result from the input (the h-dome). FullyConnected selects the reconstruction
   // connectivity.
-  return ImageProcessing::ExecuteMorphologicalReconstructionImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Dilation, fullyConnected,
-                                                                        ImageProcessing::detail::ReconMarker::MinusHeight, height, shouldCancel, messageHandler, /*differenceFromInput=*/true,
-                                                                        /*exactIntegerHeight=*/true);
+  return ImageProcessing::detail::ExecuteMorphologicalReconstructionWithValidatedHeight(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Dilation,
+                                                                                        fullyConnected, ImageProcessing::detail::ReconMarker::MinusHeight, height, shouldCancel, messageHandler,
+                                                                                        /*differenceFromInput=*/true);
 }
 
 namespace

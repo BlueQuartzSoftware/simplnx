@@ -610,8 +610,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight use @ref SaturateCastFromDouble by default. The exactIntegerHeight opt-in preserves native
- * integer units with saturating addition or subtraction. Floating values retain the default arithmetic.
+ * For integer pixels an exact offset preserves native units, including values beyond float64 precision.
+ * A floating offset uses floating-point arithmetic. Both paths saturate integer marker values to native bounds.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -626,19 +626,18 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * @param markerStore Receives marker values; has the input's tuple and element layout.
  * @param dims Image dimensions in X, Y, Z order.
  * @param kind Selects a height or border marker.
- * @param height Finite offset in intensity units; nonnegative and whole for the integer opt-in.
+ * @param height Prepared offset in intensity units.
  * @param shouldCancel Requests cancellation between transfers.
- * @param exactIntegerHeight Opt-in to exact, saturating integer offsets for a validated whole Height.
  * @return The first transfer or dimension error, or a valid result.
  * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel,
-                                   bool exactIntegerHeight = false)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, const ReconstructionHeight& height,
+                                   const std::atomic_bool& shouldCancel)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
-    const float64 signedHeight = (kind == ReconMarker::MinusHeight) ? -height : height;
+    const bool lower = kind == ReconMarker::MinusHeight;
     const usize total = inStore.getSize();
     const usize chunkValues = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || markerStore.getStoreType() == IDataStore::StoreType::OutOfCore ?
                                   std::max<usize>(1, (64ULL * 1024ULL * 1024ULL) / sizeof(T)) :
@@ -655,20 +654,7 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      if(exactIntegerHeight && std::is_integral_v<T>)
-      {
-        if constexpr(std::is_integral_v<T>)
-        {
-          ApplyExactIntegerReconstructionHeight<T>(nonstd::span<T>(buffer.get(), count), height, kind == ReconMarker::MinusHeight);
-        }
-      }
-      else
-      {
-        for(usize i = 0; i < count; ++i)
-        {
-          buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
-        }
-      }
+      ApplyReconstructionHeight(nonstd::span<T>(buffer.get(), count), height, lower);
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
         return r;
