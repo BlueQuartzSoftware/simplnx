@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include "SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.hpp"
 #include "SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -726,10 +725,10 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Cancel
       shouldCancel = true;
     }
   }};
-  ReplaceElementAttributesWithNeighborValuesInputValues inputValues{
-      .MinConfidence = 0.5F, .SelectedComparison = 0, .Loop = true, .InputArrayPath = k_ConfidencePath, .SelectedImageGeometryPath = k_GeomPath};
-  const auto result = ReplaceElementAttributesWithNeighborValues(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(0, true), nullptr, messageHandler, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == -1);
   REQUIRE(completedPass == !cancelBeforePass);
   requireTerminationData(dataStructure, {0.1F, 0.1F, 0.1F, 0.1F}, {0, 1, 2, 3});
 }
