@@ -29,6 +29,7 @@
 #include <cstring>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -270,7 +271,7 @@ struct WriteDirectVolumeFunctor
    * @param shouldCancel Stops processing between output slices.
    * @param writeSlice Writes one packed output slice.
    * @param reportRows Optional synchronous callback for completed output rows.
-   * @return Error from the image writer.
+   * @return The accumulated warnings and the first transfer or writer error.
    */
   template <typename T>
   Result<> operator()(const IDataArray& dataArray, usize planeIndex, usize dimX, usize dimY, usize dimZ, usize sliceCount, usize sliceW, usize sliceH, usize numComponents,
@@ -294,11 +295,12 @@ struct WriteDirectVolumeFunctor
     std::unique_ptr<T[]> groupValues = std::make_unique<T[]>(slicesPerGroup * sliceValueCount);
     std::vector<uint8> sliceBuffer(sliceValueCount * (std::is_same_v<T, bool> ? 1 : sizeof(T)));
 
+    Result<> status;
     for(usize firstSlice = 0; firstSlice < sliceCount; firstSlice += slicesPerGroup)
     {
       if(shouldCancel)
       {
-        return {};
+        return status;
       }
 
       const usize groupSliceCount = std::min(slicesPerGroup, sliceCount - firstSlice);
@@ -306,25 +308,29 @@ struct WriteDirectVolumeFunctor
       const Extent groupExtent = CreateSliceGroupExtent(planeIndex, firstSlice, groupSliceCount, dimX, dimY, dimZ);
       // A failed read leaves the group buffer holding stale or uninitialized values.
       // Stop here so the writer never commits those values as image pixels.
-      if(Result<> result = dataStore.readExtentIntoBuffer(groupExtent, nonstd::span<T>(groupValues.get(), groupValueCount)); result.invalid())
+      auto readResult = dataStore.readExtentIntoBuffer(groupExtent, nonstd::span<T>(groupValues.get(), groupValueCount));
+      if(readResult.invalid())
       {
-        return result;
+        return MergeResults(std::move(status), std::move(readResult));
       }
+      std::ranges::move(readResult.warnings(), std::back_inserter(status.warnings()));
 
       for(usize localSliceIndex = 0; localSliceIndex < groupSliceCount; ++localSliceIndex)
       {
         if(shouldCancel)
         {
-          return {};
+          return status;
         }
         CopySliceFromGroup(nonstd::span<const T>(groupValues.get(), groupValueCount), sliceBuffer, localSliceIndex, groupSliceCount, planeIndex, dimX, dimY, dimZ, numComponents, reportRows);
-        if(Result<> result = writeSlice(sliceBuffer, firstSlice + localSliceIndex); result.invalid())
+        auto sliceResult = writeSlice(sliceBuffer, firstSlice + localSliceIndex);
+        if(sliceResult.invalid())
         {
-          return result;
+          return MergeResults(std::move(status), std::move(sliceResult));
         }
+        std::ranges::move(sliceResult.warnings(), std::back_inserter(status.warnings()));
       }
     }
-    return {};
+    return status;
   }
 };
 
@@ -689,21 +695,12 @@ Result<> WriteImageScanline::operator()()
       m_MessageHandler.sendInfoMessage("Encoding image file");
     }
     auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), *writeBufferPtr, metadata);
-    if(m_InputValues.createColorTable)
-    {
-      Result<> fileStatus;
-      fileStatus.warnings() = std::move(atomicFileResult.warnings());
-      writeResult = MergeResults(std::move(fileStatus), std::move(writeResult));
-    }
+    writeResult = MergeResults(ConvertResult(std::move(atomicFileResult)), std::move(writeResult));
     if(writeResult.invalid())
     {
       return writeResult;
     }
-    auto commitResult = atomicFile.commit();
-    if(m_InputValues.createColorTable)
-    {
-      commitResult = MergeResults(std::move(writeResult), std::move(commitResult));
-    }
+    auto commitResult = MergeResults(std::move(writeResult), atomicFile.commit());
     if(commitResult.valid())
     {
       progressThrottle.updateCount(slice + 1);

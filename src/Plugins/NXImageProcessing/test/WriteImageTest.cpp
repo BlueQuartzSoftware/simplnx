@@ -540,7 +540,9 @@ public:
     {
       return MakeErrorResult<std::vector<T>>(-27902, "Controlled Write Image slice read failure.");
     }
-    return ExtentCountingDataStore<T>::readExtent(extent);
+    auto result = ExtentCountingDataStore<T>::readExtent(extent);
+    addExtentWarning(extent, result);
+    return result;
   }
   Result<> readExtentIntoBuffer(const Extent& extent, nonstd::span<T> values) const override
   {
@@ -548,7 +550,13 @@ public:
     {
       return MakeErrorResult(-27902, "Controlled Write Image slice read failure.");
     }
-    return ExtentCountingDataStore<T>::readExtentIntoBuffer(extent, values);
+    auto result = ExtentCountingDataStore<T>::readExtentIntoBuffer(extent, values);
+    addExtentWarning(extent, result);
+    return result;
+  }
+  void enableExtentWarnings() noexcept
+  {
+    m_WarnOnExtentRead = true;
   }
   usize flatReadCount() const
   {
@@ -560,8 +568,19 @@ public:
   }
 
 private:
+  // The returning read can call the buffer read. Add only one warning for that extent.
+  template <class ValueT>
+  void addExtentWarning(const Extent& extent, Result<ValueT>& result) const
+  {
+    if(m_WarnOnExtentRead && result.valid() && result.warnings().empty())
+    {
+      result.warnings().push_back({-27904, "Controlled Write Image read warning for XY slice " + std::to_string(extent.min.at(0)) + "."});
+    }
+  }
+
   bool m_FailFlat = false;
   bool m_FailExtent = false;
+  bool m_WarnOnExtentRead = false;
   mutable usize m_FlatReadCount = 0;
   mutable usize m_MaximumReadBytes = 0;
 };
@@ -1039,6 +1058,70 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: late nonfinite scan uses bounded
   }
   REQUIRE(result.result.warnings().size() == (useMask ? 4 : 2));
   REQUIRE(fs::is_empty(output.path()));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::WriteImageFilter: raw export retains warnings from each slice", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const bool failSecondCommit = GENERATE(false, true);
+  CAPTURE(scenario, failSecondCommit);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const ShapeType shape{2, 1, 2};
+  const std::array<uint8, 4> values{7, 11, 13, 17};
+  DataStructure dataStructure;
+  const DataPath inputPath = createWriteImageNumericInput(dataStructure, values, shape);
+  auto store = std::make_shared<WriteImageReadProbeStore<uint8>>(shape, false, false);
+  store->enableExtentWarnings();
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    store->setValue(index, values.at(index));
+  }
+  auto* input = dataStructure.getDataAs<UInt8Array>(inputPath);
+  REQUIRE(input != nullptr);
+  const auto storeResult = input->setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
+
+  const ScopedTempDir output(k_BinaryTestOutputDir);
+  const fs::path firstSlice = output.path() / "raw_000.png";
+  const fs::path secondSlice = output.path() / "raw_001.png";
+  if(failSecondCommit)
+  {
+    REQUIRE(fs::create_directory(secondSlice));
+    std::ofstream sentinel(secondSlice / "keep.txt", std::ios::binary);
+    REQUIRE(sentinel.is_open());
+    sentinel << "keep";
+  }
+  auto arguments = writeImageNumericArguments(output.path() / "raw.png");
+  arguments.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
+  arguments.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+  arguments.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<int32>(3));
+
+  const WriteImageFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, arguments);
+  if(failSecondCommit)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    REQUIRE(result.result.errors().front().code == -15782);
+    const auto sentinel = readWriteImageSentinel(secondSlice / "keep.txt");
+    REQUIRE(std::string(sentinel.begin(), sentinel.end()) == "keep");
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    REQUIRE(c15_test::Decode<uint8>(secondSlice, 2, 1, 1) == std::vector<uint8>{13, 17});
+  }
+  const auto& warnings = result.result.warnings();
+  REQUIRE(warnings.size() == 2);
+  REQUIRE(warnings.at(0).code == -27904);
+  REQUIRE(warnings.at(0).message == "Controlled Write Image read warning for XY slice 0.");
+  REQUIRE(warnings.at(1).code == -27904);
+  REQUIRE(warnings.at(1).message == "Controlled Write Image read warning for XY slice 1.");
+  REQUIRE(c15_test::Decode<uint8>(firstSlice, 2, 1, 1) == std::vector<uint8>{7, 11});
+  REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

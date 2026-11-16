@@ -28,6 +28,7 @@
 #include <cstring>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -130,9 +131,11 @@ struct ExtractSliceFunctor
     }
     const std::vector<T>& sliceValues = sliceResult.value();
     const usize expectedElements = static_cast<usize>(sliceExtent.totalElements()) * nComp;
-    if(sliceValues.size() != expectedElements)
+    const usize actualElements = sliceValues.size();
+    if(actualElements != expectedElements)
     {
-      return MakeErrorResult(-27023, fmt::format("Could not bulk-read image slice {}. Expected {} values but received {}.", sliceIndex, expectedElements, sliceValues.size()));
+      return MergeResults(ConvertResult(std::move(sliceResult)),
+                          MakeErrorResult(-27023, fmt::format("Could not bulk-read image slice {}. Expected {} values but received {}.", sliceIndex, expectedElements, actualElements)));
     }
 
     const usize rowElements = (planeIndex == 2 ? dimY : dimX) * nComp;
@@ -157,7 +160,7 @@ struct ExtractSliceFunctor
       }
     }
 
-    return {};
+    return ConvertResult(std::move(sliceResult));
   }
 };
 
@@ -458,29 +461,16 @@ Result<> WriteImageDirect::operator()()
       m_MessageHandler.sendInfoMessage("Encoding image file");
     }
     auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), *writeBufferPtr, metadata);
-    if(m_InputValues.createColorTable)
-    {
-      Result<> fileStatus;
-      fileStatus.warnings() = std::move(atomicFileResult.warnings());
-      writeResult = MergeResults(std::move(fileStatus), std::move(writeResult));
-    }
+    writeResult = MergeResults(ConvertResult(std::move(atomicFileResult)), std::move(writeResult));
     if(writeResult.invalid())
     {
       return writeResult;
     }
     if(m_ShouldCancel)
     {
-      if(m_InputValues.createColorTable)
-      {
-        return MergeResults(std::move(writeResult), MakeErrorResult(-1, "Filter cancelled"));
-      }
-      return MakeErrorResult(-1, "Filter cancelled");
+      return MergeResults(std::move(writeResult), MakeErrorResult(-1, "Filter cancelled"));
     }
-    auto commitResult = atomicFile.commit();
-    if(m_InputValues.createColorTable)
-    {
-      commitResult = MergeResults(std::move(writeResult), std::move(commitResult));
-    }
+    auto commitResult = MergeResults(std::move(writeResult), atomicFile.commit());
     if(commitResult.valid())
     {
       progressThrottle.updateCount(slice + 1);
@@ -530,22 +520,26 @@ Result<> WriteImageDirect::operator()()
   // The non-color path preserves typed bytes for one slice at a time.
   usize sliceBufferSize = sliceW * sliceH * nComp * bytesPerComponent;
   std::vector<uint8> sliceBuffer(sliceBufferSize);
+  Result<> status;
   for(usize slice = 0; slice < sliceCount; ++slice)
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return status;
     }
     auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp, progress.Rows);
     if(extractResult.invalid())
     {
-      return extractResult;
+      return MergeResults(std::move(status), std::move(extractResult));
     }
+    std::ranges::move(extractResult.warnings(), std::back_inserter(status.warnings()));
+
     auto sliceResult = writeSlice(sliceBuffer, slice);
     if(sliceResult.invalid())
     {
-      return sliceResult;
+      return MergeResults(std::move(status), std::move(sliceResult));
     }
+    std::ranges::move(sliceResult.warnings(), std::back_inserter(status.warnings()));
   }
-  return {};
+  return status;
 }
