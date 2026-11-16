@@ -746,11 +746,18 @@ Reset a prior fixed notation explicitly with `std::defaultfloat`. For printf, us
 
 ### Write floating-point output through a saturating cast
 
-**Rule:** a filter whose output type can be an integer type (for example an output type that follows the input type)
-writes each computed finite floating-point value through `ImageProcessing::detail::SaturateCastFromDouble<U>()`, which
-clamps it to the range of `U`, and reports one warning with the number of clipped values. A NaN or an infinity computed
-for an integer output is an error that names the value's index and the output type; it is never written as 0. The
-general rule is in the numeric-correctness reference of `cpp-best-practices`.
+**Rule:** select the conversion helper that matches the algorithm's output and diagnostic requirements.
+
+- Use `ImageProcessing::detail::ConvertTerminalImageValue` when a filter must report clipping or reject nonfinite
+  integer output. Finite integer conversions truncate toward zero, then clip if the integer is out of range. The
+  result status identifies clipping. A nonfinite value for an integer output returns `NonFinite` and leaves the
+  destination untouched. A floating output can retain NaN and infinity. The caller combines the clipping
+  information into one filter warning and identifies a rejected value by its flat index.
+- Use `ImageProcessing::detail::SaturateCastFromDouble<U>()` for intentional clamping when only the converted value
+  is needed. For an integer destination, NaN maps to zero and the infinities map to the native bounds. Apply these
+  mappings only when the caller's nonfinite policy permits them. A converted value alone cannot identify clipping.
+
+See the numeric-correctness reference of `cpp-best-practices`.
 
 **Example of the broken rule:** `ExpImageFilter` casts `exp(double(value))` straight to the integer output, and
 `LogImageFilter`, `SquareImageFilter` and `TanImageFilter` do the same: `log(0)`, the `uint8` square of 16 and the
@@ -760,9 +767,9 @@ general rule is in the numeric-correctness reference of `cpp-best-practices`.
 
 **What to look for:** `static_cast<U>(floatingExpression)` where `U` can be integral.
 
-**Pattern to use:** `SaturateCastFromDouble<U>()` in
-`simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp` for finite values; the nonfinite integer-output
-error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `CurvatureFlowImageFilter` (PR #1888).
+**Pattern to use:** Curvature Flow and Smoothing Recursive Gaussian use `ConvertTerminalImageValue` for the
+final conversion (PR #1888). They report one warning if clipping occurred and return an error for a nonfinite
+integer result. Intensity Windowing uses `SaturateCastFromDouble` to clamp values to the destination type.
 
 ### Decide NaN and infinity handling by where the value comes from
 
