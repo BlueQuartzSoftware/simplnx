@@ -1,4 +1,5 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
@@ -6,6 +7,32 @@
 #include <string>
 
 using namespace nx::core;
+
+TEST_CASE("StringInterpretationUtilities::Convert handles fractional Boolean text", "[simplnx][StringInterpretationUtilities]")
+{
+  const auto [input, expected] = GENERATE(table<std::string, bool>({
+      {"0.5", true},
+      {"-0.5", true},
+      {"  +0.125  ", true},
+      {"0.00001e-1", true},
+      {".5", true},
+      {"0.0", false},
+      {"-0.0", false},
+      {"0", false},
+      {"-1", true},
+      {"TRUE", true},
+      {"False", false},
+      {"0suffix", false},
+      {"0.5suffix", false},
+      {"1e-999", true},
+      {"0e-999", false},
+      {"not numeric", true},
+  }));
+  CAPTURE(input);
+  const auto result = StringInterpretationUtilities::Convert<bool>(input);
+  REQUIRE(result.valid());
+  CHECK(result.value() == expected);
+}
 
 TEST_CASE("Simplnx::StringUtilities::Split Test", "[Simplnx][StringUtilities]")
 {

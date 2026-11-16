@@ -7,6 +7,9 @@
 
 #include <fmt/format.h>
 
+#include <istream>
+#include <locale>
+#include <sstream>
 #include <string>
 
 namespace nx::core::StringInterpretationUtilities
@@ -125,7 +128,24 @@ Result<T> Convert(const std::string& input)
       Result<int64> result = detail::StringInterpreterFromType<int64>(input);
       if(result.valid())
       {
-        return {result.value() != 0};
+        if(result.value() != 0)
+        {
+          return {true};
+        }
+
+        // A zero integer prefix can hide a nonzero fraction. Require complete numeric text before overriding the integer result.
+        if(input.find_first_of(".eE") != std::string::npos)
+        {
+          std::istringstream numberStream(input);
+          numberStream.imbue(std::locale::classic());
+          float64 numericValue = 0.0;
+          if(numberStream >> numericValue)
+          {
+            numberStream >> std::ws;
+            return {numberStream.eof() && numericValue != 0.0};
+          }
+        }
+        return {false};
       }
     }
 
