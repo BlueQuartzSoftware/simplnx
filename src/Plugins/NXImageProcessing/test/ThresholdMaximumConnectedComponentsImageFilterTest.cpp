@@ -9,6 +9,7 @@
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -28,6 +29,7 @@
 #include "simplnx/Utilities/MD5.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <nonstd/span.hpp>
 
@@ -436,6 +438,10 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: on
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().front().code == -28611);
+    const auto& message = result.result.errors().front().message;
+    REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
+    REQUIRE(message.find(fmt::format("NaN at zero-based flat tuple index {}", placement)) != std::string::npos);
+    REQUIRE(message.find("assign Outside Value") != std::string::npos);
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
   else
@@ -450,6 +456,28 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: on
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Error finds the first nonfinite tuple across scan blocks",
+          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+{
+  (void)Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize firstNonfiniteIndex = 65537;
+  const auto infinity = std::numeric_limits<float64>::infinity();
+  std::vector<float64> values(firstNonfiniteIndex + 2, 4.0);
+  values[firstNonfiniteIndex] = infinity;
+  values[firstNonfiniteIndex + 1] = -infinity;
+  DataStructure dataStructure;
+  const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
+  const ThresholdMaximumConnectedComponentsImageFilter filter;
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == -28611);
+  const auto& message = result.result.errors().front().message;
+  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
+  REQUIRE(message.find("positive infinity at zero-based flat tuple index 65537") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all nonfinite Warn skips search and calculates no threshold",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {

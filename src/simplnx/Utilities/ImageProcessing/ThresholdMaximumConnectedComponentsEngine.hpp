@@ -5,6 +5,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -56,6 +57,7 @@ struct ThresholdMaxCCSummary
   usize NaNCount = 0;
   usize NegativeInfinityCount = 0;
   usize PositiveInfinityCount = 0;
+  usize FirstNonfiniteIndex = std::numeric_limits<usize>::max(); // Index within the current batch.
 };
 
 template <class T>
@@ -78,10 +80,11 @@ void MergeThresholdMaxCCSummary(ThresholdMaxCCSummary<T>& summary, const Thresho
   summary.NaNCount += block.NaNCount;
   summary.NegativeInfinityCount += block.NegativeInfinityCount;
   summary.PositiveInfinityCount += block.PositiveInfinityCount;
+  summary.FirstNonfiniteIndex = std::min(summary.FirstNonfiniteIndex, block.FirstNonfiniteIndex);
 }
 
 template <class T>
-ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values, bool warnOnNonfinite, const std::atomic_bool& shouldCancel)
+ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values, bool warnOnNonfinite, const std::atomic_bool& shouldCancel, usize blockStart)
 {
   ThresholdMaxCCSummary<T> summary;
   for(usize index = 0; index < values.size(); ++index)
@@ -109,6 +112,7 @@ ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values,
         }
         if(!warnOnNonfinite)
         {
+          summary.FirstNonfiniteIndex = blockStart + index;
           break;
         }
         continue;
@@ -135,11 +139,12 @@ ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values,
  * @param input Source values to scan.
  * @param warnOnNonfinite If true, counts nonfinite samples and continues. If false, a nonfinite sample causes an error.
  * @param shouldCancel Requests cancellation during the scan.
+ * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
  * @return Native finite bounds and sample counts, or a transfer or allocation error, or an error for disallowed nonfinite samples.
  * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
  */
 template <class T>
-Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, bool warnOnNonfinite, const std::atomic_bool& shouldCancel)
+Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, bool warnOnNonfinite, const std::atomic_bool& shouldCancel, const DataPath& inputArrayPath = {})
 {
   ThresholdMaxCCSummary<T> summary;
   Result<> status;
@@ -209,7 +214,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
       const nonstd::span<const T> values = direct ? residentPtr->createSpan().subspan(start, count) : nonstd::span<const T>(valuesPtr.get(), count);
       if(blockCapacity == 0)
       {
-        MergeThresholdMaxCCSummary(summary, ReduceThresholdMaxCCBlock(values, warnOnNonfinite, shouldCancel));
+        MergeThresholdMaxCCSummary(summary, ReduceThresholdMaxCCBlock(values, warnOnNonfinite, shouldCancel, 0));
       }
       else
       {
@@ -220,7 +225,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
           for(usize block = range.min(); block < range.max(); ++block)
           {
             const usize offset = block * blockValues;
-            blocks[block] = ReduceThresholdMaxCCBlock(values.subspan(offset, std::min(blockValues, count - offset)), warnOnNonfinite, shouldCancel);
+            blocks[block] = ReduceThresholdMaxCCBlock(values.subspan(offset, std::min(blockValues, count - offset)), warnOnNonfinite, shouldCancel, offset);
           }
         });
         for(usize block = 0; block < blockCount; ++block)
@@ -228,11 +233,16 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
           MergeThresholdMaxCCSummary(summary, blocks[block]);
         }
       }
-      if(!warnOnNonfinite && (summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0))
+      if(summary.FirstNonfiniteIndex != std::numeric_limits<usize>::max())
       {
-        return ConvertResultTo(MergeResults(std::move(status), MakeErrorResult(-28611, "Threshold Maximum Connected Components found image NaN or infinity during the initial scan. Select Warn and "
-                                                                                       "Continue under Nonfinite Input Handling only if Outside Value participation is intended.")),
-                               std::move(summary));
+        const T value = values[summary.FirstNonfiniteIndex];
+        const auto* kind = std::isnan(value) ? "NaN" : (std::signbit(value) ? "negative infinity" : "positive infinity");
+        const auto inputName = inputArrayPath.empty() ? "the input array" : fmt::format("input array '{}'", inputArrayPath.toString());
+        return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(
+            MergeResults(std::move(status),
+                         MakeErrorResult(-28611, fmt::format("Threshold Maximum Connected Components found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to assign Outside "
+                                                             "Value to nonfinite pixels.",
+                                                             kind, start + summary.FirstNonfiniteIndex, inputName))));
       }
       start += count;
     }
@@ -455,6 +465,7 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
  * @param options Component-size, cutoff, output-value, nonfinite, and staging controls.
  * @param shouldCancel Requests cancellation during scan, search, and output work.
  * @param messageHandler Receives output-phase progress messages.
+ * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
  * @return Collected warnings, or a parameter, shape, numeric-capacity, allocation, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
@@ -465,7 +476,7 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
  */
 template <class T>
 Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& input, AbstractDataStore<uint8>& output, const SizeVec3& dims, const ThresholdMaxCCOptions& options,
-                                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {})
+                                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {}, const DataPath& inputArrayPath = {})
 {
   Result<> status;
   if(std::isnan(options.UpperBoundary))
@@ -484,7 +495,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
   }
   try
   {
-    auto summaryResult = detail::ScanThresholdMaxCC(input, options.WarnOnNonfinite, shouldCancel);
+    auto summaryResult = detail::ScanThresholdMaxCC(input, options.WarnOnNonfinite, shouldCancel, inputArrayPath);
     if(summaryResult.invalid())
     {
       return ConvertResult(std::move(summaryResult));

@@ -694,7 +694,7 @@ struct ThresholdMaxCCExecuteFn
   {
     const auto& input = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
     auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
-    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler);
+    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler, inputArrayPath);
   }
 };
 } // namespace

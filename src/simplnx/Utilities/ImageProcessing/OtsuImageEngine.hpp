@@ -4,6 +4,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -72,10 +73,11 @@ struct OtsuFloatingRangeSummary
   usize NaNCount = 0;
   usize NegativeInfinityCount = 0;
   usize PositiveInfinityCount = 0;
+  usize FirstNonfiniteIndex = std::numeric_limits<usize>::max(); // Index within the current batch.
 };
 
 template <class T, class MaskT>
-OtsuFloatingRangeSummary<T> ReduceOtsuFloatingBlock(nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, const std::atomic_bool& shouldCancel)
+OtsuFloatingRangeSummary<T> ReduceOtsuFloatingBlock(nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, const std::atomic_bool& shouldCancel, usize blockStart)
 {
   OtsuFloatingRangeSummary<T> summary;
   for(usize index = 0; index < values.size(); ++index)
@@ -91,6 +93,10 @@ OtsuFloatingRangeSummary<T> ReduceOtsuFloatingBlock(nonstd::span<const T> values
     const T value = values[index];
     if(!std::isfinite(value))
     {
+      if(summary.FirstNonfiniteIndex == std::numeric_limits<usize>::max())
+      {
+        summary.FirstNonfiniteIndex = blockStart + index;
+      }
       if(std::isnan(value))
       {
         ++summary.NaNCount;
@@ -140,6 +146,7 @@ void MergeOtsuFloatingSummary(OtsuFloatingRangeSummary<T>& summary, const OtsuFl
   summary.NaNCount += block.NaNCount;
   summary.NegativeInfinityCount += block.NegativeInfinityCount;
   summary.PositiveInfinityCount += block.PositiveInfinityCount;
+  summary.FirstNonfiniteIndex = std::min(summary.FirstNonfiniteIndex, block.FirstNonfiniteIndex);
 }
 
 template <class T, class MaskT>
@@ -147,7 +154,7 @@ OtsuFloatingRangeSummary<T> ReduceOtsuFloatingRange(nonstd::span<const T> values
 {
   if(values.size() <= k_OtsuRangeBlockValues)
   {
-    return ReduceOtsuFloatingBlock(values, maskValues, shouldCancel);
+    return ReduceOtsuFloatingBlock(values, maskValues, shouldCancel, 0);
   }
   // The caller caps each resident view/owned batch. This table never has one entry per full-image block.
   const usize blockCount = 1 + ((values.size() - 1) / k_OtsuRangeBlockValues);
@@ -163,7 +170,7 @@ OtsuFloatingRangeSummary<T> ReduceOtsuFloatingRange(nonstd::span<const T> values
       }
       const usize start = block * k_OtsuRangeBlockValues;
       const usize count = std::min(k_OtsuRangeBlockValues, values.size() - start);
-      summaries[block] = ReduceOtsuFloatingBlock(values.subspan(start, count), maskValues.empty() ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count), shouldCancel);
+      summaries[block] = ReduceOtsuFloatingBlock(values.subspan(start, count), maskValues.empty() ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count), shouldCancel, start);
     }
   });
   OtsuFloatingRangeSummary<T> summary;
@@ -239,7 +246,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
         return status;
       }
       const usize count = std::min(blockValues, total - start);
-      status = MergeResults(std::move(status), visitor(values.subspan(start, count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count)));
+      status = MergeResults(std::move(status), visitor(values.subspan(start, count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count), start));
       if(status.invalid())
       {
         return status;
@@ -284,7 +291,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
       return status;
     }
     status = MergeResults(std::move(status),
-                          visitor(nonstd::span<const T>(valuesPtr.get(), count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : nonstd::span<const MaskT>(maskValuesPtr.get(), count)));
+                          visitor(nonstd::span<const T>(valuesPtr.get(), count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : nonstd::span<const MaskT>(maskValuesPtr.get(), count), start));
     if(status.invalid())
     {
       return status;
@@ -377,6 +384,7 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
  * @param maskPtr Optional scalar mask with the input tuple count, paired in flat order. Null selects every input value.
  * @param options Histogram-bin count, nonfinite policy, and transfer-memory target.
  * @param shouldCancel Requests cancellation during scans and histogram construction.
+ * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
  * @return Histogram and selected finite and nonfinite sample counts, or an input, numeric, or transfer error.
  * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
  *
@@ -384,7 +392,8 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
  * The ring uses capacity left after the input and mask buffers. A scan without usable ring frequencies uses a second bounded pass for nonconstant input.
  */
 template <class T, class MaskT = uint8>
-Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel)
+Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& input, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options, const std::atomic_bool& shouldCancel,
+                                                 const DataPath& inputArrayPath = {})
 {
   if(options.NumberOfBins < 2)
   {
@@ -431,7 +440,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   }
   Result<> rangeResult = detail::VisitOtsuValues(
       input, maskPtr, options, shouldCancel, plan.Values,
-      [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
+      [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, usize batchStart) -> Result<> {
         if constexpr(std::is_floating_point_v<T>)
         {
           const auto summary = detail::ReduceOtsuFloatingRange(values, maskValues, shouldCancel);
@@ -439,9 +448,14 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
           {
             return {};
           }
-          if(!options.WarnOnNonfinite && (summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0))
+          if(!options.WarnOnNonfinite && summary.FirstNonfiniteIndex != std::numeric_limits<usize>::max())
           {
-            return MakeErrorResult(-28654, "Otsu found a selected NaN or infinity. Choose Warn and Continue to skip nonfinite pixels and assign Excluded Label, or exclude them with Use Mask Array.");
+            const T value = values[summary.FirstNonfiniteIndex];
+            const auto* kind = std::isnan(value) ? "NaN" : (std::signbit(value) ? "negative infinity" : "positive infinity");
+            const auto inputName = inputArrayPath.empty() ? "the input array" : fmt::format("input array '{}'", inputArrayPath.toString());
+            return MakeErrorResult(-28654, fmt::format("Otsu found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to skip nonfinite pixels and assign Excluded Label, or "
+                                                       "select a mask that excludes these pixels.",
+                                                       kind, batchStart + summary.FirstNonfiniteIndex, inputName));
           }
           if(summary.FiniteCount != 0)
           {
@@ -578,7 +592,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
       // The floating-point histogram pass needs no range summaries.
       plan = detail::ReserveOtsuBuffers(options, {.TotalValues = total, .BytesPerValue = bytesPerValue, .UsesExternalStore = external});
     }
-    Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, plan.Values, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues) -> Result<> {
+    Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, plan.Values, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, usize) -> Result<> {
       for(usize i = 0; i < values.size(); ++i)
       {
         if((i % 65536) == 0 && shouldCancel)
@@ -677,6 +691,7 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
  * @param options Histogram, class-label, nonfinite, and transfer controls.
  * @param shouldCancel Requests cancellation during scans, search, and output work.
  * @param messageHandler Receives output-phase progress messages.
+ * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
  * @return Collected diagnostics, including the nonfinite exclusion warning, or a validation, numeric, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
@@ -685,7 +700,7 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
  */
 template <class T, class MaskT = uint8>
 Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uint8>& output, const AbstractDataStore<MaskT>* maskPtr, const OtsuImageOptions& options,
-                        const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                        const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const DataPath& inputArrayPath = {})
 {
   if(input.getSize() != output.getSize() || output.getNumberOfComponents() != 1)
   {
@@ -697,7 +712,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   {
     return MakeErrorResult(-28603, "Otsu labels do not fit a distinct uint8 class interval. Reduce Label Offset/Number Of Thresholds or select an Excluded Label outside that interval.");
   }
-  auto histogramResult = ComputeOtsuHistogram(input, maskPtr, options, shouldCancel);
+  auto histogramResult = ComputeOtsuHistogram(input, maskPtr, options, shouldCancel, inputArrayPath);
   if(histogramResult.invalid())
   {
     return ConvertResult(std::move(histogramResult));
