@@ -19,19 +19,25 @@ The configured class interval is **Label Offset** through **Label Offset + Numbe
 **Nonfinite Input Handling** has two choices:
 
 - **Error** is the default. A selected NaN, negative infinity, or positive infinity stops the filter. Choose a deliberate handling method before rerunning the pipeline.
-- **Warn and Continue** retains these selected samples in the histogram. Only selected finite values set the histogram bounds. NaN and negative infinity contribute to the first bin and receive the ordinary lowest class label. Positive infinity contributes to the last bin and receives the ordinary highest class label. These samples affect threshold fitting; they are not treated as excluded pixels. The filter returns one warning with counts for the three nonfinite kinds. Classification can be unreliable or unpredictable.
+- **Warn and Continue** fits thresholds using selected finite pixels. Selected NaN and infinity pixels receive **Excluded Label**. One warning counts the nonfinite pixels still selected after any mask.
 
-Both choices require at least one selected finite sample. Empty data, an all-false mask, or data with no selected finite value cannot define a histogram range and cause an error. Warn does not silently remove nonfinite samples.
+Both choices require at least one selected finite sample. Empty data, an all-false mask, or data with no selected finite value cannot define a histogram range and cause an error.
 
 ### Explicit mask and excluded labels
 
 Enable **Use Mask Array** to select a **Mask Array**. The mask must be scalar `bool` or `uint8` and have the same tuple count as the input. Tuples are paired in flat order; the mask can have a different tuple shape or parent group. False/zero excludes a pixel; true or any nonzero `uint8` value selects it. The filter applies this selection before range, histogram, and nonfinite checks. An excluded NaN or infinity therefore causes no nonfinite error or warning.
 
-Excluded pixels receive **Masked Label**, which defaults to 255. This label must lie outside the entire configured class interval, even if some configured classes have no pixels. With a mask, at most 255 ordinary classes and one distinct excluded label fit in `uint8`. An interval that uses all labels 0 through 255 cannot leave a distinct Masked Label. The filter reports a collision and requires a control change.
+Pixels excluded by the mask and nonfinite pixels skipped in Warn mode use the same **Excluded Label**. It defaults to 255 and must be outside the configured class interval when a mask is enabled or Warn is used with floating-point input. This leaves up to 255 ordinary classes. Choose an unused label or reduce the class interval if the label collides.
 
 A distinct label does not make downstream filters ignore excluded pixels. Supply the mask or an explicit background/exclusion rule to consumers that must ignore them. Changing histogram participation can change phase fractions, feature counts, and connectivity.
 
-For example, with input `[0, 0, 4, 4, NaN, -inf, +inf]`, two bins, one threshold, and Label Offset 7, Warn produces histogram counts `[4, 3]` and labels `[7, 7, 8, 8, 7, 7, 8]`. The finite bounds remain 0 and 4. An explicit mask `[1, 1, 1, 1, 0, 0, 0]` instead produces counts `[2, 2]`, no nonfinite warning, and labels `[7, 7, 8, 8, 255, 255, 255]` with Masked Label 255. This mask also permits Error mode because it excludes all nonfinite values.
+For input [0, 0, 4, 4, NaN, negative infinity, positive infinity], Warn uses histogram counts [2, 2] with two bins.
+With Label Offset 7 and Excluded Label 255, it writes [7, 7, 8, 8, 255, 255, 255]. A mask that excludes the three
+nonfinite pixels gives the same labels with either choice and produces no nonfinite warning.
+
+For component labeling, first select the ordinary class of interest into a binary mask. For fractions measured over valid
+pixels, exclude Excluded Label from both the selection and the denominator. Removing nonfinite samples from the histogram
+can move the fitted thresholds and change the labels of finite pixels too.
 
 ### Precision and pipeline migration
 
@@ -39,7 +45,7 @@ Histogram bounds, bin measurements, and threshold fitting use `float64`. The fil
 
 The finite tie tolerance, ordinary threshold search, and Valley Emphasis behavior are retained. **ReturnBinMidpoint** selects a bin midpoint instead of its maximum for the returned threshold. These checks add no automatic normalization or new scientific fitting rule.
 
-Existing pipelines receive Error, Use Mask Array off, and Masked Label 255 as defaults. Ordinary finite pipelines with valid label intervals and usable histogram and solver arithmetic retain their labels. A finite pipeline that previously completed can now stop with a numeric error if the new checks detect an unusable calculation. Pipelines that previously contained NaN/infinity now stop by default. Choose Warn to keep the stated endpoint-bin participation, or supply an explicit mask to exclude samples. Replacing nonfinite values upstream adds replacement intensities to the histogram and can bias thresholds; it is not statistical exclusion.
+Existing pipelines receive Error, Use Mask Array off, and Excluded Label 255 as defaults. Ordinary finite pipelines with valid label intervals and usable histogram and solver arithmetic retain their labels. A finite pipeline that previously completed can now stop with a numeric error if the new checks detect an unusable calculation. Pipelines that previously contained NaN/infinity now stop by default. Choose Warn to skip selected nonfinite pixels and assign Excluded Label. Replacing nonfinite values upstream adds replacement intensities to the histogram and can bias thresholds; it is not statistical exclusion.
 
 This filter also includes an option to use the valley emphasis algorithm from H.F. Ng, "Automatic thresholding for defect detection", Pattern Recognition Letters, (27): 1644-1649, 2006. The valley emphasis algorithm is particularly effective when the object to be thresholded is small. It is turned off by default; enable it with **Valley Emphasis**.
 

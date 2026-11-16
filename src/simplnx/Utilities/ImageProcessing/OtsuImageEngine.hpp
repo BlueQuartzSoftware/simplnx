@@ -37,7 +37,7 @@ struct OtsuImageOptions
   uint32 NumberOfBins = 128;
   uint8 NumberOfThresholds = 1;
   uint8 LabelOffset = 0;
-  uint8 MaskedLabel = 255;
+  uint8 ExcludedLabel = 255;
   bool WarnOnNonfinite = false;
   bool ValleyEmphasis = false;
   bool ReturnBinMidpoint = false;
@@ -441,7 +441,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
           }
           if(!options.WarnOnNonfinite && (summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0))
           {
-            return MakeErrorResult(-28654, "Otsu found a selected NaN or infinity. Choose Warn and Continue to retain endpoint-bin participation, or explicitly exclude it with Use Mask Array.");
+            return MakeErrorResult(-28654, "Otsu found a selected NaN or infinity. Choose Warn and Continue to skip nonfinite pixels and assign Excluded Label, or exclude them with Use Mask Array.");
           }
           if(summary.FiniteCount != 0)
           {
@@ -603,8 +603,6 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
       return ConvertInvalidResult<OtsuHistogramResult>(std::move(rangeResult));
     }
   }
-  histogram.counts.front() += result.NaNCount + result.NegativeInfinityCount;
-  histogram.counts.back() += result.PositiveInfinityCount;
   return ConvertResultTo(std::move(rangeResult), std::move(result));
 }
 
@@ -662,7 +660,7 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
   {
     if(!std::isfinite(value))
     {
-      return std::isinf(value) && value > 0 ? static_cast<uint8>(static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds) : options.LabelOffset;
+      return options.ExcludedLabel;
     }
   }
   const usize index = static_cast<usize>(std::ranges::lower_bound(thresholds, static_cast<float64>(value)) - thresholds.begin());
@@ -670,7 +668,7 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
 }
 
 /**
- * @brief Fits an Otsu histogram and writes selected classes and optional masked labels.
+ * @brief Fits an Otsu histogram and writes selected classes and an excluded label.
  * @tparam T Numeric input value type.
  * @tparam MaskT Boolean or uint8 selection-mask type.
  * @param input Scalar source image.
@@ -679,7 +677,7 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
  * @param options Histogram, class-label, nonfinite, and transfer controls.
  * @param shouldCancel Requests cancellation during scans, search, and output work.
  * @param messageHandler Receives output-phase progress messages.
- * @return Collected diagnostics, including the nonfinite participation warning, or a validation, numeric, or transfer error.
+ * @return Collected diagnostics, including the nonfinite exclusion warning, or a validation, numeric, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
  * Mask selection precedes histogram and nonfinite checks. The optional mask is read in bounded owned chunks.
@@ -694,9 +692,10 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
     return MakeErrorResult(-28602, "Otsu output must be scalar and match the input tuple count. Recreate the output array before thresholding.");
   }
   if(static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds > 255 ||
-     (maskPtr != nullptr && options.MaskedLabel >= options.LabelOffset && static_cast<uint32>(options.MaskedLabel) <= static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds))
+     ((maskPtr != nullptr || (std::is_floating_point_v<T> && options.WarnOnNonfinite)) && options.ExcludedLabel >= options.LabelOffset &&
+      static_cast<uint32>(options.ExcludedLabel) <= static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds))
   {
-    return MakeErrorResult(-28603, "Otsu labels do not fit a distinct uint8 class interval. Reduce Label Offset/Number Of Thresholds or select a Masked Label outside that interval.");
+    return MakeErrorResult(-28603, "Otsu labels do not fit a distinct uint8 class interval. Reduce Label Offset/Number Of Thresholds or select an Excluded Label outside that interval.");
   }
   auto histogramResult = ComputeOtsuHistogram(input, maskPtr, options, shouldCancel);
   if(histogramResult.invalid())
@@ -710,12 +709,14 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   Result<> result;
   result.warnings() = std::move(histogramResult.warnings());
   const auto& counts = histogramResult.value();
-  if(counts.NaNCount != 0 || counts.NegativeInfinityCount != 0 || counts.PositiveInfinityCount != 0)
+  const usize excludedCount = counts.NaNCount + counts.NegativeInfinityCount + counts.PositiveInfinityCount;
+  if(excludedCount != 0)
   {
-    result.warnings().push_back(Warning{.code = -8319,
-                                        .message = fmt::format("Otsu retained {} NaN, {} negative infinity and {} positive infinity samples in the endpoint histogram bins. Classification can be "
-                                                               "unreliable or unpredictable. Use an explicit mask to exclude these samples.",
-                                                               counts.NaNCount, counts.NegativeInfinityCount, counts.PositiveInfinityCount)});
+    const auto maskContext = maskPtr == nullptr ? "" : " still selected after applying the input mask";
+    result.warnings().push_back(
+        Warning{.code = -8319,
+                .message = fmt::format("Otsu skipped {} nonfinite pixels{} when fitting thresholds ({} NaN, {} negative infinity and {} positive infinity). The Excluded Label for these pixels is {}.",
+                                       excludedCount, maskContext, counts.NaNCount, counts.NegativeInfinityCount, counts.PositiveInfinityCount, options.ExcludedLabel)});
   }
   auto thresholdsResult = ComputeCheckedOtsuThresholds(histogramResult.value().HistogramData, options, shouldCancel);
   if(thresholdsResult.invalid())
@@ -780,7 +781,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
           {
             return;
           }
-          (*labelsPtr)[i] = maskValuesPtr[i] ? ClassifyOtsuValue(valuesPtr[i], thresholds, options) : options.MaskedLabel;
+          (*labelsPtr)[i] = maskValuesPtr[i] ? ClassifyOtsuValue(valuesPtr[i], thresholds, options) : options.ExcludedLabel;
         }
       });
       if(shouldCancel)
