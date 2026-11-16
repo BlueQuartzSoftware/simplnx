@@ -513,7 +513,7 @@ Result<> WriteImageDirect::operator()()
     }
 
     auto colorResult = ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceExtents, binPoints, controlPoints, maskArrayPtr,
-                                           m_InputValues.invalidColor, m_InputValues.NonfiniteInputHandling, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), progress);
+                                           m_InputValues.invalidColor, m_InputValues.nonfiniteInputHandling, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), progress);
     return MergeResults(ConvertResult(std::move(controlPointsResult)), std::move(colorResult));
   }
 

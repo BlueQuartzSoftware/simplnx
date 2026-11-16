@@ -44,7 +44,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
-  MarkerIdConversionHandling ConversionHandling = MarkerIdConversionHandling::Error;
+  MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error;
 
   template <class T> // T = grayscale type
   Result<> operator()() const
@@ -68,7 +68,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
         return MakeErrorResult(-79010, "MorphologicalWatershedFromMarkers: failed to allocate a uint32 scratch store.");
       }
 
-      accumulated = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel, ConversionHandling);
+      accumulated = WidenIntegerArrayToUInt32(dataStructure, markerArrayPath, *markerU32, shouldCancel, conversionHandling);
       if(accumulated.invalid())
       {
         return accumulated;
