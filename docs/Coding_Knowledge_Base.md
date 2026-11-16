@@ -830,7 +830,9 @@ meaning of infinity (PR #1888).
 the pipeline's disabled state. When a constructor gets a new argument, update the copy paths in the same change.
 Test copies with values that are not the defaults. For actions, apply the original and copy to separate
 `DataStructure`s and compare. For pipeline nodes, check the copied settings and serialized JSON, then change the
-copy's metadata and verify that the source keeps its values. Keep the API's existing child-sharing contract.
+copy's metadata and verify that the source keeps its values. Pipeline copy construction and copy assignment share
+child nodes with the source. Move construction and move assignment transfer the existing child nodes. Preserve
+these contracts when adding fields.
 
 **Example of the broken rule:** five geometry-creation actions (`CreateGeometry1DAction`, `CreateGeometry2DAction`,
 `CreateGeometry3DAction`, `CreateRectGridGeometryAction`, `CreateVertexGeometryAction`) lost their created geometry path
