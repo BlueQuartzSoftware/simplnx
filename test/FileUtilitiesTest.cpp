@@ -1,5 +1,6 @@
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
@@ -27,12 +28,11 @@ class PathFixture
 public:
   PathFixture()
   : m_OutputRoot(fs::canonical(fs::path(unit_test::k_BinaryTestOutputDir.view())))
-  , m_Path(m_OutputRoot / "fu1856")
+  , m_Path(m_OutputRoot / ("fu1856-" + Uuid::GenerateV4().str()))
   {
     REQUIRE(m_Path.parent_path() == m_OutputRoot);
-    REQUIRE_FALSE(fs::exists(m_Path));
     REQUIRE(fs::create_directory(m_Path));
-    REQUIRE(fs::canonical(m_Path).parent_path() == m_OutputRoot);
+    REQUIRE(fs::canonical(m_Path) == m_Path);
   }
 
   ~PathFixture() noexcept
@@ -47,7 +47,7 @@ public:
       }
     }
     const auto resolvedPath = fs::canonical(m_Path, errorCode);
-    if(!errorCode && resolvedPath.parent_path() == m_OutputRoot && resolvedPath.filename() == "fu1856")
+    if(!errorCode && resolvedPath == m_Path)
     {
       fs::remove_all(resolvedPath, errorCode);
     }
