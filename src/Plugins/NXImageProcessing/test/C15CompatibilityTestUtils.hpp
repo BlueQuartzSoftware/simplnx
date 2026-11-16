@@ -8,6 +8,7 @@
 #include "NXImageProcessing/Filters/ReadMhaFileFilter.hpp"
 #include "NXImageProcessing/Filters/WriteImageFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
+#include "SimplnxCore/Filters/ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/ConvertDataFilter.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -189,6 +190,24 @@ inline DataPath Components(DataStructure& dataStructure, const DataPath& input, 
   args.insertOrAssign(ConnectedComponentImageFilter::k_ProvisionalLabelLimitHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
   ExecuteChecked(filter, dataStructure, args);
   return input.replaceName(name);
+}
+
+inline float32 MaskedMean(DataStructure& dataStructure, const DataPath& input, const DataPath& mask)
+{
+  const ComputeArrayStatisticsFilter filter;
+  const DataPath stats({"Phase Statistics"});
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(input));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(mask));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(stats));
+  args.insertOrAssign(ComputeArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>("Phase Fraction"));
+  ExecuteChecked(filter, dataStructure, args);
+  const Float32Array* result = nullptr;
+  REQUIRE_NOTHROW(result = &dataStructure.getDataRefAs<Float32Array>(stats.createChildPath("Phase Fraction")));
+  REQUIRE(result->getNumberOfTuples() == 1);
+  return result->getValue(0);
 }
 
 inline void SetGeometry(DataStructure& dataStructure)

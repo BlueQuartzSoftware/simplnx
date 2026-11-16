@@ -67,18 +67,18 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "Valley Emphasis", "Set/Get the use of valley emphasis. Default is false.", false));
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
-  params.insert(std::make_unique<ChoicesParameter>(
-      k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
-      "Error stops on selected NaN or infinity. Warn and Continue retains NaN/negative infinity in the first histogram bin and positive infinity in the last; classification may be unreliable.", 0,
-      ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
+                                                                    "Error stops on selected NaN or infinity. Warn and Continue skips these pixels when fitting thresholds and assigns Excluded Label.",
+                                                                    0, ChoicesParameter::Choices{"Error", "Warn and Continue"}));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMaskArray_Key, "Use Mask Array", "Explicitly exclude pixels with a zero/false mask value before range and nonfinite checks.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Select a scalar bool or uint8 mask with one value per input tuple. Nonzero values select pixels.",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<UInt8Parameter>(k_MaskedLabel_Key, "Masked Label",
-                                                 "Label for excluded pixels. It must be outside the entire configured class interval; downstream filters must explicitly honor it.", uint8{255}));
+  params.insert(std::make_unique<UInt8Parameter>(k_MaskedLabel_Key, "Excluded Label",
+                                                 "Label for pixels excluded by the input mask or skipped by Warn and Continue. Choose a value outside the ordinary class interval.", uint8{255}));
   params.linkParameters(k_UseMaskArray_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_UseMaskArray_Key, k_MaskedLabel_Key, true);
+  params.linkParameters(k_NonfiniteInputHandling_Key, k_MaskedLabel_Key, ChoicesParameter::ValueType{1});
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -125,15 +125,22 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
                 MakeErrorResult<OutputActions>(-8312, fmt::format("Label Offset ({}) plus Number Of Thresholds ({}) exceeds 255. Reduce either value to keep every class label within uint8.",
                                                                   labelOffset, static_cast<uint32>(numberOfThresholds)))};
   }
-  if(filterArgs.value<bool>(k_UseMaskArray_Key))
+  const bool useMask = filterArgs.value<bool>(k_UseMaskArray_Key);
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
+  const auto inputType = inputArray.getDataType();
+  const bool warnOnNonfinite = filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1;
+  if(useMask || (warnOnNonfinite && (inputType == DataType::float32 || inputType == DataType::float64)))
   {
     const uint32 maskedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key);
     if(maskedLabel >= labelOffset && maskedLabel <= lastLabel)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
-                  -8313, fmt::format("Masked Label ({}) collides with the configured class interval [{}, {}]. Select a Masked Label outside this interval or reduce the class interval.", maskedLabel,
-                                     labelOffset, lastLabel))};
+                  -8313, fmt::format("Excluded Label ({}) collides with the configured class interval [{}, {}]. Select an Excluded Label outside this interval or reduce the class interval.",
+                                     maskedLabel, labelOffset, lastLabel))};
     }
+  }
+  if(useMask)
+  {
     const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
     // ArraySelectionParameter also accepts nonnumeric array kinds.
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPath);
@@ -143,15 +150,13 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
       return {.outputActions =
                   MakeErrorResult<OutputActions>(invalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
     }
-    const auto& input = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-    if(maskPtr->getNumberOfTuples() != input.getNumberOfTuples())
+    if(maskPtr->getNumberOfTuples() != inputArray.getNumberOfTuples())
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-8314, fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
-                                                                                 maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), input.getNumberOfTuples()))};
+                                                                                 maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), inputArray.getNumberOfTuples()))};
     }
   }
 
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
@@ -173,7 +178,7 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   const ImageProcessing::OtsuImageOptions options{.NumberOfBins = filterArgs.value<uint32>(k_NumberOfHistogramBins_Key),
                                                   .NumberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key),
                                                   .LabelOffset = filterArgs.value<uint8>(k_LabelOffset_Key),
-                                                  .MaskedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key),
+                                                  .ExcludedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key),
                                                   .WarnOnNonfinite = filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1,
                                                   .ValleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key),
                                                   .ReturnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key)};
