@@ -1,5 +1,9 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -17,6 +21,59 @@ enum class TerminalImageConversionStatus : std::uint8_t
   Clipped,  ///< A finite integer result was clipped after truncation.
   NonFinite ///< A nonfinite integer result was rejected; output is unchanged.
 };
+
+/**
+ * @class TerminalConversionState
+ * @brief Collects clipping and the lowest rejected index for one terminal conversion.
+ * @details Workers can record outcomes concurrently. Read the state after the workers join.
+ */
+class TerminalConversionState
+{
+public:
+  TerminalConversionState() = default;
+  ~TerminalConversionState() = default;
+  TerminalConversionState(const TerminalConversionState&) = delete;
+  TerminalConversionState(TerminalConversionState&&) = delete;
+  TerminalConversionState& operator=(const TerminalConversionState&) = delete;
+  TerminalConversionState& operator=(TerminalConversionState&&) = delete;
+
+  void recordClipping() noexcept
+  {
+    m_Clipped.store(true, std::memory_order_relaxed);
+  }
+  bool clipped() const noexcept
+  {
+    return m_Clipped.load(std::memory_order_relaxed);
+  }
+  /**
+   * @brief Records the smallest flat index of a rejected value.
+   * @param index Flat index in the output array.
+   */
+  void recordNonFinite(usize index) noexcept
+  {
+    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
+    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
+    {
+    }
+  }
+  /**
+   * @brief Returns the lowest index observed after the workers join.
+   * @return The flat index or the largest usize value if there was no rejected value.
+   */
+  usize nonFiniteIndex() const noexcept
+  {
+    return m_NonFiniteIndex.load(std::memory_order_relaxed);
+  }
+
+private:
+  std::atomic<bool> m_Clipped{false};
+  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
+};
+
+/**
+ * @brief Adds caller-owned diagnostics to the result at the end of terminal conversion.
+ */
+using TerminalConversionReporter = Result<>(const TerminalConversionState&, Result<>);
 
 /**
  * @brief Converts floating image values and maps finite narrowing overflow to signed infinity.

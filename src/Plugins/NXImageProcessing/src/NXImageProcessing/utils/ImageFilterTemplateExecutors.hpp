@@ -218,7 +218,7 @@ struct AxisProjectionExecuteFn
  *        ConductanceParameter, ...) are supplied by the caller; this functor only resolves the T-typed input/output
  *        stores and forwards to the streaming @ref ApplyFiniteDifference driver.
  */
-template <class F, bool CheckedOutput = false>
+template <class F, bool CheckedOutput = false, auto ReportConversion = nullptr>
 struct FiniteDifferenceExecuteFn
 {
   DataStructure& dataStructure;
@@ -237,7 +237,8 @@ struct FiniteDifferenceExecuteFn
   {
     const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
     auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyFiniteDifference<T, F, CheckedOutput>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+    return ApplyFiniteDifference<T, F, CheckedOutput, ReportConversion>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel,
+                                                                        messageHandler);
   }
 };
 
@@ -382,9 +383,9 @@ Result<> ExecuteAxisProjectionImageFilter(DataStructure& dataStructure, const Da
  *        (CurvatureFlowFn etc.), which may itself hold extra parameters set by the caller. @p TypeSetPolicy
  *        selects which scalar types the filter accepts (AllNumeric for CurvatureFlow; FloatingScalar for the
  *        other three). The caller's preflight must have enforced a scalar input.
- *        CheckedOutput is an explicit Curvature Flow opt-in; other finite-difference callers keep the default.
+ *        CheckedOutput selects the checked Curvature Flow path. ReportConversion supplies its diagnostics.
  */
-template <class F, class TypeSetPolicy, bool CheckedOutput = false>
+template <class F, class TypeSetPolicy, bool CheckedOutput = false, auto ReportConversion = nullptr>
 Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, F fn, float64 timeStep,
                                             uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
@@ -393,7 +394,8 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const SizeVec3 dims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
-  const detail::FiniteDifferenceExecuteFn<F, CheckedOutput> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler};
+  const detail::FiniteDifferenceExecuteFn<F, CheckedOutput, ReportConversion> executeFn{dataStructure, inputArrayPath,     outputArrayPath, dims,          spacing, fn,
+                                                                                        timeStep,      numberOfIterations, shouldCancel,    messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 

@@ -3,7 +3,6 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
-#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -79,43 +78,8 @@ inline Result<> MergeRecursiveGaussianResults(bool checkedSmoothing, Result<> pr
   return current.invalid() ? std::move(current) : Result<>{};
 }
 
-class SmoothingGaussianConversionState
-{
-public:
-  SmoothingGaussianConversionState() = default;
-  ~SmoothingGaussianConversionState() = default;
-  SmoothingGaussianConversionState(const SmoothingGaussianConversionState&) = delete;
-  SmoothingGaussianConversionState(SmoothingGaussianConversionState&&) = delete;
-  SmoothingGaussianConversionState& operator=(const SmoothingGaussianConversionState&) = delete;
-  SmoothingGaussianConversionState& operator=(SmoothingGaussianConversionState&&) = delete;
-
-  void recordClipping() noexcept
-  {
-    m_Clipped.store(true, std::memory_order_relaxed);
-  }
-  bool clipped() const noexcept
-  {
-    return m_Clipped.load(std::memory_order_relaxed);
-  }
-  void recordNonFinite(usize index) noexcept
-  {
-    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
-    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
-    {
-    }
-  }
-  usize nonFiniteIndex() const noexcept
-  {
-    return m_NonFiniteIndex.load(std::memory_order_relaxed);
-  }
-
-private:
-  std::atomic<bool> m_Clipped{false};
-  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
-};
-
 template <class T>
-bool ConvertSmoothingGaussianBuffer(nonstd::span<const float32> input, nonstd::span<T> output, usize offset, SmoothingGaussianConversionState& state, const std::atomic_bool& shouldCancel,
+bool ConvertSmoothingGaussianBuffer(nonstd::span<const float32> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel,
                                     usize valuesPerRow = 0, usize rowStride = 0)
 {
   bool clipped = false;
@@ -147,36 +111,6 @@ bool ConvertSmoothingGaussianBuffer(nonstd::span<const float32> input, nonstd::s
     state.recordClipping();
   }
   return true;
-}
-
-template <class T>
-Result<> SmoothingGaussianNonFiniteResult(const SmoothingGaussianConversionState& state)
-{
-  if(state.nonFiniteIndex() == std::numeric_limits<usize>::max())
-  {
-    return {};
-  }
-  return MakeErrorResult(k_SmoothingGaussianNonFiniteIntegerOutput, fmt::format("Smoothing Recursive Gaussian produced a nonfinite value at flat value index {} for output type '{}'. Use a "
-                                                                                "floating-point input array to retain nonfinite output, or correct nonfinite input values.",
-                                                                                state.nonFiniteIndex(), DataTypeToString(GetDataType<T>())));
-}
-
-/** @brief Finalizes the one owner warning on success, cancellation, or a later transfer/conversion failure. */
-template <class T>
-Result<> FinishSmoothingGaussianConversion(const SmoothingGaussianConversionState& state, Result<> result)
-{
-  if(result.valid())
-  {
-    result = MergeResults(std::move(result), SmoothingGaussianNonFiniteResult<T>(state));
-  }
-  if(state.clipped())
-  {
-    result.warnings().push_back({.code = k_SmoothingGaussianClippedIntegerOutput,
-                                 .message = fmt::format("Smoothing Recursive Gaussian clipped finite final integer values to the '{}' range after truncation. Review the "
-                                                        "output before thresholding or segmentation; use a floating-point input to retain these values.",
-                                                        DataTypeToString(GetDataType<T>()))});
-  }
-  return result;
 }
 
 // Four-line batches are the computational unit, not the reporting unit. Group them so a worker
@@ -2597,11 +2531,21 @@ inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::a
   return {};
 }
 
-// Smoothing final conversion retains float32 pass values and checks only the terminal integer conversion.
+/**
+ * @brief Writes the final float32 working values in the destination type.
+ * @tparam T Destination pixel type.
+ * @param src Completed Gaussian pass values.
+ * @param dst Destination with the same value count as the source.
+ * @param shouldCancel Request to stop conversion between batches.
+ * @param reportConversion Adds conversion diagnostics to the result on each executed path.
+ * @param options Controls the direct or buffered route and the scratch memory budget.
+ * @return The first error and the collected transfer and conversion warnings.
+ */
 template <class T>
-Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataStore<T>& dst, const std::atomic_bool& shouldCancel, const detail::PointwiseExecutionOptions& options = {})
+Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataStore<T>& dst, const std::atomic_bool& shouldCancel, detail::TerminalConversionReporter& reportConversion,
+                            const detail::PointwiseExecutionOptions& options = {})
 {
-  detail::SmoothingGaussianConversionState conversionState;
+  detail::TerminalConversionState conversionState;
   Result<> accumulated;
   const usize total = src.getSize();
   if(dst.getSize() != total)
@@ -2620,7 +2564,7 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
       detail::ConvertSmoothingGaussianBuffer<T>(srcValues.subspan(range.min(), range.max() - range.min()), dstValues.subspan(range.min(), range.max() - range.min()), range.min(), conversionState,
                                                 shouldCancel);
     });
-    return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+    return reportConversion(conversionState, std::move(accumulated));
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
       total, sizeof(float32) + sizeof(T), options.targetScratchBytes,
@@ -2637,25 +2581,25 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
   {
     if(shouldCancel)
     {
-      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+      return reportConversion(conversionState, std::move(accumulated));
     }
     const usize n = std::min(batchValues, total - start);
     accumulated = MergeResults(std::move(accumulated), src.copyIntoBuffer(start, nonstd::span<float32>(s.data(), n)));
     if(accumulated.invalid())
     {
-      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+      return reportConversion(conversionState, std::move(accumulated));
     }
     if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(s.data(), n), nonstd::span<T>(d.data(), n), start, conversionState, shouldCancel))
     {
-      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+      return reportConversion(conversionState, std::move(accumulated));
     }
     accumulated = MergeResults(std::move(accumulated), dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
     if(accumulated.invalid())
     {
-      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+      return reportConversion(conversionState, std::move(accumulated));
     }
     start += n;
   }
-  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+  return reportConversion(conversionState, std::move(accumulated));
 }
 } // namespace nx::core::ImageProcessing

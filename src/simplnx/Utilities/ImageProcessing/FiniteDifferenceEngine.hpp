@@ -59,43 +59,8 @@ inline Result<> ValidateCurvatureFlowControls(float64 timeStep, const FloatVec3&
   return {};
 }
 
-class CurvatureFlowConversionState
-{
-public:
-  CurvatureFlowConversionState() = default;
-  ~CurvatureFlowConversionState() = default;
-  CurvatureFlowConversionState(const CurvatureFlowConversionState&) = delete;
-  CurvatureFlowConversionState(CurvatureFlowConversionState&&) = delete;
-  CurvatureFlowConversionState& operator=(const CurvatureFlowConversionState&) = delete;
-  CurvatureFlowConversionState& operator=(CurvatureFlowConversionState&&) = delete;
-
-  void recordClipping() noexcept
-  {
-    m_Clipped.store(true, std::memory_order_relaxed);
-  }
-  bool clipped() const noexcept
-  {
-    return m_Clipped.load(std::memory_order_relaxed);
-  }
-  void recordNonFinite(usize index) noexcept
-  {
-    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
-    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
-    {
-    }
-  }
-  usize nonFiniteIndex() const noexcept
-  {
-    return m_NonFiniteIndex.load(std::memory_order_relaxed);
-  }
-
-private:
-  std::atomic<bool> m_Clipped{false};
-  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
-};
-
 template <bool CheckedOutput, class T, class Real>
-bool ConvertFiniteDifferenceOutputBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, CurvatureFlowConversionState& state, const std::atomic_bool& shouldCancel,
+bool ConvertFiniteDifferenceOutputBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel,
                                          usize valuesPerRow = 0, usize rowStride = 0)
 {
   bool clipped = false;
@@ -134,29 +99,6 @@ bool ConvertFiniteDifferenceOutputBuffer(nonstd::span<const Real> input, nonstd:
     state.recordClipping();
   }
   return true;
-}
-
-template <bool CheckedOutput>
-Result<> FinishFiniteDifferenceConversion(const CurvatureFlowConversionState& state)
-{
-  Result<> result;
-  if constexpr(CheckedOutput)
-  {
-    const usize failedIndex = state.nonFiniteIndex();
-    if(failedIndex != std::numeric_limits<usize>::max())
-    {
-      result = MakeErrorResult(
-          k_CurvatureFlowNonFiniteIntegerOutput,
-          fmt::format("Curvature Flow produced a nonfinite integer output at flat value index {}. Reduce Time Step or use a floating-point input array to retain nonfinite output.", failedIndex));
-    }
-    if(state.clipped())
-    {
-      result.warnings().push_back({.code = k_CurvatureFlowClippedIntegerOutput,
-                                   .message = "Curvature Flow clipped final integer values to the output type's range after truncation. The evolution may be unstable. "
-                                              "Reduce Time Step and check downstream masks and segmentation for clipping plateaus."});
-    }
-  }
-  return result;
 }
 
 template <class T>
@@ -1513,17 +1455,17 @@ Result<> UpdateGlobalConductance2DBounded(F& fn, const StoreT& currentStore, usi
   return {};
 }
 
-template <class T, class F, class Real, bool CheckedOutput = false, class WorkingStoreT>
+template <class T, class F, class Real, bool CheckedOutput = false, auto ReportConversion = nullptr, class WorkingStoreT>
 Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, usize nx, usize ny,
                                         const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                         const IFilter::MessageHandler& messageHandler, usize residentLimit)
 {
-  detail::CurvatureFlowConversionState conversionState;
+  detail::TerminalConversionState conversionState;
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
     {
-      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+      return ReportConversion(conversionState, MergeResults(std::move(ioResult), std::move(result)));
     }
     return result;
   };
@@ -1728,17 +1670,17 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
   return finish();
 }
 
-template <class T, class F, class Real, bool CheckedOutput = false, class WorkingStoreT>
+template <class T, class F, class Real, bool CheckedOutput = false, auto ReportConversion = nullptr, class WorkingStoreT>
 Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, const SizeVec3& dims,
                                          const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                          const IFilter::MessageHandler& messageHandler)
 {
-  detail::CurvatureFlowConversionState conversionState;
+  detail::TerminalConversionState conversionState;
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
     {
-      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+      return ReportConversion(conversionState, MergeResults(std::move(ioResult), std::move(result)));
     }
     return result;
   };
@@ -2039,7 +1981,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
   return finish();
 }
 
-template <class T, class F, class Real, bool CheckedOutput = false>
+template <class T, class F, class Real, bool CheckedOutput = false, auto ReportConversion = nullptr>
 Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, F fn, float64 timeStep,
                                      uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D)
 {
@@ -2105,10 +2047,11 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
   TemporaryFiniteDifferenceStore<Real> secondStore(*secondRecords, shouldCancel);
   if(nz == 1)
   {
-    return ApplyFiniteDifference2DBounded<T, F, Real, CheckedOutput>(inStore, outStore, firstStore, secondStore, nx, ny, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler,
-                                                                     residentLimit2D);
+    return ApplyFiniteDifference2DBounded<T, F, Real, CheckedOutput, ReportConversion>(inStore, outStore, firstStore, secondStore, nx, ny, sc, fn, timeStep, numberOfIterations, shouldCancel,
+                                                                                       messageHandler, residentLimit2D);
   }
-  return ApplyFiniteDifference3DPingPong<T, F, Real, CheckedOutput>(inStore, outStore, firstStore, secondStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  return ApplyFiniteDifference3DPingPong<T, F, Real, CheckedOutput, ReportConversion>(inStore, outStore, firstStore, secondStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel,
+                                                                                      messageHandler);
 }
 
 // Full ITK-free FiniteDifference driver. Resident DataStore execution retains the original full-volume
@@ -2134,19 +2077,19 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
 // hardcoded to float64, the float32-input live-ITK grid diverged from ITK by ~1 ULP at essentially every voxel --
 // a deterministic precision-MODEL mismatch, not thread-order FP noise -- and resolved once Real became T here).
 // CheckedOutput opts into the selected Curvature Flow controls, exact no-ops, and terminal conversion only.
-// Other finite-difference filters retain the default behavior and their own precision models.
-template <class T, class F, bool CheckedOutput = false>
+// The checked caller supplies ReportConversion to add its diagnostics at the end of conversion.
+template <class T, class F, bool CheckedOutput = false, auto ReportConversion = nullptr>
 // NOLINTNEXTLINE(misc-no-recursion) -- The staging call has two resident endpoints, so it cannot re-enter the out-of-core staging branch.
 Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, FloatVec3 spacing, F fn, float64 timeStep, uint32 numberOfIterations,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {
   using Real = std::conditional_t<F::k_NativePrecision, T, float64>;
-  detail::CurvatureFlowConversionState conversionState;
+  detail::TerminalConversionState conversionState;
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
     {
-      return MergeResults(MergeResults(std::move(ioResult), std::move(result)), detail::FinishFiniteDifferenceConversion<true>(conversionState));
+      return ReportConversion(conversionState, MergeResults(std::move(ioResult), std::move(result)));
     }
     return result;
   };
@@ -2222,8 +2165,9 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
         {
           return finish(std::move(inputResult));
         }
-        Result<> evolutionResult = MergeResults(std::move(inputResult), ApplyFiniteDifference<T, F, CheckedOutput>(residentInput, residentOutput, dims, spacing, fn, timeStep, numberOfIterations,
-                                                                                                                   shouldCancel, messageHandler, residentLimit2D));
+        Result<> evolutionResult =
+            MergeResults(std::move(inputResult), ApplyFiniteDifference<T, F, CheckedOutput, ReportConversion>(residentInput, residentOutput, dims, spacing, fn, timeStep, numberOfIterations,
+                                                                                                              shouldCancel, messageHandler, residentLimit2D));
         if(evolutionResult.invalid())
         {
           return finish(std::move(evolutionResult));
@@ -2258,7 +2202,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
 
   if(hasOutOfCoreEndpoint)
   {
-    return ApplyFiniteDifferenceOocRaw<T, F, Real, CheckedOutput>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
+    return ApplyFiniteDifferenceOocRaw<T, F, Real, CheckedOutput, ReportConversion>(inStore, outStore, dims, sc, fn, timeStep, numberOfIterations, shouldCancel, messageHandler, residentLimit2D);
   }
 
   // Resident/fallback stores: accum (Real) = cast<Real>(in), streamed plane by plane -- ITK's IntermediateType

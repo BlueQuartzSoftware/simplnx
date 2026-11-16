@@ -1,6 +1,7 @@
 #include "CurvatureFlowImageFilter.hpp"
 
 #include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -106,7 +107,7 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
 
-  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true>(
+  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
       dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
 }
 } // namespace nx::core
