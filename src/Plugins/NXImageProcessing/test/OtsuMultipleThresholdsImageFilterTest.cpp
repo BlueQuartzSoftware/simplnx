@@ -259,10 +259,10 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: preflight check
   {
     REQUIRE(preflightResult.outputActions.invalid());
     REQUIRE_FALSE(preflightResult.outputActions.errors().empty());
-    REQUIRE(preflightResult.outputActions.errors().front().code == -8312);
+    REQUIRE(preflightResult.outputActions.errors().front().code == -28903);
     const auto execution = filter.execute(dataStructure, arguments);
     SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
-    REQUIRE(execution.result.errors().front().code == -8312);
+    REQUIRE(execution.result.errors().front().code == -28903);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -422,7 +422,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn r
   if constexpr(std::is_floating_point_v<TestType>)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().front().code == -8313);
+    REQUIRE(preflight.outputActions.errors().front().code == -28907);
   }
   else
   {
@@ -475,7 +475,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finit
   const auto result = filter.execute(dataStructure, restored.value());
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings().front().code == -8319);
+  REQUIRE(result.result.warnings().front().code == -28959);
   REQUIRE(result.result.warnings().front().message.find(useMask ? "skipped 2 nonfinite pixels still selected after applying the input mask" : "skipped 3 nonfinite pixels") != std::string::npos);
   REQUIRE(result.result.warnings().front().message.find("Excluded Label for these pixels is 42") != std::string::npos);
   requireOtsuLabels(dataStructure, inputPath, expected);
@@ -493,7 +493,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects e
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, otsuArguments(inputPath));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -28654);
+  REQUIRE(result.result.errors().front().code == -28954);
   const auto& message = result.result.errors().front().message;
   const auto* kind = std::isnan(value) ? "NaN" : (value < 0 ? "negative infinity" : "positive infinity");
   REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
@@ -529,7 +529,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error finds the
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -28654);
+  REQUIRE(result.result.errors().front().code == -28954);
   const auto& message = result.result.errors().front().message;
   REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
   REQUIRE(message.find("negative infinity at zero-based flat tuple index 262145") != std::string::npos);
@@ -589,7 +589,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(result.result.errors().front().code == -28655);
+  REQUIRE(result.result.errors().front().code == -28955);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -601,7 +601,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   const auto inputPath = recon_test::BuildImageFromPattern<float32>(dataStructure, 4, 1, 1, {0, 0, 4, 4});
   auto args = otsuArguments(inputPath);
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
-  int32 expectedCode = -8313;
+  int32 expectedCode = -28907;
   SECTION("unused interior class is still reserved")
   {
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(3));
@@ -621,7 +621,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   }
   SECTION("different tuple count")
   {
-    expectedCode = -8314;
+    expectedCode = -28908;
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(createOtsuMask(dataStructure, std::array<uint8, 3>{1, 1, 1})));
   }
   SECTION("full unmasked interval leaves no masked label")
@@ -703,7 +703,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: true constants 
     input.setValue(0, std::numeric_limits<uint64>::max() - 1);
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28656);
+    REQUIRE(result.errors().front().code == -28956);
   }
   SECTION("opposite float64 extrema overflow the range")
   {
@@ -711,21 +711,21 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: true constants 
     input.setValue(0, -std::numeric_limits<float64>::max());
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28656);
+    REQUIRE(result.errors().front().code == -28956);
   }
   SECTION("nonzero means square to zero")
   {
     const ImageProcessing::Histogram histogram{.counts = {1, 1, 100}, .min = 0, .max = 3e-200, .binWidth = 1e-200};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28650);
+    REQUIRE(result.errors().front().code == -28950);
   }
   SECTION("finite means square to infinity")
   {
     const ImageProcessing::Histogram histogram{.counts = {1, 1, 100}, .min = 1e200, .max = 4e200, .binWidth = 1e200};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28650);
+    REQUIRE(result.errors().front().code == -28950);
   }
   SECTION("unique rational optimum stays unchanged at ordinary scale")
   {
@@ -1188,7 +1188,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: StringArray mas
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     const auto& error = result.outputActions.errors().front();
-    REQUIRE(error.code == -83100);
+    REQUIRE(error.code == -28909);
     REQUIRE(error.message.find(maskPath.toString()) != std::string::npos);
     REQUIRE(error.message.find("scalar bool or uint8") != std::string::npos);
   }
@@ -1265,11 +1265,11 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constants exclu
   input.setValue(0, std::numeric_limits<float64>::quiet_NaN());
   const auto noFiniteResult = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(noFiniteResult);
-  REQUIRE(noFiniteResult.errors().front().code == -28655);
+  REQUIRE(noFiniteResult.errors().front().code == -28955);
   const DataStore<float64> empty({0}, {1}, 0.0);
   const auto emptyResult = ImageProcessing::ComputeOtsuHistogram(empty, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(emptyResult);
-  REQUIRE(emptyResult.errors().front().code == -28655);
+  REQUIRE(emptyResult.errors().front().code == -28955);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -1286,14 +1286,14 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper 
     options.NumberOfBins = 1;
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28600);
+    REQUIRE(result.errors().front().code == -28900);
   }
   SECTION("output size")
   {
     DataStore<uint8> output({1}, {1}, uint8{0});
     const auto result = ImageProcessing::ApplyOtsuImage(input, output, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28602);
+    REQUIRE(result.errors().front().code == -28902);
   }
   SECTION("threshold count")
   {
@@ -1301,21 +1301,21 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper 
     const ImageProcessing::Histogram histogram{.counts = {1, 1}, .min = 0, .max = 4, .binWidth = 2};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28601);
+    REQUIRE(result.errors().front().code == -28901);
   }
   SECTION("empty histogram")
   {
     const ImageProcessing::Histogram histogram{.counts = {0, 0}, .min = 0, .max = 4, .binWidth = 2};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28605);
+    REQUIRE(result.errors().front().code == -28905);
   }
   SECTION("nonfinite histogram metadata")
   {
     const ImageProcessing::Histogram histogram{.counts = {1, 1}, .min = std::numeric_limits<float64>::infinity(), .max = std::numeric_limits<float64>::infinity(), .binWidth = 0};
     const auto result = ImageProcessing::ComputeCheckedOtsuThresholds(histogram, options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28606);
+    REQUIRE(result.errors().front().code == -28906);
   }
   SECTION("collapsed required bin boundaries")
   {
@@ -1324,7 +1324,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper 
     input.setValue(1, 1e20 + 32768.0);
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28657);
+    REQUIRE(result.errors().front().code == -28957);
   }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

@@ -39,9 +39,9 @@ namespace nx::core
 {
 namespace
 {
-constexpr int32 k_OtsuClassIntervalOverflow = -8312;
-constexpr int32 k_OtsuExcludedLabelCollision = -8313;
-constexpr int32 k_OtsuMaskTupleMismatch = -8314;
+constexpr int32 k_OtsuClassIntervalOverflow = -28903;
+constexpr int32 k_OtsuExcludedLabelCollision = -28907;
+constexpr int32 k_OtsuMaskTupleMismatch = -28908;
 } // namespace
 
 std::string OtsuMultipleThresholdsImageFilter::name() const
@@ -155,7 +155,7 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPath);
     if(maskPtr == nullptr)
     {
-      constexpr int32 invalidMaskArrayKind = -83100;
+      constexpr int32 invalidMaskArrayKind = -28909;
       return {.outputActions =
                   MakeErrorResult<OutputActions>(invalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
     }
