@@ -7,6 +7,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -65,7 +66,7 @@ DataPath runMappedIntegerAsin(DataStructure& dataStructure, const DataPath& inpu
 TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer one produces float32 radians", "[NXImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {1});
@@ -86,7 +87,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer one produces flo
 TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer endpoints and invalid values produce floating angles", "[NXImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const auto inputValues = [] {
     if constexpr(std::is_signed_v<TestType>)
@@ -125,7 +126,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer endpoints and in
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: floating input retains type and principal angles", "[NXImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {-1, -0.5, -TestType{0}, TestType{0}, 0.5, 1, 2, -2, std::numeric_limits<TestType>::quiet_NaN(),
@@ -159,7 +160,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: floating input retains t
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: adjacent domain boundaries remain distinct", "[NXImageProcessing][Issue1874][AsinImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const TestType insideValue = std::nextafter(TestType{1}, TestType{0});
   const TestType outsideValue = std::nextafter(TestType{1}, std::numeric_limits<TestType>::infinity());
@@ -187,7 +188,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: adjacent domain boundari
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::AsinImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][AsinImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int16>(dataStructure, 2, 0, 0);

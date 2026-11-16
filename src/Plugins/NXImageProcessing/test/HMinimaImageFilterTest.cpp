@@ -10,6 +10,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -59,7 +60,7 @@ Arguments makeHMinimaArguments(const DataPath& inputPath, float64 height, bool f
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional Height fails preflight", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const float64 height = GENERATE(0.5, 2.5);
   CAPTURE(height);
@@ -87,7 +88,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional He
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves values and type", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64, float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -134,7 +134,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: floating fractional Height retains fractional minima", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -174,7 +173,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: floating fractional H
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: native 64-bit marker preserves units above double precision", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -210,7 +208,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: native 64-bit marker 
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves native integer bounds", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool fullyConnected = GENERATE(false, true);
   CAPTURE(scenario, fullyConnected);
@@ -248,7 +245,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: zero Height preserves
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height raises or saturates native integer markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool fullyConnected = GENERATE(false, true);
   const bool atMaximum = GENERATE(false, true);
@@ -285,7 +281,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height raises o
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: large whole Height retains exact native 64-bit markers", "[NXImageProcessing][Issue1874][HMinimaImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool fullyConnected = GENERATE(false, true);
   const float64 height = GENERATE(std::ldexp(1.0, 63), 0x1.fffffffffffffp63);
@@ -324,7 +319,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: large whole Height re
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: whole Height is stable under a signed baseline shift", "[NXImageProcessing][Issue1874][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool fullyConnected = GENERATE(false, true);
   const bool positiveBaseline = GENERATE(false, true);
@@ -580,7 +574,6 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height gu
 
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const nlohmann::json json = {{"Height", 3.5},
                                {"FullyConnected", true},
                                {"SelectedCellArrayPath", {{"Data Container Name", "Image Geometry"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "Input"}}},
@@ -602,7 +595,6 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: FromSIMPLJson", "[NXImageProce
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima)", "[NXImageProcessing][ItkGolden][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
   rt::RunReconstructionMd5ItkGolden<HMinimaImageFilter>("RA-Short.nrrd", "7778067eeb752b6ac396dd9e362e8346",
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
 }

@@ -7,6 +7,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -66,7 +67,7 @@ DataPath runMappedIntegerLog(DataStructure& dataStructure, const DataPath& input
 TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: integer values produce float64 natural logarithms", "[NXImageProcessing][Issue1874][LogImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   constexpr int32 highestPower = std::numeric_limits<TestType>::digits - 1;
   constexpr TestType highestPowerOfTwo = static_cast<TestType>(TestType{1} << highestPower);
@@ -116,7 +117,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: integer values produce fl
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: floating input retains type and IEEE domain results", "[NXImageProcessing][Issue1874][LogImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input =
@@ -169,7 +170,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: floating input retains ty
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: positive floating boundaries retain finite logarithms", "[NXImageProcessing][Issue1874][LogImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {std::numeric_limits<TestType>::min(), std::numeric_limits<TestType>::denorm_min(),
@@ -201,7 +202,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: positive floating boundar
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::LogImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][LogImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildRampImage<int16>(dataStructure, 2, 1, 0);

@@ -234,7 +234,6 @@ private:
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonfinite policy is explicit and defaults to Error",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][ThresholdSafeRed]")
 {
-  UnitTest::LoadPlugins();
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   const Parameters parameters = filter.parameters();
   const std::string policyKey = "nonfinite_input_handling_index";
@@ -256,7 +255,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: initial midpoint includes the finite image minimum",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][ThresholdSafeRed]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 2, 1, 1, std::vector<int32>{100, 102});
@@ -295,7 +294,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: in
 TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: native integer endpoints retain exact width-two masks",
                    "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool nearMaximum = GENERATE(false, true);
   const TestType low = nearMaximum ? static_cast<TestType>(std::numeric_limits<TestType>::max() - TestType{2}) : std::numeric_limits<TestType>::lowest();
@@ -314,7 +313,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageF
 TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: full native integer spans keep the absolute-two heuristic",
                    "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 2, 1, 1, {std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max()});
@@ -331,7 +330,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageF
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: caps clamp before 64-bit conversion and preserve lower truncation",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   SECTION("signed exclusive high and finite overflow")
   {
@@ -382,7 +381,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ca
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: low and empty bands return warned Outside values",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const float64 cap = GENERATE(-1.0, -std::numeric_limits<float64>::infinity(), 99.0);
   const uint8 outside = GENERATE(uint8{0}, uint8{7});
@@ -401,7 +400,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: lo
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: NaN Upper Boundary is a hard parameter error in both image modes",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool warn = GENERATE(false, true);
   DataStructure dataStructure;
@@ -424,7 +423,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Na
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: one image policy covers every nonfinite class and order",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize placement = GENERATE(usize{0}, usize{1}, usize{2});
   const bool warn = GENERATE(false, true);
@@ -485,7 +484,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Er
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all nonfinite Warn skips search and calculates no threshold",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const int32 kind = GENERATE(0, 1, 2, 3);
   const uint8 outside = GENERATE(uint8{0}, uint8{7});
@@ -509,7 +508,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: al
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: floating rounding distinguishes convergence from a repeated wide state",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool roundUp = GENERATE(false, true);
   DataStructure dataStructure;
@@ -531,7 +530,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: fl
 TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: opposite finite floating extrema keep finite search candidates",
                    "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 2, 1, 1, {-std::numeric_limits<TestType>::max(), std::numeric_limits<TestType>::max()});
@@ -549,7 +548,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageF
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonzero scoring minimum sizes and the fixed scale stop are preserved",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const ThresholdMaximumConnectedComponentsImageFilter filter;
@@ -617,7 +616,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: old JSON receives Error and version two preserves explicit Warn",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   REQUIRE(filter.parametersVersion() == 2);
   auto json = filter.toJson(filter.getDefaultArguments());
@@ -640,7 +638,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ol
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine rejects image nonfinites before empty-cap output and distinguishes empty input",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const std::atomic_bool shouldCancel{false};
   const float64 nonfinite = GENERATE(std::numeric_limits<float64>::quiet_NaN(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::infinity());
   const ThresholdTransferStore<float64> input({0, nonfinite, 2});
@@ -666,7 +663,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no-finite fallback avoids count and reread passes and retains warnings on write failure",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool failWrite = GENERATE(false, true);
   const ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::infinity()});
   ThresholdTransferStore<uint8> output({99, 99, 99});
@@ -700,7 +696,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: count failures remain strict under image Warn",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto fault = GENERATE(ThresholdFaultType::ReadError, ThresholdFaultType::BadAllocation, ThresholdFaultType::LengthError);
   ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 4});
   input.setReadFault(2, fault); // Initial summary succeeds; the first component-count read fails.
@@ -729,7 +724,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: summary and final transfers preserve failures and collected diagnostics",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const int32 stage = GENERATE(0, 1, 2, 3, 4, 5, 6);
   ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
   ThresholdTransferStore<uint8> output({99, 99, 99});
@@ -792,7 +786,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: su
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: outer exceptions preserve collected warnings before output",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool allocationFailure = GENERATE(false, true);
   const ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
   ThresholdTransferStore<uint8> output({99, 99, 99});
@@ -824,7 +817,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ou
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine cancellation keeps warning Results without inventing a local cancellation error",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool cancelBefore = GENERATE(false, true);
   std::atomic_bool shouldCancel{cancelBefore};
   const ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
@@ -848,7 +840,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: direct engine validates output shape before transfer",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity()});
   ThresholdTransferStore<uint8> output({99});
   const std::atomic_bool shouldCancel{false};
@@ -865,7 +856,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: di
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: resident and owned multi-block summaries use finite native extrema",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   constexpr usize count = 131073;
   std::vector<float32> values(count, 0);
   values.at(1) = 2;
@@ -903,7 +893,6 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: re
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: native span and cap math retain exact bounds and ordinary floating rounding",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   REQUIRE(ImageProcessing::detail::ThresholdMaxCCSpanExceedsTwo(std::numeric_limits<int8>::lowest(), std::numeric_limits<int8>::max()));
   REQUIRE(ImageProcessing::detail::ThresholdMaxCCSpanExceedsTwo(std::numeric_limits<int64>::lowest(), std::numeric_limits<int64>::max()));
   REQUIRE(ImageProcessing::detail::ThresholdMaxCCSpanExceedsTwo(-std::numeric_limits<float64>::max(), std::numeric_limits<float64>::max()));
@@ -975,13 +964,11 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   rt::RunReconstructionMd5ItkGolden<ThresholdMaximumConnectedComponentsImageFilter>("cthead1.png", "c84b75c78c33844251a1095d9cbcffb9");
 }
 
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ITK real-image golden (parameters)", "[NXImageProcessing][ItkGolden][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
   rt::RunReconstructionMd5ItkGolden<ThresholdMaximumConnectedComponentsImageFilter>("cthead1.png", "27c6cf8494fcc4e414f1c420e7a9ca6f", [](Arguments& args) {
     args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(40u));
     args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(150.0));
@@ -992,7 +979,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: IT
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: corrected-midpoint real-image regression (float)",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][MidpointMigration]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath geometryPath({"Image Geometry"});
@@ -1069,7 +1056,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
 TEST_CASE("NXImageProcessing::C15Compatibility resident threshold fallback selects intended foreground",
           "[NXImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});

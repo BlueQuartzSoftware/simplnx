@@ -7,6 +7,7 @@
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -33,7 +34,7 @@ using namespace nx::core;
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: integer input produces float64 growth and decay", "[NXImageProcessing][Issue1874][ExpImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   std::vector<TestType> values = {0, 1, 100};
   if constexpr(std::is_signed_v<TestType>)
@@ -108,7 +109,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: integer input produces fl
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: floating IEEE values retain growth decay and range behavior", "[NXImageProcessing][Issue1874][ExpImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {std::numeric_limits<TestType>::quiet_NaN(),
@@ -196,7 +197,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: floating IEEE values reta
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::ExpImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][ExpImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildRampImage<int16>(dataStructure, 2, 0, 0);
@@ -249,7 +250,6 @@ TEST_CASE("NXImageProcessing::ExpImageFilter: mapped multi-component output pres
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::ExpImageFilter: floating result conversion handles finite narrowing boundaries", "[NXImageProcessing][Issue1874][ExpImageFilter]")
 {
-  UnitTest::LoadPlugins();
   constexpr float64 finiteLimit = std::numeric_limits<float32>::max();
   const float64 outside = std::nextafter(finiteLimit, std::numeric_limits<float64>::infinity());
   const float64 inside = std::nextafter(finiteLimit, float64{0});
@@ -275,7 +275,7 @@ TEST_CASE("NXImageProcessing::ExpImageFilter: floating result conversion handles
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: floating input retains type for safe finite values", "[NXImageProcessing][Issue1874][ExpImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {-1, 0, 1});

@@ -11,6 +11,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -209,7 +210,7 @@ std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
 
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active sigma is rejected before execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(usize{1}, usize{4});
   const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
@@ -230,7 +231,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
 
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active spacing is rejected before execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(usize{1}, usize{4});
   const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
@@ -254,7 +255,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effective active scale is rejected before execution",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(usize{1}, usize{4});
   const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
@@ -280,7 +281,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid eff
 
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: finite negative spacing and unused Z remain accepted", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const float64 unusedSigma = GENERATE(0.0, -1.0, std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
   const float32 unusedSpacing = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
@@ -300,7 +301,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: finite nega
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: each selected validation branch has a diagnostic", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize failure = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
   const std::array<int32, 5> expectedCodes{ImageProcessing::k_SmoothingGaussianInvalidSigma, ImageProcessing::k_SmoothingGaussianInvalidSpacing, ImageProcessing::k_SmoothingGaussianInvalidScale,
@@ -346,7 +347,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: each select
 TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: constants retain type shape and selected endpoint behavior",
                    "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int8, int16, int32, int64, float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope algorithmScope(scenario);
   const usize dimZ = GENERATE(usize{1}, usize{4});
@@ -398,7 +398,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: co
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 output retains float32 interpass precision", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope algorithmScope(scenario);
   DataStructure dataStructure;
@@ -424,7 +423,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: float64 out
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and buffered terminal conversion follow literal expectations",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool buffered = GENERATE(false, true);
   const std::array<float32, 5> input{93.75F, 127.75F, 128.0F, -128.75F, -129.0F};
   const std::array<int8, 5> expected{93, 127, 127, -128, -128};
@@ -446,7 +444,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and 
 TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: floating terminal values retain nonfinite behavior",
                    "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
   const bool buffered = GENERATE(false, true);
   DataStore<float32> source(ShapeType{4}, ShapeType{1}, 93.75F);
   source.setValue(1, std::numeric_limits<float32>::infinity());
@@ -473,7 +470,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fl
 TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: terminal nonfinite integer errors and binary64 boundaries",
                    "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]", int32, int64)
 {
-  UnitTest::LoadPlugins();
   const bool buffered = GENERATE(false, true);
   const bool nonfinite = GENERATE(false, true);
   const float32 invalidValue = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), std::numeric_limits<float32>::quiet_NaN());
@@ -506,7 +502,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: te
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping warning survives later transfer failure and cancellation",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const usize outcome = GENERATE(usize{0}, usize{1}, usize{2});
   std::atomic_bool shouldCancel{false};
   const SmoothingTransferStore<float32> source(8, 128.0F, {.ReadAt = outcome == 0 ? usize{2} : usize{0}});
@@ -536,7 +531,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping wa
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected plane sinks retain successful warnings before error or cancellation",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const SmoothingTransferStore<float32> source(64, 0.0F);
   std::atomic_bool shouldCancel{false};
   const bool cancel = GENERATE(false, true);
@@ -575,7 +569,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected pl
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected tiled transfers keep prior row warnings on failure",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const bool write = GENERATE(false, true);
   SmoothingTransferStore<float32> store(8, 0.0F, {.ReadAt = write ? usize{0} : usize{2}, .WriteAt = write ? usize{2} : usize{0}});
   std::array<float32, 2> values{1.0F, 2.0F};
@@ -590,7 +583,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: selected ti
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: checked axis materializations narrow finite overflow explicitly",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const uint32 axis = GENERATE(uint32{0}, uint32{1}, uint32{2});
   const bool fast = GENERATE(false, true);
   const DataStore<float64> source(ShapeType{5, 5, 5}, ShapeType{1}, 2.0 * static_cast<float64>(std::numeric_limits<float32>::max()));
@@ -799,7 +791,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJson", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const nlohmann::json json = {
       {"Sigma", {{"x", 2.0}, {"y", 3.0}, {"z", 4.0}}},
       {"NormalizeAcrossScale", true},
@@ -1018,7 +1009,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
 TEST_CASE("NXImageProcessing::C15Compatibility resident SmoothingRecursiveGaussianImageFilter feeds quantitative gradient",
           "[NXImageProcessing][C15Compatibility][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const bool step = GENERATE(false, true);

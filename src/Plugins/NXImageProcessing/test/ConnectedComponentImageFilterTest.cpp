@@ -6,6 +6,7 @@
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -96,7 +97,6 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: provisional label limit policy is explicit and defaults to Error", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const ConnectedComponentImageFilter filter;
   REQUIRE(filter.parametersVersion() == 2);
   const Parameters parameters = filter.parameters();
@@ -128,7 +128,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: provisional label l
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: both policies preserve literal connectivity labels and uint32 shape", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool fullyConnected = GENERATE(false, true);
@@ -181,7 +181,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: both policies prese
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: many provisional runs can form one exact component", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const std::vector<int8> input{1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1};
@@ -215,7 +215,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: many provisional ru
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: execution cancellation keeps the filter cancellation result", "[NXImageProcessing][Issue1874][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   DataStructure dataStructure;

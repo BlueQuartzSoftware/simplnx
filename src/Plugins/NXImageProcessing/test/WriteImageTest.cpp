@@ -364,7 +364,6 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::WriteImageFilter: nonfinite policy is explicit and defaults to Error", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageSafeRed]")
 {
-  UnitTest::LoadPlugins();
   const WriteImageFilter filter;
   const Parameters parameters = filter.parameters();
   const std::string policyKey = "nonfinite_input_handling_index";
@@ -384,7 +383,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: nonfinite policy is explicit and
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: nonfinite policy is active only for color-table output", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageSafeRed]")
 {
-  UnitTest::LoadPlugins();
   const WriteImageFilter filter;
   const Parameters parameters = filter.parameters();
   const std::string policyKey = "nonfinite_input_handling_index";
@@ -589,7 +587,6 @@ private:
 TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: native endpoints decode to literal RGB", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64, float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   requireWriteImageGray(scope, std::array<TestType, 2>{std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max()}, std::array<uint8, 2>{0, 255});
@@ -597,7 +594,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: native endpoints decode
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: wide and tiny interiors decode without native range collapse", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const std::array<uint8, 3> expected{0, 127, 255};
@@ -621,7 +617,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: wide and tiny interiors decode w
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::WriteImageFilter: subnormal double interior has a distinct runtime witness", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const float64 tiny = std::numeric_limits<float64>::denorm_min();
@@ -637,7 +632,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: subnormal double interior has a 
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: mask first nonfinite and finite masked range decode literally", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool booleanMask = GENERATE(false, true);
   const uint64 policy = GENERATE(uint64{0}, uint64{1});
@@ -668,7 +662,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: mask first nonfinite and finite 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: integer color reads masks only for slices", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -712,7 +705,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: integer color reads masks only f
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: Warn returns one count and the first actual control color", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool useMask = GENERATE(false, true);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -742,7 +734,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Warn returns one count and the f
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: late strict nonfinite preserves every existing slice byte", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize invalidKind = GENERATE(usize{0}, usize{1}, usize{2});
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -778,7 +769,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: late strict nonfinite preserves 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: no finite color range errors in either mode", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const uint64 policy = GENERATE(uint64{0}, uint64{1});
   const bool allMasked = GENERATE(false, true);
@@ -799,7 +789,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: no finite color range errors in 
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: finite constants and all finite masked values stay valid", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool allMasked = GENERATE(false, true);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -820,7 +809,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: finite constants and all finite 
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: policy output retains literal layouts in every plane", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const uint64 plane = GENERATE(uint64{0}, uint64{1}, uint64{2});
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -852,7 +840,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: policy output retains literal la
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: raw floating pixels ignore color policy and mask", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]", float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const uint64 policy = GENERATE(uint64{0}, uint64{1});
   const bool useMask = GENERATE(false, true);
@@ -915,7 +902,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: raw floating pixels ign
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: cancellation during color scan opens no slice", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
@@ -942,7 +928,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: cancellation during color scan o
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: color size and palette guards use actionable results", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   constexpr usize maximum = std::numeric_limits<usize>::max();
   const auto empty = write_image_color::ValidateSize<float64>({.Width = 0, .Height = 2, .Count = 3}, false);
   SIMPLNX_RESULT_REQUIRE_INVALID(empty);
@@ -973,7 +958,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: color size and palette guards us
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: page and slice IO failures preserve diagnostics and warnings", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize failure = GENERATE(usize{0}, usize{1}, usize{2});
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -1016,7 +1000,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: page and slice IO failures prese
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: late nonfinite scan uses bounded scalar and mask pages", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool useMask = GENERATE(false, true);
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -1129,7 +1112,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: raw export retains warnings from
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::WriteImageFilter: later commit failure keeps earlier slice and policy warning", "[NXImageProcessing][Issue1874][WriteImageFilter][WriteImageNumeric]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
@@ -2975,7 +2957,6 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tangent persist and export ordered fractions", "[NXImageProcessing][C15Compatibility][Issue1874][WriteImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const usize operation = GENERATE(usize{0}, usize{1}, usize{2});
