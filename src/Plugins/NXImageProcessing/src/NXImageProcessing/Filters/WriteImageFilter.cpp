@@ -358,7 +358,7 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   inputValues.imageDataArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   inputValues.createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
-  inputValues.NonfiniteInputHandling = inputValues.createColorTable ?
+  inputValues.nonfiniteInputHandling = inputValues.createColorTable ?
                                            static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) :
                                            ImageProcessing::NonfiniteInputHandling::Error;
   inputValues.presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);

@@ -29,7 +29,7 @@ struct NXIMAGEPROCESSING_EXPORT WriteImageInputValues
   DataPath imageGeometryPath;
   DataPath imageDataArrayPath;
   bool createColorTable = false;
-  ImageProcessing::NonfiniteInputHandling NonfiniteInputHandling = ImageProcessing::NonfiniteInputHandling::Error;
+  ImageProcessing::NonfiniteInputHandling nonfiniteInputHandling = ImageProcessing::NonfiniteInputHandling::Error;
   std::string presetName;
   bool useMask = false;
   DataPath maskArrayPath;

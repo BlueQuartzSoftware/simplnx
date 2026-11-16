@@ -53,7 +53,7 @@ struct ConnectedComponentExecuteFn
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
 
-  ConnectedComponentLabelLimitHandling LabelLimitHandling;
+  ConnectedComponentLabelLimitHandling labelLimitHandling;
 
   template <class T>
   Result<> operator()() const
@@ -62,7 +62,7 @@ struct ConnectedComponentExecuteFn
     auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
     return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler, k_ConnectedComponent2DTargetBytes,
-                                       LabelLimitHandling);
+                                       labelLimitHandling);
   }
 };
 
