@@ -37,6 +37,13 @@ using namespace nx::core;
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_OtsuClassIntervalOverflow = -8312;
+constexpr int32 k_OtsuExcludedLabelCollision = -8313;
+constexpr int32 k_OtsuMaskTupleMismatch = -8314;
+} // namespace
+
 std::string OtsuMultipleThresholdsImageFilter::name() const
 {
   return FilterTraits<OtsuMultipleThresholdsImageFilter>::name;
@@ -121,9 +128,9 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   const uint32 lastLabel = labelOffset + static_cast<uint32>(numberOfThresholds);
   if(lastLabel > 255)
   {
-    return {.outputActions =
-                MakeErrorResult<OutputActions>(-8312, fmt::format("Label Offset ({}) plus Number Of Thresholds ({}) exceeds 255. Reduce either value to keep every class label within uint8.",
-                                                                  labelOffset, static_cast<uint32>(numberOfThresholds)))};
+    return {.outputActions = MakeErrorResult<OutputActions>(k_OtsuClassIntervalOverflow,
+                                                            fmt::format("Label Offset ({}) plus Number Of Thresholds ({}) exceeds 255. Reduce either value to keep every class label within uint8.",
+                                                                        labelOffset, static_cast<uint32>(numberOfThresholds)))};
   }
   const bool useMask = filterArgs.value<bool>(k_UseMaskArray_Key);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
@@ -136,8 +143,9 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
     if(maskedLabel >= labelOffset && maskedLabel <= lastLabel)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(
-                  -8313, fmt::format("Excluded Label ({}) collides with the configured class interval [{}, {}]. Select an Excluded Label outside this interval or reduce the class interval.",
-                                     maskedLabel, labelOffset, lastLabel))};
+                  k_OtsuExcludedLabelCollision,
+                  fmt::format("Excluded Label ({}) collides with the configured class interval [{}, {}]. Select an Excluded Label outside this interval or reduce the class interval.", maskedLabel,
+                              labelOffset, lastLabel))};
     }
   }
   if(useMask)
@@ -153,8 +161,9 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
     }
     if(maskPtr->getNumberOfTuples() != inputArray.getNumberOfTuples())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-8314, fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
-                                                                                 maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), inputArray.getNumberOfTuples()))};
+      return {.outputActions = MakeErrorResult<OutputActions>(k_OtsuMaskTupleMismatch,
+                                                              fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
+                                                                          maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), inputArray.getNumberOfTuples()))};
     }
   }
 

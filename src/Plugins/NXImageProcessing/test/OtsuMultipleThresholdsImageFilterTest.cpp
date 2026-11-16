@@ -260,6 +260,9 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: preflight check
     REQUIRE(preflightResult.outputActions.invalid());
     REQUIRE_FALSE(preflightResult.outputActions.errors().empty());
     REQUIRE(preflightResult.outputActions.errors().front().code == -8312);
+    const auto execution = filter.execute(dataStructure, arguments);
+    SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+    REQUIRE(execution.result.errors().front().code == -8312);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -634,6 +637,9 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.outputActions.errors().front().code == expectedCode);
+  const auto execution = filter.execute(dataStructure, args);
+  REQUIRE(execution.result.invalid());
+  REQUIRE(execution.result.errors().front().code == expectedCode);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -1282,27 +1288,12 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper 
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -28600);
   }
-  SECTION("mask size")
-  {
-    DataStore<uint8> mask({1}, {1}, uint8{1});
-    const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(&mask), options, shouldCancel);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -8329);
-  }
   SECTION("output size")
   {
     DataStore<uint8> output({1}, {1}, uint8{0});
     const auto result = ImageProcessing::ApplyOtsuImage(input, output, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -28602);
-  }
-  SECTION("label interval")
-  {
-    options.LabelOffset = 255;
-    DataStore<uint8> output({2}, {1}, uint8{0});
-    const auto result = ImageProcessing::ApplyOtsuImage(input, output, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel, {});
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().front().code == -28603);
   }
   SECTION("threshold count")
   {

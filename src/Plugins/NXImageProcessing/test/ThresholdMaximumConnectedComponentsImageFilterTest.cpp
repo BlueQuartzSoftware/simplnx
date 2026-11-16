@@ -407,10 +407,14 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Na
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<uint64>(dataStructure, 2, 1, 1, {100, 102});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.preflight(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = std::numeric_limits<float64>::quiet_NaN(), .WarnOnNonfinite = warn}));
+  const auto args = thresholdArguments(inputPath, {.UpperBoundary = std::numeric_limits<float64>::quiet_NaN(), .WarnOnNonfinite = warn});
+  const auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -28610);
   REQUIRE(result.outputActions.errors().front().message.find("Upper Boundary") != std::string::npos);
+  const auto execution = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+  REQUIRE(execution.result.errors().front().code == -28610);
   REQUIRE(dataStructure.getDataAs<IDataArray>(inputPath.replaceName("Output")) == nullptr);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -841,18 +845,17 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: direct engine validates hard parameters and output shape before transfer",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: direct engine validates output shape before transfer",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   UnitTest::LoadPlugins();
-  const bool nanParameter = GENERATE(false, true);
   const ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity()});
   ThresholdTransferStore<uint8> output({99});
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.UpperBoundary = nanParameter ? std::numeric_limits<float64>::quiet_NaN() : 65536, .WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{.UpperBoundary = 65536, .WarnOnNonfinite = true};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{2, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == (nanParameter ? -28610 : -28612));
+  REQUIRE(result.errors().front().code == -28612);
   REQUIRE(input.reads() == 0);
   REQUIRE(output.writes() == 0);
 }

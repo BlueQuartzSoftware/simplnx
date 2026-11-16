@@ -469,7 +469,9 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
  * @return Collected warnings, or a parameter, shape, numeric-capacity, allocation, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
- * NaN Upper Boundary always fails. Image Error fails in the initial scan, including for an empty requested band.
+ * @pre The caller has rejected a NaN Upper Boundary.
+ *
+ * Image Error fails in the initial scan, including for an empty requested band.
  * Warn retains ordinary inclusive comparisons. With no finite data, the engine fills Outside Value and reports that no threshold was calculated.
  * Count capacity remains strict. Owned scan and output buffers are bounded; component-run tables depend on image topology.
  * Completed output is not rolled back after a late failure or cancellation.
@@ -479,10 +481,6 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
                                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {}, const DataPath& inputArrayPath = {})
 {
   Result<> status;
-  if(std::isnan(options.UpperBoundary))
-  {
-    return MakeErrorResult(-28610, "Upper Boundary is NaN. Enter a valid numeric cutoff; positive infinity selects the native maximum and negative infinity requests an empty band.");
-  }
   if(input.getNumberOfComponents() != 1 || output.getNumberOfComponents() != 1 || output.getSize() != input.getSize())
   {
     return MakeErrorResult(-28612, "Threshold Maximum Connected Components requires scalar input and uint8 output with matching tuple counts. Recreate the output for the selected image.");

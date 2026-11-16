@@ -26,6 +26,11 @@ using namespace nx::core;
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_ThresholdMaxCCNaNUpperBoundary = -28610;
+} // namespace
+
 std::string ThresholdMaximumConnectedComponentsImageFilter::name() const
 {
   return FilterTraits<ThresholdMaximumConnectedComponentsImageFilter>::name;
@@ -98,7 +103,7 @@ IFilter::PreflightResult ThresholdMaximumConnectedComponentsImageFilter::preflig
   if(std::isnan(filterArgs.value<float64>(k_UpperBoundary_Key)))
   {
     return {.outputActions = MakeErrorResult<OutputActions>(
-                -28610, "Upper Boundary is NaN. Enter a valid numeric cutoff; positive infinity selects the native maximum and negative infinity requests an empty band.")};
+                k_ThresholdMaxCCNaNUpperBoundary, "Upper Boundary is NaN. Enter a valid numeric cutoff; positive infinity selects the native maximum and negative infinity requests an empty band.")};
   }
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
