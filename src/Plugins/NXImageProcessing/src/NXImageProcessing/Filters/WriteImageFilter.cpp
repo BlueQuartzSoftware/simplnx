@@ -117,7 +117,7 @@ Parameters WriteImageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
                                                    "Error stops before any slice is written if an unmasked value is NaN or infinity. Warn and Continue uses the first control color for those values "
                                                    "and reports their count. Masked finite values still participate in the finite color range.",
-                                                   0, ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+                                                   static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue"}));
 
   params.insertSeparator(Parameters::Separator{"Scale Bar (Optional)"});
   params.insert(std::make_unique<BoolParameter>(k_AddScaleBar_Key, "Add Physical Scale Bar",
@@ -358,7 +358,9 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   inputValues.imageDataArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   inputValues.createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
-  inputValues.NonfiniteInputHandling = inputValues.createColorTable ? filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) : 0;
+  inputValues.NonfiniteInputHandling = inputValues.createColorTable ?
+                                           static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) :
+                                           ImageProcessing::NonfiniteInputHandling::Error;
   inputValues.presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);

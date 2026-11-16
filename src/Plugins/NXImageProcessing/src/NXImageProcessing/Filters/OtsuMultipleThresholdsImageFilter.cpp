@@ -67,9 +67,9 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "Valley Emphasis", "Set/Get the use of valley emphasis. Default is false.", false));
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
-                                                                    "Error stops on selected NaN or infinity. Warn and Continue skips these pixels when fitting thresholds and assigns Excluded Label.",
-                                                                    0, ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_NonfiniteInputHandling_Key, "Nonfinite Input Handling", "Error stops on selected NaN or infinity. Warn and Continue skips these pixels when fitting thresholds and assigns Excluded Label.",
+      static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue"}));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMaskArray_Key, "Use Mask Array", "Explicitly exclude pixels with a zero/false mask value before range and nonfinite checks.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Select a scalar bool or uint8 mask with one value per input tuple. Nonzero values select pixels.",
@@ -78,7 +78,7 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
                                                  "Label for pixels excluded by the input mask or skipped by Warn and Continue. Choose a value outside the ordinary class interval.", uint8{255}));
   params.linkParameters(k_UseMaskArray_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_UseMaskArray_Key, k_MaskedLabel_Key, true);
-  params.linkParameters(k_NonfiniteInputHandling_Key, k_MaskedLabel_Key, ChoicesParameter::ValueType{1});
+  params.linkParameters(k_NonfiniteInputHandling_Key, k_MaskedLabel_Key, static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::WarnAndContinue));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -128,7 +128,8 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   const bool useMask = filterArgs.value<bool>(k_UseMaskArray_Key);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   const auto inputType = inputArray.getDataType();
-  const bool warnOnNonfinite = filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1;
+  const bool warnOnNonfinite =
+      static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) == ImageProcessing::NonfiniteInputHandling::WarnAndContinue;
   if(useMask || (warnOnNonfinite && (inputType == DataType::float32 || inputType == DataType::float64)))
   {
     const uint32 maskedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key);
@@ -179,7 +180,8 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
                                                   .NumberOfThresholds = filterArgs.value<uint8>(k_NumberOfThresholds_Key),
                                                   .LabelOffset = filterArgs.value<uint8>(k_LabelOffset_Key),
                                                   .ExcludedLabel = filterArgs.value<uint8>(k_MaskedLabel_Key),
-                                                  .WarnOnNonfinite = filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1,
+                                                  .WarnOnNonfinite = static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(
+                                                                         k_NonfiniteInputHandling_Key)) == ImageProcessing::NonfiniteInputHandling::WarnAndContinue,
                                                   .ValleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key),
                                                   .ReturnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key)};
   const IDataArray* maskPtr = filterArgs.value<bool>(k_UseMaskArray_Key) ? &dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_MaskArrayPath_Key)) : nullptr;

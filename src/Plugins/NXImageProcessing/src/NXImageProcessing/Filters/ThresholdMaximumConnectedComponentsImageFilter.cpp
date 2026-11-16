@@ -69,7 +69,7 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
                                                    "Error stops on image NaN or either infinity before search/output. Warn and Continue uses finite bounds and assigns nonfinite pixels Outside Value. "
                                                    "With no finite pixels, it skips search, fills Outside Value and warns that no threshold was calculated.",
-                                                   0, ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+                                                   static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -126,8 +126,8 @@ Result<> ThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructu
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  return ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, minimumObjectSizeInPixels, upperBoundary,
-                                                                                insideValue, outsideValue, shouldCancel, messageHandler,
-                                                                                filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key) == 1);
+  return ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter(
+      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, minimumObjectSizeInPixels, upperBoundary, insideValue, outsideValue, shouldCancel, messageHandler,
+      static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) == ImageProcessing::NonfiniteInputHandling::WarnAndContinue);
 }
 } // namespace nx::core
