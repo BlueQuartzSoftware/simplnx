@@ -189,10 +189,10 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
     auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
     if(maskPtr != nullptr && maskPtr->getDataType() == DataType::boolean)
     {
-      return ImageProcessing::ApplyOtsuImage(input, output, &maskPtr->getIDataStoreRefAs<AbstractDataStore<bool>>(), options, shouldCancel, messageHandler);
+      return ImageProcessing::ApplyOtsuImage(input, output, &maskPtr->getIDataStoreRefAs<AbstractDataStore<bool>>(), options, shouldCancel, messageHandler, selectedInputArray);
     }
     const auto* maskStorePtr = maskPtr == nullptr ? nullptr : &maskPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
-    return ImageProcessing::ApplyOtsuImage(input, output, maskStorePtr, options, shouldCancel, messageHandler);
+    return ImageProcessing::ApplyOtsuImage(input, output, maskStorePtr, options, shouldCancel, messageHandler, selectedInputArray);
   });
 }
 

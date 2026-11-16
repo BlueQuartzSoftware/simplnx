@@ -34,6 +34,7 @@
 #include "simplnx/Utilities/ImageProcessing/OtsuImageEngine.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <nonstd/span.hpp>
@@ -478,6 +479,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finit
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects each selected nonfinite kind", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   UnitTest::LoadPlugins();
@@ -487,12 +489,50 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects e
   const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, 3, 1, 1, {0, value, 4});
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, otsuArguments(inputPath));
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.result.errors().front().code == -28654);
+  const auto& message = result.result.errors().front().message;
+  const auto* kind = std::isnan(value) ? "NaN" : (value < 0 ? "negative infinity" : "positive infinity");
+  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
+  REQUIRE(message.find(fmt::format("{} at zero-based flat tuple index 1", kind)) != std::string::npos);
+  REQUIRE(message.find("skip nonfinite pixels and assign Excluded Label") != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error finds the first selected nonfinite tuple across scan blocks",
+          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  (void)Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize firstSelectedIndex = 262145;
+  const auto infinity = std::numeric_limits<float64>::infinity();
+  std::vector<float64> values(firstSelectedIndex + 2, 4.0);
+  values[0] = std::numeric_limits<float64>::quiet_NaN();
+  values[firstSelectedIndex] = -infinity;
+  values[firstSelectedIndex + 1] = infinity;
+  DataStructure dataStructure;
+  const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
+  const DataPath maskPath({"Mask"});
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {values.size()}, {1});
+  REQUIRE(maskStore != nullptr);
+  std::vector<uint8> mask(values.size(), uint8{1});
+  mask[0] = 0;
+  const auto maskWrite = maskStore->copyFromBuffer(0, nonstd::span<const uint8>(mask.data(), mask.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(maskWrite);
+  REQUIRE(UInt8Array::Create(dataStructure, maskPath.getTargetName(), maskStore) != nullptr);
+  auto args = otsuArguments(inputPath);
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  const OtsuMultipleThresholdsImageFilter filter;
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == -28654);
+  const auto& message = result.result.errors().front().message;
+  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
+  REQUIRE(message.find("negative infinity at zero-based flat tuple index 262145") != std::string::npos);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask precedes Error and accepts flat tuple count across parents",
