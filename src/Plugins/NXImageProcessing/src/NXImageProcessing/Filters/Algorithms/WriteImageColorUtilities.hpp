@@ -4,6 +4,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -88,13 +89,14 @@ struct Range
  * @tparam T Scalar input type.
  * @param array Single-component source array.
  * @param maskArray Optional single-component bool or uint8 mask.
- * @param policy Error (0) or Warn and Continue (1).
+ * @param policy Action for unmasked nonfinite values.
  * @param shouldCancel Stops the scan between pages.
  * @param reportRange Synchronous callback after each complete page.
  * @return Native range and warnings, cancellation state, or the first scan error.
  */
 template <typename T>
-Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray, uint64 policy, const std::atomic_bool& shouldCancel, const std::function<void(usize, usize)>& reportRange)
+Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray, ImageProcessing::NonfiniteInputHandling policy, const std::atomic_bool& shouldCancel,
+                           const std::function<void(usize, usize)>& reportRange)
 {
   const auto& store = array.getIDataStoreRefAs<AbstractDataStore<T>>();
   const usize count = store.getNumberOfTuples();
@@ -168,7 +170,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
           const bool selected = boolMask != nullptr ? boolMask[index] : (byteMask == nullptr || (*byteMask)[index] != 0);
           if(selected)
           {
-            if(policy == 0)
+            if(policy == ImageProcessing::NonfiniteInputHandling::Error)
             {
               return ConvertResultTo<Range<T>>(
                   MergeResults(std::move(status), MakeErrorResult(-27027, fmt::format("Write Image array '{}' has an unmasked nonfinite value at tuple {}. Repair or mask this value, or select 'Warn "

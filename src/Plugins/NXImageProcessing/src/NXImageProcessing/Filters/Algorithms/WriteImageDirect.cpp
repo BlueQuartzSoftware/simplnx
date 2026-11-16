@@ -201,8 +201,8 @@ struct ColorizeVolumeFunctor
   // The operation calculates the range in pages and then colorizes bounded slices.
   template <typename T>
   Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, const write_image_color::SliceExtents& sliceExtents, const std::vector<float32>& binPoints,
-                      const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, uint64 nonfinitePolicy, const std::atomic_bool& shouldCancel,
-                      const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const write_image_color::ProgressCallbacks& progress)
+                      const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, ImageProcessing::NonfiniteInputHandling nonfinitePolicy,
+                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const write_image_color::ProgressCallbacks& progress)
   {
     const auto& [sliceW, sliceH, sliceCount] = sliceExtents;
     if(Result<> sizeResult = write_image_color::ValidateSize<T>(sliceExtents, maskArray != nullptr); sizeResult.invalid())

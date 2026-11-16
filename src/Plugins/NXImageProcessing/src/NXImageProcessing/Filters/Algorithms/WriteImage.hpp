@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <filesystem>
 #include <string>
@@ -28,7 +29,7 @@ struct NXIMAGEPROCESSING_EXPORT WriteImageInputValues
   DataPath imageGeometryPath;
   DataPath imageDataArrayPath;
   bool createColorTable = false;
-  uint64 NonfiniteInputHandling = 0;
+  ImageProcessing::NonfiniteInputHandling NonfiniteInputHandling = ImageProcessing::NonfiniteInputHandling::Error;
   std::string presetName;
   bool useMask = false;
   DataPath maskArrayPath;
