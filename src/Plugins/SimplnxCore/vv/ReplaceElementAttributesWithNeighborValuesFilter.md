@@ -26,7 +26,7 @@
 
 `ReplaceElementAttributesWithNeighborValuesFilter` replaces each "bad" cell (one that fails a user-supplied threshold comparison) by copying all AttributeMatrix arrays from the best-passing face neighbor. Algorithm: (1) scan pass — for each bad voxel, check 6 face neighbors and record the one with the most-extreme passing value; (2) copy pass — apply recorded neighbor copies to all cell arrays. An optional loop repeats until no bad voxels remain or a complete pass selects no replacements.
 
-Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. The comparison was re-run after the algorithm was refactored and remained bit-identical. No deviations.
+Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. The comparison was re-run after the algorithm was refactored and remained bit-identical. Stalled-loop termination deviates from 6.5.171. See [Termination contract (#1806)](#termination-contract-1806).
 
 ### Termination contract (#1806)
 
@@ -34,7 +34,7 @@ Preflight returns error **-15003** when loop mode selects a comparison array out
 
 In loop mode, a complete pass with failing cells and zero selected replacements returns error **-15002**. The diagnostic names the comparison array, remaining cell count, and threshold, and suggests changing *Threshold Value* or disabling *Loop Until Gone*. Earlier tuple writes remain applied. One-pass mode still leaves cells without donors unchanged and returns success. The existing cancellation checkpoints return success before the stall check.
 
-The inline termination regressions use hand-derived line fixtures. Four failing cells have no donor under either comparison. A single passing donor fills a four-cell line across three passes, including all three Euler-angle components and the phase value. A NaN separator isolates two failing cells after another cell receives its donor tuple; the error preserves that completed change. The cancellation regression uses the existing progress callback to request cancellation after a complete pass, and also checks cancellation before the first pass. The hidden real-store regression requires actual disk-backed stores and backing files for all three arrays, for both no-donor and donor inputs. These cases supplement the historical verification below; their current execution results belong to the task validation record.
+The inline termination regressions use hand-derived line fixtures. Four failing cells have no donor under either comparison. A single passing donor fills a four-cell line across three passes, including all three Euler-angle components and the phase value. A NaN separator isolates two failing cells after another cell receives its donor tuple; the error preserves that completed change. The cancellation regression uses the existing progress callback to request cancellation after a complete pass, and also checks cancellation before the first pass. The hidden real-store regression requires actual disk-backed stores and backing files for all three arrays, for both no-donor and donor inputs. These cases supplement the historical verification below. The test plan for [PR #1974](https://github.com/BlueQuartzSoftware/simplnx/pull/1974) records the regression runs.
 
 ## Algorithm Relationship
 
@@ -78,13 +78,13 @@ Multi-array copy verified via `Marker`: after replacement `markerStore[13] != 13
 
 ## Code path coverage
 
-*The historical path inventory below includes the new stalled-loop branch. Current execution evidence is recorded separately in the task validation record.*
+*The path inventory includes the historical algorithm paths and the termination and preflight checks for #1806.*
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.cpp`
 
 | #  | Phase        | Path                                          | Test coverage                                    |
 |----|--------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| 1  | Loop         | Cancellation before or after a complete pass returns success | Cancellation takes priority over stall regression. |
+| 1  | Cancellation | The public filter reports cancellation before execution or after a complete pass. | Cancellation takes priority over stall regression. |
 | 2  | (a) Scan     | Good voxel → skip; `count` not incremented    | All 24 good voxels in each synthetic SECTION.    |
 | 3  | (a) Scan     | Bad voxel → enter 6-neighbor search; `count++`| LessThan/GreaterThan: voxels {0,13,26}; loop=false: voxel 13.                                        |
 | 4  | (a) Scan     | -Z boundary guard (`plane == 0`) → skip       | Voxel 0 at (0,0,0).                              |
@@ -120,7 +120,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceEleme
 | Missing Cell Data | Class 1 | A geometry with no assigned Cell Attribute Matrix returns -15003 with or without looping. |
 | Repeated donor propagation | Class 1 | One donor fills a four-cell line over repeated passes. One-pass control changes only the adjacent tuple. |
 | Partial progress before stall | Class 1 | A NaN separator isolates two failing cells. The completed replacement remains applied when -15002 is returned. |
-| Cancellation takes priority over stall | Class 1 | Cancellation before the first pass or after a complete pass returns success without -15002. |
+| Cancellation takes priority over stall | Class 1 | Cancellation before the first pass or after a complete pass returns the filter cancellation result (-1). The data remains unchanged. |
 | Hidden real-store termination and donor propagation | Class 1 | Both comparisons, with and without a donor. All three stores must be out-of-core with existing backing files. |
 
 ## Exemplar archive

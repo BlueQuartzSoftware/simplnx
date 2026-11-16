@@ -154,12 +154,12 @@ The expected disabled flags and comments are fixed input values, independent of 
 gives a behavioral check: an enabled reader makes replay fail. Core cases in `test/PipelineSaveTest.cpp` cover ordinary
 and null filter copies, nested pipeline state, both segment overloads, Pipeline value operations and placeholder state.
 
-Test-first evidence (2026-11-11): the controller built these tests against unchanged production code at
-`9cb9a456a66b11da59b702dc393c0d2b14d123c8` plus the regression tests. All six new CTest cases failed on the expected
-metadata assertions. The integration case also failed replay preflight because the copied reader became enabled.
+Test-first evidence (2026-11-11): all six new CTest cases failed on the expected metadata assertions when built
+against unchanged production code at `9cb9a456a66b11da59b702dc393c0d2b14d123c8`. The integration case also
+failed replay preflight because the copied reader became enabled.
 An additional core recovery case, `Pipeline persistent state: placeholder keeps malformed disabled payload`, checks
 string and null disabled flags in incomplete filter JSON. Placeholders retain that raw payload and remain enabled.
-The controller confirmed all four direct/fallback combinations failed before the local Boolean type guard.
+All four direct and fallback combinations failed before the Boolean type guard was added.
 
 Validation after the fixes (2026-11-11): all seven regression cases for persistent pipeline state passed without
 failures or skips on Windows in-core Release/Debug and Release with OOC enabled. The integration case uses an empty
