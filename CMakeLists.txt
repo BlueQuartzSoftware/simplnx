@@ -762,6 +762,9 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataArray.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataStore.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStore.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringStore.cpp
 

@@ -962,29 +962,21 @@ private:
   std::shared_ptr<store_type> m_DataStore = nullptr;
 };
 
-extern template std::string DataArray<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<int16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<int32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<int64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<uint8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<uint16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<uint32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<uint64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<float32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<float64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-extern template std::string DataArray<bool>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-extern template bool DataArray<int8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<uint8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<int16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<uint16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<int32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<uint32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<int64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<uint64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<float32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+// MSVC compiles the members defined in the class body in every consumer anyway, so these declarations would save
+// no time there. Without them, each MSVC consumer keeps its own static arrays and vftables instead of importing them.
+#if !defined(_MSC_VER)
+extern template class DataArray<int8>;
+extern template class DataArray<uint8>;
+extern template class DataArray<int16>;
+extern template class DataArray<uint16>;
+extern template class DataArray<int32>;
+extern template class DataArray<uint32>;
+extern template class DataArray<int64>;
+extern template class DataArray<uint64>;
+extern template class DataArray<float32>;
+extern template class DataArray<float64>;
+extern template class DataArray<bool>;
+#endif
 
 /**
  * @brief Names a uint8 data array.
