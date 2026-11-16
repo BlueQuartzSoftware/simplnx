@@ -388,6 +388,8 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
  * @return Histogram and selected finite and nonfinite sample counts, or an input, numeric, or transfer error.
  * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
  *
+ * @pre An active mask has the same tuple count as the input.
+ *
  * Mask selection precedes nonfinite and range checks. Compact native integer ranges can retain exact frequencies in a fixed ring.
  * The ring uses capacity left after the input and mask buffers. A scan without usable ring frequencies uses a second bounded pass for nonconstant input.
  */
@@ -403,9 +405,9 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   {
     return MakeErrorResult<OtsuHistogramResult>(-28604, "Otsu histogram bin storage exceeds the addressable allocation size. Reduce Number Of Histogram Bins.");
   }
-  if(input.getNumberOfComponents() != 1 || (maskPtr != nullptr && (maskPtr->getNumberOfComponents() != 1 || maskPtr->getSize() != input.getSize())))
+  if(input.getNumberOfComponents() != 1 || (maskPtr != nullptr && maskPtr->getNumberOfComponents() != 1))
   {
-    return MakeErrorResult<OtsuHistogramResult>(-8329, "Otsu input and optional mask must be scalar and contain the same number of tuples. Select a scalar mask with one value per input tuple.");
+    return MakeErrorResult<OtsuHistogramResult>(-8329, "Otsu input and optional mask must be scalar. Select arrays with one component per tuple.");
   }
   if(shouldCancel)
   {
@@ -695,6 +697,8 @@ uint8 ClassifyOtsuValue(T value, const std::vector<float64>& thresholds, const O
  * @return Collected diagnostics, including the nonfinite exclusion warning, or a validation, numeric, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
+ * @pre The class labels fit in uint8, Excluded Label is distinct when used, and the mask has the input tuple count.
+ *
  * Mask selection precedes histogram and nonfinite checks. The optional mask is read in bounded owned chunks.
  * A later write failure or cancellation can leave completed output batches in place.
  */
@@ -705,12 +709,6 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   if(input.getSize() != output.getSize() || output.getNumberOfComponents() != 1)
   {
     return MakeErrorResult(-28602, "Otsu output must be scalar and match the input tuple count. Recreate the output array before thresholding.");
-  }
-  if(static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds > 255 ||
-     ((maskPtr != nullptr || (std::is_floating_point_v<T> && options.WarnOnNonfinite)) && options.ExcludedLabel >= options.LabelOffset &&
-      static_cast<uint32>(options.ExcludedLabel) <= static_cast<uint32>(options.LabelOffset) + options.NumberOfThresholds))
-  {
-    return MakeErrorResult(-28603, "Otsu labels do not fit a distinct uint8 class interval. Reduce Label Offset/Number Of Thresholds or select an Excluded Label outside that interval.");
   }
   auto histogramResult = ComputeOtsuHistogram(input, maskPtr, options, shouldCancel, inputArrayPath);
   if(histogramResult.invalid())
