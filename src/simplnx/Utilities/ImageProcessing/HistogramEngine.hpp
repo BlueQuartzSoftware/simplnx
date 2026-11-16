@@ -684,9 +684,7 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& histogram, u
     const float64 offset = returnBinMidpoint ? 0.5 : 1.0;
     thresholds[t] = histogram.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * histogram.binWidth;
   }
-  Result<std::vector<float64>> result;
-  result.m_Expected = std::move(thresholds);
-  return result;
+  return {{std::move(thresholds)}};
 }
 } // namespace detail
 
