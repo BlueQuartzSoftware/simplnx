@@ -480,9 +480,7 @@ public:
         m_MessageHandler.sendWarningMessage(m_Warnings.warnings().front().message);
       }
     }
-    Result<uint32> result;
-    result.m_Expected = static_cast<uint32>(candidate);
-    return result;
+    return {{static_cast<uint32>(candidate)}};
   }
 
   // Called once by the outer execution wrapper, including after cancellation, retry, or an independent error.
@@ -1679,9 +1677,7 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
         ++numComponents;
       }
     }
-    Result<uint32> result;
-    result.m_Expected = numComponents;
-    return result;
+    return {{numComponents}};
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult<uint32>(-8774, "Connected-component counting could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory.");

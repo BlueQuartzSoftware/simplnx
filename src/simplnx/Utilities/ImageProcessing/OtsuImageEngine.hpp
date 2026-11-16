@@ -653,9 +653,7 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
   }
   if(histogram.binWidth == 0.0 && histogram.min == histogram.max)
   {
-    Result<std::vector<float64>> result;
-    result.m_Expected = std::vector<float64>(options.NumberOfThresholds, histogram.min);
-    return result;
+    return {{std::vector<float64>(options.NumberOfThresholds, histogram.min)}};
   }
   return detail::ComputeOtsuThresholds<true>(histogram, options.NumberOfThresholds, options.ValleyEmphasis, options.ReturnBinMidpoint, &shouldCancel);
 }
