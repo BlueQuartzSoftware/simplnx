@@ -10,6 +10,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -153,7 +154,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: smaller integer types widen for
 
 TEST_CASE("NXImageProcessing::SquareImageFilter: retained 64-bit integers preserve low bits at safe bounds", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   SECTION("int64 signed bounds")
   {
@@ -169,7 +170,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: retained 64-bit integers preser
 
 TEST_CASE("NXImageProcessing::SquareImageFilter: 64-bit overflow inputs return actionable errors", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   SECTION("Signed minimum")
   {
@@ -199,7 +200,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: 64-bit overflow inputs return a
 
 TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: empty 64-bit inputs retain empty output", "[NXImageProcessing][Issue1874][SquareImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   requireSquareValues<TestType, TestType>({}, {});
 }
@@ -207,7 +208,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: empty 64-bit inputs re
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation preserves the filter cancellation result", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<int64>(dataStructure, {std::numeric_limits<int64>::min()});
@@ -228,7 +229,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation preserves the filt
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SquareImageFilter: widened multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int16>(dataStructure, 2, 0, 0);
@@ -259,7 +260,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: widened multi-component output 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating inputs retain type and safe IEEE values", "[NXImageProcessing][Issue1874][SquareImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const TestType infinity = std::numeric_limits<TestType>::infinity();
   DataStructure dataStructure;
@@ -284,7 +285,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating inputs retain
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: floating overflow is positive infinity and underflow is positive zero", "[NXImageProcessing][Issue1874][SquareImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const TestType maximum = std::numeric_limits<TestType>::max();
@@ -342,7 +343,6 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::C15Compatibility resident widened Square persists and feeds integer components", "[NXImageProcessing][C15Compatibility][Issue1874][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const c15_test::Directory output;

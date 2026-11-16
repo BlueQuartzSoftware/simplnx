@@ -7,6 +7,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -35,7 +36,7 @@ using namespace nx::core;
 TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: integer radians produce signed fractional float32 responses", "[NXImageProcessing][Issue1874][TanImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   std::vector<TestType> values = {0, 1, 3};
@@ -108,7 +109,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: integer radians produce s
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: floating responses retain type signed zero and finite near-pole values", "[NXImageProcessing][Issue1874][TanImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;

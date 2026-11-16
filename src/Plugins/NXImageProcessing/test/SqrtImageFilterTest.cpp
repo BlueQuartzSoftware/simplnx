@@ -7,6 +7,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -65,7 +66,7 @@ DataPath runMappedIntegerSqrt(DataStructure& dataStructure, const DataPath& inpu
 TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: integer values produce float64 square roots", "[NXImageProcessing][Issue1874][SqrtImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const auto values = [] {
     if constexpr(std::is_signed_v<TestType>)
@@ -141,7 +142,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: integer values produce f
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: floating input retains type and IEEE domain results", "[NXImageProcessing][Issue1874][SqrtImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(
@@ -197,7 +198,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: floating input retains t
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: floating boundary roots match independent binary values", "[NXImageProcessing][Issue1874][SqrtImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   constexpr TestType smallestNormal = std::numeric_limits<TestType>::min();
   constexpr TestType infinity = std::numeric_limits<TestType>::infinity();
@@ -253,7 +254,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SqrtImageFilter: floating boundary roots 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::SqrtImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][SqrtImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildRampImage<int16>(dataStructure, 2, 0, 0);

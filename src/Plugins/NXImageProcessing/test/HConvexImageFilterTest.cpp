@@ -9,6 +9,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -117,7 +118,7 @@ private:
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional Height fails preflight", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const float64 height = GENERATE(0.5, 2.5);
   CAPTURE(height);
@@ -142,7 +143,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional He
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zero contrast with unchanged type", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64, float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -185,7 +185,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zer
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: floating fractional Height retains fractional contrast", "[NXImageProcessing][Issue1874][HConvexImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -223,7 +222,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: floating fractional H
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit contrast for unit and large Heights above double precision", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int64,
                    uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -261,7 +259,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: native 64-bit contras
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::HConvexImageFilter: exact signed 64-bit marker boundaries in both directions", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
   constexpr int64 minimum = std::numeric_limits<int64>::lowest();
   constexpr int64 maximum = std::numeric_limits<int64>::max();
   const bool lower = GENERATE(false, true);
@@ -293,7 +290,6 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact signed 64-bit marker bou
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: exact integer marker zero unit and huge Heights", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16, int32,
                    uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
   constexpr TestType minimum = std::numeric_limits<TestType>::lowest();
   constexpr TestType maximum = std::numeric_limits<TestType>::max();
   const bool lower = GENERATE(false, true);
@@ -328,7 +324,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: exact integer marker 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker arithmetic requires explicit opt-in", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
   constexpr int64 inputValue = (int64{1} << 54) + 1;
   constexpr int64 expectedExistingValue = int64{1} << 54;
   std::array<int64, 1> values = {inputValue};
@@ -349,7 +344,6 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker arithmetic requir
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker Height immediately below 2^64", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
   ImageProcessing::ReconstructionMarkerOptions options;
   options.source = ImageProcessing::ReconstructionMarkerSource::MaskMinusHeight;
   options.height = ImageProcessing::ExactReconstructionHeight{std::numeric_limits<uint64>::max() - uint64{2047}};
@@ -370,7 +364,6 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: exact marker Height immediatel
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: signed contrast overflow and adjacent representable contrast", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, int16, int32,
                    int64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -420,7 +413,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: signed contrast overf
 TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zero contrast at native integer bounds", "[NXImageProcessing][Issue1874][HConvexImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -449,7 +441,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: zero Height gives zer
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::HConvexImageFilter: whole Height contrast is stable under a signed baseline shift", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
@@ -475,7 +466,6 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: whole Height contrast is stabl
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::HConvexImageFilter: chunked contrast preserves transfer Results and cancellation", "[NXImageProcessing][Issue1874][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
   HConvexTransferStore input(2);
   HConvexTransferStore reconstruction(1);
   HConvexTransferStore output(-1);

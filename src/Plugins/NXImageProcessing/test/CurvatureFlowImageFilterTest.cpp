@@ -13,6 +13,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -409,7 +410,7 @@ void requireCurvatureFlowConstant(DataStructure& dataStructure, const DataPath& 
 
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: invalid time step is rejected before execution", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const float64 timeStep = GENERATE(-0.05, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity());
   const uint32 iterations = GENERATE(0u, 1u);
@@ -427,7 +428,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: invalid time step is rej
 
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: invalid active spacing is rejected for no-op requests", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool is3D = GENERATE(false, true);
   const uint32 iterations = GENERATE(0u, 1u);
@@ -459,7 +460,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: invalid active spacing i
 
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: finite negative spacing and unused Z remain accepted", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const float32 unusedSpacing = GENERATE(0.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
   DataStructure dataStructure;
@@ -477,7 +478,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: finite negative spacing 
 TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: constant finite input preserves type and value", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", int8, uint8, int16,
                    uint16, int32, uint32, int64, uint64, float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 1, 1, 1, {TestType{7}});
@@ -487,7 +488,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: constant finite
 
 TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero operation copies int64 values exactly", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool zeroIterations = GENERATE(false, true);
   constexpr TestType inputValue = (TestType{1} << 53) + TestType{1};
@@ -502,7 +503,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero operation 
 TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: terminal integer conversion has exact bounds", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
   using ImageProcessing::detail::ConvertTerminalImageValue;
   using ImageProcessing::detail::TerminalImageConversionStatus;
   TestType output = 7;
@@ -543,7 +543,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: terminal intege
 
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: floating narrowing retains IEEE values", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
   using ImageProcessing::detail::NarrowFloatingImageValue;
   const auto positive = NarrowFloatingImageValue<float32>(std::numeric_limits<float64>::max());
   const auto negative = NarrowFloatingImageValue<float32>(-std::numeric_limits<float64>::max());
@@ -560,7 +559,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: floating narrowing retai
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: independent one-step stencil truncates then clips once", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool clip = GENERATE(false, true);
   const bool negativeSpacing = GENERATE(false, true);
@@ -597,7 +596,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: independent one-step ste
 
 TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op preserves integer endpoints", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const TestType value = GENERATE(std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max());
   const bool zeroIterations = GENERATE(false, true);
@@ -609,7 +608,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op pr
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: nonfinite terminal integer result errors", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 3, 3, 1, {0, 0, 0, 0, 100, 100, 0, 100, 100});
@@ -625,7 +624,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: nonfinite terminal integ
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong terminal routes honor the stencil", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool pingPong = GENERATE(false, true);
   const bool nonFinite = GENERATE(false, true);
@@ -673,7 +672,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong t
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op propagates transfer failures and cancellation", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const int scenario = GENERATE(0, 1, 2, 3);
   const ShapeType shape{1, 1, 1};
@@ -703,7 +702,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op propagates 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: resident wrapper merges clipping warning with copy failure", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const ImageProcessing::ScopedWorkingMemoryTuningOverride tuning(uint64{1024} * 1024);
   const ShapeType shape{2, 3, 3};
@@ -727,7 +726,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: resident wrapper merges 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: floating output retains nonfinite and overflow behavior", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool nanInput = GENERATE(false, true);
   DataStructure dataStructure;
@@ -766,7 +765,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: floating output
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: exact no-op uses bounded native transfers", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   constexpr usize valuesPerMiB = (usize{1024} * 1024) / sizeof(uint64);
   constexpr usize count = (2 * valuesPerMiB) + 1;
@@ -793,7 +792,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: exact no-op uses bounded
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exits retain clipping and transfer warnings", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const int route = GENERATE(0, 1, 2); // ping-pong delayed read, ping-pong cancellation, resident fallback cancellation
   const ShapeType shape{3, 3, 3};
@@ -854,7 +853,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exi
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D terminal exits retain warnings", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool cancel = GENERATE(false, true);
   const ShapeType shape{1, 3, 3};
@@ -1090,7 +1089,6 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::C15Compatibility resident CurvatureFlowImageFilter feeds quantitative gradient", "[NXImageProcessing][C15Compatibility][Issue1874][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const bool step = GENERATE(false, true);

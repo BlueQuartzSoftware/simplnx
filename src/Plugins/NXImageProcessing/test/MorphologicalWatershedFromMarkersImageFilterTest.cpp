@@ -446,7 +446,6 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker conversion policy defaults to Error", "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
   const WSFilter filter;
   REQUIRE(filter.parametersVersion() == 2);
   const Parameters parameters = filter.parameters();
@@ -475,7 +474,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: default Error rejects a changed uint64 marker before flooding",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const bool markWatershedLine = GENERATE(true, false);
   const bool fullyConnected = GENERATE(false, true);
@@ -507,7 +506,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: defa
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT32_MAX marker remains valid with uint64 output",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   const bool markWatershedLine = GENERATE(true, false);
   const bool fullyConnected = GENERATE(false, true);
@@ -531,7 +530,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: UINT
 TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: native lossless seeds propagate exactly",
                    "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool markWatershedLine = GENERATE(true, false);
@@ -560,7 +559,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFil
 TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: wide marker bounds have literal legacy results",
                    "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool markWatershedLine = GENERATE(true, false);
@@ -579,7 +578,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFil
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias and lost seed choices have exact flood consequences",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool markWatershedLine = GENERATE(true, false);
@@ -593,7 +592,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alia
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker copy checks chunk boundaries before writing",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize changedIndex = GENERATE(usize{65535}, usize{65536}, usize{65537});
   const auto handling = GENERATE(ImageProcessing::MarkerIdConversionHandling::Error, ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
@@ -636,7 +635,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invalid policy is rejected before execution",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   auto args = createSinglePixelMarkerArguments(dataStructure, 1, true, false);
@@ -655,7 +654,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: inva
 TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: diagnostic context keeps exact 64-bit extrema",
                    "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   createMarkerLineArguments<TestType>(dataStructure, {0, std::numeric_limits<TestType>::max(), std::numeric_limits<TestType>::max()}, true, false);
@@ -690,7 +689,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFil
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy cancellation retains observed warning only",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   constexpr usize valueCount = 65537;
   const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
@@ -719,7 +718,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy warning survives transfer failure or allocation failure",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   constexpr usize valueCount = 65537;
   const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
@@ -764,7 +763,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conversion warning survives later facade outcomes",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto inputStorePtr = std::make_shared<MarkerTransferStore<float32>>(3);
   DataStructure dataStructure;
@@ -826,7 +825,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conv
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: successful transfer warnings survive later marker-copy failure",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   constexpr usize valueCount = 65537;
   const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
@@ -857,7 +856,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: succ
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restoration retains transfer warnings through a short final chunk",
           "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   constexpr usize valueCount = 65537;
   DataStructure dataStructure;

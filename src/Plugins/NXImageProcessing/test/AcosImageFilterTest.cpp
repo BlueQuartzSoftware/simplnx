@@ -6,6 +6,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -125,7 +126,7 @@ private:
 TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer zero produces float32 radians", "[NXImageProcessing][Issue1874][AcosImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
@@ -164,7 +165,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer zero produces fl
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: floating input retains type and propagates domain NaN", "[NXImageProcessing][Issue1874][AcosImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
@@ -196,7 +197,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: floating input retains t
 TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer endpoints and invalid values produce floating angles", "[NXImageProcessing][Issue1874][AcosImageFilter]", int8, uint8, int16, uint16,
                    int32, uint32, int64, uint64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const auto values = [] {
     if constexpr(std::is_signed_v<TestType>)
@@ -236,7 +237,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer endpoints and in
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: adjacent domain boundaries remain distinct", "[NXImageProcessing][Issue1874][AcosImageFilter]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const TestType inside = std::nextafter(TestType{1}, TestType{0});
   const TestType outside = std::nextafter(TestType{1}, std::numeric_limits<TestType>::infinity());
@@ -265,7 +266,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: adjacent domain boundari
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::AcosImageFilter: mapped multi-component output preserves tuple shape", "[NXImageProcessing][Issue1874][AcosImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildRampImage<int16>(dataStructure, 2, 0, 0);
@@ -302,7 +303,6 @@ TEST_CASE("NXImageProcessing::AcosImageFilter: mapped multi-component output pre
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::AcosImageFilter: mapped buffered engine preserves cancellation and I/O failures", "[NXImageProcessing][Issue1874][AcosImageFilter]")
 {
-  UnitTest::LoadPlugins();
   using OutputType = ImageProcessing::IntegerToFloat32Type<int16>;
   AcosTransferStore<int16> input(0);
   AcosTransferStore<OutputType> output(-7.0f);
