@@ -82,7 +82,9 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
 
-**Input Comparison Array** must have one tuple per cell of the selected geometry. When **Loop Until Gone** is enabled, select a comparison array in the geometry's Cell Data Attribute Matrix. Otherwise, another Attribute Matrix is allowed.
+**Input Comparison Array** must have one tuple per cell of the selected geometry. The filter writes to numeric arrays in that geometry's Cell Attribute Matrix.
+
+When **Loop Until Gone** is enabled, select the comparison array from that Cell Attribute Matrix. Each pass must be able to update the values used by the next pass. Single-pass mode also accepts a comparison array from another location. Preflight returns error **-15003** if loop mode selects an external comparison array or the selected geometry has no Cell Attribute Matrix.
 
 ## Algorithm
 
@@ -96,7 +98,7 @@ For each pass over the volume:
 2. If the voxel fails the comparison (e.g., confidence index < 0.1), examine its 6 face-connected neighbors.
 3. Among neighbors that pass the threshold, find the one with the best value (highest for less-than mode, lowest for greater-than mode).
 4. Mark the failing voxel to be replaced by that neighbor's data.
-5. After each Z-slice is scanned, apply all replacements across every array in the Attribute Matrix (not just the comparison array).
+5. After each Z-slice is scanned, apply the replacements to the numeric arrays in the geometry's Cell Attribute Matrix.
 
 If **Loop Until Gone** is enabled, each pass can extend replacements inward from passing neighbors. The algorithm stops when no voxels fail the threshold. If failing voxels remain and a complete pass selects no replacement, it returns error **-15002** and preserves earlier changes.
 

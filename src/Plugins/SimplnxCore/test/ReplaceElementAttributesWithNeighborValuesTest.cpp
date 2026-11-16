@@ -9,8 +9,11 @@
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -20,12 +23,16 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <any>
 #include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -576,6 +583,94 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: No don
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   }
   requireTerminationData(dataStructure, {badValue, badValue, badValue, badValue}, {0, 1, 2, 3});
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: External comparison array", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.2F, 0.3F, 0.4F, 0.45F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
+  const auto& cellDataRef = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath);
+  const StringArray::collection_type labels = {"donor", "target", "third", "fourth"};
+  const auto* labelsPtr = StringArray::CreateWithValues(dataStructure, "Labels", cellDataRef.getShape(), labels, cellDataRef.getId());
+  REQUIRE(labelsPtr != nullptr);
+  const bool useRootArray = GENERATE(false, true);
+  CAPTURE(useRootArray);
+  DataObject::OptionalId parentId;
+  DataPath inputPath({"External Comparison"});
+  if(!useRootArray)
+  {
+    const auto* otherMatrixPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{4});
+    REQUIRE(otherMatrixPtr != nullptr);
+    parentId = otherMatrixPtr->getId();
+    inputPath = DataPath({"Other Data"}).createChildPath(inputPath.getTargetName());
+  }
+  const std::vector<float32> comparisonValues = {0.9F, 0.1F, 0.1F, 0.1F};
+  auto comparisonStore = std::make_shared<DataStore<float32>>(ShapeType{4}, ShapeType{1}, 0.0F);
+  const auto writeResult = comparisonStore->copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  REQUIRE(Float32Array::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId) != nullptr);
+
+  const FilterType filter;
+  SECTION("Loop mode rejects an external comparison array before copying")
+  {
+    auto args = terminationArguments(0, true);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    const auto& errorRef = preflight.outputActions.errors().front();
+    CHECK(errorRef.code == -15003);
+    CHECK(errorRef.message.find(inputPath.toString()) != std::string::npos);
+    CHECK(errorRef.message.find(k_CellDataPath.toString()) != std::string::npos);
+    const auto execution = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+    REQUIRE(execution.result.errors().size() == 1);
+    CHECK(execution.result.errors().front().code == -15003);
+    requireTerminationData(dataStructure, {0.2F, 0.3F, 0.4F, 0.45F}, {0, 1, 2, 3});
+  }
+
+  SECTION("Single-pass mode modifies only the geometry's Cell Data arrays")
+  {
+    auto args = terminationArguments(0, false);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const std::vector<DataPath> expectedModifications = {k_ConfidencePath, k_CellDataPath.createChildPath("EulerAngles"), k_CellDataPath.createChildPath("Phases")};
+    std::vector<DataPath> actualModifications;
+    for(const auto& modification : preflight.outputActions.value().modifiedActions)
+    {
+      CHECK(modification.modifiedType == DataObjectModification::ModifiedType::Modified);
+      actualModifications.push_back(modification.modifiedPath);
+    }
+    CHECK(std::ranges::is_permutation(actualModifications, expectedModifications));
+    const auto execution = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
+    requireTerminationData(dataStructure, {0.2F, 0.2F, 0.4F, 0.45F}, {0, 0, 2, 3});
+  }
+
+  for(usize index = 0; index < comparisonValues.size(); index++)
+  {
+    CHECK((*comparisonStore)[index] == comparisonValues[index]);
+  }
+  CHECK(labelsPtr->values() == labels);
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Missing Cell Data", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.9F, 0.1F, 0.1F, 0.1F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_GeomPath));
+  dataStructure.getDataRefAs<ImageGeom>(k_GeomPath).setCellData(std::nullopt);
+  const bool loop = GENERATE(false, true);
+  CAPTURE(loop);
+  const auto preflight = ReplaceElementAttributesWithNeighborValuesFilter().preflight(dataStructure, terminationArguments(0, loop));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().size() == 1);
+  const auto& errorRef = preflight.outputActions.errors().front();
+  CHECK(errorRef.code == -15003);
+  CHECK(errorRef.message.find("requires a Cell Attribute Matrix") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Repeated donor propagation", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")

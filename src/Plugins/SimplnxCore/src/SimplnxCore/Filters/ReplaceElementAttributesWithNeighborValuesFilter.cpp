@@ -2,7 +2,10 @@
 
 #include "SimplnxCore/Filters/Algorithms/ReplaceElementAttributesWithNeighborValues.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -57,7 +60,9 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
 
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Threshold Value", "The value to of the threshold", 0.1F));
   params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "The operator to use for comparisons. 0=Less, 1=Greater Than", 0, detail::k_OperationChoices));
-  params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "The algorithm will keep looping until all pixels have been evaluated", false));
+  params.insert(std::make_unique<BoolParameter>(
+      k_Loop_Key, "Loop Until Gone",
+      "Repeat threshold replacement until no cells fail or no donor can replace the remaining cells. Requires a comparison array in the selected geometry's Cell Attribute Matrix.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
@@ -84,19 +89,34 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
+  const auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  const auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -15001); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  nx::core::Result<OutputActions> resultOutputActions;
+  const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
+  const bool loopUntilGone = filterArgs.value<bool>(k_Loop_Key);
+  // Each loop pass must be able to update the values it will compare on the next pass.
+  if(loopUntilGone || imageGeomRef.getCellData() == nullptr)
+  {
+    if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, -15003, "Input Comparison Array"); cellDataResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
+    }
+  }
 
-  // Inform users that the following arrays are going to be modified in place
-  // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, inputArrayPath.getParent(), {});
+  nx::core::Result<OutputActions> resultOutputActions;
+  const auto cellDataPath = imageGeomRef.getCellDataPath();
+  for(const auto& [id, child] : imageGeomRef.getCellDataRef())
+  {
+    if(const auto* arrayPtr = dynamic_cast<const IDataArray*>(child.get()); arrayPtr != nullptr)
+    {
+      MarkDataPathModified(dataStructure, resultOutputActions, cellDataPath.createChildPath(arrayPtr->getName()));
+    }
+  }
 
   return {std::move(resultOutputActions)};
 }

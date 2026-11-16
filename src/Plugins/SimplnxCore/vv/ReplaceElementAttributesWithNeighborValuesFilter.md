@@ -16,7 +16,7 @@
 |------------------------|--------------------------|
 | Algorithm Relationship | **Port** — direct translation of SIMPL `ReplaceElementAttributesWithNeighborValues`; same two-pass (scan → copy) + optional-loop structure. Legacy UUID cited in filter header. |
 | Oracle                | **Class 1 (Analytical)** — synthetic 3×3×3 grid, 4 SECTIONs with closed-form expected values. **Class 4 (Invariant)** companion — post-loop threshold saturation and multi-array copy. |
-| Code paths            | Historical 17-path inventory below, supplemented by cancellation and stalled-loop regressions under #1806. |
+| Code paths            | Historical 17-path inventory below, supplemented by stalled-loop and comparison array preflight regressions under #1806. |
 | Tests                 | Historical synthetic and SIMPL compatibility cases, plus inline termination regressions and a hidden real-store contract case. |
 | Exemplar archive      | `6_6_replace_element_attributes_with_neighbor.tar.gz` — unreferenced; consuming circular-oracle test removed. See `vv/provenance/ReplaceElementAttributesWithNeighborValues.md`. |
 | Legacy comparison     | **Complete (2026-07-21, re-run 2026-07-21 post-refactor).** Bit-identical on the tested successful inputs. Stalled-loop termination now differs under #1806. See `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md`. |
@@ -29,6 +29,8 @@
 Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. The comparison was re-run after the algorithm was refactored and remained bit-identical. No deviations.
 
 ### Termination contract (#1806)
+
+Preflight returns error **-15003** when loop mode selects a comparison array outside the geometry's Cell Attribute Matrix. Each loop pass must be able to update the values used by the next pass. Single-pass mode accepts an external comparison array. Both modes require a Cell Attribute Matrix and declare only its numeric arrays as modified.
 
 In loop mode, a complete pass with failing cells and zero selected replacements returns error **-15002**. The diagnostic names the comparison array, remaining cell count, and threshold, and suggests changing *Threshold Value* or disabling *Loop Until Gone*. Earlier tuple writes remain applied. One-pass mode still leaves cells without donors unchanged and returns success. The existing cancellation checkpoints return success before the stall check.
 
@@ -100,6 +102,9 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceEleme
 | 16 | Loop control | `count == 0` → exit while                     | LessThan: second iteration has count=0.          |
 | 17 | Loop control | `loop=false` → single pass only               | loop=false SECTION.                              |
 | 18 | Loop control | Loop mode has failing cells and zero selected replacements → error -15002 | No donor termination and Partial progress before stall regressions. |
+| 19 | Preflight | Loop mode with a same-size comparison array outside the geometry's Cell Attribute Matrix → error -15003 before any tuple is copied. | External comparison array regression, with top-level and separate Attribute Matrix inputs. |
+| 20 | Preflight | Single-pass mode with a same-size external comparison array → declare modifications only to the numeric arrays in the geometry's Cell Attribute Matrix. | External comparison array single-pass control checks the declared paths, the copied tuples, and the unchanged external and string arrays. |
+| 21 | Preflight | Selected geometry has no Cell Attribute Matrix → error -15003 in both modes. | Missing Cell Data regression. |
 
 ## Test inventory
 
@@ -111,6 +116,8 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ReplaceEleme
 | Synthetic — compare1=false skip              | Class 1       | bad cluster={4,10,12,13,14,16,22}, loop=false. Center stays bad; ring replaced. Covers path 11. |
 | SIMPL Backwards Compatibility (6.4 + 6.5)   | N/A           | UUID + arg-key + value round-trip via `Pipeline::FromSIMPLFile`. Not an oracle test. |
 | No donor termination | Class 1 | Four failing cells, both comparisons. Loop mode returns -15002. One-pass mode returns success with unchanged tuples. |
+| External comparison array | Class 1 | A four-cell line has one passing donor. Loop mode rejects the external input. One-pass mode copies one tuple within Cell Data. |
+| Missing Cell Data | Class 1 | A geometry with no assigned Cell Attribute Matrix returns -15003 with or without looping. |
 | Repeated donor propagation | Class 1 | One donor fills a four-cell line over repeated passes. One-pass control changes only the adjacent tuple. |
 | Partial progress before stall | Class 1 | A NaN separator isolates two failing cells. The completed replacement remains applied when -15002 is returned. |
 | Cancellation takes priority over stall | Class 1 | Cancellation before the first pass or after a complete pass returns success without -15002. |
