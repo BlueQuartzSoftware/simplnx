@@ -32,6 +32,18 @@
 
 namespace nx::core::ImageProcessing
 {
+inline constexpr int32 k_ThresholdMaxCCNonfiniteInput = -28611;
+inline constexpr int32 k_ThresholdMaxCCMismatchedOutput = -28612;
+inline constexpr int32 k_ThresholdMaxCCNonfiniteInputWarning = -28614;
+inline constexpr int32 k_ThresholdMaxCCEmptyBand = -28615;
+inline constexpr int32 k_ThresholdMaxCCSearchStalled = -28616;
+inline constexpr int32 k_ThresholdMaxCCScanAllocationFailed = -28617;
+inline constexpr int32 k_ThresholdMaxCCScanTooLarge = -28618;
+inline constexpr int32 k_ThresholdMaxCCOutputAllocationFailed = -28634;
+inline constexpr int32 k_ThresholdMaxCCOutputTooLarge = -28635;
+inline constexpr int32 k_ThresholdMaxCCAllocationFailed = -28636;
+inline constexpr int32 k_ThresholdMaxCCBufferTooLarge = -28637;
+
 /**
  * @struct ThresholdMaxCCOptions
  * @brief Controls the native threshold search. Byte targets affect staging, not segmentation.
@@ -238,24 +250,25 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
         const T value = values[summary.FirstNonfiniteIndex];
         const auto* kind = std::isnan(value) ? "NaN" : (std::signbit(value) ? "negative infinity" : "positive infinity");
         const auto inputName = inputArrayPath.empty() ? "the input array" : fmt::format("input array '{}'", inputArrayPath.toString());
-        return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(
-            MergeResults(std::move(status),
-                         MakeErrorResult(-28611, fmt::format("Threshold Maximum Connected Components found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to assign Outside "
-                                                             "Value to nonfinite pixels.",
-                                                             kind, start + summary.FirstNonfiniteIndex, inputName))));
+        return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(MergeResults(
+            std::move(status), MakeErrorResult(k_ThresholdMaxCCNonfiniteInput,
+                                               fmt::format("Threshold Maximum Connected Components found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to assign Outside "
+                                                           "Value to nonfinite pixels.",
+                                                           kind, start + summary.FirstNonfiniteIndex, inputName))));
       }
       start += count;
     }
     return {{summary}, std::move(status.warnings())};
   } catch(const std::bad_alloc&)
   {
-    return ConvertResultTo(
-        MergeResults(std::move(status), MakeErrorResult(-28617, "Threshold Maximum Connected Components could not allocate its scan buffers. Reduce the data size or provide more memory.")),
-        std::move(summary));
+    return ConvertResultTo(MergeResults(std::move(status), MakeErrorResult(k_ThresholdMaxCCScanAllocationFailed,
+                                                                           "Threshold Maximum Connected Components could not allocate its scan buffers. Reduce the data size or provide more memory.")),
+                           std::move(summary));
   } catch(const std::length_error&)
   {
-    return ConvertResultTo(MergeResults(std::move(status), MakeErrorResult(-28618, "Threshold Maximum Connected Components exceeded an addressable scan buffer size. Reduce the image dimensions.")),
-                           std::move(summary));
+    return ConvertResultTo(
+        MergeResults(std::move(status), MakeErrorResult(k_ThresholdMaxCCScanTooLarge, "Threshold Maximum Connected Components exceeded an addressable scan buffer size. Reduce the image dimensions.")),
+        std::move(summary));
   }
 }
 
@@ -389,7 +402,7 @@ Result<T> SearchThresholdMaxCC(const AbstractDataStore<T>& input, const SizeVec3
     {
       if(low == oldLow && high == oldHigh && midpoint == oldMidpoint && ThresholdMaxCCSpanExceedsTwo(low, high))
       {
-        status.warnings().push_back(Warning{.code = -28616,
+        status.warnings().push_back(Warning{.code = k_ThresholdMaxCCSearchStalled,
                                             .message = "Threshold search stopped because native floating precision repeated the complete search state while the interval was wider than "
                                                        "2 intensity units. The candidate selected by the normal component-count comparison was retained; segmentation is heuristic."});
         break;
@@ -448,10 +461,12 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
     return status;
   } catch(const std::bad_alloc&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28634, "Threshold Maximum Connected Components could not allocate its output buffers. Reduce the data size or provide more memory."));
+    return MergeResults(std::move(status), MakeErrorResult(k_ThresholdMaxCCOutputAllocationFailed,
+                                                           "Threshold Maximum Connected Components could not allocate its output buffers. Reduce the data size or provide more memory."));
   } catch(const std::length_error&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28635, "Threshold Maximum Connected Components exceeded an addressable output buffer size. Reduce the image dimensions."));
+    return MergeResults(std::move(status),
+                        MakeErrorResult(k_ThresholdMaxCCOutputTooLarge, "Threshold Maximum Connected Components exceeded an addressable output buffer size. Reduce the image dimensions."));
   }
 }
 } // namespace detail
@@ -483,7 +498,8 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
   Result<> status;
   if(input.getNumberOfComponents() != 1 || output.getNumberOfComponents() != 1 || output.getSize() != input.getSize())
   {
-    return MakeErrorResult(-28612, "Threshold Maximum Connected Components requires scalar input and uint8 output with matching tuple counts. Recreate the output for the selected image.");
+    return MakeErrorResult(k_ThresholdMaxCCMismatchedOutput,
+                           "Threshold Maximum Connected Components requires scalar input and uint8 output with matching tuple counts. Recreate the output for the selected image.");
   }
   usize sliceValues = 0;
   usize volumeValues = 0;
@@ -510,7 +526,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
     if(summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0)
     {
       status.warnings().push_back(Warning{
-          .code = -28614,
+          .code = k_ThresholdMaxCCNonfiniteInputWarning,
           .message =
               fmt::format("Input contains {} NaN, {} negative infinity and {} positive infinity pixels. {} Outside Value is {}. Nonzero Outside pixels remain foreground and can connect regions.",
                           summary.NaNCount, summary.NegativeInfinityCount, summary.PositiveInfinityCount,
@@ -520,7 +536,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
     }
     if(emptyBand && !noFinite)
     {
-      status.warnings().push_back(Warning{.code = -28615,
+      status.warnings().push_back(Warning{.code = k_ThresholdMaxCCEmptyBand,
                                           .message = fmt::format("Upper Boundary requests an empty native intensity band. Threshold search was skipped; every output pixel is set to Outside Value "
                                                                  "({}). A nonzero Outside Value can make the whole image foreground downstream.",
                                                                  options.OutsideValue)});
@@ -546,11 +562,11 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
     return MergeResults(std::move(status), std::move(writeResult));
   } catch(const std::bad_alloc&)
   {
-    return MergeResults(std::move(status),
-                        MakeErrorResult(-28636, "Threshold Maximum Connected Components could not allocate its scan or output buffers. Reduce the data size or provide more memory."));
+    return MergeResults(std::move(status), MakeErrorResult(k_ThresholdMaxCCAllocationFailed,
+                                                           "Threshold Maximum Connected Components could not allocate its scan or output buffers. Reduce the data size or provide more memory."));
   } catch(const std::length_error&)
   {
-    return MergeResults(std::move(status), MakeErrorResult(-28637, "Threshold Maximum Connected Components exceeded an addressable buffer size. Reduce the image dimensions."));
+    return MergeResults(std::move(status), MakeErrorResult(k_ThresholdMaxCCBufferTooLarge, "Threshold Maximum Connected Components exceeded an addressable buffer size. Reduce the image dimensions."));
   }
 }
 } // namespace nx::core::ImageProcessing

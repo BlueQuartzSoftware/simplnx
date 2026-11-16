@@ -33,7 +33,7 @@ namespace
 // its Height guards: -8553 (non-finite) and -8556 (negative).
 constexpr int32 k_NonFiniteHeight = -8553;
 constexpr int32 k_NegativeHeight = -8556;
-constexpr int32 k_FractionalIntegerHeight = -1874101;
+constexpr int32 k_FractionalIntegerHeight = -29101;
 } // namespace
 
 namespace nx::core

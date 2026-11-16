@@ -29,6 +29,19 @@
 
 namespace nx::core::ImageProcessing
 {
+inline constexpr int32 k_OtsuTooFewBins = -28900;
+inline constexpr int32 k_OtsuInvalidThresholdCount = -28901;
+inline constexpr int32 k_OtsuInvalidOutputShape = -28902;
+inline constexpr int32 k_OtsuBinAllocationTooLarge = -28904;
+inline constexpr int32 k_OtsuEmptyHistogram = -28905;
+inline constexpr int32 k_OtsuInvalidHistogram = -28906;
+inline constexpr int32 k_OtsuNonScalarStore = -28910;
+inline constexpr int32 k_OtsuNonfiniteInput = -28954;
+inline constexpr int32 k_OtsuNoFiniteSamples = -28955;
+inline constexpr int32 k_OtsuInvalidBinWidth = -28956;
+inline constexpr int32 k_OtsuCollapsedBins = -28957;
+inline constexpr int32 k_OtsuSkippedNonfinite = -28959;
+
 /**
  * @struct OtsuImageOptions
  * @brief Holds Otsu controls for fixed uint8 output labels.
@@ -315,7 +328,8 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
   if(!std::isfinite(range) || range <= 0.0 || !std::isfinite(upper) || upper <= histogram.min || !std::isfinite(histogram.binWidth) || histogram.binWidth <= 0.0 ||
      !std::isfinite(1.0 / histogram.binWidth))
   {
-    return MakeErrorResult(-28656, "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
+    return MakeErrorResult(k_OtsuInvalidBinWidth,
+                           "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
   }
   float64 previousBoundary = histogram.min;
   float64 previousMeasurement = histogram.min;
@@ -329,7 +343,7 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
     const float64 measurement = histogram.min + ((static_cast<float64>(bin) + 0.5) * histogram.binWidth);
     if(!std::isfinite(boundary) || !std::isfinite(measurement) || boundary <= previousBoundary || (bin != 0 && measurement <= previousMeasurement))
     {
-      return MakeErrorResult(-28657, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
+      return MakeErrorResult(k_OtsuCollapsedBins, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
     }
     previousBoundary = boundary;
     previousMeasurement = measurement;
@@ -399,15 +413,15 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
 {
   if(options.NumberOfBins < 2)
   {
-    return MakeErrorResult<OtsuHistogramResult>(-28600, "Otsu requires at least two histogram bins. Increase Number Of Histogram Bins.");
+    return MakeErrorResult<OtsuHistogramResult>(k_OtsuTooFewBins, "Otsu requires at least two histogram bins. Increase Number Of Histogram Bins.");
   }
   if(static_cast<usize>(options.NumberOfBins) > std::vector<usize>{}.max_size())
   {
-    return MakeErrorResult<OtsuHistogramResult>(-28604, "Otsu histogram bin storage exceeds the addressable allocation size. Reduce Number Of Histogram Bins.");
+    return MakeErrorResult<OtsuHistogramResult>(k_OtsuBinAllocationTooLarge, "Otsu histogram bin storage exceeds the addressable allocation size. Reduce Number Of Histogram Bins.");
   }
   if(input.getNumberOfComponents() != 1 || (maskPtr != nullptr && maskPtr->getNumberOfComponents() != 1))
   {
-    return MakeErrorResult<OtsuHistogramResult>(-8329, "Otsu input and optional mask must be scalar. Select arrays with one component per tuple.");
+    return MakeErrorResult<OtsuHistogramResult>(k_OtsuNonScalarStore, "Otsu input and optional mask must be scalar. Select arrays with one component per tuple.");
   }
   if(shouldCancel)
   {
@@ -455,9 +469,10 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
             const T value = values[summary.FirstNonfiniteIndex];
             const auto* kind = std::isnan(value) ? "NaN" : (std::signbit(value) ? "negative infinity" : "positive infinity");
             const auto inputName = inputArrayPath.empty() ? "the input array" : fmt::format("input array '{}'", inputArrayPath.toString());
-            return MakeErrorResult(-28654, fmt::format("Otsu found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to skip nonfinite pixels and assign Excluded Label, or "
-                                                       "select a mask that excludes these pixels.",
-                                                       kind, batchStart + summary.FirstNonfiniteIndex, inputName));
+            return MakeErrorResult(k_OtsuNonfiniteInput,
+                                   fmt::format("Otsu found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to skip nonfinite pixels and assign Excluded Label, or "
+                                               "select a mask that excludes these pixels.",
+                                               kind, batchStart + summary.FirstNonfiniteIndex, inputName));
           }
           if(summary.FiniteCount != 0)
           {
@@ -549,7 +564,8 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   if(result.FiniteCount == 0)
   {
     return ConvertResultTo(
-        MergeResults(std::move(rangeResult), MakeErrorResult(-28655, "Otsu has no selected finite samples. Select at least one finite input value with the optional mask before thresholding.")),
+        MergeResults(std::move(rangeResult),
+                     MakeErrorResult(k_OtsuNoFiniteSamples, "Otsu has no selected finite samples. Select at least one finite input value with the optional mask before thresholding.")),
         std::move(result));
   }
   auto& histogram = result.HistogramData;
@@ -640,15 +656,15 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
   }
   if(options.NumberOfThresholds == 0 || options.NumberOfThresholds >= histogram.counts.size())
   {
-    return MakeErrorResult<std::vector<float64>>(-28601, "Otsu Number Of Thresholds must be positive and less than the histogram bin count.");
+    return MakeErrorResult<std::vector<float64>>(k_OtsuInvalidThresholdCount, "Otsu Number Of Thresholds must be positive and less than the histogram bin count.");
   }
   if(std::ranges::all_of(histogram.counts, [](usize count) { return count == 0; }))
   {
-    return MakeErrorResult<std::vector<float64>>(-28605, "Otsu threshold calculation requires at least one histogram sample.");
+    return MakeErrorResult<std::vector<float64>>(k_OtsuEmptyHistogram, "Otsu threshold calculation requires at least one histogram sample.");
   }
   if(!std::isfinite(histogram.min) || !std::isfinite(histogram.max) || !std::isfinite(histogram.binWidth) || histogram.binWidth < 0.0)
   {
-    return MakeErrorResult<std::vector<float64>>(-28606,
+    return MakeErrorResult<std::vector<float64>>(k_OtsuInvalidHistogram,
                                                  "Otsu threshold calculation requires finite histogram bounds and a nonnegative finite bin width. Rebuild the histogram from selected finite data.");
   }
   if(histogram.binWidth == 0.0 && histogram.min == histogram.max)
@@ -706,7 +722,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
 {
   if(input.getSize() != output.getSize() || output.getNumberOfComponents() != 1)
   {
-    return MakeErrorResult(-28602, "Otsu output must be scalar and match the input tuple count. Recreate the output array before thresholding.");
+    return MakeErrorResult(k_OtsuInvalidOutputShape, "Otsu output must be scalar and match the input tuple count. Recreate the output array before thresholding.");
   }
   auto histogramResult = ComputeOtsuHistogram(input, maskPtr, options, shouldCancel, inputArrayPath);
   if(histogramResult.invalid())
@@ -725,7 +741,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   {
     const auto maskContext = maskPtr == nullptr ? "" : " still selected after applying the input mask";
     result.warnings().push_back(
-        Warning{.code = -8319,
+        Warning{.code = k_OtsuSkippedNonfinite,
                 .message = fmt::format("Otsu skipped {} nonfinite pixels{} when fitting thresholds ({} NaN, {} negative infinity and {} positive infinity). The Excluded Label for these pixels is {}.",
                                        excludedCount, maskContext, counts.NaNCount, counts.NegativeInfinityCount, counts.PositiveInfinityCount, options.ExcludedLabel)});
   }

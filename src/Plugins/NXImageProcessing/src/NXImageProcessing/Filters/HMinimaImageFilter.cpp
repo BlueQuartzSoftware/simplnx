@@ -33,7 +33,7 @@ namespace
 // the -8552 (non-finite) and -8555 (negative) slots for its Height guards (HMaxima owns -8551/-8554).
 constexpr int32 k_NonFiniteHeight = -8552;
 constexpr int32 k_NegativeHeight = -8555;
-constexpr int32 k_FractionalIntegerHeight = -1874111;
+constexpr int32 k_FractionalIntegerHeight = -29201;
 } // namespace
 
 namespace nx::core

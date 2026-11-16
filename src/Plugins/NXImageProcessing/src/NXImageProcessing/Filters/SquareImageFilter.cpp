@@ -32,6 +32,9 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_SquareBelowSignedLimit = -29001;
+constexpr int32 k_SquareAboveSignedLimit = -29002;
+constexpr int32 k_SquareAboveUnsignedLimit = -29003;
 template <class T>
 using SquareOutputType = std::conditional_t<
     std::is_same_v<T, int8>, int16,
@@ -64,24 +67,25 @@ Result<> validateSquareRange(const AbstractDataStore<T>& inputStore, const DataP
     constexpr int64 limit = 3037000499LL;
     if(extrema.min < -limit)
     {
-      auto errorResult = MakeErrorResult(-1874091, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at least -3037000499. Convert the input to "
-                                                               "float64 first if approximate larger squares are acceptable.",
-                                                               extrema.min, inputPath.toString()));
+      auto errorResult =
+          MakeErrorResult(k_SquareBelowSignedLimit, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at least -3037000499. Convert the input to "
+                                                                "float64 first if approximate larger squares are acceptable.",
+                                                                extrema.min, inputPath.toString()));
       return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
     }
     if(extrema.max > limit)
     {
-      auto errorResult = MakeErrorResult(-1874092, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at most "
-                                                               "3037000499. Convert the input to float64 first if approximate larger squares are acceptable.",
-                                                               extrema.max, inputPath.toString()));
+      auto errorResult = MakeErrorResult(k_SquareAboveSignedLimit, fmt::format("Square Image Filter cannot square value {} in input array '{}': int64 inputs must be at most "
+                                                                               "3037000499. Convert the input to float64 first if approximate larger squares are acceptable.",
+                                                                               extrema.max, inputPath.toString()));
       return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
     }
   }
   else if(extrema.max > 4294967295ULL)
   {
-    auto errorResult = MakeErrorResult(-1874093, fmt::format("Square Image Filter cannot square value {} in input array '{}': uint64 inputs must be at most "
-                                                             "4294967295. Convert the input to float64 first if approximate larger squares are acceptable.",
-                                                             extrema.max, inputPath.toString()));
+    auto errorResult = MakeErrorResult(k_SquareAboveUnsignedLimit, fmt::format("Square Image Filter cannot square value {} in input array '{}': uint64 inputs must be at most "
+                                                                               "4294967295. Convert the input to float64 first if approximate larger squares are acceptable.",
+                                                                               extrema.max, inputPath.toString()));
     return MergeResults(ConvertResult(std::move(extremaResult)), std::move(errorResult));
   }
   return ConvertResult(std::move(extremaResult));

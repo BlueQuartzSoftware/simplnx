@@ -173,27 +173,27 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: 64-bit overflow inputs return a
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   SECTION("Signed minimum")
   {
-    requireSquareOverflow<int64>(std::numeric_limits<int64>::min(), -1874091);
+    requireSquareOverflow<int64>(std::numeric_limits<int64>::min(), -29001);
   }
   SECTION("Signed negative adjacent overflow")
   {
-    requireSquareOverflow<int64>(-3037000500LL, -1874091);
+    requireSquareOverflow<int64>(-3037000500LL, -29001);
   }
   SECTION("Signed positive adjacent overflow")
   {
-    requireSquareOverflow<int64>(3037000500LL, -1874092);
+    requireSquareOverflow<int64>(3037000500LL, -29002);
   }
   SECTION("Signed maximum")
   {
-    requireSquareOverflow<int64>(std::numeric_limits<int64>::max(), -1874092);
+    requireSquareOverflow<int64>(std::numeric_limits<int64>::max(), -29002);
   }
   SECTION("Unsigned adjacent overflow")
   {
-    requireSquareOverflow<uint64>(4294967296ULL, -1874093);
+    requireSquareOverflow<uint64>(4294967296ULL, -29003);
   }
   SECTION("Unsigned maximum")
   {
-    requireSquareOverflow<uint64>(std::numeric_limits<uint64>::max(), -1874093);
+    requireSquareOverflow<uint64>(std::numeric_limits<uint64>::max(), -29003);
   }
 }
 

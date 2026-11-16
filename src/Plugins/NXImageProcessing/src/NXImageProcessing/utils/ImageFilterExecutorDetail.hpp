@@ -909,9 +909,11 @@ Result<> SubtractHConvexContrastRange(nonstd::span<const T> inputValues, nonstd:
   const usize invalid = firstInvalid.load(std::memory_order_relaxed);
   if(invalid != count)
   {
-    return MakeErrorResult(-1874102, fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
-                                                 "floating-point type before this filter.",
-                                                 start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
+    constexpr int32 k_HConvexContrastOverflow = -29102;
+    return MakeErrorResult(k_HConvexContrastOverflow,
+                           fmt::format("H Convex contrast at tuple {} of input array '{}' exceeds the {} output maximum {}. Reduce Height or explicitly convert the input to a wider or "
+                                       "floating-point type before this filter.",
+                                       start + invalid, inputPath.toString(), DataTypeToString(GetDataType<T>()), std::numeric_limits<T>::max()));
   }
   return {};
 }

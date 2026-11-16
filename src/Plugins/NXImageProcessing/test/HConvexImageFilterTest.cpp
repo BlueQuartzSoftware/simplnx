@@ -131,7 +131,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional He
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.errors().front().code == -1874101);
+  REQUIRE(preflightResult.outputActions.errors().front().code == -29101);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == preflightResult.outputActions.errors().front().code);
@@ -392,7 +392,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: signed contrast overf
   {
     REQUIRE(executeResult.result.invalid());
     REQUIRE(executeResult.result.errors().size() == 1);
-    REQUIRE(executeResult.result.errors().front().code == -1874102);
+    REQUIRE(executeResult.result.errors().front().code == -29102);
     REQUIRE(executeResult.result.errors().front().message.find("tuple 1") != std::string::npos);
     REQUIRE(executeResult.result.errors().front().message.find(inputPath.toString()) != std::string::npos);
   }
