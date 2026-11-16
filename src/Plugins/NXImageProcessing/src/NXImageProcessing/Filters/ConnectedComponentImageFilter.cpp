@@ -49,12 +49,14 @@ Parameters ConnectedComponentImageFilter::parameters() const
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
-  params.insert(std::make_unique<ChoicesParameter>(k_ProvisionalLabelLimitHandling_Key, "Provisional Label Limit Handling",
-                                                   "Controls what happens if more than 4,294,967,295 provisional run IDs are needed. Error (default) stops before IDs wrap. "
-                                                   "Warn and Continue (Legacy Behavior) keeps uint32 wrap to background zero and reused IDs. Foreground can disappear, components can merge, "
-                                                   "and segmentation, counts, and downstream statistics can be incorrect. Choose Warn only if you intentionally accept these consequences. "
-                                                   "It does not increase label capacity or prevent memory or I/O errors.",
-                                                   0, ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
+  params.insert(
+      std::make_unique<ChoicesParameter>(k_ProvisionalLabelLimitHandling_Key, "Provisional Label Limit Handling",
+                                         "Controls what happens if more than 4,294,967,295 provisional run IDs are needed. Error (default) stops before IDs wrap. "
+                                         "Warn and Continue (Legacy Behavior) keeps uint32 wrap to background zero and reused IDs. Foreground can disappear, components can merge, "
+                                         "and counts and downstream statistics can be incorrect. A wrapped zero from a previous row can erase a neighboring component in scanline processing. "
+                                         "Tiled processing skips that zero and can give different labels. Choose Warn only if you accept these consequences. "
+                                         "It does not increase label capacity or prevent memory or I/O errors.",
+                                         0, ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
