@@ -38,11 +38,10 @@ struct MorphologicalReconstructionExecuteFn
   ReconstructOp op;
   bool fullyConnected;
   ReconMarker markerKind;
-  float64 height;
+  ReconstructionHeight height;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
   bool differenceFromInput; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
-  bool ExactIntegerHeight = false;
 
   template <class T>
   Result<> operator()() const
@@ -55,7 +54,6 @@ struct MorphologicalReconstructionExecuteFn
     std::shared_ptr<AbstractDataStore<T>> markerStore;
     const AbstractDataStore<T>* marker = &inStore;
     ReconstructionMarkerOptions markerOptions;
-    markerOptions.ExactIntegerHeight = ExactIntegerHeight;
     const bool isHeightMarker = markerKind == ReconMarker::MinusHeight || markerKind == ReconMarker::PlusHeight;
     const bool isBorderMarker = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
     const bool useDerivedMarker = isBorderMarker || (inStore.getStoreType() == IDataStore::StoreType::OutOfCore && isHeightMarker);
@@ -76,7 +74,7 @@ struct MorphologicalReconstructionExecuteFn
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
       markerStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(auto markerResult = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel, ExactIntegerHeight); markerResult.invalid())
+      if(auto markerResult = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel); markerResult.invalid())
       {
         return markerResult;
       }
@@ -99,6 +97,16 @@ struct MorphologicalReconstructionExecuteFn
     return {};
   }
 };
+
+Result<> ExecutePreparedMorphologicalReconstruction(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, DataType inputType,
+                                                    ReconstructOp op, bool fullyConnected, ReconMarker markerKind, ReconstructionHeight height, const std::atomic_bool& shouldCancel,
+                                                    const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
+{
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const MorphologicalReconstructionExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), op, fullyConnected, markerKind,
+                                                       height,        shouldCancel,   messageHandler,  differenceFromInput};
+  return AllNumeric::dispatch(inputType, executeFn);
+}
 
 /**
  * @brief Streamed compare-select for the PreserveIntensities pass of opening/closing-by-reconstruction: for each
@@ -274,16 +282,23 @@ struct BinaryReconstructionOpeningExecuteFn
 // -----------------------------------------------------------------------------
 Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, ReconstructOp op,
                                                        bool fullyConnected, detail::ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
-                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput, bool exactIntegerHeight)
+                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
 {
-  using TypeSetPolicy = AllNumeric;
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const DataType inputType = inputArray.getDataType();
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{dataStructure,  inputArrayPath,      outputArrayPath,   dims, op, fullyConnected, markerKind, height, shouldCancel,
-                                                         messageHandler, differenceFromInput, exactIntegerHeight};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const auto inputType = dataStructure.getDataRefAs<IDataArray>(inputArrayPath).getDataType();
+  return detail::ExecutePreparedMorphologicalReconstruction(dataStructure, imageGeomPath, inputArrayPath, outputArrayPath, inputType, op, fullyConnected, markerKind, height, shouldCancel,
+                                                            messageHandler, differenceFromInput);
+}
+
+// -----------------------------------------------------------------------------
+Result<> detail::ExecuteMorphologicalReconstructionWithValidatedHeight(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
+                                                                       ReconstructOp op, bool fullyConnected, ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
+                                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
+{
+  const auto inputType = dataStructure.getDataRefAs<IDataArray>(inputArrayPath).getDataType();
+  const ReconstructionHeight offset =
+      GetIntegerScalarTypes().contains(inputType) ? ReconstructionHeight{ExactReconstructionHeight{SaturateCastFromDouble<uint64>(height)}} : ReconstructionHeight{height};
+  return ExecutePreparedMorphologicalReconstruction(dataStructure, imageGeomPath, inputArrayPath, outputArrayPath, inputType, op, fullyConnected, markerKind, offset, shouldCancel, messageHandler,
+                                                    differenceFromInput);
 }
 
 // -----------------------------------------------------------------------------

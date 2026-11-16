@@ -69,13 +69,17 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional He
   const auto wholeHeightPreflightResult = filter.preflight(dataStructure, makeHMinimaArguments(inputPath, 2.0));
   SIMPLNX_RESULT_REQUIRE_VALID(wholeHeightPreflightResult.outputActions);
 
-  // Integer images require a whole Height. Stop at preflight: the baseline must never execute this request.
-  const auto preflightResult = filter.preflight(dataStructure, makeHMinimaArguments(inputPath, height));
+  const Arguments args = makeHMinimaArguments(inputPath, height);
+  const auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors().front().code == -1874111);
   REQUIRE(preflightResult.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
   REQUIRE(preflightResult.outputActions.errors().front().message.find(height == 0.5 ? "0.5" : "2.5") != std::string::npos);
+  const auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == preflightResult.outputActions.errors().front().code);
+  REQUIRE(dataStructure.getData(inputPath.replaceName("Output")) == nullptr);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -539,23 +543,38 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height gu
 
   SECTION("NaN Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
+    const Arguments args = makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN());
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 
   SECTION("Inf Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
+    const Arguments args = makeArgs(inputPath, std::numeric_limits<float64>::infinity());
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 
   SECTION("Negative Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, -1.0));
+    const Arguments args = makeArgs(inputPath, -1.0);
+    const auto result = filter.preflight(ds, args);
     REQUIRE(result.outputActions.invalid());
     REQUIRE(result.outputActions.errors().front().code == k_NegativeHeight);
+    const auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().front().code == k_NegativeHeight);
+    REQUIRE(ds.getData(inputPath.replaceName("Output")) == nullptr);
   }
 }
 
