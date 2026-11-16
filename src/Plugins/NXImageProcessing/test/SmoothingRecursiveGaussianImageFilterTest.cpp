@@ -5,6 +5,8 @@
 
 #include "NXImageProcessing/Filters/SmoothingRecursiveGaussianImageFilter.hpp"
 
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
+
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -433,7 +435,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: direct and 
   options.forceBuffered = buffered;
   options.targetScratchBytes = 5;
   const std::atomic_bool shouldCancel{false};
-  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, options);
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>, options);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == (fixture == 2 || fixture == 4 ? 1 : 0));
   REQUIRE(output.getValue(0) == expected.at(fixture));
@@ -455,7 +457,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fl
   options.forceBuffered = buffered;
   options.targetScratchBytes = 5;
   const std::atomic_bool shouldCancel{false};
-  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, options);
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<TestType>, options);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(result.warnings().empty());
   REQUIRE(output.getValue(0) == TestType{93.75});
@@ -483,7 +485,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: te
   options.forceBuffered = buffered;
   options.targetScratchBytes = 1;
   const std::atomic_bool shouldCancel{false};
-  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, options);
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<TestType>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<TestType>, options);
   REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
   if(nonfinite)
   {
@@ -512,7 +514,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: clipping wa
   ImageProcessing::detail::PointwiseExecutionOptions options;
   options.forceBuffered = true;
   options.targetScratchBytes = 5;
-  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, options);
+  const Result<> result = ImageProcessing::CastFloat32StoreTo<int8>(source, output, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int8>, options);
   REQUIRE(countSmoothingWarning(result, ImageProcessing::k_SmoothingGaussianClippedIntegerOutput) == 1);
   REQUIRE(countSmoothingWarning(result, -23692) >= 1);
   REQUIRE(countSmoothingWarning(result, -23693) >= 1);

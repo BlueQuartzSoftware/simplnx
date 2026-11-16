@@ -5,6 +5,8 @@
 
 #include "NXImageProcessing/Filters/CurvatureFlowImageFilter.hpp"
 
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
+
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Extent.hpp"
@@ -641,13 +643,13 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong t
   Result<> result;
   if(pingPong)
   {
-    result = ImageProcessing::ApplyFiniteDifference3DPingPong<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(input, output, first, second, dims, {1.0, 1.0, 1.0},
-                                                                                                                              ImageProcessing::detail::CurvatureFlowFn{}, step, 1, shouldCancel, {});
+    result = ImageProcessing::ApplyFiniteDifference3DPingPong<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+        input, output, first, second, dims, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, step, 1, shouldCancel, {});
   }
   else
   {
-    result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true>(input, output, dims, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, step, 1,
-                                                                                                           shouldCancel, {});
+    result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+        input, output, dims, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, step, 1, shouldCancel, {});
   }
   if(nonFinite)
   {
@@ -680,8 +682,8 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op propagates 
   CurvatureFlowForwardingStore<uint64> output(shape, false, scenario == 1);
   input.setValue(0, std::numeric_limits<uint64>::max());
   output.setValue(0, 7);
-  const auto result = ImageProcessing::ApplyFiniteDifference<uint64, ImageProcessing::detail::CurvatureFlowFn, true>(input, output, {1, 1, 1}, {1.0F, 1.0F, 1.0F},
-                                                                                                                     ImageProcessing::detail::CurvatureFlowFn{}, 0.0, 1, shouldCancel, {});
+  const auto result = ImageProcessing::ApplyFiniteDifference<uint64, ImageProcessing::detail::CurvatureFlowFn, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+      input, output, {1, 1, 1}, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, 0.0, 1, shouldCancel, {});
   if(scenario >= 2)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -712,8 +714,8 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: resident wrapper merges 
   // This endpoint selects the wrapper and injects its final-copy fault. Real backing is checked in the paired tests.
   CurvatureFlowForwardingStore<uint8> output(shape, false, true, true);
   const std::atomic_bool shouldCancel{false};
-  const auto result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true>(input, output, {3, 3, 2}, {1.0F, 1.0F, 1.0F},
-                                                                                                                    ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {});
+  const auto result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+      input, output, {3, 3, 2}, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {});
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -28891);
   REQUIRE(result.warnings().size() == 1);
@@ -774,8 +776,8 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: exact no-op uses bounded
   input.setValue(0, std::numeric_limits<uint64>::max());
   input.setValue(count - 1, (uint64{1} << 53) + 1);
   const std::atomic_bool shouldCancel{false};
-  const auto result = ImageProcessing::ApplyFiniteDifference<uint64, ImageProcessing::detail::CurvatureFlowFn, true>(input, output, {count, 1, 1}, {1.0F, 1.0F, 1.0F},
-                                                                                                                     ImageProcessing::detail::CurvatureFlowFn{}, 0.0, 1, shouldCancel, {});
+  const auto result = ImageProcessing::ApplyFiniteDifference<uint64, ImageProcessing::detail::CurvatureFlowFn, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+      input, output, {count, 1, 1}, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, 0.0, 1, shouldCancel, {});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(result.warnings().empty());
   REQUIRE(input.readCount() == 3);
@@ -816,15 +818,15 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exi
   Result<> result;
   if(route == 2)
   {
-    result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true>(input, output, {3, 3, 3}, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{},
-                                                                                                           10.0, 1, shouldCancel, {});
+    result = ImageProcessing::ApplyFiniteDifference<uint8, ImageProcessing::detail::CurvatureFlowFn, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+        input, output, {3, 3, 3}, {1.0F, 1.0F, 1.0F}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {});
   }
   else
   {
     DataStore<float64> first(shape, ShapeType{1}, 0.0);
     DataStore<float64> second(shape, ShapeType{1}, 0.0);
-    result = ImageProcessing::ApplyFiniteDifference3DPingPong<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(input, output, first, second, {3, 3, 3}, {1.0, 1.0, 1.0},
-                                                                                                                              ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {});
+    result = ImageProcessing::ApplyFiniteDifference3DPingPong<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+        input, output, first, second, {3, 3, 3}, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {});
   }
   if(route == 0)
   {
@@ -878,7 +880,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D ter
   const auto plan = ImageProcessing::detail::BuildFiniteDifference2DBufferPlan(3, 3, 1, sizeof(float64), limit);
   REQUIRE(plan.coreCols == 3);
   REQUIRE(plan.coreRows == 1);
-  const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(
+  const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
       input, output, first, second, 3, 3, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {}, limit);
   if(cancel)
   {
@@ -953,7 +955,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: X-tiled transfers retain
   REQUIRE(plan.valid);
   REQUIRE(plan.coreCols == 2);
   REQUIRE(plan.coreRows == 1);
-  const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true>(
+  const auto result = ImageProcessing::ApplyFiniteDifference2DBounded<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
       input, output, first, second, width, height, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, 10.0, 1, shouldCancel, {}, limit);
   if(failRead || failWrite)
   {

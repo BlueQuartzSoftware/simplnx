@@ -1,4 +1,7 @@
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+#include "NXImageProcessing/utils/SmoothingRecursiveGaussian2D.hpp"
+
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -221,7 +224,7 @@ template <class T, class WorkStoreT>
 Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, WorkStoreT& work, const SizeVec3& dims, const FloatVec3& spacing,
                                            const std::vector<float64>& sigma, bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  detail::SmoothingGaussianConversionState conversionState;
+  detail::TerminalConversionState conversionState;
   RecursiveGaussianPassOptions options;
   options.CheckedSmoothing = true;
   Result<> accumulated = RecursiveGaussianAxisPass<T>(input, work, dims, 2, sigma[2], static_cast<double>(spacing[2]), 0, normalizeAcrossScale, shouldCancel, messageHandler, options);
@@ -241,7 +244,7 @@ Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, Ab
   const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
   const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
   accumulated = MergeResults(std::move(accumulated), RecursiveGaussianXYPlaneCascadeToSink<float32>(work, dims, first, second, shouldCancel, messageHandler, outputSink));
-  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
+  return detail::ReportSmoothingGaussianConversion<T>(conversionState, std::move(accumulated));
 }
 
 template <class T, class WorkStoreT, class ContributionStoreT, class CheckpointStoreT>
@@ -337,34 +340,6 @@ Result<> ApplyLaplacianRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
     }
   }
   return {};
-}
-
-template <class T, class WorkStoreT, class CheckpointStoreT>
-Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, WorkStoreT& work, CheckpointStoreT& checkpoints, const SizeVec3& dims,
-                                           const FloatVec3& spacing, const std::vector<float64>& sigma, bool normalizeAcrossScale, const detail::RecursiveGaussian2DBufferPlan& plan,
-                                           const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
-{
-  detail::SmoothingGaussianConversionState conversionState;
-  std::vector<T> outputBuffer;
-  auto terminalSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> filtered, nonstd::span<float32>) -> Result<> {
-    if constexpr(std::is_same_v<T, float32>)
-    {
-      return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()), true);
-    }
-    outputBuffer.resize(filtered.size());
-    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filtered.data(), filtered.size()), nonstd::span<T>(outputBuffer.data(), outputBuffer.size()), (yBegin * dims[0]) + xBegin,
-                                                  conversionState, shouldCancel, columnCount, dims[0]))
-    {
-      return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
-    }
-    return ImageProcessing::WriteRecursiveGaussian2DBlock<T>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const T>(outputBuffer.data(), outputBuffer.size()), true);
-  };
-  const RecursiveGaussianPlaneAxis smoothY{
-      .axis = 1, .sigma = sigma[1], .spacing = static_cast<double>(spacing[1]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
-  const RecursiveGaussianPlaneAxis smoothX{
-      .axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
-  Result<> result = RecursiveGaussian2DYXCascadeToSink<T>(input, work, checkpoints, dims, smoothY, smoothX, plan, shouldCancel, messageHandler, terminalSink);
-  return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(result));
 }
 
 /// @brief Dispatched execute body for the GradientMagnitudeRecursiveGaussian filter.
@@ -902,7 +877,7 @@ struct SmoothingRecursiveGaussianExecuteFn
     if(usePlaneCascade)
     {
       std::vector<T> outputPlane(dims[0] * dims[1]);
-      detail::SmoothingGaussianConversionState conversionState;
+      detail::TerminalConversionState conversionState;
       auto outputSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) -> Result<> {
         if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
                                                       conversionState, shouldCancel))
@@ -917,7 +892,7 @@ struct SmoothingRecursiveGaussianExecuteFn
       const RecursiveGaussianPlaneAxis second{
           .axis = 0, .sigma = sigma[0], .spacing = static_cast<double>(spacing[0]), .order = 0, .normalizeAcrossScale = normalizeAcrossScale, .CheckedSmoothing = true};
       Result<> result = RecursiveGaussianXYPlaneCascadeToSink<T>(inStore, dims, first, second, shouldCancel, messageHandler, outputSink);
-      return detail::FinishSmoothingGaussianConversion<T>(conversionState, std::move(result));
+      return detail::ReportSmoothingGaussianConversion<T>(conversionState, std::move(result));
     }
 
     const std::string format = detail::SelectRecursiveGaussianWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
@@ -959,7 +934,7 @@ struct SmoothingRecursiveGaussianExecuteFn
         }
       }
     }
-    return MergeResults(std::move(accumulated), CastFloat32StoreTo<T>(work, outStore, shouldCancel));
+    return MergeResults(std::move(accumulated), CastFloat32StoreTo<T>(work, outStore, shouldCancel, detail::ReportSmoothingGaussianConversion<T>));
   }
 };
 

@@ -1,5 +1,7 @@
-#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
+
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
+#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -654,7 +656,7 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: forced buffered postproce
 
   REQUIRE(SqrtStoreInPlace(squared, shouldCancel, options).valid());
   DataStore<int16> cast(tupleShape, ShapeType{1}, int16{});
-  REQUIRE(CastFloat32StoreTo<int16>(scaled, cast, shouldCancel, options).valid());
+  REQUIRE(CastFloat32StoreTo<int16>(scaled, cast, shouldCancel, ImageProcessing::detail::ReportSmoothingGaussianConversion<int16>, options).valid());
   for(usize i = 0; i < k_TotalValues; ++i)
   {
     const double value = static_cast<double>(source.getValue(i)) / 1.25;
