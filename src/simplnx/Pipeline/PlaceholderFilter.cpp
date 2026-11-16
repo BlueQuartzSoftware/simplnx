@@ -19,7 +19,7 @@ PlaceholderFilter::PlaceholderFilter(nlohmann::json json)
   const auto disabledIter = m_Json.find("isDisabled");
   if(disabledIter != m_Json.end() && disabledIter->is_boolean())
   {
-    setDisabled(ReadDisabledState(m_Json));
+    setDisabled(disabledIter->get<bool>());
   }
 }
 
