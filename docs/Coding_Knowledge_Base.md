@@ -1428,7 +1428,7 @@ header is `inline constexpr` when constant expressions need it, otherwise `inlin
 
 **Example of the broken rule:** `UnitTestCommon.hpp` defined 25 helpers `inline`, among them
 `CompareExemplarToGeneratedData`, `CompareDataStructures` and `CheckArraysInheritTupleDims`, and its `DataPath` and
-`FilterHandle` constants were plain `const`. PR #UTC_PR moved 24 of the helpers to `UnitTestCommon.cpp` and deleted
+`FilterHandle` constants were plain `const`. PR #1983 moved 24 of the helpers to `UnitTestCommon.cpp` and deleted
 one that nothing called. `DataObjectComparison.hpp` and `SegmentFeaturesTestUtils.hpp` still define helpers inline.
 
 **Why:** every test file that includes the header compiles each body and every template that the body instantiates,
