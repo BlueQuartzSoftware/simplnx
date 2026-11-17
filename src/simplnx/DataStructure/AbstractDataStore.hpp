@@ -256,13 +256,20 @@ public:
     }
 
     /**
-     * @brief Swaps the values of two proxies.
+     * @brief Swaps the values of two proxies, which may refer to different data stores.
      * @param lhs First proxy.
      * @param rhs Second proxy.
      */
     friend void swap(ValueProxy lhs, ValueProxy rhs)
     {
-      lhs.m_DataStore->swap(lhs.m_Index, rhs.m_Index);
+      if(lhs.m_DataStore == rhs.m_DataStore)
+      {
+        lhs.m_DataStore->swap(lhs.m_Index, rhs.m_Index);
+        return;
+      }
+      const T lhsValue = lhs.getValue();
+      lhs.setValue(rhs.getValue());
+      rhs.setValue(lhsValue);
     }
 
   private:

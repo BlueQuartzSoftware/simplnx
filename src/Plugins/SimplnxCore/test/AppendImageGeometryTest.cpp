@@ -14,6 +14,7 @@
 #include "SimplnxCore/Filters/DeleteDataFilter.hpp"
 #include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 
@@ -93,6 +94,53 @@ void removeArray(DataStructure& dataStructure, const DataPath& dataArrayPath)
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
+/**
+ * @brief Returns the neighbor list that the test creates for one tuple of the uncropped geometry.
+ * @param sourceIndex Tuple index in the uncropped geometry.
+ * @return Neighbor list of that tuple.
+ */
+std::vector<float32> createSourceNeighborList(usize sourceIndex)
+{
+  const float32 factor = static_cast<float32>(sourceIndex) * 0.001;
+  return {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
+}
+
+/**
+ * @brief Checks that the appended neighbor list is the uncropped one mirrored along the append axis.
+ * @param dataStructure Holds the appended geometry.
+ * @param appendedCellDataPath Cell attribute matrix of the appended geometry.
+ * @param appendDimension Append axis: 0 for X, 1 for Y, 2 for Z.
+ *
+ * The exemplar contains unmirrored neighbor lists. The mirrored cases therefore compare against the source lists
+ * created by this test.
+ */
+void checkMirroredNeighborList(const DataStructure& dataStructure, const DataPath& appendedCellDataPath, usize appendDimension)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(appendedCellDataPath.getParent()));
+  const auto& geometry = dataStructure.getDataRefAs<ImageGeom>(appendedCellDataPath.getParent());
+  const SizeVec3 dims = geometry.getDimensions();
+  const DataPath neighborListPath = appendedCellDataPath.createChildPath("NeighborList");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(neighborListPath));
+  const auto& neighborList = dataStructure.getDataRefAs<NeighborList<float32>>(neighborListPath);
+  REQUIRE(neighborList.getNumberOfTuples() == dims[0] * dims[1] * dims[2]);
+
+  for(usize z = 0; z < dims[2]; ++z)
+  {
+    for(usize y = 0; y < dims[1]; ++y)
+    {
+      for(usize x = 0; x < dims[0]; ++x)
+      {
+        std::array<usize, 3> source = {x, y, z};
+        source[appendDimension] = dims[appendDimension] - 1 - source[appendDimension];
+        const usize sourceIndex = (source[2] * dims[1] + source[1]) * dims[0] + source[0];
+        const usize index = (z * dims[1] + y) * dims[0] + x;
+        INFO(fmt::format("Appended tuple ({}, {}, {}) mirrors source tuple ({}, {}, {})", x, y, z, source[0], source[1], source[2]));
+        REQUIRE(neighborList.copyOfList(static_cast<int32>(index)) == createSourceNeighborList(sourceIndex));
+      }
+    }
+  }
+}
+
 void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minMiddleVoxel,
                                         const std::vector<uint64>& maxMiddleVoxel, const std::vector<uint64>& minTopVoxel, const std::vector<uint64>& maxTopVoxel, const DataPath& bottomPath,
                                         const DataPath& middlePath, const DataPath& topPath)
@@ -106,8 +154,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   for(usize i = 0; i < numTuples; ++i)
   {
     const float32 factor = static_cast<float32>(i) * 0.001;
-    std::vector<float32> list = {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
-    neighborList->setList(i, std::make_shared<std::vector<float32>>(list));
+    neighborList->setList(i, std::make_shared<std::vector<float32>>(createSourceNeighborList(i)));
     stringArrayValues[i] = "String_" + StringUtilities::number(factor);
   }
 
@@ -316,6 +363,13 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
 
       const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
       REQUIRE(numAppendedArrays == exemplarNumAppendedArrays);
+
+      if(mirror)
+      {
+        checkMirroredNeighborList(dataStructure, appendedCellDataPath, appendDimension);
+        // Without its exemplar array, the comparison below skips the neighbor list.
+        dataStructure.removeData(exemplarGeometryPath.createChildPath(k_CellData).createChildPath("NeighborList"));
+      }
 
       CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, exemplarGeometryPath.getTargetName());
     }

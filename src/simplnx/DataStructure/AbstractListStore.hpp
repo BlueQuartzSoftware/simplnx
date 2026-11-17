@@ -152,18 +152,18 @@ public:
     }
     ReferenceList& operator=(ReferenceList&& rhs)
     {
-      m_Edited = rhs.m_Edited;
+      // The proxy keeps its own store and tuple, so assigning writes the list of rhs into this tuple.
+      m_Edited = true;
       m_List = std::move(rhs.m_List);
-      m_Index = rhs.m_Index;
       return *this;
     }
     constexpr void swap(ReferenceList& rhs) noexcept
     {
+      // Only the lists are exchanged: each proxy writes the other list back to its own store and tuple.
       m_Edited = true;
       rhs.m_Edited = true;
 
       std::swap(m_List, rhs.m_List);
-      std::swap(m_Index, rhs.m_Index);
     }
 
     friend void swap(ReferenceList lhs, ReferenceList rhs) noexcept

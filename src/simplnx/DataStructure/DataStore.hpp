@@ -1055,17 +1055,31 @@ public:
   /**
    * @brief Writes contiguous values to a binary file.
    * @param absoluteFilePath Destination file path.
-   * @return Error code and message.
+   * @return Error code and message; an error also when the buffered values cannot be written when the file is closed.
    */
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
+    constexpr int32 k_FileNotCompleteError = -10176;
+
     std::ofstream outStrm(absoluteFilePath, std::ios_base::out | std::ios_base::binary);
     if(!outStrm.is_open())
     {
       return {-10170, fmt::format("File could not be opened for writing:\n  '{}'", absoluteFilePath)};
     }
 
-    return writeBinaryFile(outStrm);
+    auto result = writeBinaryFile(outStrm);
+    if(result.first != 0)
+    {
+      return result;
+    }
+
+    outStrm.close();
+    if(outStrm.fail())
+    {
+      return {k_FileNotCompleteError, fmt::format("The binary file '{}' could not be written completely. Check that the disk has free space and that the file can be written.", absoluteFilePath)};
+    }
+
+    return result;
   }
 
   /**
@@ -1079,7 +1093,8 @@ public:
 
     outputStream.write(reinterpret_cast<char*>(m_Data.get()), sizeof(T) * totalElements);
 
-    if(outputStream.bad())
+    // A stream that was already in a failed state writes nothing, so failbit counts as a failure too.
+    if(outputStream.fail())
     {
       return {-10175, fmt::format("Error writing binary file:\n  Total Elements:'{}'\n", totalElements)};
     }
