@@ -155,7 +155,7 @@ void requirePermutationAssociations(bool outOfCore)
         REQUIRE((components[(3 * newId) + component] == componentFeatureValue(oldId, component)));
       }
     }
-    // Rows not indexed by any cell are outside the randomized feature population.
+    // Rows beyond the largest input Feature ID stay unchanged.
     for(usize row = totalFeatures; row < totalFeatures + 3; ++row)
     {
       REQUIRE((scalars[row] == scalarFeatureValue(row)));
