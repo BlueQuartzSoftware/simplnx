@@ -357,6 +357,8 @@ Result<T> SearchThresholdMaxCC(const AbstractDataStore<T>& input, const SizeVec3
   T left = std::midpoint(low, midpoint);
   T right = std::midpoint(high, midpoint);
   Result<> status;
+  // Score each candidate using the nonzero pixels it would write. In Warn and Continue, nonfinite pixels receive
+  // Outside Value. They can connect foreground regions when Outside Value is nonzero.
   while(ThresholdMaxCCSpanExceedsTwo(low, high) && !shouldCancel)
   {
     const T oldLow = low;

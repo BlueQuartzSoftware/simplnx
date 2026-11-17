@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Common/Types.hpp"
+
 namespace nx::core::ImageProcessing
 {
 /** @brief Only Connected Component exposes the explicit legacy wrap policy. Other callers keep Error. */

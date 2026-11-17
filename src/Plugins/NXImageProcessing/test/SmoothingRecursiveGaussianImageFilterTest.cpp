@@ -7,22 +7,28 @@
 
 #include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
+#include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
+
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -229,7 +235,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active spacing is rejected before execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active spacing is rejected during execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -246,13 +252,15 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
   spacing.at(axis) = invalidSpacing;
   dataStructure.getDataRefAs<ImageGeom>(geometryPath).setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
   const SmoothFilter filter;
-  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0}));
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  const auto result = filter.execute(dataStructure, makeSmoothingArguments(inputPath, {1.0, 1.0, 1.0}));
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidSpacing);
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effective active scale is rejected before execution",
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid effective active scale is rejected during execution",
           "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   Application::GetOrCreateInstance();
@@ -272,10 +280,12 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid eff
   std::vector<float64> sigma{1.0, 1.0, 1.0};
   sigma.at(axis) = underflow ? std::numeric_limits<float64>::denorm_min() : std::numeric_limits<float64>::max();
   const SmoothFilter filter;
-  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
+  const auto result = filter.execute(dataStructure, makeSmoothingArguments(inputPath, sigma));
   // Positive finite operands can produce zero or infinity for sigma / abs(spacing). No cutoff on finite scales is imposed.
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidScale);
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -336,10 +346,97 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: each select
     sigma.at(0) = std::numeric_limits<float64>::denorm_min();
   }
   const SmoothFilter filter;
-  const auto preflight = filter.preflight(dataStructure, makeSmoothingArguments(inputPath, sigma));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  REQUIRE(preflight.outputActions.errors().front().code == expectedCodes.at(failure));
-  REQUIRE(preflight.outputActions.errors().front().message.find("Image Geometry") != std::string::npos);
+  const auto args = makeSmoothingArguments(inputPath, sigma);
+  const auto preflight = filter.preflight(dataStructure, args);
+  if(failure == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  }
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == expectedCodes.at(failure));
+  REQUIRE(result.result.errors().front().message.find("Image Geometry") != std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: pipeline validates spacing after resampling", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr float32 largeSpacing = 1.0e20F;
+  constexpr float32 signalValue = 7.0F;
+  const bool usableFinalSpacing = GENERATE(false, true);
+  const float32 finalSpacing = usableFinalSpacing ? largeSpacing : 1.0F;
+  const DataPath rectPath({"Rect Grid"});
+  const DataPath imagePath({"Resampled Image"});
+  const DataPath inputPath = imagePath.createChildPath("Cell Data").createChildPath("Signal");
+  const ShapeType cellShape{1, 4, 4};
+  const SizeVec3 dimensions{4, 4, 1};
+  DataStructure dataStructure;
+
+  auto* rectGrid = RectGridGeom::Create(dataStructure, rectPath.getTargetName());
+  REQUIRE(rectGrid != nullptr);
+  rectGrid->setDimensions(dimensions);
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, rectGrid->getId());
+  REQUIRE(cellData != nullptr);
+  rectGrid->setCellData(*cellData);
+  const std::array<std::string, 3> boundNames{"X Bounds", "Y Bounds", "Z Bounds"};
+  std::array<Float32Array*, 3> bounds{};
+  for(usize axis = 0; axis < bounds.size(); ++axis)
+  {
+    bounds[axis] = Float32Array::Create(dataStructure, boundNames[axis], std::make_unique<DataStore<float32>>(dimensions[axis] + 1, 0.0F), rectGrid->getId());
+    REQUIRE(bounds[axis] != nullptr);
+    const float32 axisSpacing = axis < 2 ? finalSpacing : 1.0F;
+    for(usize index = 0; index <= dimensions[axis]; ++index)
+    {
+      bounds[axis]->setValue(index, static_cast<float32>(index) * axisSpacing);
+    }
+  }
+  const auto boundsResult = rectGrid->setBounds(bounds[0], bounds[1], bounds[2]);
+  SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
+  REQUIRE(Float32Array::Create(dataStructure, "Signal", std::make_unique<DataStore<float32>>(cellShape, ShapeType{1}, signalValue), cellData->getId()) != nullptr);
+
+  using ResampleFilter = ResampleRectGridToImageGeomFilter;
+  auto resample = std::make_unique<ResampleFilter>();
+  auto resampleArgs = resample->getDefaultArguments();
+  resampleArgs.insertOrAssign(ResampleFilter::k_RectilinearGridPath_Key, rectPath);
+  resampleArgs.insertOrAssign(ResampleFilter::k_ImageGeometryPath_Key, imagePath);
+  resampleArgs.insertOrAssign(ResampleFilter::k_ImageGeomCellAttributeMatrixName_Key, std::string("Cell Data"));
+  resampleArgs.insertOrAssign(ResampleFilter::k_Dimensions_Key, std::vector<int32>{4, 4, 1});
+  resampleArgs.insertOrAssign(ResampleFilter::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{rectPath.createChildPath("Cell Data").createChildPath("Signal")});
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::move(resample), resampleArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<SmoothFilter>(), makeSmoothingArguments(inputPath, {largeSpacing, largeSpacing, 1.0})));
+  const std::atomic_bool shouldCancel{false};
+  auto preflightData = dataStructure;
+  REQUIRE(pipeline.preflight(preflightData, shouldCancel));
+  REQUIRE(preflightData.getDataRefAs<ImageGeom>(imagePath).getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
+
+  const bool executed = pipeline.execute(dataStructure, shouldCancel);
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(imagePath).getSpacing() == FloatVec3{finalSpacing, finalSpacing, 1.0F});
+  if(usableFinalSpacing)
+  {
+    REQUIRE(executed);
+    const auto& output = dataStructure.getDataRefAs<Float32Array>(inputPath.replaceName("Output"));
+    REQUIRE(output.getSize() == 16);
+    for(usize index = 0; index < output.getSize(); ++index)
+    {
+      REQUIRE(output[index] == Approx(signalValue));
+    }
+  }
+  else
+  {
+    REQUIRE_FALSE(executed);
+    const auto* gaussian = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+    REQUIRE(gaussian != nullptr);
+    const auto errors = gaussian->getErrors();
+    REQUIRE(errors.size() == 1);
+    REQUIRE(errors.front().code == ImageProcessing::k_SmoothingGaussianInvalidCoefficients);
+  }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -764,7 +861,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSigma);
   }
-  SECTION("degenerate spacing rejected")
+  SECTION("degenerate spacing rejected during execution")
   {
     DataStructure ds;
     const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims/type/sigma; only the X spacing is degenerate
@@ -778,10 +875,10 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    const auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
+    REQUIRE(result.result.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
   }
 }
 

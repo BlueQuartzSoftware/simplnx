@@ -97,7 +97,8 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   }
 
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
-  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianControls(sigma, imageGeom.getSpacing(), imageGeom.getDimensions()); controls.invalid())
+  // The executor validates spacing and coefficients after upstream filters set the final spacing.
+  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianSigma(sigma, imageGeom.getDimensions()); controls.invalid())
   {
     controls.errors().front().message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(controls), OutputActions{})};

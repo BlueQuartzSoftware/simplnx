@@ -1,7 +1,5 @@
 #include "OtsuMultipleThresholdsImageFilter.hpp"
 
-#include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
-
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
