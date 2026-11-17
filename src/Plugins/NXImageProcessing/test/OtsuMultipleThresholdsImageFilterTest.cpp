@@ -6,6 +6,8 @@
 
 #include "NXImageProcessing/Filters/OtsuMultipleThresholdsImageFilter.hpp"
 
+#include "SimplnxCore/Filters/ScalarSegmentFeaturesFilter.hpp"
+
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -28,6 +30,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -48,6 +51,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -590,7 +594,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask collision and tuple validation", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask label collisions fail preflight", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -598,7 +602,6 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   const auto inputPath = recon_test::BuildImageFromPattern<float32>(dataStructure, 4, 1, 1, {0, 0, 4, 4});
   auto args = otsuArguments(inputPath);
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
-  int32 expectedCode = -28907;
   SECTION("unused interior class is still reserved")
   {
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(3));
@@ -616,11 +619,6 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(8));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(createOtsuMask(dataStructure, std::array<uint8, 4>{1, 1, 1, 1})));
   }
-  SECTION("different tuple count")
-  {
-    expectedCode = -28908;
-    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(createOtsuMask(dataStructure, std::array<uint8, 3>{1, 1, 1})));
-  }
   SECTION("full unmasked interval leaves no masked label")
   {
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(256));
@@ -633,12 +631,89 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(result.outputActions.errors().front().code == expectedCode);
+  REQUIRE(result.outputActions.errors().front().code == -28907);
   const auto execution = filter.execute(dataStructure, args);
   REQUIRE(execution.result.invalid());
-  REQUIRE(execution.result.errors().front().code == expectedCode);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(execution.result.errors().front().code == -28907);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: pipeline accepts a mask resized by an upstream filter", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  (void)Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto inputPath = recon_test::BuildImageFromPattern<int32>(dataStructure, 3, 1, 1, {0, 0, 4});
+  const auto geometryPath = inputPath.getParent().getParent();
+  const auto maskPath = geometryPath.createChildPath("Features").createChildPath("Active");
+  auto segmenter = std::make_unique<ScalarSegmentFeaturesFilter>();
+  auto segmentArgs = segmenter->getDefaultArguments();
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(geometryPath));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputPath));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int32>(0));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("Features"));
+  segmentArgs.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+
+  auto args = otsuArguments(inputPath);
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::move(segmenter), segmentArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<OtsuMultipleThresholdsImageFilter>(), args));
+  const std::atomic_bool cancel = false;
+  DataStructure preflightData = dataStructure;
+  REQUIRE(pipeline.preflight(preflightData, cancel));
+  const UInt8Array* placeholderPtr = nullptr;
+  REQUIRE_NOTHROW(placeholderPtr = &preflightData.getDataRefAs<UInt8Array>(maskPath));
+  REQUIRE(placeholderPtr->getNumberOfTuples() == 1);
+
+  REQUIRE(pipeline.execute(dataStructure, cancel));
+  const UInt8Array* maskPtr = nullptr;
+  REQUIRE_NOTHROW(maskPtr = &dataStructure.getDataRefAs<UInt8Array>(maskPath));
+  REQUIRE(maskPtr->getNumberOfTuples() == 3);
+  std::array<uint8, 3> actualMask{};
+  const auto readMask = maskPtr->getDataStoreRef().copyIntoBuffer(0, actualMask);
+  SIMPLNX_RESULT_REQUIRE_VALID(readMask);
+  REQUIRE(actualMask == std::array<uint8, 3>{0, 1, 1});
+  requireOtsuLabels(dataStructure, inputPath, {255, 7, 8});
+}
+
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: final mask tuple mismatch fails before store reads", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  (void)Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto inputPath = recon_test::BuildImageFromPattern<float32>(dataStructure, 4, 1, 1, {0, 0, 4, 4});
+  auto inputStorePtr = std::make_shared<OtsuTransferStore<float32>>(4, IDataStore::StoreType::OutOfCore);
+  Float32Array* inputPtr = nullptr;
+  REQUIRE_NOTHROW(inputPtr = &dataStructure.getDataRefAs<Float32Array>(inputPath));
+  const auto resize = inputStorePtr->resizeTuples({1, 1, 4});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  const auto setStore = inputPtr->setDataStore(inputStorePtr);
+  SIMPLNX_RESULT_REQUIRE_VALID(setStore);
+  auto maskStorePtr = std::make_shared<OtsuTransferStore<uint8>>(3, IDataStore::StoreType::OutOfCore);
+  const DataPath maskPath({"Mask"});
+  REQUIRE(UInt8Array::Create(dataStructure, maskPath.getTargetName(), maskStorePtr) != nullptr);
+
+  auto args = otsuArguments(inputPath);
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  const OtsuMultipleThresholdsImageFilter filter;
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == -28908);
+  REQUIRE(result.result.errors().front().message.find("has 3 tuples") != std::string::npos);
+  REQUIRE(inputStorePtr->reads() == 0);
+  REQUIRE(maskStorePtr->reads() == 0);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: full native integer spans retain a valid two-bin split", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",

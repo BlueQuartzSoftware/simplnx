@@ -611,6 +611,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/StreamingStatistics.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/SweepTemporaryStore.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/HistogramEngine.hpp
