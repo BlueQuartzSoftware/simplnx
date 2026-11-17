@@ -1940,11 +1940,12 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         }
         if(finalIteration)
         {
-          if(!shouldCancel)
+          auto result = finish();
+          if(result.valid() && !shouldCancel)
           {
             throttleProgress(progressThrottle, iter, numberOfIterations);
           }
-          return finish();
+          return result;
         }
         currentStore = &firstStore;
         nextStore = &secondStore;
@@ -1966,11 +1967,12 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     }
     if(finalIteration)
     {
-      if(!shouldCancel)
+      auto result = finish();
+      if(result.valid() && !shouldCancel)
       {
         throttleProgress(progressThrottle, iter, numberOfIterations);
       }
-      return finish();
+      return result;
     }
     std::swap(currentStore, nextStore);
     if(!shouldCancel)

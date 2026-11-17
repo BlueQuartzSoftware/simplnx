@@ -675,12 +675,12 @@ inline Result<std::vector<float64>> ComputeCheckedOtsuThresholds(const Histogram
 }
 
 /**
- * @brief Maps one selected value to an ordinary uint8 class; equality stays in the lower class.
+ * @brief Classifies a selected value. A finite value equal to a threshold stays in the lower class.
  * @tparam T Numeric input value type.
- * @param value Native value to classify. NaN and negative infinity use the lowest class; positive infinity uses the highest class.
+ * @param value Native value to classify.
  * @param thresholds Finite thresholds in ascending order, with exactly NumberOfThresholds entries.
- * @param options Class offset and threshold count. Their sum must not exceed 255.
- * @return The ordinary class label. Masked-label selection belongs to the caller.
+ * @param options Class offset, threshold count, and excluded label. The offset plus the threshold count must not exceed 255.
+ * @return The ordinary class label for a finite value or Excluded Label for a nonfinite value. The caller handles the mask.
  * @pre The caller has validated the class interval and threshold vector and has enforced the selected nonfinite policy.
  */
 template <class T>

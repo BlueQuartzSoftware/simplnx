@@ -642,8 +642,16 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong t
   Result<> result;
   if(pingPong)
   {
+    bool reportedCompletion = false;
+    const IFilter::MessageHandler messageHandler{[&reportedCompletion](const IFilter::Message& message) {
+      if(message.type == IFilter::Message::Type::Progress && message.progress == 100 && message.message.starts_with("Finite Difference: Completed Iterations"))
+      {
+        reportedCompletion = true;
+      }
+    }};
     result = ImageProcessing::ApplyFiniteDifference3DPingPong<uint8, ImageProcessing::detail::CurvatureFlowFn, float64, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
-        input, output, first, second, dims, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, step, 1, shouldCancel, {});
+        input, output, first, second, dims, {1.0, 1.0, 1.0}, ImageProcessing::detail::CurvatureFlowFn{}, step, 1, shouldCancel, messageHandler);
+    REQUIRE(reportedCompletion == !nonFinite);
   }
   else
   {
