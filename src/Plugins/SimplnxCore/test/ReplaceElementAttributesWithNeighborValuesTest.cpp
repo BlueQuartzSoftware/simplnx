@@ -197,12 +197,7 @@ void requireDiskBackedCellArrays(const DataStructure& dataStructure)
   {
     const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
     REQUIRE(arrayPtr != nullptr);
-    const auto& storeRef = arrayPtr->getIDataStoreRef();
-    REQUIRE(storeRef.getStoreType() == IDataStore::StoreType::OutOfCore);
-    const auto metadata = storeRef.getRecoveryMetadata();
-    const auto backingPath = metadata.find("OocBackingFilePath");
-    REQUIRE(backingPath != metadata.end());
-    REQUIRE(fs::exists(fs::path(backingPath->second)));
+    UnitTest::RequireDiskBackedStore(*arrayPtr);
   }
 }
 

@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Arguments.hpp"
@@ -27,6 +28,7 @@
 
 #include <any>
 #include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -595,6 +597,45 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy numeric arguments pres
       CHECK((removalResult.value() == removeValue));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy Float32 midpoint rounding", "[SimplnxCore][ConditionalSetValueFilter][BackwardsCompatibility]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  // The first tie rounds down to an even significand. The next tie rounds up.
+  constexpr float64 k_Midpoint = 0x1.000001p0;
+  constexpr float32 k_Lower = 1.0F;
+  constexpr float32 k_Upper = 0x1.000002p0F;
+  const auto [legacyValue, expected, other] = GENERATE_COPY(table<float64, float32, float32>({
+      {std::nextafter(k_Midpoint, 0.0), k_Lower, k_Upper},
+      {k_Midpoint, k_Lower, k_Upper},
+      {std::nextafter(k_Midpoint, 2.0), k_Upper, k_Lower},
+      {0x1.000003p0, 0x1.000004p0F, k_Upper},
+      {0x1.000001p-30, 0x1p-30F, 0x1.000002p-30F},
+  }));
+  CAPTURE(scenario, legacyValue, expected, other);
+
+  const nlohmann::json arrayPath = {{"Data Container Name", "DataContainer"}, {"Attribute Matrix Name", "CellData"}, {"Data Array Name", "TestArray"}};
+  const auto args = ConditionalSetValueFilter::FromSIMPLJson({{"SelectedArray", arrayPath}, {"RemoveValue", -legacyValue}, {"ReplaceValue", legacyValue}});
+  SIMPLNX_RESULT_REQUIRE_VALID(args);
+
+  DataStructure dataStructure;
+  auto* groupPtr = DataGroup::Create(dataStructure, "DataContainer");
+  REQUIRE(groupPtr != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2}, groupPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  auto* valuesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "TestArray", {2}, {1}, cellDataPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
+  (*valuesPtr)[0] = -expected;
+  (*valuesPtr)[1] = -other;
+
+  const ConditionalSetValueFilter filter;
+  const auto result = scope.executeFilter(filter, dataStructure, args.value());
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CHECK((*valuesPtr)[0] == expected);
+  CHECK((*valuesPtr)[1] == -other);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Legacy numeric arguments retain integer interpretation", "[SimplnxCore][ConditionalSetValueFilter][BackwardsCompatibility]")
