@@ -159,12 +159,6 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
       return {.outputActions =
                   MakeErrorResult<OutputActions>(invalidMaskArrayKind, fmt::format("Mask Array '{}' is not a numeric data array. Select a scalar bool or uint8 mask array.", maskPath.toString()))};
     }
-    if(maskPtr->getNumberOfTuples() != inputArray.getNumberOfTuples())
-    {
-      return {.outputActions = MakeErrorResult<OutputActions>(k_OtsuMaskTupleMismatch,
-                                                              fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.",
-                                                                          maskPath.toString(), maskPtr->getNumberOfTuples(), selectedInputArray.toString(), inputArray.getNumberOfTuples()))};
-    }
   }
 
   if(inputArray.getNumberOfComponents() != 1)
@@ -193,9 +187,23 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
                                                                          k_NonfiniteInputHandling_Key)) == ImageProcessing::NonfiniteInputHandling::WarnAndContinue,
                                                   .ValleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key),
                                                   .ReturnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key)};
-  const IDataArray* maskPtr = filterArgs.value<bool>(k_UseMaskArray_Key) ? &dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_MaskArrayPath_Key)) : nullptr;
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
+  const IDataArray* maskPtr = nullptr;
+  if(filterArgs.value<bool>(k_UseMaskArray_Key))
+  {
+    const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+    maskPtr = &dataStructure.getDataRefAs<IDataArray>(maskPath);
+    // Upstream filters can resize arrays during execution. Compare their final counts before reading either store.
+    const auto maskTuples = maskPtr->getNumberOfTuples();
+    const auto inputTuples = inputArray.getNumberOfTuples();
+    if(maskTuples != inputTuples)
+    {
+      return MakeErrorResult(k_OtsuMaskTupleMismatch, fmt::format("Mask Array '{}' has {} tuples, but input '{}' has {}. Select a scalar mask with one value per input tuple.", maskPath.toString(),
+                                                                  maskTuples, selectedInputArray.toString(), inputTuples));
+    }
+  }
   // Dispatch is synchronous, so the filter arguments and local paths remain live.
-  return ImageProcessing::AllNumeric::dispatch(dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType(), [&]<class T>() -> Result<> {
+  return ImageProcessing::AllNumeric::dispatch(inputArray.getDataType(), [&]<class T>() -> Result<> {
     const auto& input = dataStructure.getDataRefAs<DataArray<T>>(selectedInputArray).getDataStoreRef();
     auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
     if(maskPtr != nullptr && maskPtr->getDataType() == DataType::boolean)

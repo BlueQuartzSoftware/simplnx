@@ -395,15 +395,6 @@ inline bool FloatAlmostEqual(float64 x1, float64 x2, int64 maxUlps = 1)
 }
 } // namespace detail
 
-/**
- * @brief Bin-space multi-Otsu thresholding, a direct port of itk::OtsuMultipleThresholdsCalculator::Compute()
- *        (itkOtsuMultipleThresholdsCalculator.hxx, ITK v5.4.4) adapted to operate on the Histogram struct.
- *
- * Per-bin measurement value is the bin centroid/midpoint (min + (bin+0.5)*binWidth), matching ITK's
- * Histogram::GetMeasurementVector(bin)[0]. Returns @p numThresholds threshold values in input-intensity units.
- * Bin->value conversion uses the bin maximum (min + (bin+1)*binWidth), matching ITK's GetMaxs(), unless
- * @p returnBinMidpoint is set, in which case the bin midpoint (min + (bin+0.5)*binWidth) is used.
- */
 namespace detail
 {
 struct OtsuClassStatistics
@@ -696,7 +687,15 @@ Result<std::vector<float64>> ComputeOtsuThresholds(const Histogram& histogram, u
 }
 } // namespace detail
 
-/** @brief Retains the established unchecked solver contract for existing direct consumers. */
+/**
+ * @brief Fits multiple Otsu thresholds using bin midpoints as measurements, as in ITK v5.4.4.
+ * @param histogram Binned counts and their intensity range.
+ * @param numThresholds Number of thresholds to fit.
+ * @param valleyEmphasis Give more weight to thresholds in bins with fewer samples.
+ * @param returnBinMidpoint Return each selected bin's midpoint instead of its upper edge.
+ * @return `numThresholds` values in input-intensity units. Returns an empty vector for zero thresholds,
+ * too few bins, or a histogram with no samples.
+ */
 inline std::vector<float64> OtsuMultipleThresholds(const Histogram& histogram, usize numThresholds, bool valleyEmphasis, bool returnBinMidpoint)
 {
   auto result = detail::ComputeOtsuThresholds<false>(histogram, numThresholds, valleyEmphasis, returnBinMidpoint, nullptr);

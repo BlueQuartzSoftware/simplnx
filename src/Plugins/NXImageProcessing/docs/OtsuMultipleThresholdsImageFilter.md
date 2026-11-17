@@ -25,7 +25,7 @@ Both choices require at least one selected finite sample. Empty data, an all-fal
 
 ### Explicit mask and excluded labels
 
-Enable **Use Mask Array** to select a **Mask Array**. The mask must be scalar `bool` or `uint8` and have the same tuple count as the input. Tuples are paired in flat order; the mask can have a different tuple shape or parent group. False/zero excludes a pixel; true or any nonzero `uint8` value selects it. The filter applies this selection before range, histogram, and nonfinite checks. An excluded NaN or infinity therefore causes no nonfinite error or warning.
+Enable **Use Mask Array** to select a **Mask Array**. The mask must be scalar `bool` or `uint8`. Its final tuple count must match the input when Otsu runs, after any upstream filters have resized their arrays. Tuples are paired in flat order, so the mask can have a different tuple shape or parent group. False/zero excludes a pixel; true or any nonzero `uint8` value selects it. The filter applies this selection before range, histogram, and nonfinite checks. An excluded NaN or infinity therefore causes no nonfinite error or warning.
 
 Pixels excluded by the mask and nonfinite pixels skipped in Warn mode use the same **Excluded Label**. It defaults to 255 and must be outside the configured class interval when a mask is enabled or Warn is used with floating-point input. This leaves up to 255 ordinary classes. Choose an unused label or reduce the class interval if the label collides.
 
