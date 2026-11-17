@@ -98,9 +98,10 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
+  const auto* cellDataPtr = imageGeomRef.getCellData();
   const bool loopUntilGone = filterArgs.value<bool>(k_Loop_Key);
-  // Each loop pass must be able to update the values it will compare on the next pass.
-  if(loopUntilGone || imageGeomRef.getCellData() == nullptr)
+  // Loop mode must write the same comparison array it reads, including when selected through another parent.
+  if(cellDataPtr == nullptr || (loopUntilGone && !cellDataPtr->contains(dataStructure.getDataAs<IDataArray>(inputArrayPath))))
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, -15003, "Input Comparison Array"); cellDataResult.invalid())
     {
@@ -110,7 +111,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
   nx::core::Result<OutputActions> resultOutputActions;
   const auto cellDataPath = imageGeomRef.getCellDataPath();
-  for(const auto& [id, child] : imageGeomRef.getCellDataRef())
+  for(const auto& [id, child] : *cellDataPtr)
   {
     if(const auto* arrayPtr = dynamic_cast<const IDataArray*>(child.get()); arrayPtr != nullptr)
     {

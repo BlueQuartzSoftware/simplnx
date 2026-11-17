@@ -11,6 +11,7 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
@@ -145,6 +146,19 @@ Arguments terminationArguments(ChoicesParameter::ValueType comparison, bool loop
   args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(k_ConfidencePath));
   args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
   return args;
+}
+
+DataPath addCellArrayAlias(DataStructure& dataStructure, const DataPath& arrayPath)
+{
+  const DataPath aliasParentPath({"Comparison Aliases"});
+  const auto* arrayPtr = dataStructure.getDataAs<IArray>(arrayPath);
+  REQUIRE(arrayPtr != nullptr);
+  const auto* aliasParentPtr = AttributeMatrix::Create(dataStructure, aliasParentPath.getTargetName(), arrayPtr->getTupleShape());
+  REQUIRE(aliasParentPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(arrayPtr->getId(), aliasParentPtr->getId()));
+  const auto aliasPath = aliasParentPath.createChildPath(arrayPath.getTargetName());
+  REQUIRE(dataStructure.getDataAs<IArray>(aliasPath) == arrayPtr);
+  return aliasPath;
 }
 
 // Explicit source indices describe the complete tuple expected at each destination.
@@ -598,13 +612,15 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
     const auto* otherMatrixPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{4});
     REQUIRE(otherMatrixPtr != nullptr);
     parentId = otherMatrixPtr->getId();
-    inputPath = DataPath({"Other Data"}).createChildPath(inputPath.getTargetName());
+    inputPath = DataPath({"Other Data"}).createChildPath(k_ConfidencePath.getTargetName());
   }
   const std::vector<float32> comparisonValues = {0.9F, 0.1F, 0.1F, 0.1F};
   auto comparisonStore = std::make_shared<DataStore<float32>>(ShapeType{4}, ShapeType{1}, 0.0F);
   const auto writeResult = comparisonStore->copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-  REQUIRE(Float32Array::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId) != nullptr);
+  const auto* externalPtr = Float32Array::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId);
+  REQUIRE(externalPtr != nullptr);
+  REQUIRE(externalPtr != dataStructure.getDataAs<Float32Array>(k_ConfidencePath));
 
   const FilterType filter;
   SECTION("Loop mode rejects an external comparison array before copying")
@@ -649,6 +665,37 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
     CHECK((*comparisonStore)[index] == comparisonValues[index]);
   }
   CHECK(labelsPtr->values() == labels);
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Comparison array alias", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.9F, 0.1F, 0.1F, 0.1F});
+  auto args = terminationArguments(0, true);
+
+  SECTION("A numeric comparison array remains writable through Cell Data")
+  {
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, k_ConfidencePath)));
+    const auto result = FilterType().execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    requireTerminationData(dataStructure, {0.9F, 0.9F, 0.9F, 0.9F}, {0, 0, 0, 0});
+  }
+
+  SECTION("A string array alias is rejected")
+  {
+    const auto* cellDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_CellDataPath);
+    REQUIRE(cellDataPtr != nullptr);
+    const DataPath labelsPath = k_CellDataPath.createChildPath("Labels");
+    const StringArray::collection_type labels = {"first", "second", "third", "fourth"};
+    REQUIRE(StringArray::CreateWithValues(dataStructure, labelsPath.getTargetName(), cellDataPtr->getShape(), labels, cellDataPtr->getId()) != nullptr);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, labelsPath)));
+
+    const auto preflight = FilterType().preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors().front().code == -15003);
+  }
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Missing Cell Data", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
@@ -742,7 +789,13 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: real-s
   buildTerminationData(dataStructure, {hasDonor ? goodValue : badValue, badValue, badValue, badValue});
   requireDiskBackedCellArrays(dataStructure);
 
-  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(comparison, true));
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  auto args = terminationArguments(comparison, true);
+  if(hasDonor)
+  {
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, k_ConfidencePath)));
+  }
+  const auto result = FilterType().execute(dataStructure, args);
   if(hasDonor)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);

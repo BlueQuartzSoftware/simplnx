@@ -48,6 +48,16 @@
 namespace nx::core::FileUtilities
 {
 
+namespace detail
+{
+/**
+ * @brief Formats a path for a filesystem error message.
+ * @param path Identifies the path to include in the message.
+ * @return The UTF-8 path, or a placeholder if the path conversion fails.
+ */
+std::string PathForDiagnostic(const std::filesystem::path& path);
+} // namespace detail
+
 /**
  * @brief Counts text lines in a file.
  * @param filepath Identifies the file to read.

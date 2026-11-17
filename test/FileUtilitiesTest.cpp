@@ -1,5 +1,7 @@
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/Uuid.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -14,7 +16,12 @@
 #include <system_error>
 #include <utility>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#else
 #include <unistd.h>
 #endif
 
@@ -115,7 +122,8 @@ TEST_CASE("FileUtilities::CreateOutputDirectories reports the full creation erro
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -4010);
-  CHECK(result.errors()[0].message.find(outputPath.string()) != std::string::npos);
+  const auto utf8Path = outputPath.u8string();
+  CHECK(result.errors()[0].message.find(std::string(utf8Path.begin(), utf8Path.end())) != std::string::npos);
   CHECK(result.errors()[0].message.find(std::to_string(expectedError.value())) != std::string::npos);
   CHECK(result.errors()[0].message.find(expectedError.message()) != std::string::npos);
   REQUIRE(fs::is_regular_file(filePath));
@@ -210,3 +218,48 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission returns a status erro
   }
 #endif
 }
+
+#ifdef _WIN32
+TEST_CASE("FileUtilities returns a Windows status error for a Unicode path", "[simplnx][FileUtilities][WindowsPathStatus]")
+{
+  const PathFixture fixture;
+  const auto directoryPath = fixture.path() / u8"pending-\U0001F600";
+  REQUIRE(fs::create_directory(directoryPath));
+  const HANDLE directoryHandle = CreateFileW(directoryPath.c_str(), DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  REQUIRE(directoryHandle != INVALID_HANDLE_VALUE);
+  const auto closeDirectory = MakeScopeGuard([directoryHandle]() noexcept { CloseHandle(directoryHandle); });
+
+  // Keep the handle open so the directory remains in the delete-pending state during inspection.
+  FILE_DISPOSITION_INFO disposition{TRUE};
+  REQUIRE(SetFileInformationByHandle(directoryHandle, FileDispositionInfo, &disposition, sizeof(disposition)) != 0);
+  const auto outputPath = directoryPath / "out";
+  std::error_code statusError;
+  REQUIRE_FALSE(fs::exists(outputPath, statusError));
+  REQUIRE(statusError == std::errc::permission_denied);
+
+  const auto checkStatusError = [&statusError](const Result<>& result, int32 resultCode) {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    const auto& error = result.errors()[0];
+    CHECK(error.code == resultCode);
+    CHECK(error.message.find("pending-\xF0\x9F\x98\x80") != std::string::npos);
+    CHECK(error.message.find("Operating system error " + std::to_string(statusError.value())) != std::string::npos);
+    CHECK(error.message.find(statusError.message()) != std::string::npos);
+  };
+
+  SECTION("Output directory creation")
+  {
+    Result<> result;
+    REQUIRE_NOTHROW(result = CreateOutputDirectories(outputPath));
+    checkStatusError(result, -4090);
+  }
+  SECTION("Output file permission")
+  {
+    const auto filePath = outputPath / "out.txt";
+    Result<> result;
+    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(filePath, true));
+    checkStatusError(result, -4092);
+    CHECK(result.errors()[0].message.find("out.txt") != std::string::npos);
+  }
+}
+#endif

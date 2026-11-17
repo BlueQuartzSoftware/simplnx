@@ -84,7 +84,7 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 **Input Comparison Array** must have one tuple per cell of the selected geometry. The filter writes to Boolean and numeric arrays in that geometry's Cell Attribute Matrix.
 
-When **Loop Until Gone** is enabled, select the comparison array from that Cell Attribute Matrix. Each pass must be able to update the values used by the next pass. Single-pass mode also accepts a comparison array from another location. Preflight returns error **-15003** if loop mode selects an external comparison array or the selected geometry has no Cell Attribute Matrix.
+When **Loop Until Gone** is enabled, the comparison array must belong to that Cell Attribute Matrix. You can select any path to that array. Each pass must be able to update the values used by the next pass. Single-pass mode also accepts an independent comparison array from another location. Preflight returns error **-15003** if loop mode selects an array that does not belong to Cell Data or the selected geometry has no Cell Attribute Matrix.
 
 ## Algorithm
 

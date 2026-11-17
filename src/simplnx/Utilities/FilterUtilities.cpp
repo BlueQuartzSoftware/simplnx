@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FileUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -28,8 +29,8 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   const bool outputExists = fs::exists(outputPath, statusError);
   if(statusError)
   {
-    return MakeErrorResult(pathStatusError,
-                           fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}", outputPath.string(), statusError.value(), statusError.message()));
+    return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}",
+                                                        FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   if(outputExists)
   {
@@ -42,15 +43,23 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
     return {};
   }
 
-  // Another process or a symlink can create the directory between the checks.
-  // Keep the creation error if the follow-up check cannot confirm existence.
-  const bool outputExistsAfterCreation = fs::exists(outputPath, statusError);
-  if(!statusError && outputExistsAfterCreation)
+  // Another process can create the directory between the first check and the creation attempt.
+  if(fs::exists(outputPath, statusError))
   {
     return {};
   }
-  return MakeErrorResult(createDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}", outputPath.string(),
-                                                           creationError.value(), creationError.message()));
+  if(creationError)
+  {
+    return MakeErrorResult(createDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}",
+                                                             FileUtilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
+  }
+  if(statusError)
+  {
+    return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect output path '{}' after the directory creation attempt. Check directory access. Operating system error {}: {}",
+                                                        FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
+  }
+  return MakeErrorResult(createDirectoryError,
+                         fmt::format("Output directory '{}' no longer exists after the creation attempt. Check the path and try again.", FileUtilities::detail::PathForDiagnostic(outputPath)));
 }
 
 // -----------------------------------------------------------------------------

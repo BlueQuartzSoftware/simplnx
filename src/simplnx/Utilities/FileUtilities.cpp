@@ -8,6 +8,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <system_error>
 
 #ifdef _WIN32
@@ -33,6 +34,19 @@ constexpr int k_HasAccess = 0;
 
 namespace nx::core::FileUtilities
 {
+std::string detail::PathForDiagnostic(const fs::path& path)
+{
+  try
+  {
+    const std::u8string utf8Path = path.u8string();
+    return std::string(utf8Path.begin(), utf8Path.end());
+  } catch(const std::system_error&)
+  {
+    // Keep the original filesystem error if the path conversion fails.
+    return "<path unavailable>";
+  }
+}
+
 int64 LinesInFile(const std::string& filepath)
 {
   const usize BUFFER_SIZE = 16384;
@@ -213,7 +227,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     if(statusError)
     {
       return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
-                                                          checkedPath.string(), path.string(), statusError.value(), statusError.message()));
+                                                          detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
     }
     if(checkedPathExists || checkedPath == rootPath)
     {

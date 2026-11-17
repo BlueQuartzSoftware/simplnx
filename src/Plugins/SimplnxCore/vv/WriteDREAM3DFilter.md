@@ -161,9 +161,10 @@ An additional core recovery case, `Pipeline persistent state: placeholder keeps 
 string and null disabled flags in incomplete filter JSON. Placeholders retain that raw payload and remain enabled.
 All four direct and fallback combinations failed before the Boolean type guard was added.
 
-Validation after the fixes (2026-11-11): all seven regression cases for persistent pipeline state passed without
-failures or skips on Windows in-core Release/Debug and Release with OOC enabled. The integration case uses an empty
-`DataStructure` and verifies metadata preservation and replay. It does not verify disk backing for real arrays.
+Validation after the fixes (2026-11-11) used simplnx commit `bbe3b7c10532813d7619bd534345be3a7a2456eb`. All seven
+regression cases for persistent pipeline state passed on Windows in-core Release and Debug and on Release with OOC
+enabled. The integration case uses an empty `DataStructure` and verifies metadata preservation and replay. It does
+not verify disk backing for real arrays.
 These regression results do not constitute formal V&V recertification. This addendum does not change the historical
 results or sign-offs above.
 
