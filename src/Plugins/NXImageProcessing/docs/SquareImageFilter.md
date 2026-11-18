@@ -58,6 +58,8 @@ Only int64 and uint64 inputs require an extra native-integer minimum/maximum sca
 
 ## Example Pipelines
 
+`15_Radiography_Intensity_Calibration.d3dpipeline` uses this filter to convert *Transmission* into *Squared Transmission*.
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.

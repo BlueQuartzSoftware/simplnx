@@ -10,6 +10,13 @@ Computes the **principal arccosine**, `acos(x)`, for each value in the input ima
 
 Values in the closed interval `[-1, 1]` have a real angle. Values outside this interval, including positive and negative infinity, produce NaN (not a number). Incoming NaN also produces NaN. The filter does not clamp, replace or reject these values.
 
+| Input cosine | Output angle (radians) |
+|---|---|
+| -1 | pi, approximately 3.14159265 |
+| 0 | pi/2, approximately 1.57079633 |
+| 1 | 0 |
+| 2 | NaN |
+
 ### Output Type and Precision
 
 | Input type | Output type | Output bytes per value |
@@ -38,14 +45,7 @@ The filter evaluates each value independently. Resident arrays use direct memory
 
 ## Example Pipelines
 
-The following scalar values illustrate the result. These are examples, not named pipeline files.
-
-| Input cosine | Output angle (radians) |
-|---|---|
-| -1 | pi, approximately 3.14159265 |
-| 0 | pi/2, approximately 1.57079633 |
-| 1 | 0 |
-| 2 | NaN |
+`16_Phase_and_Angle_Field_Transforms.d3dpipeline` uses this filter to convert *Normalized Response* into *Inverse Cosine*.
 
 ## License & Copyright
 
