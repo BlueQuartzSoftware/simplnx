@@ -28,7 +28,7 @@
 
 // Small transport helpers only. Each owning test states its independent numerical expectations.
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-namespace c15_test
+namespace image_integration
 {
 using namespace nx::core;
 
@@ -36,7 +36,7 @@ class Directory
 {
 public:
   Directory()
-  : m_Path(std::filesystem::path(unit_test::k_BinaryDir.view()) / "test_output" / ("C15Compatibility-" + std::to_string(std::random_device{}())))
+  : m_Path(std::filesystem::path(unit_test::k_BinaryDir.view()) / "test_output" / ("ImageFilterIntegration-" + std::to_string(std::random_device{}())))
   {
     REQUIRE(std::filesystem::create_directories(m_Path));
   }
@@ -283,4 +283,4 @@ inline DataStructure ReadMha(const std::filesystem::path& path)
   return result;
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
-} // namespace c15_test
+} // namespace image_integration

@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 
 #include "ItkGoldenTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
@@ -341,42 +341,43 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::C15Compatibility resident widened Square persists and feeds integer components", "[NXImageProcessing][C15Compatibility][Issue1874][SquareImageFilter]")
+TEST_CASE("NXImageProcessing::SquareImageFilter: resident integration widened Square persists and feeds integer components",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][SquareImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
-  const c15_test::Directory output;
+  const image_integration::Directory output;
   DataStructure source;
   const std::vector<int32> original{0, 2147483647, 0, 2};
   const auto input = ip_test::BuildScalarValuesImage<int32>(source, original);
-  c15_test::SetGeometry(source);
-  REQUIRE(c15_test::Read<int32>(source, input, {1, 1, 4}, scope) == original);
-  const auto square = c15_test::Pointwise<SquareImageFilter>(source, input, "ExactSquare");
+  image_integration::SetGeometry(source);
+  REQUIRE(image_integration::Read<int32>(source, input, {1, 1, 4}, scope) == original);
+  const auto square = image_integration::Pointwise<SquareImageFilter>(source, input, "ExactSquare");
   // (2^31-1)^2 is exact in Int64 and cannot be transported exactly through Float64.
   const std::vector<int64> expected{0, 4611686014132420609LL, 0, 4};
-  REQUIRE(c15_test::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
+  REQUIRE(image_integration::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
   const auto save = DREAM3D::WriteFile(output.path() / "square.dream3d", source);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
-  c15_test::CheckSaved<int64>(output.path() / "square.dream3d", square, {1, 1, 4}, expected);
+  image_integration::CheckSaved<int64>(output.path() / "square.dream3d", square, {1, 1, 4}, expected);
   auto load = DREAM3D::LoadDataStructure(output.path() / "square.dream3d");
   SIMPLNX_RESULT_REQUIRE_VALID(load);
   auto& reloaded = load.value();
-  REQUIRE(c15_test::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
-  c15_test::CheckGeometry(reloaded, {4, 1, 1});
+  REQUIRE(image_integration::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
+  image_integration::CheckGeometry(reloaded, {4, 1, 1});
   const WriteImageFilter writer;
-  c15_test::Execute(writer, reloaded, c15_test::WriteArguments(square, output.path() / "square.mha"), scope);
-  auto raw = c15_test::ReadMha(output.path() / "square.mha");
-  REQUIRE(c15_test::Read<int64>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 4}, scope) == expected);
+  image_integration::Execute(writer, reloaded, image_integration::WriteArguments(square, output.path() / "square.mha"), scope);
+  auto raw = image_integration::ReadMha(output.path() / "square.mha");
+  REQUIRE(image_integration::Read<int64>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 4}, scope) == expected);
   const ImageGeom* rawGeometryPtr = nullptr;
   REQUIRE_NOTHROW(rawGeometryPtr = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
   REQUIRE(rawGeometryPtr->getDimensions() == SizeVec3{4, 1, 1});
   REQUIRE(rawGeometryPtr->getSpacing() == FloatVec3{1, 2, 1});
   REQUIRE(rawGeometryPtr->getOrigin() == FloatVec3{4, 5, 0});
-  const auto labels = c15_test::Components(reloaded, square, "Components");
-  REQUIRE(c15_test::Read<uint32>(reloaded, labels, {1, 1, 4}, scope) == std::vector<uint32>{0, 1, 0, 2});
-  REQUIRE(c15_test::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
-  REQUIRE(c15_test::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
-  REQUIRE(c15_test::Read<int32>(source, input, {1, 1, 4}, scope) == original);
+  const auto labels = image_integration::Components(reloaded, square, "Components");
+  REQUIRE(image_integration::Read<uint32>(reloaded, labels, {1, 1, 4}, scope) == std::vector<uint32>{0, 1, 0, 2});
+  REQUIRE(image_integration::Read<int64>(reloaded, square, {1, 1, 4}, scope) == expected);
+  REQUIRE(image_integration::Read<int64>(source, square, {1, 1, 4}, scope) == expected);
+  REQUIRE(image_integration::Read<int32>(source, input, {1, 1, 4}, scope) == original);
   UnitTest::CheckArraysInheritTupleDims(source);
   UnitTest::CheckArraysInheritTupleDims(reloaded);
 }

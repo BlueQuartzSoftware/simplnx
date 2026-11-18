@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 #include "NXImageProcessing/Filters/AcosImageFilter.hpp"
 #include "NXImageProcessing/Filters/AsinImageFilter.hpp"
 #include "NXImageProcessing/Filters/TanImageFilter.hpp"
@@ -1095,7 +1095,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: raw export retains warnings from
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    REQUIRE(c15_test::Decode<uint8>(secondSlice, 2, 1, 1) == std::vector<uint8>{13, 17});
+    REQUIRE(image_integration::Decode<uint8>(secondSlice, 2, 1, 1) == std::vector<uint8>{13, 17});
   }
   const auto& warnings = result.result.warnings();
   REQUIRE(warnings.size() == 2);
@@ -1103,7 +1103,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: raw export retains warnings from
   REQUIRE(warnings.at(0).message == "Controlled Write Image read warning for XY slice 0.");
   REQUIRE(warnings.at(1).code == -27904);
   REQUIRE(warnings.at(1).message == "Controlled Write Image read warning for XY slice 1.");
-  REQUIRE(c15_test::Decode<uint8>(firstSlice, 2, 1, 1) == std::vector<uint8>{7, 11});
+  REQUIRE(image_integration::Decode<uint8>(firstSlice, 2, 1, 1) == std::vector<uint8>{7, 11});
   REQUIRE(std::distance(fs::directory_iterator(output.path()), fs::directory_iterator{}) == 2);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -2955,13 +2955,14 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tangent persist and export ordered fractions", "[NXImageProcessing][C15Compatibility][Issue1874][WriteImageFilter]")
+TEST_CASE("NXImageProcessing::WriteImageFilter: resident integration principal angles and tangent persist and export ordered fractions",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][WriteImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
   const usize operation = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(operation, scenario);
-  const c15_test::Directory output;
+  const image_integration::Directory output;
   using InputSamplesType = std::array<int16, 6>;
   using OutputSamplesType = std::array<float32, 6>;
   constexpr auto piRadians = std::numbers::pi_v<float32>;
@@ -2975,23 +2976,23 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
   const auto& expected = outputSamples.at(operation);
   DataStructure source;
   const auto input = recon_test::BuildImageFromPattern<int16>(source, 3, 1, 2, original);
-  c15_test::SetGeometry(source);
-  REQUIRE(c15_test::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  image_integration::SetGeometry(source);
+  REQUIRE(image_integration::Read<int16>(source, input, {2, 1, 3}, scope) == original);
   const std::string outputName = operation == 2 ? "Tangent" : "Radians";
   DataPath quantitative;
   switch(operation)
   {
   case 0:
-    quantitative = c15_test::Pointwise<AcosImageFilter>(source, input, outputName);
+    quantitative = image_integration::Pointwise<AcosImageFilter>(source, input, outputName);
     break;
   case 1:
-    quantitative = c15_test::Pointwise<AsinImageFilter>(source, input, outputName);
+    quantitative = image_integration::Pointwise<AsinImageFilter>(source, input, outputName);
     break;
   default:
-    quantitative = c15_test::Pointwise<TanImageFilter>(source, input, outputName);
+    quantitative = image_integration::Pointwise<TanImageFilter>(source, input, outputName);
     break;
   }
-  const auto values = c15_test::Read<float32>(source, quantitative, {2, 1, 3}, scope);
+  const auto values = image_integration::Read<float32>(source, quantitative, {2, 1, 3}, scope);
   for(usize index = 0; index < expected.size(); ++index)
   {
     CAPTURE(index);
@@ -3008,27 +3009,27 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
   // Geometry length units are a separate .dream3d field.
   const auto save = DREAM3D::WriteFile(output.path() / "quantitative.dream3d", source);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
-  c15_test::CheckSaved<float32>(output.path() / "quantitative.dream3d", quantitative, {2, 1, 3}, values);
+  image_integration::CheckSaved<float32>(output.path() / "quantitative.dream3d", quantitative, {2, 1, 3}, values);
   auto load = DREAM3D::LoadDataStructure(output.path() / "quantitative.dream3d");
   SIMPLNX_RESULT_REQUIRE_VALID(load);
   auto& reloaded = load.value();
-  REQUIRE(c15_test::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
-  c15_test::CheckGeometry(reloaded, {3, 1, 2});
+  REQUIRE(image_integration::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  image_integration::CheckGeometry(reloaded, {3, 1, 2});
   const WriteImageFilter writer;
-  c15_test::Execute(writer, reloaded, c15_test::WriteArguments(quantitative, output.path() / "raw.mha"), scope);
+  image_integration::Execute(writer, reloaded, image_integration::WriteArguments(quantitative, output.path() / "raw.mha"), scope);
   if(operation == 0)
   {
-    c15_test::Execute(writer, reloaded, c15_test::WriteArguments(quantitative, output.path() / "raw.tif"), scope);
-    auto displayArgs = c15_test::WriteArguments(quantitative, output.path() / "display.png");
+    image_integration::Execute(writer, reloaded, image_integration::WriteArguments(quantitative, output.path() / "raw.tif"), scope);
+    auto displayArgs = image_integration::WriteArguments(quantitative, output.path() / "display.png");
     displayArgs.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
     displayArgs.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>("Grayscale"));
-    c15_test::Execute(writer, reloaded, displayArgs, scope);
+    image_integration::Execute(writer, reloaded, displayArgs, scope);
   }
   for(usize slice = 0; slice < 2; ++slice)
   {
     const std::string suffix = slice == 0 ? "_000" : "_001";
-    auto raw = c15_test::ReadMha(output.path() / (std::string("raw") + suffix + ".mha"));
-    const auto pixels = c15_test::Read<float32>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 3}, scope);
+    auto raw = image_integration::ReadMha(output.path() / (std::string("raw") + suffix + ".mha"));
+    const auto pixels = image_integration::Read<float32>(raw, DataPath({"Image Geometry", "CellData", "Pixels"}), {1, 1, 3}, scope);
     const ImageGeom* rawGeometryPtr = nullptr;
     REQUIRE_NOTHROW(rawGeometryPtr = &raw.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"})));
     REQUIRE(rawGeometryPtr->getDimensions() == SizeVec3{3, 1, 1});
@@ -3042,7 +3043,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
     if(operation == 0)
     {
       const auto tiffPath = output.path() / (std::string("raw") + suffix + ".tif");
-      const auto tiff = c15_test::Decode<float32>(tiffPath, 3, 1);
+      const auto tiff = image_integration::Decode<float32>(tiffPath, 3, 1);
       REQUIRE(tiff == pixels);
       const auto imageIO = CreateImageIO(tiffPath);
       SIMPLNX_RESULT_REQUIRE_VALID(imageIO);
@@ -3052,14 +3053,14 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident principal angles and tan
       REQUIRE(metadata.value().origin.has_value());
       REQUIRE(metadata.value().spacing == FloatVec3{1, 2, 1});
       REQUIRE(metadata.value().origin == FloatVec3{4, 5, 0});
-      const auto display = c15_test::Decode<uint8>(output.path() / (std::string("display") + suffix + ".png"), 3, 1, 3);
+      const auto display = image_integration::Decode<uint8>(output.path() / (std::string("display") + suffix + ".png"), 3, 1, 3);
       const std::vector<uint8> expectedDisplay = slice == 0 ? std::vector<uint8>{0, 0, 0, 127, 127, 127, 255, 255, 255} : std::vector<uint8>{255, 255, 255, 127, 127, 127, 0, 0, 0};
       REQUIRE(display == expectedDisplay);
     }
   }
-  REQUIRE(c15_test::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
-  REQUIRE(c15_test::Read<float32>(source, quantitative, {2, 1, 3}, scope) == values);
-  REQUIRE(c15_test::Read<int16>(source, input, {2, 1, 3}, scope) == original);
+  REQUIRE(image_integration::Read<float32>(reloaded, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(image_integration::Read<float32>(source, quantitative, {2, 1, 3}, scope) == values);
+  REQUIRE(image_integration::Read<int16>(source, input, {2, 1, 3}, scope) == original);
   UnitTest::CheckArraysInheritTupleDims(source);
   UnitTest::CheckArraysInheritTupleDims(reloaded);
 }

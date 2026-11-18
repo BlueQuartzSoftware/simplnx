@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "NXImageProcessing/Filters/GradientMagnitudeImageFilter.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
@@ -1106,8 +1106,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::C15Compatibility resident SmoothingRecursiveGaussianImageFilter feeds quantitative gradient",
-          "[NXImageProcessing][C15Compatibility][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: resident integration feeds quantitative gradient",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);
@@ -1123,20 +1123,20 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident SmoothingRecursiveGaussi
   }
   DataStructure dataStructure;
   const auto input = recon_test::BuildImageFromPattern<float32>(dataStructure, 16, 4, 1, original);
-  c15_test::SetGeometry(dataStructure);
-  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  image_integration::SetGeometry(dataStructure);
+  REQUIRE(image_integration::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
   const SmoothingRecursiveGaussianImageFilter filter;
-  auto args = c15_test::ImageArguments(filter, input, "Smoothed");
+  auto args = image_integration::ImageArguments(filter, input, "Smoothed");
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1, 1, 1}));
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-  c15_test::Execute(filter, dataStructure, args, scope);
+  image_integration::Execute(filter, dataStructure, args, scope);
   const auto smoothed = input.replaceName("Smoothed");
-  const auto values = c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope);
+  const auto values = image_integration::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope);
   const GradientMagnitudeImageFilter gradient;
-  args = c15_test::ImageArguments(gradient, smoothed, "Gradient");
+  args = image_integration::ImageArguments(gradient, smoothed, "Gradient");
   args.insertOrAssign(GradientMagnitudeImageFilter::k_UseImageSpacing_Key, std::make_any<bool>(true));
-  c15_test::Execute(gradient, dataStructure, args, scope);
-  const auto edges = c15_test::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
+  image_integration::Execute(gradient, dataStructure, args, scope);
+  const auto edges = image_integration::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
   for(usize row = 0; row < 4; ++row)
   {
     const usize rowOffset = row * 16;
@@ -1165,9 +1165,9 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident SmoothingRecursiveGaussi
       }
     }
   }
-  REQUIRE(c15_test::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope) == values);
-  REQUIRE(c15_test::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
-  c15_test::CheckGeometry(dataStructure, {16, 4, 1});
+  REQUIRE(image_integration::Read<float32>(dataStructure, smoothed, {1, 4, 16}, scope) == values);
+  REQUIRE(image_integration::Read<float32>(dataStructure, input, {1, 4, 16}, scope) == original);
+  image_integration::CheckGeometry(dataStructure, {16, 4, 1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison)

@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
@@ -1550,11 +1550,12 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: floating summar
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::C15Compatibility resident Otsu excluded labels preserve class measurements", "[NXImageProcessing][C15Compatibility][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: resident integration Otsu excluded labels preserve class measurements",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const image_integration::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const bool useMask = GENERATE(false, true);
   const auto nan = std::numeric_limits<float64>::quiet_NaN();
   const auto inf = std::numeric_limits<float64>::infinity();
@@ -1563,7 +1564,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident Otsu excluded labels pre
   DataStructure dataStructure;
   const auto input = ip_test::BuildScalarValuesImage<float64>(dataStructure, original);
   const OtsuMultipleThresholdsImageFilter filter;
-  auto args = c15_test::ImageArguments(filter, input, "Classes");
+  auto args = image_integration::ImageArguments(filter, input, "Classes");
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(2));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(1));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(7));
@@ -1572,7 +1573,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident Otsu excluded labels pre
   if(useMask)
   {
     const auto mask = createOtsuMask(dataStructure, std::array<uint8, 7>{1, 1, 1, 1, 0, 1, 1});
-    REQUIRE(c15_test::Read<uint8>(dataStructure, mask, ShapeType{7}, expectedStore) == std::vector<uint8>{1, 1, 1, 1, 0, 1, 1});
+    REQUIRE(image_integration::Read<uint8>(dataStructure, mask, ShapeType{7}, expectedStore) == std::vector<uint8>{1, 1, 1, 1, 0, 1, 1});
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(mask));
   }
@@ -1581,14 +1582,14 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident Otsu excluded labels pre
   REQUIRE(result.result.warnings().size() == 1);
   REQUIRE(result.result.warnings().front().message.find(useMask ? "skipped 2 nonfinite pixels still selected after applying the input mask" : "skipped 3 nonfinite pixels") != std::string::npos);
   const auto classes = input.replaceName("Classes");
-  REQUIRE(c15_test::Read<uint8>(dataStructure, classes, shape, expectedStore) == std::vector<uint8>{7, 8, 255, 8, 255, 255, 7});
-  const auto selected = c15_test::Select(dataStructure, classes, 8, 8, "DesiredClass");
-  REQUIRE(c15_test::Read<uint8>(dataStructure, selected, shape, expectedStore) == std::vector<uint8>{0, 1, 0, 1, 0, 0, 0});
-  const auto components = c15_test::Components(dataStructure, selected, "Components");
-  REQUIRE(c15_test::Read<uint32>(dataStructure, components, shape, expectedStore) == std::vector<uint32>{0, 1, 0, 2, 0, 0, 0});
-  const auto validity = c15_test::Select(dataStructure, classes, 7, 8, "Validity");
-  REQUIRE(c15_test::Read<uint8>(dataStructure, validity, shape, expectedStore) == std::vector<uint8>{1, 1, 0, 1, 0, 0, 1});
-  REQUIRE(c15_test::MaskedMean(dataStructure, selected, validity) == 0.5F);
+  REQUIRE(image_integration::Read<uint8>(dataStructure, classes, shape, expectedStore) == std::vector<uint8>{7, 8, 255, 8, 255, 255, 7});
+  const auto selected = image_integration::Select(dataStructure, classes, 8, 8, "DesiredClass");
+  REQUIRE(image_integration::Read<uint8>(dataStructure, selected, shape, expectedStore) == std::vector<uint8>{0, 1, 0, 1, 0, 0, 0});
+  const auto components = image_integration::Components(dataStructure, selected, "Components");
+  REQUIRE(image_integration::Read<uint32>(dataStructure, components, shape, expectedStore) == std::vector<uint32>{0, 1, 0, 2, 0, 0, 0});
+  const auto validity = image_integration::Select(dataStructure, classes, 7, 8, "Validity");
+  REQUIRE(image_integration::Read<uint8>(dataStructure, validity, shape, expectedStore) == std::vector<uint8>{1, 1, 0, 1, 0, 0, 1});
+  REQUIRE(image_integration::MaskedMean(dataStructure, selected, validity) == 0.5F);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison)
