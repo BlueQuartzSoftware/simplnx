@@ -27,9 +27,11 @@ The output Image Geometry associates the selected Cell Attribute Matrix with its
 - **Triangle Geometry** -- the surface mesh to sample, typically produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md).
 - **Face Labels** -- the per-face 2-component array identifying the **Features** on either side of each triangle, produced by the same surface-meshing filter.
 
-### Spatial Parameter Limits
+### Valid Parameter Values
 
-Every **Spacing** component must be finite and greater than zero. Every **Origin** and **Uncertainty** component must be finite. Origin, spacing and uncertainty use the geometry coordinate units. Zero and negative uncertainty values are valid. These checks preserve the random seed and draw order.
+Each **Spacing** value must be finite and greater than zero.
+Each **Origin** and **Uncertainty** value must be finite.
+Use the geometry's length units for all three parameters. **Uncertainty** can be zero or negative.
 
 % Auto generated parameter table will be inserted here
 

@@ -31,19 +31,24 @@ Starting with the simple case, a `VertexGeom`, if a vertex/point (cell-level) fa
 
 ### Sphere Bounding Type
 
-The way a point is determined to be in the sphere uses the following calculation where `p` is the query point, `c` is the centroid of the sphere (provided from the first 3 values in "Sphere Info" parameter), and `r` is the radius of the sphere (provided from the 4th value in "Sphere Info" parameter):
+The filter uses this test to determine if a point is in the sphere.
 
 `(p_x - c_x)^2 + (p_y - c_y)^2 + (p_z - c_z)^2 <= r^2`
 
-The center `c` (first 3 values of *Sphere Info*) and radius `r` (4th value) are both given in **physical coordinate** units matching the geometry.
+In the formula, `p` is the point. The first three values in **Sphere centroid and Radius (Physical Units)** give the center `c`. The fourth value gives the radius `r`.
 
 ### Inverting the Mask
 
 This is primarily a convenience option provided to the user. If toggled on the values will be true (`1`) by default and values withing the bounds will be marked false (`0`). This doesn't modify anything other than switching what value is set for bounds that fall inside or outside respectively.
 
-### Spatial Parameter Limits
+### Valid Parameter Values
 
-When Sphere is selected, **Sphere Information** requires finite X, Y and Z center coordinates and a finite radius greater than zero. All four values use the geometry coordinate units. Rectangle ignores Sphere Information.
+When **Coordinate Container Shape** is *Sphere*, use **Sphere centroid and Radius (Physical Units)**.
+The three center coordinates must be finite.
+The radius must be finite and greater than zero.
+Use the geometry's length units for all four values.
+
+When **Coordinate Container Shape** is *Rectangle*, use finite **Lower Bound (Physical Units)** and **Upper Bound (Physical Units)** coordinates.
 
 % Auto generated parameter table will be inserted here
 

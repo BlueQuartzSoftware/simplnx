@@ -31,9 +31,11 @@ The user selects:
 
 - **Rectilinear Grid Geometry** -- the source geometry. Typically produced by [Create Geometry](CreateGeometryFilter.md) with type Rectilinear Grid, or imported from an external simulation.
 
-### Count Parameter Limits
+### Valid Parameter Values
 
-Every **Dimensions** component must be an integer of at least 1. The requested XYZ product must fit the geometry size type. Preflight rejects zero, negative or unrepresentable requested dimensions before output actions. Execution derives origin and spacing from the RectGrid bounds. No workload limit is imposed.
+Each **Dimensions (Voxels)** value must be a whole number of at least 1.
+The filter checks the total cell count. If the grid is too large, decrease **Dimensions (Voxels)**.
+The filter calculates the origin and spacing from the Rectilinear Grid bounds when it runs.
 
 % Auto generated parameter table will be inserted here
 

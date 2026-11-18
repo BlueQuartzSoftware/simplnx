@@ -30,13 +30,12 @@ When importing raw binary data on a regular grid, run this filter first to creat
 
 None. The geometry is created from user-supplied parameters.
 
-### Numeric input constraints
+### Valid Parameter Values
 
-**Spacing** must contain finite values greater than 0. **Origin** must contain finite values.
-
-### Count Parameter Limits
-
-Every **Dimensions** component must be an integer of at least 1. Each dimension and the XYZ tuple product must fit the geometry size type. Preflight rejects invalid dimensions before output actions or extent previews. These checks impose no workload limit.
+Each **Dimensions** value must be a whole number of at least 1 cell.
+The filter checks the total cell count. If the grid is too large, decrease **Dimensions**.
+Each **Spacing** value must be finite and greater than zero. Each **Origin** coordinate must be finite.
+Enter **Spacing** and **Origin** in the same length units.
 
 % Auto generated parameter table will be inserted here
 

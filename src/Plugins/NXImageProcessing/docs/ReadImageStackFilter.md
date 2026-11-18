@@ -60,15 +60,21 @@ When **Postprocessed** is selected, the processing order becomes:
 
 ### Resampling Caveats
 
-The user can optionally resample each image as it is read in. The *Resample Images* parameter provides the following choices:
+Use **Resample Images** to choose how the filter reads each image.
 
-- **Do Not Resample (0)**: Images are used at their native pixel dimensions.
-- **Scaling (1)**: A percentage value scales the X and Y pixel counts. A value of 100 means no scaling, 50 means half the pixels, and 200 means double the pixels. The percentage must be finite and greater than or equal to 1.0.
-- **Exact X/Y Dimensions (2)**: The requested **Exact 2D Dimensions (Pixels)** X and Y counts must each be at least 1. Their values and product must fit the geometry size type. The Z dimension stays equal to the generated file count after Z cropping.
+- *Do Not Resample (0)* keeps the original pixel counts.
+- *Scaling (1)* changes the X and Y pixel counts by a percentage. A value of 100 keeps the original counts. A value of 50 gives half the original counts. A value of 200 doubles them.
+- In *Exact X/Y Dimensions (2)* mode, the filter resamples each image to the X and Y pixel counts in **Exact 2D Dimensions (Pixels)**. The Z dimension is the number of images left after Z cropping.
 
-Do Not Resample ignores Scaling and Exact 2D Dimensions. Scaling ignores Exact 2D Dimensions, including an empty vector or zero inactive counts. Exact Dimensions ignores Scaling. There is no workload limit on representable requested dimensions.
+### Valid Parameter Values
 
-Preflight checks active resampling parameters before reading slice metadata or creating output actions. A geometry-derived spacing, dimension or tuple-product failure uses the shared resampling warning and unit-size placeholder rules during preflight. Execution recomputes the layout from final per-slice metadata and returns an error before the affected slice copy if the layout remains unrepresentable. Earlier copied slices and regular output objects can remain after a later failure.
+In *Scaling (1)* mode, **Scaling (%)** must be finite and at least 1.
+In *Exact X/Y Dimensions (2)* mode, each value in **Exact 2D Dimensions (Pixels)** must be a whole number of at least 1.
+The filter checks the total pixel count. If the image is too large, decrease **Exact 2D Dimensions (Pixels)**.
+
+If preflight cannot calculate a valid output size, it warns and uses a temporary size for the preview.
+The filter calculates the size again as it reads each image. If the size is still invalid, it stops before it copies that image.
+Images copied earlier can remain in the output.
 
 ### Grayscale Conversion
 

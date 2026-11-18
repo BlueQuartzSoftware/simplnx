@@ -89,15 +89,18 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 
 The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
 
-### Spatial Parameter Limits
+### Valid Parameter Values
 
-With Gaussian interpolation, every **Gaussian Sigmas** component must be finite and greater than zero. Its square in float32 must be finite and nonzero. A nonzero subnormal square is valid. The sigmas measure the kernel offsets in cells. Uniform interpolation ignores Gaussian Sigmas, including empty or invalid inactive values.
+Each **Kernel Size** value must be finite and at least zero in the geometry's length units.
+A zero extent limits the contribution to the center cell along that axis.
 
-### Count Parameter Limits
+When **Interpolation Technique** is *Gaussian*, each **Gaussian Sigmas** value must be finite and greater than zero.
+These values are in cells. If the filter reports that the values are too small, increase **Gaussian Sigmas**.
+If the filter reports that the values are too large, decrease **Gaussian Sigmas**.
 
-Each **Kernel Size** component must be finite and nonnegative in the geometry length units. Fractional extents and zero are valid. Zero produces a single center contribution.
-
-Kernel radii, widths, element counts and storage sizes depend on the Image Geometry spacing. If provisional metadata cannot produce a representable layout, preflight warns and defers kernel setup. Execution recomputes the layout from final spacing and returns an error before kernel allocation if it still cannot be represented. These checks impose no workload or memory-budget limit.
+The filter uses the Image Geometry spacing to calculate the kernel size in cells.
+If the kernel is too large during preflight, the filter warns and tries again during the run.
+If the kernel is still too large, decrease **Kernel Size** or use a grid with larger spacing.
 
 % Auto generated parameter table will be inserted here
 
