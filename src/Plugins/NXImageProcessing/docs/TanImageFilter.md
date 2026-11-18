@@ -38,7 +38,7 @@ Existing pipelines with integer input now receive float32 responses. Earlier int
 
 ## Algorithm
 
-The filter evaluates each value independently through the existing pointwise traversal. Resident arrays use direct memory views. Disk-backed arrays use serial bulk reads and writes through working batches. Transfer buffers target a combined 64 MiB, but each batch holds at least one complete trailing-dimensional slab, such as an XY slice for a Z/Y/X tuple shape. A slab can exceed this target or contain the whole array. Parallel calculation uses owned buffers. The filter adds no separate Tan-specific full-array calculation buffer. Output uses the input storage format and preserves its geometry.
+The filter evaluates each value independently through the existing pointwise traversal. Resident arrays use direct memory views. Disk-backed arrays use serial bulk reads and writes through working batches. Transfer buffers target a combined 64 MiB, but each batch holds at least one complete trailing-dimensional slab, such as an XY slice for a Z/Y/X tuple shape. A slab can exceed this target or contain the whole array. Parallel calculation uses owned buffers. The filter adds no separate Tan-specific full-array calculation buffer. The output belongs to the input geometry. An explicit input storage format also applies to the output. When the input uses automatic storage, the storage resolver uses the output type and size. A uint8 image in memory can therefore produce a float32 array large enough to use disk storage.
 
 % Auto generated parameter table will be inserted here
 
