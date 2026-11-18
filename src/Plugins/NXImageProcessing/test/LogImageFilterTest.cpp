@@ -103,7 +103,16 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: integer values produce fl
   constexpr float64 upperBound = std::numeric_limits<TestType>::digits * logTwo;
   REQUIRE(std::isfinite(store.getValue(3)));
   REQUIRE(store.getValue(3) >= lowerBound);
-  REQUIRE(store.getValue(3) <= upperBound);
+  if constexpr(sizeof(TestType) == sizeof(uint64))
+  {
+    // The maximum rounds to 2^digits on conversion to float64. Allow one step for libm rounding.
+    REQUIRE(store.getValue(3) >= std::nextafter(upperBound, 0.0));
+    REQUIRE(store.getValue(3) <= std::nextafter(upperBound, std::numeric_limits<float64>::infinity()));
+  }
+  else
+  {
+    REQUIRE(store.getValue(3) <= upperBound);
+  }
   REQUIRE(store.getValue(4) == Approx(lowerBound).epsilon(0).margin(1.0e-14));
   if constexpr(std::is_signed_v<TestType>)
   {
