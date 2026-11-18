@@ -90,13 +90,18 @@ OutputType NarrowFloatingImageValue(InputType value)
   static_assert(std::is_floating_point_v<OutputType> && std::is_floating_point_v<InputType>);
   static_assert(std::is_same_v<InputType, float> || std::is_same_v<InputType, double>);
   static_assert(std::is_same_v<OutputType, float> || std::is_same_v<OutputType, double>);
-  if constexpr(std::is_same_v<OutputType, InputType>)
+  if constexpr(std::is_same_v<InputType, float64> && std::is_same_v<OutputType, float32>)
   {
-    return value;
-  }
-  if(std::isfinite(value) && std::abs(static_cast<double>(value)) > static_cast<double>(std::numeric_limits<OutputType>::max()))
-  {
-    return std::signbit(value) ? -std::numeric_limits<OutputType>::infinity() : std::numeric_limits<OutputType>::infinity();
+    static_assert(std::numeric_limits<float32>::is_iec559 && std::numeric_limits<float32>::digits == 24 && std::numeric_limits<float32>::max_exponent == 128);
+    // The midpoint between FLT_MAX and 2^128 rounds to infinity (ties to even).
+    // Values between FLT_MAX and the midpoint round back to FLT_MAX, without an out-of-range cast.
+    constexpr float64 overflowMidpoint = 0x1.ffffffp127;
+    const float64 magnitude = std::abs(value);
+    if(magnitude > static_cast<float64>(std::numeric_limits<float32>::max()))
+    {
+      const float32 rounded = magnitude < overflowMidpoint ? std::numeric_limits<float32>::max() : std::numeric_limits<float32>::infinity();
+      return std::signbit(value) ? -rounded : rounded;
+    }
   }
   return static_cast<OutputType>(value);
 }
