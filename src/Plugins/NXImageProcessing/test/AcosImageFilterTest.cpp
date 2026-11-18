@@ -13,7 +13,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -36,30 +35,6 @@ using namespace nx::core;
 
 namespace
 {
-DataPath runMappedIntegerAcos(DataStructure& dataStructure, const DataPath& input)
-{
-  const AcosImageFilter filter;
-  Arguments args;
-  args.insertOrAssign(AcosImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(AcosImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(AcosImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr != nullptr);
-  // A mapping regression must fail before invalid integer values can reach a NaN-to-integer cast.
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->type() == DataType::float32);
-  const auto executeResult = filter.execute(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  return input.replaceName("Output");
-}
-
 // Test-only transfer failures use the engine's existing forced-buffer option. These stores are resident;
 // the separate SimplnxOoc test supplies the actual disk witness.
 template <class T>
@@ -131,24 +106,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer zero produces fl
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {0});
-  const DataPath output = input.replaceName("Output");
-  Arguments args;
-  args.insertOrAssign(AcosImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(AcosImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(AcosImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-
-  const AcosImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == DataType::float32);
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, 1});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<AcosImageFilter>(dataStructure, input, DataType::float32, {1, 1, 1}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
@@ -212,7 +170,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AcosImageFilter: integer endpoints and in
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
-  const DataPath output = runMappedIntegerAcos(dataStructure, input);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<AcosImageFilter>(dataStructure, input, DataType::float32, {1, 1, values.size()}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
@@ -280,7 +238,7 @@ TEST_CASE("NXImageProcessing::AcosImageFilter: mapped multi-component output pre
   {
     store->setValue(index, static_cast<int16>(static_cast<int32>(index % 4) - 1));
   }
-  const DataPath output = runMappedIntegerAcos(dataStructure, input);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<AcosImageFilter>(dataStructure, input, DataType::float32, {2, 2, 2}, {2});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);

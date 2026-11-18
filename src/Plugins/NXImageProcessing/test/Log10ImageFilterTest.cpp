@@ -16,7 +16,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -95,24 +94,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: integer values produce 
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
-  const DataPath output = input.replaceName("Output");
-  Arguments args;
-  args.insertOrAssign(Log10ImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(Log10ImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(Log10ImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const Log10ImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  // Stop the baseline before zero or a negative input can produce a nonfinite-to-integer cast.
-  REQUIRE(actionPtr->type() == DataType::float64);
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, values.size()});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<Log10ImageFilter>(dataStructure, input, DataType::float64, {1, 1, values.size()}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
@@ -145,23 +127,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::Log10ImageFilter: floating input retains 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {1, 10, 100, 2, TestType{0.0}, -TestType{0.0}, -1, std::numeric_limits<TestType>::quiet_NaN(),
                                                                                    std::numeric_limits<TestType>::infinity(), -std::numeric_limits<TestType>::infinity()});
-  const DataPath output = input.replaceName("Output");
-  Arguments args;
-  args.insertOrAssign(Log10ImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(Log10ImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(Log10ImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const Log10ImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == GetDataType<TestType>());
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, 10});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<Log10ImageFilter>(dataStructure, input, GetDataType<TestType>(), {1, 1, 10}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == GetDataType<TestType>());
@@ -255,22 +221,7 @@ TEST_CASE("NXImageProcessing::Log10ImageFilter: promoted Float64 output preserve
   {
     inputArrayPtr->getDataStoreRef().setValue(index, values.at(index));
   }
-  Arguments args;
-  args.insertOrAssign(Log10ImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(Log10ImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(Log10ImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const Log10ImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == DataType::float64);
-  REQUIRE(actionPtr->dims() == tupleShape);
-  REQUIRE(actionPtr->componentDims() == componentShape);
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath output = input.replaceName("Output");
+  const DataPath output = ip_test::RunMappedPointwiseFilter<Log10ImageFilter>(dataStructure, input, DataType::float64, tupleShape, componentShape);
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
