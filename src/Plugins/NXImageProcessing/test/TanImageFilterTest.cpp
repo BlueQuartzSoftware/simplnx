@@ -15,7 +15,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -58,24 +57,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: integer radians produce s
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
   const ShapeType tupleShape = {1, 1, values.size()};
-  Arguments args;
-  args.insertOrAssign(TanImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(TanImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const TanImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  // Stop the baseline before a negative tangent could be converted to an unsigned integer.
-  REQUIRE(actionPtr->type() == DataType::float32);
-  REQUIRE(actionPtr->dims() == tupleShape);
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath outputPath = inputPath.replaceName("Output");
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<TanImageFilter>(dataStructure, inputPath, DataType::float32, tupleShape, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
@@ -116,23 +98,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::TanImageFilter: floating responses retain
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {0, -TestType{0}, 1, -1, 3, std::numeric_limits<TestType>::quiet_NaN(), std::numeric_limits<TestType>::infinity(),
                                                                                        -std::numeric_limits<TestType>::infinity(), static_cast<TestType>(1.5707963267948966),
                                                                                        std::numeric_limits<TestType>::lowest(), std::numeric_limits<TestType>::max()});
-  Arguments args;
-  args.insertOrAssign(TanImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(TanImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const TanImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == GetDataType<TestType>());
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, 11});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath outputPath = inputPath.replaceName("Output");
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<TanImageFilter>(dataStructure, inputPath, GetDataType<TestType>(), {1, 1, 11}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   REQUIRE(outputArrayPtr->getDataType() == GetDataType<TestType>());
@@ -200,30 +166,7 @@ TEST_CASE("NXImageProcessing::TanImageFilter: integer vector tuples preserve sha
     inputArrayPtr->getDataStoreRef().setValue(index, values.at(index));
   }
 
-  Arguments args;
-  args.insertOrAssign(TanImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(TanImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(TanImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const TanImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr != nullptr);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->type() == DataType::float32);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->dims() == tupleShape);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->componentDims() == componentShape);
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath outputPath = inputPath.replaceName("Output");
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<TanImageFilter>(dataStructure, inputPath, DataType::float32, tupleShape, componentShape);
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.

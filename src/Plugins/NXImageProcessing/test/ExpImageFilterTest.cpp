@@ -14,7 +14,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -46,25 +45,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: integer input produces fl
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
-  const DataPath output = input.replaceName("Output");
-  Arguments args;
-  args.insertOrAssign(ExpImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(ExpImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(ExpImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-
-  const ExpImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  // Stop the baseline before exp(100) can undergo an out-of-range conversion to an integer.
-  REQUIRE(actionPtr->type() == DataType::float64);
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, values.size()});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, DataType::float64, {1, 1, values.size()}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
@@ -212,22 +193,7 @@ TEST_CASE("NXImageProcessing::ExpImageFilter: mapped multi-component output pres
     inputStore->setValue(index, static_cast<int16>(static_cast<int32>(index % 4) - 1));
   }
 
-  Arguments args;
-  args.insertOrAssign(ExpImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(ExpImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(ExpImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const ExpImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == DataType::float64);
-  REQUIRE(actionPtr->dims() == ShapeType{2, 2, 2});
-  REQUIRE(actionPtr->componentDims() == ShapeType{2});
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath output = input.replaceName("Output");
+  const DataPath output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, DataType::float64, {2, 2, 2}, {2});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
@@ -279,24 +245,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: floating input retains ty
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {-1, 0, 1});
-  const DataPath output = input.replaceName("Output");
-  Arguments args;
-  args.insertOrAssign(ExpImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(ExpImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(ExpImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-
-  const ExpImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == GetDataType<TestType>());
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, 3});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, GetDataType<TestType>(), {1, 1, 3}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == GetDataType<TestType>());

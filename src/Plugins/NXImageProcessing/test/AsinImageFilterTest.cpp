@@ -13,7 +13,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -30,37 +29,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-DataPath runMappedIntegerAsin(DataStructure& dataStructure, const DataPath& inputPath, const ShapeType& tupleShape, const ShapeType& componentShape = {1})
-{
-  const AsinImageFilter filter;
-  Arguments args;
-  args.insertOrAssign(AsinImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(AsinImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(AsinImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr != nullptr);
-  // Stop an unfixed implementation before an invalid integer value can reach a NaN-to-integer conversion.
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->type() == DataType::float32);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->dims() == tupleShape);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->componentDims() == componentShape);
-  const auto executeResult = filter.execute(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  return inputPath.replaceName("Output");
-}
-} // namespace
-
 // The principal angle at integer one is pi/2 radians for every integer width and signedness.
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer one produces float32 radians", "[NXImageProcessing][Issue1874][AsinImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
@@ -70,7 +38,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer one produces flo
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {1});
-  const DataPath outputPath = runMappedIntegerAsin(dataStructure, inputPath, {1, 1, 1});
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<AsinImageFilter>(dataStructure, inputPath, DataType::float32, {1, 1, 1}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
@@ -101,7 +69,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::AsinImageFilter: integer endpoints and in
   }();
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildScalarValuesImage<TestType>(dataStructure, inputValues);
-  const DataPath outputPath = runMappedIntegerAsin(dataStructure, inputPath, {1, 1, inputValues.size()});
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<AsinImageFilter>(dataStructure, inputPath, DataType::float32, {1, 1, inputValues.size()}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);
@@ -203,7 +171,7 @@ TEST_CASE("NXImageProcessing::AsinImageFilter: mapped multi-component output pre
   {
     inputStore->setValue(index, inputValues.at(index % inputValues.size()));
   }
-  const DataPath outputPath = runMappedIntegerAsin(dataStructure, inputPath, {2, 2, 2}, {2});
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<AsinImageFilter>(dataStructure, inputPath, DataType::float32, {2, 2, 2}, {2});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float32);

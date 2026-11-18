@@ -14,7 +14,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -31,37 +30,6 @@
 #include <vector>
 
 using namespace nx::core;
-
-namespace
-{
-DataPath runMappedIntegerLog(DataStructure& dataStructure, const DataPath& input, const ShapeType& tupleShape, const ShapeType& componentShape)
-{
-  const LogImageFilter filter;
-  Arguments args;
-  args.insertOrAssign(LogImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(LogImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(LogImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr != nullptr);
-  // Stop before zero or negative integer input can produce an unsafe nonfinite-to-integer cast.
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->type() == DataType::float64);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->dims() == tupleShape);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->componentDims() == componentShape);
-  const auto executeResult = filter.execute(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  return input.replaceName("Output");
-}
-} // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
 TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: integer values produce float64 natural logarithms", "[NXImageProcessing][Issue1874][LogImageFilter]", int8, uint8, int16, uint16, int32, uint32,
@@ -84,7 +52,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: integer values produce fl
   const ShapeType tupleShape = {1, 1, values.size()};
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
-  const DataPath output = runMappedIntegerLog(dataStructure, input, tupleShape, {1});
+  const DataPath output = ip_test::RunMappedPointwiseFilter<LogImageFilter>(dataStructure, input, DataType::float64, tupleShape, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
@@ -132,22 +100,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::LogImageFilter: floating input retains ty
   const DataPath input =
       ip_test::BuildScalarValuesImage<TestType>(dataStructure, {1, 2, TestType{0}, -TestType{0}, -1, std::numeric_limits<TestType>::quiet_NaN(), std::numeric_limits<TestType>::infinity(),
                                                                 -std::numeric_limits<TestType>::infinity(), std::numeric_limits<TestType>::max(), std::numeric_limits<TestType>::lowest()});
-  const DataPath output = input.replaceName("Output");
-  const LogImageFilter filter;
-  Arguments args;
-  args.insertOrAssign(LogImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(LogImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
-  args.insertOrAssign(LogImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  REQUIRE(actionPtr != nullptr);
-  REQUIRE(actionPtr->type() == GetDataType<TestType>());
-  REQUIRE(actionPtr->dims() == ShapeType{1, 1, 10});
-  REQUIRE(actionPtr->componentDims() == ShapeType{1});
-  const auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<LogImageFilter>(dataStructure, input, GetDataType<TestType>(), {1, 1, 10}, {1});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == GetDataType<TestType>());
@@ -226,7 +179,7 @@ TEST_CASE("NXImageProcessing::LogImageFilter: mapped multi-component output pres
   {
     storePtr->setValue(index, values.at(index % values.size()));
   }
-  const DataPath output = runMappedIntegerLog(dataStructure, input, {2, 2, 2}, {2});
+  const DataPath output = ip_test::RunMappedPointwiseFilter<LogImageFilter>(dataStructure, input, DataType::float64, {2, 2, 2}, {2});
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(output));
   REQUIRE(outputArrayPtr->getDataType() == DataType::float64);
