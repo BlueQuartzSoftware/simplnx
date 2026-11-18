@@ -243,7 +243,6 @@ inline Arguments WriteArguments(const DataPath& input, const std::filesystem::pa
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WriteImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
   return args;
 }
 

@@ -694,7 +694,7 @@ struct ThresholdMaxCCExecuteFn
   {
     const auto& input = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
     auto& output = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
-    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler, inputArrayPath);
+    return ApplyThresholdMaximumConnectedComponents(input, output, dims, Options, shouldCancel, messageHandler);
   }
 };
 } // namespace
@@ -764,14 +764,13 @@ Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const Da
 // -----------------------------------------------------------------------------
 Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                                uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue, const std::atomic_bool& shouldCancel,
-                                                               const IFilter::MessageHandler& messageHandler, bool warnOnNonfinite)
+                                                               const IFilter::MessageHandler& messageHandler)
 {
   using TypeSetPolicy = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const ThresholdMaxCCOptions options{
-      .MinimumObjectSize = minimumObjectSizeInPixels, .UpperBoundary = upperBoundary, .InsideValue = insideValue, .OutsideValue = outsideValue, .WarnOnNonfinite = warnOnNonfinite};
+  const ThresholdMaxCCOptions options{.MinimumObjectSize = minimumObjectSizeInPixels, .UpperBoundary = upperBoundary, .InsideValue = insideValue, .OutsideValue = outsideValue};
   const detail::ThresholdMaxCCExecuteFn executeFn{.dataStructure = dataStructure,
                                                   .inputArrayPath = inputArrayPath,
                                                   .outputArrayPath = outputArrayPath,

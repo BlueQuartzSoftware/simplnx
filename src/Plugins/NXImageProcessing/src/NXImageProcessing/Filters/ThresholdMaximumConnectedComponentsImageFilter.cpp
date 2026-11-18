@@ -11,19 +11,18 @@
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+
+#include <nlohmann/json.hpp> // NOLINT(misc-include-cleaner) The serialization overrides require the complete JSON type.
+#include <nlohmann/json_fwd.hpp>
 
 #include <any>
 #include <cmath>
 #include <limits>
 #include <memory>
-#include <nlohmann/json.hpp> // NOLINT(misc-include-cleaner) The serialization overrides require the complete JSON type.
-#include <nlohmann/json_fwd.hpp>
 #include <utility>
 
 using namespace nx::core;
@@ -119,13 +118,8 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
   params.insert(
       std::make_unique<UInt8Parameter>(k_InsideValue_Key, "Inside Value",
                                        "Dimensionless uint8 value assigned inside the inclusive threshold band. Default: 1. Only nonzero output pixels participate in the component-count score.", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(
-      k_OutsideValue_Key, "Outside Value",
-      "Dimensionless uint8 value assigned outside the band. Default: 0. A nonzero value participates in scoring and can connect regions, including nonfinite pixels in Warn mode.", 0u));
-  params.insert(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
-                                                   "Error stops on image NaN or either infinity before search/output. Warn and Continue uses finite bounds and assigns nonfinite pixels Outside Value. "
-                                                   "With no finite pixels, it skips search, fills Outside Value and warns that no threshold was calculated.",
-                                                   static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue"}));
+  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "Outside Value",
+                                                 "Dimensionless uint8 value assigned outside the band. Default: 0. A nonzero value participates in scoring and can connect regions.", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -182,8 +176,7 @@ Result<> ThresholdMaximumConnectedComponentsImageFilter::executeImpl(DataStructu
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  return ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter(
-      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, minimumObjectSizeInPixels, upperBoundary, insideValue, outsideValue, shouldCancel, messageHandler,
-      static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) == ImageProcessing::NonfiniteInputHandling::WarnAndContinue);
+  return ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, minimumObjectSizeInPixels, upperBoundary,
+                                                                                insideValue, outsideValue, shouldCancel, messageHandler);
 }
 } // namespace nx::core

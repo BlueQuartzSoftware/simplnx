@@ -462,13 +462,12 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteBinaryThinningImageFilter(DataStructure
  * @brief Execute the native ThresholdMaximumConnectedComponents heuristic using component scores (size >= MinimumObjectSizeInPixels) via @ref
  *        detail::ThresholdMaxCCExecuteFn (which uses @ref CountConnectedComponents each iteration), then writes the
  *        final binary threshold [ThresholdValue, UpperBoundary] as a FIXED uint8 image (InsideValue/OutsideValue).
- *        Uses native safe arithmetic, the absolute two-unit stop and an explicit image nonfinite policy.
+ *        Uses native safe arithmetic, the absolute two-unit stop and finite native bounds.
  *        The caller's preflight must have enforced a scalar input.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                         const DataPath& outputArrayPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue,
-                                                                                        uint8 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                                                                                        bool warnOnNonfinite = false);
+                                                                                        uint8 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled

@@ -32,8 +32,6 @@ public:
   static constexpr StringLiteral k_TotalIndexDigits_Key = "total_index_digits";
   static constexpr StringLiteral k_LeadingDigitCharacter_Key = "leading_digit_character";
   static constexpr StringLiteral k_CreateColorTable_Key = "create_color_table";
-  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
-  static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
   static constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
   static constexpr StringLiteral k_UseMask_Key = "use_mask";
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
@@ -117,7 +115,7 @@ protected:
    * @param messageHandler Receives slice progress messages.
    * @param shouldCancel Stops output between slices when set.
    * @param executionContext Resolves relative file paths.
-   * @return Color-policy warnings or an error from the initial scan, slice extraction, compression, or file output.
+   * @return Warnings and errors from reading image data, encoding slices, or writing files.
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                        const ExecutionContext& executionContext) const override;

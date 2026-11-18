@@ -110,7 +110,6 @@ nx_filter = nximgproc.WriteImageFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    nonfinite_input_handling_index=0,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_001"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
@@ -141,7 +140,6 @@ nx_filter = nximgproc.WriteImageFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    nonfinite_input_handling_index=0,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_010"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),
@@ -171,7 +169,6 @@ nx_filter = nximgproc.WriteImageFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    nonfinite_input_handling_index=0,
     file_name=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png",
     image_array_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/IPF_100"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr"),

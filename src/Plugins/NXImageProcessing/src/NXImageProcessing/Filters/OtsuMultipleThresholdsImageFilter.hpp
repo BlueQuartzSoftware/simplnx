@@ -27,7 +27,6 @@ public:
   static constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
   static constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
   // NOLINTBEGIN(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
-  static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
   static constexpr StringLiteral k_UseMaskArray_Key = "use_mask_array";
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static constexpr StringLiteral k_MaskedLabel_Key = "masked_label";

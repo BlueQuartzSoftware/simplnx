@@ -10,13 +10,6 @@
 
 namespace nx::core::ImageProcessing
 {
-/** @brief Saved choices for handling nonfinite input values. */
-enum class NonfiniteInputHandling : uint64
-{
-  Error = 0,
-  WarnAndContinue = 1
-};
-
 // Error codes (offset chosen to avoid collision with core/ITK codes).
 inline constexpr int32 k_UnsupportedDataType = -8000;
 inline constexpr int32 k_GeometryMismatch = -8001;

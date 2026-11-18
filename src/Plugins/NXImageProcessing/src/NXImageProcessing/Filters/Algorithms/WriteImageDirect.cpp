@@ -201,15 +201,15 @@ struct ColorizeVolumeFunctor
   // The operation calculates the range in pages and then colorizes bounded slices.
   template <typename T>
   Result<> operator()(const IDataArray& dataArrayRef, usize planeIndex, usize dimX, usize dimY, usize dimZ, const write_image_color::SliceExtents& sliceExtents, const std::vector<float32>& binPoints,
-                      const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, ImageProcessing::NonfiniteInputHandling nonfinitePolicy,
-                      const std::atomic_bool& shouldCancel, const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const write_image_color::ProgressCallbacks& progress)
+                      const std::vector<float32>& controlPoints, const IDataArray* maskArray, const std::vector<uint8>& invalidColor, const std::atomic_bool& shouldCancel,
+                      const std::function<Result<>(std::vector<uint8>&, usize)>& writeSlice, const write_image_color::ProgressCallbacks& progress)
   {
     const auto& [sliceW, sliceH, sliceCount] = sliceExtents;
     if(Result<> sizeResult = write_image_color::ValidateSize<T>(sliceExtents, maskArray != nullptr); sizeResult.invalid())
     {
       return sizeResult;
     }
-    auto rangeResult = write_image_color::ScanRange<T>(dataArrayRef, maskArray, nonfinitePolicy, shouldCancel, progress.Range);
+    auto rangeResult = write_image_color::ScanRange<T>(dataArrayRef, shouldCancel, progress.Range);
     if(rangeResult.invalid())
     {
       return ConvertResult(std::move(rangeResult));
@@ -513,7 +513,7 @@ Result<> WriteImageDirect::operator()()
     }
 
     auto colorResult = ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceExtents, binPoints, controlPoints, maskArrayPtr,
-                                           m_InputValues.invalidColor, m_InputValues.nonfiniteInputHandling, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), progress);
+                                           m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), progress);
     return MergeResults(ConvertResult(std::move(controlPointsResult)), std::move(colorResult));
   }
 
