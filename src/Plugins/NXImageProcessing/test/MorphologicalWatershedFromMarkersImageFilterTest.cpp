@@ -870,18 +870,32 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: rest
   source.setValue(valueCount - 1, 4294967295U);
   source.warnOnRead();
   outputStorePtr->warnOnWrite();
-  bool expectFailure = false;
+  bool failFinalWrite = false;
+  bool failRestoreAllocation = false;
   SECTION("all delivered warnings survive success")
   {
   }
   SECTION("earlier warnings survive final write failure")
   {
     outputStorePtr->failWrite(2);
-    expectFailure = true;
+    failFinalWrite = true;
+  }
+  SECTION("allocation failure during the last restoration read")
+  {
+    source.failRead(2, true);
+    failRestoreAllocation = true;
   }
   const std::atomic_bool shouldCancel = false;
   const auto result = ImageProcessing::detail::NarrowUInt32StoreToIntegerArray(source, dataStructure, DataPath({"Image Geometry", "CellData", "Output"}), shouldCancel);
-  if(expectFailure)
+  if(failRestoreAllocation)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    REQUIRE(result.errors().front().code == -79045);
+    REQUIRE(result.errors().front().message.find("while restoring marker IDs") != std::string::npos);
+    REQUIRE(outputStorePtr->getValue(valueCount - 1) == 0);
+  }
+  else if(failFinalWrite)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -1874152);
@@ -892,10 +906,10 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: rest
     REQUIRE(outputStorePtr->getValue(valueCount - 1) == 4294967295ULL);
   }
   REQUIRE(outputStorePtr->getValue(0) == 1);
-  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874153; }) == 2);
-  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874154; }) == (expectFailure ? 1 : 2));
+  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874153; }) == (failRestoreAllocation ? 1 : 2));
+  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874154; }) == (failFinalWrite || failRestoreAllocation ? 1 : 2));
   REQUIRE(source.readCount() == 2);
-  REQUIRE(outputStorePtr->writeCount() == 2);
+  REQUIRE(outputStorePtr->writeCount() == (failRestoreAllocation ? 1 : 2));
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
