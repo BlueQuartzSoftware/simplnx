@@ -172,19 +172,18 @@ protected:
                               const DataPath& attrMatrixPath) const;
 
   /**
-   * @brief Checks partition counts and lengths before the geometry data count.
+   * @brief Checks partition counts before the geometry data count.
    * @tparam GeomType Image, rectilinear, or node geometry type.
    * @param numOfPartitionsPerAxis Partition count on each axis; each count must exceed zero.
-   * @param lengthPerPartition Partition length on each axis; negative values are invalid.
    * @param geometryToPartition Geometry that supplies the cell or vertex count.
    * @param attrMatrix Selected matrix whose tuple count must match the geometry data count.
    * @param geometryToPartitionPath Actual selected geometry path for geometry diagnostics, including linked selections.
    * @param attrMatrixPath Actual selected matrix path for geometry diagnostics, including linked selections.
-   * @return First partition-count, length, or geometry-data error, or a valid empty result.
+   * @return First partition-count or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& lengthPerPartition, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
-                                 const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
+  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+                                 const DataPath& attrMatrixPath) const;
 
   /**
    * @brief Checks partition counts and bounds before the geometry data count.

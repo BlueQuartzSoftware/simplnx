@@ -21,6 +21,7 @@
 #include <fstream>
 #include <mutex>
 #include <new>
+#include <string_view>
 
 /**
  * @namespace nx::core::ImageRotationUtilities
@@ -28,6 +29,14 @@
  */
 namespace nx::core::ImageRotationUtilities
 {
+/**
+ * @brief Validates an XYZ rotation axis and an angle in degrees.
+ * @param axisAngle Supplies exactly four values, a finite nonzero axis and a finite angle.
+ * @param parameterName Identifies the parameter in diagnostics.
+ * @return The first length, nonfinite-axis, zero-axis, or nonfinite-angle error, in that order.
+ */
+SIMPLNX_EXPORT Result<> ValidateRotationAxisAngle(const VectorFloat32Parameter::ValueType& axisAngle, std::string_view parameterName);
+
 const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
@@ -104,7 +113,8 @@ SIMPLNX_EXPORT Matrix4fR GenerateManualTransformationMatrix(const DynamicTablePa
 /**
  * @brief Creates an axis-angle rotation matrix.
  * @param pRotationValue Provides XYZ axis values and angle in degrees.
- * @return Homogeneous rotation matrix.
+ * @pre ValidateRotationAxisAngle(pRotationValue, ...).valid().
+ * @return Homogeneous rotation matrix, or sixteen quiet NaNs when the precondition fails.
  */
 SIMPLNX_EXPORT Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue);
 

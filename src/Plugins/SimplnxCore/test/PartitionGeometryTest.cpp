@@ -1,8 +1,3 @@
-/**
- * @file PartitionGeometryTest.cpp
- * @brief Tests each partitioning mode, supported geometry, error path, and OOC algorithm path.
- */
-
 #include <catch2/catch.hpp>
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -570,8 +565,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Partition counts precede image 
   std::vector<int32> partitionCounts = {2, 2, 2};
   partitionCounts[axis] = 0;
   args.insertOrAssign(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, partitionCounts);
-  // A partition-count error also precedes invalid advanced lengths/bounds.
-  args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, std::vector<float32>{-1.0F, -1.0F, -1.0F});
+  // Valid advanced lengths isolate partition-count errors from parameter-domain errors.
+  args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, std::vector<float32>{1.0F, 1.0F, 1.0F});
   args.insertOrAssign(PartitionGeometryFilter::k_MinGridCoord_Key, std::vector<float32>{3.0F, 3.0F, 3.0F});
   const auto preflightResult = PartitionGeometryFilter().preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -1344,5 +1339,99 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Geometry cell tuple count", "[P
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("selected grid geometry 'Image' has 12 cells") != std::string::npos);
     REQUIRE(errorRef.message.find("Select data with one tuple per geometry cell.") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometry: Advanced numeric domain regression", "[SimplnxCore][PartitionGeometry][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+  CAPTURE(row);
+  DataStructure ds;
+  if(row == 3 || row == 4)
+  {
+    createVertexTupleValidationInput(ds, 4);
+    auto* geom = ds.getDataAs<VertexGeom>(k_SelectedTupleGeometryPath);
+    REQUIRE(geom != nullptr);
+    auto resized = geom->getVerticesRef().resizeTuples({4});
+    SIMPLNX_RESULT_REQUIRE_VALID(resized);
+    auto* matrix = geom->getVertexAttributeMatrix();
+    REQUIRE(matrix != nullptr);
+    auto matrixResult = matrix->resizeTuples({4});
+    SIMPLNX_RESULT_REQUIRE_VALID(matrixResult);
+    geom->getVerticesRef()[11] = 1;
+  }
+  else
+  {
+    createCellTupleValidationInput(ds, row == 5 || row == 7, 8);
+  }
+  auto args = createCellTupleValidationArguments(1);
+  if(row == 3 || row == 4)
+  {
+    args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, k_SelectedVertexTupleMatrixPath);
+  }
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const float32 inf = std::numeric_limits<float32>::infinity();
+  const std::vector<VectorFloat32Parameter::ValueType> values = {{0, 1, 1}, {1, nan, 1}, {1, 1, inf}, {0, 1, 1}, {-1, 1, 1}, {1, 0, 1}, {1, 1, 1}, {1, 1, 1}};
+  args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, values[row]);
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridOrigin_Key, VectorFloat32Parameter::ValueType{row >= 6 ? nan : 0, 0, 0});
+  PartitionGeometryFilter filter;
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (row == 4 ? -3003 : row >= 6 ? -86015 : -86014));
+  CHECK(result.outputActions.errors()[0].message.find(row >= 6 ? "Partition Grid Origin" : "Cell Length") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 1 || row == 5 ? "Y" : row == 2 ? "Z" : "X") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometry: Inactive advanced parameters and existing errors", "[SimplnxCore][PartitionGeometryFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto row = GENERATE(0, 1, 2);
+  CAPTURE(scenario, row);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  createCellTupleValidationInput(ds, false, 8);
+  auto args = createCellTupleValidationArguments(row == 0 ? 0 : 1);
+  args.insertOrAssign(PartitionGeometryFilter::k_CellLength_Key, row == 0 ? VectorFloat32Parameter::ValueType{0, 0, 0} :
+                                                                 row == 1 ? VectorFloat32Parameter::ValueType{-1, 1, 1} :
+                                                                            VectorFloat32Parameter::ValueType{1, 1});
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridOrigin_Key, VectorFloat32Parameter::ValueType{row == 0 ? std::numeric_limits<float32>::quiet_NaN() : 0, 0, 0});
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridGeometry_Key, DataPath({"ValidationPartitionGrid"}));
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridCellAMName_Key, std::string("Cells"));
+  args.insertOrAssign(PartitionGeometryFilter::k_PartitionGridFeatureIDsName_Key, std::string("Ids"));
+  args.insertOrAssign(PartitionGeometryFilter::k_StartingFeatureID_Key, int32{1});
+  PartitionGeometryFilter filter;
+  auto pre = filter.preflight(ds, args);
+  if(row == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+    auto result = scope.executeFilter(filter, ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    // Each unit cube is one partition. IDs start at 1 and X varies fastest.
+    const std::array<int32, 8> expectedIds = {1, 2, 3, 4, 5, 6, 7, 8};
+    const auto* ids = ds.getDataAs<Int32Array>(k_SelectedTupleMatrixPath.createChildPath("PartitionIds"));
+    const auto* grid = ds.getDataAs<ImageGeom>(DataPath({"ValidationPartitionGrid"}));
+    const auto* gridIds = ds.getDataAs<Int32Array>(DataPath({"ValidationPartitionGrid", "Cells", "Ids"}));
+    REQUIRE(ids != nullptr);
+    REQUIRE(grid != nullptr);
+    REQUIRE(gridIds != nullptr);
+    CHECK(grid->getDimensions() == SizeVec3{2, 2, 2});
+    CHECK(grid->getOrigin() == FloatVec3{0, 0, 0});
+    CHECK(grid->getSpacing() == FloatVec3{1, 1, 1});
+    CHECK(ids->getTupleShape() == ShapeType{4, 2});
+    CHECK(grid->getCellDataRef().getShape() == ShapeType{2, 2, 2});
+    CHECK(gridIds->getTupleShape() == ShapeType{2, 2, 2});
+    REQUIRE(ids->getNumberOfTuples() == expectedIds.size());
+    REQUIRE(gridIds->getNumberOfTuples() == expectedIds.size());
+    for(usize index = 0; index < expectedIds.size(); ++index)
+    {
+      CHECK((*ids)[index] == expectedIds[index]);
+      CHECK((*gridIds)[index] == expectedIds[index]);
+    }
+    UnitTest::CheckArraysInheritTupleDims(ds);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
+    CHECK(pre.outputActions.errors()[0].code == (row == 1 ? -3003 : -1));
   }
 }

@@ -44,6 +44,10 @@ If *Update Origin* is **ON**, the geometry's origin is shifted so that the origi
 
 - **Input Image Geometry** -- the geometry to extend. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
 
+### Numeric input constraints
+
+For each enabled axis, **Min & Max Padding** must contain nonnegative cell counts. Disabled axes are ignored. Padded dimensions and their tuple count must fit the supported size type. When **Update Origin** is enabled, the computed origin must be finite. Preflight warns when the current geometry metadata produces an unrepresentable result. Execution checks the final metadata before copying data. Array creation also checks element and byte counts.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

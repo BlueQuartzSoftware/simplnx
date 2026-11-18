@@ -10,6 +10,7 @@
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
@@ -118,4 +119,25 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility
       // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
     }
   }
+}
+
+TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "[SimplnxCore][CreateImageGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3);
+  CAPTURE(row);
+  DataStructure ds;
+  CreateImageGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
+
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, spacings[row]);
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
+  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
 }

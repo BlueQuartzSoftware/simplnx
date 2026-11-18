@@ -30,6 +30,10 @@ When importing raw binary data on a regular grid, run this filter first to creat
 
 None. The geometry is created from user-supplied parameters.
 
+### Numeric input constraints
+
+**Spacing** must contain finite values greater than 0. **Origin** must contain finite values.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

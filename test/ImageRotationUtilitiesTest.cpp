@@ -6,6 +6,8 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <cmath>
+#include <limits>
 #include <string>
 
 using namespace nx::core;
@@ -206,4 +208,85 @@ TEST_CASE("ImageRotationUtilities: Raw grid tolerance accounts for column normal
     CHECK(args.outputSpacing[axis] == Approx(expectedSpacing[axis]));
     CHECK(args.outputDims[axis] == expectedDims[axis]);
   }
+}
+
+TEST_CASE("ImageRotationUtilities: Scaled axis regression", "[simplnx][ImageRotationUtilities][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
+  CAPTURE(row);
+  const std::vector<VectorFloat32Parameter::ValueType> inputs = {{0, 0, 1e20f, 90}, {1e-22f, 0, 0, 90}, {1e-40f, 0, 0, 90}, {3e38f, 3e38f, 3e38f, 120},
+                                                                 {0, 0, 2, 90},     {1, 1, 1, 120},     {1, 1, 1, 36000}};
+  auto matrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(inputs[row]);
+  Eigen::Matrix3f expected;
+  if(row == 0 || row == 4)
+  {
+    expected << 0, -1, 0, 1, 0, 0, 0, 0, 1;
+  }
+  else if(row == 1 || row == 2)
+  {
+    expected << 1, 0, 0, 0, 0, -1, 0, 1, 0;
+  }
+  else if(row == 6)
+  {
+    expected.setIdentity();
+  }
+  else
+  {
+    expected << 0, 0, 1, 1, 0, 0, 0, 1, 0;
+  }
+  Eigen::Matrix3f rotation = matrix.block<3, 3>(0, 0);
+  CHECK((rotation - expected).cwiseAbs().maxCoeff() < (row == 6 ? 5e-5f : 1e-6f));
+  CHECK((rotation * rotation.transpose() - Eigen::Matrix3f::Identity()).cwiseAbs().maxCoeff() < 1e-6f);
+  CHECK(rotation.determinant() == Approx(1).margin(1e-6));
+}
+TEST_CASE("ImageRotationUtilities: Invalid matrix regression", "[simplnx][ImageRotationUtilities][NumericDomainRed]")
+{
+  const auto matrix = ImageRotationUtilities::GenerateRotationTransformationMatrix({0, 0, 0, 90});
+  for(usize index = 0; index < 16; ++index)
+  {
+    CHECK(std::isnan(matrix.data()[index]));
+  }
+}
+
+TEST_CASE("ImageRotationUtilities: Axis-angle input validation", "[simplnx][ImageRotationUtilities]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN(), inf = std::numeric_limits<float32>::infinity();
+  const std::vector<VectorFloat32Parameter::ValueType> values = {{0, 0, 1},      {nan, 0, 1, 90}, {0, inf, 1, 90},  {0, 0, -inf, 90}, {0, 0, 0, 90},
+                                                                 {0, 0, 1, nan}, {0, 0, 1, inf},  {nan, 0, 1, nan}, {0, 0, 1, 90}};
+  auto result = ImageRotationUtilities::ValidateRotationAxisAngle(values[row], "Rotation");
+  const std::array<int32, 9> codes = {-86050, -86051, -86051, -86051, -86052, -86053, -86053, -86051, 0};
+  if(row == 8)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors()[0].code == codes[row]);
+    CHECK(result.errors()[0].message.find("Rotation") != std::string::npos);
+  }
+  if(row != 8)
+  {
+    auto matrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(values[row]);
+    for(usize idx = 0; idx < 16; ++idx)
+    {
+      CHECK(std::isnan(matrix.data()[idx]));
+    }
+  }
+}
+TEST_CASE("ImageRotationUtilities: Ordinary angle compatibility", "[simplnx][ImageRotationUtilities]")
+{
+  const auto matrix = ImageRotationUtilities::GenerateRotationTransformationMatrix({1, 1, 1, 36000});
+  const float32 radians = 36000.0f * Constants::k_PiOver180F;
+  const float32 cosine = cos(radians), sine = sin(radians), unit = FloatVec3{1, 1, 1}.normalize()[0];
+  ImageRotationUtilities::Matrix4fR previous = ImageRotationUtilities::Matrix4fR::Identity();
+  for(usize row = 0; row < 3; ++row)
+  {
+    for(usize col = 0; col < 3; ++col)
+    {
+      previous(row, col) = unit * unit * (1 - cosine) + (row == col ? cosine : ((row + 1) % 3 == col ? -unit * sine : unit * sine));
+    }
+  }
+  CHECK((matrix - previous).cwiseAbs().maxCoeff() < 2e-6f);
 }

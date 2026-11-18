@@ -1,4 +1,5 @@
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/Types.hpp"
@@ -11,6 +12,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
@@ -27,6 +29,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
@@ -34,9 +37,11 @@
 #include <algorithm>
 #include <any>
 #include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -1193,4 +1198,467 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: SIMPL Backwards Com
       CHECK(args.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
     }
   }
+}
+
+namespace
+{
+ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 2}, const FloatVec3& spacing = {1, 1, 1}, const FloatVec3& origin = {0, 0, 0})
+{
+  auto* geom = ImageGeom::Create(ds, "ValidationImage");
+  REQUIRE(geom != nullptr);
+  geom->setDimensions(dims);
+  geom->setSpacing(spacing);
+  geom->setOrigin(origin);
+  auto* cells = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geom->getId());
+  REQUIRE(cells != nullptr);
+  geom->setCellData(*cells);
+  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, DataPath({"ValidationImage", "Cells", "Samples"}), {dims[2], dims[1], dims[0]}, {1});
+  REQUIRE(store != nullptr);
+  auto* samples = Int32Array::Create(ds, "Samples", store, cells->getId());
+  REQUIRE(samples != nullptr);
+  for(usize index = 0; index < samples->getNumberOfTuples(); ++index)
+  {
+    (*samples)[index] = static_cast<int32>(index + 1);
+  }
+  return geom;
+}
+} // namespace
+
+namespace
+{
+VertexGeom* MakeValidationVertices(DataStructure& ds)
+{
+  auto* geom = VertexGeom::Create(ds, "ValidationVertices");
+  REQUIRE(geom != nullptr);
+  auto* coords = Float32Array::CreateWithStore<Float32DataStore>(ds, "Vertices", {4}, {3}, geom->getId());
+  REQUIRE(coords != nullptr);
+  const std::array<float32, 12> values = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
+  for(usize idx = 0; idx < values.size(); ++idx)
+  {
+    (*coords)[idx] = values[idx];
+  }
+  geom->setVertices(*coords);
+  return geom;
+}
+Arguments ValidationTransformArgs(usize type, bool image)
+{
+  ApplyTransformationToGeometryFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, DataPath({image ? "ValidationImage" : "ValidationVertices"}));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, DataPath({"ValidationImage", "Cells"}));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, ChoicesParameter::ValueType{image ? 0ULL : 2ULL});
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, static_cast<ChoicesParameter::ValueType>(type));
+  return args;
+}
+} // namespace
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Parameter domain regression", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
+  CAPTURE(row);
+  const bool image = row < 3 || row == 5;
+  DataStructure ds;
+  if(image)
+  {
+    MakeValidationImage(ds);
+  }
+  else
+  {
+    MakeValidationVertices(ds);
+  }
+  const usize type = row < 4 ? 5 : row < 6 ? 4 : 3;
+  auto args = ValidationTransformArgs(type, image);
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN(), inf = std::numeric_limits<float32>::infinity();
+  const std::vector<VectorFloat32Parameter::ValueType> values = {{0, 1, 1}, {-1, 1, 1}, {nan, 1, 1}, {nan, 1, 1}, {inf, 0, 0}, {nan, 0, 0}, {0, 0, 0, 90}, {nan, 0, 1, 90}, {0, 0, 1, inf}};
+  args.insertOrAssign(type == 5 ? ApplyTransformationToGeometryFilter::k_Scale_Key :
+                      type == 4 ? ApplyTransformationToGeometryFilter::k_Translation_Key :
+                                  ApplyTransformationToGeometryFilter::k_Rotation_Key,
+                      values[row]);
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  const std::array<int32, 9> codes = {-86004, -86004, -86004, -86003, -86002, -86002, -86052, -86051, -86053};
+  REQUIRE(result.outputActions.errors()[0].code == codes[row]);
+  CHECK(result.outputActions.errors()[0].message.find(type == 5 ? "Scale" : type == 4 ? "Translation" : "Rotation") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 8 ? "angle" : "X") != std::string::npos);
+}
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2);
+  CAPTURE(row);
+  DataStructure ds;
+  auto* geom = MakeValidationImage(ds, {1, 1, 1}, {row == 0 ? 2.0f : row == 1 ? 0.25f : 1.0f, 1, 1}, {row == 2 ? 3e38f : 0, 0, 0});
+  const auto oldSpacing = geom->getSpacing(), oldOrigin = geom->getOrigin();
+  auto args = ValidationTransformArgs(row == 2 ? 4 : 5, true);
+  args.insertOrAssign(row == 2 ? ApplyTransformationToGeometryFilter::k_Translation_Key : ApplyTransformationToGeometryFilter::k_Scale_Key,
+                      VectorFloat32Parameter::ValueType{row == 1 ? std::numeric_limits<float32>::denorm_min() : 3e38f, row == 2 ? 0.0f : 1.0f, row == 2 ? 0.0f : 1.0f});
+  ApplyTransformationToGeometryFilter filter;
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  REQUIRE_FALSE(pre.outputActions.warnings().empty());
+  CHECK(pre.outputActions.warnings()[0].code == (row == 2 ? -86005 : -86006));
+  CHECK(pre.outputActions.warnings()[0].message.find("X") != std::string::npos);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors()[0].code == (row == 2 ? -86029 : -86028));
+  const auto& message = result.result.errors()[0].message;
+  CHECK(message.find("'ValidationImage'") != std::string::npos);
+  CHECK(message.find("X") != std::string::npos);
+  CHECK(message.find(row == 2 ? "existing origin 3e+38" : row == 0 ? "existing spacing 2" : "existing spacing 0.25") != std::string::npos);
+  CHECK(message.find(row == 2 ? "assigned origin inf" : row == 0 ? "assigned spacing inf" : "assigned spacing 0") != std::string::npos);
+  CHECK(message.find(row == 1 ? "computed result 0" : "computed result inf") != std::string::npos);
+  CHECK(geom->getSpacing() == oldSpacing);
+  CHECK(geom->getOrigin() == oldOrigin);
+}
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects invalid parameters without mutation", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
+{
+  const auto row = GENERATE(0, 1, 2);
+  CAPTURE(row);
+  DataStructure ds;
+  if(row == 0)
+  {
+    MakeValidationImage(ds);
+  }
+  else
+  {
+    MakeValidationVertices(ds);
+  }
+  auto args = ValidationTransformArgs(row == 0 ? 5 : row == 1 ? 4 : 3, row == 0);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32Parameter::ValueType{0, 1, 1});
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors()[0].code == (row == 0 ? -86004 : row == 1 ? -86002 : -86052));
+  if(row != 0)
+  {
+    auto* geom = ds.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
+    const std::array<float32, 12> expected = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      CHECK(geom->getVerticesRef()[index] == expected[index]);
+    }
+  }
+}
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Large axis vertex regression", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
+{
+  const float32 magnitude = GENERATE(1.0f, 1e20f);
+  DataStructure ds;
+  auto* geom = MakeValidationVertices(ds);
+  auto args = ValidationTransformArgs(3, false);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, magnitude, 90});
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const std::array<float32, 12> expected = {-2, 1, 3, 0, -1, 2, 3, 2, 1, -1, 0, -2};
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CHECK(geom->getVerticesRef()[index] == Approx(expected[index]).margin(1e-6));
+  }
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector lengths and image rotation", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto row = GENERATE(0, 1, 2);
+  DataStructure ds;
+  if(row == 2)
+  {
+    MakeValidationImage(ds);
+  }
+  else
+  {
+    MakeValidationVertices(ds);
+  }
+  auto args = ValidationTransformArgs(row == 0 ? 4 : row == 1 ? 5 : 3, row == 2);
+  if(row == 2)
+  {
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
+  }
+  else
+  {
+    args.insertOrAssign(row == 0 ? ApplyTransformationToGeometryFilter::k_Translation_Key : ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32Parameter::ValueType{1, 2});
+  }
+  SizeVec3 destinationDims{};
+  FloatVec3 destinationOrigin{};
+  if(row == 2)
+  {
+    auto validArgs = ValidationTransformArgs(3, true);
+    validArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 1, 90});
+    ApplyTransformationToGeometryFilter filter;
+    auto pre = filter.preflight(ds, validArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+    auto applied = pre.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(applied);
+    auto* destination = ds.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
+    REQUIRE(destination != nullptr);
+    destinationDims = destination->getDimensions();
+    destinationOrigin = destination->getOrigin();
+    auto* samples = ds.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
+    REQUIRE(samples != nullptr);
+    samples->fill(99);
+    auto invalidArgs = ValidationTransformArgs(3, true);
+    for(const auto& values : std::vector<VectorFloat32Parameter::ValueType>{{0, 0, 0, 90}, {std::numeric_limits<float32>::quiet_NaN(), 0, 1, 90}, {0, 0, 1, std::numeric_limits<float32>::infinity()}})
+    {
+      invalidArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, values);
+      auto rejected = filter.preflight(ds, invalidArgs);
+      SIMPLNX_RESULT_REQUIRE_INVALID(rejected.outputActions);
+      CHECK(rejected.outputActions.errors()[0].code == (values[0] != values[0] ? -86051 : values[3] != 90 ? -86053 : -86052));
+    }
+  }
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == (row == 2 ? -86052 : -1));
+  if(row != 2)
+  {
+    INFO("Malformed active parameter: " << (row == 0 ? "Translation" : "Scale"));
+    CHECK(result.result.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+    auto* geom = ds.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
+    const std::array<float32, 12> expected = {1, 2, 3, -1, 0, 2, 2, -3, 1, 0, 1, -2};
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      CHECK(geom->getVerticesRef()[index] == expected[index]);
+    }
+  }
+  else
+  {
+    CHECK(ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}))->getOrigin() == FloatVec3{0, 0, 0});
+    auto* destination = ds.getDataAs<ImageGeom>(DataPath({".ValidationImage"}));
+    REQUIRE(destination != nullptr);
+    CHECK(destination->getDimensions() == destinationDims);
+    CHECK(destination->getOrigin() == destinationOrigin);
+    auto* sourceSamples = ds.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
+    auto* destinationSamples = ds.getDataAs<Int32Array>(DataPath({".ValidationImage", "Cells", "Samples"}));
+    REQUIRE(sourceSamples != nullptr);
+    REQUIRE(destinationSamples != nullptr);
+    for(usize index = 0; index < 8; ++index)
+    {
+      CHECK((*sourceSamples)[index] == index + 1);
+      CHECK((*destinationSamples)[index] == 99);
+    }
+  }
+}
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inactive vectors", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5);
+  DataStructure ds;
+  const bool image = row < 3 || row == 5;
+  ImageGeom* geom = nullptr;
+  VertexGeom* vertices = nullptr;
+  if(image)
+  {
+    geom = MakeValidationImage(ds, {1, 1, 1}, {row == 5 ? 0.0f : 1.0f, 1, 1});
+  }
+  else
+  {
+    vertices = MakeValidationVertices(ds);
+  }
+  auto args = ValidationTransformArgs(row == 2 || row == 5 ? 4 : 5, image);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32Parameter::ValueType{row == 0 ? std::numeric_limits<float32>::denorm_min() :
+                                                                                                          row == 1 ? 1e20f :
+                                                                                                          row == 3 ? -1.0f :
+                                                                                                                     0.0f,
+                                                                                                          1, 1});
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, VectorFloat32Parameter::ValueType{row == 2 ? 2e38f : 1.0f, 0, 0});
+  ApplyTransformationToGeometryFilter filter;
+  auto pre = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  CHECK(std::none_of(pre.outputActions.warnings().begin(), pre.outputActions.warnings().end(), [](const Warning& warning) { return warning.code <= -86000 && warning.code >= -86069; }));
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  if(row == 0)
+  {
+    CHECK(geom->getSpacing()[0] == std::numeric_limits<float32>::denorm_min());
+  }
+  if(row == 1)
+  {
+    CHECK(geom->getSpacing()[0] == 1e20f);
+  }
+  if(row == 2)
+  {
+    CHECK(geom->getOrigin()[0] == 2e38f);
+  }
+  if(row == 3 || row == 4)
+  {
+    const std::array<float32, 12> reflected = {-1, 2, 3, 1, 0, 2, -2, -3, 1, 0, 1, -2};
+    const std::array<float32, 12> collapsed = {0, 2, 3, 0, 0, 2, 0, -3, 1, 0, 1, -2};
+    const auto& expected = row == 3 ? reflected : collapsed;
+    for(usize index = 0; index < expected.size(); ++index)
+    {
+      CHECK(vertices->getVerticesRef()[index] == expected[index]);
+    }
+  }
+  if(row == 5)
+  {
+    CHECK(geom->getSpacing()[0] == 0);
+    CHECK(geom->getOrigin()[0] == 1);
+  }
+}
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Pipeline stand-in metadata", "[SimplnxCore][ApplyTransformationToGeometryFilter][SetImageGeomOriginScalingFilter]")
+{
+  const auto row = GENERATE(0, 1);
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope algorithmScope(scenario);
+  Pipeline pipeline;
+  auto first = ValidationTransformArgs(1, true);
+  first.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, DataPath({"Matrix"}));
+  REQUIRE(pipeline.push_back(std::make_unique<ApplyTransformationToGeometryFilter>(), first));
+  if(row == 0)
+  {
+    auto second = ValidationTransformArgs(5, true);
+    second.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32Parameter::ValueType{3e38f, 1, 1});
+    REQUIRE(pipeline.push_back(std::make_unique<ApplyTransformationToGeometryFilter>(), second));
+  }
+  else
+  {
+    SetImageGeomOriginScalingFilter filter;
+    auto second = filter.getDefaultArguments();
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, DataPath({"ValidationImage"}));
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_ChangeSpacing_Key, true);
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_ChangeOrigin_Key, true);
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_CenterOrigin_Key, true);
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_Spacing_Key, VectorFloat32Parameter::ValueType{3e38f, 1, 1});
+    second.insertOrAssign(SetImageGeomOriginScalingFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, 0, 0});
+    REQUIRE(pipeline.push_back(std::make_unique<SetImageGeomOriginScalingFilter>(), second));
+  }
+  for(bool execute : {false, true})
+  {
+    DataStructure ds;
+    MakeValidationImage(ds, row == 0 ? SizeVec3{1, 1, 1} : SizeVec3{10, 1, 1}, row == 0 ? FloatVec3{2, 1, 1} : FloatVec3{1, 1, 1});
+    auto* matrix = Float32Array::CreateWithStore<Float32DataStore>(ds, "Matrix", {1}, {16});
+    REQUIRE(matrix != nullptr);
+    const std::array<float32, 16> values =
+        row == 0 ? std::array<float32, 16>{0.5f, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1} : std::array<float32, 16>{0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    for(usize idx = 0; idx < 16; ++idx)
+    {
+      (*matrix)[idx] = values[idx];
+    }
+    if(!execute)
+    {
+      REQUIRE(pipeline.preflight(ds, false));
+    }
+    else
+    {
+      REQUIRE(algorithmScope.execute([&] { return pipeline.execute(ds, false); }));
+      auto* geom = ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
+      REQUIRE(geom != nullptr);
+      if(row == 0)
+      {
+        CHECK(geom->getSpacing()[0] == 3e38f);
+      }
+      else
+      {
+        CHECK(geom->getDimensions() == SizeVec3{1, 10, 1});
+        CHECK(geom->getOrigin()[0] == Approx(-1.5e38f));
+        CHECK(geom->getOrigin()[1] == -5);
+        CHECK(geom->getOrigin()[2] == -0.5f);
+      }
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Principal rotation controls", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  DataStructure ds;
+  MakeValidationImage(ds);
+  auto args = ValidationTransformArgs(3, true);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32Parameter::ValueType{0, 0, 1, 90});
+  ApplyTransformationToGeometryFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  auto* geom = ds.getDataAs<ImageGeom>(DataPath({"ValidationImage"}));
+  REQUIRE(geom != nullptr);
+  CHECK(geom->getDimensions() == SizeVec3{2, 2, 2});
+  auto* samples = ds.getDataAs<Int32Array>(DataPath({"ValidationImage", "Cells", "Samples"}));
+  REQUIRE(samples != nullptr);
+  const std::array<int32, 8> expected = {3, 1, 4, 2, 7, 5, 8, 6};
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    CHECK((*samples)[index] == expected[index]);
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Selected vector preflight validation", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+  DataStructure ds;
+  MakeValidationImage(ds);
+  MakeValidationVertices(ds);
+  ApplyTransformationToGeometryInputValues input{};
+  input.SelectedGeometryPath = DataPath({row == 6 || row == 7 ? "ValidationVertices" : "ValidationImage"});
+  input.TransformationSelection = row < 3 ? 4 : row < 8 ? 5 : row < 11 ? 3 : 0;
+  input.Translation = row == 0 ? std::vector<float32>{1, 2} : row == 1 ? std::vector<float32>{std::numeric_limits<float32>::infinity(), 0, 0} : std::vector<float32>{1, 2, 3};
+  input.Scale = row == 3             ? std::vector<float32>{1, 2} :
+                row == 4             ? std::vector<float32>{0, 1, 1} :
+                row == 5 || row == 6 ? std::vector<float32>{std::numeric_limits<float32>::quiet_NaN(), 1, 1} :
+                row == 7             ? std::vector<float32>{-1, 0, 1} :
+                                       std::vector<float32>{1, 2, 3};
+  input.Rotation = row == 8 ? std::vector<float32>{0, 0, 1} : row == 9 ? std::vector<float32>{0, 0, 0, 90} : std::vector<float32>{0, 0, 2, 90};
+  if(row == 12)
+  {
+    input.TransformationSelection = 1;
+  }
+  if(row == 13)
+  {
+    input.TransformationSelection = 2;
+  }
+  if(row == 14)
+  {
+    input.TransformationSelection = 5;
+    input.Scale = {1, 2, 3};
+  }
+  auto args = ValidationTransformArgs(input.TransformationSelection, row != 6 && row != 7);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, input.Translation);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, input.Scale);
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, input.Rotation);
+  if(row == 12)
+  {
+    auto* matrix = Float32Array::CreateWithStore<Float32DataStore>(ds, "Matrix", {16}, {1});
+    REQUIRE(matrix != nullptr);
+    matrix->fill(0);
+    for(usize index = 0; index < 16; index += 5)
+    {
+      (*matrix)[index] = 1;
+    }
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, DataPath({"Matrix"}));
+  }
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.preflight(ds, args).outputActions;
+  const std::array<int32, 15> codes = {-1, -86002, 0, -1, -86004, -86004, -86003, 0, -1, -86052, 0, 0, 0, 0, 0};
+  if(codes[row] == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    REQUIRE(result.errors()[0].code == codes[row]);
+    if(codes[row] == -1)
+    {
+      INFO("Malformed active parameter: " << (row == 0 ? "Translation" : row == 3 ? "Scale" : "Rotation Axis-Angle"));
+      CHECK(result.errors()[0].message == (row == 8 ? "VectorParameter requires size 4. Received size 3." : "VectorParameter requires size 3. Received size 2."));
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Preflight accepts one malformed inactive vector", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  const auto row = GENERATE(0, 1, 2, 3, 4, 5);
+  CAPTURE(row);
+  DataStructure ds;
+  MakeValidationVertices(ds);
+  auto args = ValidationTransformArgs(row < 2 ? 4 : row < 4 ? 5 : 3, false);
+  const auto malformedKey = row == 0 || row == 5 ? ApplyTransformationToGeometryFilter::k_Scale_Key :
+                            row == 1 || row == 3 ? ApplyTransformationToGeometryFilter::k_Rotation_Key :
+                                                   ApplyTransformationToGeometryFilter::k_Translation_Key;
+  args.insertOrAssign(malformedKey, VectorFloat32Parameter::ValueType{});
+  ApplyTransformationToGeometryFilter filter;
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
 }
