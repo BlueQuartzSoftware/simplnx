@@ -8,8 +8,11 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
+#include <filesystem>
+
 namespace nx::core
 {
+class AtomicFile;
 class PipelineFilter;
 
 /**
@@ -45,6 +48,18 @@ public:
   WriteDREAM3D& operator=(WriteDREAM3D&&) noexcept = delete;
 
   Result<> operator()();
+
+  /**
+   * @brief Installs the XDMF sidecar when requested and returns the output status.
+   *
+   * A failed disk flush permits sidecar installation because the DREAM3D file was already replaced.
+   * @param commitResult Result of installing the DREAM3D file.
+   * @param atomicFile Transaction that holds the temporary path for the sidecar.
+   * @param destination Final DREAM3D path.
+   * @param writeXdmf True when the XDMF sidecar was written.
+   * @return Commit and sidecar errors, if any.
+   */
+  [[nodiscard]] static Result<> finalizeOutput(Result<> commitResult, const AtomicFile& atomicFile, const std::filesystem::path& destination, bool writeXdmf);
 
 private:
   DataStructure& m_DataStructure;

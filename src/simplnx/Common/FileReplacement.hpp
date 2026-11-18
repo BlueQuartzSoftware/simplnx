@@ -23,10 +23,10 @@ inline constexpr std::chrono::milliseconds k_FileReplacementTotalWaitLimitMs{200
  * @enum FileReplacementDurability
  * @brief Selects the write-through behavior on Windows. Both values use one rename on POSIX.
  */
-enum class FileReplacementDurability
+enum class FileReplacementDurability : uint8
 {
   Default,     ///< Use the platform's default buffering.
-  WriteThrough ///< Request a disk flush before reporting success on Windows.
+  WriteThrough ///< On Windows, flush the file buffers after a POSIX-semantics rename or request MOVEFILE_WRITE_THROUGH on the fallback.
 };
 
 /**
@@ -36,9 +36,9 @@ enum class FileReplacementDurability
 struct FileReplacementAttempt
 {
   /** @brief System error from the rename or flush, or an empty code on success. */
-  std::error_code error;
+  std::error_code Error;
   /** @brief True when the rename succeeded, including when a subsequent flush failed. */
-  bool renamed = false;
+  bool Renamed = false;
 };
 
 /**
@@ -49,20 +49,20 @@ struct FileReplacementAttempt
 struct FileReplacementSteps
 {
   /**
-   * @var FileReplacementSteps::rename
+   * @var FileReplacementSteps::Rename
    * @brief Renames the replacement to the destination once. The arguments are the replacement and destination paths in that order.
    */
-  std::function<FileReplacementAttempt(const std::filesystem::path&, const std::filesystem::path&)> rename;
+  std::function<FileReplacementAttempt(const std::filesystem::path&, const std::filesystem::path&)> Rename;
   /**
-   * @var FileReplacementSteps::isTransient
-   * @brief Returns true for a rename error that permits a retry.
+   * @var FileReplacementSteps::IsTransient
+   * @brief Tests if the error permits a retry for the given replacement and destination paths, in that order.
    */
-  std::function<bool(const std::error_code&)> isTransient;
+  std::function<bool(const std::error_code&, const std::filesystem::path&, const std::filesystem::path&)> IsTransient;
   /**
-   * @var FileReplacementSteps::wait
+   * @var FileReplacementSteps::Wait
    * @brief Waits for the specified duration before the next attempt.
    */
-  std::function<void(std::chrono::milliseconds)> wait;
+  std::function<void(std::chrono::milliseconds)> Wait;
 };
 
 /**
@@ -72,15 +72,15 @@ struct FileReplacementSteps
 struct FileReplacementOutcome
 {
   /** @brief System error from the final attempt, or an empty code on success. */
-  std::error_code error;
+  std::error_code Error;
   /** @brief Number of attempts, at least one when returned by InstallReplacementFile(). */
-  usize attempts = 0;
+  usize Attempts = 0;
   /** @brief Sum of the requested waits between attempts. */
-  std::chrono::milliseconds waited{0};
+  std::chrono::milliseconds Waited{0};
   /** @brief True when the rename succeeded, including when a subsequent flush failed. */
-  bool renamed = false;
+  bool Renamed = false;
   /** @brief True when a transient error persists after the total wait budget. */
-  bool retriesExhausted = false;
+  bool RetriesExhausted = false;
 };
 
 /**
@@ -88,7 +88,7 @@ struct FileReplacementOutcome
  *
  * Windows tries a POSIX-semantics rename first. A conventional Windows replace fails if any handle to the destination is open.
  * The Windows Search indexer can hold such a handle for a few microseconds.
- * Windows permits retries for access denied, sharing violation and lock violation errors. POSIX does not retry.
+ * Windows permits retries for access denied, sharing violation and lock violation errors. Known permanent access-denied errors end the operation. POSIX does not retry.
  * @param durability Selects Windows write-through behavior. The default adds no flush.
  * @return Rename, error classification and wait operations.
  */
@@ -121,11 +121,19 @@ struct FileReplacementOutcome
                                                                            FileReplacementDurability durability = FileReplacementDurability::Default);
 
 /**
+ * @brief Describes the system error and retry history for a caller's diagnostic.
+ * @param outcome Result of the failed operation.
+ * @return System error text and, after a retry, the attempts and total requested wait.
+ * @pre outcome.Error contains an error.
+ */
+[[nodiscard]] SIMPLNX_EXPORT std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& outcome);
+
+/**
  * @brief Describes a failed replacement or flush and gives a recovery action.
  * @param outcome Result of the failed operation.
  * @param destination Path that was to receive the replacement file.
  * @return Diagnostic with the destination path, recovery action and system error details.
- * @pre outcome.error contains an error.
+ * @pre outcome.Error contains an error.
  */
 [[nodiscard]] SIMPLNX_EXPORT std::string DescribeFileReplacementFailure(const FileReplacementOutcome& outcome, const std::filesystem::path& destination);
 } // namespace nx::core

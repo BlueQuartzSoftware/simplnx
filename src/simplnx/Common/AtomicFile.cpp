@@ -6,7 +6,8 @@
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <fmt/std.h>
+#include <fmt/format.h>
+#include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
 
 #include <array>
 #include <cstdint>
@@ -230,10 +231,18 @@ Result<> AtomicFile::commit()
     return MakeErrorResult(-15781, fmt::format("Temporary output file '{}' does not exist. Write the output before calling commit().", m_TempFilePath.string()));
   }
 
-  const auto outcome = InstallReplacementFile(m_TempFilePath, m_FilePath, FileReplacementDurability::WriteThrough);
-  if(outcome.error)
+  return commitResult(InstallReplacementFile(m_TempFilePath, m_FilePath, FileReplacementDurability::WriteThrough), m_TempFilePath, m_FilePath);
+}
+
+Result<> AtomicFile::commitResult(const FileReplacementOutcome& outcome, const fs::path& temporaryPath, const fs::path& destination)
+{
+  if(outcome.Error)
   {
-    return MakeErrorResult(-15782, fmt::format("Could not commit temporary output file '{}'. {}", m_TempFilePath, DescribeFileReplacementFailure(outcome, m_FilePath)));
+    if(outcome.Renamed)
+    {
+      return MakeErrorResult(k_FlushAfterReplacementError, DescribeFileReplacementFailure(outcome, destination));
+    }
+    return MakeErrorResult(-15782, fmt::format("Could not commit temporary output file '{}'. {}", temporaryPath, DescribeFileReplacementFailure(outcome, destination)));
   }
 
   return {};
