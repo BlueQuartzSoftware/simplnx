@@ -32,7 +32,7 @@ Before converting the result to an integer type later in a pipeline, handle NaN 
 
 ## Algorithm
 
-The filter evaluates each value independently. Resident arrays use direct memory views. Out-of-core arrays use serial bulk reads and writes through working batches; parallel calculation uses owned buffers. Batch sizes follow the pointwise engine's memory target and store layout. A small image can fit in one batch. Output uses the input storage format and preserves its geometry.
+The filter evaluates each value independently. Resident arrays use direct memory views. Out-of-core arrays use serial bulk reads and writes through working batches; parallel calculation uses owned buffers. Batch sizes follow the pointwise engine's memory target and store layout. A small image can fit in one batch. The output belongs to the input geometry. An explicit input storage format also applies to the output. When the input uses automatic storage, the storage resolver uses the output type and size. A uint8 image in memory can therefore produce a float32 array large enough to use disk storage.
 
 % Auto generated parameter table will be inserted here
 
