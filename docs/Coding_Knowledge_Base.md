@@ -780,23 +780,13 @@ integer result. Intensity Windowing uses `SaturateCastFromDouble` to clamp value
   to store in a floating-point array (a fill value or a replacement value) may be NaN or infinity.
 - **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
   error that names the file and the field.
-- **Input array values** that would change a result other than their own element's output, or would reach a
-  comparison, an ordering, a range, a histogram, a threshold, a color map, a search, an index or an integer conversion.
-  This covers reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and
-  unique-value counts, per feature or per region), neighborhood operations on floating-point data (smoothing, median and
-  gradient filters, morphology) and decisions made from a value (thresholds, segmentation tolerances, bin and index
-  selection). The filter has a choice parameter **Nonfinite Input Handling** (key
-  `nonfinite_input_handling_index`) with two choices, **Error** (the default) and **Warn and Continue**.
-  - **Error** stops at the first nonfinite value, before any output is written. The message names the array and the
-    tuple and says that **Warn and Continue** handles these values instead.
-  - **Warn and Continue** computes ranges and bounds from finite values only, gives each nonfinite element the result
-    that the filter documentation states (for example "first bin" or "Outside Value"), and reports one warning with
-    the number of nonfinite values. For reductions and neighborhood operations, exclude nonfinite values from the
-    contributing samples and counts.
-  - The in-core and out-of-core algorithms use one shared test and rule. The parameter has no effect on integer arrays.
-- **Element-wise floating-point math**, where one element in gives the same element out and no other element changes,
-  lets the IEEE result pass through. The filter documentation lists what NaN, infinity, zero and out-of-domain inputs
-  produce. When integer input can produce a fraction or NaN, the output type is floating point.
+- **Floating-point input arrays.** The caller is responsible for supplying data suitable for the filter. Do not add a
+  parameter, validation pass, warning or error solely to detect or report NaN or infinity in the user's array.
+  Keep the checks required to compute valid indices and perform safe conversions. When an algorithm needs a finite
+  range, use finite samples in its existing range calculation and handle the case where none are available.
+  Apply the same arithmetic on in-memory and out-of-core paths.
+- **Element-wise floating-point results.** Element-wise math can produce an IEEE result such as NaN from the square
+  root of a finite negative value. When integer input can produce a fraction or NaN, the output type is floating point.
 - **A computed value written to an integer output:** see
   [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast).
 - **A result that is undefined for degenerate input** (a zero-length vector, an all-zero quaternion) is NaN in a
@@ -813,23 +803,29 @@ Histogram** groups values with the same equality test, and the shared statistics
 and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
 (issue #1874). **Invert Intensity Image** accepts a NaN **Maximum** and writes 0 to every integer pixel (issue #1873).
 
-**Why:** every comparison with NaN is false. `operator<` is then not a strict weak ordering, so `std::sort`,
-`std::stable_sort` and `std::map` keys are undefined; a threshold or a bin search puts NaN on one side without saying
-so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN or an
-infinity to an integer is undefined behavior. Whether a nonfinite input value means "bad data" or "no measurement"
-depends on the user's data, so input array values get a choice; parameters and file values do not.
+**Why:** ordered comparisons with NaN are false. A minimum and maximum seeded with NaN can therefore stay NaN
+even when the rest of the image is finite. Sorting a mixture of NaNs and finite values with ordinary less-than
+comparisons can violate the ordering the sort requires. Converting NaN or infinity to an integer is undefined
+behavior. Guard these operations where they occur.
 
 **What to look for:**
 
 - `std::sort`, `std::stable_sort`, `std::map`, `std::set` or `std::unique` over floating-point input values;
 - an equivalence written as `!(a < b) && !(b < a)` on floating-point values;
-- a running minimum, maximum or sum over input values with no finiteness test;
+- a finite range seeded from the first pixel when that pixel can be NaN;
 - a threshold, tolerance or bin index computed from an input value with no finiteness test;
 - a parameter check written as `value < 0` or `value <= 0`, which NaN passes.
 
-**Pattern to use:** **Nonfinite Input Handling** in `ThresholdMaximumConnectedComponentsImageFilter` and
-`WriteImageFilter` (PR #1888); the Upper Boundary of `ThresholdMaximumConnectedComponentsImageFilter` for a documented
-meaning of infinity (PR #1888).
+**Pattern to use (issue #1874):**
+
+- Otsu Multiple Thresholds fits the histogram using finite, mask-selected samples. Test the labels of the finite
+  samples with a NaN first and with it later. The filter makes no guarantee about the label of a nonfinite input.
+- Threshold Maximum Connected Components uses finite intensities for its search bounds and assigns Outside Value to
+  nonfinite pixels. If no finite samples exist, fill with Outside Value. Upper Boundary is a filter parameter with
+  documented meanings for positive and negative infinity.
+- Write Image preserves raw floating-point pixels. In color-table mode, finite values establish the palette range.
+  Masked pixels use the mask color. Unmasked nonfinite pixels use the first palette color, including when there are
+  no finite samples.
 
 ### Copy every field that sets behavior when you clone an object
 
