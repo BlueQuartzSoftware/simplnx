@@ -1,5 +1,16 @@
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/OtsuImageEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
+#include "simplnx/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp"
 
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
@@ -8,27 +19,11 @@
 #include <atomic>
 #include <cmath>
 #include <limits>
+#include <string>
+#include <vector>
 
 using namespace nx::core;
-
-TEST_CASE("Image terminal conversion: last finite Float32 rounding interval", "[simplnx][ImageNumericContracts]")
-{
-  const auto sign = GENERATE(-1.0, 1.0);
-  const float32 maximum = std::numeric_limits<float32>::max();
-  constexpr float64 midpoint = 0x1.ffffffp127;
-  for(const float64 magnitude : {static_cast<float64>(maximum), std::nextafter(static_cast<float64>(maximum), midpoint), std::nextafter(midpoint, 0.0)})
-  {
-    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-    REQUIRE(ImageProcessing::detail::NarrowFloatingImageValue<float32>(sign * magnitude) == static_cast<float32>(sign) * maximum);
-  }
-  for(const float64 magnitude : {midpoint, std::nextafter(midpoint, std::numeric_limits<float64>::infinity())})
-  {
-    const float32 result = ImageProcessing::detail::NarrowFloatingImageValue<float32>(sign * magnitude);
-    REQUIRE(std::isinf(result));
-    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-    REQUIRE(std::signbit(result) == (sign < 0));
-  }
-}
+using nx::core::ImageProcessing::ConnectedComponentLabelLimitHandling;
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
 TEMPLATE_TEST_CASE("Image terminal conversion: exact integer bounds", "[simplnx][ImageNumericContracts]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
@@ -84,6 +79,151 @@ TEST_CASE("Image terminal conversion: IEEE floating results", "[simplnx][ImageNu
   REQUIRE(std::signbit(NarrowFloatingImageValue<float32>(-0.0)));
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(NarrowFloatingImageValue<float64>(std::numeric_limits<float32>::max()) == static_cast<float64>(std::numeric_limits<float32>::max()));
+}
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros.
+TEST_CASE("Connected component engine: native provisional label capacity", "[simplnx][ImageNumericContracts]")
+{
+  if constexpr(std::numeric_limits<usize>::max() <= std::numeric_limits<uint32>::max())
+  {
+    SUCCEED("A native index on this platform cannot exceed uint32 capacity; no overflowing candidate was executed.");
+    return;
+  }
+  const std::array<uint64, 6> candidates{1, 4294967295ULL, 4294967296ULL, 4294967297ULL, 8589934592ULL, 8589934593ULL};
+  const std::array<uint32, 6> legacyLabels{1, 4294967295U, 0, 1, 0, 1};
+  usize warningMessages = 0;
+  const IFilter::MessageHandler handler{[&warningMessages](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Warning)
+    {
+      ++warningMessages;
+    }
+  }};
+  ImageProcessing::detail::ConnectedComponentLabelState strictState(ConnectedComponentLabelLimitHandling::Error, handler);
+  ImageProcessing::detail::ConnectedComponentLabelState legacyState(ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy, handler);
+  for(usize index = 0; index < candidates.size(); ++index)
+  {
+    const usize candidate = static_cast<usize>(candidates.at(index));
+    CAPTURE(candidate);
+    const auto strictResult = strictState.labelFor(candidate);
+    if(index < 2)
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(strictResult);
+      REQUIRE(strictResult.value() == legacyLabels.at(index));
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(strictResult);
+      REQUIRE(strictResult.errors().front().code == -29301);
+      REQUIRE(strictResult.errors().front().message.find(std::to_string(candidate)) != std::string::npos);
+      REQUIRE(strictResult.errors().front().message.find("Warn and Continue (Legacy Behavior)") != std::string::npos);
+    }
+    const auto legacyResult = legacyState.labelFor(candidate);
+    SIMPLNX_RESULT_REQUIRE_VALID(legacyResult);
+    REQUIRE(legacyResult.value() == legacyLabels.at(index));
+    REQUIRE(warningMessages == (index < 2 ? 0 : 1)); // immediate, before finish(), and only once
+  }
+  REQUIRE(warningMessages == 1);
+  const auto strictFinished = strictState.finish({});
+  SIMPLNX_RESULT_REQUIRE_VALID(strictFinished);
+  REQUIRE(strictFinished.warnings().empty());
+  const auto legacyFinished = legacyState.finish({});
+  SIMPLNX_RESULT_REQUIRE_VALID(legacyFinished);
+  REQUIRE(legacyFinished.warnings().size() == 1);
+  REQUIRE(legacyFinished.warnings().front().code == -29302);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+TEST_CASE("Image terminal conversion: last finite Float32 rounding interval", "[simplnx][ImageNumericContracts]")
+{
+  const auto sign = GENERATE(-1.0, 1.0);
+  const float32 maximum = std::numeric_limits<float32>::max();
+  constexpr float64 midpoint = 0x1.ffffffp127;
+  for(const float64 magnitude : {static_cast<float64>(maximum), std::nextafter(static_cast<float64>(maximum), midpoint), std::nextafter(midpoint, 0.0)})
+  {
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+    REQUIRE(ImageProcessing::detail::NarrowFloatingImageValue<float32>(sign * magnitude) == static_cast<float32>(sign) * maximum);
+  }
+  for(const float64 magnitude : {midpoint, std::nextafter(midpoint, std::numeric_limits<float64>::infinity())})
+  {
+    const float32 result = ImageProcessing::detail::NarrowFloatingImageValue<float32>(sign * magnitude);
+    REQUIRE(std::isinf(result));
+    // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+    REQUIRE(std::signbit(result) == (sign < 0));
+  }
+}
+
+TEST_CASE("Otsu histogram: inconsistent bounds cannot index a bin", "[simplnx][ImageNumericContracts]")
+{
+  ImageProcessing::Histogram histogram{.counts = {0, 0}, .min = 2, .max = 4, .binWidth = 1};
+  const auto result = ImageProcessing::detail::AccumulateCheckedOtsuValue(histogram, 1.0, 0.0, 4.0);
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == ImageProcessing::k_OtsuInvalidBinCoordinate);
+  REQUIRE(histogram.counts == std::vector<usize>{0, 0});
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+}
+
+TEST_CASE("Otsu histogram: bin count fits the platform container", "[simplnx][ImageNumericContracts]")
+{
+  const usize capacity = std::vector<usize>{}.max_size();
+  if(capacity >= std::numeric_limits<uint32>::max())
+  {
+    SUCCEED("Every representable bin-count parameter fits the vector size limit on this platform.");
+    return;
+  }
+  const DataStore<float64> input(ShapeType{1}, ShapeType{1}, 2.0);
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = static_cast<uint32>(capacity + 1)};
+  const std::atomic_bool cancelled = false;
+  const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, cancelled);
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == ImageProcessing::k_OtsuBinAllocationTooLarge);
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+}
+
+TEST_CASE("Image reconstruction: preserve native integer marker offsets", "[simplnx][ImageNumericContracts]")
+{
+  constexpr int64 intensity = int64{1} << 54;
+  // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(ImageProcessing::detail::SubtractExactIntegerReconstructionHeight(intensity, 1) == intensity - 1);
+  REQUIRE(ImageProcessing::detail::AddExactIntegerReconstructionHeight(intensity, 1) == intensity + 1);
+  REQUIRE(ImageProcessing::detail::SubtractExactIntegerReconstructionHeight(std::numeric_limits<int64>::lowest(), 1) == std::numeric_limits<int64>::lowest());
+  REQUIRE(ImageProcessing::detail::AddExactIntegerReconstructionHeight(std::numeric_limits<uint64>::max(), 1) == std::numeric_limits<uint64>::max());
+  // NOLINTEND(bugprone-chained-comparison)
+}
+
+TEST_CASE("Threshold maximum components: distinguish unbounded and empty cutoffs", "[simplnx][ImageNumericContracts]")
+{
+  const auto high = ImageProcessing::detail::ConvertThresholdMaxCCCap<uint64>(std::numeric_limits<float64>::infinity());
+  REQUIRE_FALSE(high.Empty);
+  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(high.Value == std::numeric_limits<uint64>::max());
+  REQUIRE(ImageProcessing::detail::ConvertThresholdMaxCCCap<int64>(-std::numeric_limits<float64>::infinity()).Empty);
+}
+
+TEST_CASE("Image finite range: empty batches preserve exact contributing bounds", "[simplnx][ImageNumericContracts]")
+{
+  const ImageProcessing::ArrayMinMax<float64> noSamples{};
+  ImageProcessing::ArrayMinMax<float64> finite;
+  finite.addValue(4.0);
+  finite.addValue(9.0);
+  const bool emptyFirst = GENERATE(false, true);
+  auto range = emptyFirst ? noSamples : finite;
+  range.merge(emptyFirst ? finite : noSamples);
+  // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(range.count == 2);
+  REQUIRE(range.min == 4.0);
+  REQUIRE(range.max == 9.0);
+  // NOLINTEND(bugprone-chained-comparison)
+
+  constexpr uint64 base = uint64{1} << 54;
+  ImageProcessing::ArrayMinMax<uint64> wide;
+  wide.addValue(base + 1);
+  wide.addValue(base + 2);
+  // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(wide.min == base + 1);
+  REQUIRE(wide.max == base + 2);
+  // NOLINTEND(bugprone-chained-comparison)
 }
 
 TEST_CASE("Image terminal conversion: a single rejection reports its image index", "[simplnx][ImageNumericContracts]")
