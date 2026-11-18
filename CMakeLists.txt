@@ -604,18 +604,18 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/CacheMemoryBudgetManager.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ColorToGrayScale.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/HistogramEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/TerminalImageConversion.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/PointwiseEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/StreamingStatistics.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/SweepTemporaryStore.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/HistogramEngine.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/PointwiseEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/TerminalImageConversion.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
