@@ -9,9 +9,10 @@
 namespace nx::core
 {
 template <class T>
-NumberParameter<T>::NumberParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
+NumberParameter<T>::NumberParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, std::optional<Bounds> bounds)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
+, m_Bounds(std::move(bounds))
 {
 }
 
@@ -57,7 +58,7 @@ Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, Ve
 template <class T>
 IParameter::UniquePointer NumberParameter<T>::clone() const
 {
-  return std::make_unique<NumberParameter<T>>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<NumberParameter<T>>(name(), humanName(), helpText(), m_DefaultValue, m_Bounds);
 }
 
 template <class T>
@@ -82,7 +83,13 @@ Result<> NumberParameter<T>::validate(const std::any& value) const
 template <class T>
 Result<> NumberParameter<T>::validateNumber(ValueType value) const
 {
-  return {};
+  return detail::ValidateNumberBounds(value, m_Bounds, [this] { return humanName(); });
+}
+
+template <class T>
+const std::optional<typename NumberParameter<T>::Bounds>& NumberParameter<T>::bounds() const
+{
+  return m_Bounds;
 }
 
 template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<int8>;

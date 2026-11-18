@@ -37,7 +37,8 @@ repository, but contains no code from one.
   - [Support every type and value that a parameter accepts](#support-every-type-and-value-that-a-parameter-accepts)
   - [Check tuple counts in preflight](#check-tuple-counts-in-preflight)
   - [Range-check every index that comes from data](#range-check-every-index-that-comes-from-data)
-  - [Validate every parameter value in preflight](#validate-every-parameter-value-in-preflight)
+  - [Declare numeric value bounds on the parameter](#declare-numeric-value-bounds-on-the-parameter)
+  - [Validate derived parameter values in preflight](#validate-derived-parameter-values-in-preflight)
   - [Never throw in preflight](#never-throw-in-preflight)
   - [Do not allocate or read array data in preflight](#do-not-allocate-or-read-array-data-in-preflight)
   - [Make the same decisions in preflight and execute](#make-the-same-decisions-in-preflight-and-execute)
@@ -174,10 +175,10 @@ if(executeResult.result.invalid())
 
 **Rule:** a filter checks its inputs at three levels. Put each check at the earliest level that has the information:
 
-1. **Parameter:** structure that does not depend on other inputs (`AllowedTypes`, `AllowedComponentShapes`). It runs
-   before `preflightImpl()`.
-2. **`preflightImpl()`:** parameter values, relationships between inputs (tuple counts, element counts), geometry and
-   file metadata. Preflight cannot see array values.
+1. **Parameter:** structure and value constraints independent of other inputs (`AllowedTypes`,
+   `AllowedComponentShapes`, numeric bounds). This runs before `preflightImpl()`.
+2. **`preflightImpl()`:** constraints that parameter declarations cannot express, relationships between inputs,
+   and checks on geometry and file metadata available in preflight.
 3. **Execute:** checks that need array values, such as feature ids or phases used as indices.
 
 Do not repeat a parameter or preflight check in the filter's `executeImpl()` or in its algorithm class.
@@ -305,25 +306,50 @@ with no prior check of its sign and upper bound.
 **Pattern to use:** `ValidateFeatureIdsToFeatureAttributeMatrixIndexing()` in `DataArrayUtilities`; the checked phase
 scan in `ComputeNumFeaturesFilter`.
 
-### Validate every parameter value in preflight
+### Declare numeric value bounds on the parameter
 
-**Rule:** most numeric parameters have no built-in range. `preflightImpl()` rejects every value that the algorithm
-cannot use, before any cast:
+**Rule**
 
-- spacings, steps, scales and distances: finite; greater than 0 only where 0 is not valid.
-- counts, dimensions and sizes: whole numbers; 1 or more only where 0 is not valid. A supported no-op value, such as 0
-  iterations, stays valid.
-- indices: `0 <= index < size`.
-- related values: legal combinations; accept `min <= max` when the operation defines equal bounds.
-- values cast to an array element type: inside the range of that type.
+Declare value bounds on `NumberParameter` and `VectorParameter`. A filter's `preflightImpl()` leaves checks that a
+bound can express to the parameter. A vector bound applies to every component. Floating-point parameters reject
+NaN and infinity by default, even without bounds. Choose a valid default and link each mode-specific parameter
+to the choices that use it.
 
-Write each comparison so that NaN fails it. Reject NaN, and reject infinity unless the filter documentation gives it a
-meaning; a value the user asks the filter to store in a floating-point array may be NaN or infinity
-([Decide NaN and infinity handling by where the value comes from](#decide-nan-and-infinity-handling-by-where-the-value-comes-from)).
-Validate a value only when the algorithm uses it (follow the parameter linking), and always validate a value that it
-always reads. A direction or axis parameter does not default to `{0, 0, 0}`, and preflight rejects a zero-length or
-non-finite vector. Every parameter reaches the algorithm's input values and changes its behavior, or it is removed. When
-a filter stores the random seed it used, the algorithm uses that same seed, so the stored seed reproduces the output.
+**Example of the broken rule**
+
+PR #1964 addressed issue #1873 by adding separate checks for values such as **Hatch Spacing** in
+`CreateAMScanPathsFilter::preflightImpl()`. Other filters added their own checks for the same conditions.
+Issue #1991 put those checks in the parameter classes.
+
+**Why**
+
+Separate checks can disagree about valid endpoints, miss NaN, or check values that a mode ignores.
+`IFilter::preflight()` validates active parameters before calling `preflightImpl()`. Parameter bounds give
+filters the same errors and messages for the same invalid values.
+
+**What to look for**
+
+Look for finiteness checks, comparisons with a constant, and loops that apply the same limits to every vector
+component in `preflightImpl()`. Check that each default satisfies its own parameter and that mode-specific
+parameters have a `linkParameters()` call for each mode that uses them.
+
+**Pattern to use**
+
+```cpp
+params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing",
+    "Distance between adjacent scan lines.", 0.14F, Float32Parameter::Bounds::Positive()));
+```
+
+Use `Bounds::AtLeast(1)` for integer counts that start at one. Use `Bounds::NonNegative()` when zero is valid.
+Keep parameter combinations, size products, and checks on available geometry metadata in `preflightImpl()`.
+Check values that depend on the final geometry in execute.
+
+### Validate derived parameter values in preflight
+
+**Rule:** after parameter validation, `preflightImpl()` checks the derived values it can calculate safely from
+the inputs. Accept `min <= max` when the operation defines equal bounds. A direction or axis parameter uses a
+nonzero default, and preflight rejects a zero-length vector. When a filter stores the random seed it used, the
+algorithm uses that same seed so the stored seed reproduces the output.
 
 Validate the derived representation as well as the parameter value. For radii and dimensions, check derived widths,
 signed coordinate and loop limits, padded extents, element counts and byte counts before the affected arithmetic or
@@ -767,9 +793,9 @@ error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `C
 
 **Rule:** NaN and positive and negative infinity (nonfinite values) are handled by where the value comes from:
 
-- **Parameter values:** preflight rejects NaN. It also rejects positive and negative infinity unless the filter
-  documentation gives infinity a meaning, such as an unbounded side of a range. A value that the user asks the filter
-  to store in a floating-point array (a fill value or a replacement value) may be NaN or infinity.
+- **Parameter values.** Floating-point `NumberParameter` and `VectorParameter` checks reject NaN and infinity
+  by default. A parameter can explicitly allow them when the filter documentation defines their meaning.
+  Other parameter types apply their own validation, for example to allow NaN in a floating-point fill value.
 - **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
   error that names the file and the field.
 - **Input array values** that would change a result other than their own element's output, or would reach a
