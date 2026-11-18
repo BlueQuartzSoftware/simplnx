@@ -707,11 +707,11 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
   int32 expectedCode = -28631;
   if(fault == ThresholdFaultType::BadAllocation)
   {
-    expectedCode = -8774;
+    expectedCode = -29304;
   }
   else if(fault == ThresholdFaultType::LengthError)
   {
-    expectedCode = -8776;
+    expectedCode = -29306;
   }
   REQUIRE(result.errors().front().code == expectedCode);
   REQUIRE(result.warnings().size() == 1);

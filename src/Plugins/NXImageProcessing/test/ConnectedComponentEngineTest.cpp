@@ -1161,7 +1161,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: native provisional capac
     else
     {
       SIMPLNX_RESULT_REQUIRE_INVALID(strictResult);
-      REQUIRE(strictResult.errors().front().code == -8771);
+      REQUIRE(strictResult.errors().front().code == -29301);
       REQUIRE(strictResult.errors().front().message.find(std::to_string(candidate)) != std::string::npos);
       REQUIRE(strictResult.errors().front().message.find("Warn and Continue (Legacy Behavior)") != std::string::npos);
     }
@@ -1177,7 +1177,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: native provisional capac
   const auto legacyFinished = legacyState.finish({});
   SIMPLNX_RESULT_REQUIRE_VALID(legacyFinished);
   REQUIRE(legacyFinished.warnings().size() == 1);
-  REQUIRE(legacyFinished.warnings().front().code == 8772);
+  REQUIRE(legacyFinished.warnings().front().code == -29302);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -1285,7 +1285,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: capacity warning context
   REQUIRE(result.errors().front().code == -8794);
   REQUIRE(result.warnings().size() == 2);
   REQUIRE(result.warnings().at(0).code == 8793);
-  REQUIRE(result.warnings().at(1).code == 8772);
+  REQUIRE(result.warnings().at(1).code == -29302);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -1325,7 +1325,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: seeded warning context s
   result = state.finish(std::move(result));
   REQUIRE(warnings == 1);
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == 8772);
+  REQUIRE(result.warnings().front().code == -29302);
   if(fault == ConnectedComponentReadFaultType::Cancel)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -1365,13 +1365,13 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: allocation addressabilit
   int32 countCode = -8791;
   if(fault == ConnectedComponentReadFaultType::BadAllocOnce)
   {
-    labelCode = -8773;
-    countCode = -8774;
+    labelCode = -29303;
+    countCode = -29304;
   }
   else if(fault == ConnectedComponentReadFaultType::LengthError)
   {
-    labelCode = -8775;
-    countCode = -8776;
+    labelCode = -29305;
+    countCode = -29306;
   }
   REQUIRE(labelResult.errors().front().code == labelCode);
   REQUIRE(labelResult.warnings().empty());

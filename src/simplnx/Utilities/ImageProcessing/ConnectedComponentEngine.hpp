@@ -33,8 +33,16 @@
 
 namespace nx::core::ImageProcessing
 {
+inline constexpr int32 k_ProvisionalLabelOverflow = -29301;
+inline constexpr int32 k_ProvisionalLabelWrapWarning = -29302;
+inline constexpr int32 k_LabelAllocationFailed = -29303;
+inline constexpr int32 k_CountAllocationFailed = -29304;
+inline constexpr int32 k_LabelSizeExceeded = -29305;
+inline constexpr int32 k_CountSizeExceeded = -29306;
+
 namespace detail
 {
+
 using ProgressCallback = std::function<void(usize)>;
 using BeginProgressPhaseCallback = std::function<void(std::string_view, usize)>;
 
@@ -465,17 +473,19 @@ public:
       if(m_Handling == ConnectedComponentLabelLimitHandling::Error)
       {
         return MakeErrorResult<uint32>(
-            -8771, fmt::format("Connected-component provisional run ID {} exceeds the uint32 limit of 4,294,967,295. Execution stopped before this ID was created. "
-                               "Reduce the number of foreground runs. In Connected Component only, select 'Warn and Continue (Legacy Behavior)' under 'Provisional Label Limit Handling' "
-                               "only if you intentionally accept lost foreground, merged components, and incorrect counts and statistics.",
-                               candidate));
+            k_ProvisionalLabelOverflow,
+            fmt::format("Connected-component provisional run ID {} exceeds the uint32 limit of 4,294,967,295. Execution stopped before this ID was created. "
+                        "Reduce the number of foreground runs. In Connected Component only, select 'Warn and Continue (Legacy Behavior)' under 'Provisional Label Limit Handling' "
+                        "only if you intentionally accept lost foreground, merged components, and incorrect counts and statistics.",
+                        candidate));
       }
       if(!m_WarningIssued)
       {
-        m_Warnings = MakeWarningVoidResult(8772, fmt::format("Connected-component provisional run ID {} exceeds 4,294,967,295. 'Warn and Continue (Legacy Behavior)' retains uint32 wrap to "
-                                                             "background zero and reused IDs. Foreground can disappear, components can merge, and counts and downstream statistics can be incorrect. "
-                                                             "Execution routes can give different incorrect results. Memory and I/O failures still stop execution.",
-                                                             candidate));
+        m_Warnings = MakeWarningVoidResult(k_ProvisionalLabelWrapWarning,
+                                           fmt::format("Connected-component provisional run ID {} exceeds 4,294,967,295. 'Warn and Continue (Legacy Behavior)' retains uint32 wrap to "
+                                                       "background zero and reused IDs. Foreground can disappear, components can merge, and counts and downstream statistics can be incorrect. "
+                                                       "Execution routes can give different incorrect results. Memory and I/O failures still stop execution.",
+                                                       candidate));
         m_WarningIssued = true;
         m_MessageHandler.sendWarningMessage(m_Warnings.warnings().front().message);
       }
@@ -1616,12 +1626,14 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
         detail::LabelConnectedComponentsImpl(inStore, outStore, dims, pred, fullyConnected, shouldCancel, target2DBytes, beginProgressPhase, reportCount, reportPercent, labelState));
   } catch(const std::bad_alloc&)
   {
-    return labelState.finish(MakeErrorResult(-8773, "Connected-component labeling could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory. "
-                                                    "Legacy label continuation does not waive memory failures."));
+    return labelState.finish(MakeErrorResult(k_LabelAllocationFailed,
+                                             "Connected-component labeling could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory. "
+                                             "Legacy label continuation does not waive memory failures."));
   } catch(const std::length_error&)
   {
-    return labelState.finish(MakeErrorResult(-8775, "Connected-component labeling exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs. "
-                                                    "Legacy label continuation does not increase storage capacity."));
+    return labelState.finish(MakeErrorResult(k_LabelSizeExceeded,
+                                             "Connected-component labeling exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs. "
+                                             "Legacy label continuation does not increase storage capacity."));
   }
 }
 
@@ -1680,10 +1692,11 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
     return {{numComponents}};
   } catch(const std::bad_alloc&)
   {
-    return MakeErrorResult<uint32>(-8774, "Connected-component counting could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory.");
+    return MakeErrorResult<uint32>(k_CountAllocationFailed,
+                                   "Connected-component counting could not allocate its run tables or working buffers. Reduce the number of foreground runs or provide more memory.");
   } catch(const std::length_error&)
   {
-    return MakeErrorResult<uint32>(-8776, "Connected-component counting exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs.");
+    return MakeErrorResult<uint32>(k_CountSizeExceeded, "Connected-component counting exceeded an addressable run-table or buffer size. Reduce the image dimensions or number of foreground runs.");
   }
 }
 } // namespace nx::core::ImageProcessing

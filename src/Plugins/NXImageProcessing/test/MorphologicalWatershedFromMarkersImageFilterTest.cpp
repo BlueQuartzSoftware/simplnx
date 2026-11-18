@@ -210,7 +210,7 @@ void requireMarkerLine(const std::vector<T>& markers, const std::vector<T>& expe
   if(changedCount != 0)
   {
     // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-    REQUIRE(result.result.warnings().front().code == 79074);
+    REQUIRE(result.result.warnings().front().code == -79074);
     // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.warnings().front().message.find(std::to_string(changedCount) + " changed marker occurrence(s)") != std::string::npos);
   }
@@ -494,7 +494,8 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: defa
   // Omit the new choice deliberately: existing pipelines must receive the safe default.
   const auto result = filter.execute(dataStructure, args, nullptr, messageHandler);
   requireSinglePixelMarkerOutput(dataStructure);
-  REQUIRE(result.result.invalid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors().front().code == -79073);
   REQUIRE(result.result.errors().front().message.find("Marker") != std::string::npos);
@@ -617,7 +618,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == 79074);
+    REQUIRE(result.warnings().front().code == -79074);
     REQUIRE(destination.writeCount() == 2);
     REQUIRE(destination.getValue(changedIndex) == 1);
     messagePtr = &result.warnings().front().message;
@@ -674,7 +675,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFil
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == 79074);
+    REQUIRE(result.warnings().front().code == -79074);
     REQUIRE(result.warnings().front().message.find("2 changed marker occurrence(s)") != std::string::npos);
     messagePtr = &result.warnings().front().message;
   }
@@ -706,7 +707,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(shouldCancel.load());
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == 79074);
+  REQUIRE(result.warnings().front().code == -79074);
   REQUIRE(result.warnings().front().message.find("1 changed marker occurrence(s)") != std::string::npos);
   REQUIRE(markerStorePtr->readCount() == 1);
   REQUIRE(destination.writeCount() == 1);
@@ -742,7 +743,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy
   SECTION("later marker read throws allocation failure")
   {
     markerStorePtr->failRead(2, true);
-    expectedCode = -79045;
+    expectedCode = -79075;
   }
   const std::atomic_bool shouldCancel = false;
   const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel,
@@ -751,7 +752,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().code == expectedCode);
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == 79074);
+  REQUIRE(result.warnings().front().code == -79074);
   REQUIRE(result.warnings().front().message.find("1 changed marker occurrence(s)") != std::string::npos);
   REQUIRE(markerStorePtr->readCount() <= 2);
   REQUIRE(destination.writeCount() == 1);
@@ -816,7 +817,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conv
     REQUIRE(result.errors().front().code == expectedCode);
   }
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == 79074);
+  REQUIRE(result.warnings().front().code == -79074);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -843,7 +844,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: succ
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -1874151);
   REQUIRE(result.warnings().size() == 3);
-  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 79074; }) == 1);
+  REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == -79074; }) == 1);
   REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874153; }) == 1);
   REQUIRE(std::ranges::count_if(result.warnings(), [](const Warning& warning) { return warning.code == 1874154; }) == 1);
   REQUIRE(markerStorePtr->readCount() == 2);
@@ -891,7 +892,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: rest
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
-    REQUIRE(result.errors().front().code == -79045);
+    REQUIRE(result.errors().front().code == -79076);
     REQUIRE(result.errors().front().message.find("while restoring marker IDs") != std::string::npos);
     REQUIRE(outputStorePtr->getValue(valueCount - 1) == 0);
   }
