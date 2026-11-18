@@ -4,9 +4,8 @@
  */
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/FileReplacement.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Common/ScopeGuard.hpp"
-#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -21,6 +20,9 @@
 #include <utility>
 
 #ifdef _WIN32
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Uuid.hpp"
+
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -81,6 +83,17 @@ TEST_CASE("AtomicFile::CommitReplacesExistingFile")
   fs::remove(outputPath);
 }
 
+TEST_CASE("AtomicFile reports a flush failure after replacing the output", "[simplnx]")
+{
+  const auto flushError = std::make_error_code(std::errc::io_error);
+  const FileReplacementOutcome outcome{.Error = flushError, .Attempts = 1, .Renamed = true};
+  const auto result = AtomicFile::commitResult(outcome, "temporary.txt", "output.txt");
+  SIMPLNX_RESULT_REQUIRE_INVALID(result); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
+  REQUIRE((result.errors().size() == 1));
+  CHECK((result.errors().front().code == -15785));
+  CHECK_THAT(result.errors().front().message, Catch::Matchers::Contains("was replaced, but the system could not confirm that the data reached the disk"));
+}
+
 #ifdef _WIN32
 TEST_CASE("AtomicFile::CommitReplacesFileWithFullSharingHandle", "[simplnx]")
 {
@@ -100,17 +113,17 @@ TEST_CASE("AtomicFile::CommitReplacesFileWithFullSharingHandle", "[simplnx]")
   }
 
   auto atomicFileResult = AtomicFile::Create(outputPath);
-  SIMPLNX_RESULT_REQUIRE_VALID(atomicFileResult);
+  SIMPLNX_RESULT_REQUIRE_VALID(atomicFileResult); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
   AtomicFile atomicFile = std::move(atomicFileResult.value());
   writeTemporaryFile(atomicFile, "new contents");
 
-  const HANDLE held = CreateFileW(outputPath.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  const HANDLE held = CreateFileW(outputPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   REQUIRE(held != INVALID_HANDLE_VALUE);
   const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
 
   const auto commitResult = atomicFile.commit();
-  SIMPLNX_RESULT_REQUIRE_VALID(commitResult);
-  CHECK(readTextFile(outputPath) == "new contents");
+  SIMPLNX_RESULT_REQUIRE_VALID(commitResult); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
+  CHECK((readTextFile(outputPath) == "new contents"));
 }
 #endif
 

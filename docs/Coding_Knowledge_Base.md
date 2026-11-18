@@ -670,13 +670,15 @@ written and closed without a state check; an atomic-file commit that follows eit
 **Rule:** use `InstallReplacementFile()` to replace an existing file with a complete new file. Do not use a bare
 replacing `std::filesystem::rename()` or `MoveFileExW()`. Close the replacement file's writer before the rename.
 
-**Example of the broken rule:** `AtomicFile::commit()` used a direct `MoveFileExW()` call on Windows. The out-of-core
-storage plugin also used a conventional replace (`BlueQuartzSoftware/SimplnxOoc#39`). A kernel trace showed the
+**Example of the broken rule:** `AtomicFile::commit()` used a direct `MoveFileExW()` call on Windows, and
+`WriteDREAM3D` used a direct rename for the XDMF file. The out-of-core storage plugin also used a conventional
+replace (`BlueQuartzSoftware/SimplnxOoc#39`). A kernel trace showed the
 Windows Search indexer (`SearchProtocolHost.exe`) opening the destination six microseconds before a failed replace.
-A workload that replaced the same file thousands of times failed in about half its runs with Windows Search
-enabled. It did not fail with Windows Search disabled.
+A workload that replaced the same file thousands of times failed in 11 of 17 runs on the CI machine where the
+Windows Search service runs, and in 0 of 8 runs on the one where it is disabled.
 
-The following results were measured with an open handle on the destination:
+The following results were measured with a `GENERIC_READ` handle open on the destination. The trace recorded the
+indexer's share mode, and its access mask is unknown.
 
 | Destination handle share mode | `MoveFileExW` replace | POSIX-semantics replace |
 | --- | --- | --- |
@@ -687,13 +689,15 @@ The following results were measured with an open handle on the destination:
 write and delete access. The indexer can hold that handle for only a few microseconds. On NTFS, starting with
 Windows 10 version 1607, a POSIX-semantics rename can replace a destination while a handle with delete sharing is open.
 
-**What to look for:** a file writer that publishes a complete replacement with a direct `std::filesystem::rename()`
-or `MoveFileExW(MOVEFILE_REPLACE_EXISTING)` call.
+**What to look for:**
+
+- A file writer that publishes a replacement with a direct `std::filesystem::rename()` call.
+- A direct `MoveFileExW(MOVEFILE_REPLACE_EXISTING)` call.
 
 **Pattern to use:** call `InstallReplacementFile(replacement, destination)` and report any failure with
-`DescribeFileReplacementFailure()`. Use `FileReplacementDurability::WriteThrough` for an explicit Windows disk flush,
-as `AtomicFile::commit()` does. The helper uses one rename on POSIX. On Windows it tries POSIX semantics, uses a
-compatible fallback for unsupported operations, and applies bounded waits to transient rename errors.
+`DescribeFileReplacementFailure()`. To request write-through on Windows, use `FileReplacementDurability::WriteThrough`
+as `AtomicFile::commit()` does. The helper uses one rename on POSIX. On Windows it tries POSIX semantics, falls
+back to a compatible rename for unsupported operations, and applies bounded waits to transient rename errors.
 
 ### Check for cancel in every long loop
 
