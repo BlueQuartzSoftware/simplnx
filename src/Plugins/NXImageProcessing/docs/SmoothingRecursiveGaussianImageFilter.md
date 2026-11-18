@@ -18,7 +18,7 @@ array shape. Each filtered axis needs at least four pixels. For a single Z slice
 *Sigma* is the Gaussian standard deviation in image-spacing units. It defaults to 1 along each axis. A larger value
 produces more smoothing along that axis.
 
-For each filtered axis, Sigma must be finite and positive. The spacing magnitude must be finite and greater than
+Preflight checks that Sigma is finite and positive on each filtered axis. Execution checks the final Image Geometry spacing. The spacing magnitude must be finite and greater than
 `1e-8` in image-spacing units. The filter checks that Sigma divided by the spacing magnitude gives a finite positive
 scale and that the calculation can form finite filter coefficients. Accuracy can decrease at extreme scales.
 

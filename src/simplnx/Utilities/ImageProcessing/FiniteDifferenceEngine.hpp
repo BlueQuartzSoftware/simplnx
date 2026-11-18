@@ -31,6 +31,7 @@
 #include <new>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -39,13 +40,28 @@ namespace nx::core::ImageProcessing
 {
 namespace detail
 {
-/** @brief Checks the selected Curvature Flow controls, including requests that only copy the input. */
-inline Result<> ValidateCurvatureFlowControls(float64 timeStep, const FloatVec3& spacing, const SizeVec3& dims)
+/**
+ * @brief Checks the user-supplied timestep at preflight, including copy requests.
+ * @param timeStep Evolution step. Zero requests an exact copy.
+ * @return An error for a negative or nonfinite step.
+ */
+inline Result<> ValidateCurvatureFlowTimeStep(float64 timeStep)
 {
   if(!std::isfinite(timeStep) || timeStep < 0.0)
   {
     return MakeErrorResult(k_CurvatureFlowInvalidTimeStep, fmt::format("Curvature Flow Time Step must be finite and nonnegative; received {}. Set Time Step to zero to copy the input.", timeStep));
   }
+  return {};
+}
+
+/**
+ * @brief Checks the final active spacings before evolution or an exact copy.
+ * @param spacing Final X, Y and Z spacings of the image geometry.
+ * @param dims Image dimensions that identify the active axes.
+ * @return An error for an active axis with zero or nonfinite spacing.
+ */
+inline Result<> ValidateCurvatureFlowSpacing(const FloatVec3& spacing, const SizeVec3& dims)
+{
   const usize activeAxes = dims[2] > 1 ? 3 : 2;
   for(usize axis = 0; axis < activeAxes; ++axis)
   {
@@ -53,7 +69,8 @@ inline Result<> ValidateCurvatureFlowControls(float64 timeStep, const FloatVec3&
     if(!std::isfinite(value) || value == 0.0)
     {
       return MakeErrorResult(k_CurvatureFlowInvalidSpacing,
-                             fmt::format("Curvature Flow image spacing for active axis {} must be finite and nonzero; received {}. Correct the Image Geometry spacing before execution.", axis, value));
+                             fmt::format("Curvature Flow image spacing for active axis {} must be finite and nonzero; received {}. Correct the Image Geometry spacing before execution.",
+                                         std::string_view{"XYZ"}.at(axis), value));
     }
   }
   return {};
@@ -2097,7 +2114,11 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   };
   if constexpr(CheckedOutput)
   {
-    if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, detail::ValidateCurvatureFlowControls(timeStep, spacing, dims)); result.invalid())
+    if(Result<> result = detail::ValidateCurvatureFlowTimeStep(timeStep); result.invalid())
+    {
+      return finish(std::move(result));
+    }
+    if(Result<> result = detail::ValidateCurvatureFlowSpacing(spacing, dims); result.invalid())
     {
       return finish(std::move(result));
     }

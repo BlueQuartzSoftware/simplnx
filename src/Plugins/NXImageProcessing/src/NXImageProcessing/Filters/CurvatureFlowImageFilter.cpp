@@ -15,6 +15,7 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 
+#include <fmt/format.h>
 #include <utility>
 
 using namespace nx::core;
@@ -87,9 +88,8 @@ IFilter::PreflightResult CurvatureFlowImageFilter::preflightImpl(const DataStruc
   {
     return {.outputActions = std::move(resultOutputActions)};
   }
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const float64 timeStep = filterArgs.value<float64>(k_TimeStep_Key);
-  if(Result<> result = ImageProcessing::detail::ValidateCurvatureFlowControls(timeStep, imageGeom.getSpacing(), imageGeom.getDimensions()); result.invalid())
+  if(Result<> result = ImageProcessing::detail::ValidateCurvatureFlowTimeStep(timeStep); result.invalid())
   {
     return {.outputActions = MergeResults(std::move(resultOutputActions), ConvertResultTo<OutputActions>(std::move(result), OutputActions{}))};
   }
@@ -107,7 +107,19 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
 
-  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
-      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  Result<> result =
+      ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+          dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  if(result.invalid())
+  {
+    for(auto& error : result.errors())
+    {
+      if(error.code == ImageProcessing::k_CurvatureFlowInvalidSpacing)
+      {
+        error.message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
+      }
+    }
+  }
+  return result;
 }
 } // namespace nx::core
