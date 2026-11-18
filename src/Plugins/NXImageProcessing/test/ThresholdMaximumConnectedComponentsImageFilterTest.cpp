@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
@@ -1053,12 +1053,12 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::C15Compatibility resident threshold fallback selects intended foreground",
-          "[NXImageProcessing][C15Compatibility][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: resident integration threshold fallback selects intended foreground",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const image_integration::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4});
   const auto inf = std::numeric_limits<float64>::infinity();
   DataStructure dataStructure;
@@ -1068,7 +1068,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident threshold fallback selec
       noFinite ? ip_test::BuildScalarValuesImage<float64>(dataStructure, {std::numeric_limits<float64>::quiet_NaN(), -inf, inf}) : ip_test::BuildScalarValuesImage<int32>(dataStructure, {100, 102});
   const ShapeType shape{1, 1, noFinite ? usize{3} : usize{2}};
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  auto args = c15_test::ImageArguments(filter, input, "Thresholded");
+  auto args = image_integration::ImageArguments(filter, input, "Thresholded");
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0));
   const std::array<float64, 5> upperBounds{65536, 99, -inf, 65536, 65536};
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(upperBounds.at(variant)));
@@ -1093,30 +1093,30 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident threshold fallback selec
   }
   const auto thresholded = input.replaceName("Thresholded");
   const std::vector<uint8> expected = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, outside);
-  REQUIRE(c15_test::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
+  REQUIRE(image_integration::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
   if(outside == 7)
   {
     // CC treats all nonzero values as foreground, including the documented expert Outside Value.
-    const auto direct = c15_test::Components(dataStructure, thresholded, "DirectComponents");
-    REQUIRE(c15_test::Read<uint32>(dataStructure, direct, shape, expectedStore) == std::vector<uint32>{1, 1, 1});
+    const auto direct = image_integration::Components(dataStructure, thresholded, "DirectComponents");
+    REQUIRE(image_integration::Read<uint32>(dataStructure, direct, shape, expectedStore) == std::vector<uint32>{1, 1, 1});
   }
-  const auto desired = c15_test::Select(dataStructure, thresholded, 1, 1, "DesiredInside");
+  const auto desired = image_integration::Select(dataStructure, thresholded, 1, 1, "DesiredInside");
   const std::vector<uint8> expectedDesired = variant == 0 ? std::vector<uint8>{0, 1} : std::vector<uint8>(noFinite ? 3 : 2, 0);
-  REQUIRE(c15_test::Read<uint8>(dataStructure, desired, shape, expectedStore) == expectedDesired);
-  const auto labels = c15_test::Components(dataStructure, desired, "Components");
+  REQUIRE(image_integration::Read<uint8>(dataStructure, desired, shape, expectedStore) == expectedDesired);
+  const auto labels = image_integration::Components(dataStructure, desired, "Components");
   const std::vector<uint32> expectedLabels = variant == 0 ? std::vector<uint32>{0, 1} : std::vector<uint32>(noFinite ? 3 : 2, 0);
-  REQUIRE(c15_test::Read<uint32>(dataStructure, labels, shape, expectedStore) == expectedLabels);
-  REQUIRE(c15_test::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
+  REQUIRE(image_integration::Read<uint32>(dataStructure, labels, shape, expectedStore) == expectedLabels);
+  REQUIRE(image_integration::Read<uint8>(dataStructure, thresholded, shape, expectedStore) == expected);
   if(noFinite)
   {
-    const auto sourceValues = c15_test::Read<float64>(dataStructure, input, shape, expectedStore);
+    const auto sourceValues = image_integration::Read<float64>(dataStructure, input, shape, expectedStore);
     REQUIRE(std::isnan(sourceValues[0]));
     REQUIRE(sourceValues[1] == -inf);
     REQUIRE(sourceValues[2] == inf);
   }
   else
   {
-    REQUIRE(c15_test::Read<int32>(dataStructure, input, shape, expectedStore) == std::vector<int32>{100, 102});
+    REQUIRE(image_integration::Read<int32>(dataStructure, input, shape, expectedStore) == std::vector<int32>{100, 102});
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

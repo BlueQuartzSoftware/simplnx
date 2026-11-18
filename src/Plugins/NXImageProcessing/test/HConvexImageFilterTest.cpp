@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 
 #include "ReconstructionFilterTestUtils.hpp"
 
@@ -790,7 +790,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: ITK real-image golden (HConvex
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::C15Compatibility resident exact widening supports fractional HConvex height", "[NXImageProcessing][C15Compatibility][Issue1874][HConvexImageFilter]")
+TEST_CASE("NXImageProcessing::HConvexImageFilter: resident integration exact widening supports fractional HConvex height", "[NXImageProcessing][ImageFilterIntegration][Issue1874][HConvexImageFilter]")
 {
   UnitTest::LoadPlugins();
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
@@ -798,19 +798,19 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exact widening supports 
   DataStructure dataStructure;
   const std::vector<uint8> original{2, 2, 2, 2, 4, 2, 2, 2, 2};
   const auto input = recon_test::BuildImageFromPattern<uint8>(dataStructure, 3, 3, 1, original);
-  c15_test::SetGeometry(dataStructure);
-  const auto converted = c15_test::ConvertToFloat32(dataStructure, input);
+  image_integration::SetGeometry(dataStructure);
+  const auto converted = image_integration::ConvertToFloat32(dataStructure, input);
   const std::vector<float32> exactConverted{2, 2, 2, 2, 4, 2, 2, 2, 2};
-  REQUIRE(c15_test::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
+  REQUIRE(image_integration::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
   const HConvexImageFilter filter;
-  auto args = c15_test::ImageArguments(filter, converted, "Contrast");
+  auto args = image_integration::ImageArguments(filter, converted, "Contrast");
   args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(0.5));
   args.insertOrAssign(HConvexImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-  c15_test::Execute(filter, dataStructure, args, scope);
-  REQUIRE(c15_test::Read<float32>(dataStructure, input.replaceName("Contrast"), {1, 3, 3}, scope) == std::vector<float32>{0, 0, 0, 0, 0.5F, 0, 0, 0, 0});
-  REQUIRE(c15_test::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
-  REQUIRE(c15_test::Read<uint8>(dataStructure, input, {1, 3, 3}, scope) == original);
-  c15_test::CheckGeometry(dataStructure, {3, 3, 1});
+  image_integration::Execute(filter, dataStructure, args, scope);
+  REQUIRE(image_integration::Read<float32>(dataStructure, input.replaceName("Contrast"), {1, 3, 3}, scope) == std::vector<float32>{0, 0, 0, 0, 0.5F, 0, 0, 0, 0});
+  REQUIRE(image_integration::Read<float32>(dataStructure, converted, {1, 3, 3}, scope) == exactConverted);
+  REQUIRE(image_integration::Read<uint8>(dataStructure, input, {1, 3, 3}, scope) == original);
+  image_integration::CheckGeometry(dataStructure, {3, 3, 1});
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison)

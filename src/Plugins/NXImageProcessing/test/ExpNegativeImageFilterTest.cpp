@@ -1,4 +1,4 @@
-#include "C15CompatibilityTestUtils.hpp"
+#include "ImageFilterIntegrationTestUtils.hpp"
 #include "ItkGoldenTestUtils.hpp"
 #include "NXImageProcessing/Filters/ExpImageFilter.hpp"
 #include "NXImageProcessing/Filters/Log10ImageFilter.hpp"
@@ -359,11 +359,12 @@ TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: ITK real-image golden (def
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain masks feed components", "[NXImageProcessing][C15Compatibility][Issue1874][ExpNegativeImageFilter]")
+TEST_CASE("NXImageProcessing::ExpNegativeImageFilter: resident integration exponential and domain masks feed components",
+          "[NXImageProcessing][ImageFilterIntegration][Issue1874][ExpNegativeImageFilter]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const c15_test::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
+  const image_integration::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
   const usize variant = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4}, usize{5}, usize{6});
   CAPTURE(variant);
   DataStructure dataStructure;
@@ -380,33 +381,33 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain m
   {
   case 0:
     input = ip_test::BuildScalarValuesImage<int16>(dataStructure, {0, 1, 2});
-    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, 0.36787944117144232160, 0.13533528323661269189};
     lower = 0.5;
     upper = 1;
     selected = {1, 0, 0};
     components = {1, 0, 0};
-    REQUIRE(c15_test::Read<int16>(dataStructure, input, {1, 1, 3}, expectedStore) == std::vector<int16>{0, 1, 2});
+    REQUIRE(image_integration::Read<int16>(dataStructure, input, {1, 1, 3}, expectedStore) == std::vector<int16>{0, 1, 2});
     break;
   case 1:
     input = ip_test::BuildScalarValuesImage<int16>(dataStructure, {0, 1});
-    quantitative = c15_test::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, std::numbers::e};
     lower = 1;
     selected = {1, 0};
     components = {1, 0};
-    REQUIRE(c15_test::Read<int16>(dataStructure, input, {1, 1, 2}, expectedStore) == std::vector<int16>{0, 1});
+    REQUIRE(image_integration::Read<int16>(dataStructure, input, {1, 1, 2}, expectedStore) == std::vector<int16>{0, 1});
     break;
   case 2:
     input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 1000, nan, -inf, inf});
-    quantitative = c15_test::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<ExpImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, inf, nan, 0, inf};
     selected = {1, 0, 0, 1, 0};
     components = {1, 0, 0, 2, 0};
     break;
   case 3:
     input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {1, 0, -1, inf, nan});
-    quantitative = c15_test::Pointwise<LogImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<LogImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, -inf, nan, inf, nan};
     lower = -1;
     upper = 1;
@@ -415,7 +416,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain m
     break;
   case 4:
     input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {1, 10, 0, -1});
-    quantitative = c15_test::Pointwise<Log10ImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<Log10ImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, 1, -inf, nan};
     upper = 1;
     selected = {1, 1, 0, 0};
@@ -423,14 +424,14 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain m
     break;
   case 5:
     input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 4, -1, inf, nan});
-    quantitative = c15_test::Pointwise<SqrtImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<SqrtImageFilter>(dataStructure, input, "Quantitative");
     expected = {0, 2, nan, inf, nan};
     selected = {1, 1, 0, 0, 0};
     components = {1, 1, 0, 0, 0};
     break;
   default:
     input = ip_test::BuildScalarValuesImage<float64>(dataStructure, {0, 1, 2});
-    quantitative = c15_test::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
+    quantitative = image_integration::Pointwise<ExpNegativeImageFilter>(dataStructure, input, "Quantitative");
     expected = {1, 0.36787944117144232160, 0.13533528323661269189};
     lower = 0.5;
     upper = 1;
@@ -440,7 +441,7 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain m
   }
   const ShapeType shape{1, 1, expected.size()};
   auto checkQuantitative = [&] {
-    const auto values = c15_test::Read<float64>(dataStructure, quantitative, shape, expectedStore);
+    const auto values = image_integration::Read<float64>(dataStructure, quantitative, shape, expectedStore);
     for(usize index = 0; index < expected.size(); ++index)
     {
       CAPTURE(index);
@@ -460,13 +461,13 @@ TEST_CASE("NXImageProcessing::C15Compatibility resident exponential and domain m
   };
   if(variant >= 2)
   {
-    REQUIRE(c15_test::Read<float64>(dataStructure, input, shape, expectedStore).size() == expected.size());
+    REQUIRE(image_integration::Read<float64>(dataStructure, input, shape, expectedStore).size() == expected.size());
   }
   checkQuantitative();
-  const auto mask = c15_test::Select(dataStructure, quantitative, lower, upper, "Selected");
-  REQUIRE(c15_test::Read<uint8>(dataStructure, mask, shape, expectedStore) == selected);
-  const auto labels = c15_test::Components(dataStructure, mask, "Components");
-  REQUIRE(c15_test::Read<uint32>(dataStructure, labels, shape, expectedStore) == components);
+  const auto mask = image_integration::Select(dataStructure, quantitative, lower, upper, "Selected");
+  REQUIRE(image_integration::Read<uint8>(dataStructure, mask, shape, expectedStore) == selected);
+  const auto labels = image_integration::Components(dataStructure, mask, "Components");
+  REQUIRE(image_integration::Read<uint32>(dataStructure, labels, shape, expectedStore) == components);
   checkQuantitative();
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
