@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/ExecutionContext.hpp"
@@ -268,6 +269,11 @@ public:
   ExecutionContext getPipelineExecutionContext() const;
 
 protected:
+  /**
+   * @brief JSON key that stores the node's disabled state.
+   */
+  static constexpr StringLiteral k_IsDisabledKey = "isDisabled";
+
   /**
    * @brief Attempts to read the disabled state from the provided node's json.
    * If the disabled key is not found, this method returns false.

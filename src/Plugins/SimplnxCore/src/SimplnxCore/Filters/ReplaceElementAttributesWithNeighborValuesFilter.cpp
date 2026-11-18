@@ -19,6 +19,12 @@
 
 using namespace nx::core;
 
+namespace
+{
+constexpr int32 k_TupleCountMismatchError = -15001;
+constexpr int32 k_ComparisonNotInCellDataError = -15003;
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -62,7 +68,9 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "The operator to use for comparisons. 0=Less, 1=Greater Than", 0, detail::k_OperationChoices));
   params.insert(std::make_unique<BoolParameter>(
       k_Loop_Key, "Loop Until Gone",
-      "Repeat threshold replacement until no cells fail or no donor can replace the remaining cells. Requires a comparison array in the selected geometry's Cell Attribute Matrix.", false));
+      "Repeat threshold replacement until no cells fail. Returns an error if a complete pass finds no passing neighbor for the remaining cells. Requires a comparison array in the "
+      "selected geometry's Cell Attribute Matrix.",
+      false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
@@ -92,7 +100,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   const auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
-  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -15001); tupleResult.invalid())
+  if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, k_TupleCountMismatchError); tupleResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
@@ -103,7 +111,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   // Loop mode must write the same comparison array it reads, including when selected through another parent.
   if(cellDataPtr == nullptr || (loopUntilGone && !cellDataPtr->contains(dataStructure.getDataAs<IDataArray>(inputArrayPath))))
   {
-    if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, -15003, "Input Comparison Array"); cellDataResult.invalid())
+    if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
     }

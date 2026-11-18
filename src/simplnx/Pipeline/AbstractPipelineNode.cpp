@@ -18,11 +18,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-constexpr StringLiteral k_IsDisabledKey = "isDisabled";
-}
-
 AbstractPipelineNode::AbstractPipelineNode(Pipeline* parent)
 : m_Parent(parent)
 {

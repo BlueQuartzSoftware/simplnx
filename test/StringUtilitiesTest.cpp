@@ -1,4 +1,5 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -30,7 +31,7 @@ TEST_CASE("StringInterpretationUtilities::Convert handles fractional Boolean tex
   }));
   CAPTURE(input);
   const auto result = StringInterpretationUtilities::Convert<bool>(input);
-  REQUIRE(result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value() == expected);
 }
 

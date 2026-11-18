@@ -24,7 +24,7 @@
 
 ## Summary
 
-`ReplaceElementAttributesWithNeighborValuesFilter` replaces each failing cell with data from its best passing face neighbor. It scans up to six face neighbors and records the passing neighbor with the most extreme value. It copies the recorded tuples in the Boolean and numeric arrays of the geometry's Cell Attribute Matrix. The optional loop repeats until no cells fail or a complete pass selects no replacements.
+`ReplaceElementAttributesWithNeighborValuesFilter` replaces each failing cell with data from its best passing face neighbor. It scans up to six face neighbors and records the passing neighbor with the most extreme value. It copies the recorded tuples in the Boolean and numeric arrays of the geometry's Cell Attribute Matrix. The optional loop repeats until no cells fail; a complete pass that selects no replacement returns error -15002.
 
 Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. The comparison was re-run after the algorithm was refactored and remained bit-identical. Stalled-loop termination deviates from 6.5.171. See [Termination contract (#1806)](#termination-contract-1806).
 
