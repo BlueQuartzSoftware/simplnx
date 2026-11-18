@@ -57,7 +57,9 @@ public:
 
   /**
    * @brief Atomically replaces the destination with the temporary file.
-   * @return Valid result on success or a detailed filesystem error.
+   *
+   * On Windows, this operation retries transient rename errors and requests a disk flush before reporting success.
+   * @return Valid result on success or a detailed filesystem error. If only the flush fails, the destination already contains the new file.
    */
   [[nodiscard]] Result<> commit();
 

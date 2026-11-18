@@ -49,6 +49,7 @@ repository, but contains no code from one.
   - [Build DataPaths from DataPaths](#build-datapaths-from-datapaths)
   - [Never drop a Result](#never-drop-a-result)
   - [Check the file close and the stream state before you report a successful write](#check-the-file-close-and-the-stream-state-before-you-report-a-successful-write)
+  - [Replace files through InstallReplacementFile](#replace-files-through-installreplacementfile)
   - [Check for cancel in every long loop](#check-for-cancel-in-every-long-loop)
   - [Write floating-point data as text that reads back to the same value](#write-floating-point-data-as-text-that-reads-back-to-the-same-value)
   - [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast)
@@ -663,6 +664,36 @@ written and closed without a state check; an atomic-file commit that follows eit
 **Pattern to use:** merge the write result and a checked close before the commit, as the path-based write of
 `DataStructureWriter` does with `closeChecked()` in PR #1859:
 `return MergeResults(std::move(writeResult), fileWriter.closeChecked());`.
+
+### Replace files through InstallReplacementFile
+
+**Rule:** use `InstallReplacementFile()` to replace an existing file with a complete new file. Do not use a bare
+replacing `std::filesystem::rename()` or `MoveFileExW()`. Close the replacement file's writer before the rename.
+
+**Example of the broken rule:** `AtomicFile::commit()` used a direct `MoveFileExW()` call on Windows. The out-of-core
+storage plugin also used a conventional replace (`BlueQuartzSoftware/SimplnxOoc#39`). A kernel trace showed the
+Windows Search indexer (`SearchProtocolHost.exe`) opening the destination six microseconds before a failed replace.
+A workload that replaced the same file thousands of times failed in about half its runs with Windows Search
+enabled. It did not fail with Windows Search disabled.
+
+The following results were measured with an open handle on the destination:
+
+| Destination handle share mode | `MoveFileExW` replace | POSIX-semantics replace |
+| --- | --- | --- |
+| Read, write and delete (Windows Search indexer) | `ERROR_ACCESS_DENIED` (5) | Succeeds |
+| Read and write without delete | `ERROR_ACCESS_DENIED` (5) | `ERROR_SHARING_VIOLATION` (32) |
+
+**Why:** any open destination handle blocks a conventional Windows replace, even when the handle shares read,
+write and delete access. The indexer can hold that handle for only a few microseconds. On NTFS, starting with
+Windows 10 version 1607, a POSIX-semantics rename can replace a destination while a handle with delete sharing is open.
+
+**What to look for:** a file writer that publishes a complete replacement with a direct `std::filesystem::rename()`
+or `MoveFileExW(MOVEFILE_REPLACE_EXISTING)` call.
+
+**Pattern to use:** call `InstallReplacementFile(replacement, destination)` and report any failure with
+`DescribeFileReplacementFailure()`. Use `FileReplacementDurability::WriteThrough` for an explicit Windows disk flush,
+as `AtomicFile::commit()` does. The helper uses one rename on POSIX. On Windows it tries POSIX semantics, uses a
+compatible fallback for unsupported operations, and applies bounded waits to transient rename errors.
 
 ### Check for cancel in every long loop
 

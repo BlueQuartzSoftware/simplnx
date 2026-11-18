@@ -376,6 +376,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Any.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Array.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/FileReplacement.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Bit.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
@@ -680,6 +681,7 @@ set(SIMPLNX_GENERATED_HEADERS
 
 set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.cpp
+  ${SIMPLNX_SOURCE_DIR}/Common/FileReplacement.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.cpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range2D.cpp
