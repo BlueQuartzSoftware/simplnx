@@ -10,6 +10,7 @@
 #include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
@@ -48,6 +49,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -377,36 +379,36 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: pipeline va
   const SizeVec3 dimensions{4, 4, 1};
   DataStructure dataStructure;
 
-  auto* rectGrid = RectGridGeom::Create(dataStructure, rectPath.getTargetName());
-  REQUIRE(rectGrid != nullptr);
-  rectGrid->setDimensions(dimensions);
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, rectGrid->getId());
-  REQUIRE(cellData != nullptr);
-  rectGrid->setCellData(*cellData);
+  auto* rectGridPtr = RectGridGeom::Create(dataStructure, rectPath.getTargetName());
+  REQUIRE(rectGridPtr != nullptr);
+  rectGridPtr->setDimensions(dimensions);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, rectGridPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  rectGridPtr->setCellData(*cellDataPtr);
   const std::array<std::string, 3> boundNames{"X Bounds", "Y Bounds", "Z Bounds"};
   std::array<Float32Array*, 3> bounds{};
   for(usize axis = 0; axis < bounds.size(); ++axis)
   {
-    bounds[axis] = Float32Array::Create(dataStructure, boundNames[axis], std::make_unique<DataStore<float32>>(dimensions[axis] + 1, 0.0F), rectGrid->getId());
-    REQUIRE(bounds[axis] != nullptr);
+    bounds.at(axis) = Float32Array::Create(dataStructure, boundNames.at(axis), std::make_unique<DataStore<float32>>(dimensions[axis] + 1, 0.0F), rectGridPtr->getId());
+    REQUIRE(bounds.at(axis) != nullptr);
     const float32 axisSpacing = axis < 2 ? finalSpacing : 1.0F;
     for(usize index = 0; index <= dimensions[axis]; ++index)
     {
-      bounds[axis]->setValue(index, static_cast<float32>(index) * axisSpacing);
+      bounds.at(axis)->setValue(index, static_cast<float32>(index) * axisSpacing);
     }
   }
-  const auto boundsResult = rectGrid->setBounds(bounds[0], bounds[1], bounds[2]);
+  const auto boundsResult = rectGridPtr->setBounds(bounds[0], bounds[1], bounds[2]);
   SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
-  REQUIRE(Float32Array::Create(dataStructure, "Signal", std::make_unique<DataStore<float32>>(cellShape, ShapeType{1}, signalValue), cellData->getId()) != nullptr);
+  REQUIRE(Float32Array::Create(dataStructure, "Signal", std::make_unique<DataStore<float32>>(cellShape, ShapeType{1}, signalValue), cellDataPtr->getId()) != nullptr);
 
-  using ResampleFilter = ResampleRectGridToImageGeomFilter;
-  auto resample = std::make_unique<ResampleFilter>();
+  using ResampleFilterType = ResampleRectGridToImageGeomFilter;
+  auto resample = std::make_unique<ResampleFilterType>();
   auto resampleArgs = resample->getDefaultArguments();
-  resampleArgs.insertOrAssign(ResampleFilter::k_RectilinearGridPath_Key, rectPath);
-  resampleArgs.insertOrAssign(ResampleFilter::k_ImageGeometryPath_Key, imagePath);
-  resampleArgs.insertOrAssign(ResampleFilter::k_ImageGeomCellAttributeMatrixName_Key, std::string("Cell Data"));
-  resampleArgs.insertOrAssign(ResampleFilter::k_Dimensions_Key, std::vector<int32>{4, 4, 1});
-  resampleArgs.insertOrAssign(ResampleFilter::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{rectPath.createChildPath("Cell Data").createChildPath("Signal")});
+  resampleArgs.insertOrAssign(ResampleFilterType::k_RectilinearGridPath_Key, rectPath);
+  resampleArgs.insertOrAssign(ResampleFilterType::k_ImageGeometryPath_Key, imagePath);
+  resampleArgs.insertOrAssign(ResampleFilterType::k_ImageGeomCellAttributeMatrixName_Key, std::string("Cell Data"));
+  resampleArgs.insertOrAssign(ResampleFilterType::k_Dimensions_Key, std::vector<int32>{4, 4, 1});
+  resampleArgs.insertOrAssign(ResampleFilterType::k_SelectedDataArrayPaths_Key, std::vector<DataPath>{rectPath.createChildPath("Cell Data").createChildPath("Signal")});
 
   Pipeline pipeline;
   REQUIRE(pipeline.push_back(std::move(resample), resampleArgs));
@@ -431,9 +433,9 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: pipeline va
   else
   {
     REQUIRE_FALSE(executed);
-    const auto* gaussian = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
-    REQUIRE(gaussian != nullptr);
-    const auto errors = gaussian->getErrors();
+    const auto* gaussianNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+    REQUIRE(gaussianNodePtr != nullptr);
+    const auto errors = gaussianNodePtr->getErrors();
     REQUIRE(errors.size() == 1);
     REQUIRE(errors.front().code == ImageProcessing::k_SmoothingGaussianInvalidCoefficients);
   }
@@ -876,6 +878,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto result = filter.execute(ds, args);
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
     REQUIRE(result.result.errors().front().code == nx::core::ImageProcessing::k_SmoothingGaussianInvalidSpacing);
