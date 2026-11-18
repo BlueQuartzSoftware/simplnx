@@ -10,6 +10,11 @@ NXImageProcessing (Morphology)
 
 Computes the *h-convex* transform of a grayscale image: **HConvex(f, h) = f − HMaxima(f, h)**. Each regional maximum of the input is replaced by its own height (its contrast to the surrounding level), **capped at the Height parameter**, while everything that is not part of a maximum becomes zero. A regional maximum of contrast `c` therefore maps to `min(c, h)`.
 
+Here HMaxima denotes mathematical reconstruction by dilation. With 64-bit integer intensities above 2^53,
+the separate H Maxima filter can round its marker through Float64. Subtracting that filter's output from the
+input can therefore give a different value. For example, an isolated peak at 2^54 and Height 1 has exact
+marker intensity 2^54 − 1 in H Convex.
+
 This isolates bright "domes" and measures their prominence: peaks taller than `Height` all map to `Height`, while shallower peaks map to their true contrast. It is a common pre-step for peak detection and marker extraction.
 
 Internally the filter reconstructs the `input − Height` marker by dilation under the original input, then subtracts that reconstruction from the input. The reconstruction cannot exceed an integer input, so the integer contrast is nonnegative. A nonnegative contrast can still exceed a signed output type's maximum. The filter returns an execution error in that case.

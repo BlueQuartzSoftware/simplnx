@@ -12,7 +12,8 @@ namespace nx::core
  * @brief ITK-free, out-of-core-capable h-convex transform: each regional maximum is replaced by its own height,
  *        capped at the Height parameter (its "dome"), and everything else becomes zero.
  *
- * HConvex(f, h) = f - HMaxima(f, h). A regional maximum of contrast c maps to min(c, h); the background maps to 0.
+ * HMaxima in the mathematical identity HConvex(f, h) = f - HMaxima(f, h) uses exact integer markers here.
+ * The separate H Maxima filter can round 64-bit integer markers above 2^53. A regional maximum of contrast c maps to min(c, h); the background maps to 0.
  * It is implemented by reconstruction-by-dilation of the (input - Height) marker under the input mask (the HMaxima
  * result) followed by an elementwise subtraction of that result from the input. Output type == input type; the
  * input must be single-component (scalar). Height is finite and nonnegative; integer images require a whole Height.

@@ -16,6 +16,10 @@ Internally the filter performs a **reconstruction-by-dilation** of a marker imag
 
 The input array must be single-component (scalar); the output element type matches the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK H Maxima Image Filter. When all data is resident it uses a fast in-core hybrid reconstruction; when the arrays are out-of-core it streams the computation so memory use stays bounded regardless of image size. Both paths produce bit-identical output, and the result matches the legacy ITK filter exactly.
 
+For wide integer images, marker construction uses Float64 arithmetic. It can lose single intensity units
+above 2^53. The [H Convex](HConvexImageFilter.md) filter uses exact integer marker arithmetic and should be
+used directly for integer peak contrast.
+
 ### Height
 
 The *Height* parameter sets the contrast threshold in the same units as the image intensities:
