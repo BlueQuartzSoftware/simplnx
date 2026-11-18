@@ -72,7 +72,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HMinimaImageFilter: integer fractional He
 
   const Arguments args = makeHMinimaArguments(inputPath, height);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors().front().code == -29201);
   REQUIRE(preflightResult.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);

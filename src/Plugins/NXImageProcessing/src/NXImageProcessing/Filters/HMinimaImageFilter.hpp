@@ -17,7 +17,7 @@ namespace nx::core
  * Height uses float64 precision, which cannot distinguish every consecutive integer above 2^53.
  *
  * Input must have one component per tuple. Output contains reconstructed intensities with the same type and shape as input.
- * Resident and disk-backed reconstruction retain their existing storage routes. Corrected integer markers can change downstream minima and watershed seeds.
+ * Resident and disk-backed reconstruction both preserve integer marker precision for downstream minima and watershed seeds.
  */
 class NXIMAGEPROCESSING_EXPORT HMinimaImageFilter : public IFilter
 {

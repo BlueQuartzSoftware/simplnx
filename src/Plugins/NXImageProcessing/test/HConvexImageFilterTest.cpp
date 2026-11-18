@@ -128,7 +128,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: integer fractional He
 
   const Arguments args = makeHConvexArguments(inputPath, height);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
@@ -383,7 +384,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::HConvexImageFilter: signed contrast overf
   const auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   if(overflow)
   {
-    REQUIRE(executeResult.result.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
     REQUIRE(executeResult.result.errors().front().code == -29102);
     REQUIRE(executeResult.result.errors().front().message.find("tuple 1") != std::string::npos);
@@ -485,7 +486,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: chunked contrast preserves tra
   {
     input.setFailRead(true);
     const auto result = ImageProcessing::detail::SubtractHConvexContrastChunked<int16>(input, reconstruction, output, inputPath, shouldCancel, 2);
-    REQUIRE(result.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors().front().code == -18741001);
     REQUIRE(output.getValue(0) == -1);
@@ -494,7 +495,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: chunked contrast preserves tra
   {
     reconstruction.setFailRead(true);
     const auto result = ImageProcessing::detail::SubtractHConvexContrastChunked<int16>(input, reconstruction, output, inputPath, shouldCancel, 2);
-    REQUIRE(result.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors().front().code == -18741001);
     REQUIRE(result.warnings().size() == 1);
@@ -504,7 +505,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: chunked contrast preserves tra
   {
     output.setFailWrite(true);
     const auto result = ImageProcessing::detail::SubtractHConvexContrastChunked<int16>(input, reconstruction, output, inputPath, shouldCancel, 2);
-    REQUIRE(result.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors().front().code == -18741002);
     REQUIRE(result.warnings().size() == 2);
