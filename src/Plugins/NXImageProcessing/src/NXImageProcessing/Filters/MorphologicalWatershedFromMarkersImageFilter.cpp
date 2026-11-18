@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -61,7 +62,7 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
       "and make downstream feature measurements incorrect. Choose Warn only if you intentionally accept these consequences; it does not preserve unsupported IDs. "
       "Output keeps the marker type. All 8/16/32-bit integer values, including signed negatives, are lossless. The int64/uint64 lossless range is 0 through 4294967295, inclusive. "
       "Zero is unmarked; UINT32_MAX is a valid seed. For example, uint64 4294967296 becomes 0, 4294967297 becomes 1, and int64 -1 becomes 4294967295.",
-      0, ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
+      to_underlying(ImageProcessing::MarkerIdConversionHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

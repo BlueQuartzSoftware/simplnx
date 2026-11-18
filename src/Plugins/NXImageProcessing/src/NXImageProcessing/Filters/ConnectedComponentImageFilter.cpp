@@ -3,15 +3,16 @@
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 
 #include <memory>
 #include <utility>
@@ -56,7 +57,7 @@ Parameters ConnectedComponentImageFilter::parameters() const
                                          "and counts and downstream statistics can be incorrect. A wrapped zero from a previous row can erase a neighboring component in scanline processing. "
                                          "Tiled processing skips that zero and can give different labels. Choose Warn only if you accept these consequences. "
                                          "It does not increase label capacity or prevent memory or I/O errors.",
-                                         0, ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
+                                         to_underlying(ImageProcessing::ConnectedComponentLabelLimitHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
