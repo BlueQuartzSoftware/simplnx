@@ -45,8 +45,10 @@ range if needed. For example, an int8 result of 127.75 becomes 127 without clipp
 reports one warning if any values clip.
 
 If the final value is NaN or infinity, integer output fails with an error that identifies the value's index and output
-type. Floating-point output retains NaN and infinity. A double value too large for an intermediate float32 becomes
-infinity with the same sign.
+type.
+
+Floating-point output retains NaN and infinity. A double value just above the largest finite float32 magnitude can
+round back to that magnitude. At or beyond the overflow midpoint, it rounds to infinity with the same sign.
 
 ### Migration and downstream use
 

@@ -462,6 +462,15 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: co
       value = std::numeric_limits<TestType>::lowest();
     }
   }
+  else
+  {
+    // A normalized Gaussian preserves DC. The double recurrence may exceed FLT_MAX
+    // by a few double ULPs before each float32 materialization.
+    if(endpoint != 0)
+    {
+      value = endpoint == 1 ? std::numeric_limits<float32>::max() : -std::numeric_limits<float32>::max();
+    }
+  }
   const bool clips = endpoint == 1 && std::is_integral_v<TestType> && sizeof(TestType) >= sizeof(int32);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<TestType>(dataStructure, 4, 4, dimZ, std::vector<TestType>(16 * dimZ, value));
