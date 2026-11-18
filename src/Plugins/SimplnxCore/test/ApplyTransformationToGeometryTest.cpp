@@ -1276,10 +1276,10 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Parameter domain regressi
   ApplyTransformationToGeometryFilter filter;
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  const std::array<int32, 9> codes = {-86004, -86004, -86004, -86003, -86002, -86002, -86052, -86051, -86053};
+  const std::array<int32, 9> codes = {-86004, -86004, k_NumberNotFinite, k_NumberNotFinite, k_NumberNotFinite, k_NumberNotFinite, -86052, k_NumberNotFinite, k_NumberNotFinite};
   REQUIRE(result.outputActions.errors()[0].code == codes[row]);
   CHECK(result.outputActions.errors()[0].message.find(type == 5 ? "Scale" : type == 4 ? "Translation" : "Rotation") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(row == 8 ? "angle" : "X") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(row == 8 ? "(w (Deg))" : row == 7 ? "(x)" : "X") != std::string::npos);
 }
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression", "[SimplnxCore][ApplyTransformationToGeometryFilter][NumericDomainRed]")
 {
@@ -1329,7 +1329,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects invalid p
   ApplyTransformationToGeometryFilter filter;
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors()[0].code == (row == 0 ? -86004 : row == 1 ? -86002 : -86052));
+  REQUIRE(result.result.errors()[0].code == (row == 0 ? -86004 : row == 1 ? k_NumberNotFinite : -86052));
   if(row != 0)
   {
     auto* geom = ds.getDataAs<VertexGeom>(DataPath({"ValidationVertices"}));
@@ -1402,7 +1402,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
       invalidArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, values);
       auto rejected = filter.preflight(ds, invalidArgs);
       SIMPLNX_RESULT_REQUIRE_INVALID(rejected.outputActions);
-      CHECK(rejected.outputActions.errors()[0].code == (values[0] != values[0] ? -86051 : values[3] != 90 ? -86053 : -86052));
+      CHECK(rejected.outputActions.errors()[0].code == (values[0] != values[0] || values[3] != 90 ? k_NumberNotFinite : -86052));
     }
   }
   ApplyTransformationToGeometryFilter filter;
@@ -1629,7 +1629,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Selected vector preflight
   }
   ApplyTransformationToGeometryFilter filter;
   auto result = filter.preflight(ds, args).outputActions;
-  const std::array<int32, 15> codes = {-1, -86002, 0, -1, -86004, -86004, -86003, 0, -1, -86052, 0, 0, 0, 0, 0};
+  const std::array<int32, 15> codes = {-1, k_NumberNotFinite, 0, -1, -86004, k_NumberNotFinite, k_NumberNotFinite, 0, -1, -86052, 0, 0, 0, 0, 0};
   if(codes[row] == 0)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);

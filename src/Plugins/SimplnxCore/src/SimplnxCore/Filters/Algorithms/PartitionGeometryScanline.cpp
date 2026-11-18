@@ -109,6 +109,11 @@ Result<> PartitionGeometryScanline::operator()()
   }
   case IGeometry::Type::RectGrid: {
     const RectGridGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->InputGeometryToPartition});
+    auto checked = ValidateRectGridPartitionCoordinates(inputGeomToPartition, partitionGridGeom, m_InputValues->InputGeometryToPartition, m_ShouldCancel);
+    if(checked.invalid() || m_ShouldCancel)
+    {
+      return checked;
+    }
     result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
     break;
   }
@@ -124,7 +129,8 @@ Result<> PartitionGeometryScanline::operator()()
     break;
   }
   default: {
-    return MakeErrorResult(-3012, fmt::format("Unable to partition geometry at path '{}' - Unknown geometry type detected.", m_InputValues->InputGeometryToPartition.toString()));
+    return MakeErrorResult(detail::k_UnsupportedPartitionGeometry,
+                           fmt::format("Input geometry '{}' has a type that Partition Geometry cannot use.", m_InputValues->InputGeometryToPartition.toString()));
   }
   }
 
@@ -152,7 +158,7 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
     for(usize chunkIndex = 0; chunkIndex < count; chunkIndex++)
     {
       const Point3D<float64> coord = inputGeometry.getCoords(offset + chunkIndex);
-      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coord);
+      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coord, m_InputValues->InputGeometryToPartition, offset + chunkIndex);
       if(checkedIndex.invalid())
       {
         return ConvertResult(std::move(checkedIndex));
@@ -210,7 +216,8 @@ Result<> PartitionGeometryScanline::partitionNodeBasedGeometry(const VertexStore
         partitionIdsBuffer[chunkIndex] = outOfBoundsValue;
         continue;
       }
-      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, Point3Df{verticesBuffer[vertexOffset], verticesBuffer[vertexOffset + 1], verticesBuffer[vertexOffset + 2]});
+      const Point3Df coordinate = {verticesBuffer[vertexOffset], verticesBuffer[vertexOffset + 1], verticesBuffer[vertexOffset + 2]};
+      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coordinate, m_InputValues->InputGeometryToPartition, offset + chunkIndex);
       if(checkedIndex.invalid())
       {
         return ConvertResult(std::move(checkedIndex));

@@ -17,6 +17,8 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
+#include <limits>
 
 using namespace nx::core;
 
@@ -978,9 +980,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingVertices(DataStructure& ds)
@@ -1012,8 +1011,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Spatial parameter doma
   std::vector<float32> sphere = {0, 0, 0, 1};
   sphere[axis] = value;
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, sphere);
-  const int32 expectedCode = axis == 3 ? -86110 : -86109;
-  const std::string parameter = "Sphere Information";
+  const int32 expectedCode = k_NumberNotFinite;
+  const std::string parameter = "Sphere centroid and Radius (Physical Units)";
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -1022,7 +1021,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Spatial parameter doma
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
 
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(axis == 3 ? "radius" : std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(axis == 3 ? "(Radius)" : fmt::format("({})", "XYZ"[axis])) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere and inactive controls", "[SimplnxCore][ComputeCoordinateThresholdFilter][SpatialSamplingControls]")

@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -974,7 +975,7 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Positive neighborhood rings"
   const auto rings = GENERATE(0, -1);
   CAPTURE(rings);
   args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, static_cast<int32>(rings));
-  const int32 expectedCode = -86161;
+  const int32 expectedCode = k_NumberBelowLowerBound;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);

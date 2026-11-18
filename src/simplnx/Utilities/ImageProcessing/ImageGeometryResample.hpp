@@ -48,14 +48,6 @@ struct ResampledImageLayout
 };
 
 /**
- * @brief Checks active resampling parameters during filter preflight.
- * @param inputValues Selects the mode and its active parameter vector.
- * @return An error for an invalid active value, otherwise success.
- * @pre Active vectors have three components. Inactive vectors are not read.
- */
-SIMPLNX_EXPORT Result<> ValidateResamplingParameters(const ResampleImageGeomInputValues& inputValues);
-
-/**
  * @brief Computes a layout from source metadata without allocating cell arrays.
  * @param source Provides geometry dimensions and spacing, which can be provisional during preflight.
  * @param inputValues Selects the active resampling formula and parameters.
@@ -107,15 +99,6 @@ public:
    * Cancellation can leave partial destination arrays.
    */
   Result<> operator()();
-
-  /**
-   * @brief Checks final coordinate metadata and consumed array sizes before copy.
-   * @param dataStructure Contains the prepared source and destination geometries.
-   * @param inputValues Identifies the source and destination paths.
-   * @pre The paths identify geometries with cell Attribute Matrices and matching arrays.
-   * @return An error for unrepresentable metadata or sizes, otherwise success.
-   */
-  static Result<> ValidatePreparedGeometry(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues);
 
   /**
    * @brief Maps final coordinates to source indices, retaining an unmapped sentinel outside coverage.

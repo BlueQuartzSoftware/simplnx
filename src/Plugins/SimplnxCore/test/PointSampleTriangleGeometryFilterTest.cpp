@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -21,6 +22,8 @@
 
 #include <catch2/catch.hpp>
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include <array>
 #include <cmath>
 #include <filesystem>
@@ -452,9 +455,6 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete fea
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
-
 namespace
 {
 void CreateCountTriangle(DataStructure& ds)
@@ -501,16 +501,15 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Nonnegative sample co
   PointSampleTriangleGeometryFilter filter;
   auto args = CountTriangleArguments();
   args.insertOrAssign(PointSampleTriangleGeometryFilter::k_NumberOfSamples_Key, int32{-1});
-  const int32 expectedCode = -86162;
+  const int32 expectedCode = k_NumberBelowLowerBound;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == expectedCode);
-  CHECK(result.outputActions.errors()[0].message.find("Number of Sample Points value -1") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("Number of Sample Points must be greater than or equal to 0. The value is -1.") != std::string::npos);
 }
 
-#include <cmath>
 TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Sample count boundaries", "[SimplnxCore][GeometryCountControls]")
 {
 

@@ -41,14 +41,13 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_NegativePartitionCount = -86150;
 constexpr int32 k_PartitionCountProduct = -86152;
 /**
- * @brief Checks only active requested counts before conversion and output actions.
+ * @brief Checks the total number of cells for modes that create a grid.
  * @param mode Selects creation or an existing partition grid.
  * @param counts Gives signed XYZ partition counts.
  * @pre counts has three components in a mode that creates a grid.
- * @return Representable dimensions or an axis/product error; existing-grid mode ignores counts.
+ * @return The dimensions or an error if the total is too large. Existing-grid mode ignores counts.
  */
 Result<SizeVec3> ValidatePartitionCounts(ChoicesParameter::ValueType mode, nonstd::span<const int32> counts)
 {
@@ -60,47 +59,21 @@ Result<SizeVec3> ValidatePartitionCounts(ChoicesParameter::ValueType mode, nonst
   usize product = 1;
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(counts[axis] <= 0)
-    {
-      return MakeErrorResult<SizeVec3>(counts[axis] < 0 ? k_NegativePartitionCount : -3012 - static_cast<int32>(axis),
-                                       counts[axis] < 0 ? fmt::format("Number Of Cells Per Axis {} value {} must be at least 1.", "XYZ"[axis], counts[axis]) :
-                                                          fmt::format("Number Of Cells Per Axis: The {} dimension ({}) must be greater than 0.", "XYZ"[axis], counts[axis]));
-    }
     dimensions[axis] = static_cast<usize>(counts[axis]);
   }
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
     {
-      return MakeErrorResult<SizeVec3>(k_PartitionCountProduct, fmt::format("Number Of Cells Per Axis tuple product cannot fit usize: X={}, Y={}, Z={}.", counts[0], counts[1], counts[2]));
+      return MakeErrorResult<SizeVec3>(k_PartitionCountProduct,
+                                       fmt::format("Number Of Cells Per Axis (X={}, Y={}, Z={}) would create too many cells. Reduce one or more values.", counts[0], counts[1], counts[2]));
     }
     product *= dimensions[axis];
   }
   return {dimensions};
 }
 
-constexpr int32 k_CellLengthDomain = -86014;
-constexpr int32 k_GridOriginDomain = -86015;
-constexpr std::array<int32, 3> k_NegativeCellLength = {-3003, -3004, -3005};
-
 // -----------------------------------------------------------------------------
-Result<> ValidateAdvancedParameters(const FloatVec3& cellLength, const FloatVec3& gridOrigin)
-{
-  for(usize axis = 0; axis < 3; ++axis)
-  {
-    if(cellLength[axis] < 0)
-    {
-      return MakeErrorResult(k_NegativeCellLength[axis], fmt::format("Parameter 'Cell Length' {} value {} cannot be negative.", "XYZ"[axis], cellLength[axis]));
-    }
-  }
-  auto validation = GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const float32>(&cellLength[0], 3), "Cell Length", k_CellLengthDomain);
-  if(validation.invalid())
-  {
-    return validation;
-  }
-  return GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32>(&gridOrigin[0], 3), "Partition Grid Origin", k_GridOriginDomain);
-}
-
 const std::string k_BasicMode("Basic (0)");
 const std::string k_AdvancedMode("Advanced (1)");
 const std::string k_BoundingBoxMode("Bounding Box (2)");
@@ -354,16 +327,16 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Partition Grid Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode",
                                                                     "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partition Grid (3)'", 0, ::k_Choices));
-  params.insert(std::make_unique<Int32Parameter>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1));
+  params.insert(std::make_unique<Int32Parameter>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1, Int32Parameter::Bounds::NonNegative()));
   params.insert(std::make_unique<Int32Parameter>(k_OutOfBoundsFeatureID_Key, "Out-Of-Bounds Feature ID",
                                                  "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
   params.insert(std::make_unique<VectorInt32Parameter>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
-                                                       std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                       std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"}), VectorInt32Parameter::Bounds::AtLeast(1)));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_CellLength_Key, "Cell Length (Physical Units)",
                                                          "The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry.",
-                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"}), VectorFloat32Parameter::Bounds::Positive()));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinGridCoord_Key, "Minimum Grid Coordinate", "Minimum grid coordinate used to create the partition grid",
                                                          std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxGridCoord_Key, "Maximum Grid Coordinate", "Maximum grid coordinate used to create the partition grid",
@@ -439,8 +412,6 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 {
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumberOfCellsPerAxis_Key);
-  auto pPartitionGridOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_PartitionGridOrigin_Key);
-  auto pCellLengthValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
   auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
   auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxGridCoord_Key);
   auto pInputGeomCellAMPathValue = filterArgs.value<DataPath>(k_InputGeometryCellAttributeMatrixPath_Key);
@@ -469,15 +440,6 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
-  if(pPartitioningModeValue == k_AdvancedModeIndex)
-  {
-    auto validation = ValidateAdvancedParameters(pCellLengthValue, pPartitionGridOriginValue);
-    if(validation.invalid())
-    {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
-    }
-  }
-
   if(iGeom.getGeomType() == IGeometry::Type::Image && pPartitioningModeValue == k_ExistingSchemeModeIndex)
   {
     const auto& geometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryToPartitionValue);
@@ -575,11 +537,6 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   }
 
   const auto startingFeatureId = filterArgs.value<int32>(k_StartingFeatureID_Key);
-  if(startingFeatureId < 0)
-  {
-    return {MakeErrorResult<OutputActions>(-3046, fmt::format("Starting Feature ID ({}) must be non-negative so partition IDs can index the feature Attribute Matrix.", startingFeatureId))};
-  }
-
   nx::core::Result<OutputActions> resultOutputActions;
 
   DataPath dap = pInputGeomCellAMPathValue.createChildPath(pPartitionIdsArrayNameValue);

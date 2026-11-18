@@ -764,25 +764,23 @@ Result<InterpolationKernelLayout> InterpolatePointCloudToRegularGrid::ComputeKer
   {
     if(!std::isfinite(spacing[axis]) || spacing[axis] <= 0)
     {
-      return MakeErrorResult<InterpolationKernelLayout>(k_KernelRadiusRepresentation,
-                                                        fmt::format("Image Geometry '{}' {} spacing {} cannot produce a kernel radius. Final spacing must be finite and positive.",
-                                                                    inputValues.imageGeomPath.toString(), "XYZ"[axis], spacing[axis]));
+      return MakeErrorResult<InterpolationKernelLayout>(k_InvalidImageSpacing, fmt::format("Image Geometry '{}' has invalid spacing on the {} axis ({}). Use a geometry with finite, positive spacing.",
+                                                                                           inputValues.imageGeomPath.toString(), "XYZ"[axis], spacing[axis]));
     }
     const float32 radius = inputValues.kernelSize[axis] < spacing[axis] ? 0.0F : std::ceil((inputValues.kernelSize[axis] / spacing[axis]) * 0.5F);
     const float64 exclusiveBound = std::ldexp(1.0, 62);
     if(!std::isfinite(radius) || radius < 0 || static_cast<float64>(radius) >= exclusiveBound)
     {
-      return MakeErrorResult<InterpolationKernelLayout>(
-          k_KernelRadiusRepresentation,
-          fmt::format("Kernel Size {} value {} and Image Geometry '{}' spacing {} produce radius {}. The radius must be finite, nonnegative and below exclusive bound {}.", "XYZ"[axis],
-                      inputValues.kernelSize[axis], inputValues.imageGeomPath.toString(), spacing[axis], radius, exclusiveBound));
+      return MakeErrorResult<InterpolationKernelLayout>(k_KernelRadiusRepresentation,
+                                                        fmt::format("Kernel Size ({}) {} gives an invalid radius ({}) for Image Geometry '{}' with spacing {}. Reduce Kernel Size.", "XYZ"[axis],
+                                                                    inputValues.kernelSize[axis], radius, inputValues.imageGeomPath.toString(), spacing[axis]));
     }
     layout.Radii[axis] = static_cast<int64>(radius);
     const uint64 width = 2 * static_cast<uint64>(layout.Radii[axis]) + 1;
     if(width > std::numeric_limits<usize>::max())
     {
-      return MakeErrorResult<InterpolationKernelLayout>(k_KernelRadiusRepresentation, fmt::format("Kernel Size {} produces width {} from radius {}, exceeding usize limit {}.", "XYZ"[axis], width,
-                                                                                                  layout.Radii[axis], std::numeric_limits<usize>::max()));
+      return MakeErrorResult<InterpolationKernelLayout>(
+          k_KernelWidthTooLarge, fmt::format("Kernel Size ({}) {} gives a width of {} cells. Reduce Kernel Size on this axis.", "XYZ"[axis], inputValues.kernelSize[axis], width));
     }
     layout.Dimensions[axis] = static_cast<usize>(width);
   }
@@ -791,7 +789,7 @@ Result<InterpolationKernelLayout> InterpolatePointCloudToRegularGrid::ComputeKer
     if(layout.Dimensions[axis] > std::numeric_limits<usize>::max() / layout.ElementCount)
     {
       return MakeErrorResult<InterpolationKernelLayout>(k_KernelProductRepresentation,
-                                                        fmt::format("Kernel Size for Image Geometry '{}' produces a kernel tuple product that cannot fit usize: X={}, Y={}, Z={}.",
+                                                        fmt::format("Kernel Size for Image Geometry '{}' would use too many kernel cells (X={}, Y={}, Z={}). Reduce Kernel Size.",
                                                                     inputValues.imageGeomPath.toString(), layout.Dimensions[0], layout.Dimensions[1], layout.Dimensions[2]));
     }
     layout.ElementCount *= layout.Dimensions[axis];
@@ -799,15 +797,14 @@ Result<InterpolationKernelLayout> InterpolatePointCloudToRegularGrid::ComputeKer
   if(layout.ElementCount > std::numeric_limits<usize>::max() / sizeof(float32))
   {
     return MakeErrorResult<InterpolationKernelLayout>(k_KernelStorageRepresentation,
-                                                      fmt::format("Kernel Size for Image Geometry '{}' produces a kernel byte count that cannot fit usize: element count={}, element bytes={}.",
+                                                      fmt::format("Kernel Size for Image Geometry '{}' would use too much memory for the kernel ({} cells at {} bytes each). Reduce Kernel Size.",
                                                                   inputValues.imageGeomPath.toString(), layout.ElementCount, sizeof(float32)));
   }
   const usize containerLimit = std::vector<float32>{}.max_size();
   if(layout.ElementCount > containerLimit)
   {
-    return MakeErrorResult<InterpolationKernelLayout>(k_KernelStorageRepresentation,
-                                                      fmt::format("Kernel Size for Image Geometry '{}' produces kernel container size {}, exceeding vector<float32> limit {}.",
-                                                                  inputValues.imageGeomPath.toString(), layout.ElementCount, containerLimit));
+    return MakeErrorResult<InterpolationKernelLayout>(k_KernelContainerTooLarge, fmt::format("Kernel Size for Image Geometry '{}' would use {} kernel cells. The maximum is {}. Reduce Kernel Size.",
+                                                                                             inputValues.imageGeomPath.toString(), layout.ElementCount, containerLimit));
   }
   return {layout};
 }

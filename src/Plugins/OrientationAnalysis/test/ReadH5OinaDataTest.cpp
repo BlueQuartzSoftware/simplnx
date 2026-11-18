@@ -747,10 +747,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Parameter Rejections", "[O
     args = MakeArgs(inputFile, {"1"}, 1.0F, true, true, true);
     expectedCode = -9583;
   }
-  SECTION("Non-finite Z Spacing (-9580)")
+  SECTION("Non-finite Z Spacing")
   {
     args = MakeArgs(inputFile, {"1"}, std::numeric_limits<float32>::quiet_NaN());
-    expectedCode = -9580;
+    expectedCode = k_NumberNotFinite;
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);

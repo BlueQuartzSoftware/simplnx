@@ -15,23 +15,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include <cmath>
-
 using namespace nx::core;
-
-namespace
-{
-constexpr int32 k_CustomZFinite = -86111;
-
-Result<> ValidateCustomZ(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType choice, float32 value)
-{
-  if(choice == ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue && !std::isfinite(value))
-  {
-    return MakeErrorResult(k_CustomZFinite, fmt::format("Custom Z Value {} must be finite when Use Custom Z Value is selected.", value));
-  }
-  return {};
-}
-} // namespace
 
 namespace nx::core
 {
@@ -117,14 +101,7 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   auto pInputImageGeometryPathValue = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pOutputEdgeGeometryPathValue = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
-  auto pZValueChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key);
-  auto pCustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
   auto pExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
-
-  if(auto validation = ValidateCustomZ(static_cast<ExtractFeatureBoundaries2DInputValues::ZValueChoiceType>(pZValueChoice), pCustomZValue); validation.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
-  }
 
   if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())
   {

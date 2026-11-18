@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/PointSampleEdgeGeometry.hpp"
 #include "SimplnxCore/Filters/PointSampleEdgeGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -15,8 +16,10 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -293,9 +296,6 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingEdges(DataStructure& ds, bool squares = false)
@@ -351,7 +351,7 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Spatial parameter domains
   const auto value = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(value);
   args.insertOrAssign(PointSampleEdgeGeometryFilter::k_ScanVectorSamplingRes_Key, value);
-  const int32 expectedCode = -86102;
+  const int32 expectedCode = std::isfinite(value) ? k_NumberBelowLowerBound : k_NumberNotFinite;
   const std::string parameter = "Sampling Spacing (mm)";
 
   auto result = filter.preflight(ds, args);
@@ -371,13 +371,14 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Checked final sample coun
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(PointSampleEdgeGeometryFilter::k_ScanVectorGeometryPath_Key, DataPath({"Edges"}));
   args.insertOrAssign(PointSampleEdgeGeometryFilter::k_CalculateCumulativeSampleDistance_Key, false);
-  const bool excessive = GENERATE(false, true);
-  args.insertOrAssign(PointSampleEdgeGeometryFilter::k_ScanVectorSamplingRes_Key, excessive ? std::ldexp(1.0F, -30) : 1.0F);
+  const auto spacing = GENERATE(1.0F, std::ldexp(1.0F, -30), std::numeric_limits<float32>::denorm_min());
+  CAPTURE(spacing);
+  args.insertOrAssign(PointSampleEdgeGeometryFilter::k_ScanVectorSamplingRes_Key, spacing);
   auto result = filter.execute(ds, args);
-  if(excessive)
+  if(spacing < 1.0F)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-    CHECK(result.result.errors()[0].code == -86124);
+    CHECK(result.result.errors()[0].code == (spacing == std::numeric_limits<float32>::denorm_min() ? -86220 : -86124));
   }
   else
   {
@@ -399,9 +400,6 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Checked final sample coun
   CHECK(source.getVerticesRef()[3] == 2);
 }
 
-#include "SimplnxCore/Filters/Algorithms/PointSampleEdgeGeometry.hpp"
-#include <cmath>
-
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Sample size arithmetic", "[SimplnxCore][PointSampleEdgeGeometryFilter][SpatialSamplingControls]")
 {
   const auto maximum = std::numeric_limits<usize>::max();
@@ -410,15 +408,15 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Sample size arithmetic", 
     auto result = detail::AddSampleCounts(maximum, 1);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     CHECK(result.errors()[0].code == -86125);
-    CHECK(result.errors()[0].message.find("aggregate sample count") != std::string::npos);
+    CHECK(result.errors()[0].message.find("total sample count") != std::string::npos);
     CHECK(result.errors()[0].message.find(std::to_string(maximum)) != std::string::npos);
-    CHECK(result.errors()[0].message.find("increment=1") != std::string::npos);
+    CHECK(result.errors()[0].message.find("1 on the next edge") != std::string::npos);
   }
   SECTION("Index overflow")
   {
     auto result = detail::CheckSampleIndexCount(usize{1} << 63);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == -86125);
+    CHECK(result.errors()[0].code == -86221);
     CHECK(result.errors()[0].message.find("sample index count") != std::string::npos);
     CHECK(result.errors()[0].message.find(std::to_string(usize{1} << 63)) != std::string::npos);
     CHECK(result.errors()[0].message.find(std::to_string(std::numeric_limits<int64>::max())) != std::string::npos);
@@ -427,21 +425,21 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Sample size arithmetic", 
   {
     auto result = detail::CheckSampleArraySize(usize{1} << 62, 4, 1, "TestValues");
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == -86125);
-    CHECK(result.errors()[0].message.find("sample value count") != std::string::npos);
+    CHECK(result.errors()[0].code == -86222);
+    CHECK(result.errors()[0].message.find("too many sample values") != std::string::npos);
     CHECK(result.errors()[0].message.find("TestValues") != std::string::npos);
     CHECK(result.errors()[0].message.find(std::to_string(usize{1} << 62)) != std::string::npos);
-    CHECK(result.errors()[0].message.find("components=4") != std::string::npos);
+    CHECK(result.errors()[0].message.find("4 components") != std::string::npos);
   }
   SECTION("Byte overflow")
   {
     auto result = detail::CheckSampleArraySize(usize{1} << 61, 1, 8, "TestEdgeIds");
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == -86125);
-    CHECK(result.errors()[0].message.find("sample byte count") != std::string::npos);
+    CHECK(result.errors()[0].code == -86223);
+    CHECK(result.errors()[0].message.find("is too large") != std::string::npos);
     CHECK(result.errors()[0].message.find("TestEdgeIds") != std::string::npos);
     CHECK(result.errors()[0].message.find(std::to_string(usize{1} << 61)) != std::string::npos);
-    CHECK(result.errors()[0].message.find("element bytes=8") != std::string::npos);
+    CHECK(result.errors()[0].message.find("8 bytes each") != std::string::npos);
   }
   SECTION("Representable boundaries")
   {

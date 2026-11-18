@@ -13,9 +13,12 @@
 
 #include "SimplnxCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <random>
 
 using namespace nx::core;
@@ -297,10 +300,6 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Ray exits l
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingTetrahedron(DataStructure& ds)
@@ -353,7 +352,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Spatial par
     std::vector<float32> values = {1, 1, 1};
     values[axis] = value;
     args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, values);
-    expectedCode = -86105;
+    expectedCode = k_NumberNotFinite;
     parameter = "Spacing";
   }
   SECTION("Origin")
@@ -361,7 +360,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Spatial par
     std::vector<float32> values = {0, 0, 0};
     values[axis] = value;
     args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, values);
-    expectedCode = -86107;
+    expectedCode = k_NumberNotFinite;
     parameter = "Origin";
   }
   SECTION("Uncertainty")
@@ -369,7 +368,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Spatial par
     std::vector<float32> values = {0, 0, 0};
     values[axis] = value;
     args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, values);
-    expectedCode = -86106;
+    expectedCode = k_NumberNotFinite;
     parameter = "Uncertainty";
   }
 
@@ -380,7 +379,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Spatial par
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
 
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("({})", "xyz"[axis])) != std::string::npos);
 }
 TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Nonpositive sampling spacing", "[SimplnxCore][UncertainRegularGridSampleSurfaceMeshFilter][SpatialParameterDomains]")
 {
@@ -406,7 +405,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Nonpositive
   std::vector<float32> values = {1, 1, 1};
   values[axis] = value;
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, values);
-  expectedCode = -86105;
+  expectedCode = k_NumberBelowLowerBound;
   parameter = "Spacing";
 
   auto result = filter.preflight(ds, args);
@@ -414,7 +413,7 @@ TEST_CASE("SimplnxCore::UncertainRegularGridSampleSurfaceMeshFilter: Nonpositive
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == expectedCode);
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("({})", "xyz"[axis])) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
 }
 

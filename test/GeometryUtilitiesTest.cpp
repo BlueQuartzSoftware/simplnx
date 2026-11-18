@@ -1,4 +1,6 @@
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include <catch2/catch.hpp>
 #include <limits>
@@ -69,44 +71,25 @@ TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUti
   }
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include <limits>
-
-TEST_CASE("GeometryUtilities: Positive image dimensions", "[simplnx][GeometryUtilities]")
+TEST_CASE("GeometryUtilities: Image dimension product", "[simplnx][GeometryUtilities]")
 {
-  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
-  CAPTURE(row);
-  const std::array<std::array<uint64, 3>, 7> inputs = {{{1, 1, 1}, {2, 3, 5}, {std::numeric_limits<uint64>::max(), 1, 1}, {0, 1, 1}, {1, 0, 1}, {1, 1, 0}, {uint64{1} << 63, 2, 1}}};
-  const auto& dimensions = inputs[row];
-  auto result = GeometryUtilities::ValidateImageDimensions(dimensions, "Exact Dimensions", -86153);
-  if(row < 3)
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-    CHECK(result.warnings().empty());
-    CHECK(result.value() == SizeVec3{static_cast<usize>(dimensions[0]), static_cast<usize>(dimensions[1]), static_cast<usize>(dimensions[2])});
-  }
-  else
+  const auto dimensions =
+      GENERATE((std::array<uint64, 3>{1, 1, 1}), (std::array<uint64, 3>{2, 3, 5}), (std::array<uint64, 3>{std::numeric_limits<usize>::max(), 1, 1}), (std::array<uint64, 3>{uint64{1} << 63, 2, 1}));
+  const bool overflow = dimensions[0] == uint64{1} << 63;
+  auto result = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact Dimensions", -1);
+  if(overflow)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
-    CHECK(result.errors()[0].code == -86153);
-    const auto& message = result.errors()[0].message;
-    CHECK(message.find("Exact Dimensions") != std::string::npos);
-    if(row < 6)
-    {
-      CHECK(message.find(std::string(1, "XYZ"[row - 3])) != std::string::npos);
-      CHECK(message.find("value 0") != std::string::npos);
-      CHECK(message.find("positive dimension") != std::string::npos);
-    }
-    else
-    {
-      CHECK(message.find("tuple product") != std::string::npos);
-      for(const auto value : dimensions)
-      {
-        CHECK(message.find(std::to_string(value)) != std::string::npos);
-      }
-    }
+    CHECK(result.errors()[0].code == -1);
+    CHECK(result.errors()[0].message.find("Exact Dimensions") != std::string::npos);
+    CHECK(result.errors()[0].message.find("too many cells") != std::string::npos);
+    CHECK(result.errors()[0].message.find(std::to_string(dimensions[0])) != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.value() == SizeVec3{static_cast<usize>(dimensions[0]), static_cast<usize>(dimensions[1]), static_cast<usize>(dimensions[2])});
   }
 }
 

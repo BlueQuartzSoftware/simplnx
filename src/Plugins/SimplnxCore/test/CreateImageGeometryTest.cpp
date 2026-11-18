@@ -7,6 +7,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -137,7 +138,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
   args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
+  REQUIRE(result.outputActions.errors()[0].code == (row >= 2 ? k_NumberNotFinite : k_NumberBelowLowerBound));
   CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
 }
@@ -157,7 +158,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Positive creation dimensions"
   std::vector<uint64> dims = {1, 1, 1};
   dims[axis] = 0;
   args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, dims);
-  const int32 expectedCode = -86155;
+  const int32 expectedCode = k_NumberBelowLowerBound;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -165,11 +166,9 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Positive creation dimensions"
   CHECK(result.outputActions.errors()[0].code == expectedCode);
   CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("Dimensions") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("value 0") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("value is 0") != std::string::npos);
 }
 
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include <limits>
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Creation count boundaries", "[SimplnxCore][GeometryCountControls]")
 {
 

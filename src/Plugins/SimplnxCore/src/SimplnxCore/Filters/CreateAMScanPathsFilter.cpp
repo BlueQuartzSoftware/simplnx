@@ -13,28 +13,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
-
 using namespace nx::core;
-
-namespace
-{
-constexpr int32 k_RotationAngleDomain = -86101;
-constexpr int32 k_HatchSpacingDomain = -86100;
-
-Result<> ValidateScanPathParameters(float32 hatchSpacing, float32 angleRadians)
-{
-  if(!std::isfinite(hatchSpacing) || hatchSpacing <= 0)
-  {
-    return MakeErrorResult(k_HatchSpacingDomain, fmt::format("Hatch Spacing value {} must be finite and greater than 0.", hatchSpacing));
-  }
-  if(!std::isfinite(angleRadians))
-  {
-    return MakeErrorResult(k_RotationAngleDomain, fmt::format("Hatch Rotation Angle (Degrees) produces radians value {}. The radians must be finite.", angleRadians));
-  }
-  return {};
-}
-} // namespace
 
 namespace nx::core
 {
@@ -75,7 +54,7 @@ Parameters CreateAMScanPathsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f));
+  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f, Float32Parameter::Bounds::Positive()));
   params.insert(std::make_unique<Float32Parameter>(k_StripeWidth_Key, "Hatch Length", "The length of each vector that is created.", 7.0f));
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle, "Hatch Rotation Angle (Degrees)", "The angle in degrees by which each slice's hatches are rotated", 67.0f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerPath_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},
@@ -121,11 +100,6 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
   auto pVertexAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pHatchAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_HatchAttributeMatrixName_Key);
   auto pRegionIdsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegionIdsArrayName_Key);
-
-  if(auto validation = ValidateScanPathParameters(filterArgs.value<float32>(k_HatchSpacing_Key), filterArgs.value<float32>(k_RotationAngle) * Constants::k_DegToRadF); validation.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
-  }
 
   PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;

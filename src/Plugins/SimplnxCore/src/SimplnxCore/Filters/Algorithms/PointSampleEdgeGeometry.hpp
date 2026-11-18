@@ -11,7 +11,7 @@ namespace nx::core
 {
 /**
  * @namespace nx::core::detail
- * @brief Contains internal sample-layout arithmetic.
+ * @brief Contains sample-layout checks that boundary tests call without allocating large arrays.
  */
 namespace detail
 {

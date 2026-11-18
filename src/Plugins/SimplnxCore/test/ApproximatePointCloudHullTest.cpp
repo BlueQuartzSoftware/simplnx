@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -336,13 +337,13 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Spatial parameter domai
     std::vector<float32> values = {1, 1, 1};
     values[axis] = value;
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, values);
-    expectedCode = -86103;
+    expectedCode = k_NumberNotFinite;
     parameter = "Grid Resolution";
   }
   SECTION("Minimum Number of Empty Neighbors")
   {
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{27});
-    expectedCode = -86104;
+    expectedCode = k_NumberAboveUpperBound;
     actual = "27";
     parameter = "Minimum Number of Empty Neighbors";
   }
@@ -466,7 +467,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Parameter boundaries", 
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors()[0].code == (row == 4 ? -1 : -11001));
+    CHECK(result.outputActions.errors()[0].code == (row == 4 ? -1 : k_NumberBelowLowerBound));
     if(row == 4)
     {
       CHECK(filter.parameters().at(ApproximatePointCloudHullFilter::k_GridResolution_Key)->humanName() == "Grid Resolution");

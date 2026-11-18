@@ -14,7 +14,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -23,59 +22,24 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_KernelExtentDomain = -86163;
 constexpr int32 k_KernelRadiusWarning = -86168;
 constexpr int32 k_KernelProductWarning = -86169;
 constexpr int32 k_KernelStorageWarning = -86170;
 constexpr int32 k_SigmaSquareOverflow = -86135;
 constexpr int32 k_SigmaSquareUnderflow = -86134;
-constexpr int32 k_SigmaFinite = -86108;
 
-/**
- * @brief Checks the active spatial parameter domains before output actions.
- * @param technique Selects uniform or Gaussian interpolation.
- * @param kernelSize Gives physical kernel extents in XYZ order.
- * @param sigmas Gives Gaussian standard deviations in cell offsets.
- * @pre kernelSize has three components; sigmas has three components when Gaussian interpolation is active.
- * @return The first active parameter error, otherwise success.
- */
-Result<> ValidateInterpolationParameters(uint64 technique, nonstd::span<const float32> kernelSize, nonstd::span<const float32> sigmas)
+Result<> ValidateGaussianSigmaSquares(nonstd::span<const float32> sigmas)
 {
-  for(usize axis = 0; axis < 3; ++axis)
-  {
-    if(!std::isfinite(kernelSize[axis]))
-    {
-      return MakeErrorResult(k_KernelExtentDomain, fmt::format("Kernel Size {} value {} must be finite and nonnegative.", "XYZ"[axis], kernelSize[axis]));
-    }
-    if(kernelSize[axis] < 0)
-    {
-      return MakeErrorResult(-11000, fmt::format("Kernel Size {} value {} must be nonnegative.", "XYZ"[axis], kernelSize[axis]));
-    }
-  }
-  if(technique != InterpolatePointCloudToRegularGrid::k_Gaussian)
-  {
-    return {};
-  }
-  auto result = GeometryUtilities::ValidateFiniteVector(sigmas, "Gaussian Sigmas", k_SigmaFinite);
-  if(result.invalid())
-  {
-    return result;
-  }
-  result = GeometryUtilities::ValidatePositiveFiniteVector(sigmas, "Gaussian Sigmas", -11000);
-  if(result.invalid())
-  {
-    return result;
-  }
   for(usize axis = 0; axis < 3; ++axis)
   {
     const float32 square = sigmas[axis] * sigmas[axis];
     if(square == 0)
     {
-      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas {} value {} has square {}. Its float32 square must be greater than 0.", "XYZ"[axis], sigmas[axis], square));
+      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas ({}) value {} is too small. Increase this value.", "XYZ"[axis], sigmas[axis]));
     }
     if(!std::isfinite(square))
     {
-      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas {} value {} has nonfinite square {}. Its float32 square must be finite.", "XYZ"[axis], sigmas[axis], square));
+      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas ({}) value {} is too large. Decrease this value.", "XYZ"[axis], sigmas[axis]));
     }
   }
   return {};
@@ -124,10 +88,10 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_InterpolationTechnique_Key, "Interpolation Technique", "Selected Interpolation Technique", 0, std::vector<std::string>{"Uniform", "Gaussian"}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"},
+                                                         VectorFloat32Parameter::Bounds::NonNegative()));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                         std::vector<std::string>{"x", "y", "z"}));
+                                                         std::vector<std::string>{"x", "y", "z"}, VectorFloat32Parameter::Bounds::Positive()));
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
@@ -228,9 +192,13 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   OutputActions actions;
 
-  if(auto validation = ValidateInterpolationParameters(interpolationTechnique, kernelSize, sigmas); validation.invalid())
+  if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Gaussian)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    auto validation = ValidateGaussianSigmaSquares(sigmas);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -347,6 +315,8 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     int32 warning = k_KernelStorageWarning;
     switch(error.code)
     {
+    case InterpolatePointCloudToRegularGrid::k_InvalidImageSpacing:
+    case InterpolatePointCloudToRegularGrid::k_KernelWidthTooLarge:
     case InterpolatePointCloudToRegularGrid::k_KernelRadiusRepresentation:
       warning = k_KernelRadiusWarning;
       break;
@@ -357,7 +327,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     default:
       break;
     }
-    output.warnings().push_back({warning, fmt::format("{} Preflight defers kernel setup until final Image Geometry metadata is available.", error.message)});
+    output.warnings().push_back({warning, fmt::format("{} The filter checks the kernel again when it runs.", error.message)});
   }
   return {std::move(output)};
 }

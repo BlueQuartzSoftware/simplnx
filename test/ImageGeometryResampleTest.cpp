@@ -11,105 +11,6 @@
 
 using namespace nx::core;
 
-TEST_CASE("simplnx::ImageGeometryResample: Active parameter domains", "[simplnx][ImageGeometryResample]")
-{
-  ResampleImageGeomInputValues input{};
-  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-  CAPTURE(row);
-  int32 expectedCode = 0;
-  std::string context;
-  input.ResamplingMode = row < 4 ? 0 : 1;
-  if(row < 4)
-  {
-    input.Spacing = {1, 1, 1};
-    if(row == 0)
-    {
-      input.Spacing[0] = std::numeric_limits<float32>::denorm_min();
-    }
-    if(row == 1)
-    {
-      input.Spacing[0] = 0;
-      expectedCode = -86113;
-      context = "X value 0";
-    }
-    if(row == 2)
-    {
-      input.Spacing[1] = std::numeric_limits<float32>::quiet_NaN();
-      expectedCode = -86113;
-      context = "Y value nan";
-    }
-    if(row == 3)
-    {
-      input.Spacing[2] = -1;
-      expectedCode = -11502;
-      context = "Z value -1";
-    }
-  }
-  else
-  {
-    input.Scaling = {100, 100, 100};
-    if(row == 4)
-    {
-      input.Scaling[0] = std::numeric_limits<float32>::denorm_min();
-    }
-    if(row == 5)
-    {
-      input.Scaling[2] = 0;
-      expectedCode = -11500;
-      context = "Z value 0";
-    }
-    if(row == 6)
-    {
-      input.Scaling[0] = std::numeric_limits<float32>::quiet_NaN();
-      expectedCode = -86114;
-      context = "X value nan";
-    }
-    if(row == 7)
-    {
-      input.Spacing = {std::numeric_limits<float32>::quiet_NaN(), 0, -1};
-      input.ExactDimensions = {0, 0, 0};
-    }
-    if(row == 8)
-    {
-      input.ResamplingMode = 2;
-      input.ExactDimensions = {1, 2, 3};
-      input.Spacing = {std::numeric_limits<float32>::quiet_NaN(), 0, -1};
-      input.Scaling = {0, std::numeric_limits<float32>::quiet_NaN(), -std::numeric_limits<float32>::infinity()};
-    }
-  }
-  if(row == 9)
-  {
-    input.ResamplingMode = 2;
-    input.ExactDimensions = {std::numeric_limits<uint64>::max(), 1, 1};
-  }
-  const auto spacing = input.Spacing;
-  const auto scaling = input.Scaling;
-  const auto exact = input.ExactDimensions;
-  auto result = ValidateResamplingParameters(input);
-  if(expectedCode == 0)
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-    CHECK(result.warnings().empty());
-  }
-  else
-  {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors().size() == 1);
-    CHECK(result.errors()[0].code == expectedCode);
-    CHECK(result.errors()[0].message.find(row < 4 ? "Spacing" : "Scaling Factor") != std::string::npos);
-    CHECK(result.errors()[0].message.find(context) != std::string::npos);
-  }
-  CHECK(input.ExactDimensions == exact);
-  for(usize axis = 0; axis < spacing.size(); ++axis)
-  {
-    CHECK((input.Spacing[axis] == spacing[axis] || (std::isnan(input.Spacing[axis]) && std::isnan(spacing[axis]))));
-  }
-  for(usize axis = 0; axis < scaling.size(); ++axis)
-  {
-    CHECK((input.Scaling[axis] == scaling[axis] || (std::isnan(input.Scaling[axis]) && std::isnan(scaling[axis]))));
-  }
-}
-
 TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx][ImageGeometryResample]")
 {
   DataStructure ds;
@@ -161,7 +62,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     input.ResamplingMode = 2;
     input.ExactDimensions = {1, 1, 1};
     expectedCode = -86126;
-    context = "derived Spacing X result inf";
+    context = "invalid New Spacing on the X axis (inf)";
   }
   SECTION("Spacing underflow")
   {
@@ -170,7 +71,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     input.ResamplingMode = 1;
     input.Scaling = {200, 100, 100};
     expectedCode = -86126;
-    context = "derived Spacing X result 0";
+    context = "invalid New Spacing on the X axis (0)";
   }
   SECTION("Dimension exclusive bound")
   {
@@ -178,7 +79,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     source->setSpacing({1, 1, 1});
     input.Spacing = {std::ldexp(1.0F, -64), 1, 1};
     expectedCode = -86127;
-    context = "dimension conversion X";
+    context = "calculated cell count on the X axis";
   }
   SECTION("Tuple product")
   {
@@ -186,7 +87,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     source->setSpacing({1, 1, 1});
     input.Spacing = {std::ldexp(1.0F, -32), std::ldexp(1.0F, -32), 1};
     expectedCode = -86128;
-    context = "tuple product";
+    context = "too many cells";
   }
   const auto originalDimensions = source->getDimensions();
   const auto originalSpacing = source->getSpacing();
@@ -236,7 +137,54 @@ TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simp
     values[1] = name == std::string("Source") ? 9 : 37;
   }
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Destination"})));
-  ds.getDataRefAs<ImageGeom>(DataPath({"Destination"})).setSpacing({std::numeric_limits<float32>::quiet_NaN(), 1, 1});
+  auto& destination = ds.getDataRefAs<ImageGeom>(DataPath({"Destination"}));
+  int32 expectedCode = -86136;
+  SECTION("Spacing")
+  {
+    destination.setSpacing({std::numeric_limits<float32>::quiet_NaN(), 1, 1});
+  }
+  SECTION("Origin")
+  {
+    destination.setOrigin({std::numeric_limits<float32>::infinity(), 0, 0});
+    expectedCode = -86228;
+  }
+  SECTION("Cell count")
+  {
+    destination.setDimensions({usize{1} << 63, 2, 1});
+    expectedCode = -86229;
+  }
+  SECTION("Row count")
+  {
+    destination.setDimensions({0, usize{1} << 63, 2});
+    expectedCode = -86230;
+  }
+  SECTION("Rows to copy")
+  {
+    auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({"Destination", "Cell Data", "Extra"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    destination.setDimensions({1, usize{1} << 63, 1});
+    expectedCode = -86231;
+  }
+  SECTION("Array value count")
+  {
+    auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {16}, DataPath({"Destination", "Cell Data", "Extra"})).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    const auto* extra = ds.getDataAs<Int32Array>(DataPath({"Destination", "Cell Data", "Extra"}));
+    REQUIRE(extra != nullptr);
+    REQUIRE(extra->getNumberOfComponents() == 16);
+    destination.setDimensions({usize{1} << 60, 1, 1});
+    expectedCode = -86232;
+  }
+  SECTION("Array byte count")
+  {
+    destination.setDimensions({usize{1} << 62, 1, 1});
+    expectedCode = -86233;
+  }
+  SECTION("Axis length")
+  {
+    destination.setDimensions({std::vector<usize>{}.max_size() + 1, 1, 1});
+    expectedCode = -86234;
+  }
   ResampleImageGeomInputValues input{};
   input.SelectedImageGeometryPath = DataPath({"Source"});
   input.CreatedImageGeometryPath = DataPath({"Destination"});
@@ -245,7 +193,8 @@ TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simp
   auto result = ResampleImageGeom(ds, handler, cancel, &input)();
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors()[0].code == -86136);
+  CAPTURE(expectedCode);
+  CHECK(result.errors()[0].code == expectedCode);
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"})));
   const auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"}));
   CHECK(values[0] == 31);
@@ -285,32 +234,4 @@ TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps t
   REQUIRE(plannedGeometryPtr != nullptr);
   CHECK(plannedGeometryPtr->units() == units);
   CHECK(plannedGeometryPtr->path() == inputValues.CreatedImageGeometryPath);
-}
-
-TEST_CASE("simplnx::ImageGeometryResample: Exact parameter propagation", "[simplnx][ImageGeometryResample]")
-{
-  const bool product = GENERATE(false, true);
-  CAPTURE(product);
-  ResampleImageGeomInputValues input{};
-  input.ResamplingMode = 2;
-  input.ExactDimensions = product ? std::vector<uint64>{uint64{1} << 63, 2, 1} : std::vector<uint64>{1, 0, 1};
-  auto result = ValidateResamplingParameters(input);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors()[0].code == -86153);
-  const auto& message = result.errors()[0].message;
-  CHECK(message.find("Exact Dimensions") != std::string::npos);
-  if(product)
-  {
-    CHECK(message.find("tuple product") != std::string::npos);
-    for(auto value : input.ExactDimensions)
-    {
-      CHECK(message.find(std::to_string(value)) != std::string::npos);
-    }
-  }
-  else
-  {
-    CHECK(message.find("Y value 0") != std::string::npos);
-    CHECK(message.find("positive dimension") != std::string::npos);
-  }
 }

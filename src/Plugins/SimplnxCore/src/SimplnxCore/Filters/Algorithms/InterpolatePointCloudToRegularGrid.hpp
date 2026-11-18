@@ -105,6 +105,9 @@ public:
    * @brief Identifies an unrepresentable kernel radius, width or consumed spacing.
    */
   static constexpr int32 k_KernelRadiusRepresentation = -86165;
+  static constexpr int32 k_InvalidImageSpacing = -86224;
+  static constexpr int32 k_KernelWidthTooLarge = -86225;
+  static constexpr int32 k_KernelContainerTooLarge = -86226;
   /**
    * @brief Identifies overflow in the kernel element product.
    */

@@ -15,20 +15,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-using namespace nx::core;
-constexpr int32 k_RingCountDomain = -86161;
-Result<> ValidateNeighborhoodRingCount(int32 rings)
-{
-  if(rings < 1)
-  {
-    return MakeErrorResult(k_RingCountDomain, fmt::format("Neighborhood Ring Count value {} must be at least 1.", rings));
-  }
-  return {};
-}
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -69,7 +55,7 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Triangle Geometry", "The input Triangle Geometry to compute the curvature values", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1));
+  params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1, Int32Parameter::Bounds::AtLeast(1)));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputePrincipalDirection_Key, "Compute Principal Direction Vectors", "Compute the Principal Direction Vectors", true));
 
@@ -135,11 +121,6 @@ IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
 IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  if(auto validation = ValidateNeighborhoodRingCount(filterArgs.value<int32>(k_NeighborhoodRing_Key)); validation.invalid())
-  {
-    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
-  }
-
   auto triangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto surfaceMeshPrincipalCurvature1Path = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
   auto surfaceMeshFeatureFaceIdsPath = filterArgs.value<DataPath>(k_FeatureFaceIdsPath_Key);

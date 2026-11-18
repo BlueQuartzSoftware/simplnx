@@ -1,9 +1,11 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -11,6 +13,9 @@
 
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
+#include <cmath>
+#include <limits>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -138,10 +143,6 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: SIMPL Backwards Compatibility",
   }
 }
 
-#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
-#include <cmath>
-#include <limits>
-
 namespace
 {
 void CreateSamplingEdges(DataStructure& ds, bool squares = false)
@@ -183,14 +184,9 @@ void CreateSamplingEdges(DataStructure& ds, bool squares = false)
     edges[1] = 1;
   }
 }
-} // namespace
 
-TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[SimplnxCore][CreateAMScanPathsFilter][SpatialParameterDomains]")
+Arguments MakeSamplingArgs(const CreateAMScanPathsFilter& filter)
 {
-
-  DataStructure ds;
-  CreateSamplingEdges(ds, true);
-  CreateAMScanPathsFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, DataPath({"Edges"}));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Layers"}));
@@ -198,6 +194,16 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[S
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, DataPath({"Hatches"}));
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, 0.5F);
   args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, 0.0F);
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[SimplnxCore][CreateAMScanPathsFilter][SpatialParameterDomains]")
+{
+  DataStructure ds;
+  CreateSamplingEdges(ds, true);
+  CreateAMScanPathsFilter filter;
+  auto args = MakeSamplingArgs(filter);
   int32 expectedCode;
   std::string parameter;
   std::string actual;
@@ -207,7 +213,7 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[S
     CAPTURE(value);
     actual = fmt::format("{}", value);
     args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, value);
-    expectedCode = -86100;
+    expectedCode = std::isfinite(value) ? k_NumberBelowLowerBound : k_NumberNotFinite;
     parameter = "Hatch Spacing";
   }
   SECTION("Hatch Rotation Angle")
@@ -216,8 +222,8 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[S
     CAPTURE(value);
     actual = fmt::format("{}", value);
     args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, value);
-    expectedCode = -86101;
-    parameter = "Hatch Rotation Angle";
+    expectedCode = k_NumberNotFinite;
+    parameter = "Hatch Rotation Angle (Degrees)";
   }
 
   auto result = filter.preflight(ds, args);
@@ -230,17 +236,10 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Spatial parameter domains", "[S
 
 TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Finite hatch controls", "[SimplnxCore][CreateAMScanPathsFilter][SpatialSamplingControls]")
 {
-
   DataStructure ds;
   CreateSamplingEdges(ds, true);
   CreateAMScanPathsFilter filter;
-  auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, DataPath({"Edges"}));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Layers"}));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, DataPath({"Edges", "Edge Data", "Regions"}));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, DataPath({"Hatches"}));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, 0.5F);
-  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, 0.0F);
+  auto args = MakeSamplingArgs(filter);
   const auto angle = GENERATE(0.0F, -90.0F);
   args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, angle);
   auto result = filter.execute(ds, args);
@@ -271,4 +270,70 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Finite hatch controls", "[Simpl
     }
   }
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Tiny hatch spacing stops execution", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  constexpr float32 k_MinY = 1000.0F;
+  const auto row = GENERATE(0, 1, 2);
+  const float32 spacing = row == 2 ? 1e-4F : 1e-5F;
+  const float32 height = row == 0 ? 1.0F : row == 1 ? 16.0F : 200.0F;
+  CHECK((k_MinY + spacing == k_MinY) == (row < 2));
+
+  DataStructure ds;
+  CreateSamplingEdges(ds, true);
+  const DataPath inputPath({"Edges"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(inputPath));
+  auto& vertices = ds.getDataRefAs<EdgeGeom>(inputPath).getVerticesRef();
+  for(usize vertex = 0; vertex < vertices.getNumberOfTuples(); ++vertex)
+  {
+    const usize yIndex = 3 * vertex + 1;
+    vertices[yIndex] = k_MinY + height * vertices[yIndex];
+  }
+
+  CreateAMScanPathsFilter filter;
+  auto args = MakeSamplingArgs(filter);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, spacing);
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == (row == 0 ? -86227 : -86210));
+  CHECK(result.result.errors()[0].message.find("Increase Hatch Spacing") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Rounded hatch count is within the line limit", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  constexpr float32 k_HatchSpacing = 9e-5F;
+  constexpr float32 k_MinY = 1024.0F;
+  constexpr float32 k_MaxY = 1129.0F;
+  // All coordinates are in the same float32 exponent range. The original
+  // recurrence advances one float32 step, even though the requested step is smaller.
+  constexpr float64 k_RoundedStep = 1.0 / 8192.0;
+  REQUIRE((k_MaxY - k_MinY) / k_RoundedStep < 1'000'000);
+  REQUIRE((k_MaxY - k_MinY) / k_HatchSpacing > 1'000'000);
+
+  DataStructure ds;
+  CreateSamplingEdges(ds);
+  const DataPath inputPath({"Edges"});
+  for(const auto& name : {"Layers", "Regions"})
+  {
+    auto action = CreateArrayAction(DataType::int32, {1}, {1}, inputPath.createChildPath("Edge Data").createChildPath(name)).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(action);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(inputPath));
+  auto& vertices = ds.getDataRefAs<EdgeGeom>(inputPath).getVerticesRef();
+  vertices[1] = k_MinY;
+  vertices[4] = k_MaxY;
+
+  CreateAMScanPathsFilter filter;
+  auto args = MakeSamplingArgs(filter);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, k_HatchSpacing);
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* hatches = ds.getDataAs<EdgeGeom>(DataPath({"Hatches"}));
+  REQUIRE(hatches != nullptr);
+  // One isolated edge gives one intersection. It gives no hatch segment.
+  CHECK(hatches->getNumberOfEdges() == 0);
 }

@@ -18,7 +18,6 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
-#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -33,17 +32,21 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::int32 k_ExactDimensionsDomain = -86153;
 constexpr nx::core::int32 k_AxisConversionRepresentation = -86137;
-constexpr nx::core::int32 k_PreparedGeometryRepresentation = -86136;
+constexpr nx::core::int32 k_InvalidPreparedSpacing = -86136;
+constexpr nx::core::int32 k_InvalidPreparedOrigin = -86228;
+constexpr nx::core::int32 k_PreparedCellCountTooLarge = -86229;
+constexpr nx::core::int32 k_PreparedRowCountTooLarge = -86230;
+constexpr nx::core::int32 k_PreparedArrayRowCountTooLarge = -86231;
+constexpr nx::core::int32 k_PreparedArrayValueCountTooLarge = -86232;
+constexpr nx::core::int32 k_PreparedArrayByteCountTooLarge = -86233;
+constexpr nx::core::int32 k_PreparedAxisTooLarge = -86234;
 constexpr nx::core::int32 k_ProvisionalProductWarning = -86131;
 constexpr nx::core::int32 k_ProvisionalDimensionWarning = -86130;
 constexpr nx::core::int32 k_ProvisionalSpacingWarning = -86129;
 constexpr nx::core::int32 k_TupleProductRepresentation = -86128;
 constexpr nx::core::int32 k_DimensionRepresentation = -86127;
 constexpr nx::core::int32 k_DerivedSpacingRepresentation = -86126;
-constexpr nx::core::int32 k_ScalingFinite = -86114;
-constexpr nx::core::int32 k_SpacingPositiveFinite = -86113;
 
 const std::string k_TempGeometryName = ".resampled_image_geometry";
 constexpr ChoicesParameter::ValueType k_SpacingModeIndex = 0;
@@ -219,34 +222,6 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-Result<> nx::core::ValidateResamplingParameters(const ResampleImageGeomInputValues& inputValues)
-{
-  if(inputValues.ResamplingMode == k_ExactDimensionsModeIndex)
-  {
-    return ConvertResult(GeometryUtilities::ValidateImageDimensions(inputValues.ExactDimensions, "Exact Dimensions", k_ExactDimensionsDomain));
-  }
-  const bool scaling = inputValues.ResamplingMode == k_ScalingModeIndex;
-  const auto& values = scaling ? inputValues.Scaling : inputValues.Spacing;
-  const std::string name = scaling ? "Scaling Factor" : "Spacing";
-  for(usize axis = 0; axis < 3; ++axis)
-  {
-    const float32 value = values[axis];
-    if(!std::isfinite(value))
-    {
-      return MakeErrorResult(scaling ? k_ScalingFinite : k_SpacingPositiveFinite, fmt::format("{} {} value {} must be finite and greater than 0.", name, "XYZ"[axis], value));
-    }
-    if(value < 0 || (scaling && value == 0))
-    {
-      return MakeErrorResult(scaling ? -11500 : -11502, fmt::format("{} {} value {} must be greater than 0.", name, "XYZ"[axis], value));
-    }
-    if(value == 0)
-    {
-      return MakeErrorResult(k_SpacingPositiveFinite, fmt::format("Spacing {} value {} must be greater than 0.", "XYZ"[axis], value));
-    }
-  }
-  return {};
-}
-
 // -----------------------------------------------------------------------------
 Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGeom& source, const ResampleImageGeomInputValues& inputValues)
 {
@@ -272,22 +247,21 @@ Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGe
     }
     if(inputValues.ResamplingMode != k_SpacingModeIndex && (!std::isfinite(spacing) || spacing <= 0))
     {
-      return MakeErrorResult<ResampledImageLayout>(
-          k_DerivedSpacingRepresentation,
-          fmt::format("Image Geometry '{}' derived Spacing {} result {} must be finite and positive. Source spacing={}, source dimension={}, Scaling Factor={}, Exact Dimensions={}.",
-                      inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], spacing, sourceSpacing[axis], sourceDimensions[axis],
-                      inputValues.ResamplingMode == k_ScalingModeIndex ? inputValues.Scaling[axis] : 100.0F,
-                      inputValues.ResamplingMode == k_ExactDimensionsModeIndex ? inputValues.ExactDimensions[axis] : uint64{0}));
+      return MakeErrorResult<ResampledImageLayout>(k_DerivedSpacingRepresentation,
+                                                   fmt::format("Image Geometry '{}' has invalid New Spacing on the {} axis ({}). The input spacing is {} and the input dimension is {}. Check Scale "
+                                                               "Factor (percentages) ({}) or Exact Dimensions (pixels) ({}).",
+                                                               inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], spacing, sourceSpacing[axis], sourceDimensions[axis],
+                                                               inputValues.ResamplingMode == k_ScalingModeIndex ? inputValues.Scaling[axis] : 100.0F,
+                                                               inputValues.ResamplingMode == k_ExactDimensionsModeIndex ? inputValues.ExactDimensions[axis] : uint64{0}));
     }
     layout.Spacing[axis] = spacing;
     const float32 quotient = (sourceSpacing[axis] * static_cast<float32>(sourceDimensions[axis])) / spacing;
     if(!std::isfinite(quotient) || quotient < 0 || static_cast<float64>(quotient) >= exclusiveBound)
     {
-      return MakeErrorResult<ResampledImageLayout>(
-          k_DimensionRepresentation,
-          fmt::format(
-              "Image Geometry '{}' dimension conversion {} quotient {} must be finite, nonnegative and below the exclusive bound {}. Source dimension={}, source spacing={}, derived Spacing={}.",
-              inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], quotient, exclusiveBound, sourceDimensions[axis], sourceSpacing[axis], spacing));
+      return MakeErrorResult<ResampledImageLayout>(k_DimensionRepresentation, fmt::format("Image Geometry '{}' cannot use the calculated cell count on the {} axis ({}). The count must be between 0 "
+                                                                                          "and {} (exclusive). The input dimension is {}, the input spacing is {} and New Spacing is {}.",
+                                                                                          inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], quotient, exclusiveBound,
+                                                                                          sourceDimensions[axis], sourceSpacing[axis], spacing));
     }
     layout.Dimensions[axis] = std::max<usize>(1, static_cast<usize>(quotient));
   }
@@ -295,7 +269,7 @@ Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGe
   {
     if(layout.Dimensions[axis] > std::numeric_limits<usize>::max() / product)
     {
-      return MakeErrorResult<ResampledImageLayout>(k_TupleProductRepresentation, fmt::format("Image Geometry '{}' resampled tuple product cannot fit usize: {}.",
+      return MakeErrorResult<ResampledImageLayout>(k_TupleProductRepresentation, fmt::format("Image Geometry '{}' would have too many cells after resampling: {}.",
                                                                                              inputValues.SelectedImageGeometryPath.toString(), StringUtilities::formatDimensions3D(layout.Dimensions)));
     }
     product *= layout.Dimensions[axis];
@@ -334,7 +308,9 @@ Result<std::vector<usize>> ResampleImageGeom::ComputeAxisSourceIndices(usize des
 }
 
 // -----------------------------------------------------------------------------
-Result<> ResampleImageGeom::ValidatePreparedGeometry(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues)
+namespace
+{
+Result<> ValidatePreparedGeometry(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues)
 {
   for(const auto& path : {inputValues.SelectedImageGeometryPath, inputValues.CreatedImageGeometryPath})
   {
@@ -345,10 +321,15 @@ Result<> ResampleImageGeom::ValidatePreparedGeometry(const DataStructure& dataSt
     usize tuples = 1;
     for(usize axis = 0; axis < 3; ++axis)
     {
-      if(!std::isfinite(spacing[axis]) || spacing[axis] <= 0 || !std::isfinite(origin[axis]))
+      if(!std::isfinite(spacing[axis]) || spacing[axis] <= 0)
       {
-        return MakeErrorResult(k_PreparedGeometryRepresentation, fmt::format("Prepared Image Geometry '{}' {} metadata requires finite origin and positive finite spacing. Origin={}, Spacing={}.",
-                                                                             path.toString(), "XYZ"[axis], origin[axis], spacing[axis]));
+        return MakeErrorResult(k_InvalidPreparedSpacing,
+                               fmt::format("Image Geometry '{}' has invalid spacing on the {} axis ({}). Use a geometry with finite, positive spacing.", path.toString(), "XYZ"[axis], spacing[axis]));
+      }
+      if(!std::isfinite(origin[axis]))
+      {
+        return MakeErrorResult(k_InvalidPreparedOrigin,
+                               fmt::format("Image Geometry '{}' has an invalid origin on the {} axis ({}). Use a geometry with a finite origin.", path.toString(), "XYZ"[axis], origin[axis]));
       }
     }
     if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0)
@@ -361,21 +342,22 @@ Result<> ResampleImageGeom::ValidatePreparedGeometry(const DataStructure& dataSt
       {
         if(dimensions[axis] > std::numeric_limits<usize>::max() / tuples)
         {
-          return MakeErrorResult(k_PreparedGeometryRepresentation,
-                                 fmt::format("Prepared Image Geometry '{}' tuple product overflows: {}.", path.toString(), StringUtilities::formatDimensions3D(dimensions)));
+          return MakeErrorResult(k_PreparedCellCountTooLarge,
+                                 fmt::format("Image Geometry '{}' has too many cells ({}). Reduce the dimensions.", path.toString(), StringUtilities::formatDimensions3D(dimensions)));
         }
         tuples *= dimensions[axis];
       }
     }
     if(dimensions[2] != 0 && dimensions[1] > std::numeric_limits<usize>::max() / dimensions[2])
     {
-      return MakeErrorResult(k_PreparedGeometryRepresentation, fmt::format("Prepared Image Geometry '{}' row count overflows: Y={}, Z={}.", path.toString(), dimensions[1], dimensions[2]));
+      return MakeErrorResult(k_PreparedRowCountTooLarge, fmt::format("Image Geometry '{}' has too many rows (Y={}, Z={}). Reduce the dimensions.", path.toString(), dimensions[1], dimensions[2]));
     }
     const usize rows = dimensions[1] * dimensions[2];
     if(path == inputValues.CreatedImageGeometryPath && rows != 0 && geometry.getCellDataRef().getSize() > std::numeric_limits<usize>::max() / rows)
     {
-      return MakeErrorResult(k_PreparedGeometryRepresentation,
-                             fmt::format("Prepared Image Geometry '{}' progress row count overflows: arrays={}, rows={}.", path.toString(), geometry.getCellDataRef().getSize(), rows));
+      return MakeErrorResult(k_PreparedArrayRowCountTooLarge,
+                             fmt::format("Image Geometry '{}' has too many rows to copy ({} arrays, {} rows per array). Reduce the dimensions or the number of arrays.", path.toString(),
+                                         geometry.getCellDataRef().getSize(), rows));
     }
     for(const auto& [identifier, object] : geometry.getCellDataRef())
     {
@@ -383,23 +365,30 @@ Result<> ResampleImageGeom::ValidatePreparedGeometry(const DataStructure& dataSt
       const usize components = array.getNumberOfComponents();
       const usize elementBytes = GetDataTypeSize(array.getDataType());
       const usize maximum = std::numeric_limits<usize>::max();
-      if((components != 0 && (tuples > maximum / components || dimensions[0] > maximum / components)) ||
-         (components != 0 && (tuples * components > maximum / elementBytes || dimensions[0] * components > maximum / elementBytes)))
+      if(components != 0 && (tuples > maximum / components || dimensions[0] > maximum / components))
       {
-        return MakeErrorResult(k_PreparedGeometryRepresentation,
-                               fmt::format("Prepared Image Geometry '{}' array '{}' row/value/byte size overflows: tuples={}, row={}, components={}, element bytes={}.", path.toString(),
-                                           array.getName(), tuples, dimensions[0], components, elementBytes));
+        return MakeErrorResult(k_PreparedArrayValueCountTooLarge,
+                               fmt::format("Array '{}' in Image Geometry '{}' has too many values ({} cells, {} cells per row, {} components per cell). Reduce the dimensions.", array.getName(),
+                                           path.toString(), tuples, dimensions[0], components));
+      }
+      if(tuples * components > maximum / elementBytes || dimensions[0] * components > maximum / elementBytes)
+      {
+        return MakeErrorResult(k_PreparedArrayByteCountTooLarge,
+                               fmt::format("Array '{}' in Image Geometry '{}' is too large ({} cells, {} cells per row, {} components per cell, {} bytes per value). Reduce the dimensions.",
+                                           array.getName(), path.toString(), tuples, dimensions[0], components, elementBytes));
       }
     }
     if(path == inputValues.CreatedImageGeometryPath &&
        (dimensions[0] > std::vector<usize>{}.max_size() || dimensions[1] > std::vector<usize>{}.max_size() || dimensions[2] > std::vector<usize>{}.max_size()))
     {
-      return MakeErrorResult(k_PreparedGeometryRepresentation, fmt::format("Prepared Image Geometry '{}' axis-map container size exceeds {}: {}.", path.toString(), std::vector<usize>{}.max_size(),
-                                                                           StringUtilities::formatDimensions3D(dimensions)));
+      return MakeErrorResult(k_PreparedAxisTooLarge, fmt::format("Image Geometry '{}' has too many cells on one axis ({}). The maximum per axis is {}. Reduce the dimensions.", path.toString(),
+                                                                 StringUtilities::formatDimensions3D(dimensions), std::vector<usize>{}.max_size()));
     }
   }
   return {};
 }
+
+} // namespace
 
 IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues)
 {
@@ -420,8 +409,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     const int32 warningCode = error.code == k_DerivedSpacingRepresentation ? k_ProvisionalSpacingWarning :
                               error.code == k_DimensionRepresentation      ? k_ProvisionalDimensionWarning :
                                                                              k_ProvisionalProductWarning;
-    resultOutputActions.warnings().push_back(
-        {warningCode, fmt::format("{} Preflight uses stand-in dimensions X=1, Y=1, Z=1 and unit spacing. Execution recomputes the layout from final geometry metadata.", error.message)});
+    resultOutputActions.warnings().push_back({warningCode, fmt::format("{} The preview uses one cell per axis. The filter calculates the final dimensions and spacing when it runs.", error.message)});
   }
   else
   {

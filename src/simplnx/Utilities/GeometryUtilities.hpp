@@ -24,14 +24,14 @@ inline constexpr int32 k_PaddedExtentOverflowError = -86025;
 inline constexpr int32 k_PaddedTupleOverflowError = -86026;
 
 /**
- * @brief Checks positive Image Geometry dimensions and their tuple product during preflight.
+ * @brief Checks the total number of cells requested for an Image Geometry.
  * @param dimensions Gives requested XYZ counts.
  * @param name Identifies the active parameter in diagnostics.
- * @param code Identifies dimension or product errors for the caller.
- * @pre dimensions has three components.
- * @return Representable XYZ dimensions, or an error with the rejected axis or tuple product.
+ * @param code Identifies a product error for the caller.
+ * @pre dimensions has three positive components.
+ * @return XYZ dimensions or an error if the total is too large.
  */
-SIMPLNX_EXPORT Result<SizeVec3> ValidateImageDimensions(nonstd::span<const uint64> dimensions, std::string_view name, int32 code);
+SIMPLNX_EXPORT Result<SizeVec3> ValidateImageDimensionProduct(nonstd::span<const uint64> dimensions, std::string_view name, int32 code);
 
 /**
  * @brief Rejects nonfinite vector components.

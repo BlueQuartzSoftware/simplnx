@@ -24,30 +24,22 @@ using namespace nx::core;
 
 namespace
 {
-constexpr std::array<int32, 3> k_ZeroDimensions = {-86156, -86157, -86158};
-constexpr std::array<int32, 3> k_NegativeDimensions = {-7362, -7363, -7364};
 constexpr int32 k_DimensionProduct = -86174;
 /**
- * @brief Checks requested positive dimensions and their product before output actions.
+ * @brief Checks the total number of output cells.
  * @param dimensions Gives signed XYZ counts.
  * @pre dimensions has three components.
- * @return A dimension or tuple-product error, otherwise success.
+ * @return An error if the total is too large.
  */
-Result<> ValidateResampleDimensions(nonstd::span<const int32> dimensions)
+Result<> ValidateResampleDimensionProduct(nonstd::span<const int32> dimensions)
 {
   usize product = 1;
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(dimensions[axis] <= 0)
-    {
-      return MakeErrorResult(dimensions[axis] < 0 ? k_NegativeDimensions[axis] : k_ZeroDimensions[axis], fmt::format("Dimensions {} value {} must be at least 1.", "XYZ"[axis], dimensions[axis]));
-    }
-  }
-  for(usize axis = 0; axis < 3; ++axis)
-  {
     if(static_cast<usize>(dimensions[axis]) > std::numeric_limits<usize>::max() / product)
     {
-      return MakeErrorResult(k_DimensionProduct, fmt::format("Dimensions tuple product cannot fit usize: X={}, Y={}, Z={}.", dimensions[0], dimensions[1], dimensions[2]));
+      return MakeErrorResult(k_DimensionProduct,
+                             fmt::format("Dimensions (Voxels) (X={}, Y={}, Z={}) would create too many cells. Reduce one or more values.", dimensions[0], dimensions[1], dimensions[2]));
     }
     product *= static_cast<usize>(dimensions[axis]);
   }
@@ -101,7 +93,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
       MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
-                                                       std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
+                                                       std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}, VectorInt32Parameter::Bounds::AtLeast(1)));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "Path to the created Image Geometry", DataPath({"Image Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageGeomCellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data Attribute Matrix created with the Image Geometry",
                                                           ImageGeom::k_CellAttributeMatrixName));
@@ -146,7 +138,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     return {MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  if(auto validation = ValidateResampleDimensions(pDimensionsValue); validation.invalid())
+  if(auto validation = ValidateResampleDimensionProduct(pDimensionsValue); validation.invalid())
   {
     return {ConvertInvalidResult<OutputActions>(std::move(validation))};
   }

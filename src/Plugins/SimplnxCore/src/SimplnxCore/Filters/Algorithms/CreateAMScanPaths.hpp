@@ -45,7 +45,7 @@ public:
   /**
    * @brief Generates hatch paths from closed slice edges.
    * @pre Hatch Spacing is finite and positive; consumed rotation radians are finite.
-   * @return Output resize errors or success.
+   * @return Success, a hatch-line limit error, or an output resize error.
    */
   Result<> operator()();
 

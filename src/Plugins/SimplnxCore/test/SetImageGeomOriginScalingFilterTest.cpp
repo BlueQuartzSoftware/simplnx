@@ -258,7 +258,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Parameter domain regression",
   args.insertOrAssign(SetImageGeomOriginScalingFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  CHECK(result.outputActions.errors()[0].code == (row == 0 ? -86011 : -86012));
+  CHECK(result.outputActions.errors()[0].code == (row == 0 ? -86011 : k_NumberNotFinite));
 }
 TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", "[SimplnxCore][SetImageGeomOriginScalingFilter][NumericDomainRed]")
 {

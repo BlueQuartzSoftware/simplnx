@@ -7,6 +7,7 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <cmath>
+#include <limits>
 
 using namespace nx::core;
 

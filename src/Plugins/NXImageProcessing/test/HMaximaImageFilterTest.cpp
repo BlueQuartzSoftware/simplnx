@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/HMaximaImageFilter.hpp"
 
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -15,7 +16,6 @@ namespace rt = recon_test;
 namespace
 {
 // Filter-local error codes for the Height guards (kept in sync with HMaximaImageFilter.cpp).
-constexpr int32 k_NonFiniteHeight = -8551;
 constexpr int32 k_NegativeHeight = -8554;
 } // namespace
 
@@ -198,14 +198,14 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: Preflight non-finite Height gu
   {
     auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
     REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
 
   SECTION("Inf Height is rejected")
   {
     auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
     REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
 
   SECTION("Negative Height is rejected")

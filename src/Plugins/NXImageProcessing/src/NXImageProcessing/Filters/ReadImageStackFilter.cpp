@@ -22,11 +22,13 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <array>
 #include <cmath>
 #include <filesystem>
 
@@ -46,47 +48,7 @@ const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
-constexpr int32 k_MinimumScalingError = -23508;
-
-/**
- * @brief Checks active stack resampling parameters before file metadata or output actions.
- * @param mode Selects native, scaling or exact dimensions.
- * @param scaling Gives the active scaling percentage.
- * @param exactXYDimensions Gives requested X/Y pixel counts when Exact Dimensions is active.
- * @pre mode is supported; exactXYDimensions has two components when Exact Dimensions is active.
- * @return The first active parameter error, with the stack UI parameter context.
- */
-Result<> ValidateStackResamplingParameters(usize mode, float32 scaling, nonstd::span<const nx::core::uint64> exactXYDimensions)
-{
-  if(mode == k_NoResampleModeIndex)
-  {
-    return {};
-  }
-  ResampleImageGeomInputValues input{};
-  input.ResamplingMode = mode;
-  if(mode == k_ScalingModeIndex)
-  {
-    if(std::isfinite(scaling) && scaling < 1.0F)
-    {
-      return MakeErrorResult(k_MinimumScalingError, fmt::format("Scaling (%) value {} must be greater than or equal to 1.", scaling));
-    }
-    input.Scaling = {scaling, scaling, 100.0F};
-  }
-  else
-  {
-    input.ExactDimensions = {exactXYDimensions[0], exactXYDimensions[1], 1};
-  }
-  auto result = ValidateResamplingParameters(input);
-  if(result.invalid())
-  {
-    const std::string parameterName = mode == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
-    for(auto& error : result.errors())
-    {
-      error.message = fmt::format("{}: {}", parameterName, error.message);
-    }
-  }
-  return result;
-}
+constexpr int32 k_ExactDimensionsProduct = -86175;
 
 // Walks the action list returned by a sub-filter's preflight and returns the first action of
 // the requested concrete type, or nullptr if none match. Replaces brittle index-based lookups
@@ -169,10 +131,10 @@ Parameters ReadImageStackFilter::parameters() const
       k_Scaling_Key, "Scaling (%)",
       "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
       "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
-      100.0f));
+      100.0f, Float32Parameter::Bounds::AtLeast(1.0F)));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
                                                         "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
-                                                        std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
+                                                        std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"}), VectorUInt64Parameter::Bounds::AtLeast(1)));
 
   params.insertSeparator(Parameters::Separator{"Other Slice Options"});
   params.insertLinkableParameter(
@@ -234,10 +196,14 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
   auto scalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
 
-  auto resamplingValidation = ValidateStackResamplingParameters(resampleImagesChoice, scalingValue, exactXYDims);
-  if(resamplingValidation.invalid())
+  if(resampleImagesChoice == k_ExactDimensionsModeIndex)
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(resamplingValidation))};
+    const std::array<uint64, 3> dimensions = {exactXYDims[0], exactXYDims[1], 1};
+    auto validation = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact 2D Dimensions (Pixels)", k_ExactDimensionsProduct);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
   }
 
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);

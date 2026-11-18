@@ -8,13 +8,20 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include <cmath>
+#include <limits>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -464,11 +471,6 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backward
   }
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingVertices(DataStructure& ds)
@@ -534,7 +536,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Spatial parame
   std::vector<float32> sigmas = {1, 1, 1};
   sigmas[axis] = value;
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, sigmas);
-  const int32 expectedCode = value == 1e-30F ? -86134 : value == 1e20F ? -86135 : -86108;
+  const int32 expectedCode = value == 1e-30F ? -86134 : value == 1e20F ? -86135 : k_NumberNotFinite;
   const std::string parameter = "Gaussian Sigmas";
 
   auto result = filter.preflight(ds, args);
@@ -544,7 +546,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Spatial parame
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
 
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(std::string(1, std::isfinite(value) ? "XYZ"[axis] : "xyz"[axis])) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian and inactive controls", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
@@ -597,7 +599,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian and i
     auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors()[0].code == (row == 0 ? -11000 : -1));
+    CHECK(result.outputActions.errors()[0].code == (row == 0 ? k_NumberBelowLowerBound : -1));
     if(row == 1)
     {
       CHECK(filter.parameters().at(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key)->humanName() == "Gaussian Sigmas");
@@ -724,20 +726,15 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Finite physica
   const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(value);
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{value, 0, 0});
-  const int32 expectedCode = -86163;
+  const int32 expectedCode = k_NumberNotFinite;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == expectedCode);
-  CHECK(result.outputActions.errors()[0].message.find("Kernel Size X") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("Kernel Size (x)") != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
 }
-
-#include "SimplnxCore/Filters/Algorithms/InterpolatePointCloudToRegularGrid.hpp"
-#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
-#include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
-#include <iostream>
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel layout arithmetic", "[SimplnxCore][GeometryCountControls]")
 {
@@ -759,17 +756,24 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel layout 
     expectedCode = -86165;
     context = "radius";
   }
+  SECTION("Invalid geometry spacing")
+  {
+    image->setSpacing({0, 1, 1});
+    input.kernelSize = {1, 1, 1};
+    expectedCode = -86224;
+    context = "invalid spacing";
+  }
   SECTION("Product overflow")
   {
     input.kernelSize = std::vector<float32>(3, std::ldexp(1.0F, 22));
     expectedCode = -86166;
-    context = "tuple product";
+    context = "too many kernel cells";
   }
   SECTION("Byte overflow")
   {
     input.kernelSize = {std::ldexp(1.0F, 31), std::ldexp(1.0F, 31), 0};
     expectedCode = -86167;
-    context = "byte count";
+    context = "too much memory";
   }
   SECTION("Valid large layout")
   {
@@ -838,7 +842,6 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel contain
   const usize count = (usize{1} << 61) + 3 * (usize{1} << 30) + 1;
   const usize limit = std::vector<float32>{}.max_size();
   const bool mustReject = count > limit;
-  std::cout << "Kernel container fixture count=" << count << ", max_size=" << limit << ", execution rejection gate=" << mustReject << "\n";
   DataStructure ds;
   auto* image = ImageGeom::Create(ds, "Image");
   REQUIRE(image != nullptr);
@@ -852,8 +855,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel contain
   if(mustReject)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == -86167);
-    CHECK(result.errors()[0].message.find("container size") != std::string::npos);
+    CHECK(result.errors()[0].code == -86226);
+    CHECK(result.errors()[0].message.find("kernel cells") != std::string::npos);
     DataStructure executionDs;
     auto args = CreateCountInterpolationFixture(executionDs);
     args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, input.kernelSize);
@@ -864,7 +867,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel contain
     CHECK(preflight.outputActions.warnings()[0].code == -86170);
     auto executed = filter.execute(executionDs, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executed.result);
-    CHECK(executed.result.errors()[0].code == -86167);
+    CHECK(executed.result.errors()[0].code == -86226);
   }
   else
   {
@@ -897,7 +900,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel paramet
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == (length ? -1 : -11000));
+  CHECK(result.outputActions.errors()[0].code == (length ? -1 : k_NumberBelowLowerBound));
   if(length)
   {
     CHECK(filter.parameters().at(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key)->humanName() == "Kernel Size");

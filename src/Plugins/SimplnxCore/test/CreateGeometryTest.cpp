@@ -18,6 +18,8 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
@@ -3190,7 +3192,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Numeric domain regression", "[Simp
   args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86008 : -86007));
+  REQUIRE(result.outputActions.errors()[0].code == (row >= 2 ? k_NumberNotFinite : k_NumberBelowLowerBound));
   CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Y" : "X") != std::string::npos);
 }
@@ -3206,7 +3208,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[Sim
   args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::infinity(), 0, 0});
   auto pre = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
-  CHECK(pre.outputActions.errors()[0].code == -86008);
+  CHECK(pre.outputActions.errors()[0].code == k_NumberNotFinite);
   CHECK(pre.outputActions.errors()[0].message.find("Origin") != std::string::npos);
   CHECK(pre.outputActions.errors()[0].message.find("X") != std::string::npos);
 }
@@ -3244,7 +3246,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Positive creation dimensions", "[S
   std::vector<uint64> dims = {1, 1, 1};
   dims[axis] = 0;
   args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, dims);
-  const int32 expectedCode = -86154;
+  const int32 expectedCode = k_NumberBelowLowerBound;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -3252,11 +3254,9 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Positive creation dimensions", "[S
   CHECK(result.outputActions.errors()[0].code == expectedCode);
   CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
   CHECK(result.outputActions.errors()[0].message.find("Dimensions") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("value 0") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("value is 0") != std::string::npos);
 }
 
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include <limits>
 TEST_CASE("SimplnxCore::CreateGeometryFilter: Creation count boundaries", "[SimplnxCore][GeometryCountControls]")
 {
 
@@ -3283,7 +3283,6 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Creation count boundaries", "[Simp
   }
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image dimensions", "[SimplnxCore][GeometryCountControls]")
 {
 

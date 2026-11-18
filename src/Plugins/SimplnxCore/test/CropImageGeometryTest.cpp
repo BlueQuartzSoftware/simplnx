@@ -15,6 +15,7 @@
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -1448,7 +1449,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Reject NaN Physical Bounds", "[
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   const auto& errors = preflightResult.outputActions.errors();
-  REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == -50561; }));
+  REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == k_NumberNotFinite; }));
 }
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[SimplnxCore][CropImageGeometryFilter]")

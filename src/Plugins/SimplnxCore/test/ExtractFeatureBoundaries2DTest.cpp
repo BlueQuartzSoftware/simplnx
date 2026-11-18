@@ -7,13 +7,17 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <nonstd/span.hpp>
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <memory>
 
 namespace fs = std::filesystem;
@@ -326,10 +330,6 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple co
   }
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingImage(DataStructure& ds)
@@ -367,7 +367,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Spatial parameter doma
   const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(value);
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, value);
-  const int32 expectedCode = -86111;
+  const int32 expectedCode = k_NumberNotFinite;
   const std::string parameter = "Custom Z Value";
 
   auto result = filter.preflight(ds, args);

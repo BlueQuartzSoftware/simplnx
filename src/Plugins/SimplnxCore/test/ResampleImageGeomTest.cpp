@@ -27,8 +27,12 @@
 #include <any>
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -164,13 +168,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][R
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
     args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
-    errCode = -11502;
+    errCode = k_NumberBelowLowerBound;
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
     args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
-    errCode = -11500;
+    errCode = k_NumberBelowLowerBound;
   }
 
   // We do not need to test the "Exact Dimensions" resampling mode because the parameter type "VectorUInt64Parameter" automatically keeps the input values in range
@@ -781,10 +785,6 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include <limits>
-
 namespace
 {
 void CreateSamplingImage(DataStructure& ds)
@@ -813,7 +813,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Spatial parameter domains", "[S
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
   args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
   args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{std::numeric_limits<float32>::infinity(), 1, 1});
-  const int32 expectedCode = -86113;
+  const int32 expectedCode = k_NumberNotFinite;
   const std::string parameter = "Spacing";
 
   auto result = filter.preflight(ds, args);
@@ -821,11 +821,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Spatial parameter domains", "[S
   REQUIRE(result.outputActions.errors().size() == 1);
   CHECK(result.outputActions.errors()[0].code == expectedCode);
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("X value inf") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find("The value is inf") != std::string::npos);
 }
-
-#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
-#include <cmath>
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Parameter boundaries", "[SimplnxCore][ResampleImageGeomFilter][SpatialSamplingControls]")
 {
@@ -842,13 +839,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Parameter boundaries", "[Simpln
 
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
   CAPTURE(row);
-  int32 expectedCode = -86113;
+  int32 expectedCode = k_NumberBelowLowerBound;
   if(row < 3)
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{row == 0 ? 0.0F : row == 1 ? std::numeric_limits<float32>::quiet_NaN() : -1.0F, 1, 1});
-    if(row == 2)
+    if(row == 1)
     {
-      expectedCode = -11502;
+      expectedCode = k_NumberNotFinite;
     }
   }
   else if(row < 6)
@@ -858,7 +855,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Parameter boundaries", "[Simpln
                                                                                      row == 4 ? std::numeric_limits<float32>::infinity() :
                                                                                                 0.0F,
                                                                                      100, 100});
-    expectedCode = row == 5 ? -11500 : -86114;
+    expectedCode = row == 5 ? k_NumberBelowLowerBound : k_NumberNotFinite;
   }
   else
   {
@@ -886,7 +883,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Parameter boundaries", "[Simpln
   const auto& message = result.outputActions.errors()[0].message;
   if(row < 6)
   {
-    CHECK(message.find(row >= 3 ? "Scaling Factor" : "Spacing") != std::string::npos);
+    CHECK(message.find(row >= 3 ? "Scale Factor (percentages)" : "New Spacing") != std::string::npos);
     CHECK(message.find("X") != std::string::npos);
   }
 }
@@ -963,7 +960,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Derived spacing warnings", "[Si
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.warnings().size() == 1);
   CHECK(preflight.outputActions.warnings()[0].code == -86129);
-  CHECK(preflight.outputActions.warnings()[0].message.find("stand-in") != std::string::npos);
+  CHECK(preflight.outputActions.warnings()[0].message.find("The preview uses one cell per axis") != std::string::npos);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
@@ -1068,7 +1065,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Exact dimension domains", "[Sim
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::vector<uint64>{uint64{1} << 63, 2, 1});
   }
-  const int32 expectedCode = -86153;
+  const int32 expectedCode = component.empty() ? -86153 : k_NumberBelowLowerBound;
 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -1079,11 +1076,11 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Exact dimension domains", "[Sim
   if(!component.empty())
   {
     CHECK(diagnostic.find(component) != std::string::npos);
-    CHECK(diagnostic.find("value 0") != std::string::npos);
+    CHECK(diagnostic.find("value is 0") != std::string::npos);
   }
   else
   {
-    CHECK(diagnostic.find("product") != std::string::npos);
+    CHECK(diagnostic.find("too many cells") != std::string::npos);
   }
 }
 

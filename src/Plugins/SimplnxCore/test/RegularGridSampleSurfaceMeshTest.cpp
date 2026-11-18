@@ -152,7 +152,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive o
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -11802);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == (std::isfinite(invalidSpacing) ? k_NumberBelowLowerBound : k_NumberNotFinite));
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject Face Labels outside Face Attribute Matrix", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
@@ -798,7 +798,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Spatial parameter do
   std::vector<float32> values = {0, 0, 0};
   values[axis] = value;
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, values);
-  expectedCode = -86112;
+  expectedCode = k_NumberNotFinite;
   parameter = "Origin";
 
   auto result = filter.preflight(ds, args);
@@ -808,7 +808,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Spatial parameter do
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
 
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(std::string(1, "XYZ"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("({})", "xyz"[axis])) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Sampling boundary controls", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][SpatialSamplingControls]")

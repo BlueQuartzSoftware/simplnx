@@ -3,6 +3,7 @@
 #include "UnaryFilterTestUtils.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/MaskEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -230,7 +231,7 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value r
     buildInt8(ds, 1);
     auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
     REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8102);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
   SECTION("Fractional Outside Value -> truncation warning, still valid")
   {

@@ -16,6 +16,8 @@
 #include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
 #include <array>
 
 namespace fs = std::filesystem;
@@ -297,9 +299,6 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: SIMPL Backwards Compa
   }
 }
 
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
-
 namespace
 {
 void CreateCountRectGrid(DataStructure& ds)
@@ -344,11 +343,11 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Requested dimension d
   {
     const auto axis = GENERATE(0, 1, 2);
     CAPTURE(axis);
-    component = std::string(1, "XYZ"[axis]);
+    component = std::string(1, "xyz"[axis]);
     std::vector<int32> dims = {1, 1, 1};
     dims[axis] = 0;
     args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, dims);
-    expectedCode = -86156 - axis;
+    expectedCode = k_NumberBelowLowerBound;
   }
   SECTION("Product overflow")
   {
@@ -365,11 +364,11 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Requested dimension d
   if(!component.empty())
   {
     CHECK(diagnostic.find(component) != std::string::npos);
-    CHECK(diagnostic.find("value 0") != std::string::npos);
+    CHECK(diagnostic.find("value is 0") != std::string::npos);
   }
   else
   {
-    CHECK(diagnostic.find("product") != std::string::npos);
+    CHECK(diagnostic.find("too many cells") != std::string::npos);
   }
 }
 
@@ -389,7 +388,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Rectilinear count bou
     args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, dims);
     auto result = filter.preflight(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    CHECK(result.outputActions.errors()[0].code == -7362 - axis);
+    CHECK(result.outputActions.errors()[0].code == k_NumberBelowLowerBound);
   }
   SECTION("Active vector length")
   {

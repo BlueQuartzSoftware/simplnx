@@ -32,9 +32,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_DimensionsDomain = -86154;
-constexpr int32 k_SpacingDomain = -86007;
-constexpr int32 k_OriginDomain = -86008;
+constexpr int32 k_DimensionsProduct = -86154;
 } // namespace
 
 namespace nx::core
@@ -85,11 +83,11 @@ Parameters CreateGeometryFilter::parameters() const
                                                    to_underlying(ArrayHandlingType::Move), ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
 
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
-                                                        std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+                                                        std::vector<std::string>{"X"s, "Y"s, "Z"s}, VectorUInt64Parameter::Bounds::AtLeast(1)));
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                         std::vector<std::string>{"X"s, "Y"s, "Z"s}, VectorFloat32Parameter::Bounds::Positive()));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -214,22 +212,11 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
     auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
     auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-    auto dimensionValidation = GeometryUtilities::ValidateImageDimensions(pDimensionsValue, "Dimensions", k_DimensionsDomain);
+    auto dimensionValidation = GeometryUtilities::ValidateImageDimensionProduct(pDimensionsValue, "Dimensions", k_DimensionsProduct);
     if(dimensionValidation.invalid())
     {
       return {ConvertInvalidResult<OutputActions>(std::move(dimensionValidation))};
     }
-    auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
-    if(spacingValidation.invalid())
-    {
-      return {ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
-    }
-    auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
-    if(originValidation.invalid())
-    {
-      return {ConvertInvalidResult<OutputActions>(std::move(originValidation))};
-    }
-
     std::stringstream ss;
     ss << "Extents:\n"
        << "X Extent: 0 to " << pDimensionsValue[0] - 1 << " (dimension: " << pDimensionsValue[0] << ")\n"

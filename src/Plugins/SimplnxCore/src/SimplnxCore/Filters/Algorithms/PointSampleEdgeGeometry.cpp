@@ -14,7 +14,11 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::int32 k_SampleSizeRepresentation = -86125;
+constexpr nx::core::int32 k_TotalSampleCountTooLarge = -86125;
+constexpr nx::core::int32 k_InvalidSampleCount = -86220;
+constexpr nx::core::int32 k_SampleIndexCountTooLarge = -86221;
+constexpr nx::core::int32 k_SampleValueCountTooLarge = -86222;
+constexpr nx::core::int32 k_SampleByteCountTooLarge = -86223;
 constexpr nx::core::int32 k_SampleCountRepresentation = -86124;
 
 template <typename T>
@@ -76,21 +80,18 @@ Result<std::tuple<float32, float32, float32, float32>> computeEdgeVector(const F
 Result<usize> ComputeCheckedSampleCount(float32 distance, float32 spacing)
 {
   const float32 quotient = distance / spacing;
-  const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
-  if(!std::isfinite(quotient) || quotient < 0 || static_cast<float64>(quotient) >= exclusiveBound)
+  if(!std::isfinite(quotient) || quotient < 0)
+  {
+    return MakeErrorResult<usize>(
+        k_InvalidSampleCount,
+        fmt::format("Sampling Spacing (mm) {} and edge length {} give an invalid sample count ({}). Check the edge length or increase Sampling Spacing (mm).", spacing, distance, quotient));
+  }
+  if(static_cast<float64>(quotient) >= std::numeric_limits<int32>::max())
   {
     return MakeErrorResult<usize>(k_SampleCountRepresentation,
-                                  fmt::format("Sampling Spacing (mm) {} and final edge length {} produce sample quotient {} outside the finite nonnegative conversion range [0, {}).", spacing,
-                                              distance, quotient, exclusiveBound));
+                                  fmt::format("Sampling Spacing (mm) {} and edge length {} give too many samples on one edge ({}). Increase Sampling Spacing (mm).", spacing, distance, quotient));
   }
-  const usize truncated = static_cast<usize>(quotient);
-  if(truncated >= static_cast<usize>(std::numeric_limits<int32>::max()))
-  {
-    return MakeErrorResult<usize>(k_SampleCountRepresentation,
-                                  fmt::format("Sampling Spacing (mm) {} and final edge length {} produce truncated sample quotient {}. The sample count after adding 1 must fit int32 limit {}.",
-                                              spacing, distance, truncated, std::numeric_limits<int32>::max()));
-  }
-  return {truncated + 1};
+  return {static_cast<usize>(quotient) + 1};
 }
 
 Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex, float32 samplingRes)
@@ -308,7 +309,8 @@ Result<usize> nx::core::detail::AddSampleCounts(usize total, usize increment)
 {
   if(increment > std::numeric_limits<usize>::max() - total)
   {
-    return MakeErrorResult<usize>(k_SampleSizeRepresentation, fmt::format("The aggregate sample count overflows usize: total={}, increment={}.", total, increment));
+    return MakeErrorResult<usize>(k_TotalSampleCountTooLarge,
+                                  fmt::format("The total sample count is too large ({} previous samples and {} on the next edge). Increase Sampling Spacing (mm).", total, increment));
   }
   return {total + increment};
 }
@@ -318,7 +320,7 @@ Result<> nx::core::detail::CheckSampleIndexCount(usize count)
 {
   if(count > static_cast<uint64>(std::numeric_limits<int64>::max()))
   {
-    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("The sample index count {} exceeds int64 limit {}.", count, std::numeric_limits<int64>::max()));
+    return MakeErrorResult(k_SampleIndexCountTooLarge, fmt::format("The sample index count {} exceeds the maximum of {}. Increase Sampling Spacing (mm).", count, std::numeric_limits<int64>::max()));
   }
   return {};
 }
@@ -328,12 +330,13 @@ Result<> nx::core::detail::CheckSampleArraySize(usize tuples, usize components, 
 {
   if(components != 0 && tuples > std::numeric_limits<usize>::max() / components)
   {
-    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("Array '{}' sample value count overflows usize: tuples={}, components={}.", arrayName, tuples, components));
+    return MakeErrorResult(k_SampleValueCountTooLarge,
+                           fmt::format("Array '{}' has too many sample values ({} samples with {} components each). Increase Sampling Spacing (mm).", arrayName, tuples, components));
   }
   const usize values = tuples * components;
   if(elementBytes != 0 && values > std::numeric_limits<usize>::max() / elementBytes)
   {
-    return MakeErrorResult(k_SampleSizeRepresentation, fmt::format("Array '{}' sample byte count overflows usize: values={}, element bytes={}.", arrayName, values, elementBytes));
+    return MakeErrorResult(k_SampleByteCountTooLarge, fmt::format("Array '{}' is too large ({} sample values at {} bytes each). Increase Sampling Spacing (mm).", arrayName, values, elementBytes));
   }
   return {};
 }

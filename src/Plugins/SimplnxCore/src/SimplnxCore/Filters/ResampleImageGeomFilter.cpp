@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -69,16 +70,16 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing",
                                                          "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
-                                                         std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                         std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}, VectorFloat32Parameter::Bounds::Positive()));
 
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Scaling_Key, "Scale Factor (percentages)",
                                                "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
                                                "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
-                                               std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
+                                               std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}, VectorFloat32Parameter::Bounds::Positive()));
 
   params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
-                                                        std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                        std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}, VectorUInt64Parameter::Bounds::AtLeast(1)));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
@@ -134,10 +135,14 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto validation = ValidateResamplingParameters(inputValues);
-  if(validation.invalid())
+  if(inputValues.ResamplingMode == k_ExactDimensionsModeIndex)
   {
-    return {ConvertResultTo<OutputActions>(std::move(validation), {})};
+    constexpr int32 k_ExactDimensionsProduct = -86153;
+    auto validation = GeometryUtilities::ValidateImageDimensionProduct(inputValues.ExactDimensions, "Exact Dimensions (pixels)", k_ExactDimensionsProduct);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
   }
   return PreflightImageGeometryResample(dataStructure, inputValues);
 }
