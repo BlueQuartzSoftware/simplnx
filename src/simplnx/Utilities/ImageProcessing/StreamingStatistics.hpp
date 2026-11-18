@@ -48,6 +48,24 @@ struct ArrayMinMax
   usize count = 0;
   T min{};
   T max{};
+
+  // Callers select the values that contribute to the range.
+  void addValue(T value) noexcept
+  {
+    min = count == 0 ? value : std::min(min, value);
+    max = count == 0 ? value : std::max(max, value);
+    ++count;
+  }
+
+  void merge(const ArrayMinMax& other) noexcept
+  {
+    if(other.count != 0)
+    {
+      min = count == 0 ? other.min : std::min(min, other.min);
+      max = count == 0 ? other.max : std::max(max, other.max);
+      count += other.count;
+    }
+  }
 };
 
 namespace detail

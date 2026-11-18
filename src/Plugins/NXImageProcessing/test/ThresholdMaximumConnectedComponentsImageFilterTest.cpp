@@ -21,7 +21,6 @@
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -31,6 +30,7 @@
 #include <catch2/catch.hpp>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -77,7 +77,6 @@ namespace
 struct ThresholdTestOptions
 {
   float64 UpperBoundary = std::numeric_limits<float64>::infinity();
-  bool WarnOnNonfinite = false;
   uint8 InsideValue = 1;
   uint8 OutsideValue = 0;
   uint32 MinimumSize = 0;
@@ -91,7 +90,6 @@ Arguments thresholdArguments(const DataPath& inputPath, const ThresholdTestOptio
   arguments.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   arguments.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   arguments.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(options.UpperBoundary));
-  arguments.insertOrAssign(TMCCFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(options.WarnOnNonfinite ? 1 : 0));
   arguments.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(options.InsideValue));
   arguments.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(options.OutsideValue));
   arguments.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(options.MinimumSize));
@@ -231,23 +229,14 @@ private:
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: nonfinite policy is explicit and defaults to Error",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: image samples do not require a policy parameter",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter][ThresholdSafeRed]")
 {
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   const Parameters parameters = filter.parameters();
   const std::string policyKey = "nonfinite_input_handling_index";
 
-  // One choice covers image NaN and both infinities, including the no-finite-pixels fallback.
-  // Inspect the public schema without passing nonfinite data to the baseline search.
-  REQUIRE(parameters.contains(policyKey));
-  const auto* policyPtr = dynamic_cast<const ChoicesParameter*>(parameters.at(policyKey).get());
-  REQUIRE(policyPtr != nullptr);
-  REQUIRE(policyPtr->humanName() == "Nonfinite Input Handling");
-  REQUIRE(policyPtr->choices() == ChoicesParameter::Choices{"Error", "Warn and Continue"});
-  REQUIRE(policyPtr->defaultIndex() == 0);
-  const Arguments defaultArguments = filter.getDefaultArguments();
-  REQUIRE(defaultArguments.value<ChoicesParameter::ValueType>(policyKey) == 0);
+  REQUIRE_FALSE(parameters.contains(policyKey));
 }
 // NOLINTEND(bugprone-chained-comparison)
 
@@ -397,16 +386,14 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: lo
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: NaN Upper Boundary is a hard parameter error in both image modes",
-          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: NaN Upper Boundary fails preflight", "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const bool warn = GENERATE(false, true);
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<uint64>(dataStructure, 2, 1, 1, {100, 102});
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto args = thresholdArguments(inputPath, {.UpperBoundary = std::numeric_limits<float64>::quiet_NaN(), .WarnOnNonfinite = warn});
+  const auto args = thresholdArguments(inputPath, {.UpperBoundary = std::numeric_limits<float64>::quiet_NaN()});
   const auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   REQUIRE(result.outputActions.errors().front().code == -28610);
@@ -420,13 +407,12 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Na
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: one image policy covers every nonfinite class and order",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: finite bounds classify mixed data in any order",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize placement = GENERATE(usize{0}, usize{1}, usize{2});
-  const bool warn = GENERATE(false, true);
   const uint8 outside = GENERATE(uint8{0}, uint8{7});
   std::vector<float64> values{0, 2};
   values.insert(values.begin() + static_cast<std::vector<float64>::difference_type>(placement),
@@ -436,52 +422,15 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: on
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.WarnOnNonfinite = warn, .OutsideValue = outside}));
-  if(!warn)
-  {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-    REQUIRE(result.result.errors().front().code == -28611);
-    const auto& message = result.result.errors().front().message;
-    REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
-    REQUIRE(message.find(fmt::format("NaN at zero-based flat tuple index {}", placement)) != std::string::npos);
-    REQUIRE(message.find("assign Outside Value") != std::string::npos);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  }
-  else
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    REQUIRE(result.result.warnings().size() == 1);
-    REQUIRE(result.result.warnings().front().code == -28614);
-    REQUIRE(result.result.warnings().front().message.find("1 NaN, 1 negative infinity and 1 positive infinity") != std::string::npos);
-    requireThresholdMask(dataStructure, inputPath, expected);
-  }
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.OutsideValue = outside}));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  requireThresholdMask(dataStructure, inputPath, expected);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Error finds the first nonfinite tuple across scan blocks",
-          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
-{
-  (void)Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  constexpr usize firstNonfiniteIndex = 65537;
-  const auto infinity = std::numeric_limits<float64>::infinity();
-  std::vector<float64> values(firstNonfiniteIndex + 2, 4.0);
-  values[firstNonfiniteIndex] = infinity;
-  values[firstNonfiniteIndex + 1] = -infinity;
-  DataStructure dataStructure;
-  const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
-  const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -28611);
-  const auto& message = result.result.errors().front().message;
-  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
-  REQUIRE(message.find("positive infinity at zero-based flat tuple index 65537") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all nonfinite Warn skips search and calculates no threshold",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: all nonfinite input fills the outside value",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
@@ -494,12 +443,9 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: al
   DataStructure dataStructure;
   const auto inputPath = rt::BuildImageFromPattern<float64>(dataStructure, 3, 1, 1, values);
   const ThresholdMaximumConnectedComponentsImageFilter filter;
-  const auto result =
-      filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .WarnOnNonfinite = true, .InsideValue = inside, .OutsideValue = outside, .MinimumSize = 10}));
+  const auto result = filter.execute(dataStructure, thresholdArguments(inputPath, {.UpperBoundary = 65536, .InsideValue = inside, .OutsideValue = outside, .MinimumSize = 10}));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings().front().code == -28614);
-  REQUIRE(result.result.warnings().front().message.find("no threshold was calculated") != std::string::npos);
+  REQUIRE(result.result.warnings().empty());
   requireThresholdMask(dataStructure, inputPath, {outside, outside, outside});
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -613,29 +559,47 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
 // NOLINTEND(cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: old JSON receives Error and version two preserves explicit Warn",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Upper Boundary survives a JSON text round trip",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   const ThresholdMaximumConnectedComponentsImageFilter filter;
   REQUIRE(filter.parametersVersion() == 2);
-  auto json = filter.toJson(filter.getDefaultArguments());
-  json.erase("nonfinite_input_handling_index");
-  json["parameters_version"] = 1;
-  const auto oldArguments = filter.fromJson(json);
-  SIMPLNX_RESULT_REQUIRE_VALID(oldArguments);
-  REQUIRE(oldArguments.value().value<ChoicesParameter::ValueType>(TMCCFilter::k_NonfiniteInputHandling_Key) == 0);
-  REQUIRE(oldArguments.warnings().size() == 1);
-  REQUIRE(oldArguments.warnings().front().code == -5432);
-  auto arguments = filter.getDefaultArguments();
-  arguments.insertOrAssign(TMCCFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  const auto roundTrip = filter.fromJson(filter.toJson(arguments));
-  SIMPLNX_RESULT_REQUIRE_VALID(roundTrip);
-  REQUIRE(roundTrip.value().value<ChoicesParameter::ValueType>(TMCCFilter::k_NonfiniteInputHandling_Key) == 1);
+  auto args = filter.getDefaultArguments();
+  SECTION("finite cutoffs remain JSON numbers and signed infinities use distinct strings")
+  {
+    const auto cutoff = GENERATE(137.125, std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity());
+    args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(cutoff));
+    const auto saved = nlohmann::json::parse(filter.toJson(args).dump());
+    const auto& encoded = saved.at("upper_boundary").at("value");
+    if(std::isfinite(cutoff))
+    {
+      REQUIRE(encoded.is_number());
+      REQUIRE(encoded.get<float64>() == cutoff);
+    }
+    else
+    {
+      REQUIRE(encoded == (cutoff > 0 ? "+Infinity" : "-Infinity"));
+    }
+    const auto restored = filter.fromJson(saved);
+    SIMPLNX_RESULT_REQUIRE_VALID(restored);
+    REQUIRE(restored.value().value<float64>(TMCCFilter::k_UpperBoundary_Key) == cutoff);
+  }
+  SECTION("a legacy null cannot recover the sign")
+  {
+    auto saved = filter.toJson(args);
+    saved["upper_boundary"]["version"] = uint64{1};
+    saved["upper_boundary"]["value"] = nullptr;
+    const auto restored = filter.fromJson(nlohmann::json::parse(saved.dump()));
+    SIMPLNX_RESULT_REQUIRE_INVALID(restored);
+    REQUIRE(restored.errors().front().code == -28619);
+    REQUIRE(restored.errors().front().message.find("+Infinity") != std::string::npos);
+    REQUIRE(restored.errors().front().message.find("-Infinity") != std::string::npos);
+  }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: engine rejects image nonfinites before empty-cap output and distinguishes empty input",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: empty-cap output distinguishes mixed and empty input",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   const std::atomic_bool shouldCancel{false};
@@ -644,11 +608,12 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
   ThresholdTransferStore<uint8> output({99, 99, 99});
   const ImageProcessing::ThresholdMaxCCOptions options{.UpperBoundary = -std::numeric_limits<float64>::infinity()};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().front().code == -28611);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().front().code == -28615);
   REQUIRE(input.reads() == 1);
-  REQUIRE(output.writes() == 0);
-  REQUIRE(output.getValue(0) == 99);
+  REQUIRE(output.writes() == 1);
+  REQUIRE(output.getValue(0) == 0);
   const ThresholdTransferStore<float64> emptyInput(std::vector<float64>{});
   ThresholdTransferStore<uint8> emptyOutput(std::vector<uint8>{});
   const auto emptyResult = ImageProcessing::ApplyThresholdMaximumConnectedComponents(emptyInput, emptyOutput, SizeVec3{0, 1, 1}, options, shouldCancel);
@@ -664,19 +629,20 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   const bool failWrite = GENERATE(false, true);
-  const ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::infinity()});
+  ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::infinity()});
+  input.warnOnRead();
   ThresholdTransferStore<uint8> output({99, 99, 99});
   if(failWrite)
   {
     output.failWrite();
   }
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.OutsideValue = 7, .WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{.OutsideValue = 7};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
   REQUIRE(input.reads() == 1);
   REQUIRE(output.writes() == 1);
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == -28614);
+  REQUIRE(result.warnings().front().code == -28633);
   if(failWrite)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -693,15 +659,16 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: no
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: count failures remain strict under image Warn",
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: count failures preserve prior transfer diagnostics",
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   const auto fault = GENERATE(ThresholdFaultType::ReadError, ThresholdFaultType::BadAllocation, ThresholdFaultType::LengthError);
   ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 4});
   input.setReadFault(2, fault); // Initial summary succeeds; the first component-count read fails.
+  input.warnOnRead();
   ThresholdTransferStore<uint8> output({99, 99, 99});
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   int32 expectedCode = -28631;
@@ -715,7 +682,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: co
   }
   REQUIRE(result.errors().front().code == expectedCode);
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == -28614);
+  REQUIRE(result.warnings().front().code == -28633);
   REQUIRE(output.writes() == 0);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -759,7 +726,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: su
     expectedCode = stage == 5 ? -28634 : -28635;
   }
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CAPTURE(stage);
@@ -772,11 +739,10 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: su
   {
     REQUIRE(result.errors().front().message.find("output buffer") != std::string::npos);
   }
-  REQUIRE(result.warnings().size() == (stage == 3 || stage >= 5 ? 2 : (stage == 4 ? 1 : 0)));
+  REQUIRE(result.warnings().size() == (stage == 3 || stage >= 5 ? 1 : 0));
   if(stage == 3 || stage >= 5)
   {
     REQUIRE(result.warnings().at(0).code == -28633);
-    REQUIRE(result.warnings().at(1).code == -28614);
   }
   REQUIRE(output.getValue(0) == 99);
 }
@@ -787,11 +753,12 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ou
           "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
 {
   const bool allocationFailure = GENERATE(false, true);
-  const ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  input.warnOnRead();
   ThresholdTransferStore<uint8> output({99, 99, 99});
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
-  // The engine sends this message after collecting the nonfinite warning and before writing any output.
+  const ImageProcessing::ThresholdMaxCCOptions options{};
+  // The engine sends this message after collecting the transfer warning and before writing any output.
   const IFilter::MessageHandler handler{[allocationFailure](const IFilter::Message& message) {
     if(message.type == IFilter::Message::Type::Info && message.message == "Applying the selected native threshold in bounded batches")
     {
@@ -805,7 +772,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: ou
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel, handler);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.warnings().size() == 1);
-  REQUIRE(result.warnings().front().code == -28614);
+  REQUIRE(result.warnings().front().code == -28633);
   REQUIRE(input.reads() == 1);
   REQUIRE(output.writes() == 0);
   REQUIRE(output.getValue(0) == 99);
@@ -819,10 +786,11 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
 {
   const bool cancelBefore = GENERATE(false, true);
   std::atomic_bool shouldCancel{cancelBefore};
-  const ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  ThresholdTransferStore<float64> input({0, std::numeric_limits<float64>::quiet_NaN(), 2});
+  input.warnOnRead();
   ThresholdTransferStore<uint8> output({99, 99, 99});
   output.cancelOnWrite(shouldCancel);
-  const ImageProcessing::ThresholdMaxCCOptions options{.WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{3, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(shouldCancel);
@@ -831,7 +799,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: en
   REQUIRE(result.warnings().size() == (cancelBefore ? 0 : 1));
   if(!cancelBefore)
   {
-    REQUIRE(result.warnings().front().code == -28614);
+    REQUIRE(result.warnings().front().code == -28633);
   }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -843,7 +811,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: di
   const ThresholdTransferStore<float64> input({std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity()});
   ThresholdTransferStore<uint8> output({99});
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::ThresholdMaxCCOptions options{.UpperBoundary = 65536, .WarnOnNonfinite = true};
+  const ImageProcessing::ThresholdMaxCCOptions options{.UpperBoundary = 65536};
   const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, SizeVec3{2, 1, 1}, options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -28612);
@@ -865,26 +833,22 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: re
   SECTION("owned bulk-transfer buffer")
   {
     const ThresholdTransferStore<float32> input(values);
-    const auto result = ImageProcessing::detail::ScanThresholdMaxCC(input, true, shouldCancel);
+    const auto result = ImageProcessing::detail::ScanThresholdMaxCC(input, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().Minimum == 0);
-    REQUIRE(result.value().Maximum == 2);
-    REQUIRE(result.value().FiniteCount == count - 2);
-    REQUIRE(result.value().NaNCount == 1);
-    REQUIRE(result.value().PositiveInfinityCount == 1);
+    REQUIRE(result.value().min == 0);
+    REQUIRE(result.value().max == 2);
+    REQUIRE(result.value().count == count - 2);
   }
   SECTION("direct resident span")
   {
     DataStore<float32> input(ShapeType{1, 1, count}, ShapeType{1}, 0.0F);
     const auto writeResult = input.copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    const auto result = ImageProcessing::detail::ScanThresholdMaxCC(input, true, shouldCancel);
+    const auto result = ImageProcessing::detail::ScanThresholdMaxCC(input, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().Minimum == 0);
-    REQUIRE(result.value().Maximum == 2);
-    REQUIRE(result.value().FiniteCount == count - 2);
-    REQUIRE(result.value().NaNCount == 1);
-    REQUIRE(result.value().PositiveInfinityCount == 1);
+    REQUIRE(result.value().min == 0);
+    REQUIRE(result.value().max == 2);
+    REQUIRE(result.value().count == count - 2);
   }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -1074,18 +1038,11 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: re
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_UpperBoundary_Key, std::make_any<float64>(upperBounds.at(variant)));
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_InsideValue_Key, std::make_any<uint8>(1));
   args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_OutsideValue_Key, std::make_any<uint8>(outside));
-  args.insertOrAssign(ThresholdMaximumConnectedComponentsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(noFinite ? 1 : 0));
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == (variant == 0 ? 0 : 1));
-  if(noFinite)
-  {
-    REQUIRE(result.result.warnings().front().code == -28614);
-    REQUIRE(result.result.warnings().front().message.find("1 NaN, 1 negative infinity and 1 positive infinity") != std::string::npos);
-    REQUIRE(result.result.warnings().front().message.find("No finite pixels are available") != std::string::npos);
-  }
+  REQUIRE(result.result.warnings().size() == (variant == 1 || variant == 2 ? 1 : 0));
   if(variant == 1 || variant == 2)
   {
     REQUIRE(result.result.warnings().front().code == -28615);
@@ -1119,45 +1076,5 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: re
     REQUIRE(image_integration::Read<int32>(dataStructure, input, shape, expectedStore) == std::vector<int32>{100, 102});
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
-
-// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Upper Boundary survives a JSON text round trip",
-          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
-{
-  const ThresholdMaximumConnectedComponentsImageFilter filter;
-  REQUIRE(filter.parametersVersion() == 2);
-  auto args = filter.getDefaultArguments();
-  SECTION("finite cutoffs remain JSON numbers and signed infinities use distinct strings")
-  {
-    const auto cutoff = GENERATE(137.125, std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity());
-    args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(cutoff));
-    const auto saved = nlohmann::json::parse(filter.toJson(args).dump());
-    const auto& encoded = saved.at("upper_boundary").at("value");
-    if(std::isfinite(cutoff))
-    {
-      REQUIRE(encoded.is_number());
-      REQUIRE(encoded.get<float64>() == cutoff);
-    }
-    else
-    {
-      REQUIRE(encoded == (cutoff > 0 ? "+Infinity" : "-Infinity"));
-    }
-    const auto restored = filter.fromJson(saved);
-    SIMPLNX_RESULT_REQUIRE_VALID(restored);
-    REQUIRE(restored.value().value<float64>(TMCCFilter::k_UpperBoundary_Key) == cutoff);
-  }
-  SECTION("a legacy null cannot recover the sign")
-  {
-    auto saved = filter.toJson(args);
-    saved["upper_boundary"]["version"] = uint64{1};
-    saved["upper_boundary"]["value"] = nullptr;
-    const auto restored = filter.fromJson(nlohmann::json::parse(saved.dump()));
-    SIMPLNX_RESULT_REQUIRE_INVALID(restored);
-    REQUIRE(restored.errors().front().code == -28619);
-    REQUIRE(restored.errors().front().message.find("+Infinity") != std::string::npos);
-    REQUIRE(restored.errors().front().message.find("-Infinity") != std::string::npos);
-  }
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

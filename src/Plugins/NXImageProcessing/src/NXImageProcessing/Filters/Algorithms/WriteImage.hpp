@@ -6,7 +6,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
-#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <filesystem>
 #include <string>
@@ -29,7 +28,6 @@ struct NXIMAGEPROCESSING_EXPORT WriteImageInputValues
   DataPath imageGeometryPath;
   DataPath imageDataArrayPath;
   bool createColorTable = false;
-  ImageProcessing::NonfiniteInputHandling nonfiniteInputHandling = ImageProcessing::NonfiniteInputHandling::Error;
   std::string presetName;
   bool useMask = false;
   DataPath maskArrayPath;
@@ -64,7 +62,7 @@ public:
 
   /**
    * @brief Writes all slices for the selected plane.
-   * @return Color-policy warnings or an error from the initial scan, slice extraction, compression, or file output.
+   * @return Warnings and errors from reading image data, encoding slices, or writing files.
    */
   Result<> operator()();
 

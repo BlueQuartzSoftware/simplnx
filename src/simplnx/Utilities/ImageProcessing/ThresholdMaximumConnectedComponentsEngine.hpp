@@ -5,7 +5,6 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -32,9 +31,7 @@
 
 namespace nx::core::ImageProcessing
 {
-inline constexpr int32 k_ThresholdMaxCCNonfiniteInput = -28611;
 inline constexpr int32 k_ThresholdMaxCCMismatchedOutput = -28612;
-inline constexpr int32 k_ThresholdMaxCCNonfiniteInputWarning = -28614;
 inline constexpr int32 k_ThresholdMaxCCEmptyBand = -28615;
 inline constexpr int32 k_ThresholdMaxCCSearchStalled = -28616;
 inline constexpr int32 k_ThresholdMaxCCScanAllocationFailed = -28617;
@@ -54,51 +51,15 @@ struct ThresholdMaxCCOptions
   float64 UpperBoundary = 65536.0;
   uint8 InsideValue = 1;
   uint8 OutsideValue = 0;
-  bool WarnOnNonfinite = false;
   usize CountTarget2DBytes = detail::k_ConnectedComponent2DTargetBytes;
 };
 
 namespace detail
 {
 template <class T>
-struct ThresholdMaxCCSummary
+ArrayMinMax<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values, const std::atomic_bool& shouldCancel)
 {
-  T Minimum{};
-  T Maximum{};
-  usize FiniteCount = 0;
-  usize NaNCount = 0;
-  usize NegativeInfinityCount = 0;
-  usize PositiveInfinityCount = 0;
-  usize FirstNonfiniteIndex = std::numeric_limits<usize>::max(); // Index within the current batch.
-};
-
-template <class T>
-void MergeThresholdMaxCCSummary(ThresholdMaxCCSummary<T>& summary, const ThresholdMaxCCSummary<T>& block)
-{
-  if(block.FiniteCount != 0)
-  {
-    if(summary.FiniteCount == 0)
-    {
-      summary.Minimum = block.Minimum;
-      summary.Maximum = block.Maximum;
-    }
-    else
-    {
-      summary.Minimum = std::min(summary.Minimum, block.Minimum);
-      summary.Maximum = std::max(summary.Maximum, block.Maximum);
-    }
-  }
-  summary.FiniteCount += block.FiniteCount;
-  summary.NaNCount += block.NaNCount;
-  summary.NegativeInfinityCount += block.NegativeInfinityCount;
-  summary.PositiveInfinityCount += block.PositiveInfinityCount;
-  summary.FirstNonfiniteIndex = std::min(summary.FirstNonfiniteIndex, block.FirstNonfiniteIndex);
-}
-
-template <class T>
-ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values, bool warnOnNonfinite, const std::atomic_bool& shouldCancel, usize blockStart)
-{
-  ThresholdMaxCCSummary<T> summary;
+  ArrayMinMax<T> summary;
   for(usize index = 0; index < values.size(); ++index)
   {
     if((index % 65536) == 0 && shouldCancel)
@@ -110,37 +71,10 @@ ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values,
     {
       if(!std::isfinite(value))
       {
-        if(std::isnan(value))
-        {
-          ++summary.NaNCount;
-        }
-        else if(std::signbit(value))
-        {
-          ++summary.NegativeInfinityCount;
-        }
-        else
-        {
-          ++summary.PositiveInfinityCount;
-        }
-        if(!warnOnNonfinite)
-        {
-          summary.FirstNonfiniteIndex = blockStart + index;
-          break;
-        }
         continue;
       }
     }
-    if(summary.FiniteCount == 0)
-    {
-      summary.Minimum = value;
-      summary.Maximum = value;
-    }
-    else
-    {
-      summary.Minimum = std::min(summary.Minimum, value);
-      summary.Maximum = std::max(summary.Maximum, value);
-    }
-    ++summary.FiniteCount;
+    summary.addValue(value);
   }
   return summary;
 }
@@ -149,16 +83,14 @@ ThresholdMaxCCSummary<T> ReduceThresholdMaxCCBlock(nonstd::span<const T> values,
  * @brief Scans finite native bounds without changing shared statistics or making a full-image temporary.
  * @tparam T Numeric input value type.
  * @param input Source values to scan.
- * @param warnOnNonfinite If true, counts nonfinite samples and continues. If false, a nonfinite sample causes an error.
  * @param shouldCancel Requests cancellation during the scan.
- * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
- * @return Native finite bounds and sample counts, or a transfer or allocation error, or an error for disallowed nonfinite samples.
+ * @return Native finite bounds and contributor count, or a transfer or allocation error.
  * A valid cancellation result can be incomplete. The caller must check shouldCancel before use.
  */
 template <class T>
-Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, bool warnOnNonfinite, const std::atomic_bool& shouldCancel, const DataPath& inputArrayPath = {})
+Result<ArrayMinMax<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, const std::atomic_bool& shouldCancel)
 {
-  ThresholdMaxCCSummary<T> summary;
+  ArrayMinMax<T> summary;
   Result<> status;
   try
   {
@@ -179,21 +111,21 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
       auto planResult = CreateStreamingScanBufferPlan(input);
       if(planResult.invalid())
       {
-        return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(std::move(planResult));
+        return ConvertInvalidResult<ArrayMinMax<T>>(std::move(planResult));
       }
       plan = std::move(planResult.value());
       batchValues = std::min(total, plan.batchValues);
       availableBytes = batchValues * sizeof(T);
     }
     usize blockCapacity = 1 + ((batchValues - 1) / blockValues);
-    if(blockCapacity <= 1 || blockCapacity > (availableBytes / sizeof(ThresholdMaxCCSummary<T>)))
+    if(blockCapacity <= 1 || blockCapacity > (availableBytes / sizeof(ArrayMinMax<T>)))
     {
       blockCapacity = 0;
     }
     else if(!direct)
     {
       // Charge the bounded summary table before selecting the owned input payload.
-      const usize summaryBytes = blockCapacity * sizeof(ThresholdMaxCCSummary<T>);
+      const usize summaryBytes = blockCapacity * sizeof(ArrayMinMax<T>);
       if(availableBytes - summaryBytes < sizeof(T))
       {
         blockCapacity = 0;
@@ -204,7 +136,7 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
         plan.reservation.shrinkTo((batchValues * sizeof(T)) + summaryBytes);
       }
     }
-    std::vector<ThresholdMaxCCSummary<T>> blocks(blockCapacity);
+    std::vector<ArrayMinMax<T>> blocks(blockCapacity);
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays, modernize-avoid-c-arrays) -- A full transfer overwrites this contiguous buffer, including for bool.
     auto valuesPtr = direct ? nullptr : std::make_unique_for_overwrite<T[]>(batchValues);
     for(usize start = 0; start < total;)
@@ -220,13 +152,13 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
         status = MergeResults(std::move(status), std::move(readResult));
         if(status.invalid())
         {
-          return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(std::move(status));
+          return ConvertInvalidResult<ArrayMinMax<T>>(std::move(status));
         }
       }
       const nonstd::span<const T> values = direct ? residentPtr->createSpan().subspan(start, count) : nonstd::span<const T>(valuesPtr.get(), count);
       if(blockCapacity == 0)
       {
-        MergeThresholdMaxCCSummary(summary, ReduceThresholdMaxCCBlock(values, warnOnNonfinite, shouldCancel, 0));
+        summary.merge(ReduceThresholdMaxCCBlock(values, shouldCancel));
       }
       else
       {
@@ -237,24 +169,13 @@ Result<ThresholdMaxCCSummary<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& 
           for(usize block = range.min(); block < range.max(); ++block)
           {
             const usize offset = block * blockValues;
-            blocks[block] = ReduceThresholdMaxCCBlock(values.subspan(offset, std::min(blockValues, count - offset)), warnOnNonfinite, shouldCancel, offset);
+            blocks[block] = ReduceThresholdMaxCCBlock(values.subspan(offset, std::min(blockValues, count - offset)), shouldCancel);
           }
         });
         for(usize block = 0; block < blockCount; ++block)
         {
-          MergeThresholdMaxCCSummary(summary, blocks[block]);
+          summary.merge(blocks[block]);
         }
-      }
-      if(summary.FirstNonfiniteIndex != std::numeric_limits<usize>::max())
-      {
-        const T value = values[summary.FirstNonfiniteIndex];
-        const auto* kind = std::isnan(value) ? "NaN" : (std::signbit(value) ? "negative infinity" : "positive infinity");
-        const auto inputName = inputArrayPath.empty() ? "the input array" : fmt::format("input array '{}'", inputArrayPath.toString());
-        return ConvertInvalidResult<ThresholdMaxCCSummary<T>>(MergeResults(
-            std::move(status), MakeErrorResult(k_ThresholdMaxCCNonfiniteInput,
-                                               fmt::format("Threshold Maximum Connected Components found {} at zero-based flat tuple index {} in {}. Select Warn and Continue to assign Outside "
-                                                           "Value to nonfinite pixels.",
-                                                           kind, start + summary.FirstNonfiniteIndex, inputName))));
       }
       start += count;
     }
@@ -357,7 +278,7 @@ Result<T> SearchThresholdMaxCC(const AbstractDataStore<T>& input, const SizeVec3
   T left = std::midpoint(low, midpoint);
   T right = std::midpoint(high, midpoint);
   Result<> status;
-  // Score each candidate using the nonzero pixels it would write. In Warn and Continue, nonfinite pixels receive
+  // Score each candidate using the nonzero pixels it would write. Nonfinite pixels receive
   // Outside Value. They can connect foreground regions when Outside Value is nonzero.
   while(ThresholdMaxCCSpanExceedsTwo(low, high) && !shouldCancel)
   {
@@ -479,23 +400,21 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
  * @param input Scalar source image in X-fastest order.
  * @param output Scalar uint8 destination with the input value count.
  * @param dims Image dimensions in X, Y, Z order.
- * @param options Component-size, cutoff, output-value, nonfinite, and staging controls.
+ * @param options Component-size, cutoff, output-value and staging controls.
  * @param shouldCancel Requests cancellation during scan, search, and output work.
  * @param messageHandler Receives output-phase progress messages.
- * @param inputArrayPath Identifies the source array in diagnostics when called from a filter.
  * @return Collected warnings, or a parameter, shape, numeric-capacity, allocation, or transfer error.
  * Cancellation retains the valid engine-result convention.
  *
  * @pre The caller has rejected a NaN Upper Boundary.
  *
- * Image Error fails in the initial scan, including for an empty requested band.
- * Warn retains ordinary inclusive comparisons. With no finite data, the engine fills Outside Value and reports that no threshold was calculated.
+ * Finite values define the search bounds. When none contribute, every output pixel receives Outside Value.
  * Count capacity remains strict. Owned scan and output buffers are bounded; component-run tables depend on image topology.
  * Completed output is not rolled back after a late failure or cancellation.
  */
 template <class T>
 Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& input, AbstractDataStore<uint8>& output, const SizeVec3& dims, const ThresholdMaxCCOptions& options,
-                                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {}, const DataPath& inputArrayPath = {})
+                                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {})
 {
   Result<> status;
   if(input.getNumberOfComponents() != 1 || output.getNumberOfComponents() != 1 || output.getSize() != input.getSize())
@@ -511,7 +430,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
   }
   try
   {
-    auto summaryResult = detail::ScanThresholdMaxCC(input, options.WarnOnNonfinite, shouldCancel, inputArrayPath);
+    auto summaryResult = detail::ScanThresholdMaxCC(input, shouldCancel);
     if(summaryResult.invalid())
     {
       return ConvertResult(std::move(summaryResult));
@@ -523,20 +442,9 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
       return status;
     }
     const auto cap = detail::ConvertThresholdMaxCCCap<T>(options.UpperBoundary);
-    const bool noFinite = summary.FiniteCount == 0;
-    const bool emptyBand = cap.Empty || (!noFinite && cap.Value < summary.Minimum);
-    if(summary.NaNCount != 0 || summary.NegativeInfinityCount != 0 || summary.PositiveInfinityCount != 0)
-    {
-      status.warnings().push_back(Warning{
-          .code = k_ThresholdMaxCCNonfiniteInputWarning,
-          .message =
-              fmt::format("Input contains {} NaN, {} negative infinity and {} positive infinity pixels. {} Outside Value is {}. Nonzero Outside pixels remain foreground and can connect regions.",
-                          summary.NaNCount, summary.NegativeInfinityCount, summary.PositiveInfinityCount,
-                          noFinite ? "No finite pixels are available; threshold search was skipped and no threshold was calculated. Every output pixel is set to Outside Value." :
-                                     "Finite pixels define the search range; nonfinite pixels receive Outside Value through ordinary comparisons.",
-                          options.OutsideValue)});
-    }
-    if(emptyBand && !noFinite)
+    const bool noFinite = summary.count == 0;
+    const bool emptyBand = cap.Empty || (!noFinite && cap.Value < summary.min);
+    if(emptyBand)
     {
       status.warnings().push_back(Warning{.code = k_ThresholdMaxCCEmptyBand,
                                           .message = fmt::format("Upper Boundary requests an empty native intensity band. Threshold search was skipped; every output pixel is set to Outside Value "
@@ -548,7 +456,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
       auto writeResult = detail::WriteThresholdMaxCC(input, output, true, T{}, T{}, options, shouldCancel);
       return MergeResults(std::move(status), std::move(writeResult));
     }
-    auto thresholdResult = detail::SearchThresholdMaxCC(input, dims, {.Low = summary.Minimum, .High = std::min(summary.Maximum, cap.Value), .FixedCap = cap.Value}, options, shouldCancel);
+    auto thresholdResult = detail::SearchThresholdMaxCC(input, dims, {.Low = summary.min, .High = std::min(summary.max, cap.Value), .FixedCap = cap.Value}, options, shouldCancel);
     if(thresholdResult.invalid())
     {
       return MergeResults(std::move(status), ConvertResult(std::move(thresholdResult)));

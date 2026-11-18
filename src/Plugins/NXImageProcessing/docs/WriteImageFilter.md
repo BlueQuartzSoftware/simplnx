@@ -61,29 +61,25 @@ This option only affects the written image files. The input Image Geometry and i
 *Create Color Table* is off by default. When enabled, the filter uses *Select Preset...* to map any single-component
 numeric input to uint8 RGB. An input with more than one component causes a preflight error.
 
-The filter uses all finite values for the color range, including finite values excluded by a mask. For a constant finite
-range, each unmasked pixel uses the first color in the preset. Different input values can map to the same RGB values.
-Extreme-range colors can differ from older exports.
+All finite values set the color range, including finite values excluded by a mask. If every finite value is equal,
+that value maps to the first color in the preset. Different values can have the same RGB color.
 
-#### Nonfinite Input Handling
+For wide integer data, the writer keeps differences as exact integers before it computes the color fraction. [Create Color Map](../SimplnxCore/CreateColorMapFilter.md) can give different colors for the same preset.
+For example, with the *Grayscale* preset, the three largest int64 values map to black, middle gray and white in
+Write Image. Create Color Map converts those three input values to the same floating-point number and maps them all to black.
 
-This choice applies to color-table output. Raw floating-point TIFF and MHA exports keep the input values.
+#### NaN and infinity in the input image
 
-- **Error** (default) stops on an unmasked NaN or infinity before the filter writes or replaces any slice.
-- **Warn and Continue** uses the preset's first color for unmasked NaN or infinity. The warning counts those pixels.
-  They can look the same as valid pixels at the minimum of the finite range.
-
-Both choices require at least one finite input value. Masking nonfinite pixels cannot supply a range. An entirely masked
-array with at least one finite value can still be written in the mask color.
-
-Saved pipelines without this choice use **Error** for color-table output. To export unmasked NaN or infinity, correct the
-data, mask those pixels, or select **Warn and Continue**.
+**Check the input before you interpret a color image.** An unmasked NaN or infinity receives the first color in the
+preset, the same color as the finite minimum. If every pixel is NaN or infinity, every unmasked pixel receives that color. These pixels do not produce a warning. To distinguish them from valid measurements, supply a
+mask with a distinct *Masked Color (RGB)*. To preserve the original floating-point values, turn off *Create Color
+Table* and select a format that supports the input type.
 
 #### Mask Array
 
-Enable *Use Mask Array* with *Create Color Table* to give excluded pixels the *Masked Color (RGB)*. Select a single-component
-boolean or uint8 mask with the same tuple count as the image data. A false or zero value excludes a pixel. Masked NaN
-and infinity receive the mask color and are excluded from the warning count.
+Enable *Use Mask Array* with *Create Color Table* to give excluded pixels the *Masked Color (RGB)*. Use a
+single-component boolean or uint8 mask with one tuple per image pixel. Every false or zero mask value selects
+the mask color, including at pixels that contain NaN or infinity.
 
 ### Add Physical Scale Bar (Optional)
 
@@ -114,13 +110,13 @@ or [Read Images [3D Stack]](ReadImageStackFilter.md), or an array from an upstre
 
 ## Algorithm
 
-The filter selects an algorithm from the storage type of the input **Data Array** and the optional mask. Both algorithms use the same color scan, nonfinite policy and normalization. They retain the existing slice extraction, flip, scale-bar and per-slice write paths.
+The filter selects an algorithm from the storage type of the input **Data Array** and the optional mask. Both algorithms compute the same finite color range and apply the selected preset and mask before writing each slice.
 
 ### In-Core Path
 
-`WriteImageDirect` runs when all applicable arrays use in-memory storage. The algorithm uses the original per-slice extraction path. This path preserves the lowest measured in-memory execution time.
+`WriteImageDirect` runs when all applicable arrays use in-memory storage.
 
-The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to the required byte layout and writes the slice before it reads the next slice. Color-table output first scans scalar and optional mask pages with a combined target of 1 MiB. It releases these pages before it colorizes one source slice and its optional mask at a time.
+The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to the required byte layout and writes the slice before it reads the next slice. Color-table output scans the scalar array in pages of up to 1 MiB to get the range. It then reads one source slice and its optional mask at a time.
 
 ### Out-of-Core Path
 
@@ -128,13 +124,15 @@ The algorithm reads one selected XY, XZ, or YZ slice. It converts the slice to t
 
 XY slices match the default out-of-core Z-slice chunk shape. The algorithm reads one XY slice per extent to prevent unnecessary chunk scatter. For XZ and YZ output, the algorithm groups adjacent output slices into a source slab. The slab size uses an active working-memory reservation with a preferred limit of 64 MiB. If one slice exceeds this limit, the algorithm processes one slice at a time.
 
-The algorithm keeps the grouped source slab and one output slice in memory. A color-table mask shares the same slab plan. The initial scalar/mask scan uses bounded pages before the slab allocation. The algorithm performs store I/O on one thread and checks cancellation between output slices.
+The algorithm keeps the grouped source slab and one output slice in memory. A color-table mask shares the same slab plan. The scalar range scan finishes before the algorithm allocates the slab. The algorithm performs store I/O on one thread and checks cancellation between output slices.
 
 The filter does not allocate a complete RGB volume. It still requires a complete selected 2D RGB slice. A scale bar can require a second padded slice and a separate band. The image codec can allocate more memory for that slice. The source-buffer reservation is not a limit on total process memory.
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
+
+`17_Scientific_Volume_Interoperability.d3dpipeline` exports MHA image data and writes a NIfTI volume as a series of TIFF slices.
 
 ## License & Copyright
 

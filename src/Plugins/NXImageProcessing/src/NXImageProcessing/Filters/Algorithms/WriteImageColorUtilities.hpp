@@ -4,7 +4,6 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -16,7 +15,6 @@
 #include <functional>
 #include <limits>
 #include <memory>
-#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -83,20 +81,16 @@ struct Range
 };
 
 /**
- * @brief Scans scalar pages before any slice is opened. For floating-point input, reads the optional mask to check nonfinite values.
- * Finite masked values participate in the range. Masked nonfinite values do not
- * trigger the policy, and no nonfinite value participates in the range.
+ * @brief Finds finite scalar endpoints across all input pages, including masked pixels.
+ * If every value is nonfinite, both endpoints remain zero.
  * @tparam T Scalar input type.
  * @param array Single-component source array.
- * @param maskArray Optional single-component bool or uint8 mask.
- * @param policy Action for unmasked nonfinite values.
  * @param shouldCancel Stops the scan between pages.
  * @param reportRange Synchronous callback after each complete page.
  * @return Native range and warnings, cancellation state, or the first scan error.
  */
 template <typename T>
-Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray, ImageProcessing::NonfiniteInputHandling policy, const std::atomic_bool& shouldCancel,
-                           const std::function<void(usize, usize)>& reportRange)
+Result<Range<T>> ScanRange(const IDataArray& array, const std::atomic_bool& shouldCancel, const std::function<void(usize, usize)>& reportRange)
 {
   const auto& store = array.getIDataStoreRefAs<AbstractDataStore<T>>();
   const usize count = store.getNumberOfTuples();
@@ -105,36 +99,13 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
     return MakeErrorResult<Range<T>>(-27020, "Input array is empty.");
   }
   constexpr usize targetPageBytes = usize{1024} * usize{1024};
-  const bool scanMask = std::is_floating_point_v<T> && maskArray != nullptr;
-  usize maskBytes = 0;
-  if(scanMask)
-  {
-    maskBytes = maskArray->getDataType() == DataType::boolean ? sizeof(bool) : sizeof(uint8);
-  }
-  const usize pageCount = std::min(count, std::max<usize>(1, targetPageBytes / (sizeof(T) + maskBytes)));
+  const usize pageCount = std::min(count, targetPageBytes / sizeof(T));
   // Scalar input can use bool. The store needs a contiguous bool buffer, which std::vector<bool> cannot provide.
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
   auto values = std::make_unique<T[]>(pageCount);
-  // The Boolean mask store also needs a contiguous bool buffer.
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-  std::unique_ptr<bool[]> boolMask;
-  std::unique_ptr<std::vector<uint8>> byteMask;
-  if(scanMask)
-  {
-    if(maskArray->getDataType() == DataType::boolean)
-    {
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays) std::vector<bool> cannot provide a contiguous bool buffer.
-      boolMask = std::make_unique<bool[]>(pageCount);
-    }
-    else
-    {
-      byteMask = std::make_unique<std::vector<uint8>>(pageCount);
-    }
-  }
   Range<T> range;
   Result<> status;
   bool initialized = false;
-  usize nonfiniteCount = 0;
   for(usize offset = 0; offset < count;)
   {
     if(shouldCancel)
@@ -148,18 +119,6 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
     {
       return ConvertInvalidResult<Range<T>>(std::move(status));
     }
-    if(boolMask != nullptr)
-    {
-      status = MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>().copyIntoBuffer(offset, nonstd::span<bool>(boolMask.get(), size)));
-    }
-    else if(byteMask != nullptr)
-    {
-      status = MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>().copyIntoBuffer(offset, nonstd::span<uint8>(byteMask->data(), size)));
-    }
-    if(status.invalid())
-    {
-      return ConvertInvalidResult<Range<T>>(std::move(status));
-    }
     for(usize index = 0; index < size; ++index)
     {
       const T value = values[index];
@@ -167,19 +126,6 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
       {
         if(!std::isfinite(value))
         {
-          const bool selected = boolMask != nullptr ? boolMask[index] : (byteMask == nullptr || (*byteMask)[index] != 0);
-          if(selected)
-          {
-            if(policy == ImageProcessing::NonfiniteInputHandling::Error)
-            {
-              return ConvertResultTo<Range<T>>(
-                  MergeResults(std::move(status), MakeErrorResult(-27027, fmt::format("Write Image array '{}' has an unmasked nonfinite value at tuple {}. Repair or mask this value, or select 'Warn "
-                                                                                      "and Continue' in Nonfinite Input Handling. No image slice was written.",
-                                                                                      array.getName(), offset + index))),
-                  Range<T>{});
-            }
-            ++nonfiniteCount;
-          }
           continue;
         }
       }
@@ -201,25 +147,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const IDataArray* maskArray,
       reportRange(offset, count);
     }
   }
-  if(shouldCancel)
-  {
-    range.Cancelled = true;
-    return ConvertResultTo<Range<T>>(std::move(status), std::move(range));
-  }
-  if(nonfiniteCount != 0)
-  {
-    status.warnings().push_back({.code = -27031,
-                                 .message = fmt::format("Write Image array '{}' contains {} unmasked nonfinite value(s). They use the preset's first control color, which is also used for the finite "
-                                                        "minimum. The color range uses finite values only.",
-                                                        array.getName(), nonfiniteCount)});
-  }
-  if(!initialized)
-  {
-    return ConvertResultTo<Range<T>>(MergeResults(std::move(status), MakeErrorResult(-27028, fmt::format("Write Image array '{}' has no finite values for its color range. Supply at least one finite "
-                                                                                                         "value; masking nonfinite values does not create a finite range. No image slice was written.",
-                                                                                                         array.getName()))),
-                                     Range<T>{});
-  }
+  range.Cancelled = shouldCancel;
   return ConvertResultTo<Range<T>>(std::move(status), std::move(range));
 }
 

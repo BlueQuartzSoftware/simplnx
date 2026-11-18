@@ -114,10 +114,6 @@ Parameters WriteImageFilter::parameters() const
                                                                  "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
   params.insert(
       std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
-  params.insert(std::make_unique<ChoicesParameter>(k_NonfiniteInputHandling_Key, "Nonfinite Input Handling",
-                                                   "Error stops before any slice is written if an unmasked value is NaN or infinity. Warn and Continue uses the first control color for those values "
-                                                   "and reports their count. Masked finite values still participate in the finite color range.",
-                                                   static_cast<ChoicesParameter::ValueType>(ImageProcessing::NonfiniteInputHandling::Error), ChoicesParameter::Choices{"Error", "Warn and Continue"}));
 
   params.insertSeparator(Parameters::Separator{"Scale Bar (Optional)"});
   params.insert(std::make_unique<BoolParameter>(k_AddScaleBar_Key, "Add Physical Scale Bar",
@@ -133,7 +129,6 @@ Parameters WriteImageFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
   params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
-  params.linkParameters(k_CreateColorTable_Key, k_NonfiniteInputHandling_Key, true);
   // The mask is independent of color-table creation.
   // A linkable group cannot be the child of another linkable group.
   // Thus, the mask control stays at the top level and controls the mask parameters.
@@ -150,8 +145,7 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
   // Version 3: Widened input array to all numeric types (color-table mode colorizes any numeric type).
   // Version 4: Added optional output-image flip (flip_mode_index).
   // Version 5: Added optional physical scale bar (add_scale_bar).
-  // Version 6: Added color-table-only nonfinite input handling, defaulting to Error.
-  return 6;
+  return 5;
 }
 
 //------------------------------------------------------------------------------
@@ -358,9 +352,6 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   inputValues.imageDataArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   inputValues.createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
-  inputValues.nonfiniteInputHandling = inputValues.createColorTable ?
-                                           static_cast<ImageProcessing::NonfiniteInputHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_NonfiniteInputHandling_Key)) :
-                                           ImageProcessing::NonfiniteInputHandling::Error;
   inputValues.presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);

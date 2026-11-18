@@ -14,26 +14,19 @@ Each finite, selected voxel receives the number of thresholds that its intensity
 
 The configured class interval is **Label Offset** through **Label Offset + Number Of Thresholds**, including both endpoints. The sum must not exceed 255. The filter rejects an invalid interval instead of wrapping labels. It does not renumber classes or widen the output type.
 
-### NaN and infinity
+### Input with NaN or infinity
 
-**Nonfinite Input Handling** has two choices:
-
-- **Error** is the default. A selected NaN, negative infinity, or positive infinity stops the filter. Choose a deliberate handling method before rerunning the pipeline.
-- **Warn and Continue** fits thresholds using selected finite pixels. Selected NaN and infinity pixels receive **Excluded Label**. One warning counts the nonfinite pixels still selected after any mask.
-
-Both choices require at least one selected finite sample. Empty data, an all-false mask, or data with no selected finite value cannot define a histogram range and cause an error.
+Only selected finite samples contribute to the histogram. The filter can complete with NaN or infinity in the input. Labels at these pixels have no scientific interpretation. Clean invalid intensities upstream or supply a mask that excludes them before using the labels for measurements.
 
 ### Explicit mask and excluded labels
 
-Enable **Use Mask Array** to select a **Mask Array**. The mask must be scalar `bool` or `uint8`. Its final tuple count must match the input when Otsu runs, after any upstream filters have resized their arrays. Tuples are paired in flat order, so the mask can have a different tuple shape or parent group. False/zero excludes a pixel; true or any nonzero `uint8` value selects it. The filter applies this selection before range, histogram, and nonfinite checks. An excluded NaN or infinity therefore causes no nonfinite error or warning.
+Enable **Use Mask Array** to select a **Mask Array**. The mask must be scalar `bool` or `uint8`. Its final tuple count must match the input when Otsu runs, after any upstream filters have resized their arrays. Tuples are paired in flat order, so the mask can have a different tuple shape or parent group. False or zero excludes a pixel. True or any nonzero `uint8` value selects it. The filter applies this selection before fitting the histogram.
 
-Pixels excluded by the mask and nonfinite pixels skipped in Warn mode use the same **Excluded Label**. It defaults to 255 and must be outside the configured class interval when a mask is enabled or Warn is used with floating-point input. This leaves up to 255 ordinary classes. Choose an unused label or reduce the class interval if the label collides.
+Pixels excluded by the mask receive **Excluded Label**, which defaults to 255. When a mask is enabled, this label must be outside the configured class interval, leaving up to 255 ordinary classes. An all-false mask gives every pixel the excluded label. With the mask disabled, all 256 labels are available for classes.
 
 A distinct label does not make downstream filters ignore excluded pixels. Supply the mask or an explicit background/exclusion rule to consumers that must ignore them. Changing histogram participation can change phase fractions, feature counts, and connectivity.
 
-For input [0, 0, 4, 4, NaN, negative infinity, positive infinity], Warn uses histogram counts [2, 2] with two bins.
-With Label Offset 7 and Excluded Label 255, it writes [7, 7, 8, 8, 255, 255, 255]. A mask that excludes the three
-nonfinite pixels gives the same labels with either choice and produces no nonfinite warning.
+For example, use the mask `[1,1,1,1,0,0,0]` with the input `[0,0,4,4,NaN,-Infinity,+Infinity]`. Two bins have counts `[2,2]`. With Label Offset 7 and Excluded Label 255, the output is `[7,7,8,8,255,255,255]`.
 
 For component labeling, first select the ordinary class of interest into a binary mask. For fractions measured over valid
 pixels, exclude Excluded Label from both the selection and the denominator. Removing nonfinite samples from the histogram
@@ -45,7 +38,7 @@ Histogram bounds, bin measurements, and threshold fitting use `float64`. The fil
 
 The finite tie tolerance, ordinary threshold search, and Valley Emphasis behavior are retained. **ReturnBinMidpoint** selects a bin midpoint instead of its maximum for the returned threshold. These checks add no automatic normalization or new scientific fitting rule.
 
-Existing pipelines receive Error, Use Mask Array off, and Excluded Label 255 as defaults. Ordinary finite pipelines with valid label intervals and usable histogram and solver arithmetic retain their labels. A finite pipeline that previously completed can now stop with a numeric error if the new checks detect an unusable calculation. Pipelines that previously contained NaN/infinity now stop by default. Choose Warn to skip selected nonfinite pixels and assign Excluded Label. Replacing nonfinite values upstream adds replacement intensities to the histogram and can bias thresholds; it is not statistical exclusion.
+By default, **Use Mask Array** is off. Ordinary finite pipelines with valid label intervals and usable histogram and solver arithmetic retain their labels. A finite pipeline can fail if the fitting arithmetic overflows or loses a required distinction between values. Replacing bad intensities upstream adds those replacement values to the histogram. Masking them leaves them out of the fit.
 
 This filter also includes an option to use the valley emphasis algorithm from H.F. Ng, "Automatic thresholding for defect detection", Pattern Recognition Letters, (27): 1644-1649, 2006. The valley emphasis algorithm is particularly effective when the object to be thresholded is small. It is turned off by default; enable it with **Valley Emphasis**.
 
@@ -59,7 +52,7 @@ The histogram uses the existing marginal upper bound `max + (max - min) / (numbe
 
 Thresholds are calculated from the histogram and applied independently to each selected voxel. Resident scans use direct spans. Other scans use serial bulk input/mask transfers with bounded owned buffers and working-memory reservations. Floating-point range scans reduce fixed blocks in parallel when multicore support is enabled and a batch contains more than one block. Workers read only resident spans or owned buffers. The main thread merges finite bounds and selected counts in block order. The summary table belongs to the current bounded batch and does not grow with the full image.
 
-The input, mask, and floating-range summaries share a scratch target of at most 64 MiB; a low grant can reduce a buffered scan to one tuple. The masked output pass reserves combined input, mask, and label buffers. Boolean masks use contiguous owned storage. The optional ring and histogram/solver arrays depend on the fixed ring size and requested bin/class counts, not on image volume. The unmasked output pass retains the existing resident/buffered pointwise routes. No full-volume finite-only copy is made.
+The default scratch target for the input, mask and floating-range summaries is 64 MiB. A developer working-memory override can change the target for buffered scans. The amount of useful data and the process-wide memory budget limit the actual grant. A low grant can reduce a buffered scan to one tuple. The masked output pass reserves combined input, mask, and label buffers. Boolean masks use contiguous owned storage. The optional ring and histogram/solver arrays depend on the fixed ring size and requested bin/class counts, not on image volume. The unmasked output pass retains the existing resident/buffered pointwise routes. No full-volume finite-only copy is made.
 
 Cancellation is checked during scans and threshold search and before label writes. Transfer failures remain errors. Completed earlier label batches are not rolled back if a later output transfer fails.
 

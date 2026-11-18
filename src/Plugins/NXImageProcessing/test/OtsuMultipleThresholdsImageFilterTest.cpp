@@ -28,7 +28,6 @@
 #include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -50,6 +49,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -133,21 +133,13 @@ void RunCompactInt16Otsu(DataStructure& ds, const DataPath& inputPath)
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: nonfinite policy is explicit and defaults to Error", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: image samples do not require a policy parameter", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   const OtsuMultipleThresholdsImageFilter filter;
   const Parameters parameters = filter.parameters();
   const std::string policyKey = "nonfinite_input_handling_index";
 
-  // Inspect the public schema before lookup. Do not enter the baseline histogram with NaN or infinity.
-  REQUIRE(parameters.contains(policyKey));
-  const auto* policyPtr = dynamic_cast<const ChoicesParameter*>(parameters.at(policyKey).get());
-  REQUIRE(policyPtr != nullptr);
-  REQUIRE(policyPtr->humanName() == "Nonfinite Input Handling");
-  REQUIRE(policyPtr->choices() == ChoicesParameter::Choices{"Error", "Warn and Continue"});
-  REQUIRE(policyPtr->defaultIndex() == 0);
-  const Arguments defaultArguments = filter.getDefaultArguments();
-  REQUIRE(defaultArguments.value<ChoicesParameter::ValueType>(policyKey) == 0);
+  REQUIRE_FALSE(parameters.contains(policyKey));
 }
 // NOLINTEND(bugprone-chained-comparison)
 
@@ -185,7 +177,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: explicit mask s
 // NOLINTEND(bugprone-chained-comparison)
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: excluded label is active for mask or Warn", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: excluded label is active only with the mask", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuSafeRed]")
 {
   const OtsuMultipleThresholdsImageFilter filter;
   const Parameters parameters = filter.parameters();
@@ -199,11 +191,9 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: excluded label 
   const Arguments defaultArguments = filter.getDefaultArguments();
   REQUIRE(defaultArguments.value<uint8>(maskedLabelKey) == uint8{255});
   const bool masked = GENERATE(false, true);
-  const bool warn = GENERATE(false, true);
   Arguments args = defaultArguments;
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(masked));
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(warn ? 1 : 0));
-  REQUIRE(parameters.isParameterActive(maskedLabelKey, args) == (masked || warn));
+  REQUIRE(parameters.isParameterActive(maskedLabelKey, args) == masked);
 }
 // NOLINTEND(bugprone-chained-comparison)
 
@@ -258,7 +248,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: preflight check
   }
   else
   {
-    REQUIRE(preflightResult.outputActions.invalid());
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE_FALSE(preflightResult.outputActions.errors().empty());
     REQUIRE(preflightResult.outputActions.errors().front().code == -28903);
     const auto execution = filter.execute(dataStructure, arguments);
@@ -293,7 +283,7 @@ DataPath createOtsuMask(DataStructure& dataStructure, const std::array<MaskT, N>
   return maskPath;
 }
 
-void requireOtsuLabels(const DataStructure& dataStructure, const DataPath& inputPath, const std::vector<uint8>& expected)
+void requireOtsuLabels(const DataStructure& dataStructure, const DataPath& inputPath, const std::vector<std::optional<uint8>>& expected)
 {
   const DataPath outputPath = inputPath.replaceName("Output");
   const IDataArray* arrayPtr = nullptr;
@@ -306,7 +296,13 @@ void requireOtsuLabels(const DataStructure& dataStructure, const DataPath& input
   std::vector<uint8> actual(expected.size());
   const auto readResult = labelsPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-  REQUIRE(actual == expected);
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    if(expected[index].has_value())
+    {
+      REQUIRE(actual[index] == *expected[index]);
+    }
+  }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -406,32 +402,40 @@ private:
 } // namespace
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn reserves a label only when exclusion is possible", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",
+TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: unmasked floats and integers can use all 256 labels", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]",
                    float64, int32)
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
-  const auto inputPath = recon_test::BuildImageFromPattern<TestType>(dataStructure, 3, 1, 1, {0, 1, 4});
+  // Every bin has one sample. Placing 255 boundaries in 256 bins has a single configuration.
+  std::vector<TestType> values(256);
+  for(usize index = 0; index < values.size(); ++index)
+  {
+    values[index] = static_cast<TestType>(index);
+  }
+  const auto inputPath = recon_test::BuildImageFromPattern<TestType>(dataStructure, values.size(), 1, 1, values);
   const OtsuMultipleThresholdsImageFilter filter;
   auto args = otsuArguments(inputPath);
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(256));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(255));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(0));
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
   const auto preflight = filter.preflight(dataStructure, args);
-  if constexpr(std::is_floating_point_v<TestType>)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  const UInt8Array* labelsPtr = nullptr;
+  REQUIRE_NOTHROW(labelsPtr = &dataStructure.getDataRefAs<UInt8Array>(inputPath.replaceName("Output")));
+  REQUIRE(labelsPtr->getNumberOfTuples() == values.size());
+  for(usize index = 0; index < values.size(); ++index)
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().front().code == -28907);
+    REQUIRE((*labelsPtr)[index] == static_cast<uint8>(index));
   }
-  else
-  {
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finite-only thresholds and emits the saved excluded label",
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite samples determine thresholds and the mask assigns excluded labels",
           "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
@@ -441,25 +445,21 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finit
   const float64 infinity = std::numeric_limits<float64>::infinity();
   std::vector<float64> values{0, 0, 1, 1, 2, infinity, infinity, infinity};
   // The finite histogram [2, 2, 1] splits after bin 0. Including the infinities would move the split to bin 1.
-  std::vector<uint8> expected{7, 7, 8, 8, 8, 42, 42, 42};
+  std::vector<std::optional<uint8>> expected{7, 7, 8, 8, 8, std::nullopt, std::nullopt, std::nullopt};
   std::ranges::rotate(values, values.begin() + static_cast<std::vector<float64>::difference_type>(rotation));
-  std::ranges::rotate(expected, expected.begin() + static_cast<std::vector<uint8>::difference_type>(rotation));
+  std::ranges::rotate(expected, expected.begin() + static_cast<std::vector<std::optional<uint8>>::difference_type>(rotation));
   DataStructure dataStructure;
   const DataPath inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
   const Float64Array* inputPtr = nullptr;
   REQUIRE_NOTHROW(inputPtr = &dataStructure.getDataRefAs<Float64Array>(inputPath));
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3, .LabelOffset = 7, .ExcludedLabel = 42, .WarnOnNonfinite = true};
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3, .LabelOffset = 7, .ExcludedLabel = 42};
   const auto histogramResult = ImageProcessing::ComputeOtsuHistogram(inputPtr->getDataStoreRef(), static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(histogramResult);
   REQUIRE(histogramResult.value().HistogramData.min == 0);
   REQUIRE(histogramResult.value().HistogramData.max == 2);
   REQUIRE(histogramResult.value().HistogramData.counts == std::vector<usize>{2, 2, 1});
-  REQUIRE(histogramResult.value().NaNCount == 0);
-  REQUIRE(histogramResult.value().NegativeInfinityCount == 0);
-  REQUIRE(histogramResult.value().PositiveInfinityCount == 3);
   auto args = otsuArguments(inputPath);
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(3));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(42));
   const OtsuMultipleThresholdsImageFilter filter;
@@ -468,6 +468,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finit
     std::array<uint8, 8> inputMask{1, 1, 1, 1, 1, 1, 1, 1};
     const auto infinityIndex = std::distance(values.begin(), std::ranges::find(values, infinity));
     inputMask.at(static_cast<usize>(infinityIndex)) = 0;
+    expected.at(static_cast<usize>(infinityIndex)) = 42;
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(createOtsuMask(dataStructure, inputMask)));
   }
@@ -475,16 +476,13 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Warn fits finit
   SIMPLNX_RESULT_REQUIRE_VALID(restored);
   const auto result = filter.execute(dataStructure, restored.value());
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings().front().code == -28959);
-  REQUIRE(result.result.warnings().front().message.find(useMask ? "skipped 2 nonfinite pixels still selected after applying the input mask" : "skipped 3 nonfinite pixels") != std::string::npos);
-  REQUIRE(result.result.warnings().front().message.find("Excluded Label for these pixels is 42") != std::string::npos);
+  REQUIRE(result.result.warnings().empty());
   requireOtsuLabels(dataStructure, inputPath, expected);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects each selected nonfinite kind", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected nonfinite values leave finite classes unchanged", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -493,53 +491,14 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error rejects e
   const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, 3, 1, 1, {0, value, 4});
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, otsuArguments(inputPath));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -28954);
-  const auto& message = result.result.errors().front().message;
-  const auto* kind = std::isnan(value) ? "NaN" : (value < 0 ? "negative infinity" : "positive infinity");
-  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
-  REQUIRE(message.find(fmt::format("{} at zero-based flat tuple index 1", kind)) != std::string::npos);
-  REQUIRE(message.find("skip nonfinite pixels and assign Excluded Label") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Error finds the first selected nonfinite tuple across scan blocks",
-          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
-{
-  (void)Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  constexpr usize firstSelectedIndex = 262145;
-  const auto infinity = std::numeric_limits<float64>::infinity();
-  std::vector<float64> values(firstSelectedIndex + 2, 4.0);
-  values[0] = std::numeric_limits<float64>::quiet_NaN();
-  values[firstSelectedIndex] = -infinity;
-  values[firstSelectedIndex + 1] = infinity;
-  DataStructure dataStructure;
-  const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
-  const DataPath maskPath({"Mask"});
-  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {values.size()}, {1});
-  REQUIRE(maskStore != nullptr);
-  std::vector<uint8> mask(values.size(), uint8{1});
-  mask[0] = 0;
-  const auto maskWrite = maskStore->copyFromBuffer(0, nonstd::span<const uint8>(mask.data(), mask.size()));
-  SIMPLNX_RESULT_REQUIRE_VALID(maskWrite);
-  REQUIRE(UInt8Array::Create(dataStructure, maskPath.getTargetName(), maskStore) != nullptr);
-  auto args = otsuArguments(inputPath);
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
-  const OtsuMultipleThresholdsImageFilter filter;
-  const auto result = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().front().code == -28954);
-  const auto& message = result.result.errors().front().message;
-  REQUIRE(message.find(fmt::format("'{}'", inputPath.toString())) != std::string::npos);
-  REQUIRE(message.find("negative infinity at zero-based flat tuple index 262145") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  requireOtsuLabels(dataStructure, inputPath, {7, std::nullopt, 8});
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask precedes Error and accepts flat tuple count across parents",
+TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask excludes pixels and accepts equal flat tuple counts across parents",
                    "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]", bool, uint8)
 {
   (void)Application::GetOrCreateInstance();
@@ -560,7 +519,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask p
   SIMPLNX_RESULT_REQUIRE_VALID(histogramResult);
   REQUIRE(histogramResult.value().HistogramData.counts == std::vector<usize>{2, 2});
   REQUIRE(histogramResult.value().FiniteCount == 4);
-  REQUIRE(histogramResult.value().NaNCount == 0);
   auto args = otsuArguments(inputPath);
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
@@ -573,25 +531,22 @@ TEMPLATE_TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask p
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: selected finite data is required in both modes", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: an all-false mask assigns the excluded label to every pixel", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  const uint64 policy = GENERATE(uint64{0}, uint64{1});
   DataStructure dataStructure;
   const auto inputPath = recon_test::BuildImageFromPattern<float64>(dataStructure, 2, 1, 1, {0, 4});
   const auto maskPath = createOtsuMask(dataStructure, std::array<uint8, 2>{0, 0});
   auto args = otsuArguments(inputPath);
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<uint64>(policy));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(result.result.errors().front().code == -28955);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(result.result.warnings().empty());
+  requireOtsuLabels(dataStructure, inputPath, {255, 255});
 }
 
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask label collisions fail preflight", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
@@ -619,7 +574,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(8));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(createOtsuMask(dataStructure, std::array<uint8, 4>{1, 1, 1, 1})));
   }
-  SECTION("full unmasked interval leaves no masked label")
+  SECTION("full class interval leaves no label for masked pixels")
   {
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(256));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(255));
@@ -633,7 +588,8 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: configured mask
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(result.outputActions.errors().front().code == -28907);
   const auto execution = filter.execute(dataStructure, args);
-  REQUIRE(execution.result.invalid());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
+  SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
   REQUIRE(execution.result.errors().front().code == -28907);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -811,6 +767,43 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: true constants 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: finite histograms reach each checked search objective", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+{
+  (void)Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  std::vector<float64> values;
+  uint32 bins = 2;
+  bool valleyEmphasis = true;
+  int32 expectedError = 0;
+  SECTION("initial valley weighting underflows")
+  {
+    values = {2e-162, 2e-162, 2e-162, 2.1e-162};
+    expectedError = -28951;
+  }
+  SECTION("candidate objective overflows")
+  {
+    values = {0, 5e153, 1.45e154};
+    bins = 4;
+    valleyEmphasis = false;
+    expectedError = -28952;
+  }
+  SECTION("candidate valley weighting underflows")
+  {
+    values = {2e-162, 2.1e-162, 2.1e-162, 2.1e-162, 2.2e-162};
+    bins = 3;
+    expectedError = -28953;
+  }
+  DataStructure dataStructure;
+  const auto input = recon_test::BuildImageFromPattern<float64>(dataStructure, values.size(), 1, 1, values);
+  auto args = otsuArguments(input);
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(bins));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<bool>(valleyEmphasis));
+  const auto result = OtsuMultipleThresholdsImageFilter().execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().front().code == expectedError);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: optional integer ring preserves full payload batches at its grant boundary",
           "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter][OtsuRingGrant]")
 {
@@ -1211,14 +1204,12 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipe
 {
   const OtsuMultipleThresholdsImageFilter filter;
   auto json = filter.toJson(filter.getDefaultArguments());
-  json.erase("nonfinite_input_handling_index");
   json.erase("use_mask_array");
   json.erase("mask_array_path");
   json.erase("masked_label");
   const auto result = filter.fromJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  REQUIRE(result.warnings().size() == 4);
-  REQUIRE(result.value().value<ChoicesParameter::ValueType>("nonfinite_input_handling_index") == 0);
+  REQUIRE(result.warnings().size() == 3);
   REQUIRE_FALSE(result.value().value<bool>("use_mask_array"));
   REQUIRE(result.value().value<uint8>("masked_label") == 255);
   const nlohmann::json legacy{{"NumberOfThresholds", 1},
@@ -1229,7 +1220,6 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: compatible pipe
                               {"NewCellArrayName", "Output"}};
   const auto legacyResult = OtsuMultipleThresholdsImageFilter::FromSIMPLJson(legacy);
   SIMPLNX_RESULT_REQUIRE_VALID(legacyResult);
-  REQUIRE(legacyResult.value().value<ChoicesParameter::ValueType>("nonfinite_input_handling_index") == 0);
   REQUIRE_FALSE(legacyResult.value().value<bool>("use_mask_array"));
   REQUIRE(legacyResult.value().value<uint8>("masked_label") == 255);
 }
@@ -1310,11 +1300,10 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: mask selection 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constants exclude nonfinite pixels and empty selected data errors",
-          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant finite and zero-contributor histograms classify safely", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2, .LabelOffset = 7, .WarnOnNonfinite = true};
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2, .LabelOffset = 7};
   DataStore<float64> input({4}, {1}, 42.0);
   input.setValue(1, std::numeric_limits<float64>::quiet_NaN());
   input.setValue(2, -std::numeric_limits<float64>::infinity());
@@ -1325,19 +1314,20 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constants exclu
   DataStore<uint8> output({4}, {1}, uint8{99});
   const auto result = ImageProcessing::ApplyOtsuImage(input, output, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel, {});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().empty());
   REQUIRE(output.getValue(0) == 7);
-  REQUIRE(output.getValue(1) == 255);
-  REQUIRE(output.getValue(2) == 255);
-  REQUIRE(output.getValue(3) == 255);
   input.setValue(0, std::numeric_limits<float64>::quiet_NaN());
   const auto noFiniteResult = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
-  SIMPLNX_RESULT_REQUIRE_INVALID(noFiniteResult);
-  REQUIRE(noFiniteResult.errors().front().code == -28955);
+  SIMPLNX_RESULT_REQUIRE_VALID(noFiniteResult);
+  REQUIRE(noFiniteResult.value().FiniteCount == 0);
+  REQUIRE(noFiniteResult.value().HistogramData.counts == std::vector<usize>{0, 0});
+  const auto classify = ImageProcessing::ApplyOtsuImage(input, output, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel, {});
+  SIMPLNX_RESULT_REQUIRE_VALID(classify);
+  REQUIRE(classify.warnings().empty());
   const DataStore<float64> empty({0}, {1}, 0.0);
   const auto emptyResult = ImageProcessing::ComputeOtsuHistogram(empty, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
-  SIMPLNX_RESULT_REQUIRE_INVALID(emptyResult);
-  REQUIRE(emptyResult.errors().front().code == -28955);
+  SIMPLNX_RESULT_REQUIRE_VALID(emptyResult);
+  REQUIRE(emptyResult.value().FiniteCount == 0);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -1354,6 +1344,20 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: checked helper 
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -28900);
+  }
+  SECTION("scalar input required")
+  {
+    const DataStore<float64> vectorInput({2}, {2}, 0.0);
+    const auto result = ImageProcessing::ComputeOtsuHistogram(vectorInput, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -28910);
+  }
+  SECTION("scalar mask required")
+  {
+    const DataStore<uint8> vectorMask({2}, {2}, uint8{1});
+    const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(&vectorMask), options, shouldCancel);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().front().code == -28910);
   }
   SECTION("output size")
   {
@@ -1417,8 +1421,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: highest legal c
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds preserve finite classes and exclude nonfinite pixels",
-          "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds preserve finite classes with nonfinite input", "[NXImageProcessing][Issue1874][OtsuMultipleThresholdsImageFilter]")
 {
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
@@ -1428,7 +1431,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds 
   const Float64Array* inputPtr = nullptr;
   REQUIRE_NOTHROW(inputPtr = &dataStructure.getDataRefAs<Float64Array>(inputPath));
   const std::atomic_bool shouldCancel{false};
-  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3, .NumberOfThresholds = 2, .LabelOffset = 7, .WarnOnNonfinite = true};
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3, .NumberOfThresholds = 2, .LabelOffset = 7};
   const auto histogramResult = ImageProcessing::ComputeOtsuHistogram(inputPtr->getDataStoreRef(), static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(histogramResult);
   REQUIRE(histogramResult.value().HistogramData.counts == std::vector<usize>{1, 1, 1});
@@ -1436,12 +1439,11 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: two thresholds 
   auto args = otsuArguments(inputPath);
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(3));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(2));
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
   const OtsuMultipleThresholdsImageFilter filter;
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  requireOtsuLabels(dataStructure, inputPath, {7, 8, 9, 255, 255, 255});
+  REQUIRE(result.result.warnings().empty());
+  requireOtsuLabels(dataStructure, inputPath, {7, 8, 9, std::nullopt, std::nullopt, std::nullopt});
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
@@ -1525,16 +1527,13 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: floating summar
     inputPtr->setValue(index, values.at(periodIndex));
     mask.setValue(index, periodIndex < (excludeNonfinite ? 2 : 5) ? uint8{255} : uint8{0});
   }
-  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2, .WarnOnNonfinite = !excludeNonfinite, .TargetBytes = targetBytes};
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2, .TargetBytes = targetBytes};
   const std::atomic_bool shouldCancel{false};
   const auto result = ImageProcessing::ComputeOtsuHistogram(*inputPtr, static_cast<const AbstractDataStore<uint8>*>(&mask), options, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(result.value().HistogramData.min == 0);
   REQUIRE(result.value().HistogramData.max == 4);
   REQUIRE(result.value().FiniteCount == 131074);
-  REQUIRE(result.value().NaNCount == (excludeNonfinite ? 0 : 65537));
-  REQUIRE(result.value().NegativeInfinityCount == (excludeNonfinite ? 0 : 65537));
-  REQUIRE(result.value().PositiveInfinityCount == (excludeNonfinite ? 0 : 65537));
   // Per period only 0 and 4 contribute to the histogram, regardless of selected nonfinite values.
   const std::vector<usize> expected{65537, 65537};
   REQUIRE(result.value().HistogramData.counts == expected);
@@ -1556,7 +1555,6 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: resident integr
   (void)Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const image_integration::StoreExpectation expectedStore{IDataStore::StoreType::InMemory};
-  const bool useMask = GENERATE(false, true);
   const auto nan = std::numeric_limits<float64>::quiet_NaN();
   const auto inf = std::numeric_limits<float64>::infinity();
   const std::vector<float64> original{0, 4, inf, 4, nan, -inf, 0};
@@ -1569,18 +1567,13 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: resident integr
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(1));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(7));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskedLabel_Key, std::make_any<uint8>(255));
-  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NonfiniteInputHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  if(useMask)
-  {
-    const auto mask = createOtsuMask(dataStructure, std::array<uint8, 7>{1, 1, 1, 1, 0, 1, 1});
-    REQUIRE(image_integration::Read<uint8>(dataStructure, mask, ShapeType{7}, expectedStore) == std::vector<uint8>{1, 1, 1, 1, 0, 1, 1});
-    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
-    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(mask));
-  }
+  const auto mask = createOtsuMask(dataStructure, std::array<uint8, 7>{1, 1, 0, 1, 0, 0, 1});
+  REQUIRE(image_integration::Read<uint8>(dataStructure, mask, ShapeType{7}, expectedStore) == std::vector<uint8>{1, 1, 0, 1, 0, 0, 1});
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_UseMaskArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(mask));
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings().front().message.find(useMask ? "skipped 2 nonfinite pixels still selected after applying the input mask" : "skipped 3 nonfinite pixels") != std::string::npos);
+  REQUIRE(result.result.warnings().empty());
   const auto classes = input.replaceName("Classes");
   REQUIRE(image_integration::Read<uint8>(dataStructure, classes, shape, expectedStore) == std::vector<uint8>{7, 8, 255, 8, 255, 255, 7});
   const auto selected = image_integration::Select(dataStructure, classes, 8, 8, "DesiredClass");

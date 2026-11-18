@@ -11,10 +11,8 @@ namespace nx::core
  * @class ThresholdMaximumConnectedComponentsImageFilter
  * @brief Searches native finite bounds with a component-count heuristic and an absolute two-intensity-unit stop.
  *
- * The input may be ANY scalar type; the output is a FIXED uint8 binary image (Inside Value / Outside Value)
- * regardless of the input element type. Safe midpoint arithmetic can change legacy segmentations. Image NaN and
- * infinities support Error or warned Outside participation. The shared traversal supports both storage types;
- * component run tables still grow with image topology. The search does not guarantee a global maximum.
+ * Finite scalar input values define the search interval. The uint8 output uses Inside Value and Outside Value.
+ * The search counts nonzero output components. Component run tables grow with image topology.
  */
 class NXIMAGEPROCESSING_EXPORT ThresholdMaximumConnectedComponentsImageFilter : public IFilter
 {
@@ -35,8 +33,6 @@ public:
   static constexpr StringLiteral k_UpperBoundary_Key = "upper_boundary";
   static constexpr StringLiteral k_InsideValue_Key = "inside_value";
   static constexpr StringLiteral k_OutsideValue_Key = "outside_value";
-  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
-  static constexpr StringLiteral k_NonfiniteInputHandling_Key = "nonfinite_input_handling_index";
 
   std::string name() const override;
   std::string className() const override;

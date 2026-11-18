@@ -145,7 +145,6 @@ Key parameters:
 - `label_offset`: `0`
 - `mask_array_path`: `""`
 - `masked_label`: `255`
-- `nonfinite_input_handling_index`: `0`
 - `number_of_histogram_bins`: `128`
 - `number_of_thresholds`: `2`
 - `output_array_name`: `"Otsu Regions"`
@@ -277,7 +276,6 @@ Key parameters:
 - `invalid_color_value`: `[0,0,0]`
 - `leading_digit_character`: `"0"`
 - `mask_array_path`: `""`
-- `nonfinite_input_handling_index`: `0`
 - `plane_index`: `0`
 - `selected_preset`: `"Black-Body Radiation"`
 - `total_index_digits`: `3`
