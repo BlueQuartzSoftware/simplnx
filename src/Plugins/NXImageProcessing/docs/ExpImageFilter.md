@@ -42,6 +42,8 @@ The filter applies the same exponential operation to resident and disk-backed ar
 
 ## Example Pipelines
 
+`15_Radiography_Intensity_Calibration.d3dpipeline` uses this filter to convert *Transmission* into *Exponential Response*.
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.

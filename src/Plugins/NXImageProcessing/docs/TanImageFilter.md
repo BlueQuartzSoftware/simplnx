@@ -44,6 +44,8 @@ The filter evaluates each value independently through the existing pointwise tra
 
 ## Example Pipelines
 
+`16_Phase_and_Angle_Field_Transforms.d3dpipeline` uses this filter to convert *Phase Radians* into *Tangent*.
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.

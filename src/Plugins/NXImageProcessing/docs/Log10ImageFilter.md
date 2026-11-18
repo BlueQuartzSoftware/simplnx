@@ -55,6 +55,8 @@ This is an ITK-free implementation of the legacy ITK Log10 Image Filter. It uses
 
 ## Example Pipelines
 
+`15_Radiography_Intensity_Calibration.d3dpipeline` uses this filter to convert *Transmission* into *Base-10 Log Transmission*.
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
