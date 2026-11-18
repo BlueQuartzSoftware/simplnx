@@ -1015,6 +1015,11 @@ Result<> SubtractHConvexContrast(const AbstractDataStore<T>& input, const Abstra
   }
 }
 
+inline constexpr int32 k_MarkerIdConversionError = -79073;
+inline constexpr int32 k_MarkerIdConversionWarning = -79074;
+inline constexpr int32 k_MarkerIdCopyAllocationFailed = -79075;
+inline constexpr int32 k_MarkerIdRestoreAllocationFailed = -79076;
+
 /** @brief Constant-size native context for the existing bounded marker-copy pass. */
 template <class T>
 class MarkerIdConversionState
@@ -1055,13 +1060,13 @@ public:
     if(handling == MarkerIdConversionHandling::Error)
     {
       return MergeResults(std::move(result),
-                          MakeErrorResult(-79073, context +
-                                                      "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
-                                                      "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
+                          MakeErrorResult(k_MarkerIdConversionError,
+                                          context + "Execution stopped before flooding. Use IDs that round-trip, or select 'Warn and Continue (Legacy Behavior)' under "
+                                                    "'Marker ID Conversion Handling' only if you intentionally accept seed loss, renamed IDs, merged basins, and incorrect region measurements."));
     }
-    return MergeResults(std::move(result),
-                        MakeWarningVoidResult(79074, context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
-                                                               "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
+    return MergeResults(std::move(result), MakeWarningVoidResult(k_MarkerIdConversionWarning,
+                                                                 context + "'Warn and Continue (Legacy Behavior)' retains the old conversion and flood. Seeds can disappear or merge, IDs can be "
+                                                                           "renamed, and basin boundaries, region sizes, and downstream feature measurements can be incorrect."));
   }
 
 private:
@@ -1135,8 +1140,9 @@ struct WidenIntegerArrayToUInt32Fn
       return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
     } catch(const std::bad_alloc&)
     {
-      return conversionState.finish(srcPath, ConversionHandling,
-                                    MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while copying marker IDs.")));
+      return conversionState.finish(
+          srcPath, ConversionHandling,
+          MergeResults(std::move(accumulated), MakeErrorResult(k_MarkerIdCopyAllocationFailed, "Morphological watershed could not allocate working storage while copying marker IDs.")));
     }
   }
 };
@@ -1209,7 +1215,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
       return accumulated;
     } catch(const std::bad_alloc&)
     {
-      return MergeResults(std::move(accumulated), MakeErrorResult(-79045, "Morphological watershed could not allocate working storage while restoring marker IDs."));
+      return MergeResults(std::move(accumulated), MakeErrorResult(k_MarkerIdRestoreAllocationFailed, "Morphological watershed could not allocate working storage while restoring marker IDs."));
     }
   }
 };
