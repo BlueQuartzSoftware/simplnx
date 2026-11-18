@@ -50,6 +50,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -447,12 +448,17 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: invalid active spacing i
       spacing.at(axis) = invalidSpacing;
       geometryPtr->setSpacing({spacing.at(0), spacing.at(1), spacing.at(2)});
       const CurvatureFlowImageFilter filter;
-      const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = iterations}));
-      // All executions are deferred: nonfinite spacing can poison even a constant baseline.
-      // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-      // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-      REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_CurvatureFlowInvalidSpacing);
+      const auto args = makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = iterations});
+      const auto preflight = filter.preflight(dataStructure, args);
+      // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+      const auto result = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+      const auto& error = result.result.errors().front();
+      REQUIRE(error.code == ImageProcessing::k_CurvatureFlowInvalidSpacing);
+      REQUIRE(error.message.find(inputPath.getParent().getParent().toString()) != std::string::npos);
+      REQUIRE(error.message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
+      // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
@@ -469,9 +475,9 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: finite negative spacing 
   REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()));
   geometryPtr->setSpacing({-1.0F, -2.0F, unusedSpacing});
   const CurvatureFlowImageFilter filter;
-  const auto result = filter.preflight(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = 0}));
+  const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = 0.0, .Iterations = 0}));
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

@@ -48,6 +48,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -234,6 +235,12 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
   // This deliberately stops at preflight. Invalid coefficients must never reach an unchecked output conversion.
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  const auto& error = preflight.outputActions.errors().front();
+  // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
+  REQUIRE(error.code == ImageProcessing::k_SmoothingGaussianInvalidSigma);
+  REQUIRE(error.message.find(inputPath.getParent().getParent().toString()) != std::string::npos);
+  REQUIRE(error.message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
+  // NOLINTEND(bugprone-chained-comparison)
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -258,6 +265,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite a
   // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidSpacing);
+  REQUIRE(result.result.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  REQUIRE(result.result.errors().front().message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
   // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -287,6 +296,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: invalid eff
   // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == ImageProcessing::k_SmoothingGaussianInvalidScale);
+  REQUIRE(result.result.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+  REQUIRE(result.result.errors().front().message.find(std::string("axis ") + std::string_view{"XYZ"}.at(axis)) != std::string::npos);
   // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

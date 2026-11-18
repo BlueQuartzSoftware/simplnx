@@ -32,6 +32,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -413,8 +414,8 @@ inline Result<> ValidateSmoothingGaussianSigma(const std::vector<float64>& sigma
     if(axis >= sigma.size() || !std::isfinite(sigma.at(axis)) || sigma.at(axis) <= 0.0)
     {
       return MakeErrorResult(k_SmoothingGaussianInvalidSigma,
-                             fmt::format("Smoothing Recursive Gaussian Sigma for active axis {} must be finite and positive; received {}. Correct Sigma before execution.", axis,
-                                         axis < sigma.size() ? fmt::format("{}", sigma.at(axis)) : "no value"));
+                             fmt::format("Smoothing Recursive Gaussian Sigma for active axis {} must be finite and positive; received {}. Correct Sigma before execution.",
+                                         std::string_view{"XYZ"}.at(axis), axis < sigma.size() ? fmt::format("{}", sigma.at(axis)) : "no value"));
     }
   }
   return {};
@@ -435,16 +436,16 @@ inline Result<> ValidateSmoothingGaussianControls(const std::vector<float64>& si
     {
       return MakeErrorResult(
           k_SmoothingGaussianInvalidSpacing,
-          fmt::format("Smoothing Recursive Gaussian spacing for active axis {} must be finite with absolute value greater than 1e-8; received {}. Correct the Image Geometry spacing.", axis,
-                      spacingValue));
+          fmt::format("Smoothing Recursive Gaussian spacing for active axis {} must be finite with absolute value greater than 1e-8; received {}. Correct the Image Geometry spacing.",
+                      std::string_view{"XYZ"}.at(axis), spacingValue));
     }
     const double scale = sigma.at(axis) / std::abs(spacingValue);
     if(!std::isfinite(scale) || scale <= 0.0)
     {
       return MakeErrorResult(
           k_SmoothingGaussianInvalidScale,
-          fmt::format("Smoothing Recursive Gaussian effective scale for active axis {} is {} (Sigma {}, spacing {}). Choose values whose Sigma / absolute spacing is finite and positive.", axis, scale,
-                      sigma.at(axis), spacingValue));
+          fmt::format("Smoothing Recursive Gaussian effective scale for active axis {} is {} (Sigma {}, spacing {}). Choose values whose Sigma / absolute spacing is finite and positive.",
+                      std::string_view{"XYZ"}.at(axis), scale, sigma.at(axis), spacingValue));
     }
     const auto coefficients = ComputeRecursiveGaussianCoefficients(sigma.at(axis), spacingValue, 0, false);
     const std::array<double, 20> values{coefficients.n0,  coefficients.n1,  coefficients.n2,  coefficients.n3,  coefficients.d1,  coefficients.d2,  coefficients.d3,
@@ -454,7 +455,7 @@ inline Result<> ValidateSmoothingGaussianControls(const std::vector<float64>& si
     {
       return MakeErrorResult(k_SmoothingGaussianInvalidCoefficients, fmt::format("Smoothing Recursive Gaussian coefficients are nonfinite for active axis {} (Sigma {}, spacing {}, effective scale "
                                                                                  "{}). Choose different Sigma or spacing values. Finite coefficients do not guarantee accuracy at extreme scales.",
-                                                                                 axis, sigma.at(axis), spacingValue, scale));
+                                                                                 std::string_view{"XYZ"}.at(axis), sigma.at(axis), spacingValue, scale));
     }
   }
   return {};
