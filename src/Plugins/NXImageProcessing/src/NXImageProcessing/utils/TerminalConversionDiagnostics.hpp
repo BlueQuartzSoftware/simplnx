@@ -7,75 +7,76 @@
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 
 #include <fmt/format.h>
-#include <limits>
+
+#include <atomic>
+#include <string_view>
 #include <utility>
 
 namespace nx::core::ImageProcessing::detail
 {
 /**
- * @brief Adds Curvature Flow conversion diagnostics after the transfer diagnostics.
- * @param state Conversion outcomes from the completed buffers.
- * @param result Diagnostics received before finalization.
- * @return The transfer and conversion diagnostics in their original order.
+ * @brief Retains completed conversion and transfer warnings when the public filter reports cancellation.
+ * @param result Collected execution diagnostics.
+ * @param shouldCancel Cancellation flag supplied by the caller.
+ * @return Execution diagnostics including cancellation when previous warnings must be delivered.
  */
+inline Result<> FinishCheckedImageExecution(Result<> result, const std::atomic_bool& shouldCancel)
+{
+  if(shouldCancel && result.valid() && !result.warnings().empty())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-1, "Filter cancelled"));
+  }
+  return result;
+}
+
+/**
+ * @brief Formats up to one error and one warning after all terminal workers finish.
+ * @param state Combined counts from final conversion.
+ * @param result Transfer diagnostics already collected.
+ * @param filterName Filter and optional output type to name in diagnostics.
+ * @param nonFiniteCode Error code for a rejected integer conversion.
+ * @param clippedCode Warning code for clipped integers.
+ * @param nonFiniteAdvice Action to take after a rejected conversion.
+ * @param clippingAdvice Action to take after clipping.
+ * @return Transfer diagnostics with the conversion error or warning, if present.
+ */
+inline Result<> ReportTerminalImageConversion(const TerminalConversionState& state, Result<> result, std::string_view filterName, int32 nonFiniteCode, int32 clippedCode,
+                                              std::string_view nonFiniteAdvice, std::string_view clippingAdvice)
+{
+  const auto partial = state.partial() ? " Partial count from the inspected output." : "";
+  if(state.nonFiniteCount() != 0)
+  {
+    const auto location = state.nonFiniteCount() == 1 ? fmt::format(" at flat value index {}", state.nonFiniteIndex()) : "";
+    Result<> error = MakeErrorResult(nonFiniteCode, fmt::format("{} computed {} nonfinite {}{} for integer output.{} {}", filterName, state.nonFiniteCount(),
+                                                                state.nonFiniteCount() == 1 ? "value" : "values", location, partial, nonFiniteAdvice));
+    result = MergeResults(std::move(result), std::move(error));
+  }
+  if(state.clippedCount() != 0)
+  {
+    result.warnings().push_back({.code = clippedCode,
+                                 .message = fmt::format("{} clipped {} finite {} to the integer output range after truncation.{} {}", filterName, state.clippedCount(),
+                                                        state.clippedCount() == 1 ? "value" : "values", partial, clippingAdvice)});
+  }
+  return result;
+}
+
 inline Result<> ReportCurvatureFlowConversion(const TerminalConversionState& state, Result<> result)
 {
-  Result<> conversion;
-  const usize failedIndex = state.nonFiniteIndex();
-  if(failedIndex != std::numeric_limits<usize>::max())
-  {
-    conversion = MakeErrorResult(
-        k_CurvatureFlowNonFiniteIntegerOutput,
-        fmt::format("Curvature Flow produced a nonfinite integer output at flat value index {}. Reduce Time Step or use a floating-point input array to retain nonfinite output.", failedIndex));
-  }
-  if(state.clipped())
-  {
-    conversion.warnings().push_back({.code = k_CurvatureFlowClippedIntegerOutput,
-                                     .message = "Curvature Flow clipped final integer values to the output type's range after truncation. The evolution may be unstable. "
-                                                "Reduce Time Step and check downstream masks and segmentation for clipping plateaus."});
-  }
-  return MergeResults(std::move(result), std::move(conversion));
+  return ReportTerminalImageConversion(state, std::move(result), "Curvature Flow", k_CurvatureFlowNonFiniteIntegerOutput, k_CurvatureFlowClippedIntegerOutput,
+                                       "Reduce Time Step or use a floating-point input array to retain nonfinite results.",
+                                       "The evolution may be unstable. Reduce Time Step and check downstream masks and segmentation for clipping plateaus.");
 }
 
-/**
- * @brief Reports a conversion failure to stop the active smoothing pass.
- * @tparam T Output pixel type used in the error message.
- * @param state Conversion outcomes from the completed buffers.
- * @return An error at the lowest rejected index, or a valid result when there is no rejection.
- */
-template <class T>
-Result<> SmoothingGaussianNonFiniteResult(const TerminalConversionState& state)
-{
-  if(state.nonFiniteIndex() == std::numeric_limits<usize>::max())
-  {
-    return {};
-  }
-  return MakeErrorResult(k_SmoothingGaussianNonFiniteIntegerOutput, fmt::format("Smoothing Recursive Gaussian produced a nonfinite value at flat value index {} for output type '{}'. Use a "
-                                                                                "floating-point input array to retain nonfinite output, or correct nonfinite input values.",
-                                                                                state.nonFiniteIndex(), DataTypeToString(GetDataType<T>())));
-}
-
-/**
- * @brief Adds Smoothing Recursive Gaussian conversion diagnostics while retaining the first error.
- * @tparam T Output pixel type used in the diagnostics.
- * @param state Conversion outcomes from the completed buffers.
- * @param result Diagnostics received before finalization.
- * @return The first error and all diagnostics collected by the smoothing pass.
- */
 template <class T>
 Result<> ReportSmoothingGaussianConversion(const TerminalConversionState& state, Result<> result)
 {
-  if(result.valid())
+  if(state.nonFiniteCount() == 0 && state.clippedCount() == 0)
   {
-    result = MergeResults(std::move(result), SmoothingGaussianNonFiniteResult<T>(state));
+    return result;
   }
-  if(state.clipped())
-  {
-    result.warnings().push_back({.code = k_SmoothingGaussianClippedIntegerOutput,
-                                 .message = fmt::format("Smoothing Recursive Gaussian clipped finite final integer values to the '{}' range after truncation. Review the "
-                                                        "output before thresholding or segmentation; use a floating-point input to retain these values.",
-                                                        DataTypeToString(GetDataType<T>()))});
-  }
-  return result;
+  const auto name = fmt::format("Smoothing Recursive Gaussian (output type '{}')", DataTypeToString(GetDataType<T>()));
+  return ReportTerminalImageConversion(state, std::move(result), name, k_SmoothingGaussianNonFiniteIntegerOutput, k_SmoothingGaussianClippedIntegerOutput,
+                                       "Use a floating-point input array to retain nonfinite results.",
+                                       "Review the output before thresholding or segmentation. Use a floating-point input to retain these values.");
 }
 } // namespace nx::core::ImageProcessing::detail

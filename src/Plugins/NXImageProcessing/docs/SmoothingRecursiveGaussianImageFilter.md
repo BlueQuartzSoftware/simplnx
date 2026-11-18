@@ -42,10 +42,11 @@ serially.
 
 For integer output, the filter truncates each finite final value toward zero. It clips the result to the output type's
 range if needed. For example, an int8 result of 127.75 becomes 127 without clipping, while 128 clips to 127. The filter
-reports one warning if any values clip.
+reports the total number of clipped values in one warning.
 
-If the final value is NaN or infinity, integer output fails with an error that identifies the value's index and output
-type.
+If the calculation produces NaN or infinity, integer output fails. One error gives the number of nonfinite results,
+the output type, and the flat index if exactly one value was found. If conversion stops early, the diagnostics identify
+partial counts. A block containing a rejected result is skipped. Completed blocks can remain in the output.
 
 Floating-point output retains NaN and infinity. A double value just above the largest finite float32 magnitude can
 round back to that magnitude. At or beyond the overflow midpoint, it rounds to infinity with the same sign.
@@ -56,7 +57,6 @@ Review clipping warnings after updating a saved pipeline. Earlier versions could
 when the smoothed value exceeded the output type's range. Clipping can change later thresholding and segmentation.
 Use floating-point input if you need fractional or nonfinite output. Intermediate values still have float32 precision.
 
-Cancellation or a later file error can leave completed blocks in the output.
 
 % Auto generated parameter table will be inserted here
 

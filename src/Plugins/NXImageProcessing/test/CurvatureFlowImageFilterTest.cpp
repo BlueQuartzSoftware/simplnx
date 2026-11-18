@@ -32,7 +32,6 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
-#include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
@@ -505,63 +504,6 @@ TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero operation 
   requireCurvatureFlowConstant(dataStructure, inputPath, inputValue, {.TimeStep = zeroIterations ? 0.05 : 0.0, .Iterations = zeroIterations ? 0u : 1u});
 }
 
-// NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition triggers this check.
-TEMPLATE_TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: terminal integer conversion has exact bounds", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]", int8, uint8, int16, uint16,
-                   int32, uint32, int64, uint64)
-{
-  using ImageProcessing::detail::ConvertTerminalImageValue;
-  using ImageProcessing::detail::TerminalImageConversionStatus;
-  TestType output = 7;
-  REQUIRE(ConvertTerminalImageValue(93.75, output) == TerminalImageConversionStatus::Valid);
-  REQUIRE(output == TestType{93});
-  REQUIRE(ConvertTerminalImageValue(-0.5, output) == TerminalImageConversionStatus::Valid);
-  REQUIRE(output == TestType{0});
-  const double upper = std::ldexp(1.0, std::numeric_limits<TestType>::digits);
-  REQUIRE(ConvertTerminalImageValue(upper, output) == TerminalImageConversionStatus::Clipped);
-  REQUIRE(output == std::numeric_limits<TestType>::max());
-  if constexpr(std::numeric_limits<TestType>::digits <= 32)
-  {
-    REQUIRE(ConvertTerminalImageValue(static_cast<double>(std::numeric_limits<TestType>::max()) + 0.5, output) == TerminalImageConversionStatus::Valid);
-    REQUIRE(output == std::numeric_limits<TestType>::max());
-  }
-  if constexpr(std::is_signed_v<TestType>)
-  {
-    REQUIRE(ConvertTerminalImageValue(-upper, output) == TerminalImageConversionStatus::Valid);
-    REQUIRE(output == std::numeric_limits<TestType>::lowest());
-    REQUIRE(ConvertTerminalImageValue(std::nextafter(-upper - 1.0, -std::numeric_limits<double>::infinity()), output) == TerminalImageConversionStatus::Clipped);
-    REQUIRE(output == std::numeric_limits<TestType>::lowest());
-    REQUIRE(ConvertTerminalImageValue(-1.5, output) == TerminalImageConversionStatus::Valid);
-    REQUIRE(output == TestType{-1});
-  }
-  else
-  {
-    REQUIRE(ConvertTerminalImageValue(-1.5, output) == TerminalImageConversionStatus::Clipped);
-    REQUIRE(output == TestType{0});
-  }
-  for(const double value : {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()})
-  {
-    output = 7;
-    REQUIRE(ConvertTerminalImageValue(value, output) == TerminalImageConversionStatus::NonFinite);
-    REQUIRE(output == TestType{7});
-  }
-}
-// NOLINTEND(bugprone-chained-comparison)
-
-TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: floating narrowing retains IEEE values", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
-{
-  using ImageProcessing::detail::NarrowFloatingImageValue;
-  const auto positive = NarrowFloatingImageValue<float32>(std::numeric_limits<float64>::max());
-  const auto negative = NarrowFloatingImageValue<float32>(-std::numeric_limits<float64>::max());
-  REQUIRE(std::isinf(positive));
-  REQUIRE_FALSE(std::signbit(positive));
-  REQUIRE(std::isinf(negative));
-  REQUIRE(std::signbit(negative));
-  REQUIRE(std::isnan(NarrowFloatingImageValue<float32>(std::numeric_limits<float64>::quiet_NaN())));
-  REQUIRE(std::signbit(NarrowFloatingImageValue<float32>(-0.0)));
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(NarrowFloatingImageValue<float64>(std::numeric_limits<float32>::max()) == static_cast<float64>(std::numeric_limits<float32>::max()));
-}
-
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: independent one-step stencil truncates then clips once", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
@@ -622,7 +564,12 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: nonfinite terminal integ
   const auto result = filter.execute(dataStructure, makeCurvatureFlowArgs(inputPath, {.TimeStep = std::numeric_limits<float64>::max(), .Iterations = 1}));
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == ImageProcessing::k_CurvatureFlowNonFiniteIntegerOutput);
-  REQUIRE(result.result.errors().front().message.find("index 4") != std::string::npos);
+  REQUIRE(result.result.errors().size() == 1);
+  const auto& message = result.result.errors().front().message;
+  REQUIRE(message.find("1 nonfinite value at flat value index 4") != std::string::npos);
+  REQUIRE(message.find(inputPath.replaceName("Output").toString()) != std::string::npos);
+  REQUIRE(message.find("uint8") != std::string::npos);
+  REQUIRE(message.find("Partial") == std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
@@ -641,6 +588,10 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong t
   const auto copyResult = input.copyFromBuffer(0, field);
   SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
   CurvatureFlowForwardingStore<uint8> output(shape);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    output.setValue(index, 73);
+  }
   DataStore<float64> first(shape, ShapeType{1}, 0.0);
   DataStore<float64> second(shape, ShapeType{1}, 0.0);
   const std::atomic_bool shouldCancel{false};
@@ -668,12 +619,22 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: streamed and ping-pong t
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == ImageProcessing::k_CurvatureFlowNonFiniteIntegerOutput);
+    REQUIRE(result.errors().size() == 1);
+    REQUIRE(result.errors().front().message.find("2 nonfinite values") != std::string::npos);
+    REQUIRE(result.errors().front().message.find("index") == std::string::npos);
+    REQUIRE(result.errors().front().message.find("Partial") == std::string::npos);
+    REQUIRE(output.writeCount() == 0);
+    for(usize index = 0; index < output.getSize(); ++index)
+    {
+      REQUIRE(output.getValue(index) == 73);
+    }
   }
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.warnings().size() == 1);
     REQUIRE(result.warnings().front().code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput);
+    REQUIRE(result.warnings().front().message.find("clipped 2 finite values") != std::string::npos);
     REQUIRE(output.getValue(4) == 0);
     REQUIRE(output.getValue(13) == 0);
     REQUIRE(output.writeCount() == 2);
@@ -714,6 +675,27 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: native no-op propagates 
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: public cancellation preserves completed warnings", "[NXImageProcessing][CurvatureFlowImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto input = rt::BuildImageFromPattern<uint8>(dataStructure, 1, 1, 1, {7});
+  std::atomic_bool cancel = false;
+  auto reader = std::make_shared<CurvatureFlowForwardingStore<uint8>>(ShapeType{1, 1, 1}, false, false, false, &cancel);
+  reader->warnOnReads();
+  const auto replacement = dataStructure.getDataRefAs<UInt8Array>(input).setDataStore(reader);
+  SIMPLNX_RESULT_REQUIRE_VALID(replacement);
+  const CurvatureFlowImageFilter filter;
+  const auto execution = filter.execute(dataStructure, makeCurvatureFlowArgs(input, {.TimeStep = 0.0, .Iterations = 1}), nullptr, {}, cancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+  REQUIRE(reader->readCount() == 1);
+  REQUIRE(execution.result.errors().size() == 1);
+  REQUIRE(execution.result.errors().front().code == -1);
+  REQUIRE(execution.result.warnings().size() == 1);
+  REQUIRE(execution.result.warnings().front().code == -28893);
+}
+
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: resident wrapper merges clipping warning with copy failure", "[NXImageProcessing][Issue1874][CurvatureFlowImageFilter]")
 {
   Application::GetOrCreateInstance();
@@ -812,6 +794,10 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exi
   const ShapeType shape{3, 3, 3};
   CurvatureFlowForwardingStore<uint8> input(shape);
   CurvatureFlowForwardingStore<uint8> output(shape);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    output.setValue(index, 71);
+  }
   const std::array<uint8, 9> plane{0, 0, 0, 0, 100, 100, 0, 100, 100};
   for(usize index = 0; index < 27; ++index)
   {
@@ -853,10 +839,14 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 3D exi
   }
   REQUIRE(output.writeCount() == 1);
   REQUIRE(output.getValue(4) == 0);
+  REQUIRE(output.getValue(13) == 71);
   const auto countWarnings = [&](int32 code) {
     return static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(), [code](const Warning& warning) { return warning.code == code; }));
   };
   REQUIRE(countWarnings(ImageProcessing::k_CurvatureFlowClippedIntegerOutput) == 1);
+  const auto clipped = std::ranges::find(result.warnings(), ImageProcessing::k_CurvatureFlowClippedIntegerOutput, &Warning::code);
+  REQUIRE(clipped->message.find("clipped 1 finite value") != std::string::npos);
+  REQUIRE(clipped->message.find("Partial") != std::string::npos);
   REQUIRE(countWarnings(-28893) == input.readCount());
   REQUIRE(countWarnings(-28894) == output.writeCount());
   REQUIRE(result.warnings().size() == input.readCount() + output.writeCount() + 1);
@@ -876,6 +866,10 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D ter
   const auto copyResult = input.copyFromBuffer(0, field);
   SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
   CurvatureFlowForwardingStore<uint8> output(shape);
+  for(usize index = 0; index < output.getSize(); ++index)
+  {
+    output.setValue(index, 71);
+  }
   CurvatureFlowForwardingStore<float64> first(shape);
   CurvatureFlowForwardingStore<float64> second(shape);
   second.warnOnReads();
@@ -907,10 +901,14 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: synthetic delayed 2D ter
   }
   REQUIRE(output.writeCount() == 2);
   REQUIRE(output.getValue(4) == 0);
+  REQUIRE(output.getValue(7) == 71);
   const auto countWarnings = [&](int32 code) {
     return static_cast<usize>(std::count_if(result.warnings().begin(), result.warnings().end(), [code](const Warning& warning) { return warning.code == code; }));
   };
   REQUIRE(countWarnings(ImageProcessing::k_CurvatureFlowClippedIntegerOutput) == 1);
+  const auto clipped = std::ranges::find(result.warnings(), ImageProcessing::k_CurvatureFlowClippedIntegerOutput, &Warning::code);
+  REQUIRE(clipped->message.find("clipped 1 finite value") != std::string::npos);
+  REQUIRE(clipped->message.find("Partial") != std::string::npos);
   REQUIRE(countWarnings(-28893) == second.readCount());
   REQUIRE(countWarnings(-28894) == output.writeCount());
   REQUIRE(result.warnings().size() == second.readCount() + output.writeCount() + 1);

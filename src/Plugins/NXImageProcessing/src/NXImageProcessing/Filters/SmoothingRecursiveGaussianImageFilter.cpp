@@ -1,6 +1,7 @@
 #include "SmoothingRecursiveGaussianImageFilter.hpp"
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -117,7 +118,9 @@ Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataS
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
 
-  return ImageProcessing::ExecuteSmoothingRecursiveGaussianImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+  return ImageProcessing::detail::FinishCheckedImageExecution(
+      ImageProcessing::ExecuteSmoothingRecursiveGaussianImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, sigma, normalizeAcrossScale, shouldCancel, messageHandler),
+      shouldCancel);
 }
 
 namespace

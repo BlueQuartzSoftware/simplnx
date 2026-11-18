@@ -788,8 +788,10 @@ Reset a prior fixed notation explicitly with `std::defaultfloat`. For printf, us
 - Use `ImageProcessing::detail::ConvertTerminalImageValue` when a filter must report clipping or reject nonfinite
   integer output. Finite integer conversions truncate toward zero, then clip if the integer is out of range. The
   result status identifies clipping. A nonfinite value for an integer output returns `NonFinite` and leaves the
-  destination untouched. A floating output can retain NaN and infinity. The caller combines the clipping
-  information into one filter warning and identifies a rejected value by its flat index.
+  destination untouched. A floating output can retain NaN and infinity. Report one clipping warning with the
+  total number clipped. For a nonfinite integer result, report one error with the total rejected and the output
+  path and type. Include the flat index only when exactly one result was rejected. If a transfer failure or
+  cancellation interrupts conversion, identify any reported counts as partial.
 - Use `ImageProcessing::detail::SaturateCastFromDouble<U>()` for intentional clamping when only the converted value
   is needed. For an integer destination, NaN maps to zero and the infinities map to the native bounds. Apply these
   mappings only when the caller's nonfinite policy permits them. A converted value alone cannot identify clipping.
