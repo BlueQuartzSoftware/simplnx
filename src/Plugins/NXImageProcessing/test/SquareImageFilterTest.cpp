@@ -14,10 +14,11 @@
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -25,46 +26,67 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
 
 #include <any>
 #include <array>
 #include <atomic>
 #include <cmath>
+#include <functional>
 #include <limits>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
 
 namespace
 {
+// This resident test double selects the buffered range-scan route and signals the first completed read.
+class SquareRangeReadStore : public DataStore<int64>
+{
+public:
+  explicit SquareRangeReadStore(std::function<void()> onFirstRead)
+  : DataStore<int64>(ShapeType{1, 1, 2}, ShapeType{1}, 5)
+  , m_OnFirstRead(std::move(onFirstRead))
+  {
+  }
+
+  ~SquareRangeReadStore() noexcept override = default;
+  SquareRangeReadStore(const SquareRangeReadStore&) = delete;
+  SquareRangeReadStore(SquareRangeReadStore&&) = delete;
+  SquareRangeReadStore& operator=(const SquareRangeReadStore&) = delete;
+  SquareRangeReadStore& operator=(SquareRangeReadStore&&) = delete;
+
+  IDataStore::StoreType getStoreType() const override
+  {
+    return IDataStore::StoreType::Empty;
+  }
+
+  Result<> copyIntoBuffer(usize offset, nonstd::span<int64> values) const override
+  {
+    auto result = DataStore<int64>::copyIntoBuffer(offset, values);
+    if(result.valid() && ++m_ReadCount == 1)
+    {
+      m_OnFirstRead();
+    }
+    return result;
+  }
+
+  usize readCount() const
+  {
+    return m_ReadCount;
+  }
+
+private:
+  std::function<void()> m_OnFirstRead;
+  mutable usize m_ReadCount = 0;
+};
+
 DataPath runSquareWithType(DataStructure& dataStructure, const DataPath& inputPath, DataType expectedType, const ShapeType& tupleShape, const ShapeType& componentShape)
 {
-  Arguments args;
-  args.insertOrAssign(SquareImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(SquareImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const SquareImageFilter filter;
-  const auto preflightResult = filter.preflight(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr != nullptr);
-  // A hard preflight guard stops the old same-width output before any narrowing overflow or typed lookup.
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->type() == expectedType);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->dims() == tupleShape);
-  // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
-  REQUIRE(actionPtr->componentDims() == componentShape);
-
-  const auto executeResult = filter.execute(dataStructure, args);
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx assertion macro.
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const DataPath outputPath = inputPath.replaceName("Output");
+  const DataPath outputPath = ip_test::RunMappedPointwiseFilter<SquareImageFilter>(dataStructure, inputPath, expectedType, tupleShape, componentShape);
   const IDataArray* outputArrayPtr = nullptr;
   REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
   // NOLINTNEXTLINE(bugprone-chained-comparison) Catch2 comparison decomposition.
@@ -206,22 +228,32 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SquareImageFilter: empty 64-bit inputs re
 }
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
-TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation preserves the filter cancellation result", "[NXImageProcessing][Issue1874][SquareImageFilter]")
+TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation during the 64-bit range scan leaves the output untouched", "[NXImageProcessing][Issue1874][SquareImageFilter]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
-  const DataPath inputPath = ip_test::BuildScalarValuesImage<int64>(dataStructure, {std::numeric_limits<int64>::min()});
-  Arguments args;
-  args.insertOrAssign(SquareImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(SquareImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const DataPath inputPath = ip_test::BuildScalarValuesImage<int64>(dataStructure, {5, 5});
+  const DataPath outputPath = inputPath.replaceName("Output");
+  std::atomic_bool shouldCancel = false;
+  constexpr int64 sentinel = -7;
+  auto inputStore = std::make_shared<SquareRangeReadStore>([&] {
+    // Full-overwrite outputs can begin uninitialized. Set a known value before testing for writes.
+    dataStructure.getDataRefAs<Int64Array>(outputPath).getDataStoreRef().fill(sentinel);
+    shouldCancel = true;
+  });
+  const auto replace = dataStructure.getDataRefAs<Int64Array>(inputPath).setDataStore(inputStore);
+  SIMPLNX_RESULT_REQUIRE_VALID(replace);
   const SquareImageFilter filter;
-  const std::atomic_bool shouldCancel = true;
-  const auto executeResult = filter.execute(dataStructure, args, nullptr, {}, shouldCancel);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors().size() == 1);
-  REQUIRE(executeResult.result.errors().front().code == -1);
+  const auto args = ip_test::PointwiseFilterArguments<SquareImageFilter>(inputPath);
+  const auto result = filter.execute(dataStructure, args, nullptr, {}, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  REQUIRE(result.result.errors().front().code == -1);
+  REQUIRE(inputStore->readCount() == 1);
+  const auto& output = dataStructure.getDataRefAs<Int64Array>(outputPath).getDataStoreRef();
+  REQUIRE(output.getValue(0) == sentinel);
+  REQUIRE(output.getValue(1) == sentinel);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
