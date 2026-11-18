@@ -16,7 +16,7 @@ Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
                                            const FloatVec3& spacing, const std::vector<float64>& sigma, bool normalizeAcrossScale, const detail::RecursiveGaussian2DBufferPlan& plan,
                                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(output.getSize());
   std::vector<T> outputBuffer;
   auto terminalSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> filtered, nonstd::span<float32>) -> Result<> {
     if constexpr(std::is_same_v<T, float32>)
@@ -24,10 +24,10 @@ Result<> ApplySmoothingRecursiveGaussian2D(const AbstractDataStore<T>& input, Ab
       return ImageProcessing::WriteRecursiveGaussian2DBlock<float32>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(filtered.data(), filtered.size()), true);
     }
     outputBuffer.resize(filtered.size());
-    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filtered.data(), filtered.size()), nonstd::span<T>(outputBuffer.data(), outputBuffer.size()), (yBegin * dims[0]) + xBegin,
-                                                  conversionState, shouldCancel, columnCount, dims[0]))
+    if(!detail::ConvertTerminalImageBuffer<T>(nonstd::span<const float32>(filtered.data(), filtered.size()), nonstd::span<T>(outputBuffer.data(), outputBuffer.size()), (yBegin * dims[0]) + xBegin,
+                                              conversionState, shouldCancel, columnCount, dims[0]))
     {
-      return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
+      return {};
     }
     return ImageProcessing::WriteRecursiveGaussian2DBlock<T>(output, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const T>(outputBuffer.data(), outputBuffer.size()), true);
   };

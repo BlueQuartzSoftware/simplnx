@@ -10,6 +10,7 @@
 #include "simplnx/Utilities/ImageProcessing/GradientMagnitudeEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -224,7 +225,7 @@ template <class T, class WorkStoreT>
 Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, WorkStoreT& work, const SizeVec3& dims, const FloatVec3& spacing,
                                            const std::vector<float64>& sigma, bool normalizeAcrossScale, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(output.getSize());
   RecursiveGaussianPassOptions options;
   options.CheckedSmoothing = true;
   Result<> accumulated = RecursiveGaussianAxisPass<T>(input, work, dims, 2, sigma[2], static_cast<double>(spacing[2]), 0, normalizeAcrossScale, shouldCancel, messageHandler, options);
@@ -234,10 +235,10 @@ Result<> ApplySmoothingRecursiveGaussian3D(const AbstractDataStore<T>& input, Ab
   }
   std::vector<T> outputPlane(dims[0] * dims[1]);
   auto outputSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) -> Result<> {
-    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
-                                                  conversionState, shouldCancel))
+    if(!detail::ConvertTerminalImageBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
+                                              conversionState, shouldCancel))
     {
-      return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
+      return {};
     }
     return output.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
   };
@@ -877,12 +878,12 @@ struct SmoothingRecursiveGaussianExecuteFn
     if(usePlaneCascade)
     {
       std::vector<T> outputPlane(dims[0] * dims[1]);
-      detail::TerminalConversionState conversionState;
+      detail::TerminalConversionState conversionState(outStore.getSize());
       auto outputSink = [&](usize planeOffset, nonstd::span<float32> filteredPlane) -> Result<> {
-        if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
-                                                      conversionState, shouldCancel))
+        if(!detail::ConvertTerminalImageBuffer<T>(nonstd::span<const float32>(filteredPlane.data(), filteredPlane.size()), nonstd::span<T>(outputPlane.data(), filteredPlane.size()), planeOffset,
+                                                  conversionState, shouldCancel))
         {
-          return detail::SmoothingGaussianNonFiniteResult<T>(conversionState);
+          return {};
         }
         return outStore.copyFromBuffer(planeOffset, nonstd::span<const T>(outputPlane.data(), filteredPlane.size()));
       };

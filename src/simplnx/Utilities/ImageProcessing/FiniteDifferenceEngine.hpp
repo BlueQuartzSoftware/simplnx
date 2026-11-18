@@ -80,40 +80,17 @@ template <bool CheckedOutput, class T, class Real>
 bool ConvertFiniteDifferenceOutputBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel,
                                          usize valuesPerRow = 0, usize rowStride = 0)
 {
-  bool clipped = false;
+  if constexpr(CheckedOutput)
+  {
+    return ConvertTerminalImageBuffer(input, output, offset, state, shouldCancel, valuesPerRow, rowStride);
+  }
   for(usize index = 0; index < input.size(); ++index)
   {
     if((index & 4095ULL) == 0 && shouldCancel)
     {
-      if(clipped)
-      {
-        state.recordClipping();
-      }
       return false;
     }
-    if constexpr(CheckedOutput)
-    {
-      const auto status = ConvertTerminalImageValue(input[index], output[index]);
-      if(status == TerminalImageConversionStatus::NonFinite)
-      {
-        const usize failedIndex = valuesPerRow == 0 ? offset + index : offset + ((index / valuesPerRow) * rowStride) + (index % valuesPerRow);
-        state.recordNonFinite(failedIndex);
-        if(clipped)
-        {
-          state.recordClipping();
-        }
-        return false;
-      }
-      clipped = clipped || status == TerminalImageConversionStatus::Clipped;
-    }
-    else
-    {
-      output[index] = static_cast<T>(input[index]);
-    }
-  }
-  if(clipped)
-  {
-    state.recordClipping();
+    output[index] = static_cast<T>(input[index]);
   }
   return true;
 }
@@ -1477,7 +1454,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
                                         const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                         const IFilter::MessageHandler& messageHandler, usize residentLimit)
 {
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(outStore.getSize());
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
@@ -1673,7 +1650,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
         if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(workingBlock.data(), valueCount), nonstd::span<T>(outputValues.data(), valueCount),
                                                                        (yBegin * nx) + xBegin, conversionState, shouldCancel, xEnd - xBegin, nx))
         {
-          return finish();
+          continue;
         }
         if(Result<> result = detail::RecordFiniteDifferenceIoResult<CheckedOutput>(
                ioResult, WriteFiniteDifference2DRegion<CheckedOutput>(outStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<const T>(outputValues.data(), valueCount)));
@@ -1692,7 +1669,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
                                          const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                          const IFilter::MessageHandler& messageHandler)
 {
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(outStore.getSize());
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
@@ -1873,16 +1850,19 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
       algorithm.execute(calculateRows);
       if(finalIteration)
       {
-        if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(nextPlane.data(), slice), nonstd::span<T>(finalOutputPlane.data(), slice),
-                                                                       static_cast<usize>(z) * slice, conversionState, shouldCancel))
+        if(detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(nextPlane.data(), slice), nonstd::span<T>(finalOutputPlane.data(), slice), static_cast<usize>(z) * slice,
+                                                                      conversionState, shouldCancel))
+        {
+          if(Result<> result =
+                 detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(finalOutputPlane.data(), slice)));
+             result.invalid())
+          {
+            return result;
+          }
+        }
+        else if(shouldCancel)
         {
           return {};
-        }
-        if(Result<> result =
-               detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(finalOutputPlane.data(), slice)));
-           result.invalid())
-        {
-          return result;
         }
       }
       else if(Result<> result =
@@ -2103,7 +2083,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {
   using Real = std::conditional_t<F::k_NativePrecision, T, float64>;
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(outStore.getSize());
   Result<> ioResult;
   const auto finish = [&](Result<> result = {}) {
     if constexpr(CheckedOutput)
@@ -2389,8 +2369,16 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     }
 
     auto castOutput = [&](const Range& range) {
-      detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(accumValues.data() + range.min(), range.max() - range.min()),
-                                                                 nonstd::span<T>(outputValues.data() + range.min(), range.max() - range.min()), range.min(), conversionState, shouldCancel);
+      const nonstd::span<const Real> source(accumValues.data() + range.min(), range.max() - range.min());
+      auto destination = outputValues.subspan(range.min(), source.size());
+      if constexpr(CheckedOutput)
+      {
+        detail::ConvertResidentTerminalImageBuffer(source, destination, range.min(), conversionState, shouldCancel);
+      }
+      else
+      {
+        detail::ConvertFiniteDifferenceOutputBuffer<false>(source, destination, range.min(), conversionState, shouldCancel);
+      }
     };
     ParallelDataAlgorithm castAlgorithm;
     castAlgorithm.setRange(0, volume);
@@ -2537,7 +2525,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       if(!detail::ConvertFiniteDifferenceOutputBuffer<CheckedOutput>(nonstd::span<const Real>(planeIn.data(), slice), nonstd::span<T>(planeOut.data(), slice), static_cast<usize>(z) * slice,
                                                                      conversionState, shouldCancel))
       {
-        return finish();
+        continue;
       }
       if(Result<> transferResult =
              detail::RecordFiniteDifferenceIoResult<CheckedOutput>(ioResult, outStore.copyFromBuffer(static_cast<usize>(z) * slice, nonstd::span<const T>(planeOut.data(), slice)));

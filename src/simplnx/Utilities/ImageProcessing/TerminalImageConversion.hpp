@@ -3,6 +3,9 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
@@ -24,50 +27,75 @@ enum class TerminalImageConversionStatus : std::uint8_t
 
 /**
  * @class TerminalConversionState
- * @brief Collects clipping and the lowest rejected index for one terminal conversion.
+ * @brief Counts results from final output buffers. Records the flat index for a single rejection.
  * @details Workers can record outcomes concurrently. Read the state after the workers join.
  */
 class TerminalConversionState
 {
 public:
-  TerminalConversionState() = default;
+  explicit TerminalConversionState(usize totalValues)
+  : m_TotalValues(totalValues)
+  {
+  }
   ~TerminalConversionState() = default;
   TerminalConversionState(const TerminalConversionState&) = delete;
   TerminalConversionState(TerminalConversionState&&) = delete;
   TerminalConversionState& operator=(const TerminalConversionState&) = delete;
   TerminalConversionState& operator=(TerminalConversionState&&) = delete;
 
-  void recordClipping() noexcept
+  struct BufferCounts
   {
-    m_Clipped.store(true, std::memory_order_relaxed);
+    usize Inspected = 0;
+    usize Clipped = 0;
+    usize NonFinite = 0;
+    usize NonFiniteIndex = 0;
+  };
+
+  /**
+   * @brief Merges one worker's counts after it finishes inspecting a buffer.
+   * @param counts Counts and single-rejection location collected by the worker.
+   */
+  void recordBuffer(const BufferCounts& counts) noexcept
+  {
+    m_Inspected.fetch_add(counts.Inspected, std::memory_order_relaxed);
+    if(counts.Clipped != 0)
+    {
+      m_Clipped.fetch_add(counts.Clipped, std::memory_order_relaxed);
+    }
+    if(counts.NonFinite != 0)
+    {
+      m_NonFinite.fetch_add(counts.NonFinite, std::memory_order_relaxed);
+      m_NonFiniteIndex.store(counts.NonFiniteIndex, std::memory_order_relaxed);
+    }
   }
-  bool clipped() const noexcept
+
+  usize clippedCount() const noexcept
   {
     return m_Clipped.load(std::memory_order_relaxed);
   }
-  /**
-   * @brief Records the smallest flat index of a rejected value.
-   * @param index Flat index in the output array.
-   */
-  void recordNonFinite(usize index) noexcept
+  usize nonFiniteCount() const noexcept
   {
-    usize previous = m_NonFiniteIndex.load(std::memory_order_relaxed);
-    while(index < previous && !m_NonFiniteIndex.compare_exchange_weak(previous, index, std::memory_order_relaxed))
-    {
-    }
+    return m_NonFinite.load(std::memory_order_relaxed);
   }
   /**
-   * @brief Returns the lowest index observed after the workers join.
-   * @return The flat index or the largest usize value if there was no rejected value.
+   * @brief Returns the rejected index when nonFiniteCount() is one and all workers have joined.
+   * @return The flat output index of the single rejected value.
    */
   usize nonFiniteIndex() const noexcept
   {
     return m_NonFiniteIndex.load(std::memory_order_relaxed);
   }
+  bool partial() const noexcept
+  {
+    return m_Inspected.load(std::memory_order_relaxed) < m_TotalValues;
+  }
 
 private:
-  std::atomic<bool> m_Clipped{false};
-  std::atomic<usize> m_NonFiniteIndex{std::numeric_limits<usize>::max()};
+  usize m_TotalValues;
+  std::atomic<usize> m_Inspected{0};
+  std::atomic<usize> m_Clipped{0};
+  std::atomic<usize> m_NonFinite{0};
+  std::atomic<usize> m_NonFiniteIndex{0};
 };
 
 /**
@@ -150,6 +178,105 @@ TerminalImageConversionStatus ConvertTerminalImageValue(InputType value, OutputT
   {
     output = NarrowFloatingImageValue<OutputType>(value);
     return TerminalImageConversionStatus::Valid;
+  }
+}
+
+/**
+ * @brief Converts a working buffer and counts every inspected final value, including values after a rejection.
+ * @tparam T Destination pixel type.
+ * @tparam Real Working pixel type of the computed values.
+ * @tparam WriteValues False to count conversions in a rejected block without publishing values.
+ * @param input Final working values to inspect.
+ * @param output Receives converted values when WriteValues is true. May be empty for counting alone.
+ * @param offset Flat image index corresponding to the first value.
+ * @param state Accumulates counts from this and other buffers.
+ * @param shouldCancel Requests early termination of the conversion.
+ * @param valuesPerRow Width of a tile row, or zero for a contiguous span.
+ * @param rowStride Distance between successive row starts in the image.
+ * @return True when the entire buffer can be written to the destination.
+ * @details For an X tile, valuesPerRow is the tile width and rowStride is the image width.
+ */
+template <class T, class Real, bool WriteValues = true>
+bool ConvertTerminalImageBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel, usize valuesPerRow = 0,
+                                usize rowStride = 0)
+{
+  usize clipped = 0;
+  usize nonFinite = 0;
+  usize rejectedIndex = 0;
+  usize index = 0;
+  for(; index < input.size(); ++index)
+  {
+    if((index & 4095ULL) == 0 && shouldCancel)
+    {
+      break;
+    }
+    T value{};
+    const auto status = ConvertTerminalImageValue(input[index], value);
+    if constexpr(WriteValues)
+    {
+      if(status != TerminalImageConversionStatus::NonFinite)
+      {
+        output[index] = value;
+      }
+    }
+    if(status == TerminalImageConversionStatus::Clipped)
+    {
+      ++clipped;
+    }
+    else if(status == TerminalImageConversionStatus::NonFinite)
+    {
+      if(nonFinite == 0)
+      {
+        rejectedIndex = valuesPerRow == 0 ? offset + index : offset + ((index / valuesPerRow) * rowStride) + (index % valuesPerRow);
+      }
+      ++nonFinite;
+    }
+  }
+  state.recordBuffer({.Inspected = index, .Clipped = clipped, .NonFinite = nonFinite, .NonFiniteIndex = rejectedIndex});
+  return index == input.size() && nonFinite == 0;
+}
+
+/**
+ * @brief Publishes valid integer blocks directly into the resident output span.
+ * @tparam T Destination pixel type.
+ * @tparam Real Working pixel type.
+ * @param input Final working values in image order.
+ * @param output Destination values. A rejected integer block leaves its destination untouched.
+ * @param offset Flat image index of the first value.
+ * @param state Accumulates conversion counts.
+ * @param shouldCancel Requests early termination between blocks.
+ */
+template <class T, class Real>
+void ConvertResidentTerminalImageBuffer(nonstd::span<const Real> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel)
+{
+  if constexpr(std::is_integral_v<T>)
+  {
+    constexpr usize blockSize = 512;
+    for(usize start = 0; start < input.size() && !shouldCancel;)
+    {
+      const usize length = std::min(blockSize, input.size() - start);
+      const auto block = input.subspan(start, length);
+      // Check before touching the destination. Rejected blocks still contribute every final conversion to the counts.
+      if(std::all_of(block.begin(), block.end(), [](Real value) { return std::isfinite(value); }))
+      {
+        ConvertTerminalImageBuffer<T, Real>(block, output.subspan(start, length), offset + start, state, shouldCancel);
+      }
+      else
+      {
+        ConvertTerminalImageBuffer<T, Real, false>(block, {}, offset + start, state, shouldCancel);
+      }
+      start += length;
+    }
+  }
+  else
+  {
+    // Floating output has no rejected conversions. Check cancellation between whole blocks.
+    for(usize start = 0; start < input.size() && !shouldCancel;)
+    {
+      const usize length = std::min<usize>(4096, input.size() - start);
+      ConvertTerminalImageBuffer(input.subspan(start, length), output.subspan(start, length), offset + start, state, shouldCancel);
+      start += length;
+    }
   }
 }
 } // namespace nx::core::ImageProcessing::detail

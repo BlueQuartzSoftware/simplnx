@@ -5,6 +5,7 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -110,6 +111,10 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
   Result<> result =
       ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
           dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  const auto appendOutput = [&](auto& diagnostic) {
+    const auto type = dataStructure.getDataRefAs<IDataArray>(outputArrayPath).getDataType();
+    diagnostic.message += fmt::format(" Output array '{}' has type '{}'.", outputArrayPath.toString(), DataTypeToString(type));
+  };
   if(result.invalid())
   {
     for(auto& error : result.errors())
@@ -118,8 +123,19 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
       {
         error.message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
       }
+      else if(error.code == ImageProcessing::k_CurvatureFlowNonFiniteIntegerOutput)
+      {
+        appendOutput(error);
+      }
     }
   }
-  return result;
+  for(auto& warning : result.warnings())
+  {
+    if(warning.code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput)
+    {
+      appendOutput(warning);
+    }
+  }
+  return ImageProcessing::detail::FinishCheckedImageExecution(std::move(result), shouldCancel);
 }
 } // namespace nx::core

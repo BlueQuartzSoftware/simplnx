@@ -79,41 +79,6 @@ inline Result<> MergeRecursiveGaussianResults(bool checkedSmoothing, Result<> pr
   return current.invalid() ? std::move(current) : Result<>{};
 }
 
-template <class T>
-bool ConvertSmoothingGaussianBuffer(nonstd::span<const float32> input, nonstd::span<T> output, usize offset, TerminalConversionState& state, const std::atomic_bool& shouldCancel,
-                                    usize valuesPerRow = 0, usize rowStride = 0)
-{
-  bool clipped = false;
-  for(usize index = 0; index < input.size(); ++index)
-  {
-    if((index & 4095ULL) == 0 && shouldCancel)
-    {
-      if(clipped)
-      {
-        state.recordClipping();
-      }
-      return false;
-    }
-    const auto status = ConvertTerminalImageValue(input[index], output[index]);
-    if(status == TerminalImageConversionStatus::NonFinite)
-    {
-      const usize failedIndex = valuesPerRow == 0 ? offset + index : offset + ((index / valuesPerRow) * rowStride) + (index % valuesPerRow);
-      state.recordNonFinite(failedIndex);
-      if(clipped)
-      {
-        state.recordClipping();
-      }
-      return false;
-    }
-    clipped = clipped || status == TerminalImageConversionStatus::Clipped;
-  }
-  if(clipped)
-  {
-    state.recordClipping();
-  }
-  return true;
-}
-
 // Four-line batches are the computational unit, not the reporting unit. Group them so a worker
 // enters the shared progress seam once per this many batches.
 constexpr usize k_ProgressBatchGroup = 64;
@@ -2559,13 +2524,13 @@ inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::a
  * @param shouldCancel Request to stop conversion between batches.
  * @param reportConversion Adds conversion diagnostics to the result on each executed path.
  * @param options Controls the direct or buffered route and the scratch memory budget.
- * @return The first error and the collected transfer and conversion warnings.
+ * @return Transfer diagnostics and the counts of clipped or rejected conversions. Incomplete counts are marked partial.
  */
 template <class T>
 Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataStore<T>& dst, const std::atomic_bool& shouldCancel, detail::TerminalConversionReporter& reportConversion,
                             const detail::PointwiseExecutionOptions& options = {})
 {
-  detail::TerminalConversionState conversionState;
+  detail::TerminalConversionState conversionState(src.getSize());
   Result<> accumulated;
   const usize total = src.getSize();
   if(dst.getSize() != total)
@@ -2581,8 +2546,8 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, total);
     parallelAlgorithm.execute([&](const Range& range) {
-      detail::ConvertSmoothingGaussianBuffer<T>(srcValues.subspan(range.min(), range.max() - range.min()), dstValues.subspan(range.min(), range.max() - range.min()), range.min(), conversionState,
-                                                shouldCancel);
+      detail::ConvertResidentTerminalImageBuffer<T>(srcValues.subspan(range.min(), range.max() - range.min()), dstValues.subspan(range.min(), range.max() - range.min()), range.min(), conversionState,
+                                                    shouldCancel);
     });
     return reportConversion(conversionState, std::move(accumulated));
   }
@@ -2609,14 +2574,13 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
     {
       return reportConversion(conversionState, std::move(accumulated));
     }
-    if(!detail::ConvertSmoothingGaussianBuffer<T>(nonstd::span<const float32>(s.data(), n), nonstd::span<T>(d.data(), n), start, conversionState, shouldCancel))
+    if(detail::ConvertTerminalImageBuffer<T>(nonstd::span<const float32>(s.data(), n), nonstd::span<T>(d.data(), n), start, conversionState, shouldCancel))
     {
-      return reportConversion(conversionState, std::move(accumulated));
-    }
-    accumulated = MergeResults(std::move(accumulated), dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
-    if(accumulated.invalid())
-    {
-      return reportConversion(conversionState, std::move(accumulated));
+      accumulated = MergeResults(std::move(accumulated), dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
+      if(accumulated.invalid())
+      {
+        return reportConversion(conversionState, std::move(accumulated));
+      }
     }
     start += n;
   }
