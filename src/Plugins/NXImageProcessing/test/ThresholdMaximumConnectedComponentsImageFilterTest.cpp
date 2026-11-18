@@ -1121,3 +1121,43 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: re
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: Upper Boundary survives a JSON text round trip",
+          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+{
+  const ThresholdMaximumConnectedComponentsImageFilter filter;
+  REQUIRE(filter.parametersVersion() == 2);
+  auto args = filter.getDefaultArguments();
+  SECTION("finite cutoffs remain JSON numbers and signed infinities use distinct strings")
+  {
+    const auto cutoff = GENERATE(137.125, std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity());
+    args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(cutoff));
+    const auto saved = nlohmann::json::parse(filter.toJson(args).dump());
+    const auto& encoded = saved.at("upper_boundary").at("value");
+    if(std::isfinite(cutoff))
+    {
+      REQUIRE(encoded.is_number());
+      REQUIRE(encoded.get<float64>() == cutoff);
+    }
+    else
+    {
+      REQUIRE(encoded == (cutoff > 0 ? "+Infinity" : "-Infinity"));
+    }
+    const auto restored = filter.fromJson(saved);
+    SIMPLNX_RESULT_REQUIRE_VALID(restored);
+    REQUIRE(restored.value().value<float64>(TMCCFilter::k_UpperBoundary_Key) == cutoff);
+  }
+  SECTION("a legacy null cannot recover the sign")
+  {
+    auto saved = filter.toJson(args);
+    saved["upper_boundary"]["version"] = uint64{1};
+    saved["upper_boundary"]["value"] = nullptr;
+    const auto restored = filter.fromJson(nlohmann::json::parse(saved.dump()));
+    SIMPLNX_RESULT_REQUIRE_INVALID(restored);
+    REQUIRE(restored.errors().front().code == -28619);
+    REQUIRE(restored.errors().front().message.find("+Infinity") != std::string::npos);
+    REQUIRE(restored.errors().front().message.find("-Infinity") != std::string::npos);
+  }
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
