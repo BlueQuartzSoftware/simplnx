@@ -1185,6 +1185,7 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
+  target_sources(simplnx PRIVATE "${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ConnectedComponentPolicyObserver.cpp")
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_BUILD_TESTS=1")
   add_subdirectory(test)
 endif()

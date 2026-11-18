@@ -42,6 +42,18 @@ inline constexpr int32 k_CountSizeExceeded = -29306;
 
 namespace detail
 {
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+/**
+ * @brief Records the effective label policy in the calling test thread when the label state is constructed.
+ * @param handling Policy supplied to the newly constructed label state.
+ */
+SIMPLNX_EXPORT void RecordConnectedComponentPolicyForTesting(ConnectedComponentLabelLimitHandling handling) noexcept;
+/**
+ * @brief Returns and clears the policy last recorded on this thread. An empty value means no state was constructed.
+ * @return The last observed policy, or an empty value when there was no observation.
+ */
+SIMPLNX_EXPORT std::optional<ConnectedComponentLabelLimitHandling> TakeConnectedComponentPolicyForTesting() noexcept;
+#endif
 
 using ProgressCallback = std::function<void(usize)>;
 using BeginProgressPhaseCallback = std::function<void(std::string_view, usize)>;
@@ -459,6 +471,9 @@ public:
   : m_Handling(handling)
   , m_MessageHandler(messageHandler)
   {
+#if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
+    RecordConnectedComponentPolicyForTesting(m_Handling);
+#endif
   }
   ~ConnectedComponentLabelState() noexcept = default;
   ConnectedComponentLabelState(const ConnectedComponentLabelState&) = delete;

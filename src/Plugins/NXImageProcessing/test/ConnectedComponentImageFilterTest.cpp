@@ -20,7 +20,9 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -159,8 +161,14 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: both policies prese
   REQUIRE(actionPtr->type() == DataType::uint32);
   REQUIRE(actionPtr->dims() == ShapeType{dimZ, 2, 2});
   REQUIRE(actionPtr->componentDims() == ShapeType{1});
+  // Reset the observation before the filter constructs the labeling state on this thread.
+  (void)ImageProcessing::detail::TakeConnectedComponentPolicyForTesting();
   const auto executeResult = filter.execute(dataStructure, arguments);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  const auto observed = ImageProcessing::detail::TakeConnectedComponentPolicyForTesting();
+  REQUIRE(observed.has_value());
+  const auto expectedPolicy = handling == 0 ? ImageProcessing::ConnectedComponentLabelLimitHandling::Error : ImageProcessing::ConnectedComponentLabelLimitHandling::WarnAndContinueLegacy;
+  REQUIRE(*observed == expectedPolicy);
   REQUIRE(executeResult.result.warnings().empty());
   const DataPath outputPath = inputPath.replaceName("Output");
   const IDataArray* arrayPtr = nullptr;
