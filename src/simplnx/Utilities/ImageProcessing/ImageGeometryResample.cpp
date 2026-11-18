@@ -95,19 +95,28 @@ public:
     const FloatVec3 destSpacing = m_DestImageGeom.getSpacing();
 
     // Precompute the independent source-cell mapping for each axis.
-    auto xResult = ResampleImageGeom::ComputeAxisSourceIndices(destDims[0], destOrigin[0], destSpacing[0], srcDims[0], srcOrigin[0], srcSpacing[0]);
+    const auto mapAxis = [&](usize axis) {
+      auto result = ResampleImageGeom::ComputeAxisSourceIndices(destDims[axis], destOrigin[axis], destSpacing[axis], srcDims[axis], srcOrigin[axis], srcSpacing[axis]);
+      if(result.invalid())
+      {
+        auto& error = result.errors().front();
+        error.message = fmt::format("Image Geometry '{}' ({} axis). {}", m_SrcImageGeom.getName(), "XYZ"[axis], error.message);
+      }
+      return result;
+    };
+    auto xResult = mapAxis(0);
     if(xResult.invalid())
     {
       m_TaskResult.store(ConvertResult(std::move(xResult)));
       return;
     }
-    auto yResult = ResampleImageGeom::ComputeAxisSourceIndices(destDims[1], destOrigin[1], destSpacing[1], srcDims[1], srcOrigin[1], srcSpacing[1]);
+    auto yResult = mapAxis(1);
     if(yResult.invalid())
     {
       m_TaskResult.store(ConvertResult(std::move(yResult)));
       return;
     }
-    auto zResult = ResampleImageGeom::ComputeAxisSourceIndices(destDims[2], destOrigin[2], destSpacing[2], srcDims[2], srcOrigin[2], srcSpacing[2]);
+    auto zResult = mapAxis(2);
     if(zResult.invalid())
     {
       m_TaskResult.store(ConvertResult(std::move(zResult)));
@@ -293,10 +302,10 @@ Result<std::vector<usize>> ResampleImageGeom::ComputeAxisSourceIndices(usize des
     const float64 quotient = std::floor((coordinate - srcOrigin) / srcSpacing);
     if(!std::isfinite(quotient) || quotient < 0 || quotient >= exclusiveBound)
     {
-      return MakeErrorResult<std::vector<usize>>(k_AxisConversionRepresentation,
-                                                 fmt::format("Resampling axis conversion at destination index {} has coordinate {} and source quotient {}. The quotient must be finite, nonnegative "
-                                                             "and below exclusive bound {} (source origin={}, spacing={}, dimension={}).",
-                                                             index, coordinate, quotient, exclusiveBound, srcOrigin, srcSpacing, srcDim));
+      return MakeErrorResult<std::vector<usize>>(
+          k_AxisConversionRepresentation,
+          fmt::format("Resampling cannot find a source cell for destination index {} at coordinate {}. Check the source origin ({}), spacing ({}), and cell count ({}).", index, coordinate, srcOrigin,
+                      srcSpacing, srcDim));
     }
     const usize sourceIndex = static_cast<usize>(quotient);
     if(sourceIndex < srcDim)
@@ -573,7 +582,8 @@ Result<> ResampleImageGeom::operator()()
   {
     if(m_ShouldCancel)
     {
-      return {};
+      // Collect any error from a worker that was already scheduled.
+      break;
     }
 
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);

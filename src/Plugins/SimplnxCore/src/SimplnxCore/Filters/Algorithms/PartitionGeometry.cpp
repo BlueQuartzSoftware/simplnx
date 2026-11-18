@@ -29,11 +29,8 @@ constexpr int32 k_PartitionGridProductTooLarge = -86213;
 constexpr int32 k_PartitionCountTooLarge = -86214;
 constexpr int32 k_PartitionIndexConversion = -86215;
 
-Result<> ValidatePreparedPartitionGrid(const DataStructure& dataStructure, const PartitionGeometryInputValues& input)
+Result<> ValidatePreparedPartitionGrid(const ImageGeom& grid, const DataPath& path, const PartitionGeometryInputValues& input, bool existing)
 {
-  const bool existing = input.PartitioningMode == static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid);
-  const DataPath& path = existing ? input.ExistingPartitionGridPath : input.PartitionGridGeomPath;
-  const auto& grid = dataStructure.getDataRefAs<ImageGeom>(path);
   const auto dimensions = grid.getDimensions();
   const auto spacing = grid.getSpacing();
   const auto origin = grid.getOrigin();
@@ -58,21 +55,14 @@ Result<> ValidatePreparedPartitionGrid(const DataStructure& dataStructure, const
   if(existing)
   {
     usize product = 1;
-    if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0)
+    for(usize axis = 0; axis < 3; ++axis)
     {
-      product = 0;
-    }
-    else
-    {
-      for(usize axis = 0; axis < 3; ++axis)
+      if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
       {
-        if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
-        {
-          return MakeErrorResult(k_PartitionGridProductTooLarge, fmt::format("The total number of cells in partition grid '{}' is too large. The dimensions are {}. Use a smaller grid.",
-                                                                             path.toString(), StringUtilities::formatDimensions3D(dimensions)));
-        }
-        product *= dimensions[axis];
+        return MakeErrorResult(k_PartitionGridProductTooLarge, fmt::format("The total number of cells in partition grid '{}' is too large. The dimensions are {}. Use a smaller grid.", path.toString(),
+                                                                           StringUtilities::formatDimensions3D(dimensions)));
       }
+      product *= dimensions[axis];
     }
     auto result = detail::CheckPartitionIdRange(product, input.StartingFeatureID);
     if(result.invalid())
@@ -241,18 +231,40 @@ PartitionGeometry::~PartitionGeometry() noexcept = default;
 
 Result<> PartitionGeometry::operator()()
 {
-  auto gridResult = ValidatePreparedPartitionGrid(m_DataStructure, *m_InputValues);
+  const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
+  const bool existing = partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid;
+  const DataPath& gridPath = existing ? m_InputValues->ExistingPartitionGridPath : m_InputValues->PartitionGridGeomPath;
+  const auto& grid = m_DataStructure.getDataRefAs<ImageGeom>(gridPath);
+  const auto dimensions = grid.getDimensions();
+  const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
+  auto& partitionIds = m_DataStructure.getDataRefAs<Int32Array>(partitionIdsPath);
+  if(existing && (dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0))
+  {
+    // No input element can map to an empty grid. Fill the IDs without reading coordinates.
+    auto& store = partitionIds.getDataStoreRef();
+    std::array<int32, 4096> buffer;
+    buffer.fill(m_InputValues->OutOfBoundsFeatureID);
+    for(usize offset = 0; offset < store.getSize() && !m_ShouldCancel;)
+    {
+      const usize count = std::min(buffer.size(), store.getSize() - offset);
+      auto result = store.copyFromBuffer(offset, nonstd::span<const int32>(buffer.data(), count));
+      if(result.invalid())
+      {
+        return result;
+      }
+      offset += count;
+    }
+    return {};
+  }
+
+  auto gridResult = ValidatePreparedPartitionGrid(grid, gridPath, *m_InputValues, existing);
   if(gridResult.invalid())
   {
     return gridResult;
   }
 
-  const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
-  const auto* partitionIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath);
-
   const IDataArray* partitionGridFeatureIdsArray = nullptr;
-  const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
-  if(partitioningMode != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
+  if(!existing)
   {
     const DataPath partitionGridFeatureIdsPath =
         m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);
@@ -278,6 +290,6 @@ Result<> PartitionGeometry::operator()()
   }
 
   const IDataArray* maskArray = m_InputValues->UseVertexMask ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->VertexMaskPath) : nullptr;
-  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArray, partitionGridFeatureIdsArray, verticesArray, maskArray}, m_DataStructure, m_MessageHandler,
+  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({&partitionIds, partitionGridFeatureIdsArray, verticesArray, maskArray}, m_DataStructure, m_MessageHandler,
                                                                                m_ShouldCancel, m_InputValues);
 }

@@ -90,19 +90,15 @@ public:
 
   /**
    * @brief Interpolates selected point arrays to image cells.
-   * @return Error from temporary storage or output writes, or success after cancellation.
+   * @return Error from kernel layout, temporary storage, or output writes, or success after cancellation.
+   * @pre Kernel Size has three finite nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
    *
    * Cancellation can retain outputs written before the current output page.
-   */
-  /**
-   * @brief Accumulates point values in image cells.
-   * @pre Kernel Size has three finite nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
-   * @return Temporary-storage or output-write errors, otherwise success.
    */
   Result<> operator()();
 
   /**
-   * @brief Identifies an unrepresentable kernel radius, width or consumed spacing.
+   * @brief Identifies a kernel radius that is too large.
    */
   static constexpr int32 k_KernelRadiusRepresentation = -86165;
   static constexpr int32 k_InvalidImageSpacing = -86224;
@@ -113,7 +109,7 @@ public:
    */
   static constexpr int32 k_KernelProductRepresentation = -86166;
   /**
-   * @brief Identifies an unrepresentable kernel byte count or container size.
+   * @brief Identifies a kernel byte count that is too large.
    */
   static constexpr int32 k_KernelStorageRepresentation = -86167;
 

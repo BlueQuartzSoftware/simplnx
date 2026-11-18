@@ -19,6 +19,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -1660,6 +1661,50 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Final prepared grid representat
   const auto& message = result.result.errors()[0].message;
   CHECK(message.find(expectedMessages[row]) != std::string::npos);
   CHECK(message.find("'Existing'") != std::string::npos);
+}
+
+namespace
+{
+void CheckEmptyPartitionGrid(bool requireDiskStore)
+{
+  DataStructure ds;
+  CreateCountImage(ds);
+  CreateExistingCountGrid(ds, {0, 1, 1}, {0, 1, 1});
+  auto args = ExistingCountPartitionArguments();
+  constexpr int32 k_OutsideId = 37;
+  args.insertOrAssign(PartitionGeometryFilter::k_OutOfBoundsFeatureID_Key, k_OutsideId);
+
+  PartitionGeometryFilter filter;
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto name = args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key);
+  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", name}));
+  if(requireDiskStore)
+  {
+    UnitTest::RequireDiskBackedStore(ids);
+  }
+  else
+  {
+    REQUIRE(ids.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
+  }
+  REQUIRE(ids.getNumberOfTuples() == 2);
+  CHECK(ids[0] == k_OutsideId);
+  CHECK(ids[1] == k_OutsideId);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Empty existing grid uses the outside ID", "[SimplnxCore][PartitionGeometryFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  CheckEmptyPartitionGrid(false);
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Empty existing grid uses the outside ID with disk-backed output", "[SimplnxCore][PartitionGeometryFilter][.OocStoreContract]")
+{
+  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  CheckEmptyPartitionGrid(true);
 }
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Final coordinate conversion", "[SimplnxCore][GeometryCountControls]")

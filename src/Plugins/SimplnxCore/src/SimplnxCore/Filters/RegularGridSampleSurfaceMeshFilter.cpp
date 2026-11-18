@@ -21,7 +21,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
-#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>

@@ -13,8 +13,11 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::int32 k_GridSizeRepresentation = -86133;
+constexpr nx::core::int32 k_GridAxisTooLarge = -86133;
 constexpr nx::core::int32 k_VoxelBoundsRepresentation = -86132;
+constexpr nx::core::int32 k_GridBorderOutOfRange = -86236;
+constexpr nx::core::int32 k_GridCellCountOverflow = -86238;
+constexpr nx::core::int32 k_GridContainerTooLarge = -86239;
 
 bool validNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
@@ -246,14 +249,14 @@ Result<SizeVec3> ApproximatePointCloudHull::ValidateGridRepresentation(const std
     if(!std::isfinite(minimum) || !std::isfinite(maximum) || minimum < -exclusiveBound || maximum < -exclusiveBound || minimum >= exclusiveBound || maximum >= exclusiveBound ||
        std::floor(minimum) != minimum || std::floor(maximum) != maximum)
     {
-      return MakeErrorResult<SizeVec3>(k_VoxelBoundsRepresentation, fmt::format("Grid Resolution produces {} voxel bounds minimum={}, maximum={}. Bounds must be finite integers in [{}, {}).",
-                                                                                "XYZ"[axis], minimum, maximum, -exclusiveBound, exclusiveBound));
+      return MakeErrorResult<SizeVec3>(
+          k_VoxelBoundsRepresentation,
+          fmt::format("Grid Resolution gives invalid voxel bounds on the {} axis (minimum {}, maximum {}). Increase Grid Resolution or check the input coordinates.", "XYZ"[axis], minimum, maximum));
     }
     if(minimum == -exclusiveBound)
     {
-      return MakeErrorResult<SizeVec3>(
-          k_VoxelBoundsRepresentation,
-          fmt::format("Grid Resolution produces {} voxel bounds minimum={}, maximum={}. The one-voxel border below the minimum does not fit int64.", "XYZ"[axis], minimum, maximum));
+      return MakeErrorResult<SizeVec3>(k_GridBorderOutOfRange,
+                                       fmt::format("Grid Resolution leaves no room for the empty border below voxel {} on the {} axis. Increase Grid Resolution.", minimum, "XYZ"[axis]));
     }
     // The border is added in integer arithmetic so float rounding cannot remove it. The upper bound is below 2^63, so adding 1 cannot overflow.
     const int64 lower = static_cast<int64>(minimum) - 1;
@@ -262,21 +265,26 @@ Result<SizeVec3> ApproximatePointCloudHull::ValidateGridRepresentation(const std
     const uint64 difference = static_cast<uint64>(upper) - static_cast<uint64>(lower);
     if(upper < lower || difference >= signedLimit || difference >= std::numeric_limits<usize>::max())
     {
-      return MakeErrorResult<SizeVec3>(k_GridSizeRepresentation,
-                                       fmt::format("Hull grid {} inclusive width cannot fit signed indices: minimum={}, maximum={}, int64 limit={}.", "XYZ"[axis], lower, upper, signedLimit));
+      return MakeErrorResult<SizeVec3>(
+          k_GridAxisTooLarge,
+          fmt::format("Grid Resolution gives too many cells on the {} axis (voxel {} through {}). Increase Grid Resolution or use a smaller point cloud.", "XYZ"[axis], lower, upper));
     }
     dimensions[axis] = static_cast<usize>(difference + 1);
     if(dimensions[axis] > std::numeric_limits<usize>::max() / product)
     {
-      return MakeErrorResult<SizeVec3>(k_GridSizeRepresentation,
-                                       fmt::format("Hull grid tuple product overflows usize at {} width {} and preceding product {}.", "XYZ"[axis], dimensions[axis], product));
+      return MakeErrorResult<SizeVec3>(
+          k_GridCellCountOverflow,
+          fmt::format("Grid Resolution gives a total cell count that is too large ({} cells on the {} axis and {} across the preceding axes). Increase Grid Resolution or use a "
+                      "smaller point cloud.",
+                      dimensions[axis], "XYZ"[axis], product));
     }
     product *= dimensions[axis];
   }
   if(product > signedLimit || product > std::numeric_limits<usize>::max() / sizeof(std::vector<int64>) || product > std::vector<std::vector<int64>>{}.max_size())
   {
-    return MakeErrorResult<SizeVec3>(k_GridSizeRepresentation, fmt::format("Hull grid product {} cannot fit signed indices or container bytes (element bytes={}, container limit={}): {}.", product,
-                                                                           sizeof(std::vector<int64>), std::vector<std::vector<int64>>{}.max_size(), StringUtilities::formatDimensions3D(dimensions)));
+    return MakeErrorResult<SizeVec3>(k_GridContainerTooLarge,
+                                     fmt::format("Grid Resolution gives a grid with {} cells ({}), which is too large to store. Increase Grid Resolution or use a smaller point cloud.", product,
+                                                 StringUtilities::formatDimensions3D(dimensions)));
   }
   return {dimensions};
 }

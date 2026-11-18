@@ -48,15 +48,11 @@ public:
   /**
    * @brief Creates the ImageGeom mask with bounded bulk writes.
    * @return Success, or an output bulk-I/O error.
+   * @pre In Sphere mode, Sphere centroid and Radius (Physical Units) has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
    *
    * When a chunk checkpoint observes cancellation, the method returns success. Data written before
    * that checkpoint remains in the mask. Later cells are not written.
    * A bulk-I/O error can leave completed mask chunks.
-   */
-  /**
-   * @brief Computes the coordinate-selection mask.
-   * @pre Active Sphere Information has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
-   * @return Mask-output errors, otherwise success.
    */
   Result<> operator()();
 

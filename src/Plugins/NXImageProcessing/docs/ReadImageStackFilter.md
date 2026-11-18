@@ -70,7 +70,8 @@ Use **Resample Images** to choose how the filter reads each image.
 
 In *Scaling (1)* mode, **Scaling (%)** must be finite and at least 1.
 In *Exact X/Y Dimensions (2)* mode, each value in **Exact 2D Dimensions (Pixels)** must be a whole number of at least 1.
-The filter checks the total pixel count. If the image is too large, decrease **Exact 2D Dimensions (Pixels)**.
+The filter checks the total pixel count across all selected slices.
+If the stack is too large, decrease **Scaling (%)** or **Exact 2D Dimensions (Pixels)** for the selected mode, or select fewer slices.
 
 If preflight cannot calculate a valid output size, it warns and uses a temporary size for the preview.
 The filter calculates the size again as it reads each image. If the size is still invalid, it stops before it copies that image.

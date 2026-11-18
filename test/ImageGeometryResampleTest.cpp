@@ -1,12 +1,16 @@
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
+#include <chrono>
 #include <cmath>
+#include <future>
 #include <limits>
 
 using namespace nx::core;
@@ -119,7 +123,75 @@ TEST_CASE("simplnx::ImageGeometryResample: Axis conversion bound", "[simplnx][Im
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -86137);
-  CHECK(result.errors()[0].message.find("exclusive bound") != std::string::npos);
+  CHECK(result.errors()[0].message.find("cannot find a source cell") != std::string::npos);
+}
+
+namespace
+{
+constexpr int32 k_InjectionError = -91014;
+
+class FailingResampleSourceStore : public DataStore<int32>
+{
+public:
+  explicit FailingResampleSourceStore(std::promise<void>& readStarted)
+  : DataStore<int32>({1, 1, 2}, {1}, 0)
+  , m_ReadStarted(readStarted)
+  {
+  }
+
+  Result<> copyIntoBuffer(usize, nonstd::span<int32>) const override
+  {
+    m_ReadStarted.set_value();
+    return MakeErrorResult(k_InjectionError, "Injected source read failure");
+  }
+
+private:
+  std::promise<void>& m_ReadStarted;
+};
+} // namespace
+
+TEST_CASE("simplnx::ImageGeometryResample: Cancellation preserves a source read error", "[simplnx][ImageGeometryResample]")
+{
+  DataStructure ds;
+  std::promise<void> readStarted;
+  auto firstRead = readStarted.get_future();
+  for(const auto& name : {"Source", "Destination"})
+  {
+    auto result = CreateImageGeometryAction(DataPath({name}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    for(const auto& arrayName : {"First", "Second", "Third"})
+    {
+      const DataPath path({name, "Cell Data", arrayName});
+      result = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, path).apply(ds, IDataAction::Mode::Execute);
+      SIMPLNX_RESULT_REQUIRE_VALID(result);
+      if(std::string_view(name) == "Source")
+      {
+        auto& array = ds.getDataRefAs<Int32Array>(path);
+        result = array.setDataStore(std::make_shared<FailingResampleSourceStore>(readStarted));
+        SIMPLNX_RESULT_REQUIRE_VALID(result);
+      }
+    }
+  }
+  std::atomic_bool cancel = false;
+  int32 announcements = 0;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info && ++announcements == 2)
+    {
+      if(firstRead.wait_for(std::chrono::seconds(5)) == std::future_status::ready)
+      {
+        cancel = true;
+      }
+    }
+  }};
+  ResampleImageGeomInputValues input{};
+  input.SelectedImageGeometryPath = DataPath({"Source"});
+  input.CreatedImageGeometryPath = DataPath({"Destination"});
+  auto result = ResampleImageGeom(ds, handler, cancel, &input)();
+  REQUIRE(firstRead.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
+  REQUIRE(cancel.load());
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors()[0].code == k_InjectionError);
 }
 
 TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simplnx][ImageGeometryResample]")

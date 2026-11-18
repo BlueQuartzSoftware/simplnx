@@ -17,7 +17,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <array>
 #include <limits>
 
 using namespace nx::core;

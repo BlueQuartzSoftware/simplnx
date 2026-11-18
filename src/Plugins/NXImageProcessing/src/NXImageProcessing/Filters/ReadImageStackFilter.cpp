@@ -29,8 +29,8 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <array>
-#include <cmath>
 #include <filesystem>
+#include <string_view>
 
 namespace fs = std::filesystem;
 
@@ -49,6 +49,7 @@ const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
 constexpr int32 k_ExactDimensionsProduct = -86175;
+constexpr int32 k_ResampledStackProduct = -86235;
 
 // Walks the action list returned by a sub-filter's preflight and returns the first action of
 // the requested concrete type, or nullptr if none match. Replaces brittle index-based lookups
@@ -278,6 +279,16 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     outputDims.back() = zRange.zMax - zRange.zMin + 1;
     outputOrigin.back() += static_cast<float32>(zRange.zMin) * outputSpacing.back();
 
+    if(resampleImagesChoice == k_ExactDimensionsModeIndex)
+    {
+      const std::array<uint64, 3> dimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
+      auto validation = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact 2D Dimensions (Pixels)", k_ResampledStackProduct);
+      if(validation.invalid())
+      {
+        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      }
+    }
+
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, outputOrigin, outputSpacing,
                                                                                          createImageGeomActionPtr->cellAttributeMatrixName(), createImageGeomActionPtr->units()));
     const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(imageReaderResult.outputActions.value().actions);
@@ -289,7 +300,9 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
                                                                                  createArrayActionPtr->componentDims(), createArrayActionPtr->path(), createArrayActionPtr->dataFormat(),
                                                                                  createArrayActionPtr->fillValue()));
 
-    Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    // The resampler sees one decoded slice at a time. Use its metadata to plan X/Y.
+    const auto& previewActions = resampleImagesChoice == k_NoResampleModeIndex ? resultOutputActions.value() : imageReaderResult.outputActions.value();
+    Result<> actionsResult = previewActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
@@ -312,7 +325,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     }
     else if(resampleImagesChoice == k_ExactDimensionsModeIndex)
     {
-      resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
+      resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], 1};
     }
     PreflightResult resampleImageResult = PreflightImageGeometryResample(tmpDs, resampleInputValues);
     if(resampleImageResult.outputActions.invalid())
@@ -330,13 +343,21 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
     std::vector<usize> dims = createImageGeomActionPtr->dims();
     dims.back() = outputDims.back();
+    const std::array<uint64, 3> stackDimensions = {dims[0], dims[1], dims[2]};
+    const std::string_view parameter = resampleImagesChoice == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
+    auto validation = GeometryUtilities::ValidateImageDimensionProduct(stackDimensions, parameter, k_ResampledStackProduct);
+    if(validation.invalid())
+    {
+      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+
     outputDims = dims;
+    const auto stackZSpacing = outputSpacing.back();
     outputSpacing = createImageGeomActionPtr->spacing();
-    outputOrigin = createImageGeomActionPtr->origin();
+    outputSpacing.back() = stackZSpacing;
     outputUnits = createImageGeomActionPtr->units();
-    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
-                                                                                         createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
-                                                                                         createImageGeomActionPtr->units()));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, outputOrigin, outputSpacing, createImageGeomActionPtr->cellAttributeMatrixName(), outputUnits));
 
     const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(resampleImageResult.outputActions.value().actions);
     if(createArrayActionPtr == nullptr)

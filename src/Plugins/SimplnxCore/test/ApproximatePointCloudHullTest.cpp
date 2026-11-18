@@ -410,8 +410,21 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Final grid representati
     auto result = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    CHECK(result.result.errors()[0].code == ((row == 0 || row == 3 || row == 4) ? -86132 : -86133));
-    CHECK(result.result.errors()[0].message.find(row == 1 ? "inclusive width" : row == 2 ? "product" : row == 4 ? "one-voxel border below the minimum" : "bounds") != std::string::npos);
+    const std::array<int32, 5> codes = {-86132, -86133, -86238, -86132, -86236};
+    CHECK(result.result.errors()[0].code == codes[row]);
+    const auto& message = result.result.errors()[0].message;
+    CHECK(message.find("Grid Resolution") != std::string::npos);
+    CHECK(message.find(row == 1 ? "too many cells on the X axis" : row == 2 ? "total cell count" : row == 4 ? "empty border" : "voxel bounds") != std::string::npos);
+  }
+  SECTION("Container limit")
+  {
+    // The padded product is (2^20 + 3)^3. It fits usize but exceeds vector capacity.
+    constexpr float64 k_Upper = 1048576;
+    auto result = ApproximatePointCloudHull::ValidateGridRepresentation({0, 0, 0}, {k_Upper, k_Upper, k_Upper});
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == -86239);
+    CHECK(result.errors()[0].message.find("Increase Grid Resolution") != std::string::npos);
   }
 }
 

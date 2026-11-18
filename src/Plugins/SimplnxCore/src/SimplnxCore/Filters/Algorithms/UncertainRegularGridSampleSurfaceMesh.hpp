@@ -77,15 +77,10 @@ public:
    * @brief Generates jittered slices and assigns enclosing feature IDs.
    * @return Output bulk-write or feature-ID overflow result.
    * @pre Dimensions fit usize and their X-Y product fits usize.
-   * @pre Spacing and uncertainty contain X, Y, and Z values.
+   * @pre Spacing has three finite positive components; Origin and Uncertainty have three finite signed components.
    *
    * Cancellation returns success. A slice is written only after its generation
    * and point tests complete. Prior slices remain in output.
-   */
-  /**
-   * @brief Samples face labels at perturbed grid positions.
-   * @pre Spacing has three finite positive components; Origin and Uncertainty have three finite signed components.
-   * @return Classification or output errors, otherwise success.
    */
   Result<> operator()();
 

@@ -15,6 +15,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
@@ -23,10 +24,10 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 
 #include <tiffio.h>
 
-#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include <algorithm>
 #include <any>
 #include <array>
@@ -2064,4 +2065,43 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Inactive resampling paramete
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CheckResamplingDomainStack(ds, {2, 1, 2}, {1, 1, 1}, {7, 9, 11, 13});
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Resampling uses single-slice metadata", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackResamplingSliceMetadata");
+  ReadImageStackFilter filter;
+  constexpr float32 k_ZSpacing = 2e38F;
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, true);
+  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::vector<float32>{1, 1, k_ZSpacing});
+  args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Preprocessed));
+  const auto mode = GENERATE(ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2});
+  CAPTURE(mode);
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, mode);
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, 200.0F);
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{4, 2});
+
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CheckResamplingDomainStack(ds, {4, 2, 2}, {0.5F, 0.5F, k_ZSpacing}, {7, 7, 9, 9, 7, 7, 9, 9, 11, 11, 13, 13, 11, 11, 13, 13});
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Resampled stack product must fit", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackResampledProduct");
+  ReadImageStackFilter filter;
+  const auto mode = GENERATE(ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2});
+  CAPTURE(mode);
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, mode);
+  // Scaling yields about 2^32 by 2^31 pixels per slice, and there are two slices.
+  args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, std::ldexp(100.0F, 31));
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{nx::core::uint64{1} << 63, 1});
+
+  auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().size() == 1);
+  CHECK(preflight.outputActions.errors().front().code == -86235);
+  CHECK(preflight.outputActions.errors().front().message.find(mode == 1 ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)") != std::string::npos);
 }
