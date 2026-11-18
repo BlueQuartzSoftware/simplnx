@@ -348,4 +348,10 @@ if(SIMPLNX_BUILD_PYTHON_TESTS)
     INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
     TEST_NAMES storage_contract_test
   )
+  if(TARGET NXImageProcessing AND TARGET OrientationAnalysis)
+    CreatePythonTests(PREFIX "PY_SIMPLNX"
+      INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
+      TEST_NAMES pipeline_float_expression_test
+    )
+  endif()
 endif()

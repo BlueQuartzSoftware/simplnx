@@ -18,8 +18,12 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 
+#include <any>
 #include <cmath>
+#include <limits>
 #include <memory>
+#include <nlohmann/json.hpp> // NOLINT(misc-include-cleaner) The serialization overrides require the complete JSON type.
+#include <nlohmann/json_fwd.hpp>
 #include <utility>
 
 using namespace nx::core;
@@ -29,6 +33,53 @@ namespace nx::core
 namespace
 {
 constexpr int32 k_ThresholdMaxCCNaNUpperBoundary = -28610;
+constexpr int32 k_ThresholdMaxCCNullUpperBoundary = -28619;
+
+// This cutoff accepts signed infinities, which JSON numbers cannot represent.
+class UpperBoundaryParameter final : public Float64Parameter
+{
+public:
+  using Float64Parameter::Float64Parameter;
+
+  UniquePointer clone() const override
+  {
+    return std::make_unique<UpperBoundaryParameter>(name(), humanName(), helpText(), defaultNumber());
+  }
+
+  VersionType getVersion() const override
+  {
+    return 2;
+  }
+
+protected:
+  nlohmann::json toJsonImpl(const std::any& value) const override
+  {
+    const auto cap = std::any_cast<float64>(value);
+    if(std::isinf(cap))
+    {
+      return cap > 0 ? "+Infinity" : "-Infinity";
+    }
+    return Float64Parameter::toJsonImpl(value);
+  }
+
+  Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override
+  {
+    if(json == "+Infinity")
+    {
+      return Float64Parameter::fromJsonImpl(std::numeric_limits<float64>::infinity(), version);
+    }
+    if(json == "-Infinity")
+    {
+      return Float64Parameter::fromJsonImpl(-std::numeric_limits<float64>::infinity(), version);
+    }
+    if(json.is_null())
+    {
+      return MakeErrorResult<std::any>(k_ThresholdMaxCCNullUpperBoundary,
+                                       R"(Upper Boundary is null. The saved value has lost its sign. Enter a finite cutoff, "+Infinity" for the native maximum, or "-Infinity" for an empty band.)");
+    }
+    return Float64Parameter::fromJsonImpl(json, version);
+  }
+};
 } // namespace
 
 std::string ThresholdMaximumConnectedComponentsImageFilter::name() const
@@ -60,11 +111,11 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
       k_MinimumObjectSizeInPixels_Key, "Minimum Object Size In Pixels",
       "Count face-connected nonzero output components with at least this many pixels or voxels. This changes the search score; it does not remove small objects from the output. Default: 0 pixels.",
       0u));
-  params.insert(
-      std::make_unique<Float64Parameter>(k_UpperBoundary_Key, "Upper Boundary",
-                                         "Inclusive upper cutoff in input intensity units. Default: 65536. Integer inputs truncate toward zero. High values or positive infinity select the native "
-                                         "maximum; low/empty bands or negative infinity produce Outside Value with a warning. NaN is an error. Float64 cannot express every 64-bit integer cutoff.",
-                                         65536.0));
+  params.insert(std::make_unique<UpperBoundaryParameter>(
+      k_UpperBoundary_Key, "Upper Boundary",
+      "Inclusive upper cutoff in input intensity units. Default: 65536. Integer inputs truncate toward zero. High values or positive infinity select the native "
+      "maximum; low/empty bands or negative infinity produce Outside Value with a warning. NaN is an error. Float64 cannot express every 64-bit integer cutoff.",
+      65536.0));
   params.insert(
       std::make_unique<UInt8Parameter>(k_InsideValue_Key, "Inside Value",
                                        "Dimensionless uint8 value assigned inside the inclusive threshold band. Default: 1. Only nonzero output pixels participate in the component-count score.", 1u));
