@@ -6,14 +6,12 @@
 #include "simplnx/Utilities/ImageProcessing/BoxNeighborhoodEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ContourEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
-#include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 
 #include <array>
 #include <atomic>
-#include <type_traits>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -131,59 +129,6 @@ struct ContourExecuteFn
     auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath).getDataStoreRef();
     const auto predicate = predicateFactory.template make<T>();
     return ApplyContour<T>(inStore, outStore, dims, neighborOffsets, predicate, shouldCancel, messageHandler);
-  }
-};
-
-template <template <class> class OutTypeMap, class OperationT>
-struct HistogramExecuteFn
-{
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
-
-  template <class T>
-  Result<> operator()() const
-  {
-    using U = OutTypeMap<T>; // Otsu uses AlwaysUInt8 (a uint8 label image); generalized like the other façade helpers.
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
-
-    Result<Histogram> hist = [&]() -> Result<Histogram> {
-      if constexpr(std::is_integral_v<T>)
-      {
-        return ComputeIntegralHistogram<T>(inStore, operation.numBins, shouldCancel);
-      }
-      else
-      {
-        // Only min/max feed the histogram range below, so the parallel min/max reduction replaces the full
-        // (mean/variance-computing) statistics pass.
-        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, shouldCancel);
-        if(stats.invalid())
-        {
-          return {nonstd::make_unexpected(std::move(stats.errors()))};
-        }
-        if(shouldCancel)
-        {
-          return {};
-        }
-        return ComputeHistogram<T>(inStore, operation.numBins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), shouldCancel);
-      }
-    }();
-    if(hist.invalid())
-    {
-      return {nonstd::make_unexpected(std::move(hist.errors()))};
-    }
-    if(shouldCancel)
-    {
-      return {};
-    }
-
-    const std::vector<float64> thresholds = OtsuMultipleThresholds(hist.value(), operation.numThresholds, operation.valleyEmphasis, operation.returnBinMidpoint);
-    auto classifyOp = operation.template makeClassifyOp<T, U>(thresholds);
-    return ApplyPointwise<T, U>(inStore, outStore, classifyOp, shouldCancel, messageHandler);
   }
 };
 
@@ -328,23 +273,6 @@ Result<> ExecuteContourImageFilter(DataStructure& dataStructure, const DataPath&
   const SizeVec3 dims = imageGeom.getDimensions();
   const std::vector<SEOffset> neighborOffsets = MakeContourNeighborOffsets(fullyConnected);
   detail::ContourExecuteFn<PredicateFactoryT> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, neighborOffsets, predicateFactory, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
-}
-
-/// @brief Executes a histogram-driven classification filter such as multi-Otsu thresholding.
-/// @details Integral inputs fuse range and exact-frequency discovery into one bounded scan when their observed span
-/// is at most 65,535. Wider integral ranges use the completed range plus a second histogram scan. Floating-point
-/// inputs retain separate streaming statistics and histogram scans. Derived thresholds feed the pointwise engine.
-/// The same bounded implementation serves in-core and out-of-core stores.
-/// @tparam OutTypeMap Maps each input type to the output type. The default creates a uint8 label image.
-/// @tparam OperationT Exposes the histogram and threshold settings plus a typed classification-operation factory.
-template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = AlwaysUInt8, class OperationT>
-Result<> ExecuteHistogramImageFilter(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const OperationT& operation, const std::atomic_bool& shouldCancel,
-                                     const IFilter::MessageHandler& messageHandler)
-{
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const DataType inputType = inputArray.getDataType();
-  detail::HistogramExecuteFn<OutTypeMap, OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, operation, shouldCancel, messageHandler};
   return TypeSetPolicy::dispatch(inputType, executeFn);
 }
 
