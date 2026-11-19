@@ -15,6 +15,7 @@
 #include "simplnx/Filter/FilterList.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
@@ -129,11 +130,7 @@ std::vector<T> Read(DataStructure& dataStructure, const DataPath& path, const Sh
   const auto& store = arrayPtr->getDataStoreRef();
   if(store.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
-    REQUIRE(store.getDataFormat() == "HDF5-OOC");
-    const auto metadata = store.getRecoveryMetadata();
-    const auto backing = metadata.find("OocBackingFilePath");
-    REQUIRE(backing != metadata.end());
-    REQUIRE(std::filesystem::is_regular_file(backing->second));
+    UnitTest::RequireDiskBackedStore(*arrayPtr);
   }
   std::vector<T> values(arrayPtr->getSize());
   const auto result = store.copyIntoBuffer(0, nonstd::span<T>(values.data(), values.size()));
