@@ -622,6 +622,25 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: em
   REQUIRE(emptyInput.reads() == 0);
   REQUIRE(emptyOutput.writes() == 0);
 }
+
+TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: zero-cell geometry rejects nonempty stores before transfers",
+          "[NXImageProcessing][Issue1874][ThresholdMaximumConnectedComponentsImageFilter]")
+{
+  const usize zeroAxis = GENERATE(0U, 1U, 2U);
+  CAPTURE(zeroAxis);
+  SizeVec3 dims{1, 1, 1};
+  dims[zeroAxis] = 0;
+  const ThresholdTransferStore<uint8> input({100, 102});
+  ThresholdTransferStore<uint8> output({99, 99});
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::ApplyThresholdMaximumConnectedComponents(input, output, dims, {}, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == -8372);
+  REQUIRE(input.reads() == 0);
+  REQUIRE(output.writes() == 0);
+  REQUIRE(output.getValue(0) == 99);
+  REQUIRE(output.getValue(1) == 99);
+}
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.

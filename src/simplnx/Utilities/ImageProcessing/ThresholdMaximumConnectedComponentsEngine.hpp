@@ -428,6 +428,11 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
   {
     return validation;
   }
+  if(volumeValues == 0)
+  {
+    // The labeling and counting engines allow a zero-volume no-op. Thresholding also requires the stores to be empty.
+    return detail::ValidateConnectedComponentInputSize(input.getSize(), dims, volumeValues);
+  }
   try
   {
     auto summaryResult = detail::ScanThresholdMaxCC(input, shouldCancel);
@@ -437,7 +442,7 @@ Result<> ApplyThresholdMaximumConnectedComponents(const AbstractDataStore<T>& in
     }
     const auto summary = summaryResult.value();
     status = ConvertResult(std::move(summaryResult));
-    if(shouldCancel || input.getSize() == 0)
+    if(shouldCancel)
     {
       return status;
     }
