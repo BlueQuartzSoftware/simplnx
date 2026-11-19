@@ -11,7 +11,11 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <fmt/format.h>
+#include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
+
 #include <filesystem>
+#include <string_view>
 #include <utility>
 
 using namespace nx::core;
@@ -76,7 +80,7 @@ Result<> WriteDREAM3D::operator()()
   auto commitResult = atomicFile.commit();
   if(commitResult.invalid())
   {
-    return commitResult;
+    return MergeResults(std::move(results), std::move(commitResult));
   }
 
   if(writeXdmf)
@@ -88,7 +92,14 @@ Result<> WriteDREAM3D::operator()()
     const auto outcome = InstallReplacementFile(temporarySidecar, destinationSidecar);
     if(outcome.Error)
     {
-      return MakeErrorResult(k_XdmfReplacementError, DescribeFileReplacementFailure(outcome, destinationSidecar));
+      const std::string_view recoveryAdvice = outcome.RetriesExhausted ? "The .xdmf file may be open in another program, or you may not have permission to replace it. "
+                                                                         "Close programs that use the .xdmf file and run the filter again." :
+                                                                         "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
+                                                                         "Fix any read-only settings or permissions and run the filter again.";
+      const auto message = fmt::format("The .dream3d file '{}' was saved. Its .xdmf file '{}' could not be saved. "
+                                       "An existing .xdmf file at that path may not match the new .dream3d file. {} {}",
+                                       m_InputValues->ExportFilePath, destinationSidecar, recoveryAdvice, DescribeFileReplacementSystemError(outcome));
+      return MergeResults(std::move(results), MakeErrorResult(k_XdmfReplacementError, message));
     }
   }
   return results;

@@ -48,6 +48,7 @@ struct FileReplacementOutcome
  * Windows tries a POSIX-semantics rename first and tries a conventional rename after any failure of that step.
  * File systems without POSIX-semantics support use the conventional rename with the same bounded retry policy.
  * Windows retries transient access-denied, sharing-violation, and lock-violation errors.
+ * For access-denied errors, a read-only destination, a destination directory, or a replacement directory prevents a retry.
  * On Windows, waits double from 1 ms to 64 ms, with a total budget of 2000 ms. POSIX uses one rename.
  *
  * @param replacement Path to the complete replacement file.
@@ -63,7 +64,8 @@ struct FileReplacementOutcome
 /**
  * @brief Describes the system error and retry history for a caller's diagnostic.
  * @param outcome Result of the failed operation.
- * @return System error text and, after a retry, the attempts and total requested wait.
+ * @return System error text. After a retry, the text ends with "(tried N times over M ms)."
+ * M is the sum of the retry delays in milliseconds.
  * @pre outcome.Error contains an error.
  */
 [[nodiscard]] SIMPLNX_EXPORT std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& outcome);

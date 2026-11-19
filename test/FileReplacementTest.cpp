@@ -92,25 +92,25 @@ TEST_CASE("FileReplacement falls back once and prefers a retryable primary error
   usize predicateCalls = 0;
   const auto result = detail::RenameWithFallback(
       [&] {
-        CHECK(fallbackCalls == 0);
+        CHECK((fallbackCalls == 0));
         ++primaryCalls;
         return primaryResult;
       },
       [&] {
-        CHECK(primaryCalls == 1);
+        CHECK((primaryCalls == 1));
         ++fallbackCalls;
         return fallbackResult;
       },
       [&](const std::error_code& error) {
-        CHECK(fallbackCalls == 1);
-        CHECK(error == primaryResult);
+        CHECK((fallbackCalls == 1));
+        CHECK((error == primaryResult));
         ++predicateCalls;
         return error == retryablePrimaryError || error == retryableFallbackError;
       });
-  CHECK(primaryCalls == 1);
-  CHECK(fallbackCalls == expectedFallbackCalls);
-  CHECK(predicateCalls == expectedPredicateCalls);
-  CHECK(result == expectedResult);
+  CHECK((primaryCalls == 1));
+  CHECK((fallbackCalls == expectedFallbackCalls));
+  CHECK((predicateCalls == expectedPredicateCalls));
+  CHECK((result == expectedResult));
 }
 
 TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
@@ -187,19 +187,18 @@ TEST_CASE("FileReplacement describes what failed and how to recover", "[simplnx]
   SECTION("One attempt")
   {
     description = DescribeFileReplacementFailure({.Error = error, .Attempts = 1}, destination);
-    CHECK_THAT(description, Catch::Matchers::Contains("Check that the files and the output folder are accessible"));
+    CHECK_THAT(description, Catch::Matchers::Contains("The file or the output folder may be read-only, or you may not have permission to replace the file."));
+    CHECK_THAT(description, !Catch::Matchers::Contains("open in another program"));
     CHECK_THAT(description, Catch::Matchers::EndsWith(error.message()));
-    CHECK_THAT(description, !Catch::Matchers::Contains("attempts"));
+    CHECK_THAT(description, !Catch::Matchers::Contains("(tried "));
   }
   SECTION("Exhausted attempts")
   {
     description = DescribeFileReplacementFailure({.Error = error, .Attempts = 38, .Waited = std::chrono::milliseconds{2000}, .RetriesExhausted = true}, destination);
-    CHECK_THAT(description, Catch::Matchers::Contains("The file may be read-only or you may not have permission to replace it. It may also be open in another program."));
-    CHECK_THAT(description, Catch::Matchers::Contains("Make sure the file is closed and writable"));
-    CHECK_THAT(description, Catch::Matchers::EndsWith("38 attempts, 2000 ms total requested wait)."));
-    const auto osError = description.find(error.message());
-    REQUIRE((osError != std::string::npos));
-    CHECK((description.find("Make sure") < osError));
+    CHECK_THAT(description, !Catch::Matchers::Contains("read-only"));
+    CHECK_THAT(description,
+               Catch::Matchers::Contains("It may be open in another program, or you may not have permission to replace it. Close it and run again. Operating system error: " + error.message()));
+    CHECK_THAT(description, Catch::Matchers::EndsWith("(tried 38 times over 2000 ms)."));
   }
   CHECK_THAT(description, Catch::Matchers::StartsWith("Could not replace output file 'example.txt'. The destination is unchanged."));
   CHECK((description.find("example.txt") == description.rfind("example.txt")));

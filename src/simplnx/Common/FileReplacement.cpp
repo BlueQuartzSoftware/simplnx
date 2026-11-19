@@ -9,6 +9,7 @@
 #include <cassert>
 #include <chrono>
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -201,7 +202,7 @@ std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& out
   assert(outcome.Error);
   if(outcome.Attempts > 1)
   {
-    return fmt::format("Operating system error: {} ({} attempts, {} ms total requested wait).", outcome.Error.message(), outcome.Attempts, outcome.Waited.count());
+    return fmt::format("Operating system error: {} (tried {} times over {} ms).", outcome.Error.message(), outcome.Attempts, outcome.Waited.count());
   }
   return fmt::format("Operating system error: {}", outcome.Error.message());
 }
@@ -211,13 +212,15 @@ std::string DescribeFileReplacementFailure(const FileReplacementOutcome& outcome
   std::string description;
   if(outcome.RetriesExhausted)
   {
-    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. The file may be read-only or you may not have permission to replace it. "
-                              "It may also be open in another program. Make sure the file is closed and writable.",
+    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. "
+                              "It may be open in another program, or you may not have permission to replace it. Close it and run again.",
                               destination);
   }
   else
   {
-    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. Check that the files and the output folder are accessible.", destination);
+    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. "
+                              "The file or the output folder may be read-only, or you may not have permission to replace the file.",
+                              destination);
   }
   return fmt::format("{} {}", description, DescribeFileReplacementSystemError(outcome));
 }
