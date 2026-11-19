@@ -53,6 +53,8 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
+#include <fmt/format.h>
+#include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
 
 #include <algorithm>
 #include <chrono>
@@ -1222,16 +1224,16 @@ void CheckXdmfFile(const fs::path& dream3dPath)
   REQUIRE(referenceCount > 0);
 }
 
-TEST_CASE("WriteDREAM3DFilter reports a blocked XDMF replacement", "[SimplnxCore][WriteDREAM3DFilter]")
+TEST_CASE("SimplnxCore::WriteDREAM3DFilter: Reports a blocked XDMF replacement", "[SimplnxCore][WriteDREAM3DFilter]")
 {
-  const auto directory = fs::temp_directory_path() / ("write_dream3d_" + Uuid::GenerateV4().str());
+  const auto directory = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("write_dream3d_" + Uuid::GenerateV4().str());
   const auto destination = directory / "output.dream3d";
   const auto blockedSidecar = GetXdmfPath(destination);
-  REQUIRE(fs::create_directories(blockedSidecar));
   const auto cleanup = MakeScopeGuard([&directory]() noexcept {
     std::error_code error;
     fs::remove_all(directory, error);
   });
+  REQUIRE(fs::create_directories(blockedSidecar));
 
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
@@ -1242,8 +1244,11 @@ TEST_CASE("WriteDREAM3DFilter reports a blocked XDMF replacement", "[SimplnxCore
   SIMPLNX_RESULT_REQUIRE_INVALID(result); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
   REQUIRE((result.errors().size() == 1));
   CHECK((result.errors().front().code == -78500));
-  CHECK_THAT(result.errors().front().message, Catch::Matchers::StartsWith("Could not replace output file"));
-  CHECK_THAT(result.errors().front().message, Catch::Matchers::Contains("The destination is unchanged."));
+  CHECK_THAT(result.errors().front().message, Catch::Matchers::StartsWith(fmt::format("The .dream3d file '{}' was saved. Its .xdmf file '{}' could not be saved. "
+                                                                                      "An existing .xdmf file at that path may not match the new .dream3d file. "
+                                                                                      "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
+                                                                                      "Fix any read-only settings or permissions and run the filter again. Operating system error: ",
+                                                                                      destination, blockedSidecar)));
   CHECK(fs::is_regular_file(destination));
   CHECK(fs::is_directory(blockedSidecar));
 }

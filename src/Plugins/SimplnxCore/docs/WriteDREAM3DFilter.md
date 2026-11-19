@@ -45,7 +45,12 @@ The `.xdmf` file does not contain a copy of the data — it is a metadata wrappe
 
 Enabling XDMF costs almost nothing (the file is small and fast to write) and is the recommended setting whenever visualization outside DREAM3D-NX is a possibility. It can safely be left off for intermediate pipeline outputs that will only be re-read by DREAM3D-NX itself.
 
-Error `-78500` means the filter could not install the XDMF file. The DREAM3D file has already been installed.
+If the filter reports error `-78500`, it saved the `.dream3d` file and could not save its `.xdmf` file.
+An existing `.xdmf` file at that path may not match the new `.dream3d` file.
+
+- If the message says the file may be open in another program, close programs that use the file and run the filter again.
+  This message can also appear if you do not have permission to replace the file.
+- If the message says the file or output folder may be read-only, fix any read-only settings or permissions and run the filter again.
 
 ### Required Input Sources
 
