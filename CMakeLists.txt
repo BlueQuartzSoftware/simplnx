@@ -31,7 +31,7 @@ enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_PYTHON FEATURE "python")
 option(SIMPLNX_BUILD_TESTS "Enable buildingtests" ON)
 enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_TESTS FEATURE "tests")
 
-option(SIMPLNX_STORE_COPY_STRICT_FORMAT "Fail a store copy to a storage format with no registered I/O manager instead of falling back to in-memory storage" OFF)
+option(SIMPLNX_STORE_COPY_STRICT_FORMAT "Reject a requested storage format when no registered factory supports the requested store type. Applies to numeric array creation, import planning, and store copies." OFF)
 
 # ------------------------------------------------------------------------------
 # are multithreading algorithms enabled
