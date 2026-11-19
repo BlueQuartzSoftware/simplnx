@@ -57,7 +57,10 @@ public:
 
   /**
    * @brief Atomically replaces the destination with the temporary file.
-   * @return Valid result on success or a detailed filesystem error.
+   *
+   * On Windows, this operation retries transient rename errors and requests write-through.
+   * @return Valid result on success or a detailed filesystem error. Error -15782 reports a failed replacement.
+   * @post Failure leaves the destination unchanged. Any temporary file remains available until removal or destruction.
    */
   [[nodiscard]] Result<> commit();
 
