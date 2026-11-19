@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
 #include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
