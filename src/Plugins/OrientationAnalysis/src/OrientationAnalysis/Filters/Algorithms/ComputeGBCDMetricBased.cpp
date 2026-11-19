@@ -343,8 +343,29 @@ const std::atomic_bool& ComputeGBCDMetricBased::getCancel()
   return m_ShouldCancel;
 }
 
+Result<> ComputeGBCDMetricBased::ValidateMisorientationRotation(const std::vector<float32>& misorientationRotation)
+{
+  const float32 angle = misorientationRotation[3];
+  if(!(angle > 0.0f && angle <= 180.0f))
+  {
+    return MakeErrorResult(k_InvalidMisorientationAngleError, fmt::format("The misorientation angle ({}) should be in the range (0, 180] degrees", angle));
+  }
+  if(!OrientationUtilities::NormalizeDirection(misorientationRotation[0], misorientationRotation[1], misorientationRotation[2]).has_value())
+  {
+    return MakeErrorResult(k_InvalidMisorientationAxisError,
+                           fmt::format("The axis of the Fixed Misorientation is [{}, {}, {}]. The axis needs finite components and a length greater than 0. Enter an axis such as [1, 1, 1].",
+                                       misorientationRotation[0], misorientationRotation[1], misorientationRotation[2]));
+  }
+  return {};
+}
+
 Result<> ComputeGBCDMetricBased::operator()()
 {
+  if(Result<> rotationResult = ValidateMisorientationRotation(m_InputValues->MisorientationRotation); rotationResult.invalid())
+  {
+    return rotationResult;
+  }
+
   // GMT scripts require the _1 filename suffix.
   fs::path distributionOutput = m_InputValues->DistOutputFile;
   std::string distFName = m_InputValues->DistOutputFile.stem().string();
@@ -490,8 +511,9 @@ Result<> ComputeGBCDMetricBased::operator()()
 
   // Convert axis angle to matrix representation of mis orientation
   auto gFixedAngle = m_InputValues->MisorientationRotation[3] * nx::core::Constants::k_PiOver180D;
-  Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
-  gFixedAxis.normalize();
+  // ValidateMisorientationRotation() rejected an axis that cannot be normalized.
+  const std::array<float64, 3> gFixedAxis =
+      OrientationUtilities::NormalizeDirection(m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]).value();
   auto oMatrix = ebsdlib::AxisAngleDType(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle).toOrientationMatrix();
   const Matrix3dR gFixedT = oMatrix.transpose().toEigenGMatrix();
 

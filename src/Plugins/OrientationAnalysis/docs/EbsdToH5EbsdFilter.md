@@ -1,5 +1,7 @@
 # Import Orientation File(s) to H5EBSD
 
+Input file extensions are case-insensitive, so `.ang`, `.ANG`, `.ctf`, and `.Ctf` are accepted.
+
 ## Group (Subgroup)
 
 IO (Input)

@@ -1,5 +1,6 @@
 #include "OrientationAnalysis/Filters/ComputeTwinBoundariesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/Common/Constants.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -8,7 +9,10 @@
 
 #include <catch2/catch.hpp>
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <Eigen/Core>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 
@@ -306,4 +310,73 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: SIMPL Backwards Com
       CHECK(args.value<std::string>(ComputeTwinBoundariesFilter::k_TwinBoundariesIncoherenceName_Key) == "TestName");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Exact Sigma 3 Twin With Parallel Normal", "[OrientationAnalysis][ComputeTwinBoundariesFilter]")
+{
+  // Feature 1 has the identity orientation. Feature 2 is rotated 60 degrees about [111], the Sigma 3 twin.
+  // Every face normal is a positive multiple of [111], so every face is a coherent twin: twin flag 1 and
+  // incoherence 0 (hand calculation). For some lengths the cosine between the twin axis and the normal rounds to
+  // 1 + 1 ulp; acos() of that value is NaN unless the cosine is clamped.
+  constexpr usize k_NumFaces = 4000;
+
+  DataStructure dataStructure;
+  auto* faceLabels = UnitTest::CreateTestDataArray<int32>(dataStructure, "FaceLabels", {k_NumFaces}, {2});
+  auto* faceNormals = UnitTest::CreateTestDataArray<float64>(dataStructure, "FaceNormals", {k_NumFaces}, {3});
+  for(usize faceIdx = 0; faceIdx < k_NumFaces; faceIdx++)
+  {
+    (*faceLabels)[2 * faceIdx] = 1;
+    (*faceLabels)[2 * faceIdx + 1] = 2;
+    const float64 length = 0.01 + 0.0137 * static_cast<float64>(faceIdx);
+    for(usize comp = 0; comp < 3; comp++)
+    {
+      (*faceNormals)[3 * faceIdx + comp] = length;
+    }
+  }
+  const float32 halfAngleSin = static_cast<float32>(0.5 / std::sqrt(3.0));
+  const float32 halfAngleCos = static_cast<float32>(std::sqrt(3.0) / 2.0);
+  auto* avgQuats = UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgQuats", {3}, {4});
+  avgQuats->fill(0.0F);
+  (*avgQuats)[7] = 1.0F; // Feature 1: identity, stored as (x, y, z, w)
+  (*avgQuats)[8] = halfAngleSin;
+  (*avgQuats)[9] = halfAngleSin;
+  (*avgQuats)[10] = halfAngleSin;
+  (*avgQuats)[11] = halfAngleCos;
+  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {3}, {1});
+  (*phases)[0] = 0;
+  (*phases)[1] = 1;
+  (*phases)[2] = 1;
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  ComputeTwinBoundariesFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisTolerance_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AngleTolerance_Key, std::make_any<float32>(1.0F));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_BoundariesArrayType_Key, std::make_any<ChoicesParameter::ValueType>(TwinBoundariesConstants::k_OutputType));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FindCoherence_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceLabels"})));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FaceNormalsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceNormals"})));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Phases"})));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"AvgQuats"})));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_TwinBoundariesName_Key, std::make_any<std::string>("Twin Boundaries"));
+  args.insertOrAssign(ComputeTwinBoundariesFilter::k_TwinBoundariesIncoherenceName_Key, std::make_any<std::string>("Incoherence"));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& twinBoundaries = dataStructure.getDataRefAs<UInt8Array>(DataPath({"Twin Boundaries"}));
+  const auto& incoherence = dataStructure.getDataRefAs<Float32Array>(DataPath({"Incoherence"}));
+  std::vector<usize> missedFaces;
+  for(usize faceIdx = 0; faceIdx < k_NumFaces; faceIdx++)
+  {
+    if(twinBoundaries[faceIdx] != 1 || !(incoherence[faceIdx] >= 0.0F && incoherence[faceIdx] < 0.01F))
+    {
+      missedFaces.push_back(faceIdx);
+    }
+  }
+  CAPTURE(missedFaces);
+  CHECK(missedFaces.empty());
 }

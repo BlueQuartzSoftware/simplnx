@@ -1,7 +1,9 @@
 #include "SimplnxCore/Filters/HierarchicalSmoothFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp" // nx::core::NodeType constants
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -10,6 +12,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <any>
 #include <array>
 #include <cmath>
 #include <limits>
@@ -518,4 +521,121 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Idempotency", "[SimplnxCore][H
   REQUIRE(maxDisp < k_TolIdempotent);
 
   UnitTest::CheckArraysInheritTupleDims(twiceDs);
+}
+
+namespace
+{
+// Face 0 uses original vertex ids 3, 1, 2, so diagnostics cannot assume ids 0, 1, 2.
+// The reference triangle has fixed quad points. Error cases also have a separate
+// triangle with a movable midpoint to detect smoothing followed by writeback.
+void checkReferenceLength(float32 middleX, float32 lastX, bool expectError)
+{
+  DataStructure dataStructure;
+  const usize vertexCount = expectError ? 7 : 4;
+  const usize faceCount = expectError ? 2 : 1;
+  auto* geometryPtr = TriangleGeom::Create(dataStructure, "ReferenceMesh");
+  REQUIRE(geometryPtr != nullptr);
+  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {vertexCount}, {3}, geometryPtr->getId());
+  verticesPtr->fill(0.0f);
+  (*verticesPtr)[3] = middleX;
+  (*verticesPtr)[6] = lastX;
+  geometryPtr->setVertices(*verticesPtr);
+  auto* facesPtr = UnitTest::CreateTestDataArray<uint64>(dataStructure, "Faces", {faceCount}, {3}, geometryPtr->getId());
+  (*facesPtr)[0] = 3;
+  (*facesPtr)[1] = 1;
+  (*facesPtr)[2] = 2;
+  geometryPtr->setFaceList(*facesPtr);
+  auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {vertexCount}, geometryPtr->getId());
+  REQUIRE(vertexDataPtr != nullptr);
+  geometryPtr->setVertexAttributeMatrix(*vertexDataPtr);
+  auto* nodeTypesPtr = UnitTest::CreateTestDataArray<int8>(dataStructure, "Node Type", {vertexCount}, {1}, vertexDataPtr->getId());
+  nodeTypesPtr->fill(NodeType::QuadPoint);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Face Data", {faceCount}, geometryPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {faceCount}, {2}, faceDataPtr->getId());
+  (*labelsPtr)[0] = 0;
+  (*labelsPtr)[1] = 1;
+
+  if(expectError)
+  {
+    // Face 1 has fixed endpoints (0,2,0), (2,2,0) and a movable node (1,3,0).
+    // Smoothing its boundary moves the middle node toward the line y=2.
+    (*verticesPtr)[12] = 0.0f;
+    (*verticesPtr)[13] = 2.0f;
+    (*verticesPtr)[15] = 1.0f;
+    (*verticesPtr)[16] = 3.0f;
+    (*verticesPtr)[18] = 2.0f;
+    (*verticesPtr)[19] = 2.0f;
+    (*facesPtr)[3] = 4;
+    (*facesPtr)[4] = 5;
+    (*facesPtr)[5] = 6;
+    (*nodeTypesPtr)[5] = NodeType::Default;
+    // A distinct label pair keeps the two triangles in separate boundaries.
+    (*labelsPtr)[2] = 2;
+    (*labelsPtr)[3] = 3;
+  }
+
+  const HierarchicalSmoothFilter filter;
+  Arguments args;
+  args.insertOrAssign(HierarchicalSmoothFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"ReferenceMesh"})));
+  args.insertOrAssign(HierarchicalSmoothFilter::k_SurfaceMeshNodeTypeArrayPath_Key, std::make_any<DataPath>(DataPath({"ReferenceMesh", "Vertex Data", "Node Type"})));
+  args.insertOrAssign(HierarchicalSmoothFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"ReferenceMesh", "Face Data", "Face Labels"})));
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  auto execute = filter.execute(dataStructure, args);
+  if(expectError)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
+    REQUIRE(execute.result.errors().size() == 1);
+    const auto& error = execute.result.errors()[0];
+    REQUIRE(error.code == -19460);
+    REQUIRE(error.message.find("face 0, nodes 3, 1, 2") != std::string::npos);
+    REQUIRE(error.message.find("Node 3: (0, 0, 0)") != std::string::npos);
+    REQUIRE(error.message.find("Node 1:") != std::string::npos);
+    REQUIRE(error.message.find("Node 2:") != std::string::npos);
+    // Invalid reference coordinates and the movable node must remain unchanged.
+    REQUIRE((*verticesPtr)[15] == 1.0f);
+    REQUIRE((*verticesPtr)[16] == 3.0f);
+    REQUIRE((*verticesPtr)[17] == 0.0f);
+    REQUIRE((*verticesPtr)[9] == 0.0f);
+    REQUIRE((std::isnan(middleX) ? std::isnan((*verticesPtr)[3]) : (*verticesPtr)[3] == middleX));
+    REQUIRE((*verticesPtr)[6] == lastX);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+    for(usize i = 0; i < verticesPtr->getSize(); i++)
+    {
+      REQUIRE((*verticesPtr)[i] == (i == 3 ? middleX : 0.0f));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Reference coincident first edge", "[SimplnxCore][HierarchicalSmoothFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Edge lengths 0 and 1 give reference length 0.
+  checkReferenceLength(0.0f, 1.0f, true);
+}
+
+TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Reference NaN", "[SimplnxCore][HierarchicalSmoothFilter]")
+{
+  UnitTest::LoadPlugins();
+  checkReferenceLength(std::numeric_limits<float32>::quiet_NaN(), 1.0f, true);
+}
+
+TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Reference infinity", "[SimplnxCore][HierarchicalSmoothFilter]")
+{
+  UnitTest::LoadPlugins();
+  checkReferenceLength(std::numeric_limits<float32>::infinity(), 1.0f, true);
+}
+
+TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Reference unused edge control", "[SimplnxCore][HierarchicalSmoothFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Only edge (2,0) is zero. The selected edges both have length 1, giving sqrt(3).
+  checkReferenceLength(1.0f, 0.0f, false);
 }

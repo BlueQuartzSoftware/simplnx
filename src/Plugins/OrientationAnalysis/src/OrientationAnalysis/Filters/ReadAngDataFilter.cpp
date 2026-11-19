@@ -113,6 +113,11 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
   }
 
+  if(auto headerResult = EbsdReaderUtilities::ValidateHeaderGrid(reader); headerResult.invalid())
+  {
+    return MakePreflightErrorResult(headerResult.errors().front().code, headerResult.errors().front().message);
+  }
+
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
@@ -120,7 +125,10 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
   EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
+  if(auto phaseResult = EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues); phaseResult.invalid())
+  {
+    return MakePreflightErrorResult(phaseResult.errors().front().code, phaseResult.errors().front().message);
+  }
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

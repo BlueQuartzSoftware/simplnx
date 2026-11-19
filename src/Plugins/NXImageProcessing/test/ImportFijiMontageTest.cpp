@@ -29,6 +29,7 @@
 #include <fmt/format.h>
 
 #include <any>
+#include <array>
 #include <atomic>
 #include <cmath>
 #include <filesystem>
@@ -859,13 +860,17 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale feeds scalar pipeline
   metadata.height = 2;
   metadata.numComponents = components;
   metadata.dataType = DataType::uint8;
-  std::vector<uint8> pixels;
-  for(const uint8 intensity : {uint8{10}, uint8{20}, uint8{30}, uint8{40}})
+  constexpr std::array<uint8, 4> k_Intensities = {10, 20, 30, 40};
+  // Size the vector up front to avoid a gcc 13 -Wstringop-overflow false positive from vector::insert.
+  std::vector<uint8> pixels(k_Intensities.size() * components);
+  for(usize pixel = 0; pixel < k_Intensities.size(); pixel++)
   {
-    pixels.insert(pixels.end(), {intensity, intensity, intensity});
+    pixels[pixel * components] = k_Intensities[pixel];
+    pixels[pixel * components + 1] = k_Intensities[pixel];
+    pixels[pixel * components + 2] = k_Intensities[pixel];
     if(components == 4)
     {
-      pixels.push_back(3);
+      pixels[pixel * components + 3] = 3;
     }
   }
   auto writeResult = imageIO.value()->writePixelData(imagePath, pixels, metadata);

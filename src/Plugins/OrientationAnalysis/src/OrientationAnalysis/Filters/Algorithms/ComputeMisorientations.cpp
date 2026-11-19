@@ -1,5 +1,7 @@
 #include "ComputeMisorientations.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 
@@ -228,8 +230,29 @@ ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, con
 
 ComputeMisorientations::~ComputeMisorientations() noexcept = default;
 
+Result<> ComputeMisorientations::ValidateReferenceAxis(const ComputeMisorientationsInputValues& inputValues)
+{
+  if(inputValues.ComputationType != compute_misorientations_constants::k_UseReferenceAxesIndex)
+  {
+    return {};
+  }
+  const auto& reference = inputValues.ReferenceOrientation;
+  if(!OrientationUtilities::NormalizeDirection(reference[0], reference[1], reference[2]).has_value())
+  {
+    return MakeErrorResult(k_InvalidReferenceAxisError,
+                           fmt::format("The axis of the Reference Axis-Angle is [{}, {}, {}]. The axis needs finite components and a length greater than 0. Enter an axis such as [0, 0, 1].",
+                                       reference[0], reference[1], reference[2]));
+  }
+  return {};
+}
+
 Result<> ComputeMisorientations::operator()()
 {
+  if(Result<> axisResult = ValidateReferenceAxis(*m_InputValues); axisResult.invalid())
+  {
+    return axisResult;
+  }
+
   if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseArraysIndex)
   {
     const auto& inputOrientations1Ref = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationPath1).getDataStoreRef();
@@ -243,8 +266,9 @@ Result<> ComputeMisorientations::operator()()
   {
     const auto& inputOrientations1Ref = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationPath1).getDataStoreRef();
     const usize chunkTuples = CalculateChunkTuples(inputOrientations1Ref);
-    Eigen::Vector3d axis(m_InputValues->ReferenceOrientation[0], m_InputValues->ReferenceOrientation[1], m_InputValues->ReferenceOrientation[2]);
-    axis.normalize();
+    // ValidateReferenceAxis() rejected an axis that cannot be normalized.
+    const std::array<float64, 3> axis =
+        OrientationUtilities::NormalizeDirection(m_InputValues->ReferenceOrientation[0], m_InputValues->ReferenceOrientation[1], m_InputValues->ReferenceOrientation[2]).value();
     const ebsdlib::AxisAngleDType referenceOrientation(axis[0], axis[1], axis[2], m_InputValues->ReferenceOrientation[3] * nx::core::Constants::k_PiOver180D);
     const ebsdlib::QuatD referenceQuaternion = referenceOrientation.toQuaternion();
     ReferenceSecondOrientationProvider secondOrientationProvider(referenceQuaternion);

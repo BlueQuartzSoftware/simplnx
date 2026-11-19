@@ -53,7 +53,7 @@ Parameters ComputeBoundaryStrengthsFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Loading_Key, "Loading Direction (XYZ)", "The loading axis for the sample", std::vector<float64>{0.0, 0.0, 0.0},
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_Loading_Key, "Loading Direction (XYZ)", "The loading axis for the sample", std::vector<float64>{1.0, 1.0, 1.0},
                                                          std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
@@ -101,6 +101,11 @@ IFilter::PreflightResult ComputeBoundaryStrengthsFilter::preflightImpl(const Dat
   auto pSurfaceMeshF1sptsArrayNameValue = filterArgs.value<std::string>(k_SurfaceMeshF1sptsArrayName_Key);
   auto pSurfaceMeshF7sArrayNameValue = filterArgs.value<std::string>(k_SurfaceMeshF7sArrayName_Key);
   auto pSurfaceMeshmPrimesArrayNameValue = filterArgs.value<std::string>(k_SurfaceMeshmPrimesArrayName_Key);
+
+  if(Result<> loadingResult = ComputeBoundaryStrengths::ValidateLoadingDirection(filterArgs.value<VectorFloat64Parameter::ValueType>(k_Loading_Key)); loadingResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(loadingResult), {})};
+  }
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;

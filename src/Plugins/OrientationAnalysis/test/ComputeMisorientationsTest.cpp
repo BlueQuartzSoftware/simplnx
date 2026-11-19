@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "OrientationAnalysis/Filters/Algorithms/ComputeMisorientations.hpp"
 #include "OrientationAnalysis/Filters/ComputeMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
@@ -18,7 +19,9 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <array>
+#include <atomic>
 #include <filesystem>
+#include <limits>
 #include <memory>
 using namespace nx::core::UnitTest;
 namespace fs = std::filesystem;
@@ -326,4 +329,65 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter: Phase and Laue Ind
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter: Invalid Reference Axis", "[OrientationAnalysis][ComputeMisorientations]")
+{
+  const std::vector<float32> referenceOrientation = GENERATE(std::vector<float32>{0.0F, 0.0F, 0.0F, 30.0F}, std::vector<float32>{std::numeric_limits<float32>::quiet_NaN(), 0.0F, 1.0F, 30.0F},
+                                                             std::vector<float32>{0.0F, std::numeric_limits<float32>::infinity(), 1.0F, 30.0F});
+  CAPTURE(referenceOrientation);
+
+  DataStructure dataStructure;
+  auto* eulers = UnitTest::CreateTestDataArray<float32>(dataStructure, "Eulers", {2}, {3});
+  eulers->fill(0.0F);
+  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1});
+  phases->fill(1);
+  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1});
+  (*crystalStructures)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*crystalStructures)[1] = ebsdlib::CrystalStructure::Cubic_High;
+
+  ComputeMisorientationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(compute_misorientations_constants::k_UseReferenceAxesIndex));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_ReferenceOrientation_Key, std::make_any<VectorFloat32Parameter::ValueType>(referenceOrientation));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath1_Key, std::make_any<DataPath>(DataPath({"Eulers"})));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_InputOrientationArrayPath2_Key, std::make_any<DataPath>(DataPath({"Eulers"})));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Phases"})));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
+  args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>("Misorientations"));
+
+  SECTION("Preflight and execute reject the axis")
+  {
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -68005);
+
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors()[0].code == -68005);
+  }
+
+  SECTION("The algorithm rejects the axis without the filter")
+  {
+    UnitTest::CreateTestDataArray<float32>(dataStructure, "Misorientations", {2}, {4});
+    ComputeMisorientationsInputValues inputValues;
+    inputValues.InputOrientationPath1 = DataPath({"Eulers"});
+    inputValues.InputOrientationPath2 = DataPath({"Eulers"});
+    inputValues.ReferenceOrientation = referenceOrientation;
+    inputValues.ComputationType = compute_misorientations_constants::k_UseReferenceAxesIndex;
+    inputValues.InputPhasesArrayPath = DataPath({"Phases"});
+    inputValues.OutputMisorientationsPath = DataPath({"Misorientations"});
+    inputValues.InputCrystalStructuresArrayPath = DataPath({"CrystalStructures"});
+    const std::atomic_bool shouldCancel = false;
+    Result<> result = ComputeMisorientations(dataStructure, {}, shouldCancel, &inputValues)();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors()[0].code == -68005);
+  }
+
+  SECTION("Use Arrays ignores the reference axis")
+  {
+    args.insertOrAssign(ComputeMisorientationsFilter::k_ComputationType_Key, std::make_any<ChoicesParameter::ValueType>(compute_misorientations_constants::k_UseArraysIndex));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
 }

@@ -96,3 +96,27 @@ Comparison run 2026-07-07 against the official DREAM3D 6.5.171 release on three 
 **Affected users:** Only users with nonstandard `.ang` files that declare a Phase 0 section — rare, and such files carry no meaningful phase-0 crystallography in legacy output anyway (slot 0 collided with the invalid-phase slot).
 
 **Recommendation:** Trust SIMPLNX. Renumber the file's phases to start at 1. A Phase 0 section is outside the TSL `.ang` specification.
+
+
+---
+
+## ReadAngDataFilter-D6
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadAngDataFilter-D6` |
+| **Filter UUID** | `5b062816-79ac-47ce-93cb-e7966896bcbd` |
+| **Status** | resolved on this branch |
+| **Bug flag** | Header validation defect, reproduced with EbsdLib 3.1.3 |
+
+**Symptom:** An unsupported phase Symmetry causes a segmentation fault in the preflight preview. Non-positive or non-finite XSTEP and YSTEP values reach the Image Geometry.
+
+**Root cause:** The preview uses a file-derived orientation-operations index without a bounds check. Geometry creation also requires validation of header dimensions and steps before unsigned conversion or spacing assignment.
+
+**Affected users:** Users importing malformed or edited EBSD files. Valid input files retain their symmetry mappings and geometry.
+
+**Correct behavior:** Preflight rejects unsupported Symmetry with error `-67600`. It rejects invalid dimensions with `-67601` and invalid steps with `-67602`. The messages identify the file, header key and value; the symmetry error also identifies the phase. Public execute also rejects the invalid header through its preflight check.
+
+**Test sensitivity verification:** Synthetic files in `test/ReadAngDataTest.cpp` reproduce the failure before the fix. The regression cases are `OrientationAnalysis::ReadAngData: HeaderValidation symmetry` and `ReadAngData: HeaderValidation steps`. The oracle is the supported symmetry domain and the finite, positive grid contract. The legacy executable was not run for these new malformed inputs.
+
+**Recommendation:** Correct the named header value or export the file again from the acquisition software.
