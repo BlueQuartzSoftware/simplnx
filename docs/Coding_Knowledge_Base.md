@@ -801,58 +801,62 @@ error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `C
 - **Parameter values.** Floating-point `NumberParameter` and `VectorParameter` checks reject NaN and infinity
   by default. A parameter can explicitly allow them when the filter documentation defines their meaning.
   Other parameter types apply their own validation, for example to allow NaN in a floating-point fill value.
-- **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
-  error that names the file and the field.
-- **Input array values** that would change a result other than their own element's output, or would reach a
-  comparison, an ordering, a range, a histogram, a threshold, a color map, a search, an index or an integer conversion.
-  This covers reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and
-  unique-value counts, per feature or per region), neighborhood operations on floating-point data (smoothing, median and
-  gradient filters, morphology) and decisions made from a value (thresholds, segmentation tolerances, bin and index
-  selection). The filter has a choice parameter **Nonfinite Input Handling** (key
-  `nonfinite_input_handling_index`) with two choices, **Error** (the default) and **Warn and Continue**.
-  - **Error** stops at the first nonfinite value, before any output is written. The message names the array and the
-    tuple and says that **Warn and Continue** handles these values instead.
-  - **Warn and Continue** computes ranges and bounds from finite values only, gives each nonfinite element the result
-    that the filter documentation states (for example "first bin" or "Outside Value"), and reports one warning with
-    the number of nonfinite values. For reductions and neighborhood operations, exclude nonfinite values from the
-    contributing samples and counts.
-  - The in-core and out-of-core algorithms use one shared test and rule. The parameter has no effect on integer arrays.
-- **Element-wise floating-point math**, where one element in gives the same element out and no other element changes,
-  lets the IEEE result pass through. The filter documentation lists what NaN, infinity, zero and out-of-domain inputs
-  produce. When integer input can produce a fraction or NaN, the output type is floating point.
+- **Input data:** array values, values read from a file, and the origin, spacing, bounds and coordinates of an input
+  geometry. A filter does not reject, warn about, count or skip nonfinite input data: garbage in, garbage out.
+  Floating-point math carries NaN and infinity through to the output, and the filter has no choice parameter for
+  nonfinite values. A pipeline that must exclude them removes or replaces them before the filter.
+- **Undefined behavior is the exception.** Where a nonfinite value from input data, or a value computed from it,
+  would reach undefined behavior, the filter checks it at the point that the value reaches:
+  - conversion to an integer type, such as a bin, cell or index number;
+  - use as an index, size, count, dimension, allocation size or loop bound, including a floating-point loop that
+    cannot end;
+  - an ordering or equivalence over floating-point values: `std::sort`, `std::stable_sort`, `std::nth_element`,
+    `std::lower_bound` and `std::map` or `std::set` keys with `operator<`, and `std::unique` or a hand-written
+    equality grouping;
+  - narrowing a finite `float64` outside the `float32` range to `float32`;
+  - a standard-library precondition, such as finite bounds with `a <= b` for `std::uniform_real_distribution`.
+
+  For an ordering, use a strict weak ordering that places NaN after every number; for deduplication or grouping, use
+  an equivalence that treats NaN as equal only to NaN (`a == b || (std::isnan(a) && std::isnan(b))`). The data then
+  passes through. For the other
+  cases, return an error that names the array, file or geometry and the tuple or value. A masked or exterior value
+  that never reaches the conversion is not an error. Write each check so that NaN fails it (`!(value >= 0)`, not
+  `value < 0`). Conversion of NaN or infinity to `bool` or to a floating-point type is defined and needs no check.
 - **A computed value written to an integer output:** see
   [Write floating-point output through a saturating cast](#write-floating-point-output-through-a-saturating-cast).
 - **A result that is undefined for degenerate input** (a zero-length vector, an all-zero quaternion) is NaN in a
   floating-point output, and the documentation says so. It is not reported as bad input data.
 
-These rules apply to new filters and to filters a change already fixes; changing an existing filter's output type or
-failure behavior to meet them is a breaking change that its pull request names.
+When integer input can produce a fraction or NaN, the output type is floating point. These rules apply to new filters
+and to filters a change already fixes; changing an existing filter's output type or failure behavior to meet them is a
+breaking change that its pull request names.
 
-**Example of the broken rule:** **Compute Bounding Box Stats** gives two different wrong answers for Float32 values
-{NaN, 1, 2}: the in-core algorithm treats NaN as equal to every value (`Equivalent()` in
-`ComputeBoundingBoxStatsDirect`) and reports one unique value and a NaN median, and the out-of-core algorithm sorts with
-`operator<`, which is undefined when a value is NaN (issue #1867). **Compute Array
-Histogram** groups values with the same equality test, and the shared statistics helpers in `StatisticsCalculations.hpp`
-and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`. `ComputeArrayMinMax` is not NaN-aware
-(issue #1874). **Invert Intensity Image** accepts a NaN **Maximum** and writes 0 to every integer pixel (issue #1873).
+**Example of the broken rule:** **Approximate Point Cloud Hull** finds the vertex extents with comparisons that a NaN
+vertex never wins, then casts that vertex's cell coordinate to `int64` (issue #1873). The out-of-core algorithm of
+**Compute Bounding Box Stats** sorts Float32 values with `operator<`, which is undefined when a value is NaN (issue
+#1867). In the other direction, **Partition Geometry** in PR #1964 first rejected any input grid with an infinite
+origin, although an infinite origin only places every point outside the partition grid.
 
-**Why:** every comparison with NaN is false. `operator<` is then not a strict weak ordering, so `std::sort`,
-`std::stable_sort` and `std::map` keys are undefined; a threshold or a bin search puts NaN on one side without saying
-so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN or an
-infinity to an integer is undefined behavior. Whether a nonfinite input value means "bad data" or "no measurement"
-depends on the user's data, so input array values get a choice; parameters and file values do not.
+**Why:** the comparisons `<`, `<=`, `>`, `>=` and `==` with NaN are false (`!=` is true), so `operator<` is not a
+strict weak ordering over data that can contain NaN and `std::sort`,
+`std::stable_sort` and `std::set` keys are undefined, and a cast of NaN or infinity to an integer is undefined
+behavior. Outside those points a nonfinite value only changes the output: it can make it nonfinite, or place a
+point outside a grid so that it gets the outside ID or a zero-filled cell. Whether it means bad data or "no
+measurement" depends on the user's data, so the filter does not decide for the user.
 
 **What to look for:**
 
-- `std::sort`, `std::stable_sort`, `std::map`, `std::set` or `std::unique` over floating-point input values;
-- an equivalence written as `!(a < b) && !(b < a)` on floating-point values;
-- a running minimum, maximum or sum over input values with no finiteness test;
-- a threshold, tolerance or bin index computed from an input value with no finiteness test;
-- a parameter check written as `value < 0` or `value <= 0`, which NaN passes.
+- `std::sort`, `std::stable_sort`, `std::map` or `std::set` over floating-point input values with `operator<`, and
+  `std::unique` or an equality grouping (`!(a < b) && !(b < a)`) that is not NaN-aware;
+- a cast to an integer type, an index, a count or a loop bound computed from input data with no finiteness check,
+  including comparisons before the cast that NaN passes (`ImageGeom::getIndex()`);
+- an `std::isfinite` or `std::isnan` test that rejects, warns about or skips input data where no undefined behavior
+  follows;
+- a check written as `value < 0` or `value <= 0`, which NaN passes.
 
-**Pattern to use:** **Nonfinite Input Handling** in `ThresholdMaximumConnectedComponentsImageFilter` and
-`WriteImageFilter` (PR #1888); the Upper Boundary of `ThresholdMaximumConnectedComponentsImageFilter` for a documented
-meaning of infinity (PR #1888).
+**Pattern to use:** `ComputeCheckedPartitionIndex()` in `PartitionGeometry.cpp` (finite, in-range quotient
+before the `usize` cast, after the mask and exterior checks); `SaturateCastFromDouble<U>()` for integer outputs;
+`CreateAMScanPathsDetail::IntersectionXLess()` in `CreateAMScanPaths.cpp`.
 
 ### Copy every field that sets behavior when you clone an object
 
