@@ -84,6 +84,7 @@ repository, but contains no code from one.
   - [Call UnitTest::LoadPlugins() only when the test looks up filters by UUID](#call-unittestloadplugins-only-when-the-test-looks-up-filters-by-uuid)
   - [Give Catch2 a bool when you compare file times](#give-catch2-a-bool-when-you-compare-file-times)
   - [Never put a semicolon in a Catch2 test case name](#never-put-a-semicolon-in-a-catch2-test-case-name)
+  - [Define shared test helpers in a source file, not inline in a header](#define-shared-test-helpers-in-a-source-file-not-inline-in-a-header)
 
 ---
 
@@ -1417,6 +1418,37 @@ becomes two CTest entries; Catch2 finds no case for either part, prints `No test
 TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Computed-expected (safeBorder=false, Annulus + Box zero-radius)",
           "[NXImageProcessing][BlackTopHatImageFilter]")
 ```
+
+### Define shared test helpers in a source file, not inline in a header
+
+**Rule:** put the body of a shared test helper that is not a template, and is more than a few lines, in a source file
+of the test library that owns its header (`UnitTestCommon.cpp` for `UnitTestCommon.hpp`), and declare it in the header.
+Keep templates, compile-time constants and small wrappers in the header. A shared constant at namespace scope in a test
+header is `inline constexpr` when constant expressions need it, otherwise `inline const`.
+
+**Example of the broken rule:** `UnitTestCommon.hpp` defined 25 helpers `inline`, among them
+`CompareExemplarToGeneratedData`, `CompareDataStructures` and `CheckArraysInheritTupleDims`, and its `DataPath` and
+`FilterHandle` constants were plain `const`. PR #1983 moved 24 of the helpers to `UnitTestCommon.cpp` and deleted
+one that nothing called. `DataObjectComparison.hpp` and `SegmentFeaturesTestUtils.hpp` still define helpers inline.
+
+**Why:** every test file that includes the header compiles each body and every template that the body instantiates,
+even when the file never calls the helper, and each object that calls it generates the code again. Moving the
+`UnitTestCommon.hpp` bodies out saved 0.96 CPU-s on average in each of the 318 test objects of an in-core build that
+include it, against 4.8 CPU-s more for `UnitTestCommon.cpp` in each of the 7 test targets. A plain `const` object of
+class type has a separate copy in every object, built when the test starts.
+
+**What to look for:**
+
+- A function in a test-support header that is not a template and has a body of more than a few lines, defined
+  `inline` or in a class body.
+- A namespace-scope `const` object of class type (`DataPath`, `FilterHandle`, `std::vector`) in a header.
+- An `inline` variable whose initializer binds a reference to, or takes the address of, an object with internal
+  linkage, such as a plain `constexpr` value passed by `const&`; that object needs `inline` too.
+
+**Pattern to use:** the declarations in `test/UnitTestCommon/include/simplnx/UnitTest/UnitTestCommon.hpp` and their
+definitions in `UnitTestCommon.cpp`. A helper that targets without the library's sources also use stays in its header:
+`ProcessTestProfile.hpp` serves `simplnx::TestProfile` targets, and `ItkGoldenTestUtils.hpp` serves
+`NXImageProcessingBenchmark`, which does not compile `UnitTestCommon.cpp`.
 
 ---
 
