@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IDataStoreWritePreparation.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
@@ -652,6 +653,15 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
   }
   else
   {
+    // First-write setup can need a working-memory grant of its own. Complete it before staging the masked label batches.
+    if(auto* preparationPtr = dynamic_cast<IDataStoreWritePreparation*>(&output); preparationPtr != nullptr)
+    {
+      result = MergeResults(std::move(result), preparationPtr->prepareForWrite());
+      if(result.invalid() || shouldCancel)
+      {
+        return result;
+      }
+    }
     const bool external =
         input.getStoreType() == IDataStore::StoreType::OutOfCore || maskPtr->getStoreType() == IDataStore::StoreType::OutOfCore || output.getStoreType() == IDataStore::StoreType::OutOfCore;
     auto plan = detail::ReserveOtsuBuffers(options, {.TotalValues = input.getSize(), .BytesPerValue = sizeof(T) + sizeof(MaskT) + sizeof(uint8), .UsesExternalStore = external});
