@@ -94,9 +94,7 @@ The destination voxel for each vertex is computed on-the-fly from the vertex coo
 Each **Kernel Size** value must be finite and at least zero in the geometry's length units.
 A zero extent limits the contribution to the center cell along that axis.
 
-When **Interpolation Technique** is *Gaussian*, each **Gaussian Sigmas** value must be finite and greater than zero.
-These values are in cells. If the filter reports that the values are too small, increase **Gaussian Sigmas**.
-If the filter reports that the values are too large, decrease **Gaussian Sigmas**.
+When **Interpolation Technique** is *Gaussian*, each **Gaussian Sigmas** value must be from 0.001 to 1000 cells, inclusive.
 
 The filter uses the Image Geometry spacing to calculate the kernel size in cells.
 If the kernel is too large during preflight, the filter warns and tries again during the run.

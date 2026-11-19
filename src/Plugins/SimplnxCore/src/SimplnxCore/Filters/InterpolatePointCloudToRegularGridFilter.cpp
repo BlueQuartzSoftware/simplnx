@@ -16,8 +16,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
-
 using namespace nx::core;
 
 namespace
@@ -28,25 +26,6 @@ constexpr int32 k_KernelStorageWarning = -86170;
 constexpr int32 k_InvalidImageSpacingWarning = -86244;
 constexpr int32 k_KernelWidthWarning = -86245;
 constexpr int32 k_KernelContainerWarning = -86246;
-constexpr int32 k_SigmaSquareOverflow = -86135;
-constexpr int32 k_SigmaSquareUnderflow = -86134;
-
-Result<> ValidateGaussianSigmaSquares(nonstd::span<const float32> sigmas)
-{
-  for(usize axis = 0; axis < 3; ++axis)
-  {
-    const float32 square = sigmas[axis] * sigmas[axis];
-    if(square == 0)
-    {
-      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas ({}) value {} is too small. Increase this value.", "xyz"[axis], sigmas[axis]));
-    }
-    if(!std::isfinite(square))
-    {
-      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas ({}) value {} is too large. Decrease this value.", "xyz"[axis], sigmas[axis]));
-    }
-  }
-  return {};
-}
 } // namespace
 
 namespace nx::core
@@ -94,7 +73,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"},
                                                          VectorFloat32Parameter::Bounds::NonNegative()));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                         std::vector<std::string>{"x", "y", "z"}, VectorFloat32Parameter::Bounds::Positive()));
+                                                         std::vector<std::string>{"x", "y", "z"}, VectorFloat32Parameter::Bounds::Between(0.001f, 1000.0f)));
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
@@ -165,9 +144,7 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
   auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
-  auto sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
 
   // Input Image Geometry
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -194,15 +171,6 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto summationSuffix = filterArgs.value<std::string>(k_SummationSuffix_Key);
 
   OutputActions actions;
-
-  if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Gaussian)
-  {
-    auto validation = ValidateGaussianSigmaSquares(sigmas);
-    if(validation.invalid())
-    {
-      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
-    }
-  }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   InterpolatePointCloudToRegularGridInputValues layoutInput{};

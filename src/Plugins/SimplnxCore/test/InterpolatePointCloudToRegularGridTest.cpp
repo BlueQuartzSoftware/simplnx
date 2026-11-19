@@ -502,114 +502,89 @@ void CreateSamplingImage(DataStructure& ds)
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Spatial parameter domains", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialParameterDomains]")
 {
+  using Filter = InterpolatePointCloudToRegularGridFilter;
+  auto dataStructure = createTestDataStructure({0}, {7.0});
+  Filter filter;
+  auto args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {0.0f, 0.0f, 0.0f});
 
-  DataStructure ds;
-  CreateSamplingVertices(ds);
-  CreateSamplingImage(ds);
-  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
-  auto resize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVertexAttributeMatrixRef().resizeTuples({1});
-  SIMPLNX_RESULT_REQUIRE_VALID(resize);
-  auto scalar = CreateArrayAction(DataType::float32, {1}, {1}, DataPath({"Points", "Vertex Data", "Value"})).apply(ds, IDataAction::Mode::Execute);
-  SIMPLNX_RESULT_REQUIRE_VALID(scalar);
-  auto vertexResize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef().resizeTuples({1});
-  SIMPLNX_RESULT_REQUIRE_VALID(vertexResize);
-  auto& coords = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
-  coords[0] = 0.5F;
-  coords[1] = 0.5F;
-  coords[2] = 0.5F;
-  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
-  auto& image = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
-  image.setDimensions({1, 1, 1});
-  auto imageResize = image.getCellDataRef().resizeTuples({1, 1, 1});
-  SIMPLNX_RESULT_REQUIRE_VALID(imageResize);
-  InterpolatePointCloudToRegularGridFilter filter;
-  auto args = filter.getDefaultArguments();
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, DataPath({"Points"}));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{1});
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{0, 0, 0});
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key, std::vector<DataPath>{DataPath({"Points", "Vertex Data", "Value"})});
-  const auto axis = GENERATE(0, 1, 2);
-  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), 1e-30F, 1e20F);
-  CAPTURE(axis, value);
-  std::vector<float32> sigmas = {1, 1, 1};
-  sigmas[axis] = value;
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, sigmas);
-  const int32 expectedCode = value == 1e-30F ? -86134 : value == 1e20F ? -86135 : k_NumberNotFinite;
-  const std::string parameter = "Gaussian Sigmas";
-
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == expectedCode);
-  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
-
-  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(fmt::format("Gaussian Sigmas ({})", "xyz"[axis])) != std::string::npos);
-}
-
-TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian and inactive controls", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
-{
-
-  DataStructure ds;
-  CreateSamplingVertices(ds);
-  CreateSamplingImage(ds);
-  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
-  auto resize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVertexAttributeMatrixRef().resizeTuples({1});
-  SIMPLNX_RESULT_REQUIRE_VALID(resize);
-  auto scalar = CreateArrayAction(DataType::float32, {1}, {1}, DataPath({"Points", "Vertex Data", "Value"})).apply(ds, IDataAction::Mode::Execute);
-  SIMPLNX_RESULT_REQUIRE_VALID(scalar);
-  auto vertexResize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef().resizeTuples({1});
-  SIMPLNX_RESULT_REQUIRE_VALID(vertexResize);
-  auto& coords = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
-  coords[0] = 0.5F;
-  coords[1] = 0.5F;
-  coords[2] = 0.5F;
-  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
-  auto& image = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
-  image.setDimensions({1, 1, 1});
-  auto imageResize = image.getCellDataRef().resizeTuples({1, 1, 1});
-  SIMPLNX_RESULT_REQUIRE_VALID(imageResize);
-  InterpolatePointCloudToRegularGridFilter filter;
-  auto args = filter.getDefaultArguments();
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, DataPath({"Points"}));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{1});
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{0, 0, 0});
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key, std::vector<DataPath>{DataPath({"Points", "Vertex Data", "Value"})});
-  const auto row = GENERATE(0, 1, 2);
-  CAPTURE(row);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindLength_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMin_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMax_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMean_Key, true);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindStdDeviation_Key, false);
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindSummation_Key, false);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"})));
-  ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"}))[0] = 7;
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, row == 0 ? std::vector<float32>{0, 1, 1} :
-                                                                                      row == 1 ? std::vector<float32>{1, 1} :
-                                                                                      row == 2 ? std::vector<float32>{std::ldexp(1.0F, -70), 1, 1} :
-                                                                                      row == 3 ? std::vector<float32>{} :
-                                                                                                 std::vector<float32>{1, 2, 3});
-  if(row < 2)
+  SECTION("Reject invalid Gaussian sigmas on each axis")
   {
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors()[0].code == (row == 0 ? k_NumberBelowLowerBound : -1));
-    if(row == 1)
+    const auto axis = GENERATE(0, 1, 2);
+    const auto [value, expectedCode] = GENERATE(table<float32, int32>({{std::nextafter(0.001f, 0.0f), k_NumberBelowLowerBound},
+                                                                       {std::nextafter(1000.0f, std::numeric_limits<float32>::infinity()), k_NumberAboveUpperBound},
+                                                                       {std::numeric_limits<float32>::quiet_NaN(), k_NumberNotFinite},
+                                                                       {std::numeric_limits<float32>::infinity(), k_NumberNotFinite}}));
+    const char elementName = "xyz"[axis];
+    DYNAMIC_SECTION("Gaussian Sigmas (" << elementName << ") = " << fmt::format("{}", value))
     {
-      CHECK(filter.parameters().at(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key)->humanName() == "Gaussian Sigmas");
-      CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+      std::vector<float32> sigmas = {1.0f, 1.0f, 1.0f};
+      sigmas[axis] = value;
+      args.insertOrAssign(Filter::k_GaussianSigmas_Key, sigmas);
+
+      auto result = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+      REQUIRE(result.outputActions.errors().size() == 1);
+      const auto& error = result.outputActions.errors().front();
+      CHECK(error.code == expectedCode);
+      CHECK(error.message.find(fmt::format("Gaussian Sigmas ({})", elementName)) != std::string::npos);
+      CHECK(error.message.find(fmt::format("The value is {}.", value)) != std::string::npos);
     }
   }
-  else if(row == 2)
+
+  SECTION("Accept both endpoints for all Gaussian sigmas")
   {
-    auto result = filter.preflight(ds, args);
+    const auto endpoint = GENERATE(0.001f, 1000.0f);
+    CAPTURE(endpoint);
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>(3, endpoint));
+
+    auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+
+  SECTION("Accept the default Gaussian sigmas")
+  {
+    const auto sigmas = filter.getDefaultArguments().value<std::vector<float32>>(Filter::k_GaussianSigmas_Key);
+    CHECK(sigmas == std::vector<float32>{1.0f, 1.0f, 1.0f});
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, sigmas);
+
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+
+  SECTION("Ignore out-of-range Gaussian sigmas for uniform interpolation")
+  {
+    args.insertOrAssign(Filter::k_InterpolationTechnique_Key, InterpolatePointCloudToRegularGrid::k_Uniform);
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{std::nextafter(0.001f, 0.0f), std::nextafter(1000.0f, std::numeric_limits<float32>::infinity()), 1.0f});
+
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian controls", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
+{
+  using Filter = InterpolatePointCloudToRegularGridFilter;
+  auto dataStructure = createTestDataStructure({0}, {7.0});
+  Filter filter;
+  auto args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {0.0f, 0.0f, 0.0f});
+
+  SECTION("Reject zero sigma")
+  {
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{0.0f, 1.0f, 1.0f});
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == k_NumberBelowLowerBound);
+  }
+  SECTION("Require three Gaussian sigmas")
+  {
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{1.0f, 1.0f});
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == -1);
+    CHECK(filter.parameters().at(Filter::k_GaussianSigmas_Key)->humanName() == "Gaussian Sigmas");
+    CHECK(result.outputActions.errors().front().message == "VectorParameter requires size 3. Received size 2.");
   }
 }
 
