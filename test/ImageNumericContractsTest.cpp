@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/OtsuImageEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
@@ -23,10 +24,34 @@
 #include <cmath>
 #include <limits>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
 using nx::core::ImageProcessing::ConnectedComponentLabelLimitHandling;
+
+TEST_CASE("Image transfer warnings: keep earlier warnings in order through a failed transfer", "[simplnx][ImageNumericContracts]")
+{
+  Result<> accumulated;
+  for(int32 code = 1; code <= 64; ++code)
+  {
+    ImageProcessing::AccumulateTransferResult(accumulated, MakeWarningVoidResult(code, "Page completed"));
+  }
+  ImageProcessing::AccumulateTransferResult(accumulated, {});
+  auto failure = MakeErrorResult(-1, "Transfer failed");
+  failure.warnings().push_back({.code = 65, .message = "Final page warning"});
+  ImageProcessing::AccumulateTransferResult(accumulated, std::move(failure));
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 comparison decomposition and result assertion.
+  SIMPLNX_RESULT_REQUIRE_INVALID(accumulated);
+  REQUIRE(accumulated.errors().size() == 1);
+  REQUIRE(accumulated.errors().front().code == -1);
+  REQUIRE(accumulated.warnings().size() == 65);
+  for(usize i = 0; i < accumulated.warnings().size(); ++i)
+  {
+    REQUIRE(accumulated.warnings().at(i).code == static_cast<int32>(i + 1));
+  }
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+}
 
 // NOLINTBEGIN(bugprone-chained-comparison) Catch2 comparison decomposition.
 TEMPLATE_TEST_CASE("Image terminal conversion: exact integer bounds", "[simplnx][ImageNumericContracts]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)

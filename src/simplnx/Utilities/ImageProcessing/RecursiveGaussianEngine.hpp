@@ -8,6 +8,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/GaussianTemporaryStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -74,7 +75,8 @@ inline Result<> MergeRecursiveGaussianResults(bool checkedSmoothing, Result<> pr
 {
   if(checkedSmoothing)
   {
-    return MergeResults(std::move(previous), std::move(current));
+    AccumulateTransferResult(previous, std::move(current));
+    return previous;
   }
   return current.invalid() ? std::move(current) : Result<>{};
 }
@@ -2568,14 +2570,14 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
       return reportConversion(conversionState, std::move(accumulated));
     }
     const usize n = std::min(batchValues, total - start);
-    accumulated = MergeResults(std::move(accumulated), src.copyIntoBuffer(start, nonstd::span<float32>(s.data(), n)));
+    AccumulateTransferResult(accumulated, src.copyIntoBuffer(start, nonstd::span<float32>(s.data(), n)));
     if(accumulated.invalid())
     {
       return reportConversion(conversionState, std::move(accumulated));
     }
     if(detail::ConvertTerminalImageBuffer<T>(nonstd::span<const float32>(s.data(), n), nonstd::span<T>(d.data(), n), start, conversionState, shouldCancel))
     {
-      accumulated = MergeResults(std::move(accumulated), dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
+      AccumulateTransferResult(accumulated, dst.copyFromBuffer(start, nonstd::span<const T>(d.data(), n)));
       if(accumulated.invalid())
       {
         return reportConversion(conversionState, std::move(accumulated));

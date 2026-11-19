@@ -610,6 +610,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageTransferResult.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/OtsuImageEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/PointwiseEngine.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/StreamingStatistics.hpp

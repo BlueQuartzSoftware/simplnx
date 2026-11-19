@@ -4,6 +4,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
@@ -114,7 +115,7 @@ Result<Range<T>> ScanRange(const IDataArray& array, const std::atomic_bool& shou
       return ConvertResultTo<Range<T>>(std::move(status), std::move(range));
     }
     const usize size = std::min(pageCount, count - offset);
-    status = MergeResults(std::move(status), store.copyIntoBuffer(offset, nonstd::span<T>(values.get(), size)));
+    ImageProcessing::AccumulateTransferResult(status, store.copyIntoBuffer(offset, nonstd::span<T>(values.get(), size)));
     if(status.invalid())
     {
       return ConvertInvalidResult<Range<T>>(std::move(status));
