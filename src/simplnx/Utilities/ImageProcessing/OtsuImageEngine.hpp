@@ -71,6 +71,11 @@ namespace detail
 inline constexpr usize k_OtsuRangeBlockValues = 262144;
 inline constexpr usize k_OtsuMaximumBatchBytes = 64ULL * 1024ULL * 1024ULL;
 
+// Avoid scheduling workers for short masked labeling batches. A one-threshold benchmark suggested an initial cutoff of 16,384 pixels.
+// In Release timings with 1, 2, 4 and 8 thresholds on Intel and AMD CPUs, 512 was the largest tested power of two that reduced both median
+// classification time and median whole-engine time at every threshold count. At 768 pixels, serial classification was slower with eight thresholds.
+inline constexpr usize k_OtsuMaxSerialLabelPixels = 512;
+
 template <class T, class MaskT>
 ArrayMinMax<T> ReduceOtsuFloatingBlock(nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, const std::atomic_bool& shouldCancel)
 {
@@ -676,6 +681,10 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
       }
       ParallelDataAlgorithm algorithm;
       algorithm.setRange(0, count);
+      if(count <= detail::k_OtsuMaxSerialLabelPixels)
+      {
+        algorithm.setParallelizationEnabled(false);
+      }
       algorithm.execute([&](const Range& range) {
         for(usize i = range.min(); i < range.max(); ++i)
         {
