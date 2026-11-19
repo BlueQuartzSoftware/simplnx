@@ -251,7 +251,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
   return status;
 }
 
-inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConstant, const std::atomic_bool& shouldCancel)
+inline Result<float64> ConfigureOtsuBinsAndGetInverseWidth(Histogram& histogram, bool nativeConstant, const std::atomic_bool& shouldCancel)
 {
   if(nativeConstant)
   {
@@ -262,11 +262,12 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
   const float64 numBins = static_cast<float64>(histogram.counts.size());
   const float64 upper = histogram.max + (range / (numBins * 100.0));
   histogram.binWidth = (upper - histogram.min) / numBins;
-  if(!std::isfinite(range) || range <= 0.0 || !std::isfinite(upper) || upper <= histogram.min || !std::isfinite(histogram.binWidth) || histogram.binWidth <= 0.0 ||
-     !std::isfinite(1.0 / histogram.binWidth))
+  const bool validWidth = std::isfinite(range) && range > 0.0 && std::isfinite(upper) && upper > histogram.min && std::isfinite(histogram.binWidth) && histogram.binWidth > 0.0;
+  const float64 inverseBinWidth = validWidth ? 1.0 / histogram.binWidth : 0.0;
+  if(!validWidth || !std::isfinite(inverseBinWidth))
   {
-    return MakeErrorResult(k_OtsuInvalidBinWidth,
-                           "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
+    return MakeErrorResult<float64>(k_OtsuInvalidBinWidth,
+                                    "Otsu cannot form a finite positive histogram range/bin width from the selected native values. Rescale the finite input or use fewer histogram bins.");
   }
   float64 previousBoundary = histogram.min;
   float64 previousMeasurement = histogram.min;
@@ -274,18 +275,20 @@ inline Result<> ConfigureCheckedOtsuBins(Histogram& histogram, bool nativeConsta
   {
     if((bin % 65536) == 0 && shouldCancel)
     {
-      return {};
+      break;
     }
     const float64 boundary = histogram.min + ((static_cast<float64>(bin) + 1.0) * histogram.binWidth);
     const float64 measurement = histogram.min + ((static_cast<float64>(bin) + 0.5) * histogram.binWidth);
     if(!std::isfinite(boundary) || !std::isfinite(measurement) || boundary <= previousBoundary || (bin != 0 && measurement <= previousMeasurement))
     {
-      return MakeErrorResult(k_OtsuCollapsedBins, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
+      return MakeErrorResult<float64>(k_OtsuCollapsedBins, "Otsu histogram boundaries or measurements collapse at the selected precision. Rescale the finite input or use fewer histogram bins.");
     }
     previousBoundary = boundary;
     previousMeasurement = measurement;
   }
-  return {};
+  Result<float64> result;
+  result.value() = inverseBinWidth;
+  return result;
 }
 
 template <class T>
@@ -304,7 +307,7 @@ struct OtsuFrequencyRing
 };
 
 template <class T>
-Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T maxValue, usize frequency = 1)
+[[nodiscard]] bool TryAccumulateOtsuValue(Histogram& histogram, float64 inverseBinWidth, T value, T minValue, T maxValue, usize frequency = 1)
 {
   usize bin = 0;
   if(value >= maxValue && minValue != maxValue)
@@ -313,16 +316,43 @@ Result<> AccumulateCheckedOtsuValue(Histogram& histogram, T value, T minValue, T
   }
   else if(value > minValue && minValue != maxValue)
   {
-    const float64 coordinate = (static_cast<float64>(value) - histogram.min) * (1.0 / histogram.binWidth);
+    const float64 coordinate = (static_cast<float64>(value) - histogram.min) * inverseBinWidth;
     const float64 lastBin = static_cast<float64>(histogram.counts.size() - 1);
     if(!std::isfinite(coordinate) || coordinate < 0.0)
     {
-      return MakeErrorResult(k_OtsuInvalidBinCoordinate, "Otsu produced an unusable histogram coordinate for a selected finite value. Rescale the input before thresholding.");
+      return false;
     }
     // Narrow only a finite value already inside the bin-index range. Endpoint rounding cannot escape the histogram.
     bin = coordinate >= lastBin ? histogram.counts.size() - 1 : static_cast<usize>(coordinate);
   }
   histogram.counts[bin] += frequency;
+  return true;
+}
+
+inline Result<> MakeOtsuBinCoordinateError()
+{
+  return MakeErrorResult(k_OtsuInvalidBinCoordinate, "Otsu produced an unusable histogram coordinate for a selected finite value. Rescale the input before thresholding.");
+}
+
+template <class T, class MaskT>
+Result<> AccumulateOtsuBatch(Histogram& histogram, T minValue, T maxValue, float64 inverseBinWidth, nonstd::span<const T> values, nonstd::span<const MaskT> maskValues,
+                             const std::atomic_bool& shouldCancel)
+{
+  for(usize i = 0; i < values.size(); ++i)
+  {
+    if((i % 65536) == 0 && shouldCancel)
+    {
+      return {};
+    }
+    if((!maskValues.empty() && !maskValues[i]) || !std::isfinite(static_cast<float64>(values[i])))
+    {
+      continue;
+    }
+    if(!TryAccumulateOtsuValue(histogram, inverseBinWidth, values[i], minValue, maxValue))
+    {
+      return MakeOtsuBinCoordinateError();
+    }
+  }
   return {};
 }
 } // namespace detail
@@ -463,15 +493,16 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
   auto& histogram = result.HistogramData;
   histogram.min = static_cast<float64>(minValue);
   histogram.max = static_cast<float64>(maxValue);
-  Result<> geometryResult = detail::ConfigureCheckedOtsuBins(histogram, minValue == maxValue, shouldCancel);
-  if(geometryResult.invalid())
+  auto inverseBinWidthResult = detail::ConfigureOtsuBinsAndGetInverseWidth(histogram, minValue == maxValue, shouldCancel);
+  if(inverseBinWidthResult.invalid())
   {
-    return ConvertResultTo(MergeResults(std::move(rangeResult), std::move(geometryResult)), std::move(result));
+    return ConvertResultTo(MergeResults(std::move(rangeResult), ConvertResult(std::move(inverseBinWidthResult))), std::move(result));
   }
   if(shouldCancel)
   {
     return ConvertResultTo(std::move(rangeResult), std::move(result));
   }
+  const float64 inverseBinWidth = inverseBinWidthResult.value();
   if(minValue == maxValue)
   {
     histogram.counts.front() = result.FiniteCount;
@@ -485,13 +516,9 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
         return ConvertResultTo(std::move(rangeResult), std::move(result));
       }
       const auto& entry = (*ring.Frequencies)[i];
-      if(entry.Count != 0)
+      if(entry.Count != 0 && !detail::TryAccumulateOtsuValue(histogram, inverseBinWidth, entry.Value, minValue, maxValue, entry.Count))
       {
-        Result<> addResult = detail::AccumulateCheckedOtsuValue(histogram, entry.Value, minValue, maxValue, entry.Count);
-        if(addResult.invalid())
-        {
-          return ConvertResultTo(MergeResults(std::move(rangeResult), std::move(addResult)), std::move(result));
-        }
+        return ConvertResultTo(MergeResults(std::move(rangeResult), detail::MakeOtsuBinCoordinateError()), std::move(result));
       }
     }
   }
@@ -503,23 +530,7 @@ Result<OtsuHistogramResult> ComputeOtsuHistogram(const AbstractDataStore<T>& inp
       plan = detail::ReserveOtsuBuffers(options, {.TotalValues = total, .BytesPerValue = bytesPerValue, .UsesExternalStore = external});
     }
     Result<> histogramResult = detail::VisitOtsuValues(input, maskPtr, options, shouldCancel, plan.Values, [&](nonstd::span<const T> values, nonstd::span<const MaskT> maskValues, usize) -> Result<> {
-      for(usize i = 0; i < values.size(); ++i)
-      {
-        if((i % 65536) == 0 && shouldCancel)
-        {
-          return {};
-        }
-        if((maskPtr != nullptr && !maskValues[i]) || !std::isfinite(static_cast<float64>(values[i])))
-        {
-          continue;
-        }
-        Result<> addResult = detail::AccumulateCheckedOtsuValue(histogram, values[i], minValue, maxValue);
-        if(addResult.invalid())
-        {
-          return addResult;
-        }
-      }
-      return {};
+      return detail::AccumulateOtsuBatch(histogram, minValue, maxValue, inverseBinWidth, values, maskValues, shouldCancel);
     });
     rangeResult = MergeResults(std::move(rangeResult), std::move(histogramResult));
     if(rangeResult.invalid())

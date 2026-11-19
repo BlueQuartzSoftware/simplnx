@@ -815,9 +815,10 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: optional intege
   CAPTURE(grant);
 
   OtsuTransferStore<uint16> input(valueCount, IDataStore::StoreType::OutOfCore);
-  for(usize i = 1; i < valueCount; i += 2)
+  constexpr std::array<uint16, 4> intensities = {0, 5, 5, 8};
+  for(usize i = 0; i < valueCount; ++i)
   {
-    input.setValue(i, uint16{4});
+    input.setValue(i, intensities.at(i % intensities.size()));
   }
 
   auto& budget = CacheMemoryBudgetManager::instance();
@@ -832,11 +833,12 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: optional intege
     REQUIRE(ceiling - reservedWithPressure == grant);
 
     const std::atomic_bool shouldCancel{false};
-    const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 2};
+    const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3};
     const auto result = ImageProcessing::ComputeOtsuHistogram(input, static_cast<const AbstractDataStore<uint8>*>(nullptr), options, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.value().FiniteCount == 16);
-    REQUIRE(result.value().HistogramData.counts == std::vector<usize>{8, 8});
+    // The interior intensity 5 belongs to the middle bin. Both scan routes must count all eight occurrences.
+    REQUIRE(result.value().HistogramData.counts == std::vector<usize>{4, 8, 4});
     REQUIRE(budget.reservedWorkingMemoryBytes() == reservedWithPressure);
     // The grant must fit both resources for a single pass. The fallback reads one full buffer per pass.
     CHECK(input.maximumRead() == valueCount);
