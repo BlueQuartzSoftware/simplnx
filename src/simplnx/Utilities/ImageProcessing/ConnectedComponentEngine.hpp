@@ -60,6 +60,16 @@ using BeginProgressPhaseCallback = std::function<void(std::string_view, usize)>;
 
 inline constexpr usize k_ConnectedComponentResolutionBlockSize = 65'536;
 
+inline Result<> ValidateConnectedComponentInputSize(usize inputSize, const SizeVec3& dims, usize volumeValues)
+{
+  if(inputSize != volumeValues)
+  {
+    return MakeErrorResult(
+        -8372, fmt::format("Connected-component input store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", inputSize, volumeValues, dims[0], dims[1], dims[2]));
+  }
+  return {};
+}
+
 template <class T>
 Result<> ValidateConnectedComponentVolume(const AbstractDataStore<T>& inStore, const SizeVec3& dims, usize& sliceValues, usize& volumeValues)
 {
@@ -86,12 +96,7 @@ Result<> ValidateConnectedComponentVolume(const AbstractDataStore<T>& inStore, c
   {
     return MakeErrorResult(-8371, fmt::format("Connected-component image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", dims[0], dims[1], dims[2]));
   }
-  if(inStore.getSize() != volumeValues)
-  {
-    return MakeErrorResult(-8372, fmt::format("Connected-component input store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", inStore.getSize(), volumeValues,
-                                              dims[0], dims[1], dims[2]));
-  }
-  return {};
+  return ValidateConnectedComponentInputSize(inStore.getSize(), dims, volumeValues);
 }
 
 // A maximal foreground run in one x-scanline: x in [start, start+length-1], provisional label.
