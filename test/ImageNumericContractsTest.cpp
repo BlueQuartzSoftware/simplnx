@@ -15,6 +15,7 @@
 #include <catch2/catch.hpp>
 #include <nonstd/span.hpp>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>
@@ -179,6 +180,35 @@ TEST_CASE("Otsu histogram: bin count fits the platform container", "[simplnx][Im
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == ImageProcessing::k_OtsuBinAllocationTooLarge);
   // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+}
+
+TEST_CASE("Otsu masked labeling: two thresholds give the same classes across the serial cutoff", "[simplnx][ImageNumericContracts]")
+{
+  const usize batchPixels = GENERATE(511U, 512U, 513U);
+  CAPTURE(batchPixels);
+  // One full batch and a tail one pixel shorter exercise the cutoff within the same image.
+  const usize totalPixels = batchPixels + (batchPixels - 1);
+  DataStore<float32> input({totalPixels}, {1}, 0.0F);
+  DataStore<uint8> mask({totalPixels}, {1}, uint8{0});
+  DataStore<uint8> output({totalPixels}, {1}, uint8{254});
+  std::vector<uint8> expected(totalPixels);
+  for(usize i = 0; i < totalPixels; ++i)
+  {
+    const usize classIndex = i % 3;
+    const bool selected = (i % 5) != 0;
+    input.setValue(i, static_cast<float32>(classIndex * 32));
+    mask.setValue(i, static_cast<uint8>(selected));
+    // Three occupied bins and two thresholds assign one distinct label to each selected intensity.
+    expected[i] = selected ? static_cast<uint8>(7 + classIndex) : uint8{255};
+  }
+  constexpr usize bytesPerLabelPixel = sizeof(float32) + 2 * sizeof(uint8);
+  const ImageProcessing::OtsuImageOptions options{.NumberOfBins = 3, .NumberOfThresholds = 2, .LabelOffset = 7, .TargetBytes = batchPixels * bytesPerLabelPixel};
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::ApplyOtsuImage<float32, uint8>(input, output, &mask, options, shouldCancel, {});
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) simplnx result assertion macro.
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto labels = output.createSpan();
+  REQUIRE(std::equal(labels.begin(), labels.end(), expected.begin(), expected.end()));
 }
 
 TEST_CASE("Image reconstruction: preserve native integer marker offsets", "[simplnx][ImageNumericContracts]")
