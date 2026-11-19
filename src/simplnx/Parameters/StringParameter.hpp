@@ -93,6 +93,13 @@ struct NumberToStringFilterParameterConverter
   using ParameterType = StringParameter;
   using ValueType = ParameterType::ValueType;
 
+  /**
+   * @brief Converts a legacy SIMPL numeric value to text.
+   * @param json Supplies the legacy number.
+   * @return Decimal text, or error -1 when json is not a number. Floating-point values read back exactly and never use
+   * an exponent, so integer consumers parse the integer prefix. A Float64 value that lies exactly halfway between two
+   * Float32 values is written as its exact decimal value, so a Float32 consumer rounds it the same way.
+   */
   static Result<ValueType> convert(const nlohmann::json& json);
 };
 

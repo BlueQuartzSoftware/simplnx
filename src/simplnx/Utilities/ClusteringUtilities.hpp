@@ -184,7 +184,7 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
 [[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures);
 
 /**
- * @brief Permutes cell feature IDs and applies matching pairwise feature-tuple swaps.
+ * @brief Permutes cell feature IDs and moves feature tuples to their matching IDs.
  * @param featureIds Cell-to-feature ID store to update.
  * @param totalFeatures Total feature count, including feature zero.
  * @param featureIArrays Non-owning feature arrays to permute.
@@ -194,8 +194,8 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
  * @return Error from the first bulk store operation that fails.
  *
  * The caller supplies the feature arrays so it can omit arrays that must not move.
- * Feature zero remains fixed. The implementation derives a deterministic swap
- * sequence from the same feature-ID mapping.
+ * Feature zero remains fixed. Each complete permutation cycle moves all feature
+ * tuples to their mapped IDs. Tuples at or beyond totalFeatures remain unchanged.
  */
 [[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
 } // namespace nx::core::ClusterUtilities

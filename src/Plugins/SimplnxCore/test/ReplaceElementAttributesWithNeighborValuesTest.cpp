@@ -3,18 +3,36 @@
 #include "SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <any>
+#include <atomic>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -90,6 +108,110 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
     SIMPLNX_RESULT_REQUIRE_VALID(eulerStoreWriteResult);
     auto phasesStoreWriteResult = phasesStore.copyFromBuffer(zOffset, nonstd::span<const int32>(phasesBuf.data(), sliceSize));
     SIMPLNX_RESULT_REQUIRE_VALID(phasesStoreWriteResult);
+  }
+}
+
+// The line fixture makes the required number of propagation passes explicit.
+void buildTerminationData(DataStructure& dataStructure, const std::vector<float32>& comparisonValues)
+{
+  BuildTestData(dataStructure, comparisonValues.size(), 1, 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath));
+  auto& confidenceRef = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath).getDataStoreRef();
+  const auto writeResult = confidenceRef.copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  const DataPath eulerPath = k_CellDataPath.createChildPath("EulerAngles");
+  const DataPath phasesPath = k_CellDataPath.createChildPath("Phases");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(eulerPath).getDataStoreRef();
+  auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasesPath).getDataStoreRef();
+  for(usize tupleIdx = 0; tupleIdx < comparisonValues.size(); tupleIdx++)
+  {
+    phasesRef[tupleIdx] = static_cast<int32>(100 + tupleIdx);
+    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    {
+      eulersRef[(3 * tupleIdx) + compIdx] = static_cast<float32>((10 * tupleIdx) + compIdx + 1);
+    }
+  }
+}
+
+Arguments terminationArguments(ChoicesParameter::ValueType comparison, bool loop)
+{
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  Arguments args = FilterType().getDefaultArguments();
+  args.insertOrAssign(FilterType::k_MinConfidence_Key, std::make_any<float32>(0.5F));
+  args.insertOrAssign(FilterType::k_SelectedComparison_Key, std::make_any<ChoicesParameter::ValueType>(comparison));
+  args.insertOrAssign(FilterType::k_Loop_Key, std::make_any<bool>(loop));
+  args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(k_ConfidencePath));
+  args.insertOrAssign(FilterType::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+  return args;
+}
+
+DataPath addCellArrayAlias(DataStructure& dataStructure, const DataPath& arrayPath)
+{
+  const DataPath aliasParentPath({"Comparison Aliases"});
+  const auto* arrayPtr = dataStructure.getDataAs<IArray>(arrayPath);
+  REQUIRE(arrayPtr != nullptr);
+  const auto* aliasParentPtr = AttributeMatrix::Create(dataStructure, aliasParentPath.getTargetName(), arrayPtr->getTupleShape());
+  REQUIRE(aliasParentPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(arrayPtr->getId(), aliasParentPtr->getId()));
+  const auto aliasPath = aliasParentPath.createChildPath(arrayPath.getTargetName());
+  REQUIRE(dataStructure.getDataAs<IArray>(aliasPath) == arrayPtr);
+  return aliasPath;
+}
+
+// Explicit source indices describe the complete tuple expected at each destination.
+void requireTerminationData(const DataStructure& dataStructure, const std::vector<float32>& expectedComparison, const std::vector<usize>& expectedSources)
+{
+  REQUIRE(expectedComparison.size() == expectedSources.size());
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath));
+  const auto& confidenceRef = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath);
+  const DataPath eulerPath = k_CellDataPath.createChildPath("EulerAngles");
+  const DataPath phasesPath = k_CellDataPath.createChildPath("Phases");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  const auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(eulerPath);
+  const auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  for(usize tupleIdx = 0; tupleIdx < expectedComparison.size(); tupleIdx++)
+  {
+    if(std::isnan(expectedComparison[tupleIdx]))
+    {
+      REQUIRE(std::isnan(confidenceRef[tupleIdx]));
+    }
+    else
+    {
+      REQUIRE(confidenceRef[tupleIdx] == expectedComparison[tupleIdx]);
+    }
+    REQUIRE(phasesRef[tupleIdx] == static_cast<int32>(100 + expectedSources[tupleIdx]));
+    for(usize compIdx = 0; compIdx < 3; compIdx++)
+    {
+      REQUIRE(eulersRef[(3 * tupleIdx) + compIdx] == static_cast<float32>((10 * expectedSources[tupleIdx]) + compIdx + 1));
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+void requireStallError(const Result<>& result, usize remaining)
+{
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  const auto& errorRef = result.errors().front();
+  REQUIRE(errorRef.code == -15002);
+  REQUIRE(errorRef.message.find(k_ConfidencePath.toString()) != std::string::npos);
+  REQUIRE(errorRef.message.find(fmt::format("{} cells", remaining)) != std::string::npos);
+  REQUIRE(errorRef.message.find("0.5") != std::string::npos);
+  REQUIRE(errorRef.message.find("Threshold Value") != std::string::npos);
+  REQUIRE(errorRef.message.find("Loop Until Gone") != std::string::npos);
+}
+
+void requireDiskBackedCellArrays(const DataStructure& dataStructure)
+{
+  for(const DataPath& path : {k_ConfidencePath, k_CellDataPath.createChildPath("EulerAngles"), k_CellDataPath.createChildPath("Phases")})
+  {
+    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
+    REQUIRE(arrayPtr != nullptr);
+    UnitTest::RequireDiskBackedStore(*arrayPtr);
   }
 }
 
@@ -448,6 +570,243 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL 
       CHECK(args.value<DataPath>(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: No donor termination", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  const auto comparison = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool loop = GENERATE(false, true);
+  CAPTURE(comparison, loop);
+  const float32 badValue = comparison == 0 ? 0.1F : 0.9F;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {badValue, badValue, badValue, badValue});
+
+  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(comparison, loop));
+  if(loop)
+  {
+    requireStallError(result.result, 4);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  }
+  requireTerminationData(dataStructure, {badValue, badValue, badValue, badValue}, {0, 1, 2, 3});
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: External comparison array", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.2F, 0.3F, 0.4F, 0.45F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
+  const auto& cellDataRef = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath);
+  const StringArray::collection_type labels = {"donor", "target", "third", "fourth"};
+  const auto* labelsPtr = StringArray::CreateWithValues(dataStructure, "Labels", cellDataRef.getShape(), labels, cellDataRef.getId());
+  REQUIRE(labelsPtr != nullptr);
+  const bool useRootArray = GENERATE(false, true);
+  CAPTURE(useRootArray);
+  DataObject::OptionalId parentId;
+  DataPath inputPath({"External Comparison"});
+  if(!useRootArray)
+  {
+    const auto* otherMatrixPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{4});
+    REQUIRE(otherMatrixPtr != nullptr);
+    parentId = otherMatrixPtr->getId();
+    inputPath = DataPath({"Other Data"}).createChildPath(k_ConfidencePath.getTargetName());
+  }
+  const std::vector<float32> comparisonValues = {0.9F, 0.1F, 0.1F, 0.1F};
+  auto comparisonStore = std::make_shared<DataStore<float32>>(ShapeType{4}, ShapeType{1}, 0.0F);
+  const auto writeResult = comparisonStore->copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const auto* externalPtr = Float32Array::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId);
+  REQUIRE(externalPtr != nullptr);
+  REQUIRE(externalPtr != dataStructure.getDataAs<Float32Array>(k_ConfidencePath));
+
+  const FilterType filter;
+  SECTION("Loop mode rejects an external comparison array before copying")
+  {
+    auto args = terminationArguments(0, true);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    const auto& errorRef = preflight.outputActions.errors().front();
+    CHECK(errorRef.code == -15003);
+    CHECK(errorRef.message.find(inputPath.toString()) != std::string::npos);
+    CHECK(errorRef.message.find(k_CellDataPath.toString()) != std::string::npos);
+    const auto execution = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+    REQUIRE(execution.result.errors().size() == 1);
+    CHECK(execution.result.errors().front().code == -15003);
+    requireTerminationData(dataStructure, {0.2F, 0.3F, 0.4F, 0.45F}, {0, 1, 2, 3});
+  }
+
+  SECTION("Single-pass mode modifies only the geometry's Cell Data arrays")
+  {
+    auto args = terminationArguments(0, false);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const std::vector<DataPath> expectedModifications = {k_ConfidencePath, k_CellDataPath.createChildPath("EulerAngles"), k_CellDataPath.createChildPath("Phases")};
+    std::vector<DataPath> actualModifications;
+    for(const auto& modification : preflight.outputActions.value().modifiedActions)
+    {
+      CHECK(modification.modifiedType == DataObjectModification::ModifiedType::Modified);
+      actualModifications.push_back(modification.modifiedPath);
+    }
+    CHECK(std::ranges::is_permutation(actualModifications, expectedModifications));
+    const auto execution = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
+    requireTerminationData(dataStructure, {0.2F, 0.2F, 0.4F, 0.45F}, {0, 0, 2, 3});
+  }
+
+  for(usize index = 0; index < comparisonValues.size(); index++)
+  {
+    CHECK((*comparisonStore)[index] == comparisonValues[index]);
+  }
+  CHECK(labelsPtr->values() == labels);
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Comparison array alias", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.9F, 0.1F, 0.1F, 0.1F});
+  auto args = terminationArguments(0, true);
+
+  SECTION("A numeric comparison array remains writable through Cell Data")
+  {
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, k_ConfidencePath)));
+    const auto result = FilterType().execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    requireTerminationData(dataStructure, {0.9F, 0.9F, 0.9F, 0.9F}, {0, 0, 0, 0});
+  }
+
+  SECTION("A string array alias is rejected")
+  {
+    const auto* cellDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_CellDataPath);
+    REQUIRE(cellDataPtr != nullptr);
+    const DataPath labelsPath = k_CellDataPath.createChildPath("Labels");
+    const StringArray::collection_type labels = {"first", "second", "third", "fourth"};
+    REQUIRE(StringArray::CreateWithValues(dataStructure, labelsPath.getTargetName(), cellDataPtr->getShape(), labels, cellDataPtr->getId()) != nullptr);
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, labelsPath)));
+
+    const auto preflight = FilterType().preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.errors().size() == 1);
+    CHECK(preflight.outputActions.errors().front().code == -15003);
+  }
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Missing Cell Data", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.9F, 0.1F, 0.1F, 0.1F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_GeomPath));
+  dataStructure.getDataRefAs<ImageGeom>(k_GeomPath).setCellData(std::nullopt);
+  const bool loop = GENERATE(false, true);
+  CAPTURE(loop);
+  const auto preflight = ReplaceElementAttributesWithNeighborValuesFilter().preflight(dataStructure, terminationArguments(0, loop));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().size() == 1);
+  const auto& errorRef = preflight.outputActions.errors().front();
+  CHECK(errorRef.code == -15003);
+  CHECK(errorRef.message.find("requires a Cell Attribute Matrix") != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Repeated donor propagation", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  const auto comparison = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool loop = GENERATE(false, true);
+  CAPTURE(comparison, loop);
+  const float32 badValue = comparison == 0 ? 0.1F : 0.9F;
+  const float32 goodValue = comparison == 0 ? 0.9F : 0.1F;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {goodValue, badValue, badValue, badValue});
+
+  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(comparison, loop));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  if(loop)
+  {
+    requireTerminationData(dataStructure, {goodValue, goodValue, goodValue, goodValue}, {0, 0, 0, 0});
+  }
+  else
+  {
+    requireTerminationData(dataStructure, {goodValue, goodValue, badValue, badValue}, {0, 0, 2, 3});
+  }
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Partial progress before stall", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  const auto comparison = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  CAPTURE(comparison);
+  const float32 badValue = comparison == 0 ? 0.1F : 0.9F;
+  const float32 goodValue = comparison == 0 ? 0.9F : 0.1F;
+  const float32 separator = std::numeric_limits<float32>::quiet_NaN();
+  DataStructure dataStructure;
+  // NaN neither fails the threshold nor supplies a passing donor.
+  buildTerminationData(dataStructure, {goodValue, badValue, separator, badValue, badValue});
+
+  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(comparison, true));
+  requireStallError(result.result, 2);
+  requireTerminationData(dataStructure, {goodValue, goodValue, separator, badValue, badValue}, {0, 0, 2, 3, 4});
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Cancellation takes priority over stall", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Termination]")
+{
+  const bool cancelBeforePass = GENERATE(false, true);
+  CAPTURE(cancelBeforePass);
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {0.1F, 0.1F, 0.1F, 0.1F});
+  std::atomic_bool shouldCancel = cancelBeforePass;
+  bool completedPass = false;
+  const IFilter::MessageHandler messageHandler{[&](const IFilter::Message& message) {
+    if(message.progress == 100)
+    {
+      completedPass = true;
+      shouldCancel = true;
+    }
+  }};
+  const auto result = ReplaceElementAttributesWithNeighborValuesFilter().execute(dataStructure, terminationArguments(0, true), nullptr, messageHandler, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == -1);
+  REQUIRE(completedPass == !cancelBeforePass);
+  requireTerminationData(dataStructure, {0.1F, 0.1F, 0.1F, 0.1F}, {0, 1, 2, 3});
+}
+
+TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: real-store termination and donor propagation",
+          "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][.OocStoreContract]")
+{
+  REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const auto comparison = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool hasDonor = GENERATE(false, true);
+  CAPTURE(comparison, hasDonor);
+  const float32 badValue = comparison == 0 ? 0.1F : 0.9F;
+  const float32 goodValue = comparison == 0 ? 0.9F : 0.1F;
+  DataStructure dataStructure;
+  buildTerminationData(dataStructure, {hasDonor ? goodValue : badValue, badValue, badValue, badValue});
+  requireDiskBackedCellArrays(dataStructure);
+
+  using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
+  auto args = terminationArguments(comparison, true);
+  if(hasDonor)
+  {
+    args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(addCellArrayAlias(dataStructure, k_ConfidencePath)));
+  }
+  const auto result = FilterType().execute(dataStructure, args);
+  if(hasDonor)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    requireTerminationData(dataStructure, {goodValue, goodValue, goodValue, goodValue}, {0, 0, 0, 0});
+  }
+  else
+  {
+    requireStallError(result.result, 4);
+    requireTerminationData(dataStructure, {badValue, badValue, badValue, badValue}, {0, 1, 2, 3});
+  }
+  requireDiskBackedCellArrays(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geometry cell tuple count", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][TupleCount]")

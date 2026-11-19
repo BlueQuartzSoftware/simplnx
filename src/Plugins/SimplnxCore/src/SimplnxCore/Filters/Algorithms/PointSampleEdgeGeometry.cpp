@@ -119,7 +119,8 @@ Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64
     }
     if(cumulativeSampleDistArrayPtr != nullptr)
     {
-      cumulativeSampleDistArrayPtr->setValue(vertCount, step * static_cast<float32>(j));
+      // Samples lie at subdivision centers, so distance includes the first half subdivision.
+      cumulativeSampleDistArrayPtr->setValue(vertCount, step * (static_cast<float32>(j) + 0.5f));
     }
     ++vertCount;
   }

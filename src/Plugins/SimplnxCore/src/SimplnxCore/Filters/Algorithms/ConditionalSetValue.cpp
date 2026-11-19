@@ -1,5 +1,7 @@
 #include "ConditionalSetValue.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -10,6 +12,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 using namespace nx::core;

@@ -11,6 +11,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 
 using namespace nx::core;
@@ -497,7 +498,10 @@ const std::vector<IFilter::PreflightValue>& PipelineFilter::getPreflightValues()
 
 std::unique_ptr<AbstractPipelineNode> PipelineFilter::deepCopy() const
 {
-  return m_Filter == nullptr ? std::make_unique<PipelineFilter>(nullptr, m_Arguments) : std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
+  auto pipelineFilterPtr = m_Filter == nullptr ? std::make_unique<PipelineFilter>(nullptr, m_Arguments) : std::make_unique<PipelineFilter>(m_Filter->clone(), m_Arguments);
+  pipelineFilterPtr->setComments(getComments());
+  pipelineFilterPtr->setDisabled(isDisabled());
+  return pipelineFilterPtr;
 }
 
 void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)

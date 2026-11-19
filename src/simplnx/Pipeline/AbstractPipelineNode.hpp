@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/ExecutionContext.hpp"
@@ -152,8 +153,9 @@ public:
   virtual bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
 
   /**
-   * @brief Creates and returns a unique pointer to a copy of the node.
-   * @return std::unique_ptr<AbstractPipelineNode>
+   * @brief Copies the node's persistent settings and disabled state into an independent node.
+   * The copy starts without a parent pipeline, cached execution results or connected observers.
+   * @return Independent node with the same persistent settings.
    */
   virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
 
@@ -267,6 +269,11 @@ public:
   ExecutionContext getPipelineExecutionContext() const;
 
 protected:
+  /**
+   * @brief JSON key that stores the node's disabled state.
+   */
+  static constexpr StringLiteral k_IsDisabledKey = "isDisabled";
+
   /**
    * @brief Attempts to read the disabled state from the provided node's json.
    * If the disabled key is not found, this method returns false.

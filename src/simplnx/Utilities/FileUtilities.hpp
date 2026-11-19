@@ -48,6 +48,16 @@
 namespace nx::core::FileUtilities
 {
 
+namespace detail
+{
+/**
+ * @brief Formats a path for a filesystem error message.
+ * @param path Identifies the path to include in the message.
+ * @return The UTF-8 path, or a placeholder if the path conversion fails.
+ */
+std::string PathForDiagnostic(const std::filesystem::path& path);
+} // namespace detail
+
 /**
  * @brief Counts text lines in a file.
  * @param filepath Identifies the file to read.
@@ -78,7 +88,7 @@ SIMPLNX_EXPORT bool HasWriteAccess(const std::string& path);
  * @brief Checks write permission on the nearest existing directory ancestor.
  * @param path Identifies a target file or directory.
  * @param isFile True when path includes a file name that must be removed before the check.
- * @return Valid result when an existing ancestor is writable.
+ * @return Valid result when an existing ancestor is writable, or an error if inspection or the permission check fails.
  *
  * The function does not create directories. Relative paths are made absolute.
  * A nonexistent Windows drive produces an error.

@@ -26,7 +26,9 @@ If a flagged cell has only flagged neighbors (i.e., none of its neighbors pass t
 
 ### Loop Until Gone
 
-By default, the filter runs a **single pass**. If a flagged cell's neighbors are all flagged in that pass, the cell is left alone. Enabling *Loop Until Gone* repeats the algorithm until every flagged cell has been replaced (typically because flag-replacements propagate inward across multiple passes).
+By default, the filter runs a **single pass**. If a flagged cell has no passing face neighbor, the cell stays unchanged. Enabling *Loop Until Gone* repeats the algorithm until no cells fail the threshold.
+
+If a complete pass finds failing cells but selects no replacements, the filter stops with error **-15002**. The message identifies the comparison array, remaining cell count, and threshold. Adjust *Threshold Value* or disable *Loop Until Gone*. Tuples copied in earlier passes remain changed. Cancellation between passes returns without the stall error and also preserves earlier changes.
 
 ### Caution: Flood Fill Behavior
 
@@ -80,7 +82,9 @@ The black pixels in the original are unindexed cells (Error > 0) and are filled 
 
 - **Selected Scalar Array** -- any single-component cell-level scalar suitable for thresholding. Common sources: confidence/quality arrays from [Read H5EBSD](../OrientationAnalysis/ReadH5EbsdFilter.md), [Read CTF Data](../OrientationAnalysis/ReadCtfDataFilter.md), or [Read ANG Data](../OrientationAnalysis/ReadAngDataFilter.md), or any computed per-cell scalar.
 
-**Input Comparison Array** must have one tuple per cell of the selected geometry. When **Loop Until Gone** is enabled, select a comparison array in the geometry's Cell Data Attribute Matrix. Otherwise, another Attribute Matrix is allowed.
+**Input Comparison Array** must have one tuple per cell of the selected geometry. The filter writes to Boolean and numeric arrays in that geometry's Cell Attribute Matrix.
+
+When **Loop Until Gone** is enabled, the comparison array must belong to that Cell Attribute Matrix. You can select any path to that array. Each pass must be able to update the values used by the next pass. Single-pass mode also accepts an independent comparison array from another location. Preflight returns error **-15003** if loop mode selects an array that does not belong to Cell Data or the selected geometry has no Cell Attribute Matrix.
 
 ## Algorithm
 
@@ -94,9 +98,9 @@ For each pass over the volume:
 2. If the voxel fails the comparison (e.g., confidence index < 0.1), examine its 6 face-connected neighbors.
 3. Among neighbors that pass the threshold, find the one with the best value (highest for less-than mode, lowest for greater-than mode).
 4. Mark the failing voxel to be replaced by that neighbor's data.
-5. After each Z-slice is scanned, apply all replacements across every array in the Attribute Matrix (not just the comparison array).
+5. After each Z-slice is scanned, apply the replacements to the Boolean and numeric arrays in the geometry's Cell Attribute Matrix.
 
-If **Loop Until Gone** is enabled, the algorithm repeats until no voxels fail the threshold. Each pass can improve neighbors of previously failing voxels, allowing the cleanup to propagate inward from good-data boundaries.
+If **Loop Until Gone** is enabled, each pass can extend replacements inward from passing neighbors. The algorithm stops when no voxels fail the threshold. If failing voxels remain and a complete pass selects no replacement, it returns error **-15002** and preserves earlier changes.
 
 ### Performance
 

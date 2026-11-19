@@ -178,8 +178,9 @@ public:
   const std::vector<IFilter::PreflightValue>& getPreflightValues() const;
 
   /**
-   * @brief Creates and returns a unique pointer to a copy of the node.
-   * @return std::unique_ptr<AbstractPipelineNode>
+   * @brief Copies the wrapped filter, arguments, comments and disabled state into an independent node.
+   * A null wrapped filter remains null. The copy starts with fresh execution state and signals.
+   * @return Independent filter node without a parent pipeline.
    */
   std::unique_ptr<AbstractPipelineNode> deepCopy() const override;
 

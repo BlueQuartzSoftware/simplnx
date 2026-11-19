@@ -55,10 +55,10 @@ struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
  * A sibling tuple copied from a prior Z slice can therefore contain a value
  * that this pass already copied. This makes tuple transfer dependent on Z order.
  *
- * Loop mode repeats while any value fails, even when no passing neighbor exists.
- * It has no independent pass limit and can fail to terminate. Cancellation is
- * checked only between complete passes. Bulk read and transfer results are
- * discarded, and the operation does not roll back prior slice writes.
+ * Loop mode repeats while values fail. If a complete pass selects no replacement
+ * for the remaining failed cells, the algorithm returns error -15002.
+ * Cancellation is checked only between complete passes. The algorithm returns
+ * the first bulk-I/O error and does not roll back prior slice writes.
  */
 class SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValues
 {
@@ -87,12 +87,12 @@ public:
 
   /**
    * @brief Replaces failed cell tuples for one or more passes.
-   * @return Success after completion or cancellation.
+   * @return Success after completion or cancellation, the first bulk-I/O error, or error -15002 when loop mode cannot progress.
    * @pre InputArrayPath identifies a scalar cell array.
    * @pre The input and sibling arrays match the ImageGeom cell dimensions.
    *
-   * The method cannot report bulk-I/O failures. A between-pass cancellation
-   * checkpoint returns success and can leave prior slices modified.
+   * A between-pass cancellation checkpoint returns success before the stall check.
+   * Cancellation and errors can leave prior slices modified.
    */
   Result<> operator()();
 

@@ -8,6 +8,13 @@ IO (Output)
 
 This **Filter** writes the current `DataStructure` to disk as an HDF5 file with the `.dream3d` extension. The file contains every `DataArray`, geometry, attribute matrix, and group in the pipeline, along with the pipeline itself so the work can be re-run or inspected later.
 
+### Embedded Pipeline
+
+When this filter runs in a pipeline, the embedded copy includes the nodes up to and including this writer.
+The copy keeps filter arguments, comments and disabled state. Disabled filters remain disabled when you extract and
+load the pipeline with [Extract DREAM3D-NX Pipeline To File](ExtractPipelineToFileFilter.md).
+For example, a disabled reader stays disabled during replay even when its input file is missing.
+
 ### HDF5 Compression
 
 DataArray datasets can be written with gzip (deflate) compression, dramatically reducing `.dream3d` file size at a modest CPU cost. gzip was chosen because it is non-proprietary and built into every standard HDF5 install — any tool that reads HDF5 (DREAM3D 6.x, DREAM3D-NX, HDFView, h5py, ParaView, Avizo, MATLAB) reads compressed `.dream3d` files transparently, with no special build or plugin required.

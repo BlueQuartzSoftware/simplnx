@@ -5,18 +5,27 @@
 
 #include "ReplaceElementAttributesWithNeighborValues.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/SliceBufferedTransfer.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
+
+#include <fmt/format.h>
+
+#include <atomic>
 
 using namespace nx::core;
 
 namespace
 {
 constexpr int32 k_GreaterThanIndex = 1;
+constexpr int32 k_NoDonorError = -15002;
 
 /**
  * @class IComparisonFunctor
@@ -154,20 +163,21 @@ struct ExecuteTemplate
    * @tparam T Specifies the comparison-array value type.
    * @param imageGeom Supplies dimensions and the cell AttributeMatrix.
    * @param inputIDataArray Supplies scalar values that select replacements.
+   * @param inputArrayPath Identifies the selected comparison array in diagnostics.
    * @param comparisonAlgorithm Zero selects less-than. One selects greater-than.
    * @param ThresholdValue Threshold converted to T for comparisons.
-   * @param loopUntilDone True to repeat while any value fails.
+   * @param loopUntilDone True to repeat while failed values have replacement sources.
    * @param shouldCancel Signals cancellation between complete passes.
    * @param messageHandler Receives progress messages.
    *
-   * @return The first comparison-array or sibling-array bulk-I/O error.
+   * @return The first bulk-I/O error, or an error when loop mode cannot replace remaining failed cells.
    *
-   * Each sibling array commits one destination slice at a time. Loop mode has no
-   * pass limit and can fail to terminate when a failed value has no passing face neighbor.
+   * Each sibling array commits one destination slice at a time. A stalled pass
+   * returns an error without rolling back tuples copied in earlier passes.
    */
   template <typename T>
-  Result<> operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float32 ThresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
-                      const IFilter::MessageHandler& messageHandler)
+  Result<> operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, const DataPath& inputArrayPath, int32 comparisonAlgorithm, float32 ThresholdValue, bool loopUntilDone,
+                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -225,6 +235,7 @@ struct ExecuteTemplate
     {
       keepGoing = false;
       count = 0;
+      usize replacementCount = 0;
       if(shouldCancel)
       {
         return {};
@@ -300,6 +311,10 @@ struct ExecuteTemplate
                 const T neighborValue = inputSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
                 CompareValues<T>(comparator, neighborValue, ThresholdValue, best, sliceBestNeighbor, inSlice, neighborPoint);
               }
+              if(sliceBestNeighbor[inSlice] != -1)
+              {
+                replacementCount++;
+              }
             }
           }
         }
@@ -333,6 +348,12 @@ struct ExecuteTemplate
       // count records failed values, including values without a passing source.
       if(loopUntilDone && count > 0)
       {
+        if(replacementCount == 0)
+        {
+          return MakeErrorResult(k_NoDonorError, fmt::format("Comparison array '{}' still has {} cells that fail Threshold Value {}. No passing face neighbor can replace these cells. "
+                                                             "Adjust Threshold Value or disable Loop Until Gone. Tuples copied in earlier passes remain changed.",
+                                                             inputArrayPath.toString(), count, ThresholdValue));
+        }
         keepGoing = true;
       }
     }
@@ -363,6 +384,6 @@ Result<> ReplaceElementAttributesWithNeighborValues::operator()()
   auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop,
-                             m_ShouldCancel, m_MessageHandler);
+  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison, m_InputValues->MinConfidence,
+                             m_InputValues->Loop, m_ShouldCancel, m_MessageHandler);
 }

@@ -102,10 +102,10 @@ Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize tota
 
   if(!featureIArrays.empty())
   {
-    // Visitation prevents a later mapping entry from reversing an earlier tuple swap.
-    // This state scales with feature count, not cell count.
+    // Complete each cycle so every source tuple reaches its mapped feature ID.
+    // Visitation scales with feature count and prevents processing a cycle twice.
     std::vector<bool> visited(randomIds.size(), false);
-    for(usize i = 0; i < randomIds.size(); i++)
+    for(usize i = 1; i < randomIds.size(); i++)
     {
       if(visited[i])
       {
@@ -113,11 +113,15 @@ Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize tota
       }
 
       visited[i] = true;
-      visited[randomIds[i]] = true;
-
-      for(auto* iArray : featureIArrays)
+      usize next = static_cast<usize>(randomIds[i]);
+      while(next != i)
       {
-        iArray->swapTuples(i, randomIds[i]);
+        for(auto* iArrayPtr : featureIArrays)
+        {
+          iArrayPtr->swapTuples(i, next);
+        }
+        visited[next] = true;
+        next = static_cast<usize>(randomIds[next]);
       }
     }
   }
