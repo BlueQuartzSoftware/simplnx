@@ -101,8 +101,9 @@ simplnx is the C++20 data-processing library behind DREAM3D-NX. It has no UI dep
 - When out-of-core behavior changes, run every out-of-core test except the benchmarks, in the out-of-core build, not
   one narrow tag:
   `ctest --test-dir "<build-dir>" -L "^ooc$" -LE "benchmark" -j 1 --output-on-failure --timeout 1500 --no-tests=error`.
-  The `ooc` label covers every test case tagged `[OOC]` (Catch2 tags ignore case), the `<Plugin>OocStoreContracts`
-  entries, which run the hidden `[.OocStoreContract]` cases, and the out-of-core tests that the SimplnxOoc build adds.
+  The `ooc` label exists only in builds with `DREAM3DNX_ENABLE_OOC=ON`. It covers every test case tagged `[OOC]`
+  (Catch2 tags ignore case), the `<Plugin>OocStoreContracts` entries, which run the hidden `[.OocStoreContract]`
+  cases, and the out-of-core tests that the SimplnxOoc build adds.
   Other hidden cases are not registered with ctest.
 - Format only the files you changed, with clang-format 19.1.1 from inside the repository so `.clang-format` applies
   (`bluequartz-skills:clang-format` finds the binary). A whole-tree format belongs in its own commit.
