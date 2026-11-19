@@ -368,12 +368,11 @@ inline RecursiveGaussianCoefficients ComputeRecursiveGaussianCoefficients(double
 /**
  * @brief Checks that Sigma is finite and positive on the axes that are filtered.
  * @param sigma The standard deviation for each axis, in image-spacing units.
- * @param dims Image dimensions. A Z dimension of one selects 2D smoothing.
+ * @param activeAxes Number of axes to check (2 for X and Y, 3 to include Z).
  * @return An error for the first invalid active Sigma, or a valid result.
  */
-inline Result<> ValidateSmoothingGaussianSigma(const std::vector<float64>& sigma, const SizeVec3& dims)
+inline Result<> ValidateSmoothingGaussianSigma(const std::vector<float64>& sigma, usize activeAxes)
 {
-  const usize activeAxes = dims[2] > 1 ? 3 : 2;
   for(usize axis = 0; axis < activeAxes; ++axis)
   {
     if(axis >= sigma.size() || !std::isfinite(sigma.at(axis)) || sigma.at(axis) <= 0.0)
@@ -389,11 +388,11 @@ inline Result<> ValidateSmoothingGaussianSigma(const std::vector<float64>& sigma
 /** @brief Checks the selected smoothing controls and formed coefficients without imposing an accuracy cutoff. */
 inline Result<> ValidateSmoothingGaussianControls(const std::vector<float64>& sigma, const FloatVec3& spacing, const SizeVec3& dims)
 {
-  if(auto result = ValidateSmoothingGaussianSigma(sigma, dims); result.invalid())
+  const usize activeAxes = dims[2] > 1 ? 3 : 2;
+  if(auto result = ValidateSmoothingGaussianSigma(sigma, activeAxes); result.invalid())
   {
     return result;
   }
-  const usize activeAxes = dims[2] > 1 ? 3 : 2;
   for(usize axis = 0; axis < activeAxes; ++axis)
   {
     const double spacingValue = static_cast<double>(spacing[axis]);

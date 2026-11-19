@@ -98,8 +98,8 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   }
 
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
-  // The executor validates spacing and coefficients after upstream filters set the final spacing.
-  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianSigma(sigma, imageGeom.getDimensions()); controls.invalid())
+  // X and Y are always filtered. An upstream filter can still reduce the provisional grid to a single Z slice.
+  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianSigma(sigma, 2); controls.invalid())
   {
     controls.errors().front().message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(controls), OutputActions{})};

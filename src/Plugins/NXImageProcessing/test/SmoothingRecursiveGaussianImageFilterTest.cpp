@@ -7,6 +7,8 @@
 
 #include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
+#include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
+#include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
@@ -23,10 +25,13 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -218,13 +223,12 @@ std::vector<T> ReadArray(const DataStructure& ds, const DataPath& path)
 }
 } // namespace
 
-TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite active sigma is rejected before execution", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: nonfinite X and Y sigma fail preflight", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
 {
   Application::GetOrCreateInstance();
   const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(usize{1}, usize{4});
-  const std::vector<usize> activeAxes = (dimZ == 1) ? std::vector<usize>{0, 1} : std::vector<usize>{0, 1, 2};
-  const usize axis = GENERATE_COPY(from_range(activeAxes));
+  const usize axis = GENERATE(usize{0}, usize{1});
   const float64 invalidSigma = GENERATE(std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 4, 4, dimZ, std::vector<float32>(16 * dimZ, 1.0F));
@@ -374,6 +378,82 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: each select
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().front().code == expectedCodes.at(failure));
   REQUIRE(result.result.errors().front().message.find("Image Geometry") != std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: mapped point cloud final depth determines Z sigma validation",
+          "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const bool planar = GENERATE(true, false);
+  const float64 invalidZ = GENERATE(std::numeric_limits<float64>::infinity(), -std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN());
+  CAPTURE(planar, invalidZ);
+  const DataPath cloudPath({"Points"});
+  const DataPath gridPath({"Grid"});
+  const DataPath signalPath = gridPath.createChildPath("Cells").createChildPath("Signal");
+  DataStructure dataStructure;
+  const CreateVertexGeometryAction createPoints(cloudPath, 4, "Point Data", "Vertices");
+  const auto created = createPoints.apply(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  auto* pointsPtr = dataStructure.getDataAs<VertexGeom>(cloudPath);
+  REQUIRE(pointsPtr != nullptr);
+  pointsPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(1, {4.0F, 0.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(2, {0.0F, 4.0F, 0.0F});
+  pointsPtr->setVertexCoordinate(3, {4.0F, 4.0F, planar ? 0.0F : 4.0F});
+
+  auto map = std::make_unique<MapPointCloudToRegularGridFilter>();
+  auto mapArgs = map->getDefaultArguments();
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, cloudPath);
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key, gridPath);
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::vector<int32>{4, 4, 4});
+  mapArgs.insertOrAssign(MapPointCloudToRegularGridFilter::k_CellDataName_Key, std::string("Cells"));
+  auto signal = std::make_unique<CreateDataArrayFilter>();
+  auto signalArgs = signal->getDefaultArguments();
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_NumericType_Key, NumericType::float32);
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, signalPath);
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_InitializationValue_Key, std::string("7"));
+  signalArgs.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, false);
+
+  Pipeline pipeline;
+  REQUIRE(pipeline.push_back(std::move(map), mapArgs));
+  REQUIRE(pipeline.push_back(std::move(signal), signalArgs));
+  REQUIRE(pipeline.push_back(std::make_unique<SmoothFilter>(), makeSmoothingArguments(signalPath, {1.0, 1.0, invalidZ})));
+  const std::atomic_bool shouldCancel{false};
+  auto preflightData = dataStructure;
+  REQUIRE(pipeline.preflight(preflightData, shouldCancel));
+  const auto* provisionalGridPtr = preflightData.getDataAs<ImageGeom>(gridPath);
+  REQUIRE(provisionalGridPtr != nullptr);
+  REQUIRE(provisionalGridPtr->getDimensions() == SizeVec3{4, 4, 4});
+
+  const bool executed = pipeline.execute(dataStructure, shouldCancel);
+  const auto* finalGridPtr = dataStructure.getDataAs<ImageGeom>(gridPath);
+  REQUIRE(finalGridPtr != nullptr);
+  if(planar)
+  {
+    REQUIRE(executed);
+    REQUIRE(finalGridPtr->getDimensions() == SizeVec3{5, 5, 1});
+    const auto* outputPtr = dataStructure.getDataAs<Float32Array>(signalPath.replaceName("Output"));
+    REQUIRE(outputPtr != nullptr);
+    REQUIRE(outputPtr->getSize() == 25);
+    for(usize i = 0; i < outputPtr->getSize(); ++i)
+    {
+      REQUIRE((*outputPtr)[i] == Approx(7.0));
+    }
+  }
+  else
+  {
+    REQUIRE_FALSE(executed);
+    REQUIRE(finalGridPtr->getDimensions() == SizeVec3{5, 5, 5});
+    const auto* gaussianNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(2));
+    REQUIRE(gaussianNodePtr != nullptr);
+    const auto errors = gaussianNodePtr->getErrors();
+    REQUIRE(errors.size() == 1);
+    REQUIRE(errors.front().code == ImageProcessing::k_SmoothingGaussianInvalidSigma);
+    REQUIRE(errors.front().message.find("axis Z") != std::string::npos);
+    REQUIRE(errors.front().message.find(gridPath.toString()) != std::string::npos);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: pipeline validates spacing after resampling", "[NXImageProcessing][Issue1874][SmoothingRecursiveGaussianImageFilter]")
