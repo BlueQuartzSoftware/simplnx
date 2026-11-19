@@ -557,4 +557,20 @@ private:
   usize m_NumTuples = {0};
   std::string m_DataFormat = "";
 };
+
+// MSVC compiles the members defined in the class body in every consumer anyway, so these declarations would save
+// no time there. Without them, each MSVC consumer keeps its own static arrays and vftables instead of importing them.
+#if !defined(_MSC_VER)
+extern template class EmptyDataStore<int8>;
+extern template class EmptyDataStore<uint8>;
+extern template class EmptyDataStore<int16>;
+extern template class EmptyDataStore<uint16>;
+extern template class EmptyDataStore<int32>;
+extern template class EmptyDataStore<uint32>;
+extern template class EmptyDataStore<int64>;
+extern template class EmptyDataStore<uint64>;
+extern template class EmptyDataStore<float32>;
+extern template class EmptyDataStore<float64>;
+extern template class EmptyDataStore<bool>;
+#endif
 } // namespace nx::core
