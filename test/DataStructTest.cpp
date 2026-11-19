@@ -2221,6 +2221,65 @@ TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
 
 namespace
 {
+const DataPath k_ChangedArrayPath({Constants::k_ImageGeometry, Constants::k_LevelOne, Constants::k_LevelTwo, Constants::k_Int32DataSet});
+
+/**
+ * @brief Returns the test structure with one value of one array changed.
+ * @return Test structure with the first value of the selected array incremented.
+ */
+DataStructure createChangedValueStructure()
+{
+  DataStructure dataStructure = createTestDataStructure();
+  auto& changedArray = dataStructure.getDataRefAs<Int32Array>(k_ChangedArrayPath);
+  changedArray[0] = changedArray[0] + 1;
+  return dataStructure;
+}
+
+/**
+ * @brief Returns a structure with the groups G1 and G2, G2 nested in G1 or both at the root.
+ * @param nested If true, places G2 inside G1; otherwise, places both groups at the root.
+ * @return Structure containing the two groups.
+ */
+DataStructure createTwoGroupStructure(bool nested)
+{
+  DataStructure dataStructure;
+  const DataGroup* group1 = DataGroup::Create(dataStructure, "G1");
+  DataGroup::Create(dataStructure, "G2", nested ? std::optional<DataObject::IdType>(group1->getId()) : std::nullopt);
+  return dataStructure;
+}
+} // namespace
+
+TEST_CASE("CompareDataStructures fixtures differ only below the root", "[simplnx][UnitTestCommon]")
+{
+  const DataStructure original = createTestDataStructure();
+  const DataStructure changed = createChangedValueStructure();
+  REQUIRE(original.getSize() == changed.getSize());
+  REQUIRE(original.getDataRefAs<Int32Array>(k_ChangedArrayPath)[0] != changed.getDataRefAs<Int32Array>(k_ChangedArrayPath)[0]);
+
+  const DataStructure nested = createTwoGroupStructure(true);
+  const DataStructure flat = createTwoGroupStructure(false);
+  REQUIRE(nested.getSize() == flat.getSize());
+  REQUIRE(nested.getDataMap().getNames().size() == 1);
+  REQUIRE(flat.getDataMap().getNames().size() == 2);
+}
+
+TEST_CASE("CompareDataStructures compares the arrays below the root", "[simplnx][UnitTestCommon][!shouldfail]")
+{
+  UnitTest::CompareDataStructures(createTestDataStructure(), createChangedValueStructure());
+}
+
+TEST_CASE("CompareDataStructures compares the number of root children", "[simplnx][UnitTestCommon][!shouldfail]")
+{
+  UnitTest::CompareDataStructures(createTwoGroupStructure(true), createTwoGroupStructure(false));
+}
+
+TEST_CASE("CompareDataStructures compares the number of root children in reverse order", "[simplnx][UnitTestCommon][!shouldfail]")
+{
+  UnitTest::CompareDataStructures(createTwoGroupStructure(false), createTwoGroupStructure(true));
+}
+
+namespace
+{
 /**
  * @brief Creates a small resident fixture with explicit IDs and literal values.
  * @param structure Owns the array.

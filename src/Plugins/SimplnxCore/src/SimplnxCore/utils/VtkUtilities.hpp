@@ -1,7 +1,6 @@
 #pragma once
 
 #include "simplnx/Utilities/OStreamUtilities.hpp"
-#include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <memory>
 
@@ -339,104 +338,4 @@ inline std::string ConvertDataTypeToVtkDataType() noexcept
   }
 }
 
-/**
- * @struct WriteVtkDataFunctor
- * @brief Writes numeric arrays with the legacy VTK serializer.
- *
- * Binary output byte-swaps the source array before it writes the data. It
- * restores native byte order after the write. This serializer uses direct
- * DataArray access and does not establish generic DataArray thread safety.
- */
-struct WriteVtkDataFunctor
-{
-  /**
-   * @brief Writes one numeric DataArray in legacy VTK format.
-   * @tparam T Specifies the numeric array type.
-   * @param outStrm Receives VTK scalar data.
-   * @param iDataArray Supplies a DataArray<T>.
-   * @param binary True to write binary output; false to write ASCII.
-   * @param messageHandler Receives periodic ASCII-write progress.
-   * @param shouldCancel Signals ASCII-write cancellation.
-   * @return Success after completion or cancellation.
-   * @pre iDataArray has type DataArray<T>.
-   *
-   * Binary output does not inspect shouldCancel. Binary and ASCII stream errors
-   * are not returned. ASCII cancellation can leave a written prefix.
-   */
-  template <typename T>
-  Result<> operator()(std::ofstream& outStrm, IDataArray& iDataArray, bool binary, const nx::core::IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-  {
-    using DataArrayType = DataArray<T>;
-
-    auto& dataArrayRef = dynamic_cast<DataArrayType&>(iDataArray);
-    const auto& dataStoreRef = dataArrayRef.getDataStoreRef();
-
-    std::string name = StringUtilities::replace(dataArrayRef.getName(), " ", "_");
-
-    outStrm << "SCALARS " << name << " " << ConvertDataTypeToVtkDataType<T>() << " " << dataArrayRef.getNumberOfComponents() << "\n";
-    outStrm << "LOOKUP_TABLE default\n";
-
-    if(binary)
-    {
-      // Legacy VTK binary data uses big-endian byte order.
-      if constexpr(endian::little == endian::native)
-      {
-        dataArrayRef.byteSwapElements();
-      }
-
-      auto result = dataStoreRef.writeBinaryFile(outStrm);
-      if(result.first != 0)
-      {
-      }
-
-      // Restore the source array to native byte order.
-      if constexpr(endian::little == endian::native)
-      {
-        dataArrayRef.byteSwapElements();
-      }
-    }
-    else
-    {
-      const usize k_DefaultElementsPerLine = 10;
-      auto numTuples = dataStoreRef.getSize();
-      usize currentItemCount = 0;
-      ThrottledMessageHandler progressThrottle(messageHandler);
-      progressThrottle.reset(numTuples, fmt::format("Processing {}", dataArrayRef.getName()));
-
-      for(usize idx = 0; idx < numTuples; idx++)
-      {
-        if(shouldCancel)
-        {
-          return {};
-        }
-
-        if constexpr(std::is_same_v<T, int8> || std::is_same_v<T, uint8>)
-        {
-          outStrm << static_cast<int32>(dataArrayRef[idx]);
-        }
-        else if constexpr(std::is_same_v<T, float32> || std::is_same_v<T, float64>)
-        {
-          outStrm << fmt::format("{}", dataArrayRef.getValue(idx));
-        }
-        else
-        {
-          outStrm << dataArrayRef[idx];
-        }
-        if(currentItemCount < k_DefaultElementsPerLine - 1)
-        {
-          outStrm << ' ';
-          currentItemCount++;
-        }
-        else
-        {
-          outStrm << "\n";
-          currentItemCount = 0;
-        }
-        progressThrottle.updatePercent(idx + 1);
-      }
-    }
-    outStrm << "\n";
-    return {};
-  }
-};
 } // namespace nx::core

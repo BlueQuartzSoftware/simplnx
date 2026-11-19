@@ -35,16 +35,26 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
+#include <csignal>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#if !defined(_WIN32)
+#include <sys/resource.h>
+#endif
 
 using namespace nx::core;
 
@@ -697,6 +707,278 @@ TEST_CASE("DataStore Test")
   dataStore.setComponent(2, 2, 99);
   REQUIRE(dataStore[8] == 99);
   REQUIRE(dataStore.getComponentValue(2, 2) == 99);
+}
+
+namespace
+{
+/**
+ * @brief Returns a file path in the temporary directory that is unique to this test run.
+ * @param name File name stem.
+ * @return Path of a file that does not exist yet.
+ */
+std::filesystem::path makeBinaryWritePath(const std::string& name)
+{
+  return std::filesystem::temp_directory_path() / fmt::format("simplnx_{}_{}.bin", name, std::chrono::steady_clock::now().time_since_epoch().count());
+}
+
+/**
+ * @brief Closes the file stream that writeBinaryFile(path) passes to the stream overload, so that the final close fails.
+ */
+class ClosingBinaryWriteStore : public DataStore<int32>
+{
+public:
+  using DataStore<int32>::DataStore;
+  using DataStore<int32>::writeBinaryFile;
+
+  std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
+  {
+    auto result = DataStore<int32>::writeBinaryFile(outputStream);
+    dynamic_cast<std::ofstream&>(outputStream).close();
+    return result;
+  }
+};
+
+#if !defined(_WIN32)
+/**
+ * @brief Lowers the soft file-size limit and ignores SIGXFSZ until restore() or destruction.
+ *
+ * A write beyond the limit then fails with EFBIG instead of ending the process. ready() and restore() report whether the
+ * process state was changed and put back, so a test can check both outside the scope.
+ */
+class FileSizeLimitScope
+{
+public:
+  explicit FileSizeLimitScope(rlim_t limit)
+  {
+    m_PreviousHandler = std::signal(SIGXFSZ, SIG_IGN);
+    m_HandlerSet = m_PreviousHandler != SIG_ERR;
+    if(m_HandlerSet && getrlimit(RLIMIT_FSIZE, &m_PreviousLimit) == 0)
+    {
+      rlimit lowered = m_PreviousLimit;
+      lowered.rlim_cur = limit;
+      m_Lowered = setrlimit(RLIMIT_FSIZE, &lowered) == 0;
+    }
+  }
+
+  ~FileSizeLimitScope()
+  {
+    restore();
+  }
+
+  FileSizeLimitScope(const FileSizeLimitScope&) = delete;
+  FileSizeLimitScope(FileSizeLimitScope&&) = delete;
+  FileSizeLimitScope& operator=(const FileSizeLimitScope&) = delete;
+  FileSizeLimitScope& operator=(FileSizeLimitScope&&) = delete;
+
+  /**
+   * @brief Returns whether SIGXFSZ is ignored and the limit is lowered.
+   * @return True if the signal setup and the limit setup both succeeded.
+   */
+  bool ready() const
+  {
+    return m_HandlerSet && m_Lowered;
+  }
+
+  /**
+   * @brief Puts back the previous limit and handler; later calls return the first result.
+   * @return Whether everything this scope changed was put back.
+   */
+  bool restore()
+  {
+    if(!m_Restored)
+    {
+      m_Restored = true;
+      bool restored = true;
+      if(m_Lowered)
+      {
+        restored = setrlimit(RLIMIT_FSIZE, &m_PreviousLimit) == 0;
+      }
+      if(m_HandlerSet)
+      {
+        restored = std::signal(SIGXFSZ, m_PreviousHandler) != SIG_ERR && restored;
+      }
+      m_RestoreSucceeded = restored;
+    }
+    return m_RestoreSucceeded;
+  }
+
+private:
+  rlimit m_PreviousLimit{};
+  void (*m_PreviousHandler)(int) = SIG_DFL;
+  bool m_HandlerSet = false;
+  bool m_Lowered = false;
+  bool m_Restored = false;
+  bool m_RestoreSucceeded = false;
+};
+#endif
+
+/**
+ * @brief Removes a file when the test ends.
+ */
+struct RemoveFileOnExit
+{
+  std::filesystem::path path;
+
+  ~RemoveFileOnExit()
+  {
+    std::error_code errorCode;
+    std::filesystem::remove(path, errorCode);
+  }
+};
+
+/**
+ * @brief Returns the list of every tuple of a list store.
+ * @param store Source list store.
+ * @return Lists in tuple order.
+ */
+std::vector<std::vector<int32>> allLists(const ListStore<int32>& store)
+{
+  std::vector<std::vector<int32>> lists;
+  for(usize i = 0; i < store.getNumberOfTuples(); ++i)
+  {
+    lists.push_back(store.getList(static_cast<int32>(i)));
+  }
+  return lists;
+}
+} // namespace
+
+TEST_CASE("DataStore::writeBinaryFile writes the values of the store", "[simplnx][DataStore][BinaryWrite]")
+{
+  DataStore<int32> store({4}, {1}, 0);
+  for(usize i = 0; i < 4; ++i)
+  {
+    store[i] = static_cast<int32>(10 * i + 1);
+  }
+  const std::filesystem::path path = makeBinaryWritePath("write_values");
+  const RemoveFileOnExit removeFile{path};
+
+  const auto [code, message] = store.writeBinaryFile(path.string());
+  INFO(message);
+  REQUIRE(code == 0);
+
+  std::ifstream input(path, std::ios_base::binary);
+  std::array<int32, 4> values{};
+  input.read(reinterpret_cast<char*>(values.data()), sizeof(values));
+  REQUIRE(input.gcount() == static_cast<std::streamsize>(sizeof(values)));
+  REQUIRE(values == std::array<int32, 4>{1, 11, 21, 31});
+}
+
+TEST_CASE("DataStore::writeBinaryFile reports a stream that is already in a failed state", "[simplnx][DataStore][BinaryWrite]")
+{
+  DataStore<int32> store({4}, {1}, 7);
+  std::ostringstream output;
+  output.setstate(std::ios_base::failbit);
+
+  const auto [code, message] = store.writeBinaryFile(output);
+  REQUIRE(code == -10175);
+  REQUIRE(output.str().empty());
+}
+
+TEST_CASE("DataStore::writeBinaryFile reports a file that could not be closed", "[simplnx][DataStore][BinaryWrite]")
+{
+  ClosingBinaryWriteStore store({4}, {1}, 3);
+  const std::filesystem::path path = makeBinaryWritePath("write_close");
+  const RemoveFileOnExit removeFile{path};
+
+  const auto [code, message] = store.writeBinaryFile(path.string());
+  INFO(message);
+  REQUIRE(code == -10176);
+  REQUIRE(message.find(path.string()) != std::string::npos);
+}
+
+#if !defined(_WIN32)
+TEST_CASE("DataStore::writeBinaryFile reports a file that could not be written completely", "[simplnx][DataStore][BinaryWrite]")
+{
+  // The 16-byte file-size limit makes the write of 64 bytes fail. libc++ and libstdc++ keep them in the stream buffer until
+  // the file is closed, so the close fails (-10176); a library that writes them at once fails the write instead (-10175).
+  DataStore<int32> store({16}, {1}, 3);
+  const std::filesystem::path path = makeBinaryWritePath("write_limit");
+  const RemoveFileOnExit removeFile{path};
+
+  // No assertion runs while the limit is lowered, so a failed check cannot write a report into the limited process.
+  bool limitReady = false;
+  bool limitRestored = false;
+  std::pair<int32, std::string> result;
+  {
+    FileSizeLimitScope limit(16);
+    limitReady = limit.ready();
+    if(limitReady)
+    {
+      result = store.writeBinaryFile(path.string());
+    }
+    limitRestored = limit.restore();
+  }
+  REQUIRE(limitReady);
+  REQUIRE(limitRestored);
+  INFO(result.second);
+  REQUIRE((result.first == -10176 || result.first == -10175));
+}
+#endif
+
+TEST_CASE("AbstractDataStore iterators swap values between stores", "[simplnx][DataStore][ValueProxy]")
+{
+  SECTION("two stores")
+  {
+    DataStore<int32> first({1}, {1}, 10);
+    DataStore<int32> second({1}, {1}, 20);
+    std::iter_swap(first.begin(), second.begin());
+    REQUIRE(first[0] == 20);
+    REQUIRE(second[0] == 10);
+  }
+  SECTION("one store")
+  {
+    DataStore<int32> store({3}, {1}, 0);
+    store[0] = 1;
+    store[2] = 3;
+    std::iter_swap(store.begin(), store.begin() + 2);
+    REQUIRE(store[0] == 3);
+    REQUIRE(store[1] == 0);
+    REQUIRE(store[2] == 1);
+  }
+  SECTION("two bool stores")
+  {
+    DataStore<bool> first({1}, {1}, true);
+    DataStore<bool> second({1}, {1}, false);
+    std::iter_swap(first.begin(), second.begin());
+    REQUIRE_FALSE(first[0]);
+    REQUIRE(second[0]);
+  }
+}
+
+TEST_CASE("AbstractListStore iterators write lists to their own tuples", "[simplnx][ListStore][ReferenceList]")
+{
+  ListStore<int32> first(ShapeType{3});
+  first.setList(0, std::vector<int32>{1});
+  first.setList(1, std::vector<int32>{2, 2});
+  first.setList(2, std::vector<int32>{3, 3, 3});
+  ListStore<int32> second(ShapeType{3});
+  second.setList(0, std::vector<int32>{10});
+  second.setList(1, std::vector<int32>{20, 20});
+  second.setList(2, std::vector<int32>{30, 30, 30});
+
+  SECTION("swap in one store")
+  {
+    std::iter_swap(first.begin(), first.begin() + 1);
+    REQUIRE(allLists(first) == std::vector<std::vector<int32>>{{2, 2}, {1}, {3, 3, 3}});
+  }
+  SECTION("swap between stores")
+  {
+    std::iter_swap(first.begin(), second.begin() + 1);
+    REQUIRE(allLists(first) == std::vector<std::vector<int32>>{{20, 20}, {2, 2}, {3, 3, 3}});
+    REQUIRE(allLists(second) == std::vector<std::vector<int32>>{{10}, {1}, {30, 30, 30}});
+  }
+  SECTION("assignment through iterators")
+  {
+    *(first.begin() + 2) = *second.begin();
+    REQUIRE(allLists(first) == std::vector<std::vector<int32>>{{1}, {2, 2}, {10}});
+    REQUIRE(allLists(second) == std::vector<std::vector<int32>>{{10}, {20, 20}, {30, 30, 30}});
+  }
+  SECTION("copy between stores")
+  {
+    std::copy(second.begin() + 1, second.begin() + 2, first.begin());
+    REQUIRE(allLists(first) == std::vector<std::vector<int32>>{{20, 20}, {2, 2}, {3, 3, 3}});
+    REQUIRE(allLists(second) == std::vector<std::vector<int32>>{{10}, {20, 20}, {30, 30, 30}});
+  }
 }
 
 TEST_CASE("DataStore allocation contract", "[simplnx][DataStore]")
