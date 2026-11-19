@@ -3,15 +3,12 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Common/Types.hpp"
 
 #include <filesystem>
 #include <string>
 
 namespace nx::core
 {
-struct FileReplacementOutcome;
-
 /**
  * @class AtomicFile
  * @brief Provides transactional replacement of one output file.
@@ -23,9 +20,6 @@ struct FileReplacementOutcome;
 class SIMPLNX_EXPORT AtomicFile
 {
 public:
-  /** @brief The output file was replaced, but the system could not confirm the disk flush. */
-  static constexpr int32 k_FlushAfterReplacementError = -15785;
-
   /**
    * @brief Makes a best-effort removal of any uncommitted temporary output.
    */
@@ -65,18 +59,10 @@ public:
    * @brief Atomically replaces the destination with the temporary file.
    *
    * On Windows, this operation retries transient rename errors and requests write-through.
-   * @return Valid result on success or a detailed filesystem error. Error k_FlushAfterReplacementError means the new file is at the destination, but the disk flush failed.
+   * @return Valid result on success or a detailed filesystem error. Error -15782 reports a failed replacement.
+   * @post Failure leaves the destination unchanged. Any temporary file remains available until removal or destruction.
    */
   [[nodiscard]] Result<> commit();
-
-  /**
-   * @brief Converts the result of installing the temporary file to a commit result.
-   * @param outcome Result of the file replacement and any requested flush.
-   * @param temporaryPath Path of the temporary output file before replacement.
-   * @param destination Final output path.
-   * @return Commit result with the replacement or flush error, if any.
-   */
-  [[nodiscard]] static Result<> commitResult(const FileReplacementOutcome& outcome, const std::filesystem::path& temporaryPath, const std::filesystem::path& destination);
 
   /**
    * @brief Makes a best-effort purge of the temporary file without throwing.

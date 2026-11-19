@@ -4,8 +4,9 @@
  */
 
 #include "simplnx/Common/AtomicFile.hpp"
-#include "simplnx/Common/FileReplacement.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/Common/Uuid.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -20,9 +21,6 @@
 #include <utility>
 
 #ifdef _WIN32
-#include "simplnx/Common/ScopeGuard.hpp"
-#include "simplnx/Common/Uuid.hpp"
-
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -83,15 +81,43 @@ TEST_CASE("AtomicFile::CommitReplacesExistingFile")
   fs::remove(outputPath);
 }
 
-TEST_CASE("AtomicFile reports a flush failure after replacing the output", "[simplnx]")
+TEST_CASE("AtomicFile preserves the destination and temporary output after a failed replacement", "[simplnx]")
 {
-  const auto flushError = std::make_error_code(std::errc::io_error);
-  const FileReplacementOutcome outcome{.Error = flushError, .Attempts = 1, .Renamed = true};
-  const auto result = AtomicFile::commitResult(outcome, "temporary.txt", "output.txt");
-  SIMPLNX_RESULT_REQUIRE_INVALID(result); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
-  REQUIRE((result.errors().size() == 1));
-  CHECK((result.errors().front().code == -15785));
-  CHECK_THAT(result.errors().front().message, Catch::Matchers::Contains("was replaced, but the system could not confirm that the data reached the disk"));
+  const fs::path directory = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("atomic_file_" + Uuid::GenerateV4().str());
+  REQUIRE(fs::create_directory(directory));
+  const auto cleanup = MakeScopeGuard([&directory]() noexcept {
+    std::error_code error;
+    fs::remove_all(directory, error);
+  });
+  const fs::path destination = directory / "output.txt";
+  const fs::path existingChild = destination / "existing.txt";
+  fs::path temporaryDirectory;
+  {
+    auto atomicFileResult = AtomicFile::Create(destination);
+    SIMPLNX_RESULT_REQUIRE_VALID(atomicFileResult); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
+    AtomicFile atomicFile = std::move(atomicFileResult.value());
+    const fs::path temporaryPath = atomicFile.tempFilePath();
+    temporaryDirectory = temporaryPath.parent_path();
+    writeTemporaryFile(atomicFile, "new contents");
+    REQUIRE(fs::create_directory(destination));
+    {
+      std::ofstream output(existingChild);
+      output << "old contents";
+      output.close();
+      REQUIRE_FALSE(output.fail());
+    }
+
+    const auto result = atomicFile.commit();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -15782);
+    CHECK_THAT(result.errors().front().message, Catch::Matchers::Contains(destination.string()));
+    CHECK(readTextFile(existingChild) == "old contents");
+    CHECK(readTextFile(temporaryPath) == "new contents");
+  }
+
+  CHECK_FALSE(fs::exists(temporaryDirectory));
+  CHECK(readTextFile(existingChild) == "old contents");
 }
 
 #ifdef _WIN32

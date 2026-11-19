@@ -1,4 +1,5 @@
 #include "simplnx/Common/FileReplacement.hpp"
+#include "simplnx/Common/FileReplacementDetails.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/Uuid.hpp"
@@ -30,7 +31,7 @@ namespace
 {
 struct ScriptedReplacement
 {
-  std::vector<FileReplacementAttempt> Results;
+  std::vector<std::error_code> Results;
   std::vector<std::chrono::milliseconds::rep> WaitsMs;
   usize Calls = 0;
 };
@@ -52,27 +53,86 @@ std::string readFile(const fs::path& path)
 }
 } // namespace
 
+TEST_CASE("FileReplacement falls back once and prefers a retryable primary error", "[simplnx]")
+{
+  const auto retryablePrimaryError = std::make_error_code(std::errc::device_or_resource_busy);
+  const auto permanentPrimaryError = std::make_error_code(std::errc::invalid_argument);
+  const auto retryableFallbackError = std::make_error_code(std::errc::permission_denied);
+  std::error_code primaryResult;
+  std::error_code fallbackResult;
+  usize expectedFallbackCalls = 1;
+  usize expectedPredicateCalls = 0;
+  std::error_code expectedResult;
+
+  SECTION("The primary rename succeeds")
+  {
+    expectedFallbackCalls = 0;
+  }
+  SECTION("The fallback succeeds after the primary rename fails")
+  {
+    primaryResult = retryablePrimaryError;
+  }
+  SECTION("Both renames fail and the primary error permits a retry")
+  {
+    primaryResult = retryablePrimaryError;
+    fallbackResult = retryableFallbackError;
+    expectedPredicateCalls = 1;
+    expectedResult = retryablePrimaryError;
+  }
+  SECTION("Both renames fail and the primary error is permanent")
+  {
+    primaryResult = permanentPrimaryError;
+    fallbackResult = retryableFallbackError;
+    expectedPredicateCalls = 1;
+    expectedResult = retryableFallbackError;
+  }
+
+  usize primaryCalls = 0;
+  usize fallbackCalls = 0;
+  usize predicateCalls = 0;
+  const auto result = detail::RenameWithFallback(
+      [&] {
+        CHECK(fallbackCalls == 0);
+        ++primaryCalls;
+        return primaryResult;
+      },
+      [&] {
+        CHECK(primaryCalls == 1);
+        ++fallbackCalls;
+        return fallbackResult;
+      },
+      [&](const std::error_code& error) {
+        CHECK(fallbackCalls == 1);
+        CHECK(error == primaryResult);
+        ++predicateCalls;
+        return error == retryablePrimaryError || error == retryableFallbackError;
+      });
+  CHECK(primaryCalls == 1);
+  CHECK(fallbackCalls == expectedFallbackCalls);
+  CHECK(predicateCalls == expectedPredicateCalls);
+  CHECK(result == expectedResult);
+}
+
 TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 {
   ScriptedReplacement scripted;
-  const FileReplacementSteps steps{.Rename =
-                                       [&scripted](const fs::path& replacement, const fs::path& destination) {
-                                         REQUIRE((replacement == "replacement"));
-                                         REQUIRE((destination == "destination"));
-                                         return scripted.Results.at(scripted.Calls++);
-                                       },
-                                   .IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::permission_denied; },
-                                   .Wait = [&scripted](std::chrono::milliseconds wait) { scripted.WaitsMs.push_back(wait.count()); }};
+  const detail::FileReplacementSteps steps{.Rename =
+                                               [&scripted](const fs::path& replacement, const fs::path& destination) {
+                                                 REQUIRE((replacement == "replacement"));
+                                                 REQUIRE((destination == "destination"));
+                                                 return scripted.Results.at(scripted.Calls++);
+                                               },
+                                           .IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::permission_denied; },
+                                           .Wait = [&scripted](std::chrono::milliseconds wait) { scripted.WaitsMs.push_back(wait.count()); }};
 
   const std::error_code transient = std::make_error_code(std::errc::permission_denied);
   const std::error_code permanent = std::make_error_code(std::errc::no_such_file_or_directory);
 
   SECTION("Success needs no wait")
   {
-    scripted.Results = {{.Error = {}, .Renamed = true}};
-    const auto outcome = InstallReplacementFile("replacement", "destination", steps);
+    scripted.Results = {std::error_code{}};
+    const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE_FALSE(outcome.Error);
-    CHECK(outcome.Renamed);
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
     CHECK((scripted.Calls == 1));
@@ -81,10 +141,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 
   SECTION("Transient errors clear after three waits")
   {
-    scripted.Results = {{.Error = transient}, {.Error = transient}, {.Error = transient}, {.Error = {}, .Renamed = true}};
-    const auto outcome = InstallReplacementFile("replacement", "destination", steps);
+    scripted.Results = {transient, transient, transient, std::error_code{}};
+    const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE_FALSE(outcome.Error);
-    CHECK(outcome.Renamed);
     CHECK((outcome.Attempts == 4));
     CHECK((outcome.Waited.count() == 7));
     CHECK((scripted.Calls == 4));
@@ -94,10 +153,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 
   SECTION("Permanent error ends the operation")
   {
-    scripted.Results = {{.Error = permanent}};
-    const auto outcome = InstallReplacementFile("replacement", "destination", steps);
+    scripted.Results = {permanent};
+    const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE((outcome.Error == permanent));
-    CHECK_FALSE(outcome.Renamed);
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
     CHECK((scripted.Calls == 1));
@@ -106,10 +164,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 
   SECTION("A transient error persists after the last wait")
   {
-    scripted.Results.assign(38, {.Error = transient});
-    const auto outcome = InstallReplacementFile("replacement", "destination", steps);
+    scripted.Results.assign(38, transient);
+    const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
     REQUIRE((outcome.Error == transient));
-    CHECK_FALSE(outcome.Renamed);
     CHECK(outcome.RetriesExhausted);
     CHECK((outcome.Attempts == 38));
     CHECK((outcome.Waited.count() == 2000));
@@ -119,22 +176,6 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
     expectedWaitsMs.insert(expectedWaitsMs.end(), 30, 64);
     expectedWaitsMs.push_back(17);
     CHECK((scripted.WaitsMs == expectedWaitsMs));
-  }
-
-  SECTION("A failed flush after rename does not retry the rename")
-  {
-    scripted.Results = {{.Error = transient, .Renamed = true}};
-    const auto outcome = InstallReplacementFile("replacement", "destination", steps);
-    REQUIRE((outcome.Error == transient));
-    CHECK(outcome.Renamed);
-    CHECK_FALSE(outcome.RetriesExhausted);
-    CHECK((outcome.Attempts == 1));
-    CHECK((scripted.Calls == 1));
-    CHECK(scripted.WaitsMs.empty());
-    const auto description = DescribeFileReplacementFailure(outcome, "destination");
-    CHECK_THAT(description, Catch::Matchers::StartsWith("Output file 'destination' was replaced, but the system could not confirm that the data reached the disk."));
-    CHECK_THAT(description, Catch::Matchers::Contains("Save the output again."));
-    CHECK_THAT(description, Catch::Matchers::EndsWith(transient.message()));
   }
 }
 
@@ -187,7 +228,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
 
   SECTION("A missing replacement fails immediately")
   {
-    const auto outcome = InstallReplacementFile(replacement, destination, PlatformFileReplacementSteps());
+    const auto outcome = InstallReplacementFile(replacement, destination);
     REQUIRE(outcome.Error);
     CHECK((outcome.Attempts == 1));
     CHECK((outcome.Waited.count() == 0));
@@ -222,7 +263,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
-    const auto outcome = InstallReplacementFile(replacement, destination, PlatformFileReplacementSteps());
+    const auto outcome = InstallReplacementFile(replacement, destination);
     REQUIRE_FALSE(outcome.Error);
     CHECK((readFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
@@ -239,7 +280,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
         CloseHandle(held);
       }
     });
-    auto steps = PlatformFileReplacementSteps();
+    auto steps = detail::PlatformFileReplacementSteps();
     steps.Wait = [&held](std::chrono::milliseconds) {
       if(held != INVALID_HANDLE_VALUE)
       {
@@ -248,7 +289,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       }
     };
 
-    const auto outcome = InstallReplacementFile(replacement, destination, steps);
+    const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     REQUIRE_FALSE(outcome.Error);
     CHECK((outcome.Attempts >= 2));
     CHECK((readFile(destination) == "new"));
@@ -261,13 +302,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
-    auto steps = PlatformFileReplacementSteps();
+    auto steps = detail::PlatformFileReplacementSteps();
     steps.Wait = [](std::chrono::milliseconds) {};
 
-    const auto outcome = InstallReplacementFile(replacement, destination, steps);
+    const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     CHECK((outcome.Error.category() == std::system_category()));
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION || outcome.Error.value() == ERROR_ACCESS_DENIED));
-    CHECK((outcome.Waited == k_FileReplacementTotalWaitLimitMs));
+    CHECK((outcome.Waited == detail::k_FileReplacementTotalWaitLimitMs));
     CHECK(outcome.RetriesExhausted);
     CHECK((readFile(destination) == "old"));
     CHECK((readFile(replacement) == "new"));
@@ -280,10 +321,10 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     REQUIRE((originalAttributes != INVALID_FILE_ATTRIBUTES));
     const auto restoreAttributes = MakeScopeGuard([&destination, originalAttributes]() noexcept { SetFileAttributesW(destination.c_str(), originalAttributes); });
     REQUIRE((SetFileAttributesW(destination.c_str(), (originalAttributes & ~static_cast<DWORD>(FILE_ATTRIBUTE_NORMAL)) | FILE_ATTRIBUTE_READONLY) != 0));
-    auto steps = PlatformFileReplacementSteps();
+    auto steps = detail::PlatformFileReplacementSteps();
     steps.Wait = [](std::chrono::milliseconds) {};
 
-    const auto outcome = InstallReplacementFile(replacement, destination, steps);
+    const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     CHECK((outcome.Error.category() == std::system_category()));
     CHECK((outcome.Error.value() == ERROR_ACCESS_DENIED));
     CHECK((outcome.Attempts == 1));
@@ -298,14 +339,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const HANDLE held = CreateFileW(replacement.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
-    auto steps = PlatformFileReplacementSteps();
+    auto steps = detail::PlatformFileReplacementSteps();
     steps.Wait = [](std::chrono::milliseconds) {};
 
-    const auto outcome = InstallReplacementFile(replacement, destination, steps);
+    const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
     CHECK((outcome.Error.category() == std::system_category()));
     CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION));
     CHECK(outcome.RetriesExhausted);
-    CHECK_FALSE(outcome.Renamed);
     CHECK((readFile(destination) == "old"));
     CHECK((readFile(replacement) == "new"));
   }

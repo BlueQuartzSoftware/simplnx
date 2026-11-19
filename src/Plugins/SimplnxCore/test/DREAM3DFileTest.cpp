@@ -1,11 +1,9 @@
-#include "SimplnxCore/Filters/Algorithms/WriteDREAM3D.hpp"
 #include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
 #include "SimplnxCore/Filters/WriteDREAM3DFilter.hpp"
 
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-#include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -1222,40 +1220,6 @@ void CheckXdmfFile(const fs::path& dream3dPath)
     REQUIRE(line.compare(start, expectedPrefix.size(), expectedPrefix) == 0);
   }
   REQUIRE(referenceCount > 0);
-}
-
-TEST_CASE("WriteDREAM3D installs the sidecar after a post-replacement flush failure", "[SimplnxCore][WriteDREAM3DFilter]")
-{
-  const auto directory = fs::temp_directory_path() / ("write_dream3d_" + Uuid::GenerateV4().str());
-  REQUIRE(fs::create_directory(directory));
-  const auto cleanup = MakeScopeGuard([&directory]() noexcept {
-    std::error_code error;
-    fs::remove_all(directory, error);
-  });
-  const auto destination = directory / "output.dream3d";
-  const auto atomicFile = AtomicFile::Create(destination);
-  SIMPLNX_RESULT_REQUIRE_VALID(atomicFile); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
-  const auto destinationSidecar = GetXdmfPath(destination);
-  const auto temporarySidecar = GetXdmfPath(atomicFile.value().tempFilePath());
-  for(const auto& [path, text] : {std::pair{destinationSidecar, "old sidecar"}, std::pair{temporarySidecar, "new sidecar"}})
-  {
-    std::ofstream output(path);
-    output << text;
-    output.close();
-    REQUIRE_FALSE(output.fail());
-  }
-
-  const int32 code = GENERATE(-15785, -15782);
-  const auto result = WriteDREAM3D::finalizeOutput(MakeErrorResult(code, "DREAM3D commit error"), atomicFile.value(), destination, true);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
-  REQUIRE((result.errors().size() == 1));
-  CHECK((result.errors().front().code == code));
-  CHECK((result.errors().front().message == "DREAM3D commit error"));
-  CHECK((fs::exists(temporarySidecar) == (code == -15782)));
-  std::ifstream input(destinationSidecar);
-  std::string text;
-  REQUIRE(static_cast<bool>(std::getline(input, text)));
-  CHECK((text == (code == -15785 ? "new sidecar" : "old sidecar")));
 }
 
 TEST_CASE("WriteDREAM3DFilter reports a blocked XDMF replacement", "[SimplnxCore][WriteDREAM3DFilter]")
