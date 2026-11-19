@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
@@ -36,14 +37,35 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
 };
 
 /**
+ * @struct ResampledImageLayout
+ * @brief Stores output spacing and representable resampling dimensions.
+ * @note Defaults provide unit dimensions and spacing for provisional preflight layouts.
+ */
+struct ResampledImageLayout
+{
+  SizeVec3 Dimensions = {1, 1, 1};
+  FloatVec3 Spacing = {1, 1, 1};
+};
+
+/**
+ * @brief Computes a layout from source metadata without allocating cell arrays.
+ * @param source Provides geometry dimensions and spacing, which can be provisional during preflight.
+ * @param inputValues Selects the active resampling formula and parameters.
+ * @pre Active parameter vectors have three components and valid domains.
+ * @return The layout, or an error for finite nonpositive derived spacing or an unrepresentable cell count.
+ */
+SIMPLNX_EXPORT Result<ResampledImageLayout> ComputeResampledImageLayout(const ImageGeom& source, const ResampleImageGeomInputValues& inputValues);
+
+/**
  * @class ResampleImageGeom
  * @brief Copies Image Geometry cell data to a preflight-created regular grid.
  *
  * Each destination cell uses the source cell that contains its minimum corner. A corner outside the source bounds produces a zero tuple.
- * Axis lookup tables avoid repeated coordinate division. Each array uses one source-row buffer and one destination-row buffer.
+ * Axis lookup tables avoid repeated coordinate division. An unsafe index conversion fails before the copy when a destination cell needs it.
+ * Each array uses one source-row buffer and one destination-row buffer.
  *
  * Cell arrays run as independent parallel tasks. Each task checks cancellation between destination Z slices.
- * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O results are discarded.
+ * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O failures stop the affected task.
  *
  * Optional feature renumbering starts after all cell tasks finish. The algorithm deep-copies feature arrays before compaction can resize them.
  */
@@ -72,9 +94,10 @@ public:
 
   /**
    * @brief Resamples cell arrays and optionally renumbers feature data.
-   * @return Feature validation, deep-copy, or renumber result.
+   * @return Final geometry, cell-copy, feature validation, deep-copy or renumber result.
    *
-   * The method cannot report cell-array bulk-I/O failures. Cancellation can leave partial destination arrays.
+   * @pre Source and destination paths identify prepared geometries with matching cell arrays.
+   * Cancellation can leave partial destination arrays.
    */
   Result<> operator()();
 
@@ -106,7 +129,8 @@ private:
  * @brief Plans Image Geometry resampling without a plugin dependency.
  * @param dataStructure Contains the source Image Geometry and child objects.
  * @param inputValues Contains the resampling settings and data paths.
- * @return Output actions, display values, or a validation error.
+ * @pre Active resampling parameters have valid domains and three components.
+ * @return Output actions and warnings with safe stand-ins when metadata cannot yet determine a layout.
  *
  * The created Image Geometry retains the source length unit.
  */
@@ -118,7 +142,8 @@ SIMPLNX_EXPORT IFilter::PreflightResult PreflightImageGeometryResample(const Dat
  * @param inputValues Contains the resampling settings and data paths.
  * @param messageHandler Receives algorithm messages.
  * @param shouldCancel Stops resampling when the value is true.
- * @return An error if data copying or feature renumbering fails.
+ * @pre Active resampling parameters have valid domains and three components.
+ * @return An error if final layout computation, data copying or feature renumbering fails.
  */
 SIMPLNX_EXPORT Result<> ResampleImageGeometry(DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues, const IFilter::MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel);

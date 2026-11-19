@@ -60,11 +60,23 @@ When **Postprocessed** is selected, the processing order becomes:
 
 ### Resampling Caveats
 
-The user can optionally resample each image as it is read in. The *Resample Images* parameter provides the following choices:
+Use **Resample Images** to choose how the filter reads each image.
 
-- **Do Not Resample (0)**: Images are used at their native pixel dimensions.
-- **Scaling (1)**: A percentage value scales the X and Y pixel counts. A value of 100 means no scaling, 50 means half the pixels, and 200 means double the pixels. The value must be greater than or equal to 1.0.
-- **Exact X/Y Dimensions (2)**: The X and Y dimensions of the resampled output are set to the user-supplied values. The Z dimension is left equal to the number of images in the stack.
+- *Do Not Resample (0)* keeps the original pixel counts.
+- *Scaling (1)* changes the X and Y pixel counts by a percentage. A value of 100 keeps the original counts. A value of 50 gives half the original counts. A value of 200 doubles them.
+- In *Exact X/Y Dimensions (2)* mode, the filter resamples each image to the X and Y pixel counts in **Exact 2D Dimensions (Pixels)**. The Z dimension is the number of images left after Z cropping.
+
+### Valid Parameter Values
+
+In *Scaling (1)* mode, **Scaling (%)** must be finite and at least 1.
+In *Exact X/Y Dimensions (2)* mode, each value in **Exact 2D Dimensions (Pixels)** must be a whole number of at least 1.
+The filter checks the total pixel count across all selected slices.
+If the stack is too large, decrease **Scaling (%)** or **Exact 2D Dimensions (Pixels)** for the selected mode, or select fewer slices.
+
+If preflight cannot calculate a valid output cell count or spacing, it warns and uses a temporary size for the preview.
+The filter calculates the size again as it reads each image. If that calculation fails, it stops before it copies that image.
+Cells outside the source image receive zero values. If an output cell needs a source index that cannot be calculated, the filter stops before it copies that image.
+Images copied earlier can remain in the output.
 
 ### Grayscale Conversion
 

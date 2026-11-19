@@ -22,12 +22,16 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageGeometryResample.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <array>
 #include <filesystem>
+#include <limits>
+#include <string_view>
 
 namespace fs = std::filesystem;
 
@@ -44,6 +48,9 @@ const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingM
 const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
+
+constexpr int32 k_ExactDimensionsProduct = -86175;
+constexpr int32 k_ResampledStackProduct = -86235;
 
 // Walks the action list returned by a sub-filter's preflight and returns the first action of
 // the requested concrete type, or nullptr if none match. Replaces brittle index-based lookups
@@ -126,10 +133,10 @@ Parameters ReadImageStackFilter::parameters() const
       k_Scaling_Key, "Scaling (%)",
       "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
       "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
-      100.0f));
+      100.0f, Float32Parameter::Bounds::AtLeast(1.0F)));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
                                                         "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
-                                                        std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
+                                                        std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"}), VectorUInt64Parameter::Bounds::AtLeast(1)));
 
   params.insertSeparator(Parameters::Separator{"Other Slice Options"});
   params.insertLinkableParameter(
@@ -190,6 +197,18 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
   auto resampleImagesChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
   auto scalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
+
+  usize requestedSlicePixels = 0;
+  if(resampleImagesChoice == k_ExactDimensionsModeIndex)
+  {
+    const std::array<uint64, 3> dimensions = {exactXYDims[0], exactXYDims[1], 1};
+    auto validation = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact 2D Dimensions (Pixels)", k_ExactDimensionsProduct);
+    if(validation.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    }
+    requestedSlicePixels = validation.value()[0] * validation.value()[1];
+  }
 
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto imageDataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
@@ -274,7 +293,9 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
                                                                                  createArrayActionPtr->componentDims(), createArrayActionPtr->path(), createArrayActionPtr->dataFormat(),
                                                                                  createArrayActionPtr->fillValue()));
 
-    Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    // The resampler sees one decoded slice at a time. Use its metadata to plan X/Y.
+    const auto& previewActions = resampleImagesChoice == k_NoResampleModeIndex ? resultOutputActions.value() : imageReaderResult.outputActions.value();
+    Result<> actionsResult = previewActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
@@ -286,19 +307,19 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
   if(resampleImagesChoice != k_NoResampleModeIndex)
   {
-    if(resampleImagesChoice == k_ScalingModeIndex && scalingValue < 1.0f)
-    {
-      return MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", scalingValue));
-    }
-
     ResampleImageGeomInputValues resampleInputValues{};
     resampleInputValues.SelectedImageGeometryPath = currentImageGeomPath;
     resampleInputValues.RemoveOriginalImageGeom = false;
     resampleInputValues.CreatedImageGeometryPath = ResampledTemporaryGeometryPath(imageGeomPath);
     resampleInputValues.ResamplingMode = resampleImagesChoice;
-    resampleInputValues.Spacing = {1.0F, 1.0F, 1.0F};
-    resampleInputValues.Scaling = {scalingValue, scalingValue, 100.0F};
-    resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
+    if(resampleImagesChoice == k_ScalingModeIndex)
+    {
+      resampleInputValues.Scaling = {scalingValue, scalingValue, 100.0F};
+    }
+    else if(resampleImagesChoice == k_ExactDimensionsModeIndex)
+    {
+      resampleInputValues.ExactDimensions = {exactXYDims[0], exactXYDims[1], 1};
+    }
     PreflightResult resampleImageResult = PreflightImageGeometryResample(tmpDs, resampleInputValues);
     if(resampleImageResult.outputActions.invalid())
     {
@@ -315,13 +336,26 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
     std::vector<usize> dims = createImageGeomActionPtr->dims();
     dims.back() = outputDims.back();
+    // Both slice products fit. In Exact mode the preview can round the requested size or use a one-cell fallback.
+    const usize plannedSlicePixels = dims[0] * dims[1];
+    const bool requestedSliceIsLarger = requestedSlicePixels > plannedSlicePixels;
+    const usize largestSlicePixels = requestedSliceIsLarger ? requestedSlicePixels : plannedSlicePixels;
+    if(largestSlicePixels > std::numeric_limits<usize>::max() / dims[2])
+    {
+      const uint64 x = requestedSliceIsLarger ? exactXYDims[0] : dims[0];
+      const uint64 y = requestedSliceIsLarger ? exactXYDims[1] : dims[1];
+      const std::string_view parameter = resampleImagesChoice == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
+      return MakePreflightErrorResult(k_ResampledStackProduct,
+                                      fmt::format("The resampled stack (X={}, Y={}, Z={} slices) would have too many pixels. Decrease {} or select fewer slices.", x, y, dims[2], parameter));
+    }
+
     outputDims = dims;
+    const auto stackZSpacing = outputSpacing.back();
     outputSpacing = createImageGeomActionPtr->spacing();
-    outputOrigin = createImageGeomActionPtr->origin();
+    outputSpacing.back() = stackZSpacing;
     outputUnits = createImageGeomActionPtr->units();
-    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
-                                                                                         createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
-                                                                                         createImageGeomActionPtr->units()));
+    resultOutputActions.value().appendAction(
+        std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, outputOrigin, outputSpacing, createImageGeomActionPtr->cellAttributeMatrixName(), outputUnits));
 
     const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(resampleImageResult.outputActions.value().actions);
     if(createArrayActionPtr == nullptr)

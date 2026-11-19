@@ -7,13 +7,17 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <nonstd/span.hpp>
 
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <memory>
 
 namespace fs = std::filesystem;
@@ -324,4 +328,85 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple co
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", expectedTuples)) != std::string::npos);
     REQUIRE(errorRef.message.find("'Image' has 12 cells") != std::string::npos);
   }
+}
+
+namespace
+{
+void CreateSamplingImage(DataStructure& ds)
+{
+  auto result = CreateImageGeometryAction(DataPath({"Image"}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({"Image", "Cell Data", "Marker"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(array);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}));
+  values[0] = 7;
+  values[1] = 9;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Spatial parameter domains", "[SimplnxCore][ExtractFeatureBoundaries2DFilter][SpatialParameterDomains]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  geom.setDimensions({1, 1, 1});
+  auto resize = geom.getCellDataRef().resizeTuples({1, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}))[0] = 1;
+  ExtractFeatureBoundaries2DFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, DataPath({"Image", "Cell Data", "Marker"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, DataPath({"Boundary"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, true);
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, uint64{2});
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(value);
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, value);
+  const int32 expectedCode = k_NumberNotFinite;
+  const std::string parameter = "Custom Z Value";
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Custom and inactive coordinates", "[SimplnxCore][ExtractFeatureBoundaries2DFilter][SpatialSamplingControls]")
+{
+
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& geom = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  geom.setDimensions({1, 1, 1});
+  auto resize = geom.getCellDataRef().resizeTuples({1, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}))[0] = 1;
+  ExtractFeatureBoundaries2DFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, DataPath({"Image", "Cell Data", "Marker"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, DataPath({"Boundary"}));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, true);
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, uint64{2});
+  const bool custom = GENERATE(false, true);
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, uint64{custom ? 2ULL : 0ULL});
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, custom ? -2.0F : std::numeric_limits<float32>::quiet_NaN());
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(DataPath({"Boundary"})));
+  const auto& boundary = ds.getDataRefAs<EdgeGeom>(DataPath({"Boundary"}));
+  CHECK(boundary.getNumberOfEdges() == 4);
+  for(usize idx = 0; idx < boundary.getNumberOfVertices(); ++idx)
+  {
+    CHECK(boundary.getVerticesRef()[3 * idx + 2] == (custom ? -2.0F : 0.0F));
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

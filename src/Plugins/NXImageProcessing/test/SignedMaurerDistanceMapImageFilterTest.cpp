@@ -4,6 +4,7 @@
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/MaurerDistanceMapEngine.hpp"
@@ -447,19 +448,19 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   {
     const auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::infinity()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
   SECTION("negative infinity rejected")
   {
     const auto result = filter.preflight(ds, makeArgs(-std::numeric_limits<float64>::infinity()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
   SECTION("NaN rejected")
   {
     const auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
   }
 }
 

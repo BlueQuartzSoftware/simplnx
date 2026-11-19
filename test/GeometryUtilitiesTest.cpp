@@ -1,4 +1,6 @@
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include <catch2/catch.hpp>
 #include <limits>
@@ -66,5 +68,44 @@ TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUti
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     CHECK(result.value() == (row == 0 ? SizeVec3{4294967295ULL, 1, 1} : row == 3 ? SizeVec3{5, 10, 15} : SizeVec3{1, 1, 1}));
+  }
+}
+
+TEST_CASE("GeometryUtilities: Image dimension product", "[simplnx][GeometryUtilities]")
+{
+  const auto dimensions =
+      GENERATE((std::array<uint64, 3>{1, 1, 1}), (std::array<uint64, 3>{2, 3, 5}), (std::array<uint64, 3>{std::numeric_limits<usize>::max(), 1, 1}), (std::array<uint64, 3>{uint64{1} << 63, 2, 1}));
+  const bool overflow = dimensions[0] == uint64{1} << 63;
+  auto result = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact Dimensions", -1);
+  if(overflow)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == -1);
+    CHECK(result.errors()[0].message.find("Exact Dimensions") != std::string::npos);
+    CHECK(result.errors()[0].message.find("too many cells") != std::string::npos);
+    CHECK(result.errors()[0].message.find(std::to_string(dimensions[0])) != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.value() == SizeVec3{static_cast<usize>(dimensions[0]), static_cast<usize>(dimensions[1]), static_cast<usize>(dimensions[2])});
+  }
+}
+
+TEST_CASE("GeometryUtilities: Internal geometry and byte-count contracts", "[simplnx][GeometryUtilities]")
+{
+  DataStructure ds;
+  SECTION("Internal stand-in")
+  {
+    auto result = CreateImageGeometryAction(DataPath({"Placeholder"}), {0, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cells").apply(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  SECTION("Action byte count")
+  {
+    auto result = CreateArrayAction(DataType::int32, {usize{1} << 31, usize{1} << 31}, {1}, DataPath({"Too Large"})).apply(ds, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors()[0].code == -270);
+    CHECK(result.errors()[0].message.find("byte") != std::string::npos);
   }
 }

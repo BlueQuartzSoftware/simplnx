@@ -2,6 +2,8 @@
 
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
 
+#include <cmath>
+
 namespace nx::core
 {
 INodeGeometry0D::INodeGeometry0D(DataStructure& dataStructure, std::string name)
@@ -162,13 +164,20 @@ Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
     const IGeometry::SharedVertexList& vertexList = getVerticesRef();
     auto& vertexListStore = vertexList.getDataStoreRef();
 
-    std::set<float32> pointSet;
-    for(usize tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+    const usize count = vertexListStore.getNumberOfTuples();
+    if(count == 0)
     {
-      pointSet.insert(vertexListStore.getComponentValue(tuple, dimensionIndex));
+      return {false};
     }
 
-    return {(pointSet.size() == 1)};
+    const float32 first = vertexListStore.getComponentValue(0, dimensionIndex);
+    bool allEqual = true;
+    for(usize tuple = 1; tuple < count; ++tuple)
+    {
+      const float32 value = vertexListStore.getComponentValue(tuple, dimensionIndex);
+      allEqual &= value == first || (std::isnan(value) && std::isnan(first));
+    }
+    return {allEqual};
   } catch(const std::bad_cast& exception)
   {
     return MakeErrorResult<bool>(-3000, fmt::format("Could not determine whether the geometry is a plane because an exception was thrown: {}", exception.what()));

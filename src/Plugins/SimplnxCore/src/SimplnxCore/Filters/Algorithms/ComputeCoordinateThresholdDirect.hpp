@@ -48,6 +48,7 @@ public:
   /**
    * @brief Creates the ImageGeom mask with direct storage access.
    * @return Success, or a fallback scanline bulk-I/O error.
+   * @pre In Sphere mode, Sphere centroid and Radius (Physical Units) has finite center coordinates and a finite positive radius; geometry and mask selections are valid.
    *
    * When a slice or fallback chunk checkpoint observes cancellation, the method returns success.
    * Data written before that checkpoint remains in the mask. Later cells are not written.

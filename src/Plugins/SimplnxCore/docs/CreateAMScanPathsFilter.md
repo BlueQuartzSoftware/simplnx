@@ -26,6 +26,13 @@ Given an input **Edge Geometry**, hatch spacing, hatch length, and hatch rotatio
 | Hatch Length=0.5  | ![](Images/CreateAMScanVectors_2.png) | ![](Images/CreateAMScanVectors_3.png)  |
 | Hatch Length=3.0  | ![](Images/CreateAMScanVectors_4.png) | ![](Images/CreateAMScanVectors_1.png)  |
 
+### Valid Parameter Values
+
+**Hatch Spacing** must be finite and greater than zero in the geometry's length units.
+If a slice would have too many scan lines, increase **Hatch Spacing**.
+**Hatch Rotation Angle (Degrees)** must be finite. Zero and negative angles are valid.
+The filter stops if a hatch position exceeds the coordinate range. Check the coordinates in **Slice Data Container**, **Hatch Spacing**, and **Hatch Rotation Angle (Degrees)**.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -671,6 +671,24 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
 }
 
 // -----------------------------------------------------------------------------
+Result<SizeVec3> GeometryUtilities::ValidateImageDimensionProduct(nonstd::span<const uint64> dimensions, std::string_view name, int32 code)
+{
+  SizeVec3 result;
+  usize product = 1;
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    const uint64 dimension = dimensions[axis];
+    if(dimension > std::numeric_limits<usize>::max() || (dimension != 0 && product > std::numeric_limits<usize>::max() / dimension))
+    {
+      return MakeErrorResult<SizeVec3>(code, fmt::format("{} (X={}, Y={}, Z={}) would create too many cells. Reduce one or more values.", name, dimensions[0], dimensions[1], dimensions[2]));
+    }
+    result[axis] = static_cast<usize>(dimension);
+    product *= result[axis];
+  }
+  return {result};
+}
+
+// -----------------------------------------------------------------------------
 Result<> GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
 {
   for(usize axis = 0; axis < values.size(); ++axis)

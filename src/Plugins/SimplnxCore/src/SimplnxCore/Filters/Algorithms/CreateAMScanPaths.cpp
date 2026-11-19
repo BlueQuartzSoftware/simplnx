@@ -10,8 +10,10 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -19,6 +21,13 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_HatchSpacingTooSmall = -86227;
+constexpr int32 k_HatchLineLimitExceeded = -86210;
+constexpr int32 k_HatchStartOutOfRange = -86249;
+constexpr int32 k_HatchPositionOutOfRange = -86250;
+// Each line scans every edge in the region and can add segments to the in-memory slice.
+constexpr usize k_MaxHatchLinesPerRegionSlice = 1'000'000;
+
 /**
  * @brief Finds the X intersection of a hatch line and CAD edge.
  * @param p1 Specifies the first hatch endpoint.
@@ -139,13 +148,16 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
  * @param edges Provides paired vertex indexes.
  * @param lineSpacing Specifies spacing between rotated hatch lines.
  * @param angleRadians Specifies hatch rotation in radians.
- * @return Hatch segments in the original coordinate system.
+ * @param inputPath Identifies the input edge geometry for diagnostics.
+ * @param shouldCancel Stops the count or hatch generation.
+ * @return Hatch segments in the input coordinate system or a hatch position or count error.
  * @pre Each hatch line has one filled interval and lineSpacing is positive.
  *
  * The loop connects adjacent sorted crossings. Concave polygons can fill
  * exterior gaps. Malformed or complex CAD meshes can produce incorrect hatches.
  */
-std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float lineSpacing, float angleRadians)
+Result<std::vector<LineSegment>> fillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float32 lineSpacing, float32 angleRadians, const DataPath& inputPath,
+                                                              const std::atomic_bool& shouldCancel)
 {
   float rotAngle = -angleRadians;
   Eigen::Matrix3f k_RotationMatrix;
@@ -178,17 +190,83 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
     maxY = std::max(v.y(), maxY);
   }
 
-  // Start on the first rotated grid line inside the polygon bounds.
-  float startLineY = std::floor(minY / lineSpacing) * lineSpacing;
-  if(startLineY < minY)
+  // Use float32 grid alignment when it gives a finite start position.
+  float32 firstLine = std::floor(minY / lineSpacing) * lineSpacing;
+  if(firstLine < minY)
   {
-    startLineY += lineSpacing;
+    firstLine += lineSpacing;
+  }
+  float64 runStartY = std::isfinite(firstLine) ? static_cast<float64>(firstLine) : std::ceil(static_cast<float64>(minY) / lineSpacing) * lineSpacing;
+  if(!(runStartY <= static_cast<float64>(maxY)))
+  {
+    return {std::vector<LineSegment>{}};
+  }
+
+  const auto lineLimitError = [&] {
+    return MakeErrorResult<std::vector<LineSegment>>(k_HatchLineLimitExceeded, fmt::format("Hatch Spacing {} makes more than {} hatch lines in one region and slice of '{}'. Increase Hatch Spacing.",
+                                                                                           lineSpacing, k_MaxHatchLinesPerRegionSlice, inputPath.toString()));
+  };
+  const float64 estimatedLineCount = std::floor((static_cast<float64>(maxY) - runStartY) / lineSpacing) + 1.0;
+
+  // Count the rounded positions before finding intersections. Rounding can move
+  // the actual count to either side of the limit.
+  usize numLines = 0;
+  auto start = CreateAMScanPathsDetail::CheckedHatchY(runStartY, true, inputPath);
+  if(start.invalid())
+  {
+    return ConvertInvalidResult<std::vector<LineSegment>>(std::move(start));
+  }
+  float32 countY = start.value();
+  for(; numLines < k_MaxHatchLinesPerRegionSlice && countY <= maxY; ++numLines)
+  {
+    if(shouldCancel)
+    {
+      return {std::vector<LineSegment>{}};
+    }
+    const float32 next = countY + lineSpacing;
+    if(next == countY)
+    {
+      if(estimatedLineCount > static_cast<float64>(k_MaxHatchLinesPerRegionSlice))
+      {
+        return lineLimitError();
+      }
+      return MakeErrorResult<std::vector<LineSegment>>(k_HatchSpacingTooSmall,
+                                                       fmt::format("Hatch Spacing {} cannot separate hatch lines at Y={} in '{}'. Increase Hatch Spacing.", lineSpacing, countY, inputPath.toString()));
+    }
+    countY = next;
+  }
+  if(countY <= maxY)
+  {
+    return lineLimitError();
   }
 
   std::vector<LineSegment> filledSegments;
-
-  for(float lineY = startLineY; lineY <= maxY; lineY += lineSpacing)
+  usize runStartIndex = 0;
+  float64 spacing = 0.0;
+  for(usize lineIndex = 0; lineIndex < numLines; ++lineIndex)
   {
+    if(shouldCancel)
+    {
+      return {std::vector<LineSegment>{}};
+    }
+    // Start a new indexed run when float32 rounding changes the increment.
+    // Each run uses the positions of the rounded recurrence.
+    auto position = CreateAMScanPathsDetail::CheckedHatchY(runStartY + static_cast<float64>(lineIndex - runStartIndex) * spacing, false, inputPath);
+    if(position.invalid())
+    {
+      return ConvertInvalidResult<std::vector<LineSegment>>(std::move(position));
+    }
+    const float32 lineY = position.value();
+    if(lineIndex + 1 < numLines)
+    {
+      const float64 nextSpacing = static_cast<float64>(lineY + lineSpacing) - lineY;
+      if(nextSpacing != spacing)
+      {
+        runStartIndex = lineIndex;
+        runStartY = lineY;
+        spacing = nextSpacing;
+      }
+    }
     std::vector<Eigen::Vector3f> intersections;
 
     for(size_t edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
@@ -202,7 +280,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
       }
     }
 
-    std::sort(intersections.begin(), intersections.end(), [](const Eigen::Vector3f& a, const Eigen::Vector3f& b) { return a.x() < b.x(); });
+    std::sort(intersections.begin(), intersections.end(), [](const Eigen::Vector3f& a, const Eigen::Vector3f& b) { return CreateAMScanPathsDetail::IntersectionXLess(a.x(), b.x()); });
 
     for(size_t i = 0; i + 1 < intersections.size(); i++)
     {
@@ -229,7 +307,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
     }
   }
 
-  return filledSegments;
+  return {std::move(filledSegments)};
 }
 
 /**
@@ -328,6 +406,24 @@ void printRegionSliceFiles(int32 regionId, int32 sliceId, const std::vector<Line
 
 } // namespace
 
+Result<float32> CreateAMScanPathsDetail::CheckedHatchY(float64 position, bool isStart, const DataPath& inputPath)
+{
+  constexpr float64 k_MaxCoordinate = std::numeric_limits<float32>::max();
+  if(!std::isfinite(position) || position < -k_MaxCoordinate || position > k_MaxCoordinate)
+  {
+    return MakeErrorResult<float32>(
+        isStart ? k_HatchStartOutOfRange : k_HatchPositionOutOfRange,
+        fmt::format("The {} at Y={} in Slice Data Container '{}' is outside the supported coordinate range. Check the edge coordinates, Hatch Spacing, and Hatch Rotation Angle (Degrees).",
+                    isStart ? "first hatch line" : "hatch line position", position, inputPath.toString()));
+  }
+  return {static_cast<float32>(position)};
+}
+
+bool CreateAMScanPathsDetail::IntersectionXLess(float32 left, float32 right)
+{
+  return left < right || (!std::isnan(left) && std::isnan(right));
+}
+
 CreateAMScanPaths::CreateAMScanPaths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateAMScanPathsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -399,7 +495,6 @@ Result<> CreateAMScanPaths::operator()()
 
   using LineSegmentsType = std::vector<LineSegment>;
 
-  // Hatch generation currently does not check cancellation or use parallel regions.
   // StripeWidth is currently not read by hatch generation.
   for(int32 regionId = 0; regionId < numCADRegions; regionId++)
   {
@@ -415,7 +510,16 @@ Result<> CreateAMScanPaths::operator()()
 
       extractRegion(outlineVertices, outlineEdges, sliceBucketsForRegion[sliceId], outVertices, outEdges);
 
-      regionHatches[sliceId] = ::fillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle);
+      auto hatches = fillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle, m_InputValues->CADSliceDataContainerName, m_ShouldCancel);
+      if(hatches.invalid())
+      {
+        return ConvertInvalidResult<void>(std::move(hatches));
+      }
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      regionHatches[sliceId] = std::move(hatches.value());
 
       // printRegionSliceFiles(regionId, sliceId, regionHatches[sliceId]);
       angle = angle + m_InputValues->SliceHatchRotationAngle;

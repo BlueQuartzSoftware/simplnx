@@ -2,6 +2,7 @@
 
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 
 namespace nx::core
 {
@@ -10,9 +11,10 @@ class NumberParameter : public ValueParameter
 {
 public:
   using ValueType = T;
+  using Bounds = NumberBounds<T>;
 
   NumberParameter() = delete;
-  NumberParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
+  NumberParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, std::optional<Bounds> bounds = std::nullopt);
   ~NumberParameter() override = default;
 
   NumberParameter(const NumberParameter&) = delete;
@@ -73,6 +75,11 @@ public:
    */
   Result<> validateNumber(ValueType value) const;
 
+  /**
+   * @brief Returns the declared limits. Floating-point values must be finite by default.
+   */
+  const std::optional<Bounds>& bounds() const;
+
 protected:
   /**
    * @brief
@@ -88,6 +95,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
+  std::optional<Bounds> m_Bounds;
 };
 
 extern template class NumberParameter<int8>;

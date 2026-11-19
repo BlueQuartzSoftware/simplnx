@@ -13,6 +13,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -1063,7 +1064,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[Simpl
     auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
     REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == -7584);
+    REQUIRE(result.outputActions.errors()[0].code == (std::isfinite(epsilon) ? -7584 : k_NumberNotFinite));
   }
   SECTION("Minimum Points must be positive")
   {

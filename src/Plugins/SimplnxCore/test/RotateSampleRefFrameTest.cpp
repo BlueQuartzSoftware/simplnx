@@ -861,7 +861,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[Simplnx
   RotateSampleRefFrameFilter filter;
   auto pre = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
-  REQUIRE(pre.outputActions.errors()[0].code == (row == 0 ? -86052 : -86053));
+  REQUIRE(pre.outputActions.errors()[0].code == (row == 0 ? -86052 : k_NumberNotFinite));
 }
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Large axis regression", "[SimplnxCore][RotateSampleRefFrameFilter][NumericDomainRed]")
 {

@@ -4,7 +4,10 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+
+#include <array>
 
 namespace nx::core
 {
@@ -38,6 +41,17 @@ struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
   std::string meanSuffix;
   std::string stdDeviationSuffix;
   std::string summationSuffix;
+};
+
+/**
+ * @struct InterpolationKernelLayout
+ * @brief Stores checked kernel radii, dimensions and element count without allocating weights.
+ */
+struct InterpolationKernelLayout
+{
+  std::array<int64, 3> Radii = {0, 0, 0};
+  SizeVec3 Dimensions = {1, 1, 1};
+  usize ElementCount = 1;
 };
 
 /**
@@ -76,11 +90,53 @@ public:
 
   /**
    * @brief Interpolates selected point arrays to image cells.
-   * @return Error from temporary storage or output writes, or success after cancellation.
+   * @return Error from kernel layout, temporary storage, or output writes, or success after cancellation.
+   * @pre Kernel Size has three finite nonnegative components; active Gaussian Sigmas have finite positive components and finite nonzero float32 squares.
    *
    * Cancellation can retain outputs written before the current output page.
    */
   Result<> operator()();
+
+  /**
+   * @brief Identifies a kernel radius that cannot convert to a cell count.
+   */
+  static constexpr int32 k_KernelRadiusRepresentation = -86165;
+  /**
+   * @brief Identifies a finite input image spacing that is zero or negative.
+   */
+  static constexpr int32 k_InvalidImageSpacing = -86224;
+  /**
+   * @brief Identifies a kernel width that exceeds the size type.
+   */
+  static constexpr int32 k_KernelWidthTooLarge = -86225;
+  /**
+   * @brief Identifies a kernel cell count that exceeds the vector's maximum element count.
+   */
+  static constexpr int32 k_KernelContainerTooLarge = -86226;
+  /**
+   * @brief Identifies overflow in the kernel element product.
+   */
+  static constexpr int32 k_KernelProductRepresentation = -86166;
+  /**
+   * @brief Identifies a kernel byte count that is too large.
+   */
+  static constexpr int32 k_KernelStorageRepresentation = -86167;
+
+  /**
+   * @brief Computes representable kernel extents from final image spacing.
+   * @param image Provides physical cell spacing, possibly provisional during preflight.
+   * @param inputValues Provides finite nonnegative physical kernel extents and the image path.
+   * @pre kernelSize has three finite nonnegative components.
+   * @return The layout, or an error for finite nonpositive spacing or an unrepresentable kernel.
+   */
+  static Result<InterpolationKernelLayout> ComputeKernelLayout(const ImageGeom& image, const InterpolatePointCloudToRegularGridInputValues& inputValues);
+
+  /**
+   * @brief Squares a signed kernel offset without signed integer overflow.
+   * @param offset Gives a displacement in cells.
+   * @return The squared displacement in the existing float32 numerator representation.
+   */
+  static float32 ComputeSquaredKernelOffset(int64 offset);
 
   const std::atomic_bool& getCancel();
 

@@ -16,6 +16,18 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_KernelRadiusWarning = -86168;
+constexpr int32 k_KernelProductWarning = -86169;
+constexpr int32 k_KernelStorageWarning = -86170;
+constexpr int32 k_InvalidImageSpacingWarning = -86244;
+constexpr int32 k_KernelWidthWarning = -86245;
+constexpr int32 k_KernelContainerWarning = -86246;
+} // namespace
+
 namespace nx::core
 {
 
@@ -58,10 +70,10 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_InterpolationTechnique_Key, "Interpolation Technique", "Selected Interpolation Technique", 0, std::vector<std::string>{"Uniform", "Gaussian"}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"},
+                                                         VectorFloat32Parameter::Bounds::NonNegative()));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                         std::vector<std::string>{"x", "y", "z"}));
+                                                         std::vector<std::string>{"x", "y", "z"}, VectorFloat32Parameter::Bounds::Between(0.001f, 1000.0f)));
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
@@ -132,9 +144,7 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
   auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
-  auto sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
 
   // Input Image Geometry
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -162,21 +172,11 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   OutputActions actions;
 
-  if(kernelSize[0] < 0 || kernelSize[1] < 0 || kernelSize[2] < 0)
-  {
-    return MakePreflightErrorResult(-11000, fmt::format("All kernel dimensions must be positive.\n "
-                                                        "Current kernel dimensions:\n x = {}\n y = {}\n z = {}\n",
-                                                        kernelSize[0], kernelSize[1], kernelSize[2]));
-  }
-
-  if(sigmas[0] <= 0 || sigmas[1] <= 0 || sigmas[2] <= 0)
-  {
-    return MakePreflightErrorResult(-11000, fmt::format("All sigmas must be positive.\n "
-                                                        "Current sigmas:\n x = {}\n y = {}\n z = {}\n",
-                                                        sigmas[0], sigmas[1], sigmas[2]));
-  }
-
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  InterpolatePointCloudToRegularGridInputValues layoutInput{};
+  layoutInput.kernelSize = kernelSize;
+  layoutInput.imageGeomPath = imageGeomPath;
+  auto kernelLayout = InterpolatePointCloudToRegularGrid::ComputeKernelLayout(imageGeomRef, layoutInput);
   const DataPath interpolatedGroupPath = imageGeomRef.getCellDataPath();
   const SizeVec3 imageDims = imageGeomRef.getDimensions();
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
@@ -278,7 +278,38 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     return {MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {std::move(actions)};
+  Result<OutputActions> output;
+  output.value() = std::move(actions);
+  if(kernelLayout.invalid())
+  {
+    const auto& error = kernelLayout.errors().front();
+    int32 warning = error.code;
+    switch(error.code)
+    {
+    case InterpolatePointCloudToRegularGrid::k_InvalidImageSpacing:
+      warning = k_InvalidImageSpacingWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelWidthTooLarge:
+      warning = k_KernelWidthWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelRadiusRepresentation:
+      warning = k_KernelRadiusWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelProductRepresentation:
+      warning = k_KernelProductWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelStorageRepresentation:
+      warning = k_KernelStorageWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelContainerTooLarge:
+      warning = k_KernelContainerWarning;
+      break;
+    default:
+      break;
+    }
+    output.warnings().push_back({warning, fmt::format("{} The filter checks the kernel again when it runs.", error.message)});
+  }
+  return {std::move(output)};
 }
 
 //------------------------------------------------------------------------------

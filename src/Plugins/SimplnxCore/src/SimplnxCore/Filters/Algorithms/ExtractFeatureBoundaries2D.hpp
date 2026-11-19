@@ -70,6 +70,7 @@ public:
    * @return Success, or an input-read or vertex-deduplication error.
    * @pre The ImageGeom has one nonempty Z slice and matches Feature ID tuples.
    * @pre Edge and initial vertex counts fit usize.
+   * @pre CustomZValue is finite when UseCustomZValue is active; source and destination selections are valid.
    *
    * Cancellation during counting leaves preflight output unchanged. Cancellation
    * during population returns success with allocated and partially written

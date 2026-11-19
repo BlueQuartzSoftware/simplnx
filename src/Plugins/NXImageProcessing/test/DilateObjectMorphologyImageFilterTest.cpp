@@ -21,7 +21,6 @@ using nx::core::ImageProcessing::KernelType;
 namespace
 {
 // Fresh error/warning codes for this filter (grep-verified unused across src/: -8520 block).
-constexpr int32 k_NonFiniteObjectValue = -8521;
 constexpr int32 k_ObjectValueOutOfRange = -8522;
 constexpr int32 k_ObjectValueTruncated = -8523;
 
@@ -267,7 +266,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
     {
       auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
       REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteObjectValue);
+      REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
     }
     // Fractional (1.5) -> truncation warning, still valid.
     {
@@ -293,7 +292,7 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight cast-
     {
       auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
       REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteObjectValue);
+      REQUIRE(result.outputActions.errors().front().code == k_NumberNotFinite);
     }
     // Finite but out of float32 range (1e300 > FLT_MAX): the cast to float32 would overflow to +inf and the
     // exact-equality object test would then match nothing -> reject as out-of-range rather than run silently.

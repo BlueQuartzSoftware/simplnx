@@ -11,10 +11,12 @@
 namespace nx::core
 {
 template <class T>
-VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names)
+VectorParameter<T>::VectorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const NamesType& names,
+                                    std::optional<Bounds> bounds)
 : VectorParameterBase(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_Names(names)
+, m_Bounds(std::move(bounds))
 {
   if(m_DefaultValue.size() != m_Names.size())
   {
@@ -98,7 +100,7 @@ Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, Ve
 template <class T>
 IParameter::UniquePointer VectorParameter<T>::clone() const
 {
-  return std::make_unique<VectorParameter<T>>(name(), humanName(), helpText(), m_DefaultValue, m_Names);
+  return std::make_unique<VectorParameter<T>>(name(), humanName(), helpText(), m_DefaultValue, m_Names, m_Bounds);
 }
 
 template <class T>
@@ -143,7 +145,23 @@ Result<> VectorParameter<T>::validateVector(const ValueType& value) const
     return MakeErrorResult(-1, fmt::format("VectorParameter requires size {}. Received size {}.", requiredSize, size));
   }
 
+  for(usize index = 0; index < size; ++index)
+  {
+    auto result = detail::ValidateNumberBounds(
+        value[index], m_Bounds, [this, index] { return m_Names[index].empty() ? fmt::format("{} (element {})", humanName(), index) : fmt::format("{} ({})", humanName(), m_Names[index]); });
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
   return {};
+}
+
+template <class T>
+const std::optional<typename VectorParameter<T>::Bounds>& VectorParameter<T>::bounds() const
+{
+  return m_Bounds;
 }
 
 template class SIMPLNX_TEMPLATE_EXPORT VectorParameter<int8>;

@@ -8,13 +8,20 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberBounds.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include <cmath>
+#include <limits>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -461,5 +468,669 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backward
       CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "CellData", "Mask"}));
       // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
     }
+  }
+}
+
+namespace
+{
+void CreateSamplingVertices(DataStructure& ds)
+{
+  auto result = CreateVertexGeometryAction(DataPath({"Points"}), 2, "Vertex Data", "Vertices").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  const std::array<float32, 6> coords = {0, 0, 0, 2, 0, 0};
+  auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+}
+} // namespace
+
+namespace
+{
+void CreateSamplingImage(DataStructure& ds)
+{
+  auto result = CreateImageGeometryAction(DataPath({"Image"}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  auto array = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, DataPath({"Image", "Cell Data", "Marker"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(array);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"})));
+  auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "Marker"}));
+  values[0] = 7;
+  values[1] = 9;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Spatial parameter domains", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialParameterDomains]")
+{
+  using Filter = InterpolatePointCloudToRegularGridFilter;
+  auto dataStructure = createTestDataStructure({0}, {7.0});
+  Filter filter;
+  auto args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {0.0f, 0.0f, 0.0f});
+
+  SECTION("Reject invalid Gaussian sigmas on each axis")
+  {
+    const auto axis = GENERATE(0, 1, 2);
+    const auto [value, expectedCode] = GENERATE(table<float32, int32>({{std::nextafter(0.001f, 0.0f), k_NumberBelowLowerBound},
+                                                                       {std::nextafter(1000.0f, std::numeric_limits<float32>::infinity()), k_NumberAboveUpperBound},
+                                                                       {std::numeric_limits<float32>::quiet_NaN(), k_NumberNotFinite},
+                                                                       {std::numeric_limits<float32>::infinity(), k_NumberNotFinite}}));
+    const char elementName = "xyz"[axis];
+    DYNAMIC_SECTION("Gaussian Sigmas (" << elementName << ") = " << fmt::format("{}", value))
+    {
+      std::vector<float32> sigmas = {1.0f, 1.0f, 1.0f};
+      sigmas[axis] = value;
+      args.insertOrAssign(Filter::k_GaussianSigmas_Key, sigmas);
+
+      auto result = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+      REQUIRE(result.outputActions.errors().size() == 1);
+      const auto& error = result.outputActions.errors().front();
+      CHECK(error.code == expectedCode);
+      CHECK(error.message.find(fmt::format("Gaussian Sigmas ({})", elementName)) != std::string::npos);
+      CHECK(error.message.find(fmt::format("The value is {}.", value)) != std::string::npos);
+    }
+  }
+
+  SECTION("Accept both endpoints for all Gaussian sigmas")
+  {
+    const auto endpoint = GENERATE(0.001f, 1000.0f);
+    CAPTURE(endpoint);
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>(3, endpoint));
+
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+
+  SECTION("Accept the default Gaussian sigmas")
+  {
+    const auto sigmas = filter.getDefaultArguments().value<std::vector<float32>>(Filter::k_GaussianSigmas_Key);
+    CHECK(sigmas == std::vector<float32>{1.0f, 1.0f, 1.0f});
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, sigmas);
+
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+
+  SECTION("Ignore out-of-range Gaussian sigmas for uniform interpolation")
+  {
+    args.insertOrAssign(Filter::k_InterpolationTechnique_Key, InterpolatePointCloudToRegularGrid::k_Uniform);
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{std::nextafter(0.001f, 0.0f), std::nextafter(1000.0f, std::numeric_limits<float32>::infinity()), 1.0f});
+
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian controls", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
+{
+  using Filter = InterpolatePointCloudToRegularGridFilter;
+  auto dataStructure = createTestDataStructure({0}, {7.0});
+  Filter filter;
+  auto args = getBaseArgs(false, InterpolatePointCloudToRegularGrid::k_Gaussian, {0.0f, 0.0f, 0.0f});
+
+  SECTION("Reject zero sigma")
+  {
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{0.0f, 1.0f, 1.0f});
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == k_NumberBelowLowerBound);
+  }
+  SECTION("Require three Gaussian sigmas")
+  {
+    args.insertOrAssign(Filter::k_GaussianSigmas_Key, std::vector<float32>{1.0f, 1.0f});
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    REQUIRE(result.outputActions.errors().size() == 1);
+    CHECK(result.outputActions.errors().front().code == -1);
+    CHECK(filter.parameters().at(Filter::k_GaussianSigmas_Key)->humanName() == "Gaussian Sigmas");
+    CHECK(result.outputActions.errors().front().message == "VectorParameter requires size 3. Received size 2.");
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian and uniform execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+
+  DataStructure ds;
+  CreateSamplingVertices(ds);
+  CreateSamplingImage(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto resize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVertexAttributeMatrixRef().resizeTuples({1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  auto scalar = CreateArrayAction(DataType::float32, {1}, {1}, DataPath({"Points", "Vertex Data", "Value"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(scalar);
+  auto vertexResize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef().resizeTuples({1});
+  SIMPLNX_RESULT_REQUIRE_VALID(vertexResize);
+  auto& coords = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  coords[0] = 0.5F;
+  coords[1] = 0.5F;
+  coords[2] = 0.5F;
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& image = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  image.setDimensions({1, 1, 1});
+  auto imageResize = image.getCellDataRef().resizeTuples({1, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(imageResize);
+  InterpolatePointCloudToRegularGridFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{1});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key, std::vector<DataPath>{DataPath({"Points", "Vertex Data", "Value"})});
+  const auto row = GENERATE(3, 4);
+  CAPTURE(row);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindLength_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMin_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMax_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMean_Key, true);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindStdDeviation_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindSummation_Key, false);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"})));
+  ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"}))[0] = 7;
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, row == 0 ? std::vector<float32>{0, 1, 1} :
+                                                                                      row == 1 ? std::vector<float32>{1, 1} :
+                                                                                      row == 2 ? std::vector<float32>{std::ldexp(1.0F, -70), 1, 1} :
+                                                                                      row == 3 ? std::vector<float32>{} :
+                                                                                                 std::vector<float32>{1, 2, 3});
+  if(row == 3)
+  {
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{0});
+  }
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"})));
+  CHECK(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"}))[0] == 7);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"})));
+  CHECK(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"}))[0] == 7);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+namespace
+{
+Arguments CreateCountInterpolationFixture(DataStructure& ds)
+{
+  CreateSamplingVertices(ds);
+  CreateSamplingImage(ds);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+  auto resize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVertexAttributeMatrixRef().resizeTuples({1});
+  SIMPLNX_RESULT_REQUIRE_VALID(resize);
+  auto scalar = CreateArrayAction(DataType::float32, {1}, {1}, DataPath({"Points", "Vertex Data", "Value"})).apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(scalar);
+  auto vertexResize = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef().resizeTuples({1});
+  SIMPLNX_RESULT_REQUIRE_VALID(vertexResize);
+  auto& coords = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+  coords[0] = 0.5F;
+  coords[1] = 0.5F;
+  coords[2] = 0.5F;
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+  auto& image = ds.getDataRefAs<ImageGeom>(DataPath({"Image"}));
+  image.setDimensions({1, 1, 1});
+  auto imageResize = image.getCellDataRef().resizeTuples({1, 1, 1});
+  SIMPLNX_RESULT_REQUIRE_VALID(imageResize);
+  InterpolatePointCloudToRegularGridFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, DataPath({"Points"}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{1});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{0, 0, 0});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolateArrays_Key, std::vector<DataPath>{DataPath({"Points", "Vertex Data", "Value"})});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, uint64{0});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, std::vector<float32>{1, 1, 1});
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindLength_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMin_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMax_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindMean_Key, true);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindStdDeviation_Key, false);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_FindSummation_Key, false);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"})));
+  ds.getDataRefAs<Float32Array>(DataPath({"Points", "Vertex Data", "Value"}))[0] = 7;
+  return args;
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Finite physical kernel domain", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][CountParameterDomains]")
+{
+
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  InterpolatePointCloudToRegularGridFilter filter;
+  const auto value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(value);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{value, 0, 0});
+  const int32 expectedCode = k_NumberNotFinite;
+
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == expectedCode);
+  CHECK(result.outputActions.errors()[0].message.find("Kernel Size (x)") != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel layout arithmetic", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  auto* image = ImageGeom::Create(ds, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({1, 1, 1});
+  image->setOrigin({0, 0, 0});
+  image->setSpacing({1, 1, 1});
+  InterpolatePointCloudToRegularGridInputValues input{};
+  input.imageGeomPath = DataPath({"Image"});
+  int32 expectedCode = 0;
+  SizeVec3 expectedDimensions = {1, 1, 1};
+  usize expectedCount = 1;
+  std::string context;
+  SECTION("Radius bound")
+  {
+    input.kernelSize = {1e20F, 0, 0};
+    expectedCode = -86165;
+    context = "radius";
+  }
+  SECTION("Invalid geometry spacing")
+  {
+    image->setSpacing({0, 1, 1});
+    input.kernelSize = {1, 1, 1};
+    expectedCode = -86224;
+    context = "invalid spacing";
+  }
+  SECTION("Infinite spacing")
+  {
+    const auto spacing = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+    image->setSpacing({spacing, 1, 1});
+    input.kernelSize = {1, 0, 0};
+  }
+  SECTION("NaN radius")
+  {
+    image->setSpacing({std::numeric_limits<float32>::quiet_NaN(), 1, 1});
+    input.kernelSize = {1, 0, 0};
+    expectedCode = -86165;
+    context = "radius";
+  }
+  SECTION("Product overflow")
+  {
+    input.kernelSize = std::vector<float32>(3, std::ldexp(1.0F, 22));
+    expectedCode = -86166;
+    context = "too many kernel cells";
+  }
+  SECTION("Byte overflow")
+  {
+    input.kernelSize = {std::ldexp(1.0F, 31), std::ldexp(1.0F, 31), 0};
+    expectedCode = -86167;
+    context = "too much memory";
+  }
+  SECTION("Valid large layout")
+  {
+    input.kernelSize = {std::ldexp(1.0F, 22), 0, 0};
+    expectedDimensions = {4194305, 1, 1};
+    expectedCount = 4194305;
+  }
+  SECTION("Fraction below spacing")
+  {
+    image->setSpacing({1, 2, 3});
+    input.kernelSize = {0.5F, 1, 1.5F};
+  }
+  SECTION("Fraction above spacing")
+  {
+    image->setSpacing({1, 2, 3});
+    input.kernelSize = {1.5F, 2.5F, 3.5F};
+    expectedDimensions = {3, 3, 3};
+    expectedCount = 27;
+  }
+  SECTION("Equality boundary")
+  {
+    image->setSpacing({1, 2, 3});
+    input.kernelSize = {1, 2, 3};
+    expectedDimensions = {3, 3, 3};
+    expectedCount = 27;
+  }
+  auto result = InterpolatePointCloudToRegularGrid::ComputeKernelLayout(*image, input);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.warnings().empty());
+    CHECK(result.value().Dimensions == expectedDimensions);
+    CHECK(result.value().ElementCount == expectedCount);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+    CHECK(result.errors()[0].message.find(context) != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel execution representation", "[SimplnxCore][GeometryCountControls]")
+{
+  const auto row = GENERATE(0, 1, 2);
+  CAPTURE(row);
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  InterpolatePointCloudToRegularGridFilter filter;
+  const auto extent = row == 0 ? std::vector<float32>{1e20F, 0, 0} : row == 1 ? std::vector<float32>(3, std::ldexp(1.0F, 22)) : std::vector<float32>{std::ldexp(1.0F, 31), std::ldexp(1.0F, 31), 0};
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, extent);
+  DataStructure preflightDs = ds;
+  auto preflight = filter.preflight(preflightDs, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings()[0].code == -86168 - row);
+  auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == -86165 - row);
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid spacing warning", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  const DataPath imagePath({"Image"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
+  const bool nanSpacing = GENERATE(false, true);
+  ds.getDataRefAs<ImageGeom>(imagePath).setSpacing({nanSpacing ? std::numeric_limits<float32>::quiet_NaN() : 0.0F, 1, 1});
+
+  const InterpolatePointCloudToRegularGridFilter filter;
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings()[0].code == (nanSpacing ? -86168 : -86244));
+  CHECK(preflight.outputActions.warnings()[0].message.find(nanSpacing ? "radius" : "invalid spacing") != std::string::npos);
+
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == (nanSpacing ? -86165 : -86224));
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel container boundary", "[SimplnxCore][GeometryCountControls]")
+{
+  const usize count = (usize{1} << 61) + 3 * (usize{1} << 30) + 1;
+  const usize limit = std::vector<float32>{}.max_size();
+  const bool mustReject = count > limit;
+  DataStructure ds;
+  auto* image = ImageGeom::Create(ds, "Image");
+  REQUIRE(image != nullptr);
+  image->setDimensions({1, 1, 1});
+  image->setOrigin({0, 0, 0});
+  image->setSpacing({1, 1, 1});
+  InterpolatePointCloudToRegularGridInputValues input{};
+  input.kernelSize = {std::ldexp(1.0F, 30), std::ldexp(1.0F, 31), 0};
+  input.imageGeomPath = DataPath({"Image"});
+  auto result = InterpolatePointCloudToRegularGrid::ComputeKernelLayout(*image, input);
+  if(mustReject)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors()[0].code == -86226);
+    CHECK(result.errors()[0].message.find("kernel cells") != std::string::npos);
+    DataStructure executionDs;
+    auto args = CreateCountInterpolationFixture(executionDs);
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, input.kernelSize);
+    InterpolatePointCloudToRegularGridFilter filter;
+    auto preflight = filter.preflight(executionDs, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    REQUIRE(preflight.outputActions.warnings().size() == 1);
+    CHECK(preflight.outputActions.warnings()[0].code == -86246);
+    auto executed = filter.execute(executionDs, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(executed.result);
+    CHECK(executed.result.errors()[0].code == -86226);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.value().ElementCount == count);
+    CHECK(result.value().Dimensions == SizeVec3{(usize{1} << 30) + 1, (usize{1} << 31) + 1, 1});
+    CHECK(count <= std::numeric_limits<usize>::max() / sizeof(float32));
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel offset squares", "[SimplnxCore][GeometryCountControls]")
+{
+  const int64 large = int64{1} << 32;
+  CHECK(InterpolatePointCloudToRegularGrid::ComputeSquaredKernelOffset(large) == std::ldexp(1.0F, 64));
+  CHECK(InterpolatePointCloudToRegularGrid::ComputeSquaredKernelOffset(-large) == std::ldexp(1.0F, 64));
+  CHECK(InterpolatePointCloudToRegularGrid::ComputeSquaredKernelOffset(-3) == 9);
+  const auto maximum = InterpolatePointCloudToRegularGrid::ComputeSquaredKernelOffset(std::numeric_limits<int64>::max());
+  CHECK(std::isfinite(maximum));
+  CHECK(maximum > 0);
+  CHECK(maximum < std::numeric_limits<float32>::max());
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel parameter boundaries", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  InterpolatePointCloudToRegularGridFilter filter;
+  const bool length = GENERATE(false, true);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, length ? std::vector<float32>{0, 0} : std::vector<float32>{-1, 0, 0});
+  auto result = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors()[0].code == (length ? -1 : k_NumberBelowLowerBound));
+  if(length)
+  {
+    CHECK(filter.parameters().at(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key)->humanName() == "Kernel Size");
+    CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+  }
+}
+
+namespace
+{
+// The scope surrounds only the interpolation node, after a dispatched pipeline producer finishes.
+class ScopedInterpolationFilter : public InterpolatePointCloudToRegularGridFilter
+{
+public:
+  explicit ScopedInterpolationFilter(UnitTest::AlgorithmTestScope& scope)
+  : m_Scope(scope)
+  {
+  }
+  ~ScopedInterpolationFilter() noexcept override = default;
+  ScopedInterpolationFilter(const ScopedInterpolationFilter&) = delete;
+  ScopedInterpolationFilter(ScopedInterpolationFilter&&) = delete;
+  ScopedInterpolationFilter& operator=(const ScopedInterpolationFilter&) = delete;
+  ScopedInterpolationFilter& operator=(ScopedInterpolationFilter&&) = delete;
+
+protected:
+  Result<> executeImpl(DataStructure& ds, const Arguments& args, const PipelineFilter* node, const MessageHandler& handler, const std::atomic_bool& cancel,
+                       const ExecutionContext& context) const override
+  {
+    return m_Scope.execute([&] { return InterpolatePointCloudToRegularGridFilter::executeImpl(ds, args, node, handler, cancel, context); });
+  }
+
+private:
+  UnitTest::AlgorithmTestScope& m_Scope;
+};
+} // namespace
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Provisional kernel metadata", "[SimplnxCore][GeometryCountControls]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const bool rotation = GENERATE(false, true);
+  CAPTURE(scenario, rotation);
+  for(const bool execute : {false, true})
+  {
+    DataStructure ds;
+    auto args = CreateCountInterpolationFixture(ds);
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+    ds.getDataRefAs<ImageGeom>(DataPath({"Image"})).setSpacing({1e-20F, 1, 1});
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{1, 0, 0});
+    Pipeline pipeline;
+    if(rotation)
+    {
+      REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(DataPath({"Points"})));
+      auto& vertex = ds.getDataRefAs<VertexGeom>(DataPath({"Points"})).getVerticesRef();
+      vertex[0] = -0.5F;
+      vertex[1] = 5e-21F;
+      vertex[2] = 0.5F;
+      auto created = CreateArrayAction(DataType::float32, {1}, {16}, DataPath({"Matrix"})).apply(ds, IDataAction::Mode::Execute);
+      SIMPLNX_RESULT_REQUIRE_VALID(created);
+      REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Matrix"})));
+      auto& matrix = ds.getDataRefAs<Float32Array>(DataPath({"Matrix"}));
+      const std::array<float32, 16> values = {0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+      for(usize index = 0; index < 16; ++index)
+      {
+        matrix[index] = values[index];
+      }
+      ApplyTransformationToGeometryFilter producer;
+      auto first = producer.getDefaultArguments();
+      first.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+      first.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, DataPath({"Image", "Cell Data"}));
+      first.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, uint64{1});
+      first.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, uint64{0});
+      first.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, DataPath({"Matrix"}));
+      REQUIRE(pipeline.push_back(std::make_unique<ApplyTransformationToGeometryFilter>(), first));
+    }
+    else
+    {
+      SetImageGeomOriginScalingFilter producer;
+      auto first = producer.getDefaultArguments();
+      first.insertOrAssign(SetImageGeomOriginScalingFilter::k_SelectedImageGeometryPath_Key, DataPath({"Image"}));
+      first.insertOrAssign(SetImageGeomOriginScalingFilter::k_ChangeSpacing_Key, true);
+      first.insertOrAssign(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+      REQUIRE(pipeline.push_back(std::make_unique<SetImageGeomOriginScalingFilter>(), first));
+    }
+    REQUIRE(pipeline.push_back(std::make_unique<ScopedInterpolationFilter>(scope), args));
+    if(!execute)
+    {
+      REQUIRE(pipeline.preflight(ds, false));
+      if(rotation)
+      {
+        const auto* node = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+        REQUIRE(node != nullptr);
+        bool found = false;
+        for(const auto& warning : node->getWarnings())
+        {
+          if(warning.code == -86168)
+          {
+            CHECK(warning.message.find("invalid radius") != std::string::npos);
+            found = true;
+          }
+        }
+        CHECK(found);
+      }
+    }
+    else
+    {
+      REQUIRE(pipeline.execute(ds, false));
+      REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"})));
+      CHECK(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"}))[0] == 7);
+      REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})));
+      InterpolatePointCloudToRegularGridInputValues input{};
+      input.kernelSize = {1, 0, 0};
+      input.imageGeomPath = DataPath({"Image"});
+      auto layout = InterpolatePointCloudToRegularGrid::ComputeKernelLayout(ds.getDataRefAs<ImageGeom>(DataPath({"Image"})), input);
+      SIMPLNX_RESULT_REQUIRE_VALID(layout);
+      CHECK(layout.value().Dimensions == SizeVec3{3, 1, 1});
+      UnitTest::CheckArraysInheritTupleDims(ds);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Zero physical kernel", "[SimplnxCore][GeometryCountControls]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::vector<float32>{0, 0, 0});
+  InterpolatePointCloudToRegularGridFilter filter;
+  auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"})));
+  CHECK(ds.getDataRefAs<Float64Array>(DataPath({"Image", "Cell Data", "Value"}))[0] == 7);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"})));
+  CHECK(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"}))[0] == 7);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Checked vertex mapping", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  const DataPath pointsPath({"Points"});
+  const DataPath imagePath({"Image"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(pointsPath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(pointsPath).getVerticesRef();
+  auto& image = ds.getDataRefAs<ImageGeom>(imagePath);
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  const auto executeAndCheck = [&](bool invalid, float32 expected = 0) {
+    const InterpolatePointCloudToRegularGridFilter filter;
+    const auto result = scope.executeFilter(filter, ds, args);
+    if(invalid)
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+      REQUIRE(result.result.errors().size() == 1);
+      CHECK(result.result.errors()[0].code == -86251);
+      CHECK(result.result.errors()[0].message.find("vertex 0") != std::string::npos);
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+      const DataPath meanPath({"Image", "Cell Data", "Value_Mean"});
+      REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(meanPath));
+      CHECK(ds.getDataRefAs<Float32Array>(meanPath)[0] == expected);
+    }
+  };
+  SECTION("NaN origin")
+  {
+    image.setOrigin({k_Nan, 0, 0});
+    executeAndCheck(true);
+  }
+  SECTION("NaN vertex")
+  {
+    vertices[0] = k_Nan;
+    executeAndCheck(true);
+  }
+  SECTION("Infinite offset and spacing")
+  {
+    vertices[0] = k_Inf;
+    image.setSpacing({k_Inf, 1, 1});
+    executeAndCheck(true);
+  }
+  SECTION("Masked NaN vertex")
+  {
+    vertices[0] = k_Nan;
+    const auto maskPath = pointsPath.createChildPath("Vertex Data").createChildPath("Mask");
+    auto mask = CreateArrayAction(DataType::boolean, {1}, {1}, maskPath).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(mask);
+    REQUIRE_NOTHROW(ds.getDataRefAs<BoolArray>(maskPath));
+    ds.getDataRefAs<BoolArray>(maskPath)[0] = false;
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, true);
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key, maskPath);
+    executeAndCheck(false);
+  }
+  SECTION("Exterior on any axis")
+  {
+    const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(axis);
+    vertices[axis] = 2;
+    vertices[(axis + 1) % 3] = k_Nan;
+    executeAndCheck(false);
+  }
+  SECTION("Earlier axis at the upper boundary")
+  {
+    const usize axis = GENERATE(usize{0}, usize{1});
+    CAPTURE(axis);
+    vertices[axis] = 1;
+    vertices[axis + 1] = k_Nan;
+    executeAndCheck(false);
+  }
+  SECTION("Infinite spacing")
+  {
+    const auto spacing = GENERATE_COPY(k_Inf, -k_Inf);
+    CAPTURE(spacing);
+    image.setSpacing({spacing, 1, 1});
+    executeAndCheck(false, spacing > 0 ? 7 : 0);
   }
 }

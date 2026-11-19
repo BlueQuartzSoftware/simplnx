@@ -54,7 +54,7 @@ Parameters CreateAMScanPathsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f));
+  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f, Float32Parameter::Bounds::Positive()));
   params.insert(std::make_unique<Float32Parameter>(k_StripeWidth_Key, "Hatch Length", "The length of each vector that is created.", 7.0f));
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle, "Hatch Rotation Angle (Degrees)", "The angle in degrees by which each slice's hatches are rotated", 67.0f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerPath_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},

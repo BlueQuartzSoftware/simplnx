@@ -648,7 +648,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: invalid refe
   auto ds = MakeData({{0, 30, 0}}, {1});
   auto result = FilterType().preflight(ds, MakeArgs(reference));
   REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_InvalidReferenceDirectionError);
+  const bool finite = std::all_of(reference.cbegin(), reference.cend(), [](float32 value) { return std::isfinite(value); });
+  REQUIRE(result.outputActions.errors()[0].code == (finite ? AlgorithmType::k_InvalidReferenceDirectionError : k_NumberNotFinite));
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

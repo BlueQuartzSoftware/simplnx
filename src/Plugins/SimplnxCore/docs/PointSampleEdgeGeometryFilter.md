@@ -26,6 +26,12 @@ Any additional **Edge Data Arrays** the user selects are also copied onto the ma
 
 - **Input Edge Geometry** -- an **Edge Geometry**, typically produced by [Slice Triangle Geometry](SliceTriangleGeometryFilter.md) or [Create AM Scan Paths](CreateAMScanPathsFilter.md).
 
+### Valid Parameter Values
+
+**Sampling Spacing (mm)** must be finite and greater than zero.
+A smaller spacing creates more sample points.
+If the filter reports too many points or an output array that is too large, increase **Sampling Spacing (mm)**.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

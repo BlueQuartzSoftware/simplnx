@@ -14,10 +14,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-} // namespace
-
 namespace nx::core
 {
 
@@ -57,8 +53,8 @@ Parameters PointSampleEdgeGeometryFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(
-      std::make_unique<NumberParameter<float32>>(k_ScanVectorSamplingRes_Key, "Sampling Spacing (mm)", "Distance (in millimeters) between successive sample points along each scan vector.", 0.1f));
+  params.insert(std::make_unique<NumberParameter<float32>>(k_ScanVectorSamplingRes_Key, "Sampling Spacing (mm)", "Distance (in millimeters) between successive sample points along each scan vector.",
+                                                           0.1f, Float32Parameter::Bounds::Positive()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ScanVectorGeometryPath_Key, "Input Edge Geometry", "Path to the Edge geometry along which sampling will occur.", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
