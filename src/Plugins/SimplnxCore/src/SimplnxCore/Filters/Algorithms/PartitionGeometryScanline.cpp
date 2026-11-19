@@ -109,11 +109,6 @@ Result<> PartitionGeometryScanline::operator()()
   }
   case IGeometry::Type::RectGrid: {
     const RectGridGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->InputGeometryToPartition});
-    auto checked = ValidateRectGridPartitionCoordinates(inputGeomToPartition, partitionGridGeom, m_InputValues->InputGeometryToPartition, m_ShouldCancel);
-    if(checked.invalid() || m_ShouldCancel)
-    {
-      return checked;
-    }
     result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
     break;
   }
@@ -146,6 +141,11 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
 {
   const usize numTuples = partitionIdsStore.getNumberOfTuples();
   auto partitionIdsBuffer = std::make_unique<int32[]>(std::min(k_ChunkTuples, numTuples));
+  std::optional<detail::RectGridPartitionCenters> rectCenters;
+  if(const auto* rectGrid = dynamic_cast<const RectGridGeom*>(&inputGeometry); rectGrid != nullptr)
+  {
+    rectCenters.emplace(*rectGrid);
+  }
 
   for(usize offset = 0; offset < numTuples; offset += k_ChunkTuples)
   {
@@ -157,8 +157,13 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
     const usize count = std::min(k_ChunkTuples, numTuples - offset);
     for(usize chunkIndex = 0; chunkIndex < count; chunkIndex++)
     {
-      const Point3D<float64> coord = inputGeometry.getCoords(offset + chunkIndex);
-      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coord, m_InputValues->InputGeometryToPartition, offset + chunkIndex);
+      const usize index = offset + chunkIndex;
+      auto coordinate = rectCenters.has_value() ? rectCenters->readTuple(index) : Result<Point3D<float64>>{inputGeometry.getCoords(index)};
+      if(coordinate.invalid())
+      {
+        return ConvertResult(std::move(coordinate));
+      }
+      auto checkedIndex = ComputeCheckedPartitionIndex(psImageGeom, coordinate.value(), m_InputValues->InputGeometryToPartition, index);
       if(checkedIndex.invalid())
       {
         return ConvertResult(std::move(checkedIndex));

@@ -34,9 +34,10 @@ Each **Grid Resolution** value must be finite and greater than zero in the geome
 **Minimum Number of Empty Neighbors** must be a whole number from 0 through 26, inclusive.
 If the resulting grid is too large, increase **Grid Resolution** or use a smaller point cloud.
 
-### Input Data Warning
+### Vertex Coordinates
 
-NaN values in the input data can lead to undefined behavior.
+The filter stops if it cannot map a vertex coordinate to a cell in the grid.
+Check the coordinates in **Vertex Geometry** or increase **Grid Resolution**.
 
 % Auto generated parameter table will be inserted here
 

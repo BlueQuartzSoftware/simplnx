@@ -68,8 +68,9 @@ In *Scaling* mode, each **Scale Factor (percentages)** value must be finite and 
 In *Exact Dimensions* mode, each **Exact Dimensions (pixels)** value must be a whole number of at least 1.
 
 An earlier filter can change the input spacing or dimensions during a run.
-If preflight cannot calculate a valid output grid, it warns and shows a temporary 1 × 1 × 1 grid.
-The filter calculates the grid again when it runs. If the grid is still invalid, the filter stops before it copies cell data.
+If preflight cannot calculate a valid output cell count or spacing, it warns and shows a temporary 1 × 1 × 1 grid.
+The filter calculates the grid again when it runs. If that calculation fails, the filter stops before it copies cell data.
+Cells outside the source grid receive zero values. If an output cell needs a source index that cannot be calculated, the filter stops before it copies cell data.
 
 % Auto generated parameter table will be inserted here
 

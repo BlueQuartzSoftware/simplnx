@@ -52,7 +52,7 @@ public:
   /**
    * @brief Approximates the hull through a voxel grid.
    * @pre Grid Resolution has three finite positive components; Minimum Number of Empty Neighbors is at most 26.
-   * @return Final bounds, grid representation or output resize errors.
+   * @return Final bounds, grid representation, vertex mapping or output resize errors.
    */
   Result<> operator()();
 

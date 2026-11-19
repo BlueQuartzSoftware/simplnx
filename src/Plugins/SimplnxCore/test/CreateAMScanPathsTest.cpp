@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/CreateAMScanPaths.hpp"
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -336,4 +337,133 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Rounded hatch count is within t
   REQUIRE(hatches != nullptr);
   // One isolated edge gives one intersection. It gives no hatch segment.
   CHECK(hatches->getNumberOfEdges() == 0);
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Hatch position narrowing", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  const bool isStart = GENERATE(false, true);
+  CAPTURE(isStart);
+  const float64 max = std::numeric_limits<float32>::max();
+  const float32 inside = std::nextafter(std::numeric_limits<float32>::max(), 0.0F);
+  const int32 code = isStart ? -86249 : -86250;
+  const DataPath inputPath({"Edges"});
+  const auto check = [&](float64 y) { return CreateAMScanPathsDetail::CheckedHatchY(y, isStart, inputPath); };
+  for(const auto position : {static_cast<float64>(inside), -static_cast<float64>(inside)})
+  {
+    const auto result = check(position);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(result.value() == (position < 0 ? -inside : inside));
+  }
+  for(const float64 position : {std::nextafter(max, std::numeric_limits<float64>::infinity()), std::nextafter(-max, -std::numeric_limits<float64>::infinity()),
+                                std::numeric_limits<float64>::infinity(), std::numeric_limits<float64>::quiet_NaN()})
+  {
+    const auto result = check(position);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == code);
+    CHECK(result.errors()[0].message.find(isStart ? "first hatch line" : "hatch line position") != std::string::npos);
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Intersection X ordering laws", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  const std::array<float32, 8> ordered = {-k_Inf, -3, -0.0F, 0.0F, 2, k_Inf, k_Nan, -k_Nan};
+  const std::array<int, 8> rank = {0, 1, 2, 2, 3, 4, 5, 5};
+  const auto less = CreateAMScanPathsDetail::IntersectionXLess;
+  for(usize a = 0; a < ordered.size(); ++a)
+  {
+    CHECK_FALSE(less(ordered[a], ordered[a]));
+    for(usize b = 0; b < ordered.size(); ++b)
+    {
+      CHECK(less(ordered[a], ordered[b]) == (rank[a] < rank[b]));
+      if(less(ordered[a], ordered[b]))
+      {
+        CHECK_FALSE(less(ordered[b], ordered[a]));
+        for(const auto c : ordered)
+        {
+          if(less(ordered[b], c))
+          {
+            CHECK(less(ordered[a], c));
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Mixed intersection X coordinates", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  DataStructure ds;
+  const DataPath inputPath({"Edges"});
+  const auto geometry = CreateEdgeGeometryAction(inputPath, 4, 8, "Vertex Data", "Edge Data", "Vertices", "Edges").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(geometry);
+  for(const auto name : {"Layers", "Regions"})
+  {
+    const auto path = inputPath.createChildPath("Edge Data").createChildPath(name);
+    const auto array = CreateArrayAction(DataType::int32, {4}, {1}, path).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(array);
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(path));
+    ds.getDataRefAs<Int32Array>(path).fill(0);
+  }
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(inputPath));
+  auto& geom = ds.getDataRefAs<EdgeGeom>(inputPath);
+  // The only hatch is at Y=0. The first edge gives 0 * infinity in X.
+  const std::array<float32, 24> coords = {-2e38F, -2e38F, 0, 2e38F, 2e38F, 0, 3, -1, 0, 3, 1, 0, 1, -1, 0, 1, 1, 0, 2, -1, 0, 2, 1, 0};
+  const auto write = geom.getVerticesRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coords));
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+  for(usize i = 0; i < 8; ++i)
+  {
+    geom.getEdgesRef()[i] = i;
+  }
+
+  const CreateAMScanPathsFilter filter;
+  auto args = MakeSamplingArgs(filter);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, 3e38F);
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto* hatches = ds.getDataAs<EdgeGeom>(DataPath({"Hatches"}));
+  REQUIRE(hatches != nullptr);
+  REQUIRE(hatches->getNumberOfEdges() == 2);
+  REQUIRE(hatches->getNumberOfVertices() == 4);
+  const auto& points = hatches->getVerticesRef();
+  CHECK(points[0] == 1);
+  CHECK(points[3] == 2);
+  CHECK(points[6] == 3);
+  CHECK(std::isnan(points[9]));
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: First hatch in the coordinate range", "[SimplnxCore][CreateAMScanPathsFilter]")
+{
+  const bool overflow = GENERATE(false, true);
+  CAPTURE(overflow);
+  DataStructure ds;
+  CreateSamplingEdges(ds, true);
+  const DataPath inputPath({"Edges"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<EdgeGeom>(inputPath));
+  auto& geom = ds.getDataRefAs<EdgeGeom>(inputPath);
+  const float32 limit = std::numeric_limits<float32>::max();
+  const float32 nearLimit = std::nextafter(limit, 0.0F);
+  for(usize vertex = 4; vertex < 8; ++vertex)
+  {
+    geom.setVertexCoordinate(vertex, {overflow ? limit : static_cast<float32>(vertex), overflow ? -limit : -nearLimit, 1});
+  }
+
+  const CreateAMScanPathsFilter filter;
+  auto args = MakeSamplingArgs(filter);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, nearLimit);
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, overflow ? 45.0F : 0.0F);
+  const auto result = filter.execute(ds, args);
+  if(overflow)
+  {
+    // The second slice rotates by 45 degrees. Its Y coordinate is below the float32 range.
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    CHECK(result.result.errors()[0].code == -86249);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  }
 }

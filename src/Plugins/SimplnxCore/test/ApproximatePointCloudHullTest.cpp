@@ -378,7 +378,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Final grid representati
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, DataPath({"Hull"}));
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_MinEmptyNeighbors_Key, uint64{0});
     args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{1, 1, 1});
-    const auto row = GENERATE(0, 1, 2, 3, 4);
+    const auto row = GENERATE(0, 1, 2, 3, 4, 5);
     CAPTURE(row);
     if(row == 4)
     {
@@ -407,12 +407,21 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Final grid representati
       vertices[3] = 0;
       args.insertOrAssign(ApproximatePointCloudHullFilter::k_GridResolution_Key, std::vector<float32>{std::numeric_limits<float32>::denorm_min(), 1, 1});
     }
+    if(row == 5)
+    {
+      vertices[3] = std::numeric_limits<float32>::quiet_NaN();
+    }
     auto result = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    const std::array<int32, 5> codes = {-86132, -86133, -86238, -86132, -86236};
+    const std::array<int32, 6> codes = {-86132, -86133, -86238, -86132, -86236, -86248};
     CHECK(result.result.errors()[0].code == codes[row]);
     const auto& message = result.result.errors()[0].message;
+    if(row == 5)
+    {
+      CHECK(message.find("vertex 1") != std::string::npos);
+      return;
+    }
     CHECK(message.find("Grid Resolution") != std::string::npos);
     CHECK(message.find(row == 1 ? "too many cells on the X axis" : row == 2 ? "total cell count" : row == 4 ? "empty border" : "voxel bounds") != std::string::npos);
   }

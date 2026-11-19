@@ -38,7 +38,7 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
 
 /**
  * @struct ResampledImageLayout
- * @brief Stores representable resampling dimensions and spacing.
+ * @brief Stores output spacing and representable resampling dimensions.
  * @note Defaults provide unit dimensions and spacing for provisional preflight layouts.
  */
 struct ResampledImageLayout
@@ -52,7 +52,7 @@ struct ResampledImageLayout
  * @param source Provides geometry dimensions and spacing, which can be provisional during preflight.
  * @param inputValues Selects the active resampling formula and parameters.
  * @pre Active parameter vectors have three components and valid domains.
- * @return The layout or an error for an unrepresentable derived result.
+ * @return The layout, or an error for finite nonpositive derived spacing or an unrepresentable cell count.
  */
 SIMPLNX_EXPORT Result<ResampledImageLayout> ComputeResampledImageLayout(const ImageGeom& source, const ResampleImageGeomInputValues& inputValues);
 
@@ -61,7 +61,8 @@ SIMPLNX_EXPORT Result<ResampledImageLayout> ComputeResampledImageLayout(const Im
  * @brief Copies Image Geometry cell data to a preflight-created regular grid.
  *
  * Each destination cell uses the source cell that contains its minimum corner. A corner outside the source bounds produces a zero tuple.
- * Axis lookup tables avoid repeated coordinate division. Each array uses one source-row buffer and one destination-row buffer.
+ * Axis lookup tables avoid repeated coordinate division. An unsafe index conversion fails before the copy when a destination cell needs it.
+ * Each array uses one source-row buffer and one destination-row buffer.
  *
  * Cell arrays run as independent parallel tasks. Each task checks cancellation between destination Z slices.
  * Thus, cancellation can leave arrays at different completed slices. Source and destination bulk-I/O failures stop the affected task.
@@ -99,19 +100,6 @@ public:
    * Cancellation can leave partial destination arrays.
    */
   Result<> operator()();
-
-  /**
-   * @brief Maps final coordinates to source indices, retaining an unmapped sentinel outside coverage.
-   * @param destDim Gives the destination axis length.
-   * @param destOrigin Gives the destination axis origin in geometry length units.
-   * @param destSpacing Gives the destination cell spacing in geometry length units.
-   * @param srcDim Gives the source axis length.
-   * @param srcOrigin Gives the source axis origin in geometry length units.
-   * @param srcSpacing Gives the source cell spacing in geometry length units.
-   * @pre The destination length fits its index-vector container. Origins are finite and spacings are finite and positive.
-   * @return Source indices or an error before an invalid integer conversion.
-   */
-  static Result<std::vector<usize>> ComputeAxisSourceIndices(usize destDim, float64 destOrigin, float64 destSpacing, usize srcDim, float64 srcOrigin, float64 srcSpacing);
 
   const std::atomic_bool& getCancel();
 

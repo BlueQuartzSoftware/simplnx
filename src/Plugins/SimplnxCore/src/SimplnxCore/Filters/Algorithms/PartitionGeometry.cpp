@@ -20,11 +20,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_PartitionOriginNotFinite = -86171;
-constexpr int32 k_PartitionCoordinateNotFinite = -86172;
-constexpr int32 k_PartitionBoundNotFinite = -86247;
 constexpr int32 k_PartitionIdRange = -86173;
-constexpr int32 k_PartitionSpacingNotFinite = -86211;
 constexpr int32 k_PartitionSpacingNotPositive = -86212;
 constexpr int32 k_PartitionGridProductTooLarge = -86213;
 constexpr int32 k_PartitionCountTooLarge = -86214;
@@ -34,20 +30,11 @@ Result<> ValidatePreparedPartitionGrid(const ImageGeom& grid, const DataPath& pa
 {
   const auto dimensions = grid.getDimensions();
   const auto spacing = grid.getSpacing();
-  const auto origin = grid.getOrigin();
   if(input.PartitioningMode != static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Advanced))
   {
     for(usize axis = 0; axis < 3; ++axis)
     {
-      if(!std::isfinite(origin[axis]))
-      {
-        return MakeErrorResult(k_PartitionOriginNotFinite, fmt::format("Partition grid '{}' {} origin must be finite. The value is {}.", path.toString(), "XYZ"[axis], origin[axis]));
-      }
-      if(!std::isfinite(spacing[axis]))
-      {
-        return MakeErrorResult(k_PartitionSpacingNotFinite, fmt::format("Partition grid '{}' {} spacing must be finite. The value is {}.", path.toString(), "XYZ"[axis], spacing[axis]));
-      }
-      if(spacing[axis] <= 0)
+      if(std::isfinite(spacing[axis]) && spacing[axis] <= 0)
       {
         return MakeErrorResult(k_PartitionSpacingNotPositive, fmt::format("Partition grid '{}' {} spacing must be greater than 0. The value is {}.", path.toString(), "XYZ"[axis], spacing[axis]));
       }
@@ -83,18 +70,15 @@ bool IsOutsideAxis(T coordinate, usize dimension, float32 origin, float32 spacin
 }
 
 template <class T>
-Result<usize> ComputeAxisIndex(T coordinate, float32 origin, float32 spacing, usize axis, const DataPath& inputPath, usize elementIndex)
+std::optional<usize> TryConvertPartitionAxis(T coordinate, float32 origin, float32 spacing)
 {
   const T coordinateIndex = std::floor((coordinate - origin) / spacing);
   const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
   if(!std::isfinite(coordinateIndex) || coordinateIndex < 0 || static_cast<float64>(coordinateIndex) >= exclusiveBound)
   {
-    return MakeErrorResult<usize>(
-        k_PartitionIndexConversion,
-        fmt::format("Partition Geometry cannot map the {} coordinate at element index {} of input geometry '{}' to a partition. The value is {}. Check the partition grid origin and spacing.",
-                    "XYZ"[axis], elementIndex, inputPath.toString(), coordinate));
+    return {};
   }
-  return {static_cast<usize>(coordinateIndex)};
+  return static_cast<usize>(coordinateIndex);
 }
 
 template <class T>
@@ -105,15 +89,6 @@ Result<std::optional<usize>> ComputePartitionIndex(const ImageGeom& grid, const 
   const auto spacing = grid.getSpacing();
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(!std::isfinite(coordinate[axis]))
-    {
-      return MakeErrorResult<std::optional<usize>>(
-          k_PartitionCoordinateNotFinite,
-          fmt::format("Input geometry '{}' has an invalid {} coordinate at element index {}. The value is {}. It must be finite.", inputPath.toString(), "XYZ"[axis], elementIndex, coordinate[axis]));
-    }
-  }
-  for(usize axis = 0; axis < 3; ++axis)
-  {
     if(IsOutsideAxis(coordinate[axis], dimensions[axis], origin[axis], spacing[axis]))
     {
       return {std::optional<usize>{}};
@@ -122,12 +97,14 @@ Result<std::optional<usize>> ComputePartitionIndex(const ImageGeom& grid, const 
   std::array<usize, 3> indices = {};
   for(usize axis = 0; axis < 3; ++axis)
   {
-    auto index = ComputeAxisIndex(coordinate[axis], origin[axis], spacing[axis], axis, inputPath, elementIndex);
-    if(index.invalid())
+    const auto index = TryConvertPartitionAxis(coordinate[axis], origin[axis], spacing[axis]);
+    if(!index.has_value())
     {
-      return ConvertInvalidResult<std::optional<usize>>(std::move(index));
+      return MakeErrorResult<std::optional<usize>>(k_PartitionIndexConversion, fmt::format("Partition Geometry cannot map the {} coordinate at element index {} of input geometry '{}' to partition "
+                                                                                           "grid '{}'. The value is {}. Check the coordinate and the partition grid origin and spacing.",
+                                                                                           "XYZ"[axis], elementIndex, inputPath.toString(), grid.getName(), coordinate[axis]));
     }
-    indices[axis] = index.value();
+    indices[axis] = *index;
     if(indices[axis] >= dimensions[axis])
     {
       return {std::optional<usize>{}};
@@ -167,57 +144,64 @@ Result<std::optional<usize>> nx::core::ComputeCheckedPartitionIndex(const ImageG
   return ComputePartitionIndex(grid, coordinate, inputPath, elementIndex);
 }
 
-Result<> nx::core::ValidateRectGridPartitionCoordinates(const RectGridGeom& inputGrid, const ImageGeom& partitionGrid, const DataPath& inputPath, const std::atomic_bool& shouldCancel)
+std::optional<usize> nx::core::detail::TryMapPartitionAxis(float64 coordinate, usize dimension, float32 origin, float32 spacing)
 {
-  const auto dimensions = partitionGrid.getDimensions();
-  const auto origin = partitionGrid.getOrigin();
-  const auto spacing = partitionGrid.getSpacing();
-  const std::array bounds = {&inputGrid.getXBoundsRef(), &inputGrid.getYBoundsRef(), &inputGrid.getZBoundsRef()};
-  std::array<float32, 4096> buffer;
-  for(usize axis = 0; axis < bounds.size(); ++axis)
+  if(IsOutsideAxis(coordinate, dimension, origin, spacing))
   {
-    const auto& store = bounds[axis]->getDataStoreRef();
-    float64 previous = 0;
-    for(usize offset = 0; offset < store.getSize();)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      const usize count = std::min(buffer.size(), store.getSize() - offset);
-      auto read = store.copyIntoBuffer(offset, nonstd::span<float32>(buffer.data(), count));
-      if(read.invalid())
-      {
-        return read;
-      }
-      for(usize position = 0; position < count; ++position)
-      {
-        const usize index = offset + position;
-        const float64 value = buffer[position];
-        if(!std::isfinite(value))
-        {
-          return MakeErrorResult(k_PartitionBoundNotFinite,
-                                 fmt::format("Input geometry '{}' has an invalid {} bound at element index {}. The value is {}. It must be finite.", inputPath.toString(), "XYZ"[axis], index, value));
-        }
-        if(index > 0)
-        {
-          // A rectilinear cell center uses only the adjacent bounds on its axis.
-          const float64 center = 0.5 * (previous + value);
-          if(!IsOutsideAxis(center, dimensions[axis], origin[axis], spacing[axis]))
-          {
-            auto checked = ComputeAxisIndex(center, origin[axis], spacing[axis], axis, inputPath, index - 1);
-            if(checked.invalid())
-            {
-              return ConvertResult(std::move(checked));
-            }
-          }
-        }
-        previous = value;
-      }
-      offset += count;
-    }
+    return dimension;
+  }
+  const auto index = TryConvertPartitionAxis(coordinate, origin, spacing);
+  if(index.has_value())
+  {
+    return std::min(*index, dimension);
   }
   return {};
+}
+
+detail::RectGridPartitionCenters::RectGridPartitionCenters(const RectGridGeom& grid)
+: m_Bounds{&grid.getXBoundsRef().getDataStoreRef(), &grid.getYBoundsRef().getDataStoreRef(), &grid.getZBoundsRef().getDataStoreRef()}
+, m_Dimensions(grid.getDimensions())
+{
+}
+
+Result<float64> detail::RectGridPartitionCenters::readAxis(usize axis, usize index)
+{
+  auto& cache = m_Caches[axis];
+  if(cache.Size == 0 || index < cache.Start || index - cache.Start >= cache.Size - 1)
+  {
+    // Include the upper bound of the last cell in each block.
+    constexpr usize k_CellsPerBlock = k_ValuesPerBlock - 1;
+    const usize start = (index / k_CellsPerBlock) * k_CellsPerBlock;
+    const auto& store = *m_Bounds[axis];
+    const usize available = start < store.getSize() ? store.getSize() - start : 0;
+    // Request both bounds even when the store is too short so it returns its range error.
+    const usize count = std::clamp(available, index - start + 2, k_ValuesPerBlock);
+    auto read = store.copyIntoBuffer(start, nonstd::span<float32>(cache.Values.data(), count));
+    if(read.invalid())
+    {
+      return ConvertInvalidResult<float64>(std::move(read));
+    }
+    cache.Start = start;
+    cache.Size = count;
+  }
+  const usize localIndex = index - cache.Start;
+  return {0.5 * (static_cast<float64>(cache.Values[localIndex]) + cache.Values[localIndex + 1])};
+}
+
+Result<Point3D<float64>> detail::RectGridPartitionCenters::readTuple(usize index)
+{
+  const std::array cell = {index % m_Dimensions[0], (index / m_Dimensions[0]) % m_Dimensions[1], index / (m_Dimensions[0] * m_Dimensions[1])};
+  Point3D<float64> coordinate;
+  for(usize axis = 0; axis < cell.size(); ++axis)
+  {
+    auto component = readAxis(axis, cell[axis]);
+    if(component.invalid())
+    {
+      return ConvertInvalidResult<Point3D<float64>>(std::move(component));
+    }
+    coordinate[axis] = component.value();
+  }
+  return {coordinate};
 }
 
 PartitionGeometry::PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues)

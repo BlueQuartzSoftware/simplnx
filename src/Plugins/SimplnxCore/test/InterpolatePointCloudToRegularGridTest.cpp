@@ -738,6 +738,19 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel layout 
     expectedCode = -86224;
     context = "invalid spacing";
   }
+  SECTION("Infinite spacing")
+  {
+    const auto spacing = GENERATE(std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+    image->setSpacing({spacing, 1, 1});
+    input.kernelSize = {1, 0, 0};
+  }
+  SECTION("NaN radius")
+  {
+    image->setSpacing({std::numeric_limits<float32>::quiet_NaN(), 1, 1});
+    input.kernelSize = {1, 0, 0};
+    expectedCode = -86165;
+    context = "radius";
+  }
   SECTION("Product overflow")
   {
     input.kernelSize = std::vector<float32>(3, std::ldexp(1.0F, 22));
@@ -818,19 +831,20 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid spacin
   auto args = CreateCountInterpolationFixture(ds);
   const DataPath imagePath({"Image"});
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
-  ds.getDataRefAs<ImageGeom>(imagePath).setSpacing({0, 1, 1});
+  const bool nanSpacing = GENERATE(false, true);
+  ds.getDataRefAs<ImageGeom>(imagePath).setSpacing({nanSpacing ? std::numeric_limits<float32>::quiet_NaN() : 0.0F, 1, 1});
 
   const InterpolatePointCloudToRegularGridFilter filter;
   const auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.warnings().size() == 1);
-  CHECK(preflight.outputActions.warnings()[0].code == -86244);
-  CHECK(preflight.outputActions.warnings()[0].message.find("invalid spacing") != std::string::npos);
+  CHECK(preflight.outputActions.warnings()[0].code == (nanSpacing ? -86168 : -86244));
+  CHECK(preflight.outputActions.warnings()[0].message.find(nanSpacing ? "radius" : "invalid spacing") != std::string::npos);
 
   const auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
-  CHECK(result.result.errors()[0].code == -86224);
+  CHECK(result.result.errors()[0].code == (nanSpacing ? -86165 : -86224));
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel container boundary", "[SimplnxCore][GeometryCountControls]")
@@ -1033,4 +1047,90 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Zero physical 
   REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"})));
   CHECK(ds.getDataRefAs<Float32Array>(DataPath({"Image", "Cell Data", "Value_Mean"}))[0] == 7);
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Checked vertex mapping", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  const DataPath pointsPath({"Points"});
+  const DataPath imagePath({"Image"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(pointsPath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
+  auto& vertices = ds.getDataRefAs<VertexGeom>(pointsPath).getVerticesRef();
+  auto& image = ds.getDataRefAs<ImageGeom>(imagePath);
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  const auto executeAndCheck = [&](bool invalid, float32 expected = 0) {
+    const InterpolatePointCloudToRegularGridFilter filter;
+    const auto result = scope.executeFilter(filter, ds, args);
+    if(invalid)
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+      REQUIRE(result.result.errors().size() == 1);
+      CHECK(result.result.errors()[0].code == -86251);
+      CHECK(result.result.errors()[0].message.find("vertex 0") != std::string::npos);
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+      const DataPath meanPath({"Image", "Cell Data", "Value_Mean"});
+      REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(meanPath));
+      CHECK(ds.getDataRefAs<Float32Array>(meanPath)[0] == expected);
+    }
+  };
+  SECTION("NaN origin")
+  {
+    image.setOrigin({k_Nan, 0, 0});
+    executeAndCheck(true);
+  }
+  SECTION("NaN vertex")
+  {
+    vertices[0] = k_Nan;
+    executeAndCheck(true);
+  }
+  SECTION("Infinite offset and spacing")
+  {
+    vertices[0] = k_Inf;
+    image.setSpacing({k_Inf, 1, 1});
+    executeAndCheck(true);
+  }
+  SECTION("Masked NaN vertex")
+  {
+    vertices[0] = k_Nan;
+    const auto maskPath = pointsPath.createChildPath("Vertex Data").createChildPath("Mask");
+    auto mask = CreateArrayAction(DataType::boolean, {1}, {1}, maskPath).apply(ds, IDataAction::Mode::Execute);
+    SIMPLNX_RESULT_REQUIRE_VALID(mask);
+    REQUIRE_NOTHROW(ds.getDataRefAs<BoolArray>(maskPath));
+    ds.getDataRefAs<BoolArray>(maskPath)[0] = false;
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, true);
+    args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key, maskPath);
+    executeAndCheck(false);
+  }
+  SECTION("Exterior on any axis")
+  {
+    const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(axis);
+    vertices[axis] = 2;
+    vertices[(axis + 1) % 3] = k_Nan;
+    executeAndCheck(false);
+  }
+  SECTION("Earlier axis at the upper boundary")
+  {
+    const usize axis = GENERATE(usize{0}, usize{1});
+    CAPTURE(axis);
+    vertices[axis] = 1;
+    vertices[axis + 1] = k_Nan;
+    executeAndCheck(false);
+  }
+  SECTION("Infinite spacing")
+  {
+    const auto spacing = GENERATE_COPY(k_Inf, -k_Inf);
+    CAPTURE(spacing);
+    image.setSpacing({spacing, 1, 1});
+    executeAndCheck(false, spacing > 0 ? 7 : 0);
+  }
 }

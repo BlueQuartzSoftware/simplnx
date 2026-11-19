@@ -87,7 +87,9 @@ This filter uses flat arrays rather than variable-length lists, so memory usage 
 
 ### Voxel Index Computation
 
-The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the [Map Point Cloud to Regular Grid](MapPointCloudToRegularGridFilter.md) filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
+The filter uses the vertex coordinates and the origin, spacing, and dimensions of **Interpolated Image Geometry** to find each vertex's destination cell.
+The filter skips masked and exterior vertices. It stops if a coordinate that needs a cell index cannot convert to one.
+Check the coordinates in **Vertex Geometry to Interpolate** and the origin and spacing in **Interpolated Image Geometry**.
 
 ### Valid Parameter Values
 
@@ -96,8 +98,8 @@ A zero extent limits the contribution to the center cell along that axis.
 
 When **Interpolation Technique** is *Gaussian*, each **Gaussian Sigmas** value must be from 0.001 to 1000 cells, inclusive.
 
-The filter uses the Image Geometry spacing to calculate the kernel size in cells.
-If the kernel is too large during preflight, the filter warns and tries again during the run.
+The filter uses the image spacing to calculate the kernel size in cells. Finite spacing values must be greater than zero.
+If preflight cannot calculate a valid kernel, the filter warns and tries again during the run.
 If the kernel is still too large, decrease **Kernel Size** or use a grid with larger spacing.
 
 % Auto generated parameter table will be inserted here

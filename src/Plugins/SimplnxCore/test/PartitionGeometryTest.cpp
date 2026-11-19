@@ -1638,11 +1638,11 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Final prepared grid representat
 {
   DataStructure ds;
   CreateCountImage(ds);
-  const auto row = GENERATE(0, 1, 2, 3, 4);
+  const auto row = GENERATE(0, 1, 2, 3);
   CAPTURE(row);
   constexpr auto k_MaxFeatureId = std::numeric_limits<int32>::max();
   const auto dimensions = row == 0 ? SizeVec3{usize{1} << 32, usize{1} << 32, 1} : row == 3 ? SizeVec3{static_cast<usize>(k_MaxFeatureId) + 2, 1, 1} : SizeVec3{2, 1, 1};
-  const auto spacing = row == 2 ? FloatVec3{0, 1, 1} : row == 4 ? FloatVec3{std::numeric_limits<float32>::infinity(), 1, 1} : FloatVec3{1, 1, 1};
+  const auto spacing = row == 2 ? FloatVec3{0, 1, 1} : FloatVec3{1, 1, 1};
   CreateExistingCountGrid(ds, dimensions, spacing);
   auto args = ExistingCountPartitionArguments();
   if(row == 1)
@@ -1655,8 +1655,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Final prepared grid representat
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
-  const std::array<int32, 5> expectedCodes = {-86213, -86173, -86212, -86214, -86211};
-  const std::array<std::string_view, 5> expectedMessages = {"total number of cells", "Starting Feature ID", "spacing", "partition count", "spacing"};
+  const std::array<int32, 4> expectedCodes = {-86213, -86173, -86212, -86214};
+  const std::array<std::string_view, 4> expectedMessages = {"total number of cells", "Starting Feature ID", "spacing", "partition count"};
   CHECK(result.result.errors()[0].code == expectedCodes[row]);
   const auto& message = result.result.errors()[0].message;
   CHECK(message.find(expectedMessages[row]) != std::string::npos);
@@ -1723,8 +1723,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Final coordinate conversion", "
   auto args = ExistingCountPartitionArguments();
   auto result = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  CHECK(result.result.errors()[0].code == -86172);
-  CHECK(result.result.errors()[0].message.find("Input geometry 'Image'") != std::string::npos);
+  CHECK(result.result.errors()[0].code == -86215);
+  CHECK(result.result.errors()[0].message.find("input geometry 'Image'") != std::string::npos);
   CHECK(result.result.errors()[0].message.find("X coordinate at element index 0") != std::string::npos);
 }
 
@@ -1754,6 +1754,59 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Rectilinear coordinate precisio
   const DataPath path({"Rect", "Cell Data", args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key)});
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(path));
   CHECK(ds.getDataRefAs<Int32Array>(path)[0] == 1);
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Rectilinear coordinate block boundaries", "[SimplnxCore][PartitionGeometryFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
+  DataStructure ds;
+  CreateExistingCountGrid(ds, {4096, 2, 1}, {2, 3, 5});
+  const DataPath gridPath({"Existing"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(gridPath));
+  ds.getDataRefAs<ImageGeom>(gridPath).setOrigin({-7, -3, 10});
+
+  const DataPath rectPath({"Rect"});
+  const auto created = CreateRectGridGeometryAction(rectPath, 4097, 3, 2, "Cell Data", "X", "Y", "Z").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(created);
+  REQUIRE_NOTHROW(ds.getDataRefAs<RectGridGeom>(rectPath));
+  auto& rect = ds.getDataRefAs<RectGridGeom>(rectPath);
+  REQUIRE(rect.getDimensions() == SizeVec3{4096, 2, 1});
+
+  std::vector<float32> xBounds(4097);
+  for(usize index = 0; index < xBounds.size(); ++index)
+  {
+    xBounds[index] = 2.0F * static_cast<float32>(index) - 7.0F;
+  }
+  const std::array<float32, 3> yBounds = {-3, 0, 3};
+  const std::array<float32, 2> zBounds = {10, 15};
+  const auto xWrite = rect.getXBoundsRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(xBounds));
+  SIMPLNX_RESULT_REQUIRE_VALID(xWrite);
+  const auto yWrite = rect.getYBoundsRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(yBounds));
+  SIMPLNX_RESULT_REQUIRE_VALID(yWrite);
+  const auto zWrite = rect.getZBoundsRef().getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(zBounds));
+  SIMPLNX_RESULT_REQUIRE_VALID(zWrite);
+
+  auto args = ExistingCountPartitionArguments();
+  args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryToPartition_Key, rectPath);
+  args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, rectPath.createChildPath("Cell Data"));
+  const PartitionGeometryFilter filter;
+  const auto result = scope.executeFilter(filter, ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  const auto idsPath = rectPath.createChildPath("Cell Data").createChildPath(args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(idsPath));
+  const auto& ids = ds.getDataRefAs<Int32Array>(idsPath);
+  REQUIRE(ids.getTupleShape() == ShapeType{1, 2, 4096});
+  REQUIRE(ids.getNumberOfTuples() == 8192);
+  scope.requireExpectedStore(ids);
+  // Each input cell lies in the matching partition cell. IDs follow X-fastest order, starting at 1.
+  for(usize index = 0; index < ids.getNumberOfTuples(); ++index)
+  {
+    CAPTURE(index);
+    CHECK(ids[index] == static_cast<int32>(index + 1));
+  }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
@@ -1806,7 +1859,9 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
   CreateExistingCountGrid(ds);
   auto args = ExistingCountPartitionArguments();
   std::string_view expectedLocation;
-  int32 expectedCode = -86172;
+  int32 expectedCode = 0;
+  std::vector<int32> expectedIds;
+  bool inside = false;
   Float32Array* coordinatesToInvalidate = nullptr;
 
   SECTION("NaN rectilinear bound")
@@ -1816,8 +1871,10 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
     SIMPLNX_RESULT_REQUIRE_VALID(created);
     REQUIRE_NOTHROW(ds.getDataRefAs<RectGridGeom>(rectPath));
     auto& geom = ds.getDataRefAs<RectGridGeom>(rectPath);
-    geom.getXBoundsRef()[0] = 3.0F;
-    geom.getXBoundsRef()[1] = 4.0F;
+    inside = GENERATE(false, true);
+    CAPTURE(inside);
+    geom.getXBoundsRef()[0] = inside ? 0.0F : 3.0F;
+    geom.getXBoundsRef()[1] = inside ? 1.0F : 4.0F;
     geom.getYBoundsRef()[0] = 0.0F;
     geom.getYBoundsRef()[1] = 0.5F;
     geom.getYBoundsRef()[2] = std::numeric_limits<float32>::quiet_NaN();
@@ -1825,8 +1882,12 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
     geom.getZBoundsRef()[1] = 1.0F;
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryToPartition_Key, rectPath);
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, rectPath.createChildPath("Cell Data"));
-    expectedCode = -86247;
-    expectedLocation = "'Rect' has an invalid Y bound at element index 2";
+    expectedIds = {0, 0};
+    if(inside)
+    {
+      expectedCode = -86215;
+      expectedLocation = "Y coordinate at element index 1 of input geometry 'Rect'";
+    }
   }
 
   SECTION("Unmasked NaN vertex")
@@ -1836,13 +1897,20 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
     SIMPLNX_RESULT_REQUIRE_VALID(created);
     REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(pointsPath));
     auto& vertices = ds.getDataRefAs<VertexGeom>(pointsPath).getVerticesRef();
-    const std::array<float32, 9> coordinates = {0.25F, 0.25F, 0.25F, 0.75F, 0.75F, 0.75F, 4.0F, 0.5F, 0.5F};
+    inside = GENERATE(false, true);
+    CAPTURE(inside);
+    const std::array<float32, 9> coordinates = {0.25F, 0.25F, 0.25F, 0.75F, 0.75F, 0.75F, inside ? 0.5F : 4.0F, 0.5F, 0.5F};
     auto write = vertices.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(coordinates));
     SIMPLNX_RESULT_REQUIRE_VALID(write);
     coordinatesToInvalidate = &vertices;
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryToPartition_Key, pointsPath);
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, pointsPath.createChildPath("Vertex Data"));
-    expectedLocation = "'Points' has an invalid Y coordinate at element index 2";
+    expectedIds = {1, 1, 0};
+    if(inside)
+    {
+      expectedCode = -86215;
+      expectedLocation = "Y coordinate at element index 2 of input geometry 'Points'";
+    }
   }
 
   SECTION("Finite vertex with offset too large")
@@ -1892,14 +1960,33 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
     const IFilter::MessageHandler messageHandler;
     return scope.execute([&] { return PartitionGeometry(ds, messageHandler, shouldCancel, &input)(); });
   }();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors()[0].code == expectedCode);
-  CHECK(result.errors()[0].message.find(expectedLocation) != std::string::npos);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    const auto idsPath =
+        args.value<DataPath>(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key).createChildPath(args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key));
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(idsPath));
+    const auto& ids = ds.getDataRefAs<Int32Array>(idsPath);
+    REQUIRE(ids.getNumberOfTuples() == expectedIds.size());
+    for(usize i = 0; i < expectedIds.size(); ++i)
+    {
+      CHECK(ids[i] == expectedIds[i]);
+    }
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+    CHECK(result.errors()[0].message.find(expectedLocation) != std::string::npos);
+  }
 }
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Derived partition metadata validation", "[SimplnxCore][PartitionGeometryFilter]")
 {
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
   const auto mode = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{2});
   CAPTURE(mode);
   DataStructure ds;
@@ -1920,10 +2007,77 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Derived partition metadata vali
   PartitionGeometryFilter filter;
   auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  auto result = filter.execute(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors().size() == 1);
-  CHECK(result.result.errors()[0].code == (mode == 0 ? -86171 : -86211));
-  CHECK(result.result.errors()[0].message.find("Partition grid 'Grid' X") != std::string::npos);
-  CHECK(result.result.errors()[0].message.find(mode == 0 ? "origin must be finite" : "spacing must be finite") != std::string::npos);
+  auto result = scope.executeFilter(filter, ds, args);
+  if(mode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    CHECK(result.result.errors()[0].code == -86215);
+    CHECK(result.result.errors()[0].message.find("partition grid 'Grid'") != std::string::npos);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const DataPath idsPath({"Image", "Cell Data", args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key)});
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(idsPath));
+    const auto& ids = ds.getDataRefAs<Int32Array>(idsPath);
+    REQUIRE(ids.getNumberOfTuples() == 2);
+    CHECK(ids[0] == 1);
+    CHECK(ids[1] == 1);
+  }
+}
+
+TEST_CASE("SimplnxCore::PartitionGeometryFilter: Infinite prepared grid metadata", "[SimplnxCore][PartitionGeometryFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  UnitTest::AlgorithmTestScope scope(scenario);
+  CAPTURE(scenario);
+  DataStructure ds;
+  CreateCountImage(ds);
+  CreateExistingCountGrid(ds);
+  const DataPath gridPath({"Existing"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(gridPath));
+  auto& grid = ds.getDataRefAs<ImageGeom>(gridPath);
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  const auto executeAndCheck = [&](int32 expectedId) {
+    const PartitionGeometryFilter filter;
+    const auto args = ExistingCountPartitionArguments();
+    const auto result = scope.executeFilter(filter, ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const DataPath idsPath({"Image", "Cell Data", args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key)});
+    REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(idsPath));
+    const auto& ids = ds.getDataRefAs<Int32Array>(idsPath);
+    REQUIRE(ids.getNumberOfTuples() == 2);
+    CHECK(ids[0] == expectedId);
+    CHECK(ids[1] == expectedId);
+  };
+  SECTION("Positive infinite spacing")
+  {
+    grid.setSpacing({k_Inf, 1, 1});
+    executeAndCheck(1);
+  }
+  SECTION("Negative infinite spacing")
+  {
+    grid.setSpacing({-k_Inf, 1, 1});
+    executeAndCheck(0);
+  }
+  SECTION("Infinite origin")
+  {
+    const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+    const float32 coordinate = GENERATE_COPY(k_Inf, -k_Inf);
+    CAPTURE(axis, coordinate);
+    FloatVec3 origin = {0, 0, 0};
+    origin[axis] = coordinate;
+    grid.setOrigin(origin);
+    executeAndCheck(0);
+  }
+
+  SECTION("Exterior Y bypasses an unsafe X conversion")
+  {
+    grid.setOrigin({0, k_Inf, 0});
+    const DataPath imagePath({"Image"});
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
+    ds.getDataRefAs<ImageGeom>(imagePath).setOrigin({std::numeric_limits<float32>::quiet_NaN(), 0, 0});
+    executeAndCheck(0);
+  }
 }

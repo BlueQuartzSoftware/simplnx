@@ -12,17 +12,54 @@
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <memory>
 #include <new>
+#include <optional>
 #include <type_traits>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_VertexIndexConversion = -86251;
+
+Result<std::optional<usize>> ComputeCheckedVertexIndex(const ImageGeom& image, const Point3Df& coordinates, const InterpolatePointCloudToRegularGridInputValues& input, usize vertex)
+{
+  const auto dimensions = image.getDimensions();
+  const auto origin = image.getOrigin();
+  const auto spacing = image.getSpacing();
+  // Apply all coordinate bounds before the ordered axis conversions.
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    if(coordinates[axis] < origin[axis] || coordinates[axis] > (static_cast<float32>(dimensions[axis]) * spacing[axis] + origin[axis]))
+    {
+      return {std::optional<usize>{}};
+    }
+  }
+
+  const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
+  std::array<usize, 3> indices = {};
+  for(usize axis = 0; axis < indices.size(); ++axis)
+  {
+    const float32 quotient = std::floor((coordinates[axis] - origin[axis]) / spacing[axis]);
+    if(!std::isfinite(quotient) || quotient < 0 || static_cast<float64>(quotient) >= exclusiveBound)
+    {
+      return MakeErrorResult<std::optional<usize>>(k_VertexIndexConversion, fmt::format("The {} coordinate ({}) of vertex {} in Vertex Geometry to Interpolate '{}' cannot map to a cell in "
+                                                                                        "Interpolated Image Geometry '{}'. Check the vertex coordinates and the image origin and spacing.",
+                                                                                        "XYZ"[axis], coordinates[axis], vertex, input.vertexGeomPath.toString(), input.imageGeomPath.toString()));
+    }
+    indices[axis] = static_cast<usize>(quotient);
+    if(indices[axis] >= dimensions[axis])
+    {
+      return {std::optional<usize>{}};
+    }
+  }
+  return {std::optional<usize>{dimensions[1] * dimensions[0] * indices[2] + dimensions[0] * indices[1] + indices[0]}};
+}
 
 /**
  * @struct VoxelAccumulator
@@ -555,7 +592,12 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     }
 
     const Point3D<float32> coords = vertices->getVertexCoordinate(i);
-    const std::optional<usize> optIndex = image->getIndex(coords[0], coords[1], coords[2]);
+    auto mapped = ComputeCheckedVertexIndex(*image, coords, *m_InputValues, i);
+    if(mapped.invalid())
+    {
+      return ConvertResult(std::move(mapped));
+    }
+    const auto optIndex = mapped.value();
     if(!optIndex.has_value())
     {
       continue;
@@ -762,18 +804,19 @@ Result<InterpolationKernelLayout> InterpolatePointCloudToRegularGrid::ComputeKer
   const auto spacing = image.getSpacing();
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(!std::isfinite(spacing[axis]) || spacing[axis] <= 0)
+    if(std::isfinite(spacing[axis]) && spacing[axis] <= 0)
     {
-      return MakeErrorResult<InterpolationKernelLayout>(k_InvalidImageSpacing, fmt::format("Image Geometry '{}' has invalid spacing on the {} axis ({}). Use a geometry with finite, positive spacing.",
-                                                                                           inputValues.imageGeomPath.toString(), "XYZ"[axis], spacing[axis]));
+      return MakeErrorResult<InterpolationKernelLayout>(k_InvalidImageSpacing,
+                                                        fmt::format("Interpolated Image Geometry '{}' has invalid spacing on the {} axis ({}). Correct the image spacing to a positive value.",
+                                                                    inputValues.imageGeomPath.toString(), "XYZ"[axis], spacing[axis]));
     }
     const float32 radius = inputValues.kernelSize[axis] < spacing[axis] ? 0.0F : std::ceil((inputValues.kernelSize[axis] / spacing[axis]) * 0.5F);
     const float64 exclusiveBound = std::ldexp(1.0, 62);
     if(!std::isfinite(radius) || radius < 0 || static_cast<float64>(radius) >= exclusiveBound)
     {
-      return MakeErrorResult<InterpolationKernelLayout>(k_KernelRadiusRepresentation,
-                                                        fmt::format("Kernel Size ({}) {} gives an invalid radius ({}) for Image Geometry '{}' with spacing {}. Reduce Kernel Size.", "XYZ"[axis],
-                                                                    inputValues.kernelSize[axis], radius, inputValues.imageGeomPath.toString(), spacing[axis]));
+      return MakeErrorResult<InterpolationKernelLayout>(
+          k_KernelRadiusRepresentation, fmt::format("Kernel Size ({}) {} gives an invalid radius ({}) for Image Geometry '{}' with spacing {}. Reduce Kernel Size or check the image spacing.",
+                                                    "XYZ"[axis], inputValues.kernelSize[axis], radius, inputValues.imageGeomPath.toString(), spacing[axis]));
     }
     layout.Radii[axis] = static_cast<int64>(radius);
     const uint64 width = 2 * static_cast<uint64>(layout.Radii[axis]) + 1;

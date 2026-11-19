@@ -136,6 +136,8 @@ Each **Partition Grid Origin** coordinate must be finite. Use the geometry's len
 
 In *Existing Partition Grid* mode, the filter checks the selected grid when it runs.
 If the grid has zero cells, the filter assigns **Out-Of-Bounds Feature ID** to every input element.
+Finite partition grid spacing values must be greater than zero. Exterior points receive **Out-Of-Bounds Feature ID**.
+The filter stops when a coordinate that needs a partition index cannot convert to one.
 
 % Auto generated parameter table will be inserted here
 

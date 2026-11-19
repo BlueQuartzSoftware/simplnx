@@ -18,6 +18,7 @@ constexpr nx::core::int32 k_VoxelBoundsRepresentation = -86132;
 constexpr nx::core::int32 k_GridBorderOutOfRange = -86236;
 constexpr nx::core::int32 k_GridCellCountOverflow = -86238;
 constexpr nx::core::int32 k_GridContainerTooLarge = -86239;
+constexpr nx::core::int32 k_VertexVoxelOutOfRange = -86248;
 
 bool validNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
@@ -123,6 +124,7 @@ Result<> ApproximatePointCloudHull::operator()()
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(numVerts, "Mapping Vertices to Voxels");
+  const std::string inputVertexGeometryPath = m_InputValues->InputVertexGeometryPath.toString();
 
   for(int64 v = 0; v < numVerts; v++)
   {
@@ -137,10 +139,21 @@ Result<> ApproximatePointCloudHull::operator()()
         progressThrottle.updatePercent(v);
       }
     }
-    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0])) - bboxMin[0];
-    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1])) - bboxMin[1];
-    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2])) - bboxMin[2];
-    int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
+    std::array<int64, 3> offset = {};
+    for(usize axis = 0; axis < offset.size(); ++axis)
+    {
+      const float32 coordinate = (*verts)[3 * v + axis];
+      const float64 voxel = std::floor(coordinate * inverseResolution[axis]);
+      // The occupied bounds lie one cell inside the padded grid and fit int64.
+      if(!std::isfinite(voxel) || voxel < minimumVoxelCoordinates[axis] || voxel > maximumVoxelCoordinates[axis])
+      {
+        return MakeErrorResult(k_VertexVoxelOutOfRange,
+                               fmt::format("The {} coordinate ({}) of vertex {} in Vertex Geometry '{}' cannot map to a voxel. Check the coordinates or increase Grid Resolution.", "XYZ"[axis],
+                                           coordinate, v, inputVertexGeometryPath));
+      }
+      offset[axis] = static_cast<int64>(voxel) - bboxMin[axis];
+    }
+    const int64 index = offset[0] * multiplier[0] + offset[1] * multiplier[1] + offset[2] * multiplier[2];
     vertsInVoxels[index].push_back(v);
   }
 

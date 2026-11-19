@@ -25,6 +25,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -614,6 +615,48 @@ TEST_CASE("CreateVertexGeometryAction: existing DataArray at the geometry path",
   CHECK(result.errors().front().message.find(k_GeometryPath.toString()) != std::string::npos);
   CHECK(dataStructure.getDataAs<Float32Array>(k_GeometryPath) != nullptr);
   CHECK(dataStructure.getId(k_GeometryPath) == existingId);
+}
+
+TEST_CASE("simplnx::INodeGeometry0D: Plane detection", "[simplnx][INodeGeometry0D]")
+{
+  DataStructure ds;
+  const DataPath path({"Points"});
+  std::vector<float32> x;
+  bool expected = false;
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  SECTION("Empty vertices")
+  {
+  }
+  SECTION("Equal finite coordinates")
+  {
+    x = {3, 3};
+    expected = true;
+  }
+  SECTION("Unequal finite coordinates")
+  {
+    x = {3, 4};
+  }
+  SECTION("Finite and NaN coordinates")
+  {
+    const bool nanFirst = GENERATE(false, true);
+    x = nanFirst ? std::vector<float32>{k_Nan, 3} : std::vector<float32>{3, k_Nan};
+  }
+  SECTION("All NaN coordinates")
+  {
+    x = {k_Nan, k_Nan};
+    expected = true;
+  }
+  const auto action = CreateVertexGeometryAction(path, x.size(), "Vertex Data", "Vertices").apply(ds, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(action);
+  REQUIRE_NOTHROW(ds.getDataRefAs<VertexGeom>(path));
+  auto& geom = ds.getDataRefAs<VertexGeom>(path);
+  for(usize i = 0; i < x.size(); ++i)
+  {
+    geom.setVertexCoordinate(i, {x[i], 0, 0});
+  }
+  const auto result = geom.isYZPlane();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  CHECK(result.value() == expected);
 }
 
 // Each node geometry inherits the same bounding-box implementation.

@@ -24,9 +24,11 @@
 #include "simplnx/Utilities/SamplingUtils.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
 
 using namespace nx::core;
 
@@ -34,7 +36,6 @@ namespace
 {
 constexpr nx::core::int32 k_AxisConversionRepresentation = -86137;
 constexpr nx::core::int32 k_InvalidPreparedSpacing = -86136;
-constexpr nx::core::int32 k_InvalidPreparedOrigin = -86228;
 constexpr nx::core::int32 k_PreparedCellCountTooLarge = -86229;
 constexpr nx::core::int32 k_PreparedRowCountTooLarge = -86230;
 constexpr nx::core::int32 k_PreparedArrayRowCountTooLarge = -86231;
@@ -58,6 +59,54 @@ constexpr usize k_ProgressRowBatch = 256;
 
 // This sentinel marks a destination position outside the source bounds.
 constexpr usize k_InvalidAxisIndex = std::numeric_limits<usize>::max();
+
+struct AxisSourceMap
+{
+  std::vector<usize> Indices;
+  std::optional<usize> FirstUnsafe;
+  bool HasCandidate = false;
+};
+
+AxisSourceMap MapSourceAxis(usize destDim, float64 destOrigin, float64 destSpacing, usize srcDim, float64 srcOrigin, float64 srcSpacing)
+{
+  AxisSourceMap map{std::vector<usize>(destDim, k_InvalidAxisIndex), std::nullopt, false};
+  const float64 sourceMaximum = static_cast<float64>(srcDim) * srcSpacing + srcOrigin;
+  const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
+  for(usize index = 0; index < destDim; ++index)
+  {
+    const float64 coordinate = static_cast<float64>(index) * destSpacing + destOrigin;
+    if(coordinate < srcOrigin || coordinate > sourceMaximum)
+    {
+      continue;
+    }
+    const float64 quotient = std::floor((coordinate - srcOrigin) / srcSpacing);
+    if(!std::isfinite(quotient) || quotient < 0 || quotient >= exclusiveBound)
+    {
+      // The source dimension is outside the range of valid source indexes.
+      map.Indices[index] = srcDim;
+      if(!map.FirstUnsafe.has_value())
+      {
+        map.FirstUnsafe = index;
+      }
+      map.HasCandidate = true;
+      continue;
+    }
+    const usize sourceIndex = static_cast<usize>(quotient);
+    if(sourceIndex < srcDim)
+    {
+      map.Indices[index] = sourceIndex;
+      map.HasCandidate = true;
+    }
+  }
+  return map;
+}
+
+std::string AxisConversionMessage(usize index, float64 destOrigin, float64 destSpacing, usize srcDim, float64 srcOrigin, float64 srcSpacing)
+{
+  const float64 coordinate = static_cast<float64>(index) * destSpacing + destOrigin;
+  return fmt::format("Resampling cannot find a source cell for destination index {} at coordinate {}. Check the source origin ({}), spacing ({}), and cell count ({}).", index, coordinate, srcOrigin,
+                     srcSpacing, srcDim);
+}
 
 /**
  * @brief Resamples one cell-data array by nearest-source-cell lookup.
@@ -94,37 +143,33 @@ public:
     const FloatVec3 destOrigin = m_DestImageGeom.getOrigin();
     const FloatVec3 destSpacing = m_DestImageGeom.getSpacing();
 
-    // Precompute the independent source-cell mapping for each axis.
-    const auto mapAxis = [&](usize axis) {
-      auto result = ResampleImageGeom::ComputeAxisSourceIndices(destDims[axis], destOrigin[axis], destSpacing[axis], srcDims[axis], srcOrigin[axis], srcSpacing[axis]);
-      if(result.invalid())
+    std::array<AxisSourceMap, 3> maps;
+    bool hasUnsafe = false;
+    bool allTuplesOutside = false;
+    for(usize axis = 0; axis < maps.size(); ++axis)
+    {
+      maps[axis] = MapSourceAxis(destDims[axis], destOrigin[axis], destSpacing[axis], srcDims[axis], srcOrigin[axis], srcSpacing[axis]);
+      hasUnsafe |= maps[axis].FirstUnsafe.has_value();
+      allTuplesOutside |= !maps[axis].HasCandidate;
+    }
+
+    if(hasUnsafe && !allTuplesOutside)
+    {
+      // Every combination of axis positions occurs in the destination grid. An unsafe position
+      // needs conversion if each other axis has at least one position that is not exterior.
+      for(usize axis = 0; axis < maps.size(); ++axis)
       {
-        auto& error = result.errors().front();
-        error.message = fmt::format("Image Geometry '{}' ({} axis). {}", m_SrcImageGeom.getName(), "XYZ"[axis], error.message);
+        if(maps[axis].FirstUnsafe.has_value())
+        {
+          const auto message = AxisConversionMessage(*maps[axis].FirstUnsafe, destOrigin[axis], destSpacing[axis], srcDims[axis], srcOrigin[axis], srcSpacing[axis]);
+          m_TaskResult.store(MakeErrorResult(k_AxisConversionRepresentation, fmt::format("Image Geometry '{}' ({} axis). {}", m_SrcImageGeom.getName(), "XYZ"[axis], message)));
+          return;
+        }
       }
-      return result;
-    };
-    auto xResult = mapAxis(0);
-    if(xResult.invalid())
-    {
-      m_TaskResult.store(ConvertResult(std::move(xResult)));
-      return;
     }
-    auto yResult = mapAxis(1);
-    if(yResult.invalid())
-    {
-      m_TaskResult.store(ConvertResult(std::move(yResult)));
-      return;
-    }
-    auto zResult = mapAxis(2);
-    if(zResult.invalid())
-    {
-      m_TaskResult.store(ConvertResult(std::move(zResult)));
-      return;
-    }
-    const auto& xIndices = xResult.value();
-    const auto& yIndices = yResult.value();
-    const auto& zIndices = zResult.value();
+    const auto& xIndices = maps[0].Indices;
+    const auto& yIndices = maps[1].Indices;
+    const auto& zIndices = maps[2].Indices;
 
     const usize numComponents = m_DestArray.getNumberOfComponents();
     const usize destRowLength = destDims[0] * numComponents;
@@ -134,8 +179,8 @@ public:
     ScratchBuffer<T> destRowBuffer(destRowLength);
     ScratchBuffer<T> srcRowBuffer(srcRowLength);
 
-    // When every destination column maps to a source column the gather below overwrites the whole row,
-    // so the row only needs to be zeroed when some column (or the whole row) has no source.
+    // Clear a row only if it contains exterior cells. The gather overwrites every mapped value.
+    const bool zeroFillAll = hasUnsafe && allTuplesOutside;
     const bool anyUnmappedX = std::find(xIndices.begin(), xIndices.end(), k_InvalidAxisIndex) != xIndices.end();
 
     bool haveCachedSrcRow = false;
@@ -157,11 +202,10 @@ public:
       for(usize y = 0; y < destDims[1]; y++)
       {
         const usize yIndex = yIndices[y];
-        const bool rowHasSource = (zIndex != k_InvalidAxisIndex) && (yIndex != k_InvalidAxisIndex);
+        const bool rowHasSource = !zeroFillAll && (zIndex != k_InvalidAxisIndex) && (yIndex != k_InvalidAxisIndex);
 
         if(!rowHasSource || anyUnmappedX)
         {
-          // Matches the original per-voxel fillTuple(0) fallback for an out-of-bounds source lookup.
           std::fill_n(destRowBuffer.data(), destRowLength, static_cast<T>(0));
         }
 
@@ -254,21 +298,21 @@ Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGe
     {
       spacing = inputValues.Spacing[axis];
     }
-    if(inputValues.ResamplingMode != k_SpacingModeIndex && (!std::isfinite(spacing) || spacing <= 0))
+    if(inputValues.ResamplingMode != k_SpacingModeIndex && std::isfinite(spacing) && spacing <= 0)
     {
       return MakeErrorResult<ResampledImageLayout>(k_DerivedSpacingRepresentation,
-                                                   fmt::format("Image Geometry '{}' has invalid derived spacing on the {} axis ({}). The input spacing is {} and the input dimension is {}. "
-                                                               "Use finite, positive input spacing and check the active resampling setting.",
+                                                   fmt::format("Image Geometry '{}' has invalid output spacing on the {} axis ({}). The input spacing is {} and the input dimension is {}. "
+                                                               "Use positive input spacing and check the active resampling setting.",
                                                                inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], spacing, sourceSpacing[axis], sourceDimensions[axis]));
     }
     layout.Spacing[axis] = spacing;
     const float32 quotient = (sourceSpacing[axis] * static_cast<float32>(sourceDimensions[axis])) / spacing;
     if(!std::isfinite(quotient) || quotient < 0 || static_cast<float64>(quotient) >= exclusiveBound)
     {
-      return MakeErrorResult<ResampledImageLayout>(k_DimensionRepresentation, fmt::format("Image Geometry '{}' cannot use the calculated cell count on the {} axis ({}). The count must be between 0 "
-                                                                                          "and {} (exclusive). The input dimension is {}, the input spacing is {} and New Spacing is {}.",
-                                                                                          inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], quotient, exclusiveBound,
-                                                                                          sourceDimensions[axis], sourceSpacing[axis], spacing));
+      return MakeErrorResult<ResampledImageLayout>(
+          k_DimensionRepresentation, fmt::format("Image Geometry '{}' cannot use the calculated cell count on the {} axis ({}). The count must be at least 0 and less than {}. "
+                                                 "The input dimension is {}, the input spacing is {}, and the output spacing is {}. Check the input geometry and resampling settings.",
+                                                 inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], quotient, exclusiveBound, sourceDimensions[axis], sourceSpacing[axis], spacing));
     }
     layout.Dimensions[axis] = std::max<usize>(1, static_cast<usize>(quotient));
   }
@@ -285,36 +329,6 @@ Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGe
 }
 
 // -----------------------------------------------------------------------------
-Result<std::vector<usize>> ResampleImageGeom::ComputeAxisSourceIndices(usize destDim, float64 destOrigin, float64 destSpacing, usize srcDim, float64 srcOrigin, float64 srcSpacing)
-{
-  std::vector<usize> indices(destDim, k_InvalidAxisIndex);
-  const float64 sourceMaximum = static_cast<float64>(srcDim) * srcSpacing + srcOrigin;
-  const float64 exclusiveBound = std::ldexp(1.0, std::numeric_limits<usize>::digits);
-  for(usize index = 0; index < destDim; ++index)
-  {
-    const float64 coordinate = static_cast<float64>(index) * destSpacing + destOrigin;
-    if(coordinate < srcOrigin || coordinate > sourceMaximum)
-    {
-      continue;
-    }
-    const float64 quotient = std::floor((coordinate - srcOrigin) / srcSpacing);
-    if(!std::isfinite(quotient) || quotient < 0 || quotient >= exclusiveBound)
-    {
-      return MakeErrorResult<std::vector<usize>>(
-          k_AxisConversionRepresentation,
-          fmt::format("Resampling cannot find a source cell for destination index {} at coordinate {}. Check the source origin ({}), spacing ({}), and cell count ({}).", index, coordinate, srcOrigin,
-                      srcSpacing, srcDim));
-    }
-    const usize sourceIndex = static_cast<usize>(quotient);
-    if(sourceIndex < srcDim)
-    {
-      indices[index] = sourceIndex;
-    }
-  }
-  return {std::move(indices)};
-}
-
-// -----------------------------------------------------------------------------
 namespace
 {
 Result<> ValidatePreparedGeometry(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues)
@@ -324,19 +338,13 @@ Result<> ValidatePreparedGeometry(const DataStructure& dataStructure, const Resa
     const auto& geometry = dataStructure.getDataRefAs<ImageGeom>(path);
     const auto dimensions = geometry.getDimensions();
     const auto spacing = geometry.getSpacing();
-    const auto origin = geometry.getOrigin();
     usize tuples = 1;
     for(usize axis = 0; axis < 3; ++axis)
     {
-      if(!std::isfinite(spacing[axis]) || spacing[axis] <= 0)
+      if(std::isfinite(spacing[axis]) && spacing[axis] <= 0)
       {
         return MakeErrorResult(k_InvalidPreparedSpacing,
-                               fmt::format("Image Geometry '{}' has invalid spacing on the {} axis ({}). Use a geometry with finite, positive spacing.", path.toString(), "XYZ"[axis], spacing[axis]));
-      }
-      if(!std::isfinite(origin[axis]))
-      {
-        return MakeErrorResult(k_InvalidPreparedOrigin,
-                               fmt::format("Image Geometry '{}' has an invalid origin on the {} axis ({}). Use a geometry with a finite origin.", path.toString(), "XYZ"[axis], origin[axis]));
+                               fmt::format("Image Geometry '{}' has invalid spacing on the {} axis ({}). Correct the image spacing to a positive value.", path.toString(), "XYZ"[axis], spacing[axis]));
       }
     }
     if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0)

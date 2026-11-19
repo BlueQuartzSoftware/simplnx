@@ -2110,7 +2110,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Resampled stack product must
   CHECK(message.find(mode == 1 ? "Exact 2D Dimensions (Pixels)" : "Scaling (%)") == std::string::npos);
 }
 
-TEST_CASE("NXImageProcessing::ReadImageStackFilter: Derived spacing warning uses shared terminology", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Calculated cell count warning uses shared terminology", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
 {
   DataStructure ds;
   auto args = CreateResamplingDomainStackArgs("ReadImageStackDerivedSpacing");
@@ -2124,10 +2124,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Derived spacing warning uses
   const auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.warnings().size() == 1);
-  const auto& warning = preflight.outputActions.warnings().front();
-  CHECK(warning.code == -86129);
-  CHECK(warning.message.find("Scale Factor (percentages)") == std::string::npos);
-  CHECK(warning.message.find("Exact Dimensions (pixels)") == std::string::npos);
+  const auto& countWarning = preflight.outputActions.warnings().front();
+  CHECK(countWarning.code == -86130);
+  CHECK(countWarning.message.find("output spacing") != std::string::npos);
+  CHECK(countWarning.message.find("Scale Factor (percentages)") == std::string::npos);
+  CHECK(countWarning.message.find("Exact Dimensions (pixels)") == std::string::npos);
+
+  const auto execution = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(execution.result);
+  REQUIRE(execution.result.errors().size() == 1);
+  CHECK(execution.result.errors()[0].code == -86127);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: Exact stack product covers requested and planned dimensions", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")

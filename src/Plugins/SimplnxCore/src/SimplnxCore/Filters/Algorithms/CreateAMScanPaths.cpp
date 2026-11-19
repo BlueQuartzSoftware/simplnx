@@ -23,6 +23,8 @@ namespace
 {
 constexpr int32 k_HatchSpacingTooSmall = -86227;
 constexpr int32 k_HatchLineLimitExceeded = -86210;
+constexpr int32 k_HatchStartOutOfRange = -86249;
+constexpr int32 k_HatchPositionOutOfRange = -86250;
 // Each line scans every edge in the region and can add segments to the in-memory slice.
 constexpr usize k_MaxHatchLinesPerRegionSlice = 1'000'000;
 
@@ -148,7 +150,7 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
  * @param angleRadians Specifies hatch rotation in radians.
  * @param inputPath Identifies the input edge geometry for diagnostics.
  * @param shouldCancel Stops the count or hatch generation.
- * @return Hatch segments in the original coordinate system or an error if the line count is too large.
+ * @return Hatch segments in the input coordinate system or a hatch position or count error.
  * @pre Each hatch line has one filled interval and lineSpacing is positive.
  *
  * The loop connects adjacent sorted crossings. Concave polygons can fill
@@ -188,7 +190,7 @@ Result<std::vector<LineSegment>> fillPolygonWithParallelLines(const std::vector<
     maxY = std::max(v.y(), maxY);
   }
 
-  // Keep the original grid alignment when it fits in float32.
+  // Use float32 grid alignment when it gives a finite start position.
   float32 firstLine = std::floor(minY / lineSpacing) * lineSpacing;
   if(firstLine < minY)
   {
@@ -209,7 +211,12 @@ Result<std::vector<LineSegment>> fillPolygonWithParallelLines(const std::vector<
   // Count the rounded positions before finding intersections. Rounding can move
   // the actual count to either side of the limit.
   usize numLines = 0;
-  auto countY = static_cast<float32>(runStartY);
+  auto start = CreateAMScanPathsDetail::CheckedHatchY(runStartY, true, inputPath);
+  if(start.invalid())
+  {
+    return ConvertInvalidResult<std::vector<LineSegment>>(std::move(start));
+  }
+  float32 countY = start.value();
   for(; numLines < k_MaxHatchLinesPerRegionSlice && countY <= maxY; ++numLines)
   {
     if(shouldCancel)
@@ -242,9 +249,14 @@ Result<std::vector<LineSegment>> fillPolygonWithParallelLines(const std::vector<
     {
       return {std::vector<LineSegment>{}};
     }
-    // Start a new indexed run whenever float32 rounding changes the
-    // increment. This keeps the coordinates of the original hatch grid.
-    const auto lineY = static_cast<float32>(runStartY + static_cast<float64>(lineIndex - runStartIndex) * spacing);
+    // Start a new indexed run when float32 rounding changes the increment.
+    // Each run uses the positions of the rounded recurrence.
+    auto position = CreateAMScanPathsDetail::CheckedHatchY(runStartY + static_cast<float64>(lineIndex - runStartIndex) * spacing, false, inputPath);
+    if(position.invalid())
+    {
+      return ConvertInvalidResult<std::vector<LineSegment>>(std::move(position));
+    }
+    const float32 lineY = position.value();
     if(lineIndex + 1 < numLines)
     {
       const float64 nextSpacing = static_cast<float64>(lineY + lineSpacing) - lineY;
@@ -268,7 +280,7 @@ Result<std::vector<LineSegment>> fillPolygonWithParallelLines(const std::vector<
       }
     }
 
-    std::sort(intersections.begin(), intersections.end(), [](const Eigen::Vector3f& a, const Eigen::Vector3f& b) { return a.x() < b.x(); });
+    std::sort(intersections.begin(), intersections.end(), [](const Eigen::Vector3f& a, const Eigen::Vector3f& b) { return CreateAMScanPathsDetail::IntersectionXLess(a.x(), b.x()); });
 
     for(size_t i = 0; i + 1 < intersections.size(); i++)
     {
@@ -393,6 +405,24 @@ void printRegionSliceFiles(int32 regionId, int32 sliceId, const std::vector<Line
 }
 
 } // namespace
+
+Result<float32> CreateAMScanPathsDetail::CheckedHatchY(float64 position, bool isStart, const DataPath& inputPath)
+{
+  constexpr float64 k_MaxCoordinate = std::numeric_limits<float32>::max();
+  if(!std::isfinite(position) || position < -k_MaxCoordinate || position > k_MaxCoordinate)
+  {
+    return MakeErrorResult<float32>(
+        isStart ? k_HatchStartOutOfRange : k_HatchPositionOutOfRange,
+        fmt::format("The {} at Y={} in Slice Data Container '{}' is outside the supported coordinate range. Check the edge coordinates, Hatch Spacing, and Hatch Rotation Angle (Degrees).",
+                    isStart ? "first hatch line" : "hatch line position", position, inputPath.toString()));
+  }
+  return {static_cast<float32>(position)};
+}
+
+bool CreateAMScanPathsDetail::IntersectionXLess(float32 left, float32 right)
+{
+  return left < right || (!std::isnan(left) && std::isnan(right));
+}
 
 CreateAMScanPaths::CreateAMScanPaths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateAMScanPathsInputValues* inputValues)
 : m_DataStructure(dataStructure)

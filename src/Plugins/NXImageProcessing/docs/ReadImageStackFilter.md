@@ -73,8 +73,9 @@ In *Exact X/Y Dimensions (2)* mode, each value in **Exact 2D Dimensions (Pixels)
 The filter checks the total pixel count across all selected slices.
 If the stack is too large, decrease **Scaling (%)** or **Exact 2D Dimensions (Pixels)** for the selected mode, or select fewer slices.
 
-If preflight cannot calculate a valid output size, it warns and uses a temporary size for the preview.
-The filter calculates the size again as it reads each image. If the size is still invalid, it stops before it copies that image.
+If preflight cannot calculate a valid output cell count or spacing, it warns and uses a temporary size for the preview.
+The filter calculates the size again as it reads each image. If that calculation fails, it stops before it copies that image.
+Cells outside the source image receive zero values. If an output cell needs a source index that cannot be calculated, the filter stops before it copies that image.
 Images copied earlier can remain in the output.
 
 ### Grayscale Conversion

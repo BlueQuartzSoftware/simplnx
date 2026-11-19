@@ -959,12 +959,12 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Derived spacing warnings", "[Si
   auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.warnings().size() == 1);
-  CHECK(preflight.outputActions.warnings()[0].code == -86129);
+  CHECK(preflight.outputActions.warnings()[0].code == (underflow ? -86129 : -86130));
   CHECK(preflight.outputActions.warnings()[0].message.find("The preview uses one cell per axis") != std::string::npos);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
-  CHECK(result.result.errors()[0].code == -86126);
+  CHECK(result.result.errors()[0].code == (underflow ? -86126 : -86127));
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
   const auto& placeholder = ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"}));
   CHECK(placeholder.getDimensions() == SizeVec3{1, 1, 1});
@@ -1016,15 +1016,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Pipeline provisional spacing", 
       REQUIRE(pipeline.preflight(ds, false));
       const auto* node = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
       REQUIRE(node != nullptr);
-      bool found = false;
       for(const auto& warning : node->getWarnings())
       {
-        if(warning.code == -86129)
-        {
-          found = true;
-        }
+        CHECK(warning.code != -86129);
+        CHECK(warning.code != -86130);
       }
-      CHECK(found);
+      REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})));
+      CHECK(ds.getDataRefAs<ImageGeom>(DataPath({"Resampled"})).getDimensions() == SizeVec3{1, 1, 1});
     }
     else
     {
@@ -1160,4 +1158,29 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Public exact count vector lengt
   CHECK(result.outputActions.errors()[0].code == -1);
   CHECK(filter.parameters().at(ResampleImageGeomFilter::k_ExactDimensions_Key)->humanName() == "Exact Dimensions (pixels)");
   CHECK(result.outputActions.errors()[0].message == "VectorParameter requires size 3. Received size 2.");
+}
+
+TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Shared infinite origin", "[SimplnxCore][ResampleImageGeomFilter]")
+{
+  DataStructure ds;
+  CreateSamplingImage(ds);
+  const DataPath sourcePath({"Image"});
+  const DataPath destinationPath({"Resampled"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(sourcePath));
+  ds.getDataRefAs<ImageGeom>(sourcePath).setOrigin({std::numeric_limits<float32>::infinity(), 0, 0});
+
+  const ResampleImageGeomFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key, sourcePath);
+  args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, destinationPath);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, false);
+  args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, uint64{0});
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::vector<float32>{1, 1, 1});
+
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == -86137);
+  CHECK(result.result.errors()[0].message.find("'Image' (X axis)") != std::string::npos);
 }

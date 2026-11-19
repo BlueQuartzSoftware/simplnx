@@ -20,34 +20,72 @@ namespace
 constexpr usize k_InvalidPartitionIndex = std::numeric_limits<usize>::max();
 
 /**
- * @brief Maps final input cell centers to checked flat partition offsets.
- * @param inputDimension Gives the input axis length.
- * @param inputOrigin Gives the input axis origin in geometry length units.
- * @param inputSpacing Gives the input cell spacing in geometry length units.
- * @param partitionGrid Provides final partition metadata.
+ * @brief Tries to map an image axis to flat partition-index contributions.
+ * @param inputGrid Supplies the input cell centers.
+ * @param partitionGrid Defines the cells that receive the input centers.
  * @param axis Selects X, Y or Z.
- * @param inputPath Identifies the input image geometry.
- * @return Axis offsets, unmapped sentinels or an index-conversion error.
+ * @param stride Gives the partition index increment for one cell along the axis.
+ * @return Offsets or exterior sentinels. An unsafe conversion requires checking actual input tuples.
  */
-Result<std::vector<usize>> CreateImageAxisPartitionIndices(usize inputDimension, float32 inputOrigin, float32 inputSpacing, const ImageGeom& partitionGrid, usize axis, const DataPath& inputPath)
+std::optional<std::vector<usize>> CreateImageAxisPartitionIndices(const ImageGeom& inputGrid, const ImageGeom& partitionGrid, usize axis, usize stride)
 {
+  const auto inputDimension = inputGrid.getDimensions()[axis];
+  const auto inputOrigin = inputGrid.getOrigin()[axis];
+  const auto inputSpacing = inputGrid.getSpacing()[axis];
+  const auto partitionDimension = partitionGrid.getDimensions()[axis];
+  const auto partitionOrigin = partitionGrid.getOrigin()[axis];
+  const auto partitionSpacing = partitionGrid.getSpacing()[axis];
   std::vector<usize> partitionIndices(inputDimension, k_InvalidPartitionIndex);
-  const auto partitionOrigin = partitionGrid.getOrigin();
   for(usize index = 0; index < inputDimension; ++index)
   {
-    Point3D<float64> coordinate = {partitionOrigin[0], partitionOrigin[1], partitionOrigin[2]};
-    coordinate[axis] = static_cast<float64>(index) * inputSpacing + inputOrigin + (0.5 * inputSpacing);
-    auto result = ComputeCheckedPartitionIndex(partitionGrid, coordinate, inputPath, index);
-    if(result.invalid())
+    const float64 coordinate = static_cast<float64>(index) * inputSpacing + inputOrigin + (0.5 * inputSpacing);
+    const auto mapped = detail::TryMapPartitionAxis(coordinate, partitionDimension, partitionOrigin, partitionSpacing);
+    if(!mapped.has_value())
     {
-      return ConvertInvalidResult<std::vector<usize>>(std::move(result));
+      return {};
     }
-    if(result.value().has_value())
+    if(*mapped < partitionDimension)
     {
-      partitionIndices[index] = *result.value();
+      partitionIndices[index] = *mapped * stride;
     }
   }
   return {std::move(partitionIndices)};
+}
+
+/**
+ * @brief Checks whether every rectilinear axis can use the Direct worker.
+ * @param grid Supplies the input dimensions.
+ * @param partitionGrid Defines the cells that receive the input centers.
+ * @param centers Reads the input centers through contiguous buffers.
+ * @param shouldCancel Stops the proof when true.
+ * @return True for safe axes, false if actual tuples need checking, or a store read error.
+ */
+Result<bool> CanMapRectGridAxes(const RectGridGeom& grid, const ImageGeom& partitionGrid, detail::RectGridPartitionCenters& centers, const std::atomic_bool& shouldCancel)
+{
+  const auto inputDimensions = grid.getDimensions();
+  const auto dimensions = partitionGrid.getDimensions();
+  const auto origin = partitionGrid.getOrigin();
+  const auto spacing = partitionGrid.getSpacing();
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    for(usize index = 0; index < inputDimensions[axis]; ++index)
+    {
+      if(shouldCancel)
+      {
+        return {false};
+      }
+      auto center = centers.readAxis(axis, index);
+      if(center.invalid())
+      {
+        return ConvertInvalidResult<bool>(std::move(center));
+      }
+      if(!detail::TryMapPartitionAxis(center.value(), dimensions[axis], origin[axis], spacing[axis]).has_value())
+      {
+        return {false};
+      }
+    }
+  }
+  return {true};
 }
 
 /**
@@ -434,42 +472,31 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
   if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStore != nullptr)
   {
     const auto& imageGeom = static_cast<const ImageGeom&>(inputGeometry);
-    const FloatVec3 inputOrigin = imageGeom.getOrigin();
-    const FloatVec3 inputSpacing = imageGeom.getSpacing();
-    auto xResult = CreateImageAxisPartitionIndices(dims[0], inputOrigin[0], inputSpacing[0], psImageGeom, 0, inputPath);
-    if(xResult.invalid())
+    const auto partitionDims = psImageGeom.getDimensions();
+    const auto xIndices = CreateImageAxisPartitionIndices(imageGeom, psImageGeom, 0, 1);
+    const auto yIndices = CreateImageAxisPartitionIndices(imageGeom, psImageGeom, 1, partitionDims[0]);
+    const auto zIndices = CreateImageAxisPartitionIndices(imageGeom, psImageGeom, 2, partitionDims[0] * partitionDims[1]);
+    if(xIndices.has_value() && yIndices.has_value() && zIndices.has_value())
     {
-      return ConvertResult(std::move(xResult));
+      dataAlg.execute(PartitionImageGeometryImpl(dims, *xIndices, *yIndices, *zIndices, inMemoryPartitionIdsStore->data(), m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
+      return {};
     }
-    auto yResult = CreateImageAxisPartitionIndices(dims[1], inputOrigin[1], inputSpacing[1], psImageGeom, 1, inputPath);
-    if(yResult.invalid())
-    {
-      return ConvertResult(std::move(yResult));
-    }
-    auto zResult = CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], psImageGeom, 2, inputPath);
-    if(zResult.invalid())
-    {
-      return ConvertResult(std::move(zResult));
-    }
-    const auto& xPartitionIndices = xResult.value();
-    const auto& yPartitionIndices = yResult.value();
-    const auto& zPartitionIndices = zResult.value();
-
-    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStore->data(), m_InputValues->StartingFeatureID, outOfBoundsValue,
-                                               m_ShouldCancel));
-    return {};
   }
 
-  // Check immutable input coordinates before workers use unchecked index conversion.
+  // The fast axis proof can fail for an axis that no actual cell needs to convert.
+  std::optional<detail::RectGridPartitionCenters> rectCenters;
+  bool axesAreSafe = false;
   if(rectGrid != nullptr)
   {
-    auto checked = ValidateRectGridPartitionCoordinates(*rectGrid, psImageGeom, inputPath, m_ShouldCancel);
-    if(checked.invalid() || m_ShouldCancel)
+    rectCenters.emplace(*rectGrid);
+    auto checked = CanMapRectGridAxes(*rectGrid, psImageGeom, *rectCenters, m_ShouldCancel);
+    if(checked.invalid())
     {
-      return checked;
+      return ConvertResult(std::move(checked));
     }
+    axesAreSafe = checked.value();
   }
-  else
+  if(!axesAreSafe)
   {
     for(usize index = 0; index < partitionIdsStore.getNumberOfTuples(); ++index)
     {
@@ -477,7 +504,12 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
       {
         return {};
       }
-      auto checked = ComputeCheckedPartitionIndex(psImageGeom, inputGeometry.getCoords(index), inputPath, index);
+      auto coordinate = rectCenters.has_value() ? rectCenters->readTuple(index) : Result<Point3D<float64>>{inputGeometry.getCoords(index)};
+      if(coordinate.invalid())
+      {
+        return ConvertResult(std::move(coordinate));
+      }
+      auto checked = ComputeCheckedPartitionIndex(psImageGeom, coordinate.value(), inputPath, index);
       if(checked.invalid())
       {
         return ConvertResult(std::move(checked));

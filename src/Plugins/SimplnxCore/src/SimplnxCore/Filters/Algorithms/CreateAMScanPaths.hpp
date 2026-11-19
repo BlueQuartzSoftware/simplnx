@@ -26,6 +26,26 @@ struct SIMPLNXCORE_EXPORT CreateAMScanPathsInputValues
   DataObjectNameParameter::ValueType RegionIdsArrayName;
 };
 
+namespace CreateAMScanPathsDetail
+{
+/**
+ * @brief Checks that a hatch Y coordinate fits in the output coordinate type.
+ * @param position Gives the Y coordinate in the rotated frame.
+ * @param isStart Selects the diagnostic for the first line before counting.
+ * @param inputPath Identifies the input edge geometry.
+ * @return The float32 coordinate or an error.
+ */
+SIMPLNXCORE_EXPORT Result<float32> CheckedHatchY(float64 position, bool isStart, const DataPath& inputPath);
+
+/**
+ * @brief Orders intersection X coordinates with NaN after all numbers.
+ * @param left Gives the first X coordinate.
+ * @param right Gives the second X coordinate.
+ * @return True if the first coordinate precedes the second.
+ */
+SIMPLNXCORE_EXPORT bool IntersectionXLess(float32 left, float32 right);
+} // namespace CreateAMScanPathsDetail
+
 /**
  * @class CreateAMScanPaths
  * @brief This filter will generate additive manufacturing scan paths from an edge geometry
@@ -45,7 +65,7 @@ public:
   /**
    * @brief Generates hatch paths from closed slice edges.
    * @pre Hatch Spacing is finite and positive; consumed rotation radians are finite.
-   * @return Success, a hatch-line limit error, or an output resize error.
+   * @return Success, a hatch position or count error, or an output resize error.
    */
   Result<> operator()();
 

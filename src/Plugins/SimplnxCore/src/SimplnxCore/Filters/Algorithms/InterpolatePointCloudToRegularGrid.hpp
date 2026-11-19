@@ -98,11 +98,11 @@ public:
   Result<> operator()();
 
   /**
-   * @brief Identifies a kernel radius that is too large.
+   * @brief Identifies a kernel radius that cannot convert to a cell count.
    */
   static constexpr int32 k_KernelRadiusRepresentation = -86165;
   /**
-   * @brief Identifies an input image spacing that is nonfinite or nonpositive.
+   * @brief Identifies a finite input image spacing that is zero or negative.
    */
   static constexpr int32 k_InvalidImageSpacing = -86224;
   /**
@@ -127,7 +127,7 @@ public:
    * @param image Provides physical cell spacing, possibly provisional during preflight.
    * @param inputValues Provides finite nonnegative physical kernel extents and the image path.
    * @pre kernelSize has three finite nonnegative components.
-   * @return The layout, or a spacing, radius, width, product, byte-count, or container-size error.
+   * @return The layout, or an error for finite nonpositive spacing or an unrepresentable kernel.
    */
   static Result<InterpolationKernelLayout> ComputeKernelLayout(const ImageGeom& image, const InterpolatePointCloudToRegularGridInputValues& inputValues);
 

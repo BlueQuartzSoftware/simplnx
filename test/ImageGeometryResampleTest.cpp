@@ -70,8 +70,8 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     source->setSpacing({3e38F, 1, 1});
     input.ResamplingMode = 2;
     input.ExactDimensions = {1, 1, 1};
-    expectedCode = -86126;
-    context = "invalid derived spacing on the X axis (inf)";
+    expectedCode = -86127;
+    context = "calculated cell count on the X axis";
   }
   SECTION("Spacing underflow")
   {
@@ -80,7 +80,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     input.ResamplingMode = 1;
     input.Scaling = {200, 100, 100};
     expectedCode = -86126;
-    context = "invalid derived spacing on the X axis (0)";
+    context = "invalid output spacing on the X axis (0)";
   }
   SECTION("Dimension exclusive bound")
   {
@@ -117,6 +117,11 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     CHECK(result.errors()[0].message.find(context) != std::string::npos);
     const auto& message = result.errors()[0].message;
     CHECK(message.find("Source") != std::string::npos);
+    if(expectedCode == -86127)
+    {
+      CHECK(message.find("output spacing") != std::string::npos);
+      CHECK(message.find("at least 0 and less than") != std::string::npos);
+    }
     if(expectedCode == -86126)
     {
       CHECK(message.find("Scale Factor (percentages)") == std::string::npos);
@@ -126,15 +131,6 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
   CHECK(source->getDimensions() == originalDimensions);
   CHECK(source->getSpacing() == originalSpacing);
   CHECK(source->getOrigin() == originalOrigin);
-}
-
-TEST_CASE("simplnx::ImageGeometryResample: Axis conversion bound", "[simplnx][ImageGeometryResample]")
-{
-  auto result = ResampleImageGeom::ComputeAxisSourceIndices(1, std::ldexp(1.0, 64), 1, std::numeric_limits<usize>::max(), 0, 1);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
-  CHECK(result.errors()[0].code == -86137);
-  CHECK(result.errors()[0].message.find("cannot find a source cell") != std::string::npos);
 }
 
 namespace
@@ -226,14 +222,56 @@ TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simp
   REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Destination"})));
   auto& destination = ds.getDataRefAs<ImageGeom>(DataPath({"Destination"}));
   int32 expectedCode = -86136;
-  SECTION("Spacing")
+  constexpr auto k_Nan = std::numeric_limits<float32>::quiet_NaN();
+  constexpr auto k_Inf = std::numeric_limits<float32>::infinity();
+  SECTION("NaN spacing")
   {
-    destination.setSpacing({std::numeric_limits<float32>::quiet_NaN(), 1, 1});
+    destination.setSpacing({k_Nan, 1, 1});
+    expectedCode = -86137;
   }
-  SECTION("Origin")
+  SECTION("Finite nonpositive spacing")
   {
-    destination.setOrigin({std::numeric_limits<float32>::infinity(), 0, 0});
-    expectedCode = -86228;
+    destination.setSpacing({0, 1, 1});
+  }
+  SECTION("Infinite destination origin")
+  {
+    destination.setOrigin({k_Inf, 0, 0});
+    expectedCode = 0;
+  }
+  SECTION("Coincident infinite origins")
+  {
+    REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(DataPath({"Source"})));
+    ds.getDataRefAs<ImageGeom>(DataPath({"Source"})).setOrigin({k_Inf, 0, 0});
+    destination.setOrigin({k_Inf, 0, 0});
+    expectedCode = -86137;
+  }
+  SECTION("Exterior axis with unsafe axes")
+  {
+    const usize outside = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(outside);
+    FloatVec3 origin = {k_Nan, k_Nan, k_Nan};
+    origin[outside] = k_Inf;
+    destination.setOrigin(origin);
+    expectedCode = 0;
+  }
+  SECTION("Unsafe origin with interior coordinates")
+  {
+    destination.setOrigin({0, k_Nan, 0});
+    expectedCode = -86137;
+  }
+  SECTION("Unsafe axes with interior coordinates")
+  {
+    const usize inside = GENERATE(usize{0}, usize{1}, usize{2});
+    CAPTURE(inside);
+    FloatVec3 origin = {k_Nan, k_Nan, k_Nan};
+    origin[inside] = 0;
+    destination.setOrigin(origin);
+    expectedCode = -86137;
+  }
+  SECTION("One exterior tuple and one unsafe tuple")
+  {
+    destination.setOrigin({-1, k_Nan, 0});
+    expectedCode = -86137;
   }
   SECTION("Cell count")
   {
@@ -278,14 +316,21 @@ TEST_CASE("simplnx::ImageGeometryResample: Prepared metadata stops copy", "[simp
   const std::atomic_bool cancel = false;
   const IFilter::MessageHandler handler;
   auto result = ResampleImageGeom(ds, handler, cancel, &input)();
-  SIMPLNX_RESULT_REQUIRE_INVALID(result);
-  REQUIRE(result.errors().size() == 1);
   CAPTURE(expectedCode);
-  CHECK(result.errors()[0].code == expectedCode);
+  if(expectedCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors()[0].code == expectedCode);
+  }
   REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"})));
   const auto& values = ds.getDataRefAs<Int32Array>(DataPath({"Destination", "Cell Data", "Marker"}));
-  CHECK(values[0] == 31);
-  CHECK(values[1] == 37);
+  CHECK(values[0] == (expectedCode == 0 ? 0 : 31));
+  CHECK(values[1] == (expectedCode == 0 ? 0 : 37));
 }
 
 TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps the source length unit", "[simplnx][PreflightImageGeometryResample]")
