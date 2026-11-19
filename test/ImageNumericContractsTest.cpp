@@ -1,6 +1,8 @@
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/IDataStoreWritePreparation.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
@@ -224,6 +226,41 @@ TEST_CASE("Otsu masked labeling: two thresholds give the same classes across the
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const auto labels = output.createSpan();
   REQUIRE(std::equal(labels.begin(), labels.end(), expected.begin(), expected.end()));
+}
+
+TEST_CASE("Otsu masked labeling: cancellation during write preparation preserves the warning and destination", "[simplnx][ImageNumericContracts]")
+{
+  struct CancellingOutput : DataStore<uint8>, IDataStoreWritePreparation
+  {
+    using DataStore<uint8>::DataStore;
+
+    const std::atomic_bool& cancellationFlag() const
+    {
+      return m_ShouldCancel;
+    }
+
+    Result<> prepareForWrite() override
+    {
+      m_ShouldCancel = true;
+      return MakeWarningVoidResult(1, "Prepared output before cancellation");
+    }
+
+  private:
+    std::atomic_bool m_ShouldCancel{false};
+  };
+
+  const DataStore<uint8> input({4}, {1}, uint8{0});
+  DataStore<uint8> mask({4}, {1}, uint8{1});
+  CancellingOutput output({4}, {1}, uint8{99});
+  const auto result = ImageProcessing::ApplyOtsuImage(input, output, &mask, ImageProcessing::OtsuImageOptions{}, output.cancellationFlag(), {});
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(output.cancellationFlag().load());
+  REQUIRE(result.warnings().size() == 1);
+  REQUIRE(result.warnings().front().code == 1);
+  const auto labels = output.createSpan();
+  REQUIRE(std::ranges::all_of(labels, [](uint8 label) { return label == 99; }));
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 }
 
 TEST_CASE("Image reconstruction: preserve native integer marker offsets", "[simplnx][ImageNumericContracts]")

@@ -510,6 +510,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStoreWritePreparation.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IListStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
@@ -777,6 +778,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureGraphViz.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureJson.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructureText.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStoreWritePreparation.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
