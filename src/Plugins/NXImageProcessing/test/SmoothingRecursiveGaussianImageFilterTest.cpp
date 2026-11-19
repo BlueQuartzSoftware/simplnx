@@ -1341,8 +1341,10 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: resident in
   const auto edges = image_integration::Read<float32>(dataStructure, input.replaceName("Gradient"), {1, 4, 16}, scope);
   if(step)
   {
-    // A pass-through preserves the step and its symmetries. Smoothing spreads it past the immediate neighbors.
+    // Smoothing spreads the edge into both neighboring columns while keeping the dark side on the left.
     REQUIRE(values[6] > 1.0e-3F);
+    REQUIRE(values[6] < 0.5F);
+    REQUIRE(values[9] > 0.5F);
     REQUIRE(values[9] < 1.0F - 1.0e-3F);
   }
   for(usize row = 0; row < 4; ++row)
