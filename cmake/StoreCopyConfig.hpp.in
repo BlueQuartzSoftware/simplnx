@@ -1,0 +1,6 @@
+#pragma once
+
+// When enabled, reject a requested storage format when no registered factory
+// supports the requested store type. This applies to numeric array creation,
+// import planning, and store copies.
+#cmakedefine01 SIMPLNX_STORE_COPY_STRICT_FORMAT

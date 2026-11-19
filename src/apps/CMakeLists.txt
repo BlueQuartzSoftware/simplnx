@@ -146,9 +146,6 @@ simplnx_enable_warnings(TARGET nxinfo)
 # tests depend on it through a ctest fixture.
 # -----------------------------------------------------------------------
 if(SIMPLNX_BUILD_TESTS)
-  # This directory is configured before the top-level include(CTest) call.
-  enable_testing()
-
   set(NXINFO_TEST_INPUT "${SIMPLNX_TEST_OUTPUT_DIR}/nxinfo_ctest_input.dream3d")
   set(NXINFO_TEST_INVALID_INPUT "${SIMPLNX_TEST_OUTPUT_DIR}/nxinfo_ctest_invalid.dream3d")
   set(NXINFO_TEST_OUTPUT "${SIMPLNX_TEST_OUTPUT_DIR}/nxinfo_dump.json")
