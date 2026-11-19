@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IDataStoreWritePreparation.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
@@ -342,6 +343,19 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
   Result<> status;
   try
   {
+    if(shouldCancel)
+    {
+      return status;
+    }
+    // A reopened destination may need the same working allowance to prepare its first write.
+    if(auto* preparationPtr = dynamic_cast<IDataStoreWritePreparation*>(&output); preparationPtr != nullptr)
+    {
+      status = preparationPtr->prepareForWrite();
+      if(status.invalid() || shouldCancel)
+      {
+        return status;
+      }
+    }
     const usize total = input.getSize();
     constexpr usize minimumValues = 65536;
     constexpr usize preferredBytes = 32ULL * 1024ULL * 1024ULL;
