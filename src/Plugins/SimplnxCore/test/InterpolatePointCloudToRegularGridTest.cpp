@@ -546,7 +546,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Spatial parame
   CHECK(result.outputActions.errors()[0].message.find(parameter) != std::string::npos);
 
   CHECK(result.outputActions.errors()[0].message.find(fmt::format("{}", value)) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(std::string(1, std::isfinite(value) ? "XYZ"[axis] : "xyz"[axis])) != std::string::npos);
+  CHECK(result.outputActions.errors()[0].message.find(fmt::format("Gaussian Sigmas ({})", "xyz"[axis])) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Gaussian and inactive controls", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][SpatialSamplingControls]")
@@ -837,6 +837,27 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel executi
   CHECK(result.result.errors()[0].code == -86165 - row);
 }
 
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid spacing warning", "[SimplnxCore][GeometryCountControls]")
+{
+  DataStructure ds;
+  auto args = CreateCountInterpolationFixture(ds);
+  const DataPath imagePath({"Image"});
+  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(imagePath));
+  ds.getDataRefAs<ImageGeom>(imagePath).setSpacing({0, 1, 1});
+
+  const InterpolatePointCloudToRegularGridFilter filter;
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings()[0].code == -86244);
+  CHECK(preflight.outputActions.warnings()[0].message.find("invalid spacing") != std::string::npos);
+
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors()[0].code == -86224);
+}
+
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel container boundary", "[SimplnxCore][GeometryCountControls]")
 {
   const usize count = (usize{1} << 61) + 3 * (usize{1} << 30) + 1;
@@ -864,7 +885,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Kernel contain
     auto preflight = filter.preflight(executionDs, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.warnings().size() == 1);
-    CHECK(preflight.outputActions.warnings()[0].code == -86170);
+    CHECK(preflight.outputActions.warnings()[0].code == -86246);
     auto executed = filter.execute(executionDs, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executed.result);
     CHECK(executed.result.errors()[0].code == -86226);
@@ -997,6 +1018,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Provisional ke
         {
           if(warning.code == -86168)
           {
+            CHECK(warning.message.find("invalid radius") != std::string::npos);
             found = true;
           }
         }

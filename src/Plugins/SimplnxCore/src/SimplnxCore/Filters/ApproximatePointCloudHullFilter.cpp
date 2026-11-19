@@ -10,8 +10,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-using namespace nx::core;
-
 namespace nx::core
 {
 

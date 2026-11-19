@@ -6,11 +6,16 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
+#ifdef SIMPLNX_ENABLE_MULTICORE
+#include <tbb/global_control.h>
+#endif
+
+#include <algorithm>
+#include <atomic>
 #include <catch2/catch.hpp>
-#include <chrono>
 #include <cmath>
-#include <future>
 #include <limits>
 
 using namespace nx::core;
@@ -66,7 +71,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     input.ResamplingMode = 2;
     input.ExactDimensions = {1, 1, 1};
     expectedCode = -86126;
-    context = "invalid New Spacing on the X axis (inf)";
+    context = "invalid derived spacing on the X axis (inf)";
   }
   SECTION("Spacing underflow")
   {
@@ -75,7 +80,7 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     input.ResamplingMode = 1;
     input.Scaling = {200, 100, 100};
     expectedCode = -86126;
-    context = "invalid New Spacing on the X axis (0)";
+    context = "invalid derived spacing on the X axis (0)";
   }
   SECTION("Dimension exclusive bound")
   {
@@ -110,7 +115,13 @@ TEST_CASE("simplnx::ImageGeometryResample: Checked layout arithmetic", "[simplnx
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == expectedCode);
     CHECK(result.errors()[0].message.find(context) != std::string::npos);
-    CHECK(result.errors()[0].message.find("Source") != std::string::npos);
+    const auto& message = result.errors()[0].message;
+    CHECK(message.find("Source") != std::string::npos);
+    if(expectedCode == -86126)
+    {
+      CHECK(message.find("Scale Factor (percentages)") == std::string::npos);
+      CHECK(message.find("Exact Dimensions (pixels)") == std::string::npos);
+    }
   }
   CHECK(source->getDimensions() == originalDimensions);
   CHECK(source->getSpacing() == originalSpacing);
@@ -133,62 +144,66 @@ constexpr int32 k_InjectionError = -91014;
 class FailingResampleSourceStore : public DataStore<int32>
 {
 public:
-  explicit FailingResampleSourceStore(std::promise<void>& readStarted)
+  explicit FailingResampleSourceStore(std::atomic_bool& cancel)
   : DataStore<int32>({1, 1, 2}, {1}, 0)
-  , m_ReadStarted(readStarted)
+  , m_Cancel(cancel)
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<int32>) const override
+  Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {
-    m_ReadStarted.set_value();
-    return MakeErrorResult(k_InjectionError, "Injected source read failure");
+    if(!m_Cancel.exchange(true))
+    {
+      return MakeErrorResult(k_InjectionError, "Injected source read failure");
+    }
+    return DataStore<int32>::copyIntoBuffer(offset, buffer);
   }
 
 private:
-  std::promise<void>& m_ReadStarted;
+  std::atomic_bool& m_Cancel;
 };
 } // namespace
 
 TEST_CASE("simplnx::ImageGeometryResample: Cancellation preserves a source read error", "[simplnx][ImageGeometryResample]")
 {
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  const tbb::global_control oneThread(tbb::global_control::max_allowed_parallelism, 1);
+#endif
+  std::atomic_bool cancel = false;
   DataStructure ds;
-  std::promise<void> readStarted;
-  auto firstRead = readStarted.get_future();
+  // Leave an array after the first task batch so the scheduler observes cancellation after it joins the failed read.
+  const usize arrayCount = std::max<usize>(1, ParallelTaskAlgorithm{}.getMaxThreads()) + 1;
   for(const auto& name : {"Source", "Destination"})
   {
     auto result = CreateImageGeometryAction(DataPath({name}), {2, 1, 1}, {0, 0, 0}, {1, 1, 1}, "Cell Data").apply(ds, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    for(const auto& arrayName : {"First", "Second", "Third"})
+    for(usize index = 0; index < arrayCount; index++)
     {
-      const DataPath path({name, "Cell Data", arrayName});
+      const DataPath path({name, "Cell Data", std::to_string(index)});
       result = CreateArrayAction(DataType::int32, {1, 1, 2}, {1}, path).apply(ds, IDataAction::Mode::Execute);
       SIMPLNX_RESULT_REQUIRE_VALID(result);
       if(std::string_view(name) == "Source")
       {
+        REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(path));
         auto& array = ds.getDataRefAs<Int32Array>(path);
-        result = array.setDataStore(std::make_shared<FailingResampleSourceStore>(readStarted));
+        result = array.setDataStore(std::make_shared<FailingResampleSourceStore>(cancel));
         SIMPLNX_RESULT_REQUIRE_VALID(result);
       }
     }
   }
-  std::atomic_bool cancel = false;
-  int32 announcements = 0;
+  usize announcements = 0;
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
-    if(message.type == IFilter::Message::Type::Info && ++announcements == 2)
+    if(message.type == IFilter::Message::Type::Info)
     {
-      if(firstRead.wait_for(std::chrono::seconds(5)) == std::future_status::ready)
-      {
-        cancel = true;
-      }
+      ++announcements;
     }
   }};
   ResampleImageGeomInputValues input{};
   input.SelectedImageGeometryPath = DataPath({"Source"});
   input.CreatedImageGeometryPath = DataPath({"Destination"});
   auto result = ResampleImageGeom(ds, handler, cancel, &input)();
-  REQUIRE(firstRead.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
   REQUIRE(cancel.load());
+  REQUIRE(announcements < arrayCount);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == k_InjectionError);

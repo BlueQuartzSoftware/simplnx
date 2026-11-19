@@ -30,6 +30,7 @@
 
 #include <array>
 #include <filesystem>
+#include <limits>
 #include <string_view>
 
 namespace fs = std::filesystem;
@@ -197,6 +198,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
   auto scalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
 
+  usize requestedSlicePixels = 0;
   if(resampleImagesChoice == k_ExactDimensionsModeIndex)
   {
     const std::array<uint64, 3> dimensions = {exactXYDims[0], exactXYDims[1], 1};
@@ -205,6 +207,7 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     {
       return {ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
+    requestedSlicePixels = validation.value()[0] * validation.value()[1];
   }
 
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
@@ -279,16 +282,6 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     outputDims.back() = zRange.zMax - zRange.zMin + 1;
     outputOrigin.back() += static_cast<float32>(zRange.zMin) * outputSpacing.back();
 
-    if(resampleImagesChoice == k_ExactDimensionsModeIndex)
-    {
-      const std::array<uint64, 3> dimensions = {exactXYDims[0], exactXYDims[1], outputDims[2]};
-      auto validation = GeometryUtilities::ValidateImageDimensionProduct(dimensions, "Exact 2D Dimensions (Pixels)", k_ResampledStackProduct);
-      if(validation.invalid())
-      {
-        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
-      }
-    }
-
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, outputOrigin, outputSpacing,
                                                                                          createImageGeomActionPtr->cellAttributeMatrixName(), createImageGeomActionPtr->units()));
     const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(imageReaderResult.outputActions.value().actions);
@@ -343,12 +336,17 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
 
     std::vector<usize> dims = createImageGeomActionPtr->dims();
     dims.back() = outputDims.back();
-    const std::array<uint64, 3> stackDimensions = {dims[0], dims[1], dims[2]};
-    const std::string_view parameter = resampleImagesChoice == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
-    auto validation = GeometryUtilities::ValidateImageDimensionProduct(stackDimensions, parameter, k_ResampledStackProduct);
-    if(validation.invalid())
+    // Both slice products fit. In Exact mode the preview can round the requested size or use a one-cell fallback.
+    const usize plannedSlicePixels = dims[0] * dims[1];
+    const bool requestedSliceIsLarger = requestedSlicePixels > plannedSlicePixels;
+    const usize largestSlicePixels = requestedSliceIsLarger ? requestedSlicePixels : plannedSlicePixels;
+    if(largestSlicePixels > std::numeric_limits<usize>::max() / dims[2])
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      const uint64 x = requestedSliceIsLarger ? exactXYDims[0] : dims[0];
+      const uint64 y = requestedSliceIsLarger ? exactXYDims[1] : dims[1];
+      const std::string_view parameter = resampleImagesChoice == k_ScalingModeIndex ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)";
+      return MakePreflightErrorResult(k_ResampledStackProduct,
+                                      fmt::format("The resampled stack (X={}, Y={}, Z={} slices) would have too many pixels. Decrease {} or select fewer slices.", x, y, dims[2], parameter));
     }
 
     outputDims = dims;

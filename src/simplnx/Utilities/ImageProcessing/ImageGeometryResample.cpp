@@ -257,11 +257,9 @@ Result<ResampledImageLayout> nx::core::ComputeResampledImageLayout(const ImageGe
     if(inputValues.ResamplingMode != k_SpacingModeIndex && (!std::isfinite(spacing) || spacing <= 0))
     {
       return MakeErrorResult<ResampledImageLayout>(k_DerivedSpacingRepresentation,
-                                                   fmt::format("Image Geometry '{}' has invalid New Spacing on the {} axis ({}). The input spacing is {} and the input dimension is {}. Check Scale "
-                                                               "Factor (percentages) ({}) or Exact Dimensions (pixels) ({}).",
-                                                               inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], spacing, sourceSpacing[axis], sourceDimensions[axis],
-                                                               inputValues.ResamplingMode == k_ScalingModeIndex ? inputValues.Scaling[axis] : 100.0F,
-                                                               inputValues.ResamplingMode == k_ExactDimensionsModeIndex ? inputValues.ExactDimensions[axis] : uint64{0}));
+                                                   fmt::format("Image Geometry '{}' has invalid derived spacing on the {} axis ({}). The input spacing is {} and the input dimension is {}. "
+                                                               "Use finite, positive input spacing and check the active resampling setting.",
+                                                               inputValues.SelectedImageGeometryPath.toString(), "XYZ"[axis], spacing, sourceSpacing[axis], sourceDimensions[axis]));
     }
     layout.Spacing[axis] = spacing;
     const float32 quotient = (sourceSpacing[axis] * static_cast<float32>(sourceDimensions[axis])) / spacing;

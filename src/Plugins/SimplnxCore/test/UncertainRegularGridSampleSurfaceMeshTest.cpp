@@ -15,6 +15,7 @@
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+
 #include <array>
 #include <filesystem>
 #include <fstream>

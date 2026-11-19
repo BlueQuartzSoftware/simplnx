@@ -103,8 +103,8 @@ TEST_CASE("Number Parameter Value Bounds", "[simplnx][Parameters]")
   using namespace nx::core;
 
   Float32Parameter spacing("spacing", "Hatch Spacing", "", 1.0F, Float32Parameter::Bounds::Positive());
-  CHECK(spacing.bounds()->lower->value == 0.0F);
-  CHECK_FALSE(spacing.bounds()->lower->inclusive);
+  CHECK(spacing.bounds()->Lower->Value == 0.0F);
+  CHECK_FALSE(spacing.bounds()->Lower->Inclusive);
   RequireValid(spacing.validateNumber(std::numeric_limits<float32>::min()));
   const auto zero = spacing.validateNumber(0.0F);
   RequireCode(zero, k_NumberBelowLowerBound);

@@ -1678,7 +1678,9 @@ void CheckEmptyPartitionGrid(bool requireDiskStore)
   const auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto name = args.value<std::string>(PartitionGeometryFilter::k_PartitionIdsArrayName_Key);
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", name}));
+  const DataPath idsPath({"Image", "Cell Data", name});
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(idsPath));
+  const auto& ids = ds.getDataRefAs<Int32Array>(idsPath);
   if(requireDiskStore)
   {
     UnitTest::RequireDiskBackedStore(ids);
@@ -1823,6 +1825,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid input coordinates", "[S
     geom.getZBoundsRef()[1] = 1.0F;
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryToPartition_Key, rectPath);
     args.insertOrAssign(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, rectPath.createChildPath("Cell Data"));
+    expectedCode = -86247;
     expectedLocation = "'Rect' has an invalid Y bound at element index 2";
   }
 

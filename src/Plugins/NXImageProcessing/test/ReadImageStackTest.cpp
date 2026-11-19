@@ -2103,5 +2103,53 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Resampled stack product must
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
   REQUIRE(preflight.outputActions.errors().size() == 1);
   CHECK(preflight.outputActions.errors().front().code == -86235);
-  CHECK(preflight.outputActions.errors().front().message.find(mode == 1 ? "Scaling (%)" : "Exact 2D Dimensions (Pixels)") != std::string::npos);
+  const auto& message = preflight.outputActions.errors().front().message;
+  CHECK(message.find("resampled stack (X=") != std::string::npos);
+  CHECK(message.find("Z=2 slices") != std::string::npos);
+  CHECK(message.find(mode == 1 ? "Decrease Scaling (%)" : "Decrease Exact 2D Dimensions (Pixels)") != std::string::npos);
+  CHECK(message.find(mode == 1 ? "Exact 2D Dimensions (Pixels)" : "Scaling (%)") == std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Derived spacing warning uses shared terminology", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackDerivedSpacing");
+  ReadImageStackFilter filter;
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{2});
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{1, 1});
+  args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, true);
+  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::vector<float32>{2e38F, 1, 1});
+  args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Preprocessed));
+
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  const auto& warning = preflight.outputActions.warnings().front();
+  CHECK(warning.code == -86129);
+  CHECK(warning.message.find("Scale Factor (percentages)") == std::string::npos);
+  CHECK(warning.message.find("Exact Dimensions (pixels)") == std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: Exact stack product covers requested and planned dimensions", "[NXImageProcessing][ReadImageStackFilter][ResamplingParameterDomains]")
+{
+  DataStructure ds;
+  auto args = CreateResamplingDomainStackArgs("ReadImageStackExactProduct");
+  ReadImageStackFilter filter;
+  constexpr nx::core::uint64 k_HalfRange = nx::core::uint64{1} << 63;
+  args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, ChoicesParameter::ValueType{2});
+  SECTION("Requested stack overflows even with a one-cell preview")
+  {
+    args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{k_HalfRange, 1});
+    args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, true);
+    args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::vector<float32>{2e38F, 1, 1});
+    args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Preprocessed));
+  }
+  SECTION("Rounded preview overflows even when the requested stack fits")
+  {
+    args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, VectorUInt64Parameter::ValueType{k_HalfRange - 1, 1});
+  }
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  REQUIRE(preflight.outputActions.errors().size() == 1);
+  CHECK(preflight.outputActions.errors().front().code == -86235);
 }

@@ -25,6 +25,9 @@ namespace
 constexpr int32 k_KernelRadiusWarning = -86168;
 constexpr int32 k_KernelProductWarning = -86169;
 constexpr int32 k_KernelStorageWarning = -86170;
+constexpr int32 k_InvalidImageSpacingWarning = -86244;
+constexpr int32 k_KernelWidthWarning = -86245;
+constexpr int32 k_KernelContainerWarning = -86246;
 constexpr int32 k_SigmaSquareOverflow = -86135;
 constexpr int32 k_SigmaSquareUnderflow = -86134;
 
@@ -35,11 +38,11 @@ Result<> ValidateGaussianSigmaSquares(nonstd::span<const float32> sigmas)
     const float32 square = sigmas[axis] * sigmas[axis];
     if(square == 0)
     {
-      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas ({}) value {} is too small. Increase this value.", "XYZ"[axis], sigmas[axis]));
+      return MakeErrorResult(k_SigmaSquareUnderflow, fmt::format("Gaussian Sigmas ({}) value {} is too small. Increase this value.", "xyz"[axis], sigmas[axis]));
     }
     if(!std::isfinite(square))
     {
-      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas ({}) value {} is too large. Decrease this value.", "XYZ"[axis], sigmas[axis]));
+      return MakeErrorResult(k_SigmaSquareOverflow, fmt::format("Gaussian Sigmas ({}) value {} is too large. Decrease this value.", "xyz"[axis], sigmas[axis]));
     }
   }
   return {};
@@ -312,11 +315,15 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   if(kernelLayout.invalid())
   {
     const auto& error = kernelLayout.errors().front();
-    int32 warning = k_KernelStorageWarning;
+    int32 warning = error.code;
     switch(error.code)
     {
     case InterpolatePointCloudToRegularGrid::k_InvalidImageSpacing:
+      warning = k_InvalidImageSpacingWarning;
+      break;
     case InterpolatePointCloudToRegularGrid::k_KernelWidthTooLarge:
+      warning = k_KernelWidthWarning;
+      break;
     case InterpolatePointCloudToRegularGrid::k_KernelRadiusRepresentation:
       warning = k_KernelRadiusWarning;
       break;
@@ -324,6 +331,11 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
       warning = k_KernelProductWarning;
       break;
     case InterpolatePointCloudToRegularGrid::k_KernelStorageRepresentation:
+      warning = k_KernelStorageWarning;
+      break;
+    case InterpolatePointCloudToRegularGrid::k_KernelContainerTooLarge:
+      warning = k_KernelContainerWarning;
+      break;
     default:
       break;
     }

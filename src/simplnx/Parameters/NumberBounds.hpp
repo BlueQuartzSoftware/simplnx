@@ -23,12 +23,12 @@ struct NumberBounds
 {
   struct Limit
   {
-    T value;
-    bool inclusive;
+    T Value;
+    bool Inclusive;
   };
 
-  std::optional<Limit> lower;
-  std::optional<Limit> upper;
+  std::optional<Limit> Lower;
+  std::optional<Limit> Upper;
 
   /**
    * @brief Changes the default finite-value requirement for a floating-point parameter.
@@ -39,54 +39,78 @@ struct NumberBounds
     m_AllowNonFinite = allow;
   }
 
+  /**
+   * @brief Reports whether validation can accept NaN or infinity.
+   */
   constexpr bool allowsNonFinite() const
   requires std::floating_point<T>
   {
     return m_AllowNonFinite;
   }
 
+  /**
+   * @brief Accepts values greater than zero. Zero is excluded.
+   */
   static constexpr NumberBounds Positive()
   {
     return GreaterThan(T{0});
   }
 
+  /**
+   * @brief Accepts zero and positive values.
+   */
   static constexpr NumberBounds NonNegative()
   {
     return AtLeast(T{0});
   }
 
+  /**
+   * @brief Sets an exclusive lower endpoint with no upper endpoint.
+   */
   static constexpr NumberBounds GreaterThan(T value)
   {
     NumberBounds bounds;
-    bounds.lower = Limit{value, false};
+    bounds.Lower = Limit{value, false};
     return bounds;
   }
 
+  /**
+   * @brief Sets an inclusive lower endpoint with no upper endpoint.
+   */
   static constexpr NumberBounds AtLeast(T value)
   {
     NumberBounds bounds;
-    bounds.lower = Limit{value, true};
+    bounds.Lower = Limit{value, true};
     return bounds;
   }
 
+  /**
+   * @brief Sets an exclusive upper endpoint with no lower endpoint.
+   */
   static constexpr NumberBounds LessThan(T value)
   {
     NumberBounds bounds;
-    bounds.upper = Limit{value, false};
+    bounds.Upper = Limit{value, false};
     return bounds;
   }
 
+  /**
+   * @brief Sets an inclusive upper endpoint with no lower endpoint.
+   */
   static constexpr NumberBounds AtMost(T value)
   {
     NumberBounds bounds;
-    bounds.upper = Limit{value, true};
+    bounds.Upper = Limit{value, true};
     return bounds;
   }
 
+  /**
+   * @brief Sets a closed interval. Both endpoints are valid.
+   */
   static constexpr NumberBounds Between(T lowerValue, T upperValue)
   {
     NumberBounds bounds = AtLeast(lowerValue);
-    bounds.upper = Limit{upperValue, true};
+    bounds.Upper = Limit{upperValue, true};
     return bounds;
   }
 
@@ -108,13 +132,13 @@ Result<> ValidateNumberBounds(T value, const std::optional<NumberBounds<T>>& bou
   }
   if(bounds)
   {
-    if(const auto& lower = bounds->lower; lower && (value < lower->value || (!lower->inclusive && value == lower->value)))
+    if(const auto& lower = bounds->Lower; lower && (value < lower->Value || (!lower->Inclusive && value == lower->Value)))
     {
-      return MakeErrorResult(k_NumberBelowLowerBound, fmt::format("{} must be greater than{} {}. The value is {}.", getName(), lower->inclusive ? " or equal to" : "", lower->value, value));
+      return MakeErrorResult(k_NumberBelowLowerBound, fmt::format("{} must be greater than{} {}. The value is {}.", getName(), lower->Inclusive ? " or equal to" : "", lower->Value, value));
     }
-    if(const auto& upper = bounds->upper; upper && (value > upper->value || (!upper->inclusive && value == upper->value)))
+    if(const auto& upper = bounds->Upper; upper && (value > upper->Value || (!upper->Inclusive && value == upper->Value)))
     {
-      return MakeErrorResult(k_NumberAboveUpperBound, fmt::format("{} must be less than{} {}. The value is {}.", getName(), upper->inclusive ? " or equal to" : "", upper->value, value));
+      return MakeErrorResult(k_NumberAboveUpperBound, fmt::format("{} must be less than{} {}. The value is {}.", getName(), upper->Inclusive ? " or equal to" : "", upper->Value, value));
     }
   }
   return {};

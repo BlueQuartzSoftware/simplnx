@@ -22,6 +22,7 @@ namespace
 {
 constexpr int32 k_PartitionOriginNotFinite = -86171;
 constexpr int32 k_PartitionCoordinateNotFinite = -86172;
+constexpr int32 k_PartitionBoundNotFinite = -86247;
 constexpr int32 k_PartitionIdRange = -86173;
 constexpr int32 k_PartitionSpacingNotFinite = -86211;
 constexpr int32 k_PartitionSpacingNotPositive = -86212;
@@ -195,7 +196,7 @@ Result<> nx::core::ValidateRectGridPartitionCoordinates(const RectGridGeom& inpu
         const float64 value = buffer[position];
         if(!std::isfinite(value))
         {
-          return MakeErrorResult(k_PartitionCoordinateNotFinite,
+          return MakeErrorResult(k_PartitionBoundNotFinite,
                                  fmt::format("Input geometry '{}' has an invalid {} bound at element index {}. The value is {}. It must be finite.", inputPath.toString(), "XYZ"[axis], index, value));
         }
         if(index > 0)

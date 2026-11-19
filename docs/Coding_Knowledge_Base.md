@@ -341,23 +341,27 @@ params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spac
 ```
 
 Use `Bounds::AtLeast(1)` for integer counts that start at one. Use `Bounds::NonNegative()` when zero is valid.
+Keep supported no-op values, such as zero iterations, valid.
 Keep parameter combinations, size products, and checks on available geometry metadata in `preflightImpl()`.
 Check values that depend on the final geometry in execute.
 
 ### Validate derived parameter values in preflight
 
 **Rule:** after parameter validation, `preflightImpl()` checks the derived values it can calculate safely from
-the inputs. Accept `min <= max` when the operation defines equal bounds. A direction or axis parameter uses a
-nonzero default, and preflight rejects a zero-length vector. When a filter stores the random seed it used, the
-algorithm uses that same seed so the stored seed reproduces the output.
+the inputs. Accept `min <= max` when the operation defines equal bounds. Write floating-point comparisons so
+that NaN fails the check. Before casting a value to a selected array's element type, check that the value fits
+that type. A direction or axis parameter uses a nonzero default, and preflight rejects a zero-length vector.
+Pass each parameter to the algorithm's input values and use it to change the operation. Remove unused parameters.
+When a filter stores the random seed it used, the algorithm uses that same seed so the stored seed reproduces the output.
 
 Validate the derived representation as well as the parameter value. For radii and dimensions, check derived widths,
 signed coordinate and loop limits, padded extents, element counts and byte counts before the affected arithmetic or
-allocation. An index must fit every array or axis it selects; use `index < count`, without subtracting one from the
-count. For integer destinations, do not use a rounded floating-point representation of the maximum as an inclusive upper
-bound. When fractional conversion is supported, validate the effective value and check related values in the type the
-consumer uses. Preserve supported equality. Validate and normalize direction parameters with arithmetic that remains
-safe for finite nonzero directions, then use that normalized value.
+allocation. If an index depends on an input size, check `0 <= index < count` for every array or axis it selects.
+Use the count directly to keep the check valid when the input is empty. For integer destinations, do not use a rounded
+floating-point representation of the maximum as an inclusive upper bound. When fractional conversion is supported,
+validate the effective value and check related values in the type the consumer uses. Preserve supported equality.
+Validate and normalize direction parameters with arithmetic that remains safe for finite nonzero directions, then
+use that normalized value.
 
 **Example of the broken rule:** `CreateDataArrayAdvanced` converted negative or fractional tuple dimensions to `usize`;
 `InitializeData` accepted a reversed random range; `SliceTriangleGeometry` accepted an invalid slice spacing (all
@@ -373,7 +377,8 @@ can also fit its declared type while its derived size, converted value or contex
 vector can overflow during normalization; checking only the original value leaves these failures reachable.
 
 **What to look for:** a `static_cast` of a parameter before a domain check; `if(value < 0)` on a floating-point value; a
-zero step; an unchecked `min`/`max` pair. Also:
+zero step; an unchecked `min`/`max` pair. Look for a fill or replacement value cast to the selected array type
+without a range check, and for parameters that do not reach the algorithm. Also:
 
 - radius-derived widths, padding, products or signed loop endpoints computed before validation;
 - one selector used with several arrays but checked against only one count; an upper bound written as `count - 1`;
