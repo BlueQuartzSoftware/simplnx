@@ -16,6 +16,7 @@
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ScaleBarRenderer.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
@@ -287,7 +288,7 @@ struct ColorizeVolumeFunctor
         }
       }
 
-      status = MergeResults(std::move(status), writeSlice(sliceBuffer, slice));
+      ImageProcessing::AccumulateTransferResult(status, writeSlice(sliceBuffer, slice));
       if(status.invalid())
       {
         return status;

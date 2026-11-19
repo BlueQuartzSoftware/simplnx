@@ -17,6 +17,7 @@
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ScaleBarRenderer.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
@@ -452,15 +453,15 @@ struct ColorizeVolumeFunctor
       const Extent groupExtent = CreateSliceGroupExtent(planeIndex, firstSlice, groupSliceCount, dimX, dimY, dimZ);
       // A failed read leaves the group buffers holding stale or uninitialized values.
       // Stop here so the writer never commits those values as image pixels.
-      status = MergeResults(std::move(status), dataStore.readExtentIntoBuffer(groupExtent, nonstd::span<T>(groupValues.get(), groupValueCount)));
+      ImageProcessing::AccumulateTransferResult(status, dataStore.readExtentIntoBuffer(groupExtent, nonstd::span<T>(groupValues.get(), groupValueCount)));
       if(status.invalid())
       {
         return status;
       }
       if(booleanMaskValues != nullptr)
       {
-        status =
-            MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>().readExtentIntoBuffer(groupExtent, nonstd::span<bool>(booleanMaskValues.get(), groupValueCount)));
+        ImageProcessing::AccumulateTransferResult(
+            status, maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>().readExtentIntoBuffer(groupExtent, nonstd::span<bool>(booleanMaskValues.get(), groupValueCount)));
         if(status.invalid())
         {
           return status;
@@ -468,8 +469,8 @@ struct ColorizeVolumeFunctor
       }
       else if(uint8MaskValues != nullptr)
       {
-        status =
-            MergeResults(std::move(status), maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>().readExtentIntoBuffer(groupExtent, nonstd::span<uint8>(uint8MaskValues.get(), groupValueCount)));
+        ImageProcessing::AccumulateTransferResult(
+            status, maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>().readExtentIntoBuffer(groupExtent, nonstd::span<uint8>(uint8MaskValues.get(), groupValueCount)));
         if(status.invalid())
         {
           return status;
@@ -516,7 +517,7 @@ struct ColorizeVolumeFunctor
           }
         }
 
-        status = MergeResults(std::move(status), writeSlice(sliceBuffer, firstSlice + localSliceIndex));
+        ImageProcessing::AccumulateTransferResult(status, writeSlice(sliceBuffer, firstSlice + localSliceIndex));
         if(status.invalid())
         {
           return status;
