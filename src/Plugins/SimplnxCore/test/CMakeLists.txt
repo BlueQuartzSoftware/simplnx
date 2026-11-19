@@ -240,7 +240,7 @@ set_target_properties(${PLUGIN_NAME}ProcessOutputTestChild PROPERTIES
 simplnx_enable_warnings(TARGET ${PLUGIN_NAME}ProcessOutputTestChild)
 add_dependencies(${PLUGIN_NAME}UnitTest ${PLUGIN_NAME}ProcessOutputTestChild)
 
-if(DREAM3DNX_ENABLE_OOC)
+if(DREAM3D_ENABLE_OOC)
   add_test(NAME SimplnxCoreOocStoreContracts
     COMMAND ${PLUGIN_NAME}UnitTest "[.OocStoreContract]" --reporter compact)
   set_tests_properties(SimplnxCoreOocStoreContracts PROPERTIES RUN_SERIAL TRUE TIMEOUT 1500 LABELS "ooc")
