@@ -3,11 +3,13 @@
 
 #include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/DiscreteGaussianEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/GradientMagnitudeEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"

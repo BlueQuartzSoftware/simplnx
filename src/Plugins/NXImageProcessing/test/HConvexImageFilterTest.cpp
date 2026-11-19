@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/HConvexImageFilter.hpp"
 #include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
@@ -18,10 +19,12 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 
 #include <catch2/catch.hpp>

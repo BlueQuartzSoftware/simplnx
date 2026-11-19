@@ -37,6 +37,7 @@
 
 #include <catch2/catch.hpp>
 #include <fmt/format.h>
+#include <iterator>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <nonstd/span.hpp>

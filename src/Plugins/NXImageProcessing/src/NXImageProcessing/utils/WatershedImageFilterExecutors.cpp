@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"

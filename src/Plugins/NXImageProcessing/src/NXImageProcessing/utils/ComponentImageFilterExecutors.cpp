@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/ImageProcessing/BinaryThinningEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ThresholdMaximumConnectedComponentsEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ZeroCrossingEngine.hpp"
