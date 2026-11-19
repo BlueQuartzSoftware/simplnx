@@ -27,7 +27,8 @@ For a [NRRD](https://teem.sourceforge.net/nrrd/format.html) input (attached sing
 - `encoding: raw` and `encoding: gzip` (only the data segment is compressed).
 - `endian: little` / `big` (multi-byte types are byte-swapped to host order).
 - Scalar images and interleaved component images (a leading `vector`/`none` axis, e.g. RGB) — the component axis must be the fastest axis (axis 0).
-- Axis-aligned `space directions` / `spacings` (spacing = per-axis vector magnitude) and `space origin`.
+- Axis-aligned `space directions` (spacing is the magnitude of each direction vector), scalar `spacings`, and `space origin`.
+- An axis with `space directions: none` or a `nan`, `+nan`, or `-nan` entry in `spacings` (any letter case) has unknown spacing and uses 1 for that axis.
 - 2D images are loaded with `Z = 1`.
 
 Unsupported NRRD header features produce explicit errors or warnings:
@@ -37,13 +38,13 @@ Unsupported NRRD header features produce explicit errors or warnings:
 - A component axis that is not the fastest axis → error.
 - Non-axis-aligned `space directions` (rotation / permutation) → **warning**; the rotation is dropped (simplnx `ImageGeom` is axis-aligned), spacing/origin are still extracted, and voxels are loaded in their stored order.
 
-The origin/spacing/data-type override and cropping options below apply to all backends; the origin/spacing/data-type overrides are ignored for the NRRD backend (its geometry comes from the header). `.mha`/`.mhd` files are handled by the separate Read Mha File filter (which is transform-aware).
+The origin, spacing, and cropping options apply to every backend. The data-type override applies to raster images. `.mha`/`.mhd` files are handled by the separate Read Mha File filter (which is transform-aware).
 
 ### Origin & Spacing Caveats
 
 The user can optionally override the origin and spacing for the imported image. *Spacing* is the physical size of each pixel and *Origin* is the coordinate of the lower-left corner of the geometry; both are expressed in the same physical length units (for example microns). The default values from the input file will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
 
-When **Set Origin** is enabled, the **Center Geometry on (0, 0, 0)** option controls centering. When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.
+When **Set Origin** is enabled, the **Center Geometry on (0, 0, 0)** option controls centering. When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). **Origin (Physical Units)** applies when centering is disabled.
 
 ### Origin & Spacing Processing
 
@@ -77,6 +78,12 @@ Both subvolume cropping types have checkboxes to turn on/off cropping in the X, 
 A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry.
 
 A physical crop minimum below the Image Geometry's origin is clamped to the first cell when the requested range overlaps the geometry. Preflight reports warning `-50503`, and execution reads the clamped region. A physical crop bound that is NaN fails preflight with error `-50561`.
+
+### Geometry Metadata Overrides
+
+Each origin coordinate must be finite. Each spacing value must be finite and greater than zero. If a file value is invalid, the filter reports an error that names the file, axis, and value. Enable **Set Origin** or **Set Spacing** for the field named in the error and enter valid values. With **Postprocessed** selected, physical cropping uses the file metadata when it is valid. If an enabled override replaces an invalid field, the crop uses the replacement for that field.
+
+A TIFF resolution tag with a zero or negative value requires **Set Spacing**. When a resolution tag is absent, the reader uses its default spacing.
 
 ## Required Input Sources
 

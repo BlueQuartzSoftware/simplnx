@@ -1,5 +1,7 @@
 #include "ReadChannel5Data.hpp"
 
+#include "EbsdStepMetadata.hpp"
+
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -70,6 +72,12 @@ ReadChannel5Data::~ReadChannel5Data() noexcept = default;
 Result<> ReadChannel5Data::operator()()
 {
   ebsdlib::CprReader reader;
+  if(m_InputValues->SpacingOverride.has_value())
+  {
+    const auto& spacing = *m_InputValues->SpacingOverride;
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX, spacing[0]));
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY, spacing[1]));
+  }
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
   if(err < 0)

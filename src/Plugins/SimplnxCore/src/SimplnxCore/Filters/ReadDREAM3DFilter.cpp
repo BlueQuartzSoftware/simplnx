@@ -1,7 +1,9 @@
 #include "ReadDREAM3DFilter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/DataStructure/IO/HDF5/RectGridGeomIO.hpp"
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -43,7 +45,7 @@ Uuid ReadDREAM3DFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ReadDREAM3DFilter::humanName() const
 {
-  return "Read DREAM3D-NX File";
+  return Dream3dImportParameter::k_ReadFilterHumanName.str();
 }
 
 //------------------------------------------------------------------------------
@@ -59,13 +61,18 @@ Parameters ReadDREAM3DFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
       std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData({})));
+  params.insert(std::make_unique<BoolParameter>(k_UseDefaultGeometryValues_Key, Dream3dImportParameter::k_UseDefaultGeometryValuesLabel,
+                                                "Use 0 for invalid stored origin components and 1 for invalid stored spacing components in the loaded image geometry. "
+                                                "The file is not changed. Invalid rectilinear grid bounds still produce an error.",
+                                                false));
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadDREAM3DFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Use Default Origin/Spacing for Invalid Values.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -83,11 +90,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
 
+  const bool useDefaultGeometryValues = filterArgs.value<bool>(k_UseDefaultGeometryValues_Key);
+
   // Neutral metadata avoids source-policy decisions before the destination action can plan selected arrays.
-  auto dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetchNeutralMetadata(importData.FilePath);
+  auto dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetchSelectableMetadata(importData.FilePath);
 
   Result<OutputActions> result;
-  OutputActions& actions = result.value();
 
   if(dataStructureResult.invalid())
   {
@@ -96,6 +104,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   result.warnings() = std::move(dataStructureResult.warnings());
   const auto& importedDataStructure = dataStructureResult.value().dataStructure;
 
+  std::vector<DataPath> selectedPaths;
   if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
     for(const auto& dataPath : importData.DataPaths)
@@ -106,16 +115,14 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
       }
     }
     auto allDataPaths = importedDataStructure.getAllDataPaths();
-    std::vector<DataPath> selectedDataPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
-    selectedDataPaths = DREAM3D::ExpandSelectedPathsToAncestors(selectedDataPaths);
+    selectedPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+    selectedPaths = DREAM3D::ExpandSelectedPathsToAncestors(selectedPaths);
 
-    if(selectedDataPaths.empty())
+    if(selectedPaths.empty())
     {
       result.warnings().push_back(
           Warning{-10, "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"});
     }
-
-    actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, selectedDataPaths));
   }
   else if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
   {
@@ -127,7 +134,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
         result.warnings().push_back(Warning{-11,
                                             "The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
                                             "result by setting the import policy to 'All'."});
-        actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, allDataPaths));
+        selectedPaths = std::move(allDataPaths);
       }
       else
       {
@@ -144,12 +151,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
           }
         }
 
-        actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, finalDataPaths));
+        selectedPaths = std::move(finalDataPaths);
       }
     }
     else
     {
-      actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, allDataPaths));
+      selectedPaths = std::move(allDataPaths);
     }
   }
   else
@@ -159,7 +166,32 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     return {std::move(failure)};
   }
 
-  return {result};
+  auto validation = dataStructureResult.value().applyImageMetadata(importData.FilePath, selectedPaths, useDefaultGeometryValues);
+  if(validation.invalid())
+  {
+    for(auto& error : validation.errors())
+    {
+      if(error.code == ImageGeom::k_InvalidOrigin || error.code == ImageGeom::k_InvalidSpacing)
+      {
+        error.message += fmt::format(" Enable '{}' to use defaults for invalid components in the loaded geometry.", Dream3dImportParameter::k_UseDefaultGeometryValuesLabel.view());
+      }
+    }
+    auto failure = ConvertInvalidResult<OutputActions>(std::move(validation));
+    failure.warnings() = std::move(result.warnings());
+    return {std::move(failure)};
+  }
+
+  auto boundsValidation = HDF5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.FilePath, selectedPaths);
+  if(boundsValidation.invalid())
+  {
+    auto failure = ConvertInvalidResult<OutputActions>(std::move(boundsValidation));
+    failure.warnings() = std::move(result.warnings());
+    return {std::move(failure)};
+  }
+
+  // The action reports each selected geometry's defaulted values when applied in either mode.
+  result.value().appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, selectedPaths, useDefaultGeometryValues));
+  return {std::move(result)};
 }
 
 Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

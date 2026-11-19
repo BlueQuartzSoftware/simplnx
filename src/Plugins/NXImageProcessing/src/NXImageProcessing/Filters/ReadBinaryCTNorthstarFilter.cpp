@@ -1,5 +1,7 @@
 #include "ReadBinaryCTNorthstarFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -304,6 +306,13 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
 
   for(usize i = 0; i < 3; i++)
   {
+    if(voxels[i] == 0)
+    {
+      constexpr int32 k_ZeroVoxelCount = -38741;
+      constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
+      return MakeErrorResult<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(
+          k_ZeroVoxelCount, fmt::format("The {} voxel count in '{}' must be greater than zero. Received {}.", k_Axes[i], headerFilePath.string(), voxels[i]));
+    }
     spacing[i] = (maxLocation[i] - minLocation[i]) / static_cast<float32>(voxels[i]);
   }
 
@@ -377,6 +386,9 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry Path", "The path that will be used to create the Image Geometry.", DataPath{{"CT Image Geometry"}}));
@@ -393,7 +405,8 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadBinaryCTNorthstarFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -428,6 +441,10 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   }
 
   ImageGeometryInfo geometryInfo = result.value().second;
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputHeaderFileValue, geometryInfo.Origin, geometryInfo.Spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   ImageGeometryInfo importedGeometryInfo;
   if(pImportSubvolumeValue)

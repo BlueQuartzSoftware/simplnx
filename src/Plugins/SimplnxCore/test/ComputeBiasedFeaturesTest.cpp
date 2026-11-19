@@ -198,8 +198,8 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
   const DataPath featurePath = geomPath.createChildPath("Features");
   auto* geom = ImageGeom::Create(dataStructure, "Planar");
   geom->setDimensions(dims);
-  geom->setSpacing(spacing);
-  geom->setOrigin(origin);
+  REQUIRE(geom->setSpacing(spacing).valid());
+  REQUIRE(geom->setOrigin(origin).valid());
   auto* features = AttributeMatrix::Create(dataStructure, "Features", {2}, geom->getId());
   auto* centroids = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, features->getId());
   auto* surface = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, features->getId());

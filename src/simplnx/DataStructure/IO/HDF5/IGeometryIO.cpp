@@ -22,7 +22,7 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
 
   geometry.setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
 
-  return {};
+  return result;
 }
 
 Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)

@@ -204,8 +204,8 @@ DataStructure CreateFixture()
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   imageGeomPtr->setDimensions(SizeVec3{4, 3, 1});
-  imageGeomPtr->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F}).valid());
 
   // The AttributeMatrix tuple shape uses slowest-to-fastest {Z, Y, X} order.
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, std::vector<usize>{1, 3, 4}, imageGeomPtr->getId());

@@ -101,7 +101,10 @@ Result<> RotateSampleRefFrame::operator()()
 
   if(m_InputValues->KeepInputGeometryOrigin)
   {
-    destImageGeom.setOrigin(srcImageGeom.getOrigin());
+    if(auto result = destImageGeom.setOrigin(srcImageGeom.getOrigin()); result.invalid())
+    {
+      return result;
+    }
   }
 
   // Publish errors and warnings after all array tasks join.

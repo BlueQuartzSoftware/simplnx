@@ -353,8 +353,8 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({xDim, yDim, zDim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   const std::vector<usize> tupleDims = {zDim, yDim, xDim};
   auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleDims, imageGeom->getId());
@@ -498,8 +498,8 @@ DataStructure CreateM3CParityData(bool useConfiguredCellStores)
   auto* imageGeom = ImageGeom::Create(dataStructure, k_ParityGeomPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, k_ParityCellDataPath.getTargetName(), tupleShape, imageGeom->getId());
   auto* featureData = AttributeMatrix::Create(dataStructure, k_ParityFeatureDataPath.getTargetName(), {4}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
@@ -673,8 +673,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
     imageGeom->setDimensions({2, 2, 2});
-    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+    REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+    REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
     auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, imageGeom->getId());
     imageGeom->setCellData(*cellAM);
     Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAM->getId());
@@ -721,9 +721,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
       bounds[a]->setValue(1, 1.0f);
       bounds[a]->setValue(2, 2.0f);
     }
-    rectGrid->setXBoundsId(bounds[0]->getId());
-    rectGrid->setYBoundsId(bounds[1]->getId());
-    rectGrid->setZBoundsId(bounds[2]->getId());
+    const auto boundsResult = rectGrid->setBounds(bounds[0], bounds[1], bounds[2]);
+    SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
     auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, rectGrid->getId());
     rectGrid->setCellData(*cellAM);
     Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAM->getId());
@@ -824,8 +823,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
     imageGeom->setDimensions({static_cast<usize>(dimX), static_cast<usize>(dimY), static_cast<usize>(dimZ)});
-    imageGeom->setSpacing(spacing);
-    imageGeom->setOrigin(origin);
+    REQUIRE(imageGeom->setSpacing(spacing).valid());
+    REQUIRE(imageGeom->setOrigin(origin).valid());
     const std::vector<usize> tupleShape = {static_cast<usize>(dimZ), static_cast<usize>(dimY), static_cast<usize>(dimX)};
     auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
     imageGeom->setCellData(*cellAM);
@@ -900,8 +899,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
+  REQUIRE(imageGeom->setOrigin(origin).valid());
   const std::vector<usize> tupleShape = {dimZ, dimY, dimX};
   auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -1124,8 +1123,8 @@ DataStructure BuildToyVolume(const SizeVec3& dims, const FloatVec3& spacing, con
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, k_SharpEdgesImageGeomPath.getTargetName());
   imageGeom->setDimensions(dims);
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
+  REQUIRE(imageGeom->setOrigin(origin).valid());
   const std::vector<usize> tupleShape = {dims[2], dims[1], dims[0]};
   auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -1545,7 +1544,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Geometry cell tuple count", "[S
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

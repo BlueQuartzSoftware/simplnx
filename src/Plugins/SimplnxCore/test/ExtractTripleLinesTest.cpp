@@ -70,8 +70,8 @@ void BuildGrainBlock(DataStructure& dataStructure, const SizeVec3& dimensions, c
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, imageGeomName);
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions(dimensions);
-  imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, cellDataName, ShapeType{dimensions[2], dimensions[1], dimensions[0]}, imageGeomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);

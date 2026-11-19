@@ -96,8 +96,14 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
   {
     DataStructure tmpDs;
     auto* srcImageGeom = ImageGeom::Create(tmpDs, "srcImageGeom");
-    srcImageGeom->setOrigin({md.origin[0], md.origin[1], md.origin[2]});
-    srcImageGeom->setSpacing({md.spacing[0], md.spacing[1], md.spacing[2]});
+    if(auto result = srcImageGeom->setOrigin({md.origin[0], md.origin[1], md.origin[2]}); result.invalid())
+    {
+      return ConvertInvalidResult<CropBounds>(std::move(result));
+    }
+    if(auto result = srcImageGeom->setSpacing({md.spacing[0], md.spacing[1], md.spacing[2]}); result.invalid())
+    {
+      return ConvertInvalidResult<CropBounds>(std::move(result));
+    }
     srcImageGeom->setDimensions({md.dimensions[0], md.dimensions[1], md.dimensions[2]});
 
     const auto startCoords = srcImageGeom->getCoordsf(b.xStart, b.yStart, b.zStart);
@@ -359,7 +365,11 @@ Result<> ReadNIfTIFile::operator()()
   {
     return ConvertResult(std::move(metadataResult));
   }
-  const auto& md = metadataResult.value();
+  auto md = std::move(metadataResult).value();
+  if(auto geometryResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFilePath, md.origin, md.spacing); geometryResult.invalid())
+  {
+    return geometryResult;
+  }
 
   auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
   if(boundsResult.invalid())

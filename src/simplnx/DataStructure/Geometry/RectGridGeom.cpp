@@ -9,6 +9,8 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -92,7 +94,7 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 
 namespace
 {
-Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
+Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis, float32 translation)
 {
   if(bounds == nullptr)
   {
@@ -103,6 +105,10 @@ Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
   {
     return MakeErrorResult(-4006, fmt::format("RectGridGeom: {} bounds array must contain at least 2 values to define at least 1 cell, but {} value(s) provided.", axis, size));
   }
+  if(bounds->getNumberOfComponents() != 1)
+  {
+    return MakeErrorResult(RectGridGeom::k_NonscalarBounds, fmt::format("RectGridGeom: {} bounds array must have one component per tuple, but has {}.", axis, bounds->getNumberOfComponents()));
+  }
   const auto& store = bounds->getDataStoreRef();
   if(store.getStoreType() == IDataStore::StoreType::Empty)
   {
@@ -110,21 +116,29 @@ Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
     return {};
   }
 
-  std::vector<float32> buffer(4096);
+  std::array<float32, 4096> buffer{};
   float32 previousValue = 0.0f;
   for(usize offset = 0; offset < size;)
   {
     const usize count = std::min(buffer.size(), size - offset);
-    const auto readResult = store.copyIntoBuffer(offset, nonstd::span<float32>(buffer.data(), count));
+    auto readResult = store.copyIntoBuffer(offset, nonstd::span<float32>(buffer.data(), count));
     if(readResult.invalid())
     {
+      for(auto& error : readResult.errors())
+      {
+        error.message = fmt::format("Failed to read {} bounds array '{}' starting at index {}: {}", axis, bounds->getName(), offset, error.message);
+      }
       return readResult;
     }
     for(usize j = 0; j < count; ++j)
     {
       const usize i = offset + j;
-      const float32 currentValue = buffer[j];
-      if(i > 0 && previousValue >= currentValue)
+      const float32 currentValue = buffer[j] + translation;
+      if(!std::isfinite(currentValue))
+      {
+        return MakeErrorResult(RectGridGeom::k_NonfiniteBounds, fmt::format("RectGridGeom: {} bounds value at index {} must be finite. Received {}.", axis, i, currentValue));
+      }
+      if(i > 0 && !(previousValue < currentValue))
       {
         return MakeErrorResult(
             -4007, fmt::format("RectGridGeom: {} bounds array is not strictly monotonically increasing at index {}: bounds[{}]={} >= bounds[{}]={}", axis, i, i - 1, previousValue, i, currentValue));
@@ -137,20 +151,22 @@ Result<> validateBoundsArray(const Float32Array* bounds, std::string_view axis)
 }
 } // namespace
 
+Result<> RectGridGeom::ValidateBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds, const FloatVec3& translation)
+{
+  if(auto result = validateBoundsArray(xBounds, "X", translation[0]); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = validateBoundsArray(yBounds, "Y", translation[1]); result.invalid())
+  {
+    return result;
+  }
+  return validateBoundsArray(zBounds, "Z", translation[2]);
+}
+
 Result<> RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
 {
-  Result<> result = validateBoundsArray(xBounds, "X");
-  if(result.invalid())
-  {
-    return result;
-  }
-  result = validateBoundsArray(yBounds, "Y");
-  if(result.invalid())
-  {
-    return result;
-  }
-  result = validateBoundsArray(zBounds, "Z");
-  if(result.invalid())
+  if(auto result = ValidateBounds(xBounds, yBounds, zBounds); result.invalid())
   {
     return result;
   }

@@ -199,23 +199,44 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
   case PartitionGeometryFilter::PartitioningMode::Basic: {
+    psGeomMetadata.geometryDims = numOfPartitionsPerAxisValue;
+    psGeomMetadata.geometryUnits = geometry.getUnits();
+
     Result<FloatVec3> originResult;
-    if constexpr(std::is_same_v<Geom, ImageGeom> || std::is_same_v<Geom, RectGridGeom>)
+    if constexpr(std::is_same_v<Geom, RectGridGeom>)
+    {
+      const auto isPlaceholder = [](const Float32Array* bounds) { return bounds != nullptr && bounds->getStoreType() == IDataStore::StoreType::Empty; };
+      if(isPlaceholder(geometry.getXBounds()) || isPlaceholder(geometry.getYBounds()) || isPlaceholder(geometry.getZBounds()))
+      {
+        break;
+      }
+      originResult = geometry.getOrigin();
+    }
+    else if constexpr(std::is_same_v<Geom, ImageGeom>)
     {
       originResult = {geometry.getOrigin()};
     }
     else
     {
-      originResult = GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(geometry);
+      const auto* vertices = geometry.getVertices();
+      if(vertices == nullptr || vertices->getStoreType() == IDataStore::StoreType::Empty)
+      {
+        break;
+      }
+      const auto bounds = GeometryUtilities::GetPaddedNodePartitionBounds(geometry);
+      if(bounds.isValid())
+      {
+        psGeomMetadata.geometryOrigin = FloatVec3(bounds.getMinPoint());
+        psGeomMetadata.geometrySpacing = GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(bounds, numOfPartitionsPerAxisValue).value();
+      }
+      break;
     }
 
     Result<FloatVec3> pLengthResult = GeometryUtilities::CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
     if(originResult.valid() && pLengthResult.valid())
     {
-      psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
       psGeomMetadata.geometryOrigin = originResult.value();
       psGeomMetadata.geometrySpacing = pLengthResult.value();
-      psGeomMetadata.geometryUnits = geometry.getUnits();
     }
     break;
   }
@@ -544,7 +565,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   if(!psMetadata.geometryOrigin.has_value() || !psMetadata.geometrySpacing.has_value())
   {
     psOrigin = {0.0, 0.0, 0.0};
-    psSpacing = {0.0, 0.0, 0.0};
+    psSpacing = {1.0F, 1.0F, 1.0F};
     partitioningSchemeInformation = "Input geometry space unknown during preflight.";
   }
   else
@@ -602,10 +623,13 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
   {
     return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(vertexTupleResult), {})};
   }
-  Result<> dimensionalityResult = DataCheckDimensionality(geometry);
-  if(dimensionalityResult.invalid())
+  if(geometry.getVerticesRef().getStoreType() != IDataStore::StoreType::Empty)
   {
-    return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(dimensionalityResult), {})};
+    auto dimensionalityResult = DataCheckDimensionality(geometry);
+    if(dimensionalityResult.invalid())
+    {
+      return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(dimensionalityResult), {})};
+    }
   }
   return GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
 }

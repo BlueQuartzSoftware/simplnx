@@ -1,5 +1,7 @@
 #include "ReadImageFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadImage.hpp"
 #include "NXImageProcessing/utils/NrrdUtilities.hpp"
 
@@ -57,37 +59,12 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   return options;
 }
 
-// Applies optional origin/spacing overrides to the supplied values in-place.
-// Called at both the pre- and post-crop stages to mirror the same override semantics.
-void ApplyOriginSpacingOverrides(bool shouldChangeOrigin, bool shouldCenterOrigin, bool shouldChangeSpacing, const VectorFloat32Parameter::ValueType& originValues,
-                                 const VectorFloat32Parameter::ValueType& spacingValues, const std::vector<usize>& dims, FloatVec3& origin, FloatVec3& spacing)
-{
-  if(shouldChangeSpacing)
-  {
-    spacing = FloatVec3{spacingValues[0], spacingValues[1], spacingValues[2]};
-  }
-
-  if(shouldChangeOrigin)
-  {
-    origin = FloatVec3{originValues[0], originValues[1], originValues[2]};
-    if(shouldCenterOrigin)
-    {
-      for(usize i = 0; i < 3; i++)
-      {
-        origin[i] = -0.5f * spacing[i] * static_cast<float32>(dims[i]);
-      }
-    }
-  }
-}
-
 // Builds the ImageGeom + cell DataArray for the NRRD backend (.nrrd/.nhdr). This is the geometry
 // logic of the (now retired) standalone NRRD reader, folded in here so ReadImage produces identical
 // geometry for NRRD volumes: header parse -> dims/origin/spacing -> optional crop delegation -> the create-actions and
-// the non-axis-aligned ('space directions') warning (code -35750). The raster-oriented
-// origin/spacing/data-type override parameters are intentionally not applied here; the NRRD path is
-// kept byte-for-byte compatible with the dedicated NRRD reader.
+// and the non-axis-aligned ('space directions') warning (code -35750).
 IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const DataPath& imageGeomPath, const std::string& cellAttrMatName, const std::string& imageDataArrayName,
-                                       const CropGeometryParameter::ValueType& croppingOptions, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+                                       const CropGeometryParameter::ValueType& croppingOptions, const ImageIO::GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin)
 {
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
@@ -105,8 +82,12 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   const nrrd::NrrdMetadata md = std::move(metadataResult).value();
 
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
-  std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
-  std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
+  FloatVec3 origin{md.origin[0], md.origin[1], md.origin[2]};
+  FloatVec3 spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, processing, centerOrigin, dims, origin, spacing); result.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+  }
 
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
@@ -115,7 +96,7 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     DataStructure tmpDs;
     OutputActions tmpActions;
     {
-      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin, spacing, cellAttrMatName);
+      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName);
       tmpActions.appendAction(std::move(tmpGeomAction));
     }
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
@@ -144,8 +125,16 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     spacing = croppedGeom.getSpacing().toContainer<std::vector<float32>>();
   }
 
+  if(processing == OriginSpacingProcessing::Postprocessed)
   {
-    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin, spacing, cellAttrMatName);
+    if(auto result = ImageIO::ApplyPostprocessedGeometry(inputFilePath, overrides, centerOrigin, dims, origin, spacing); result.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    }
+  }
+
+  {
+    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(imageGeomPath, dims, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), cellAttrMatName);
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
@@ -223,7 +212,7 @@ Parameters ReadImageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
                                                    ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
 
-  params.insertSeparator(Parameters::Separator{"Origin & Spacing Options"});
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
   params.insert(std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Center Geometry on (0, 0, 0)",
                                                 "When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.", false));
@@ -288,11 +277,8 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
-  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto originValues = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto spacingValues = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto imageDataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
@@ -303,7 +289,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   // the dedicated NRRD reader); everything else is a raster image read below. (.mha is out of scope.)
   if(DetermineReadImageBackend(fileName) == ReadImageBackend::Nrrd)
   {
-    return NrrdPreflight(fileName, imageGeomPath, cellDataName, imageDataArrayName, croppingOptions, messageHandler, shouldCancel);
+    return NrrdPreflight(fileName, imageGeomPath, cellDataName, imageDataArrayName, croppingOptions, overrides, originSpacingProcessing, shouldCenterOrigin);
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -330,9 +316,9 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
   FloatVec3 origin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
   FloatVec3 spacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});
 
-  if(originSpacingProcessing == OriginSpacingProcessing::Preprocessed)
+  if(auto result = ImageIO::ResolveCropGeometry(fileName, overrides, originSpacingProcessing, shouldCenterOrigin, dims, origin, spacing); result.invalid())
   {
-    ApplyOriginSpacingOverrides(shouldChangeOrigin, shouldCenterOrigin, shouldChangeSpacing, originValues, spacingValues, dims, origin, spacing);
+    return {ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   // Cropping uses the shared planner on a temporary Image Geometry.
@@ -348,8 +334,14 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     AttributeMatrix* amPtr = AttributeMatrix::Create(tmpDs, "CellData", std::vector<usize>(dims.crbegin(), dims.crend()), tmpGeomPtr->getId());
     tmpGeomPtr->setCellData(*amPtr);
     tmpGeomPtr->setDimensions(dims);
-    tmpGeomPtr->setOrigin(origin);
-    tmpGeomPtr->setSpacing(spacing);
+    if(auto result = tmpGeomPtr->setOrigin(origin); result.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    }
+    if(auto result = tmpGeomPtr->setSpacing(spacing); result.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    }
 
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(tmpGeomPath, {}, croppingOptions, zCropActive, true);
     ImageGeometryCropBounds cropBounds;
@@ -373,9 +365,13 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& dat
     origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
   }
 
-  if(originSpacingProcessing == OriginSpacingProcessing::Postprocessed)
+  // The stack applies its postprocessed settings after combining the slices.
+  if(originSpacingProcessing == OriginSpacingProcessing::Postprocessed && !m_ReadSinglePageOnly)
   {
-    ApplyOriginSpacingOverrides(shouldChangeOrigin, shouldCenterOrigin, shouldChangeSpacing, originValues, spacingValues, dims, origin, spacing);
+    if(auto result = ImageIO::ApplyPostprocessedGeometry(fileName, overrides, shouldCenterOrigin, dims, origin, spacing); result.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(result))};
+    }
   }
 
   DataType dataType = metadata.dataType;

@@ -446,8 +446,14 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
     return MakeErrorResult(-9116, fmt::format("BuildTiledInput: could not create destination ImageGeom '{}'", geomPath.toString()));
   }
   dstGeom->setDimensions({dstX, dstY, dstZ});
-  dstGeom->setSpacing(srcGeom->getSpacing());
-  dstGeom->setOrigin(srcGeom->getOrigin());
+  if(auto result = dstGeom->setSpacing(srcGeom->getSpacing()); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = dstGeom->setOrigin(srcGeom->getOrigin()); result.invalid())
+  {
+    return result;
+  }
 
   const ShapeType tupleShape = {dstZ, dstY, dstX}; // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
   auto* cellAM = AttributeMatrix::Create(ds, cellAmName, tupleShape, dstGeom->getId());

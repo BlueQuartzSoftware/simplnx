@@ -377,8 +377,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[Si
   auto* imageGeom = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({2, 1, 1});
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   auto* cellAM = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), {1, 1, 2}, imageGeom->getId());
   REQUIRE(cellAM != nullptr);
   imageGeom->setCellData(*cellAM);

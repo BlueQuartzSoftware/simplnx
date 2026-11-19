@@ -12,6 +12,14 @@
           "value": "Cell Data",
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "cropping_options_index": {
           "value": {
             "bounds_x_physical": [
@@ -58,6 +66,14 @@
           "value": 0,
           "version": 1
         },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
         "output_geometry_path": {
           "value": "Projection Volume",
           "version": 1
@@ -66,9 +82,17 @@
           "value": "MHA Image/TransformationMatrix",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "save_image_transformation": {
           "value": false,
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
           "version": 1
         },
         "transpose_transform_matrix": {

@@ -1523,7 +1523,7 @@ PYBIND11_MODULE(simplnx, mod)
   deleteDataAction.def(py::init<const DataPath&, DeleteDataAction::DeleteType>(), "path"_a, "type"_a);
 
   auto importH5ObjectPathsAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, ImportH5ObjectPathsAction, IDataCreationAction);
-  importH5ObjectPathsAction.def(py::init<const std::filesystem::path&, const ImportH5ObjectPathsAction::PathsType&>(), "import_file"_a, "paths"_a);
+  importH5ObjectPathsAction.def(py::init<const std::filesystem::path&, const ImportH5ObjectPathsAction::PathsType&, bool>(), "import_file"_a, "paths"_a, "use_default_geometry_values"_a = false);
 
   auto moveDataAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, MoveDataAction, IDataAction);
   moveDataAction.def(py::init<const DataPath&, const DataPath&>(), "path"_a, "new_parent_path"_a);
@@ -2122,8 +2122,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(spacing));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
-        return executeResult_.result;
+        // Return the filter Result so Python receives geometry metadata validation errors.
+        return filter_.execute(ds, args).result;
       },
       "data_structure"_a, "geometry_path"_a, "dimensions"_a, "origin"_a, "spacing"_a, "cell_attr_matrix_name"_a = "Cell Data");
 

@@ -149,8 +149,8 @@ BoolArray& CreateBulkBoolInput(DataStructure& ds, std::shared_ptr<AbstractDataSt
   auto* image = ImageGeom::Create(ds, k_BulkImagePath.getTargetName());
   REQUIRE(image != nullptr);
   image->setDimensions({k_BoolCount, 1, 1});
-  image->setSpacing({1.0F, 1.0F, 1.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellAM = AttributeMatrix::Create(ds, k_BulkCellDataPath.getTargetName(), ShapeType{1, 1, k_BoolCount}, image->getId());
   REQUIRE(cellAM != nullptr);
   image->setCellData(*cellAM);
@@ -307,8 +307,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
   auto* image = ImageGeom::Create(dataStructure, imagePath.getTargetName());
   REQUIRE(image != nullptr);
   image->setDimensions({3, 3, 3});
-  image->setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), ShapeType{3, 3, 3}, image->getId());
   REQUIRE(cellData != nullptr);
   image->setCellData(*cellData);
@@ -381,8 +381,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating p
   auto* imagePtr = ImageGeom::Create(dataStructure, imagePath.getTargetName());
   REQUIRE(imagePtr != nullptr);
   imagePtr->setDimensions({4, 1, 1});
-  imagePtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imagePtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imagePtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imagePtr->setCellData(*cellDataPtr);

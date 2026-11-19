@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
@@ -70,6 +71,17 @@ public:
      */
     PathImportPolicy ImportPolicy = PathImportPolicy::All;
   };
+
+  /** @brief Filter name used in the filter list and in strict-load diagnostics. */
+  static constexpr StringLiteral k_ReadFilterHumanName = "Read DREAM3D-NX File";
+  /** @brief Label of the option that supplies defaults for invalid image metadata. */
+  static constexpr StringLiteral k_UseDefaultGeometryValuesLabel = "Use Default Origin/Spacing for Invalid Values";
+
+  /**
+   * @brief Appends Read DREAM3D-NX File recovery instructions to invalid image metadata errors for direct file-loading tools.
+   * @param errors Error diagnostics from a strict DREAM.3D read.
+   */
+  static void AddImageGeometryImportHint(std::vector<Error>& errors);
 
   using ValueType = ImportData;
 

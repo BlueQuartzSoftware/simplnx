@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "simplnx/Common/ScopeGuard.hpp"
@@ -450,4 +452,34 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: SIMPL Backwards Compa
       CHECK(args.value<bool>(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key) == true);
     }
   }
+}
+
+TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: override spacing before subvolume positioning", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
+{
+  WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
+  WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
+  std::string header;
+  {
+    std::ifstream input(k_NsiHeaderPath);
+    header.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+  }
+  const auto start = header.find("<Max>");
+  REQUIRE(start != std::string::npos);
+  header.replace(start, header.find('\n', start) - start, "<Max> 0 0 0");
+  {
+    std::ofstream output(k_NsiHeaderPath, std::ios::trunc);
+    output << header;
+    REQUIRE(output.good());
+  }
+
+  const ReadBinaryCTNorthstarFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, k_NsiHeaderPath);
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, true);
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::vector<int32>{1, 2, 4});
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::vector<int32>{4, 3, 6});
+  UnitTest::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  // The cropped origin is input origin plus start voxel times spacing.
+  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), {6, 3, 24}, {2, 3, 4});
 }

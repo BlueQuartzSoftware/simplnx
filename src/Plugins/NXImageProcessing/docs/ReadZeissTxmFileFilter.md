@@ -8,7 +8,7 @@ IO (Read)
 
 This filter will read the entire volume or optionally a cropped subvolume from a .txm or .txrm file. These files are Zeiss X-ray computed tomography (xCT) reconstruction files.
 
-The volume is read into a new **Image Geometry**. The geometry's spacing and origin (and the physical-length units associated with them) are read directly from the source file; the filter does not convert or override them. The voxel values are stored in a **Cell Attribute Matrix** (default name *Cell Data*) in a single-component array (default name *CT_Data*). The created array's type is determined by the source file and is one of `float32`, `uint16`, or `uint8`.
+The filter reads the volume into a new **Image Geometry**. By default, it uses the spacing from the file and sets the origin to zero. The filter uses micrometers for both values. Enter any replacement origin or spacing in micrometers. The voxel values are stored in a **Cell Attribute Matrix** (default name *Cell Data*) in a single-component array (default name *CT_Data*). The created array's type is determined by the source file and is one of `float32`, `uint16`, or `uint8`.
 
 The cropping type options in the Cropping Options section are `No Cropping` to read the full volume into an image geometry, `Voxel Subvolume` to read a subvolume into an image geometry using voxel coordinates, and `Physical Subvolume` to read a subvolume into an image geometry using physical coordinates.  Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions.  So for example, if the cropping type `Physical Subvolume` is selected, `Crop Y Dimension` is turned on, and `Crop X Dimension` and `Crop Z Dimension` are turned off, then the incoming volume will be cropped in the Y dimension only and the cropping bounds will be in physical units.
 
@@ -22,6 +22,10 @@ It is recommended that you view the data as a "2D Slice/Image View" or "Volume R
 ## Required Input Sources
 
 None — this filter reads directly from a `.txm` or `.txrm` file on disk.
+
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The default origin is zero. The filter uses the replacement values before it computes the physical crop.
 
 % Auto generated parameter table will be inserted here
 

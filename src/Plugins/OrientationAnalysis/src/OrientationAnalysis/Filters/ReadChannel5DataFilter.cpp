@@ -1,5 +1,9 @@
 #include "ReadChannel5DataFilter.hpp"
 
+#include "Algorithms/EbsdStepMetadata.hpp"
+
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ReadChannel5Data.hpp"
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
@@ -73,6 +77,9 @@ Parameters ReadChannel5DataFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_CreateCompatibleArrays_Key, "Convert Data Arrays to be more compatible with DREAM3D",
                                                 "Some arrays will be converted from the type they are in the file to more compatible types.", true));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -88,7 +95,8 @@ Parameters ReadChannel5DataFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadChannel5DataFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -126,6 +134,8 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
 
   // Read the CPR file to gather the Geometry information and what arrays are present in the file.
   ebsdlib::CprReader reader;
+  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX);
+  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY);
   reader.setFileName(pInputFileValue.string());
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
@@ -136,14 +146,18 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), 1.0F};
+  CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), 1.0F};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   // These variables should be updated with the latest data generated for each variable during preflight.
   // These will be returned through the preflightResult variable to the
   // user interface.
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
   EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
 
   // Define an Action that makes changes to the DataStructure
@@ -261,6 +275,7 @@ Result<> ReadChannel5DataFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadChannel5DataInputValues inputValues;
+  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.EdaxHexagonalAlignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);

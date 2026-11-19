@@ -85,8 +85,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     const ShapeType cellShape = {4, 4, 4};
     auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
     imageGeom->setDimensions({4, 4, 4});
-    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+    REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+    REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
     auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
     imageGeom->setCellData(*cellAM);
     const DataPath inputPath({"Image Geometry", "CellData", "Input"});

@@ -7,7 +7,6 @@
 #include <catch2/catch.hpp>
 
 #include <array>
-#include <cmath>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -33,8 +32,8 @@ TEST_CASE("simplnx::UpdateImageGeomAction: copied actions preserve centering", "
     auto* geometry = ImageGeom::Create(dataStructure, "Image");
     REQUIRE(geometry != nullptr);
     geometry->setDimensions({4, 2, 6});
-    geometry->setOrigin({10.0f, -20.0f, 30.0f});
-    geometry->setSpacing({1.0f, 1.0f, 1.0f});
+    REQUIRE(geometry->setOrigin({10.0f, -20.0f, 30.0f}).valid());
+    REQUIRE(geometry->setSpacing({1.0f, 1.0f, 1.0f}).valid());
     const auto result = selectedActions->applyRegular(dataStructure, mode);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -51,65 +50,56 @@ TEST_CASE("simplnx::UpdateImageGeomAction: copied actions preserve centering", "
   }
 }
 
-TEST_CASE("simplnx::UpdateImageGeomAction: Optional result validation and modes", "[simplnx][UpdateImageGeomAction]")
+TEST_CASE("simplnx::UpdateImageGeomAction: Invalid metadata is rejected before either setter", "[simplnx][UpdateImageGeomAction]")
 {
-  const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool useClone = GENERATE(false, true);
+  CAPTURE(mode, useClone);
   DataStructure ds;
-  auto* geom = ImageGeom::Create(ds, "Image");
+  const DataPath geometryPath({"Parent", "Image"});
+  auto* parent = DataGroup::Create(ds, "Parent");
+  REQUIRE(parent != nullptr);
+  auto* geom = ImageGeom::Create(ds, "Image", parent->getId());
   REQUIRE(geom != nullptr);
   geom->setDimensions({10, 1, 1});
-  geom->setSpacing({row == 4 ? 0.0f : 1.0f, 1, 1});
-  geom->setOrigin({0, 0, 0});
-  const auto oldSpacing = geom->getSpacing();
-  const bool preflight = row == 0 || row == 2;
-  const bool check = row != 2 && row != 3;
-  const std::optional<FloatVec3> spacing = row == 4 ? std::nullopt : row == 6 ? FloatVec3{0, 1, 1} : row == 7 ? std::optional<FloatVec3>{} : FloatVec3{3e38f, 1, 1};
-  const FloatVec3 origin = row == 7 ? FloatVec3{std::numeric_limits<float32>::infinity(), 0, 0} : FloatVec3{0, 0, 0};
-  UpdateImageGeomAction action(origin, spacing, DataPath({"Image"}), row < 4 || row == 5, check);
-  auto cloned = action.clone();
-  auto result = (row == 5 ? cloned.get() : &action)->apply(ds, preflight ? IDataAction::Mode::Preflight : IDataAction::Mode::Execute);
-  if(row == 1 || row == 5 || row == 6 || row == 7)
+  const FloatVec3 oldSpacing{1, 1, 1};
+  const FloatVec3 oldOrigin{0, 0, 0};
+  REQUIRE(geom->setSpacing(oldSpacing).valid());
+  REQUIRE(geom->setOrigin(oldOrigin).valid());
+
+  std::optional<FloatVec3> spacing;
+  FloatVec3 origin{5, 0, 0};
+  bool centerOrigin = false;
+  int32 expectedCode = -1557;
+  std::string expectedMessage;
+  SECTION("Assigned zero spacing")
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    CHECK(result.errors()[0].code == (row == 6 ? -86028 : row == 7 ? -86029 : -86030));
-    const auto& message = result.errors()[0].message;
-    CHECK(message.find("'Image'") != std::string::npos);
-    CHECK(message.find("X") != std::string::npos);
-    CHECK(message.find("Parameter") == std::string::npos);
-    if(row == 6)
-    {
-      CHECK(message.find("assigned spacing 0") != std::string::npos);
-      CHECK(message.find("existing spacing 1") != std::string::npos);
-      CHECK(message.find("computed result 0") != std::string::npos);
-      CHECK(message.find("must be finite and greater than 0") != std::string::npos);
-    }
-    else if(row == 7)
-    {
-      CHECK(message.find("assigned origin inf") != std::string::npos);
-      CHECK(message.find("existing origin 0") != std::string::npos);
-      CHECK(message.find("computed result inf") != std::string::npos);
-      CHECK(message.find("must be finite") != std::string::npos);
-    }
-    else
-    {
-      CHECK(message.find("centering the origin 0") != std::string::npos);
-      CHECK(message.find("spacing 3e+38") != std::string::npos);
-      CHECK(message.find("dimension 10") != std::string::npos);
-      CHECK(message.find("produces -inf") != std::string::npos);
-    }
-    CHECK(geom->getSpacing() == oldSpacing);
-    CHECK(geom->getOrigin() == FloatVec3{0, 0, 0});
+    spacing = FloatVec3{0, 1, 1};
+    expectedCode = -1556;
+    expectedMessage = "Spacing on the X axis must be finite and greater than zero. Received 0.";
   }
-  else
+  SECTION("Assigned infinite origin")
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
-    if(row != 4)
-    {
-      CHECK_FALSE(std::isfinite(geom->getOrigin()[0]));
-    }
-    else
-    {
-      CHECK(geom->getSpacing()[0] == 0);
-    }
+    spacing = FloatVec3{2, 1, 1};
+    origin[0] = std::numeric_limits<float32>::infinity();
+    expectedMessage = "Origin on the X axis must be finite. Received inf.";
   }
+  SECTION("Centered origin overflows")
+  {
+    spacing = FloatVec3{3e38f, 1, 1};
+    centerOrigin = true;
+    expectedMessage = "Origin on the X axis must be finite. Received -inf.";
+  }
+
+  const UpdateImageGeomAction action(origin, spacing, geometryPath, centerOrigin);
+  const auto clone = action.clone();
+  const IDataAction* selectedAction = useClone ? clone.get() : &action;
+  const auto result = selectedAction->apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  CHECK(result.errors().front().code == expectedCode);
+  CHECK(result.errors().front().message.find("'Parent/Image'") != std::string::npos);
+  CHECK(result.errors().front().message.find(expectedMessage) != std::string::npos);
+  CHECK(geom->getSpacing() == oldSpacing);
+  CHECK(geom->getOrigin() == oldOrigin);
 }

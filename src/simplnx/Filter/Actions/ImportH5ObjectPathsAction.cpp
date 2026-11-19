@@ -16,12 +16,14 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/IO/HDF5/RectGridGeomIO.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIOInternal.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include "simplnx/Utilities/StoreCopyUtilities.hpp"
 
 #include <fmt/format.h>
@@ -314,6 +316,7 @@ void TransformGeometryReferences(IGeometry& geometry, const Transform& transform
   }
   if(auto* rectGridPtr = dynamic_cast<RectGridGeom*>(&geometry); rectGridPtr != nullptr)
   {
+    // Remap the stored references. Execute validates bounds after materialization.
     rectGridPtr->setXBoundsId(transform(rectGridPtr->getXBoundsId()));
     rectGridPtr->setYBoundsId(transform(rectGridPtr->getYBoundsId()));
     rectGridPtr->setZBoundsId(transform(rectGridPtr->getZBoundsId()));
@@ -368,10 +371,11 @@ struct ImportH5ObjectPathsAction::TestState
 #endif
 };
 
-ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const fs::path& importFile, const PathsType& paths)
+ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const fs::path& importFile, const PathsType& paths, bool useDefaultGeometryValues)
 : IDataCreationAction(DataPath{})
 , m_H5FilePath(importFile)
 , m_Paths(paths)
+, m_UseDefaultGeometryValues(useDefaultGeometryValues)
 {
   std::sort(m_Paths.begin(), m_Paths.end(), [](const DataPath& a, const DataPath& b) { return a.getLength() < b.getLength(); });
 }
@@ -380,15 +384,16 @@ ImportH5ObjectPathsAction::~ImportH5ObjectPathsAction() noexcept = default;
 
 Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto metadata = DREAM3D::Dream3dPreflightCache::Instance().fetchNeutralMetadata(m_H5FilePath);
+  auto metadata = DREAM3D::Dream3dPreflightCache::Instance().fetchSelectableMetadata(m_H5FilePath);
   if(metadata.invalid())
   {
     return ConvertResult(std::move(metadata));
   }
   const bool legacy = metadata.value().fileVersion == DREAM3D::k_LegacyFileVersion;
+  auto validation = metadata.value().applyImageMetadata(m_H5FilePath, m_Paths, m_UseDefaultGeometryValues);
   DataStructure sourceStructure = std::move(metadata.value().dataStructure);
-  Result<> importResult = ConvertResult(std::move(metadata));
-  if(m_Paths.empty())
+  Result<> importResult = MergeResults(ConvertResult(std::move(metadata)), std::move(validation));
+  if(importResult.invalid() || m_Paths.empty())
   {
     return importResult;
   }
@@ -599,6 +604,12 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     }
   }
 
+  importResult = MergeResults(std::move(importResult), HDF5::RectGridGeomIO::ValidateImportedBounds(preparedStructure, m_H5FilePath, preparedPaths));
+  if(importResult.invalid())
+  {
+    return importResult;
+  }
+
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
   auto publicationResult = m_TestState == nullptr ? dataStructure.publishImportedObjects(preparedStructure, preparedPaths, m_H5FilePath, checkpoint) :
                                                     m_TestState->Control.publish(dataStructure, preparedStructure, preparedPaths, m_H5FilePath, checkpoint);
@@ -645,7 +656,7 @@ Result<> ImportH5ObjectPathsAction::cleanupFailedImportForTesting(DataStructure&
 
 IDataAction::UniquePointer ImportH5ObjectPathsAction::clone() const
 {
-  return std::make_unique<ImportH5ObjectPathsAction>(m_H5FilePath, m_Paths);
+  return std::make_unique<ImportH5ObjectPathsAction>(m_H5FilePath, m_Paths, m_UseDefaultGeometryValues);
 }
 
 std::vector<DataPath> ImportH5ObjectPathsAction::getAllCreatedPaths() const

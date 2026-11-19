@@ -188,8 +188,8 @@ DataStructure createTestDataStructure(DynamicListMode dynamicListMode = DynamicL
   // Image Geometry
   {
     ImageGeom* imageGeom = ImageGeom::Create(dataStruct, Constants::k_ImageGeometry);
-    imageGeom->setSpacing({0.25f, 0.55f, 1.86});
-    imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+    REQUIRE(imageGeom->setSpacing({0.25f, 0.55f, 1.86}).valid());
+    REQUIRE(imageGeom->setOrigin({0.0f, 20.0f, 66.0f}).valid());
     std::vector<usize> imageGeomDims = {40, 60, 80};
     imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
@@ -276,7 +276,7 @@ DataStructure createTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*zBoundsArray)[12] = 60;
     (*zBoundsArray)[13] = 65;
 
-    rectGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+    REQUIRE(rectGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray).valid());
     rectGeom->findElementSizes(false);
   }
 
@@ -804,10 +804,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
-  // setBounds() validates values, which planned stores cannot provide; link IDs as preflight actions do.
-  rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
-  rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
-  rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
+  REQUIRE(rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr).valid());
 
   nlohmann::json json;
   REQUIRE_NOTHROW(json = dataStructure.exportHierarchyAsJson());
@@ -856,10 +853,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPlannedOutOfCoreBounds"
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
-  // setBounds() validates values, which planned stores cannot provide; link IDs as preflight actions do.
-  rectGridGeomPtr->setXBoundsId(xBoundsPtr->getId());
-  rectGridGeomPtr->setYBoundsId(yBoundsPtr->getId());
-  rectGridGeomPtr->setZBoundsId(zBoundsPtr->getId());
+  REQUIRE(rectGridGeomPtr->setBounds(xBoundsPtr, yBoundsPtr, zBoundsPtr).valid());
 
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
   const auto& rectGridNode = findNode(json.at("objects"), "Rect Grid");

@@ -53,8 +53,8 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
   imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);

@@ -117,8 +117,8 @@ FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usiz
   td.totalFeatures = numFeatures;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({nX, nY, nZ});
 
   td.cellAM = AttributeMatrix::Create(td.ds, "CellData", ShapeType{nZ, nY, nX}, td.geom->getId());

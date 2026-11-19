@@ -145,8 +145,8 @@ inline DataPath BuildBinaryContourImage(DataStructure& ds, usize dimX, usize dim
   const ShapeType cellShape = {dimZ, dimY, dimX};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -174,8 +174,8 @@ inline DataPath BuildMultiLabelContourImage(DataStructure& ds, usize dimX, usize
   const ShapeType cellShape = {dimZ, dimY, dimX};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -204,8 +204,8 @@ inline DataPath BuildBinaryContourImageBulk(DataStructure& ds, usize dim, T fore
   const ShapeType cellShape = {dim, dim, dim};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dim, dim, dim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -247,8 +247,8 @@ inline DataPath BuildMultiLabelContourImageBulk(DataStructure& ds, usize dim)
   const ShapeType cellShape = {dim, dim, dim};
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
   imageGeom->setDimensions({dim, dim, dim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);

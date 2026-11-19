@@ -34,8 +34,8 @@ Arguments CreateBinCountClusteringFixture(DataStructure& dataStructure, int32 nu
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "BinCountGeometry");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({4, 4, 4});
-  imageGeomPtr->setSpacing({1, 1, 1});
-  imageGeomPtr->setOrigin({0, 0, 0});
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {4}, imageGeomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, imageGeomPtr->getId());
@@ -345,7 +345,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair 
   auto* geometry = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometry != nullptr);
   geometry->setDimensions({1, 1, 1});
-  geometry->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(geometry->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   auto* features = AttributeMatrix::Create(dataStructure, "Features", {4}, geometry->getId());
   REQUIRE(features != nullptr);
   auto* ensembles = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, geometry->getId());

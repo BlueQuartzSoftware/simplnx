@@ -96,16 +96,35 @@ public:
   /**
    * @brief Sets the coordinate bounds arrays for X, Y, and Z axes.
    *
-   * Validates that each non-null array has at least 2 elements and that the
-   * values are strictly monotonically increasing. Negative values are permitted.
-   * Returns an error if any axis fails either check; the geometry is not modified.
+   * Validates that each non-null axis has at least two scalar bounds. Populated bounds
+   * must be finite and strictly increasing. The geometry is preserved on failure.
    *
    * @param xBounds Array of X coordinate bounds (nullptr clears the X bounds)
    * @param yBounds Array of Y coordinate bounds (nullptr clears the Y bounds)
    * @param zBounds Array of Z coordinate bounds (nullptr clears the Z bounds)
-   * @return Result<> Empty on success, or an error describing the first failing axis
+   * @return Success or the first validation error from ValidateBounds().
+   * Error -4006 indicates fewer than two bounds. Error -4048 indicates a component count other than one.
+   * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
+   * Store read errors also propagate.
    */
-  Result<> setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
+  [[nodiscard]] Result<> setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
+
+  static constexpr int32 k_NonfiniteBounds = -4008;
+  static constexpr int32 k_NonscalarBounds = -4048;
+
+  /**
+   * @brief Checks that populated axes contain finite, strictly increasing scalar bounds.
+   * Null arrays are allowed. Bounds with metadata-only stores are checked for shape.
+   * @param xBounds X coordinate bounds, or nullptr to skip this axis.
+   * @param yBounds Y coordinate bounds, or nullptr to skip this axis.
+   * @param zBounds Z coordinate bounds, or nullptr to skip this axis.
+   * @param translation Offset to apply in float32 before checking each bounds value.
+   * @return Success or the first validation error.
+   * Error -4006 indicates fewer than two bounds. Error -4048 indicates a component count other than one.
+   * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
+   * Store read errors also propagate.
+   */
+  [[nodiscard]] static Result<> ValidateBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds, const FloatVec3& translation = {});
 
   /**
    * @brief Returns a pointer to the X coordinate bounds array.
@@ -200,18 +219,21 @@ public:
   /**
    * @brief Sets the ID of the X bounds array.
    * @param xBoundsId The optional ID of the X bounds array
+   * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
   void setXBoundsId(const OptionalId& xBoundsId);
 
   /**
    * @brief Sets the ID of the Y bounds array.
    * @param yBoundsId The optional ID of the Y bounds array
+   * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
   void setYBoundsId(const OptionalId& yBoundsId);
 
   /**
    * @brief Sets the ID of the Z bounds array.
    * @param zBoundsId The optional ID of the Z bounds array
+   * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
   void setZBoundsId(const OptionalId& zBoundsId);
 

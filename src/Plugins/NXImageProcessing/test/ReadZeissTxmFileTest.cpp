@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -185,4 +187,16 @@ TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter: PhysicalCrop_MaxAtBound", 
   REQUIRE(croppedGeom.getDimensions() == dims);
   REQUIRE(croppedGeom.getOrigin() == origin);
   UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+}
+
+TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter: replace origin and spacing", "[NXImageProcessing][ReadZeissTxmFileFilter]")
+{
+  const TestFileSentinel sentinel(unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
+  const fs::path file = fs::path(unit_test::k_TestFilesDir.view()) / "ReadZeissTxmFileTest" / "ReadZeissTxmFileTest.txm";
+  const DataPath geometry({"Override Zeiss"});
+  Arguments args;
+  args.insertOrAssign(ReadZeissTxmFileFilter::k_TxmInputFilePath_Key, file);
+  args.insertOrAssign(ReadZeissTxmFileFilter::k_CreatedImageGeometryPath_Key, geometry);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(ReadZeissTxmFileFilter{}, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

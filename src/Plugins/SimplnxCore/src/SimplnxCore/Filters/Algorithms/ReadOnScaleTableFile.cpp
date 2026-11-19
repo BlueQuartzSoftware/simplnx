@@ -388,7 +388,12 @@ Result<> ReadOnScaleTableFile::operator()()
   };
   auto& names = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNamesArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  Result<> result;
+  // Attach the populated bounds only after the file's coordinates pass validation.
+  Result<> result = geometry.setBounds(nullptr, nullptr, nullptr);
+  if(result.invalid())
+  {
+    return result;
+  }
 
   for(usize axis = 0; axis < boundsArrays.size(); axis++)
   {
@@ -553,6 +558,15 @@ Result<> ReadOnScaleTableFile::operator()()
   {
     return MakeErrorResult(k_MissingMaterialSectionError, fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", m_InputValues->InputFile.string()));
   }
-  return result;
+  auto boundsResult = geometry.setBounds(boundsArrays[0], boundsArrays[1], boundsArrays[2]);
+  if(boundsResult.invalid())
+  {
+    for(auto& error : boundsResult.errors())
+    {
+      error.message =
+          fmt::format("Cannot read bounds for rectilinear grid geometry '{}' from '{}': {}", m_InputValues->RectGridGeometryPath.toString(), m_InputValues->InputFile.string(), error.message);
+    }
+  }
+  return MergeResults(std::move(result), std::move(boundsResult));
 }
 } // namespace nx::core

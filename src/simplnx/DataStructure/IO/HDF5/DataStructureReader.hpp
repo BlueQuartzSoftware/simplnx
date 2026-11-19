@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/simplnx_export.hpp"
@@ -21,8 +22,11 @@ public:
   /**
    * @brief Constructs a DataStructureReader with an optional IO manager.
    * @param ioManager Optional pointer to a custom DataIOManager. If nullptr, uses the default manager.
+   * @param deferredImageMetadata Receives unvalidated image metadata during selective discovery. The caller
+   * owns this map and keeps it alive for the read. With this map, callers must validate selected rectilinear
+   * bounds and install validated image metadata before publishing imported geometries.
    */
-  DataStructureReader(DataIOManager* ioManager = nullptr);
+  DataStructureReader(DataIOManager* ioManager = nullptr, DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr);
   ~DataStructureReader() noexcept;
 
   /**
@@ -47,9 +51,18 @@ public:
    * @param useEmptyDataStores Selects metadata placeholders.
    *
    * @param resolver Supplies policy before any imported object is created; null retains ordinary policy.
+   * @param deferredImageMetadata Optional map for selective discovery with metadata placeholders. The caller
+   * validates selected rectilinear bounds and installs validated image metadata before publishing imported geometries.
    * @return Imported structure and read diagnostics.
    */
-  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver);
+  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
+                                        DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr);
+
+  /**
+   * @brief Gets the caller-owned map that receives image metadata during selective discovery.
+   * @return The map, or nullptr when the reader validates geometry metadata during the read.
+   */
+  [[nodiscard]] DREAM3D::DeferredImageMetadata* deferredImageMetadata() const;
 
   /**
    * @brief Reads a single DataObject from an HDF5 file at the specified path.
@@ -129,5 +142,6 @@ protected:
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
+  DREAM3D::DeferredImageMetadata* m_DeferredImageMetadata = nullptr;
 };
 } // namespace nx::core::HDF5

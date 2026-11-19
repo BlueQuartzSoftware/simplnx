@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ImportFijiMontageFilter.hpp"
@@ -588,7 +590,7 @@ TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: metadata cache correctnes
 namespace
 {
 // Minimal uncompressed TIFF. The normal writer does not support 2 or 5 samples.
-void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
+void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel, bool zeroXResolution = false)
 {
   const uint32 count = static_cast<uint32>(pixel.size());
   uint16 extras = 0;
@@ -600,9 +602,10 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
   {
     extras = static_cast<uint16>(count - 3);
   }
-  const uint16 entries = extras == 0 ? 10 : 11;
+  const uint16 entries = static_cast<uint16>((extras == 0 ? 10 : 11) + (zeroXResolution ? 1 : 0));
   const uint32 bitsOffset = 8 + 2 + (entries * 12) + 4;
-  const uint32 pixelsOffset = bitsOffset + (count > 2 ? count * 2 : 0);
+  const uint32 resolutionOffset = bitsOffset + (count > 2 ? count * 2 : 0);
+  const uint32 pixelsOffset = resolutionOffset + (zeroXResolution ? 8 : 0);
   std::ofstream out(path, std::ios::binary);
   REQUIRE(out.is_open());
   auto u16 = [&](uint16 value) {
@@ -649,6 +652,10 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
   entry({.Tag = 277, .Type = 3, .Count = 1, .Value = count});
   entry({.Tag = 278, .Type = 4, .Count = 1, .Value = 2});
   entry({.Tag = 279, .Type = 4, .Count = 1, .Value = 4 * count});
+  if(zeroXResolution)
+  {
+    entry({.Tag = 282, .Type = 5, .Count = 1, .Value = resolutionOffset});
+  }
   entry({.Tag = 284, .Type = 3, .Count = 1, .Value = 1});
   if(extras != 0)
   {
@@ -661,6 +668,11 @@ void writeC02Tile(const fs::path& path, const std::vector<uint8>& pixel)
     {
       u16(8);
     }
+  }
+  if(zeroXResolution)
+  {
+    u32(0);
+    u32(1);
   }
   for(int i = 0; i < 4; i++)
   {
@@ -1102,5 +1114,48 @@ TEST_CASE("NXImageProcessing::ImportFijiMontage: grayscale action clone preserve
     REQUIRE(array.getComponentShape() == ShapeType{3});
     REQUIRE(array.getNumberOfTuples() == 4);
     UnitTest::CheckArraysInheritTupleDims(*data);
+  }
+}
+
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: rejects a nonfinite tile origin", "[NXImageProcessing][ImportFijiMontageFilter]")
+{
+  const auto config = FijiOutputDir() / "BadTileOrigin.txt";
+  WriteConfig(config, {"dim = 2", "# Define the image coordinates", "tile.png; ; (nan, 2)"});
+  Arguments args;
+  args.insertOrAssign(ImportFijiMontageFilter::k_InputFile_Key, config);
+  DataStructure ds;
+  const auto result = ImportFijiMontageFilter{}.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  CHECK(result.outputActions.errors().front().code == ImageGeom::k_InvalidOrigin);
+  CHECK(result.outputActions.errors().front().message.find("line 3") != std::string::npos);
+  CHECK(result.outputActions.errors().front().message.find(config.string()) != std::string::npos);
+}
+
+TEST_CASE("NXImageProcessing::ImportFijiMontageFilter: tile geometry uses configuration coordinates and unit spacing", "[NXImageProcessing][ImportFijiMontageFilter]")
+{
+  const auto dir = FijiOutputDir();
+  const auto tile = dir / "ZeroResolution.tif";
+  writeC02Tile(tile, {9}, true);
+  const auto tileIO = CreateImageIO(tile);
+  SIMPLNX_RESULT_REQUIRE_VALID(tileIO);
+  const auto metadata = tileIO.value()->readMetadata(tile);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  REQUIRE(metadata.value().spacing.has_value());
+  REQUIRE((*metadata.value().spacing)[0] == 0.0F);
+
+  const auto config = dir / "TileCoordinates.txt";
+  WriteConfig(config, {"dim = 2", "# Define the image coordinates", "ZeroResolution.tif; ; (10, 20)"});
+  auto args = MakeFijiArgs(config, true, false, {0, 0, 0});
+  DataStructure ds;
+  const auto result = ImportFijiMontageFilter{}.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  CHECK(result.result.warnings().empty());
+  const DataPath geometry({"Zen DataGroup", "Mosaic-ZeroResolution"});
+  UnitTest::RequireReaderGeometry(ds, geometry, {10, 20, 0}, {1, 1, 1});
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, geometry.createChildPath("Tile Data").createChildPath("Image"));
+  REQUIRE(pixels.getSize() == 4);
+  for(usize i = 0; i < pixels.getSize(); ++i)
+  {
+    CHECK(pixels[i] == 9);
   }
 }

@@ -130,8 +130,8 @@ void BuildOctantWithNumCells(DataStructure& ds)
 
   auto* imageGeom = ImageGeom::Create(ds, k_GeomName);
   imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -693,8 +693,8 @@ Arguments BuildSurfaceMetricFixture(DataStructure& dataStructure, const FloatVec
   auto* imageGeom = ImageGeom::Create(dataStructure, k_MetricGeometryPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({5, 5, 5});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeom->setSpacing(spacing);
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, k_MetricCellPath.getTargetName(), {5, 5, 5}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);

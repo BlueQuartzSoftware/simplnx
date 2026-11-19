@@ -57,6 +57,10 @@ An excellent reference for this is the following PDF file:
 
 Once the reference frames are correct, the imported Euler angles (three angles, in the Bunge Z-X-Z convention, describing each crystal's orientation relative to the sample) are typically converted to other orientation representations (quaternions, and so on) with [Convert Orientation Representation](ConvertOrientationsFilter.md) before computing misorientations, segmenting grains, or generating pole figures.
 
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. These settings are separate from the H5EBSD input settings. The filter uses them before it calculates the transformed geometry bounds.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

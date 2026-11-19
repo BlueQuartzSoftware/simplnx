@@ -75,8 +75,8 @@ void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& ge
 {
   ImageGeom* geom = ImageGeom::Create(dataStructure, geomName);
   geom->setDimensions(dims);
-  geom->setSpacing(spacing);
-  geom->setOrigin(origin);
+  REQUIRE(geom->setSpacing(spacing).valid());
+  REQUIRE(geom->setOrigin(origin).valid());
 
   auto dimsVec = dims.toContainer<std::vector<usize>>();
   auto amDims = std::vector<usize>(dimsVec.rbegin(), dimsVec.rend());

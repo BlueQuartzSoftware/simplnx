@@ -39,8 +39,8 @@ DataPath CreateUniformWriterInput(DataStructure& dataStructure, const SizeVec3& 
   auto* geometry = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometry != nullptr);
   geometry->setDimensions(dims);
-  geometry->setSpacing({2, 3, 4});
-  geometry->setOrigin({10, -5, 2});
+  REQUIRE(geometry->setSpacing({2, 3, 4}).valid());
+  REQUIRE(geometry->setOrigin({10, -5, 2}).valid());
   const ShapeType shape = {dims[2], dims[1], dims[0]};
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
   REQUIRE(cells != nullptr);
@@ -100,8 +100,8 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Tiny spacing bounds r
   const DataPath labelsPath = CreateUniformWriterInput(dataStructure, dims, {101, 102, 103, 104, 105, 106});
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(imageGeomPtr != nullptr);
-  imageGeomPtr->setOrigin({0, 0, 0});
-  imageGeomPtr->setSpacing({1e-7f, 2e-7f, 3e-7f});
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1e-7f, 2e-7f, 3e-7f}).valid());
   const std::string actual = WriteUniformFile(dataStructure, labelsPath, binary, binary ? "UniformTinySpacingBinary.am" : "UniformTinySpacingAscii.am");
   const std::string marker = "     BoundingBox ";
   const usize boxStart = actual.find(marker);
@@ -355,7 +355,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Geometry cell tuple c
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

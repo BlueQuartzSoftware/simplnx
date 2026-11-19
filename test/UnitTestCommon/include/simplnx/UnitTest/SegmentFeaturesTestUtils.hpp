@@ -34,8 +34,8 @@ inline AttributeMatrix* BuildSegmentFeaturesTestGeometry(DataStructure& ds, cons
 {
   auto* geom = ImageGeom::Create(ds, geomName);
   geom->setDimensions({dims[0], dims[1], dims[2]});
-  geom->setSpacing({1.0f, 1.0f, 1.0f});
-  geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   const ShapeType cellShape = {dims[2], dims[1], dims[0]};
   auto* am = AttributeMatrix::Create(ds, cellDataName, cellShape, geom->getId());

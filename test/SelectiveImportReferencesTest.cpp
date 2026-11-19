@@ -156,11 +156,20 @@ std::vector<ReferenceLink> PopulateReferences(DataStructure& dataStructure, IGeo
   }
   if(auto* rectGrid = dynamic_cast<RectGridGeom*>(&geometry); rectGrid != nullptr)
   {
-    rectGrid->setXBoundsId(CreateReferenceArray<float32>(dataStructure, "XBounds", parentId));
+    const auto makeBounds = [&](const std::string& name) {
+      auto store = std::make_unique<DataStore<float32>>(ShapeType{2}, ShapeType{1}, 0.0f);
+      (*store)[1] = 1.0f;
+      auto* array = Float32Array::Create(dataStructure, name, std::move(store), parentId);
+      REQUIRE(array != nullptr);
+      return array;
+    };
+    auto* xBounds = makeBounds("XBounds");
+    auto* yBounds = makeBounds("YBounds");
+    auto* zBounds = makeBounds("ZBounds");
+    const auto result = rectGrid->setBounds(xBounds, yBounds, zBounds);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
     add("XBounds", [](const IGeometry& geom) { return dynamic_cast<const RectGridGeom&>(geom).getXBoundsId(); });
-    rectGrid->setYBoundsId(CreateReferenceArray<float32>(dataStructure, "YBounds", parentId));
     add("YBounds", [](const IGeometry& geom) { return dynamic_cast<const RectGridGeom&>(geom).getYBoundsId(); });
-    rectGrid->setZBoundsId(CreateReferenceArray<float32>(dataStructure, "ZBounds", parentId));
     add("ZBounds", [](const IGeometry& geom) { return dynamic_cast<const RectGridGeom&>(geom).getZBoundsId(); });
   }
   return links;

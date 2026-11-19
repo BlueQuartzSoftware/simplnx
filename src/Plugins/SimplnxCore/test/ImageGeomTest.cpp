@@ -19,8 +19,8 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeo
   FloatVec3 origin = {-1.0f, 6.0f, 10.0f};
 
   imageGeom->setDimensions(dims);
-  imageGeom->setOrigin(origin);
-  imageGeom->setSpacing(res);
+  REQUIRE(imageGeom->setOrigin(origin).valid());
+  REQUIRE(imageGeom->setSpacing(res).valid());
 
   std::array<float, 3> coords = {2.5f, 9.23f, 12.78f};
   SizeVec3 indices = {0, 0, 0};
@@ -71,8 +71,8 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]
   FloatVec3 origin = {-10.0f, 5.0f, 2.0f};
 
   imageGeom->setDimensions(dims);
-  imageGeom->setOrigin(origin);
-  imageGeom->setSpacing(spacing);
+  REQUIRE(imageGeom->setOrigin(origin).valid());
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
 
   {
     std::array<float, 3> coords = {-9.9f, 5.25f, 2.15f};

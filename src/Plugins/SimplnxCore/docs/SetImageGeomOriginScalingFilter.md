@@ -22,11 +22,11 @@ The *Origin* parameter sets the new physical location of the bottom-left corner 
 - Y Origin: 4
 - Z Origin: 8
 
-Origin coordinates are in the geometry's physical units (microns, millimeters, etc.).
+Each origin coordinate must be finite. Coordinates use the geometry's physical units, such as microns or millimeters.
 
 ### Spacing
 
-The *Spacing* parameter sets the new physical distance between grid planes along each axis. Spacing values must be positive and non-zero. Updating spacing rescales the entire physical extent of the geometry (since the number of cells is unchanged) but leaves cell data values untouched.
+The *Spacing* parameter sets the new physical distance between grid planes along each axis. Spacing must be finite and greater than zero on every axis. Updating spacing rescales the entire physical extent of the geometry (since the number of cells is unchanged) but leaves cell data values untouched.
 
 ### Put Input Origin at the Center of Geometry
 
@@ -38,7 +38,7 @@ If *Put Input Origin at the Center of Geometry* is enabled, the user-supplied or
 
 ### Numeric input constraints
 
-When **Set Spacing** is enabled, each **Spacing** component must be finite and greater than 0. When **Set Origin** is enabled, each **Origin** component must be finite. **Put Input Origin at the Center of Geometry** is active only when **Set Origin** is enabled. Inactive vectors are ignored. Preflight warns if centering with the current geometry metadata produces a nonfinite origin. Execution checks the final centered origin before changing spacing or origin.
+When **Set Spacing** is enabled, each **Spacing** component must be finite and greater than 0. When **Set Origin** is enabled, each **Origin** component must be finite. **Put Input Origin at the Center of Geometry** is active only when **Set Origin** is enabled. Inactive vectors are ignored. Pipeline preflight and execution reject a nonfinite centered origin before changing the geometry metadata.
 
 % Auto generated parameter table will be inserted here
 

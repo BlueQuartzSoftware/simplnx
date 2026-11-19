@@ -115,8 +115,8 @@ SchmidFixture MakeFixture(usize numFeatures, usize numEnsembles = 2)
   SchmidFixture fixture;
   auto* imageGeomPtr = ImageGeom::Create(fixture.ds, k_GeomName);
   imageGeomPtr->setDimensions({1, 1, 1});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* featureAMPtr = AttributeMatrix::Create(fixture.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeomPtr->getId());
   auto* ensembleAMPtr = AttributeMatrix::Create(fixture.ds, k_EnsembleAMName, ShapeType{numEnsembles}, imageGeomPtr->getId());

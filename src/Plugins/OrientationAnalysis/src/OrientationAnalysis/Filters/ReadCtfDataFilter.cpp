@@ -1,5 +1,8 @@
 #include "ReadCtfDataFilter.hpp"
 
+#include "Algorithms/EbsdStepMetadata.hpp"
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ReadCtfData.hpp"
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
@@ -71,6 +74,9 @@ Parameters ReadCtfDataFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -86,7 +92,8 @@ Parameters ReadCtfDataFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadCtfDataFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -107,6 +114,9 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::CtfReader reader;
+  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::XStep);
+  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::YStep);
+  const auto zStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::ZStep);
   reader.setFileName(pInputFileValue.string());
   const int32 err = reader.readHeaderOnly();
   if(err < 0)
@@ -139,13 +149,15 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXCells()), static_cast<size_t>(reader.getYCells()), zCells};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  // A 2D .ctf file has no ZStep key (parses as 0), in which case the slice thickness defaults to 1.
-  // A negative ZStep is equally unusable and gets the same default.
-  const float32 zStep = reader.getZStep() > 0.0F ? reader.getZStep() : 1.0F;
-  CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), zStep};
+  // A missing ZStep has a unit thickness. An explicitly stored zero is invalid.
+  CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), zStep->storedOr(1.0F)};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
   EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
@@ -231,6 +243,7 @@ Result<> ReadCtfDataFilter::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadCtfDataInputValues inputValues;
+  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);

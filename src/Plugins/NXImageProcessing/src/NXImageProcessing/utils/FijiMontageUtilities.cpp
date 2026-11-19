@@ -1,5 +1,7 @@
 #include "FijiMontageUtilities.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
@@ -20,11 +22,13 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
     return MakeErrorResult<std::vector<FijiTile>>(-35900, fmt::format("Unable to open the Fiji TileConfiguration file for reading: '{}'", configPath.string()));
   }
 
+  usize lineNumber = 0;
   bool dimFound = false;
   bool dataFound = false;
   std::string line;
   while(std::getline(inStream, line))
   {
+    ++lineNumber;
     line = StringUtilities::trimmed(line);
     if(StringUtilities::starts_with(line, "dim ="))
     {
@@ -47,6 +51,7 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
   std::vector<FijiTile> tiles;
   while(std::getline(inStream, line))
   {
+    ++lineNumber;
     line = StringUtilities::trimmed(line);
     if(line.empty())
     {
@@ -77,6 +82,12 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
     } catch(const std::exception&)
     {
       continue; // unparseable coordinate, skip
+    }
+    if(auto result = ImageGeom::ValidateOrigin(tile.origin); result.invalid())
+    {
+      auto& error = result.errors().front();
+      error.message = fmt::format("Input file '{}' has invalid origin values at line {}. Error Message: {} Correct the stored tile coordinates.", configPath.string(), lineNumber, error.message);
+      return ConvertInvalidResult<std::vector<FijiTile>>(std::move(result));
     }
     tiles.push_back(std::move(tile));
   }

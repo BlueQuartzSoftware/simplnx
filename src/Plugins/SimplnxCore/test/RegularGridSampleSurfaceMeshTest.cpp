@@ -130,7 +130,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive o
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Existing Image Geometry");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({5, 1, 1});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, ShapeType{1, 1, 5}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);

@@ -120,8 +120,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Phase and 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", cellTupleShape, imageGeomPtr->getId());

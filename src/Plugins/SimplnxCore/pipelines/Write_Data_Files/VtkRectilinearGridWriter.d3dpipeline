@@ -44,7 +44,11 @@
           },
           "version": 2
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "use_default_geometry_values": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "The input for this pipeline requires the output from the (08) Small IN100 Full Reconstruction bookmarked pipeline.",
       "filter": {

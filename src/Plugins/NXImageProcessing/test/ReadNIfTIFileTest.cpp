@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ReadNIfTIFileFilter.hpp"
@@ -1565,7 +1567,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[N
   const fs::path filePath = OutputDir() / "ignored_axis_flip.nii";
   WriteNiftiFile(filePath, hdr, voxels, false);
   const DataPath geomPath({"NIfTI Flip"});
-  const auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", false, useAffine);
+  auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", false, useAffine);
   DataStructure ds;
   ReadNIfTIFileFilter filter;
   const auto preflight = filter.preflight(ds, args);
@@ -1742,4 +1744,26 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 pr
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
+}
+
+TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: override invalid stored image metadata", "[NXImageProcessing][ReadNIfTIFileFilter]")
+{
+  const bool badSpacing = GENERATE(false, true);
+  SyntheticNiftiParams params;
+  if(badSpacing)
+  {
+    params.spacing[2] = GENERATE(0.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
+  }
+  else
+  {
+    params.origin[1] = std::numeric_limits<float32>::infinity();
+  }
+  const fs::path path = OutputDir() / "BadMetadata.nii";
+  WriteNiftiFile(path, MakeHeader(params), {11}, false);
+  const DataPath geometry({"Override NIfTI"});
+  const ReadNIfTIFileFilter filter;
+  auto args = MakeFilterArgs(path, geometry, "Cell Data", "Pixels", true, true);
+  UnitTest::RequireBadReaderMetadata(filter, args, path, badSpacing);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 /*
  * This suite validates the ReadCtfDataFilter value-add independently of EbsdLib parsing.
  * The oracle checks geometry construction, phase preservation, Euler interleaving,
@@ -491,32 +493,20 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Invalid Cells Preflight Error
 }
 
 //------------------------------------------------------------------------------
-// EbsdLib error passthrough: a zero X Step is accepted at preflight (header-only
-// read performs no step validation) but CtfReader::readFile() rejects it at
-// execute. CtfReader only sets its error MESSAGE on this path (the error code
-// member stays 0), so the filter reports the readFile() return value: -102.
+// Explicit zero X or Z step fails preflight. The same file loads with a valid override.
 //------------------------------------------------------------------------------
-TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - Zero Step (-102)", "[OrientationAnalysis][ReadCtfDataFilter]")
+TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero Step Rejected by Geometry Validation (-1556)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
-
+  const bool explicitZStep = GENERATE(false, true);
   std::string contents = MakeToyCtf();
   const std::string xStepLine = "XStep\t0.25\n";
-  contents.replace(contents.find(xStepLine), xStepLine.size(), "XStep\t0\n");
-  const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_zero_step.ctf", contents);
-
-  ReadCtfDataFilter filter;
-  DataStructure dataStructure;
-  Arguments args = MakeDefaultArgs(inputCtfFile);
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors()[0].code == -102);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  contents.replace(contents.find(xStepLine), xStepLine.size(), explicitZStep ? xStepLine + "ZStep\t0\n" : "XStep\t0\n");
+  const auto file = WriteCtfFile("read_ctf_vv_zero_step.ctf", contents);
+  const ReadCtfDataFilter filter;
+  auto args = MakeDefaultArgs(file);
+  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
 }
 
 //------------------------------------------------------------------------------

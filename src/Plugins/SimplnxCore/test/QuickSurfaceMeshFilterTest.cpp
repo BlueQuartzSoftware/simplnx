@@ -51,8 +51,8 @@ void RequirePreflightWithoutCellAttributeMatrix(UnitTest::AlgorithmTestScope* al
   gridGeomPtr->setDimensions({4, 1, 1});
   if constexpr(std::is_same_v<GeometryT, ImageGeom>)
   {
-    gridGeomPtr->setOrigin({0, 0, 0});
-    gridGeomPtr->setSpacing({1, 1, 1});
+    REQUIRE(gridGeomPtr->setOrigin({0, 0, 0}).valid());
+    REQUIRE(gridGeomPtr->setSpacing({1, 1, 1}).valid());
   }
   REQUIRE((gridGeomPtr->getCellData() == nullptr));
   REQUIRE((gridGeomPtr->getNumberOfCells() == 4));
@@ -190,8 +190,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Transferred sides match face lab
   SizeVec3 dims = {1, 1, 1};
   dims[axis] = 2;
   image->setDimensions(dims);
-  image->setOrigin({0, 0, 0});
-  image->setSpacing({1, 1, 1});
+  REQUIRE(image->setOrigin({0, 0, 0}).valid());
+  REQUIRE(image->setSpacing({1, 1, 1}).valid());
   const ShapeType shape = {dims[2], dims[1], dims[0]};
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, image->getId());
   REQUIRE(cells != nullptr);
@@ -305,8 +305,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Feature DataArray tuple bounds",
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({3, 1, 1});
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   auto* cellAM = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 3}, imageGeom->getId());
   REQUIRE(cellAM != nullptr);
   imageGeom->setCellData(cellAM->getId());
@@ -899,8 +899,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem voxel correction handles
   auto* geometry = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometry != nullptr);
   geometry->setDimensions({2, 2, 2});
-  geometry->setSpacing({2, 3, 5});
-  geometry->setOrigin({10, 20, 30});
+  REQUIRE(geometry->setSpacing({2, 3, 5}).valid());
+  REQUIRE(geometry->setOrigin({10, 20, 30}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {2, 2, 2}, geometry->getId());
   REQUIRE(cells != nullptr);
   geometry->setCellData(cells->getId());

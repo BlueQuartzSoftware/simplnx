@@ -72,8 +72,8 @@ ImageGeom* CreateSequentialImageGeom(DataStructure& dataStructure, const std::st
 {
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, name);
   imageGeom->setDimensions(dims);
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
+  REQUIRE(imageGeom->setOrigin(origin).valid());
 
   AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, {dims[2], dims[1], dims[0]}, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -767,8 +767,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   auto* geomPtr = ImageGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({2, 2, 2});
-  geomPtr->setOrigin({0.0F, 0.0F, 0.0F});
-  geomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);

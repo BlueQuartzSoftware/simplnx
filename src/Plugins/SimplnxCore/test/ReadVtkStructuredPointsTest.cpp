@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
@@ -540,4 +542,26 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibi
       CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: uses supplied values before the singleton origin shift", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
+{
+  const fs::path file = fs::path(unit_test::k_BinaryDir.view()) / "OverrideVtkMetadata.vtk";
+  {
+    std::ofstream stream(file);
+    stream << "# vtk DataFile Version 3.0\nMetadata override\nASCII\nDATASET STRUCTURED_POINTS\nDIMENSIONS 2 2 1\n"
+              "SPACING 2 3 0\nORIGIN 0 0 0\nPOINT_DATA 4\nSCALARS Values int 1\nLOOKUP_TABLE default\n1 2 3 4\n"
+              "CELL_DATA 1\nSCALARS Values int 1\nLOOKUP_TABLE default\n5\n";
+    REQUIRE(stream.good());
+  }
+  const ReadVtkStructuredPointsFilter filter;
+  auto args = createArgs(file);
+  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  DataStructure ds;
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  // The singleton Z coordinate is a point center, so the voxel starts two units below it.
+  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
+  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
 }

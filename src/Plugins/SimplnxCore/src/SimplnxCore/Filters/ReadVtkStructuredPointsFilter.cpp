@@ -1,5 +1,7 @@
 #include "ReadVtkStructuredPointsFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/ReadVtkStructuredPoints.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -78,6 +80,9 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadPointData_Key, "Read Point Data", "Determines whether or not the Point Data will be read.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadCellData_Key, "Read Cell Data", "Determines whether or not the Cell Data will be read.", false));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Point Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Data Container [Point Data]", "The data container for the Point Data.", DataPath({"VTK Point Data"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Attribute Matrix Name [Point Data]", "The attribute matrix for the Point Data.", "Vertex Data"));
@@ -98,7 +103,8 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadVtkStructuredPointsFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -123,6 +129,7 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   sw.start();
 
   ReadVtkStructuredPointsInputValues inputValues;
+  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);
@@ -147,6 +154,7 @@ Result<> ReadVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure
                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadVtkStructuredPointsInputValues inputValues;
+  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
 
   inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);

@@ -203,24 +203,6 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }
-  SECTION("degenerate spacing rejected")
-  {
-    DataStructure ds;
-    const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims/type/sigma; only the X spacing is degenerate
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
-    ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{0.0f, 1.0f, 1.0f});
-    LaplacianFilter filter;
-    const DataPath geomPath = inputPath.getParent().getParent();
-    Arguments args;
-    args.insertOrAssign(LaplacianFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(LaplacianFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(LaplacianFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(LaplacianFilter::k_Sigma_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(LaplacianFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSpacing);
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -235,7 +217,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
 
   DataStructure directDs;
   const DataPath directInput = rt::BuildImageFromPattern<float64>(directDs, 12, 11, dimZ, field);
-  directDs.getDataRefAs<ImageGeom>(directInput.getParent().getParent()).setSpacing(spacing);
+  REQUIRE(directDs.getDataRefAs<ImageGeom>(directInput.getParent().getParent()).setSpacing(spacing).valid());
   {
     const ForceInCoreAlgorithmGuard guard;
     ResetAlgorithmPathExecutionCounts();
@@ -248,7 +230,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
 
   DataStructure fusedDs;
   const DataPath fusedInput = rt::BuildImageFromPattern<float64>(fusedDs, 12, 11, dimZ, field);
-  fusedDs.getDataRefAs<ImageGeom>(fusedInput.getParent().getParent()).setSpacing(spacing);
+  REQUIRE(fusedDs.getDataRefAs<ImageGeom>(fusedInput.getParent().getParent()).setSpacing(spacing).valid());
   {
     const ForceOocAlgorithmGuard guard(true);
     ResetAlgorithmPathExecutionCounts();

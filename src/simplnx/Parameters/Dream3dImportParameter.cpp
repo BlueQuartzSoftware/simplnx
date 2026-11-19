@@ -1,5 +1,7 @@
 #include "Dream3dImportParameter.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
@@ -20,6 +22,18 @@ constexpr StringLiteral k_PathImportPolicyKey = "path_import_policy";
 
 namespace nx::core
 {
+//------------------------------------------------------------------------------
+void Dream3dImportParameter::AddImageGeometryImportHint(std::vector<Error>& errors)
+{
+  for(auto& error : errors)
+  {
+    if(error.code == ImageGeom::k_InvalidOrigin || error.code == ImageGeom::k_InvalidSpacing)
+    {
+      error.message += fmt::format(" The file has invalid image geometry metadata. You can import it with the {} filter with '{}' enabled.", k_ReadFilterHumanName, k_UseDefaultGeometryValuesLabel);
+    }
+  }
+}
+
 //-----------------------------------------------------------------------------
 Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)

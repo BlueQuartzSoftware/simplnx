@@ -62,6 +62,7 @@ repository, but contains no code from one.
   - [Treat Feature data as stale after a filter changes the cells it was computed from](#treat-feature-data-as-stale-after-a-filter-changes-the-cells-it-was-computed-from)
   - [Use the same population in every pass of a statistic](#use-the-same-population-in-every-pass-of-a-statistic)
 - [Geometry](#geometry)
+  - [Validate geometry metadata before assigning it](#validate-geometry-metadata-before-assigning-it)
   - [Take Image Geometry cell centers from the geometry](#take-image-geometry-cell-centers-from-the-geometry)
   - [Set the length unit of every geometry you create](#set-the-length-unit-of-every-geometry-you-create)
   - [Apply the hexagonal axis correction to both hexagonal Laue classes](#apply-the-hexagonal-axis-correction-to-both-hexagonal-laue-classes)
@@ -809,7 +810,8 @@ error and the clipping warning of `SmoothingRecursiveGaussianImageFilter` and `C
   documentation gives infinity a meaning, such as an unbounded side of a range. A value that the user asks the filter
   to store in a floating-point array (a fill value or a replacement value) may be NaN or infinity.
 - **Values read from a file:** the reader rejects a nonfinite value where the format requires a finite one, with an
-  error that names the file and the field.
+  error that names the file and the field. For image origins, image spacing and rectilinear bounds, see
+  [Validate geometry metadata before assigning it](#validate-geometry-metadata-before-assigning-it).
 - **Input array values** that would change a result other than their own element's output, or would reach a
   comparison, an ordering, a range, a histogram, a threshold, a color map, a search, an index or an integer conversion.
   This covers reductions (sums, means, standard deviations, extrema and data ranges, histograms, medians, modes and
@@ -847,7 +849,8 @@ and `HistogramUtilities.hpp` sort and key floating-point values with `operator<`
 `std::stable_sort` and `std::map` keys are undefined; a threshold or a bin search puts NaN on one side without saying
 so; an equality test written as "neither is less than the other" groups NaN with every value; and a cast of NaN or an
 infinity to an integer is undefined behavior. Whether a nonfinite input value means "bad data" or "no measurement"
-depends on the user's data, so input array values get a choice; parameters and file values do not.
+depends on the user's data, so input array values get a choice between error and warning. File readers that accept
+geometry overrides validate the replacement values before loading the geometry.
 
 **What to look for:**
 
@@ -1025,6 +1028,48 @@ the loop over the groups it counts.
 ---
 
 ## Geometry
+
+### Validate geometry metadata before assigning it
+
+**Rule:** An `ImageGeom` origin must be finite on every axis. Its spacing must be finite and greater than zero on
+every axis. A populated `RectGridGeom` bounds array must contain at least two finite values in strictly increasing
+order, with one component per tuple. The setters enforce these requirements and return `Result<>`. Propagate failures
+from library and filter code. In tests, require success for valid inputs and require the expected error for invalid
+inputs. Validate file metadata with the static geometry validators before creating or modifying a geometry. For image
+readers, offer linked **Set Origin** and **Set Spacing** overrides and validate the effective values. Report invalid
+stored values with the standard reader message and its file, field, axis and value. The H5 Esprit, H5 OIM, and H5 OINA
+readers can report the core setter diagnostic, which names the geometry. They retain their format-specific checks.
+GrainMapper3D can create two image geometries and has no metadata overrides. Validate the final bounds before
+publishing in-place Rectilinear Grid changes or writing them to a file. Filters that consume an existing geometry
+rely on the invariant. Avoid nonfinite or zero-value checks and fallbacks that only check existing metadata.
+
+**Example of the broken rule:** PR #1952 added per-filter checks and fallback paths for nonfinite geometry metadata
+in **Partition Geometry** and related filters. The MHA and NIfTI readers replaced stored zero spacing with 1.
+`ImageGeom::findElementSizes()` used to reject nonpositive spacing with -1530, after the geometry already existed.
+The legacy file `6_6_import_h5_esprit_data.dream3d` stored spacing `[0, 0, 1]` for `Exemplar Data` (issue #1994).
+A large translation in **Align Geometries** could round adjacent Rectilinear Grid bounds to the same value, making a
+subsequent DREAM.3D write unreadable.
+
+**Why:** Invalid metadata leaves cells without a valid physical position or size. Silent replacements can change
+measurements. Checking values before creating a geometry lets the reader name the input file instead of a temporary
+geometry used for calculations.
+
+**What to look for:**
+
+- A discarded `Result<>` from `setOrigin()`, `setSpacing()` or `setBounds()`.
+- An image reader that sends raw file values to a setter outside the listed reader exceptions, or silently replaces
+  explicit zero spacing with 1.
+- A filter that changes bounds in place or a writer that exports bounds without checking they are valid.
+- A filter that checks `isfinite()` or substitutes a default for an origin or spacing taken from an existing geometry.
+
+**Pattern to use:** Call `ImageGeom::ValidateOrigin()`, `ImageGeom::ValidateSpacing()` or
+`RectGridGeom::ValidateBounds()` on input values. `ImageIO::GeometryOverrides::apply()` uses the image validators
+and formats errors for stored values as `Input file '<file>' has invalid <origin|spacing> values. Error Message: <msg>
+Enable 'Set <Origin|Spacing>' to use your own values.` See `ReadMhaFileFilter::preflightImpl()` for a reader and
+`test/GeometryTest.cpp` for tests that require setter results. **Read DREAM3D-NX File** uses the separate opt-in
+**Use Default Origin/Spacing for Invalid Values** setting for stored image metadata. Selective import checks the
+rectilinear grids selected for import. Full reads and writes check all rectilinear grids. For a translation, pass
+the offset to `RectGridGeom::ValidateBounds()` to check the float32 result before changing any array.
 
 ### Take Image Geometry cell centers from the geometry
 

@@ -237,7 +237,20 @@ Result<> ReadNrrdFile::operator()()
   {
     return ConvertResult(std::move(metadataResult));
   }
-  const auto& md = metadataResult.value();
+  auto md = std::move(metadataResult).value();
+  FloatVec3 origin{md.origin[0], md.origin[1], md.origin[2]};
+  FloatVec3 spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto result = ImageIO::ResolveCropGeometry(m_InputValues->InputFilePath, m_InputValues->GeometryOverrides, m_InputValues->Processing, m_InputValues->CenterOrigin,
+                                                SizeVec3{md.dimensions[0], md.dimensions[1], md.dimensions[2]}, origin, spacing);
+     result.invalid())
+  {
+    return result;
+  }
+  for(usize axis = 0; axis < 3; ++axis)
+  {
+    md.origin[axis] = origin[axis];
+    md.spacing[axis] = spacing[axis];
+  }
 
   auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
   if(boundsResult.invalid())

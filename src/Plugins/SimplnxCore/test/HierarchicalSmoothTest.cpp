@@ -168,8 +168,8 @@ MeshPaths buildVoronoiMesh(DataStructure& dataStructure, const SizeVec3& dims, c
 {
   auto* imageGeom = ImageGeom::Create(dataStructure, "Grid");
   imageGeom->setDimensions(dims);
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
   const std::vector<usize> tupleShape = {dims[2], dims[1], dims[0]}; // slowest..fastest = z,y,x
   auto* cellData = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, imageGeom->getId());

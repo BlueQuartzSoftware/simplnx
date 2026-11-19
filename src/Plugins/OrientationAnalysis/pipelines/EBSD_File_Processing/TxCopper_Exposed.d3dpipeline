@@ -13,6 +13,14 @@
           "value": "Phase Data",
           "version": 1
         },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
         "degrees_to_radians": {
           "value": true,
           "version": 1
@@ -25,11 +33,27 @@
           "value": "Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf",
           "version": 1
         },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
         "output_image_geometry_path": {
           "value": "Cugrid_after 2nd_15kv_2kx_2",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {

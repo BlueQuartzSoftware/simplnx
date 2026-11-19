@@ -45,8 +45,8 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeom->setDimensions({k_BenchmarkDimX, k_BenchmarkDimY, 1});
-  imageGeom->setOrigin({k_BenchmarkOriginX, k_BenchmarkOriginY, 5.0F});
-  imageGeom->setSpacing({k_BenchmarkSpacingX, k_BenchmarkSpacingY, 2.0F});
+  REQUIRE(imageGeom->setOrigin({k_BenchmarkOriginX, k_BenchmarkOriginY, 5.0F}).valid());
+  REQUIRE(imageGeom->setSpacing({k_BenchmarkSpacingX, k_BenchmarkSpacingY, 2.0F}).valid());
 
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellData);
@@ -289,7 +289,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple co
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({4, 3, 1});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{12}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

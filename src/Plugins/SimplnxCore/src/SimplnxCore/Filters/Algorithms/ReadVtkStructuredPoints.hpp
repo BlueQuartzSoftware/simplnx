@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -20,6 +22,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ReadVtkStructuredPointsInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
+  ImageIO::GeometryOverrides GeometryOverrides;
   bool ReadPointData;
   bool ReadCellData;
   DataPath PointGeomPath;

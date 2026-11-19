@@ -508,7 +508,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
           break;
         }
       }
-      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, std::nullopt, pSelectedGeometryPathValue, false, true));
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, std::nullopt, pSelectedGeometryPathValue));
     }
     else if(pTransformationMatrixTypeValue == detail::k_ScaleIdx)
     {
@@ -529,7 +529,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
           break;
         }
       }
-      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue, false, true));
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else // We are Rotating or manual transformation or precomputed. we need to create a brand new Image Geometry
     {
@@ -745,8 +745,14 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     // DataArray tuple dimensions use ZYX order, opposite Image Geometry XYZ order.
     std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]};
     destImageGeom.setDimensions(dims);
-    destImageGeom.setOrigin(origin);
-    destImageGeom.setSpacing(spacing);
+    if(auto result = destImageGeom.setOrigin(origin); result.invalid())
+    {
+      return result;
+    }
+    if(auto result = destImageGeom.setSpacing(spacing); result.invalid())
+    {
+      return result;
+    }
     Result<> resizeResult = destCellDataAM.resizeTuples(dataArrayShape);
     if(resizeResult.invalid())
     {

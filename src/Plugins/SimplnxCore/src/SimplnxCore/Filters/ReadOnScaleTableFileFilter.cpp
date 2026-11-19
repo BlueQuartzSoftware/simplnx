@@ -1,5 +1,7 @@
 #include "ReadOnScaleTableFileFilter.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+
 #include "SimplnxCore/Filters/Algorithms/ReadOnScaleTableFile.hpp"
 
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -115,6 +117,21 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto inputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  const auto fallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  const auto fallbackSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  if(auto result = ImageGeom::ValidateOrigin(FloatVec3(fallbackOrigin)); result.invalid())
+  {
+    auto& error = result.errors().front();
+    error.message = fmt::format("Invalid Fallback Origin for '{}'. {}", inputFile.string(), error.message);
+    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+  }
+  if(auto result = ImageGeom::ValidateSpacing(FloatVec3(fallbackSpacing)); result.invalid())
+  {
+    auto& error = result.errors().front();
+    error.message = fmt::format("Invalid Fallback Spacing for '{}'. {}", inputFile.string(), error.message);
+    return {ConvertInvalidResult<OutputActions>(std::move(result))};
+  }
+
   std::error_code fileError;
   const auto writeTime = fs::last_write_time(inputFile, fileError);
   if(fileError)
@@ -145,8 +162,6 @@ IFilter::PreflightResult ReadOnScaleTableFileFilter::preflightImpl(const DataStr
   const auto featureIdsName = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   const auto phaseDataName = filterArgs.value<std::string>(k_PhaseAttributeMatrixName_Key);
   const auto materialNamesName = filterArgs.value<std::string>(k_MaterialNamesArrayName_Key);
-  const auto fallbackOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  const auto fallbackSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   const ShapeType cellShape = {cachedHeader.BoundsCounts[2] - 1, cachedHeader.BoundsCounts[1] - 1, cachedHeader.BoundsCounts[0] - 1};
 
   Result<OutputActions> resultOutputActions;

@@ -108,8 +108,8 @@ struct AvizoFixture
     auto* geom = ImageGeom::Create(dataStructure, "ImageGeom");
     REQUIRE(geom != nullptr);
     geom->setDimensions({tupleCount, 1, 1});
-    geom->setOrigin({0.0F, 0.0F, 0.0F});
-    geom->setSpacing({1.0F, 1.0F, 1.0F});
+    REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+    REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
     auto* cells = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, tupleCount}, geom->getId());
     REQUIRE(cells != nullptr);
     geom->setCellData(*cells);

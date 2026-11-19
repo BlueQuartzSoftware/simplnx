@@ -10,6 +10,8 @@ This filter reads data from a single `.h5oina` file (the HDF5-based export from 
 
 Each measurement is placed at the grid cell computed from its own `X` and `Y` values and the step sizes, so files whose rows are not stored in grid order are still imported correctly; a file that lists the same cell twice is rejected with an error.
 
+The **Origin** and **Z Spacing (Microns)** parameters supply the output origin and Z spacing. The filter reads X and Y spacing from the file without an override. Invalid in-plane spacing produces an error that identifies the scan. An invalid origin produces a geometry validation error that identifies the Image Geometry.
+
 ### What This Filter Produces
 
 The file is EBSD (Electron Backscatter Diffraction) scan data. The most important imported arrays are:

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/NXImageProcessing_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -68,6 +70,7 @@ struct NXIMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
    *         region is stored in the output DataArray — the rest of
    *         the file is read and discarded on the fly. */
   CropGeometryParameter::ValueType CroppingOptions;
+  ImageIO::GeometryOverrides GeometryOverrides;
 };
 
 /**

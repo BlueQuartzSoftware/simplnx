@@ -320,8 +320,14 @@ Result<> WriteOnScaleTableFile::operator()()
       return MakeErrorResult(k_InvalidImageGeometryError, fmt::format("The grid geometry '{}' requires reordering but is not an Image Geometry.", m_InputValues->InputGeometryPath.toString()));
     }
     scratchGeometry->setDimensions(inputImageGeometry->getDimensions());
-    scratchGeometry->setOrigin(inputImageGeometry->getOrigin());
-    scratchGeometry->setSpacing(inputImageGeometry->getSpacing());
+    if(auto result = scratchGeometry->setOrigin(inputImageGeometry->getOrigin()); result.invalid())
+    {
+      return result;
+    }
+    if(auto result = scratchGeometry->setSpacing(inputImageGeometry->getSpacing()); result.invalid())
+    {
+      return result;
+    }
 
     const ShapeType scratchCellShape = {inputDimensions[2], inputDimensions[1], inputDimensions[0]};
     auto* scratchCellData = AttributeMatrix::Create(rotatedDataStructure, k_ScratchCellDataPath.getTargetName(), scratchCellShape, scratchGeometry->getId());

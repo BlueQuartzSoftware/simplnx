@@ -98,8 +98,8 @@ FixtureData CreateScaffold(usize numFeatures)
   const usize numCrystalStructures = 3;
 
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({nX, 1, 1});
 
   td.cellAM = AttributeMatrix::Create(td.ds, "CellData", ShapeType{1, 1, nX}, td.geom->getId());
@@ -183,8 +183,8 @@ FixtureData BuildLargeBenchmarkFixture(usize dimension)
 
   FixtureData td;
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
-  td.geom->setSpacing({1.0f, 1.0f, 1.0f});
-  td.geom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(td.geom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(td.geom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   td.geom->setDimensions({dimension, dimension, dimension});
 
   td.cellAM = AttributeMatrix::Create(td.ds, "CellData", cellTupleShape, td.geom->getId());

@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"
@@ -1245,7 +1247,7 @@ fs::path MultiPageStackOutputDir()
 
 // Writes an N-page uint8_t (single-component) TIFF. pagePixels[p] is row-major (top-to-bottom),
 // size == width*height. Mirrors the libtiff synthesis idiom used in ReadImageTest.cpp/ImageIOTest.cpp.
-void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels)
+void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels, std::optional<double> xResolution = {})
 {
   TIFF* tif = TIFFOpen(path.string().c_str(), "w");
   REQUIRE(tif != nullptr);
@@ -1254,6 +1256,10 @@ void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, c
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height);
     REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
+    if(xResolution.has_value())
+    {
+      REQUIRE(TIFFSetField(tif, TIFFTAG_XRESOLUTION, *xResolution) != 0);
+    }
     REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
@@ -1610,7 +1616,7 @@ namespace
  * @param name Selects a separate directory for each regression test.
  * @return Arguments that read the complete 3 by 2 by 4 stack.
  */
-Arguments CreateZCropStackArgs(const std::string& name)
+Arguments CreateZCropStackArgs(const std::string& name, std::optional<double> xResolution = {})
 {
   const fs::path inputDir = fs::path(std::string(unit_test::k_BinaryTestOutputDir.view())) / name;
   fs::create_directories(inputDir);
@@ -1621,7 +1627,7 @@ Arguments CreateZCropStackArgs(const std::string& name)
     {
       pixels[pixelIdx] = static_cast<uint8_t>(10 * fileIdx + pixelIdx);
     }
-    WriteMultiPageTiff(inputDir / fmt::format("slice_{}.tif", fileIdx), 3, 2, {pixels});
+    WriteMultiPageTiff(inputDir / fmt::format("slice_{}.tif", fileIdx), 3, 2, {pixels}, xResolution);
   }
 
   GeneratedFileListParameter::ValueType fileList;
@@ -1856,4 +1862,29 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWar
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   const auto& warnings = preflightResult.outputActions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
+}
+
+TEST_CASE("NXImageProcessing::ReadImageStackFilter: postprocessed override rescues per-slice cropping", "[NXImageProcessing][ReadImageStackFilter]")
+{
+  auto args = CreateZCropStackArgs("ReadImageStackBadSpacing", 0.0);
+  auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, true, false, false);
+  crop.xBoundPhysical = {2.1F, 3.9F};
+  args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, crop);
+  args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Postprocessed));
+
+  const ReadImageStackFilter filter;
+  const auto& fileList = args.value<GeneratedFileListParameter::ValueType>(ReadImageStackFilter::k_InputFileListInfo_Key);
+  UnitTest::RequireBadReaderMetadata(filter, args, fs::path(fileList.inputPath) / "slice_0.tif", true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  DataStructure ds;
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  UnitTest::RequireReaderGeometry(ds, k_ImageGeomPath, {4, -3, 8}, {2, 3, 4});
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, k_ImageDataPath);
+  REQUIRE(pixels.getSize() == 8);
+  for(usize slice = 0; slice < 4; ++slice)
+  {
+    CHECK(pixels[2 * slice] == 10 * slice + 1);
+    CHECK(pixels[2 * slice + 1] == 10 * slice + 4);
+  }
 }

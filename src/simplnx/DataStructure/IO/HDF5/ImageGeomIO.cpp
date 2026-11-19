@@ -1,5 +1,7 @@
 #include "ImageGeomIO.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/ImageMetadataImport.hpp"
 #include <cstddef>
 #include <utility>
 
@@ -25,8 +27,23 @@ constexpr int32 k_ReadingSpacingError_Code = -522;
 constexpr int32 k_ReadingOriginError_Code = -523;
 constexpr StringLiteral k_ReadingGroupError_Message = "Error opening HDF5 group while reading ImageGeom '{}'";
 constexpr StringLiteral k_ReadingDimensionsError_Message = "Error reading HDF5 dimensions attribute for ImageGeom '{}'";
-constexpr StringLiteral k_ReadingSpacingError_Message = "Error reading HDF5 spacing attribute for ImageGeom '{}'";
-constexpr StringLiteral k_ReadingOriginError_Message = "Error reading HDF5 origin attribute for ImageGeom '{}'";
+Result<DREAM3D::ImageGeometryMetadata> ReadImageGeometryMetadata(const HDF5::GroupIO& group, const ImageGeom& geometry)
+{
+  using Metadata = DREAM3D::ImageGeometryMetadata;
+  const auto origin = group.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
+  if(origin.invalid() || origin.value().size() != 3)
+  {
+    return MakeErrorResult<Metadata>(k_ReadingOriginError_Code, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three origin values in the HDF5 attribute.",
+                                                                            DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+  }
+  const auto spacing = group.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
+  if(spacing.invalid() || spacing.value().size() != 3)
+  {
+    return MakeErrorResult<Metadata>(k_ReadingSpacingError_Code, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three spacing values in the HDF5 attribute.",
+                                                                             DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+  }
+  return {Metadata{FloatVec3(origin.value()), FloatVec3(spacing.value())}};
+}
 } // namespace
 
 namespace nx::core::HDF5
@@ -49,59 +66,30 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
 {
   auto* imageGeom = ImageGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
-  std::vector<usize> volDimsVector(3);
-  std::vector<float32> originVector(3);
-  std::vector<float32> spacingVector(3);
+  auto groupReader = parentGroup.openGroup(objectName);
+  if(!groupReader.isValid())
   {
-    auto groupReader = parentGroup.openGroup(objectName);
-    if(!groupReader.isValid())
-    {
-      return MakeErrorResult(k_ReadingGroupError_Code, fmt::format(fmt::runtime(k_ReadingGroupError_Message.view()), objectName));
-    }
-
-    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
-    {
-      auto value = unitsAttr.value();
-      imageGeom->setUnits(static_cast<IGeometry::LengthUnit>(value));
-    }
-
-    auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
-    if(volDimsVectorResult.invalid())
-    {
-      return MakeErrorResult(k_ReadingDimensionsError_Code, fmt::format(fmt::runtime(k_ReadingDimensionsError_Message.view()), objectName));
-    }
-    volDimsVector = std::move(volDimsVectorResult.value());
-
-    auto originVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
-    if(originVectorResult.invalid())
-    {
-      return MakeErrorResult(k_ReadingOriginError_Code, fmt::format(fmt::runtime(k_ReadingOriginError_Message.view()), objectName));
-    }
-    originVector = std::move(originVectorResult.value());
-
-    auto spacingVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
-    if(spacingVectorResult.invalid())
-    {
-      return MakeErrorResult(k_ReadingSpacingError_Code, fmt::format(fmt::runtime(k_ReadingSpacingError_Message.view()), objectName));
-    }
-    spacingVector = std::move(spacingVectorResult.value());
+    return MakeErrorResult(k_ReadingGroupError_Code, fmt::format(fmt::runtime(k_ReadingGroupError_Message.view()), objectName));
   }
 
-  SizeVec3 volDims;
-  FloatVec3 spacing;
-  FloatVec3 origin;
-  for(usize i = 0; i < 3; i++)
+  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
   {
-    volDims[i] = volDimsVector[i];
-    spacing[i] = spacingVector[i];
-    origin[i] = originVector[i];
+    imageGeom->setUnits(static_cast<IGeometry::LengthUnit>(unitsAttr.value()));
   }
 
-  imageGeom->setDimensions(volDims);
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  auto dimensions = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
+  if(dimensions.invalid() || dimensions.value().size() != 3)
+  {
+    return MakeErrorResult(k_ReadingDimensionsError_Code, fmt::format(fmt::runtime(k_ReadingDimensionsError_Message.view()), objectName));
+  }
 
-  return IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *imageGeom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  imageGeom->setDimensions(SizeVec3(dimensions.value()));
+  auto result = DREAM3D::detail::ImportImageMetadata(*imageGeom, groupReader.getFilePath(), ReadImageGeometryMetadata(groupReader, *imageGeom), dataStructureReader.deferredImageMetadata());
+  if(result.invalid())
+  {
+    return result;
+  }
+  return MergeResults(std::move(result), IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *imageGeom, parentGroup, objectName, importId, parentId, useEmptyDataStore));
 }
 
 Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const ImageGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const

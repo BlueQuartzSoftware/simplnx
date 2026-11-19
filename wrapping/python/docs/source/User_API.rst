@@ -54,6 +54,8 @@ The enumeration `ArrayHandlingType` defines how existing arrays will be handled 
 - **Copy**: The existing arrays will be copied into the new geometry.
 - **Move**: The existing arrays will be moved into the new geometry.
 
+.. _creating-an-image-geometry:
+
 Creating An Image Geometry
 ##########################
 
@@ -62,8 +64,8 @@ To create an image geometry, use the `create_image_geometry` method. This method
 - `data_structure`: The data structure where the geometry will be created.
 - `geometry_path`: The :ref:`DataPath <DataPath>` where the geometry will be stored.
 - `dimensions`: A list of dimensions for the image.
-- `origin`: The origin coordinates of the image.
-- `spacing`: The spacing between elements in the image.
+- `origin`: Three finite origin coordinates in X, Y, Z order.
+- `spacing`: The spacing between elements in X, Y, Z order. Each value must be finite and greater than zero.
 - `cell_attr_matrix_name` (optional): The name of the cell attribute matrix. Defaults to "Cell Data".
 
 Example usage:
@@ -74,9 +76,10 @@ Example usage:
 
    # Create an image geometry
    result: nx.Result = nx.create_image_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Image Geometry"]), dimensions=[100, 150, 200], origin=[0, 5, -2], spacing=[0.5, 0.5, 0.5], cell_attr_matrix_name='Image Data')
-   if result.valid():
-      image_geom = data_structure[nx.DataPath(["Image Geometry"])]
-      print("Image Geometry Created!")
+   if result.invalid():
+      raise RuntimeError(result.errors[0].message)
+
+   image_geom = data_structure[nx.DataPath(["Image Geometry"])]
 
 
 Creating A Rectilinear Grid Geometry
@@ -92,6 +95,8 @@ To create a rectilinear grid geometry, use the `create_rect_grid_geometry` metho
 - **cell_attr_matrix_name** (optional): The name of the cell attribute matrix. Defaults to "Cell Data".
 - **array_handling** (optional): Specifies how to handle existing arrays. Defaults to ``ArrayHandlingType.Copy``.
 
+Each bounds array must have one component per tuple and at least two finite values in strictly increasing order.
+
 Example usage:
 
 .. code-block:: python
@@ -100,9 +105,10 @@ Example usage:
 
    # Create a rect grid geometry
    result = nx.create_rect_grid_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Rect Grid Geometry"]), x_bounds_path=nx.DataPath(["Foo"]), y_bounds_path=nx.DataPath(["Y Bounds"]), z_bounds_path=nx.DataPath(["Z Bounds"]), cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
-   if result.valid():
-      rect_grid_geom = data_structure[nx.DataPath(["Rect Grid Geometry"])]
-      print("Rect Grid Geometry Created!")
+   if result.invalid():
+      raise RuntimeError(result.errors[0].message)
+
+   rect_grid_geom = data_structure[nx.DataPath(["Rect Grid Geometry"])]
 
 Creating A Vertex Geometry
 ##########################

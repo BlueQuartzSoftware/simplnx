@@ -18,6 +18,7 @@
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateRectGridGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
+#include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
@@ -25,6 +26,7 @@
 #include <catch2/catch.hpp>
 
 #include <array>
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -294,7 +296,7 @@ TEST_CASE("ImageGeom::findElementSizes 3D valid spacing")
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, "Image");
   geom->setDimensions(SizeVec3{2, 3, 4});
-  geom->setSpacing(FloatVec3{2.0f, 3.0f, 5.0f});
+  REQUIRE(geom->setSpacing(FloatVec3{2.0f, 3.0f, 5.0f}).valid());
 
   REQUIRE(geom->findElementSizes(false).valid());
   const auto* voxelSizes = geom->getElementSizes();
@@ -313,7 +315,7 @@ TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper e
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, "Paper");
   geom->setDimensions(SizeVec3{17, 22, 1});
-  geom->setSpacing(FloatVec3{0.5f, 0.5f, 0.004f});
+  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 0.5f, 0.004f}).valid());
 
   REQUIRE(geom->findElementSizes(false).valid());
   const auto* voxelSizes = geom->getElementSizes();
@@ -321,31 +323,91 @@ TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper e
   REQUIRE((*voxelSizes)[0] == Approx(0.5f * 0.5f * 0.004f));
 
   // Unit spacing explicitly represents a zero-thickness axis.
-  geom->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f});
+  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f}).valid());
   REQUIRE(geom->findElementSizes(true).valid());
   const auto* voxelSizesFlat = geom->getElementSizes();
   REQUIRE((*voxelSizesFlat)[0] == Approx(0.25f));
 }
 
-TEST_CASE("ImageGeom::findElementSizes rejects non-positive spacing")
+TEST_CASE("ImageGeom rejects invalid spacing atomically", "[simplnx][ImageGeom]")
 {
-  DataStructure dataStructure;
-  auto* geom = ImageGeom::Create(dataStructure, "Image");
-  geom->setDimensions(SizeVec3{3, 3, 1});
+  const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+  const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity(), 0.0f, -2.0f);
+  CAPTURE(axis, value);
+  const std::array<std::string, 3> axes = {"X", "Y", "Z"};
+  DataStructure ds;
+  auto* geom = ImageGeom::Create(ds, "Image");
+  REQUIRE(geom != nullptr);
+  CHECK(geom->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
+  const FloatVec3 original{0.5f, 2.0f, 4.0f};
+  const auto initialResult = geom->setSpacing(original);
+  SIMPLNX_RESULT_REQUIRE_VALID(initialResult);
 
-  SECTION("spacing[2] == 0 (common pitfall for 2D after the refactor)")
+  FloatVec3 candidate{3.0f, 5.0f, 7.0f};
+  candidate[axis] = value;
+  const auto result = geom->setSpacing(candidate[0], candidate[1], candidate[2]);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(result.errors().front().message.find(axes[axis]) != std::string::npos);
+  CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(geom->getSpacing() == original);
+}
+
+TEST_CASE("ImageGeom rejects nonfinite origin atomically", "[simplnx][ImageGeom]")
+{
+  const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+  const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  const std::array<std::string, 3> axes = {"X", "Y", "Z"};
+  DataStructure ds;
+  auto* geom = ImageGeom::Create(ds, "Image");
+  REQUIRE(geom != nullptr);
+  CHECK(geom->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
+  const FloatVec3 original{-3.0f, 0.0f, 5.0f};
+  const auto initialResult = geom->setOrigin(original[0], original[1], original[2]);
+  SIMPLNX_RESULT_REQUIRE_VALID(initialResult);
+
+  FloatVec3 candidate{1.0f, 2.0f, 3.0f};
+  candidate[axis] = value;
+  const auto result = geom->setOrigin(candidate);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == ImageGeom::k_InvalidOrigin);
+  CHECK(result.errors().front().message.find(axes[axis]) != std::string::npos);
+  CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(geom->getOrigin() == original);
+}
+
+TEST_CASE("Image geometry actions reject invalid metadata", "[simplnx][CreateImageGeometryAction][UpdateImageGeomAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const bool badSpacing = GENERATE(false, true);
+  const float32 infinity = std::numeric_limits<float32>::infinity();
+  const FloatVec3 origin{-2.0f, 5.0f, badSpacing ? 0.0f : infinity};
+  const FloatVec3 spacing{2.0f, 3.0f, badSpacing ? 0.0f : 4.0f};
+  const auto expectedCode = badSpacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin;
+  DataStructure ds;
+  const DataPath path({"Parent", "Image"});
+  SECTION("create")
   {
-    geom->setSpacing(FloatVec3{1.0f, 1.0f, 0.0f});
-    const auto result = geom->findElementSizes(false);
-    REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == -1530);
-    REQUIRE(geom->getElementSizes() == nullptr);
+    const CreateImageGeometryAction action(path, {2, 3, 4}, origin.toContainer<std::vector<float32>>(), spacing.toContainer<std::vector<float32>>(), "Cell Data");
+    const auto result = action.apply(ds, mode);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors().front().code == expectedCode);
+    CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
+    CHECK_FALSE(ds.containsData(path));
   }
-
-  SECTION("negative spacing on any axis")
+  SECTION("update")
   {
-    geom->setSpacing(FloatVec3{1.0f, -1.0f, 1.0f});
-    REQUIRE(geom->findElementSizes(false).invalid());
+    REQUIRE(DataGroup::Create(ds, "Parent") != nullptr);
+    auto* geom = ImageGeom::Create(ds, "Image", ds.getId(path.getParent()));
+    REQUIRE(geom != nullptr);
+    const UpdateImageGeomAction action(origin, spacing, path);
+    const auto result = action.apply(ds, mode);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors().front().code == expectedCode);
+    CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
+    CHECK(geom->getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
+    CHECK(geom->getOrigin() == FloatVec3{0.0f, 0.0f, 0.0f});
   }
 }
 
@@ -356,7 +418,7 @@ TEST_CASE("ImageGeom::findElementSizes 1D image computes length correctly")
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, "Line");
   geom->setDimensions(SizeVec3{5, 1, 1});
-  geom->setSpacing(FloatVec3{2.0f, 1.0f, 1.0f});
+  REQUIRE(geom->setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
 
   REQUIRE(geom->findElementSizes(false).valid());
   const auto* voxelSizes = geom->getElementSizes();
@@ -410,6 +472,14 @@ TEST_CASE("CreateRectGridGeometryAction creates bounds in preflight and execute"
   REQUIRE(geom->getYBounds() == yBounds);
   REQUIRE(geom->getZBounds() == zBounds);
 
+  if(mode == IDataAction::Mode::Execute)
+  {
+    CHECK(xBounds->getValue(0) == 0.0f);
+    CHECK(xBounds->getValue(xTuples - 1) == 3.0f);
+    CHECK(yBounds->getValue(yTuples - 1) == 4.0f);
+    CHECK(zBounds->getValue(zTuples - 1) == 5.0f);
+  }
+
   const auto* cellData = dataStructure.getDataAs<AttributeMatrix>(path.createChildPath("Cell Data"));
   REQUIRE(cellData != nullptr);
   REQUIRE(geom->getCellData() == cellData);
@@ -428,6 +498,19 @@ TEST_CASE("CreateRectGridGeometryAction reports a bound array that cannot be cre
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   REQUIRE(dataStructure.getDataAs<Float32Array>(path.createChildPath("Cell Data")) == nullptr);
+}
+
+TEST_CASE("CreateRectGridGeometryAction rejects a count below two", "[simplnx][CreateRectGridGeometryAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  DataStructure ds;
+  const DataPath path({"RectGrid"});
+  const CreateRectGridGeometryAction action(path, 3, 1, 3, "Cell Data", "X Bounds", "Y Bounds", "Z Bounds");
+  const auto result = action.apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == -5914);
+  CHECK(result.errors().front().message.find("Y bounds") != std::string::npos);
+  CHECK_FALSE(ds.containsData(path));
 }
 
 TEST_CASE("RectGridGeomTest")
@@ -761,6 +844,70 @@ TEST_CASE("RectGridGeom::setBounds validates EmptyDataStore metadata")
   }
 }
 
+TEST_CASE("RectGridGeom::setBounds rejects nonscalar bounds", "[simplnx][RectGridGeom]")
+{
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  REQUIRE(geom != nullptr);
+  auto* bounds = Float32Array::CreateWithStore<DataStore<float32>>(ds, "Y", ShapeType{3}, ShapeType{2}, geom->getId());
+  REQUIRE(bounds != nullptr);
+  const auto result = geom->setBounds(nullptr, bounds, nullptr);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == RectGridGeom::k_NonscalarBounds);
+  CHECK(geom->getYBounds() == nullptr);
+}
+
+TEST_CASE("RectGridGeom::setBounds rejects nonfinite bounds", "[simplnx][RectGridGeom]")
+{
+  const usize axis = GENERATE(usize{0}, usize{1}, usize{2});
+  const float32 value = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
+  CAPTURE(axis, value);
+  DataStructure ds;
+  auto* geom = RectGridGeom::Create(ds, "RectGrid");
+  REQUIRE(geom != nullptr);
+  const std::array<std::string, 3> axes = {"X", "Y", "Z"};
+  std::array<Float32Array*, 3> bounds = {};
+  for(usize i = 0; i < bounds.size(); ++i)
+  {
+    bounds[i] = makeBoundsAxis(ds, geom, axes[i], {0.0f, 1.0f, 2.0f});
+  }
+  bounds[axis]->setValue(1, value);
+  const auto result = geom->setBounds(bounds[0], bounds[1], bounds[2]);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == RectGridGeom::k_NonfiniteBounds);
+  CHECK(result.errors().front().message.find(axes[axis] + " bounds") != std::string::npos);
+  CHECK(result.errors().front().message.find("index 1") != std::string::npos);
+  CHECK(result.errors().front().message.find(fmt::format("{}", value)) != std::string::npos);
+  CHECK(geom->getXBounds() == nullptr);
+  CHECK(geom->getYBounds() == nullptr);
+  CHECK(geom->getZBounds() == nullptr);
+}
+
+TEST_CASE("CreateRectGridGeometryAction reports invalid input bounds before moving arrays", "[simplnx][CreateRectGridGeometryAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  const auto handling = GENERATE(ArrayHandlingType::Copy, ArrayHandlingType::Move, ArrayHandlingType::Reference);
+  DataStructure ds;
+  auto* source = RectGridGeom::Create(ds, "Source");
+  REQUIRE(source != nullptr);
+  makeBoundsAxis(ds, source, "X", {0.0f, 1.0f});
+  makeBoundsAxis(ds, source, "Y", {0.0f, 1.0f});
+  makeBoundsAxis(ds, source, "Z", {0.0f, 0.0f});
+  const DataPath path({"Parent", "RectGrid"});
+  const DataPath xPath({"Source", "X"});
+  const DataPath yPath({"Source", "Y"});
+  const DataPath zPath({"Source", "Z"});
+  const CreateRectGridGeometryAction action(path, xPath, yPath, zPath, "Cell Data", handling);
+  const auto result = action.apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  CHECK(result.errors().front().code == -4007);
+  CHECK(result.errors().front().message.find(path.toString()) != std::string::npos);
+  CHECK(ds.containsData(xPath));
+  CHECK(ds.containsData(yPath));
+  CHECK(ds.containsData(zPath));
+  CHECK_FALSE(ds.containsData(path));
+}
+
 TEST_CASE("RectGridGeom::setBounds validates across bulk read boundaries")
 {
   DataStructure ds;
@@ -937,8 +1084,8 @@ TEST_CASE("ImageGeom getBoundingBox handles a negative origin")
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, "Image");
   geom->setDimensions(SizeVec3{4, 5, 6});
-  geom->setSpacing(FloatVec3{0.5f, 2.0f, 1.5f});
-  geom->setOrigin(FloatVec3{-3.0f, -10.0f, -1.0f});
+  REQUIRE(geom->setSpacing(FloatVec3{0.5f, 2.0f, 1.5f}).valid());
+  REQUIRE(geom->setOrigin(FloatVec3{-3.0f, -10.0f, -1.0f}).valid());
 
   // Lower corner is the origin; upper corner is origin + dims * spacing:
   //   x: -3 + 4 * 0.5  = -1

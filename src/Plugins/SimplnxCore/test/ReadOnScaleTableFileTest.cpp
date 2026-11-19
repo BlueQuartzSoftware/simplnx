@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include "SimplnxCore/Filters/ReadOnScaleTableFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -711,4 +713,22 @@ TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: SIMPL Backwards Compatibilit
       CHECK(args.value<std::string>(ReadOnScaleTableFileFilter::k_MaterialNamesArrayName_Key) == "Imported Material Names");
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ReadOnScaleTableFileFilter: validates fallback metadata", "[SimplnxCore][ReadOnScaleTableFileFilter]")
+{
+  const bool badSpacing = GENERATE(false, true);
+  const fs::path file = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadOnScaleTableFile" / "InvalidFallback.flxtbl";
+  WriteFixture(file, FixtureOptions{});
+  auto args = CreateArguments(file);
+  const auto key = badSpacing ? ReadOnScaleTableFileFilter::k_Spacing_Key : ReadOnScaleTableFileFilter::k_Origin_Key;
+  args.insertOrAssign(key, std::vector<float32>{1, 1, badSpacing ? 0.0F : std::numeric_limits<float32>::infinity()});
+  DataStructure ds;
+  const auto result = ReadOnScaleTableFileFilter{}.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  const auto& error = result.outputActions.errors().front();
+  CHECK(error.code == (badSpacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin));
+  CHECK(error.message.find(badSpacing ? "Invalid Fallback Spacing" : "Invalid Fallback Origin") != std::string::npos);
+  CHECK(error.message.find(file.string()) != std::string::npos);
+  CHECK(error.message.find(badSpacing ? "Z axis must be finite and greater than zero. Received 0." : "Z axis must be finite. Received inf.") != std::string::npos);
 }

@@ -14,6 +14,8 @@ The scan stores an **orientation** at every pixel as three **Euler angles** (thr
 
 ![User interface AFTER setting the "Z Spacing" and selecting files.](Images/ReadEDAXH5_2.png)
 
+The **Origin** and **Z Spacing (Microns)** parameters supply the output origin and Z spacing. The filter reads X and Y spacing from the file without an override. Invalid in-plane spacing or origin produces a geometry validation error that identifies the Image Geometry.
+
 ## Notes About Reference Frames
 
 The user should be aware that simply reading the file then performing operations that are dependent on the proper crystal reference frame (the axes fixed to the crystal lattice) and sample reference frame (the axes fixed to the physical specimen) will be undefined or simply **wrong**. To bring the crystal and sample reference frames into coincidence, rotations may need to be applied to the data. The recommended filters are:

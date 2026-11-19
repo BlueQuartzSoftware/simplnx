@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
@@ -35,6 +37,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -57,9 +60,11 @@
 #include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -1008,8 +1013,8 @@ ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& 
 {
   auto* imageGeom = ImageGeom::Create(dataStructure, geomName, parentId);
   imageGeom->setDimensions(SizeVec3{2, 2, 2});
-  imageGeom->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F});
-  imageGeom->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeom->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeom->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F}).valid());
   AttributeMatrix* cellMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2, 2}, imageGeom->getId());
   imageGeom->setCellData(*cellMatrix);
   return imageGeom;
@@ -2283,8 +2288,8 @@ void WriteC8FilterSelectionFile(const fs::path& path)
   auto* imageGeom = ImageGeom::Create(source, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({2, 2, 1});
-  imageGeom->setSpacing({1.0F, 2.0F, 3.0F});
-  imageGeom->setOrigin({-2.0F, -1.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 2.0F, 3.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({-2.0F, -1.0F, 0.0F}).valid());
   auto* cells = AttributeMatrix::Create(source, "Cells", ShapeType{1, 2, 2}, imageGeom->getId());
   REQUIRE(cells != nullptr);
   imageGeom->setCellData(*cells);
@@ -2559,4 +2564,310 @@ TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy"
   CHECK(cache.hitCount() == (warmCache ? 1 : 0));
   CHECK(destination.getData(markerId) == marker);
   CHECK(destination.getAllDataPaths() == originalPaths);
+}
+
+TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid legacy metadata", "[ReadDREAM3DFilter]")
+{
+  const UnitTest::TestFileSentinel archive(unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
+  const fs::path file = fs::path(unit_test::k_TestFilesDir.view()) / "6_6_ImportH5Data" / "6_6_import_h5_esprit_data.dream3d";
+  const DataPath geometry({"Exemplar Data"});
+  const ReadDREAM3DFilter filter;
+  Arguments args;
+  Dream3dImportParameter::ImportData input(file);
+  input.ImportPolicy = Dream3dImportParameter::PathImportPolicy::All;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
+
+  DataStructure ds;
+  const auto strict = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
+  CHECK(strict.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(strict.outputActions.errors().front().message == fmt::format("Cannot read image geometry 'Exemplar Data' from '{}'. Spacing on the X axis must be finite and greater than zero. Received 0. "
+                                                                     "Enable 'Use Default Origin/Spacing for Invalid Values' to use defaults for invalid components in the loaded geometry.",
+                                                                     file.string()));
+
+  args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, true);
+  const auto execution = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
+  const auto* image = ds.getDataAs<ImageGeom>(geometry);
+  REQUIRE(image != nullptr);
+  CHECK(image->getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
+  const auto& warnings = execution.result.warnings();
+  REQUIRE(std::count_if(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == 502693; }) == 1);
+  const auto& defaultValuesWarning = *std::find_if(warnings.begin(), warnings.end(), [](const Warning& entry) { return entry.code == 502693; });
+  CHECK(defaultValuesWarning.message == fmt::format("File '{}' has invalid values for image geometry 'Exemplar Data'. Using default values instead: "
+                                                    "Spacing X stored 0, using 1. Spacing Y stored 0, using 1. The file is not changed.",
+                                                    file.string()));
+
+  args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, false);
+  DataStructure strictAgain;
+  const auto afterUsingDefaults = filter.preflight(strictAgain, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(afterUsingDefaults.outputActions);
+  CHECK(afterUsingDefaults.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
+}
+
+TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format components", "[ReadDREAM3DFilter]")
+{
+  const fs::path file = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "DefaultImageMetadata.dream3d";
+  const DataPath geometry({"Image Group", "Image"});
+  {
+    DataStructure original;
+    auto* group = DataGroup::Create(original, "Image Group");
+    REQUIRE(group != nullptr);
+    REQUIRE(ImageGeom::Create(original, "Image", group->getId()) != nullptr);
+    const auto writeResult = DREAM3D::WriteFile(file, original);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+    auto hdf = HDF5::FileIO::AppendFile(file);
+    auto image = hdf.openGroup("DataStructure").openGroup("Image Group").openGroup("Image");
+    REQUIRE(image.isValid());
+    const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
+    SIMPLNX_RESULT_REQUIRE_VALID(removeSpacing);
+    const auto removeOrigin = image.removeAttribute(IOConstants::k_H5_ORIGIN);
+    SIMPLNX_RESULT_REQUIRE_VALID(removeOrigin);
+    const auto writeSpacing = image.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{2.0F, -3.0F, 4.0F});
+    SIMPLNX_RESULT_REQUIRE_VALID(writeSpacing);
+    const auto writeOrigin = image.writeVectorAttribute(IOConstants::k_H5_ORIGIN, std::vector<float32>{1.0F, 2.0F, std::numeric_limits<float32>::quiet_NaN()});
+    SIMPLNX_RESULT_REQUIRE_VALID(writeOrigin);
+  }
+
+  const ReadDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(file));
+  args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, true);
+  DataStructure ds;
+  const auto execution = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
+  UnitTest::RequireReaderGeometry(ds, geometry, {1.0F, 2.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
+  const auto& warnings = execution.result.warnings();
+  REQUIRE(warnings.size() == 1);
+  CHECK(warnings.front().code == 502693);
+  CHECK(warnings.front().message == fmt::format("File '{}' has invalid values for image geometry '{}'. Using default values instead: "
+                                                "Spacing Y stored -3, using 1. Origin Z stored nan, using 0. The file is not changed.",
+                                                file.string(), geometry.toString()));
+}
+
+TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and shares cached metadata", "[SimplnxCore][ReadDREAM3DFilter]")
+{
+  const fs::path file = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "SelectedImageMetadata.dream3d";
+  const DataPath badGeometry({"Invalid Image"});
+  const DataPath goodGeometry({"Valid Image"});
+  const DataPath goodCellData = goodGeometry.createChildPath(ImageGeom::k_CellAttributeMatrixName);
+  {
+    DataStructure original;
+    REQUIRE(ImageGeom::Create(original, badGeometry.getTargetName()) != nullptr);
+    auto* goodImage = ImageGeom::Create(original, goodGeometry.getTargetName());
+    REQUIRE(goodImage != nullptr);
+    goodImage->setDimensions({1, 1, 1});
+    const auto cellData = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImage->getId());
+    REQUIRE(cellData != nullptr);
+    goodImage->setCellData(*cellData);
+    const auto writeResult = DREAM3D::WriteFile(file, original);
+    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+    auto hdf = HDF5::FileIO::AppendFile(file);
+    auto image = hdf.openGroup("DataStructure").openGroup(badGeometry.getTargetName());
+    const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
+    SIMPLNX_RESULT_REQUIRE_VALID(removeSpacing);
+    const auto writeSpacing = image.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{2.0F, 0.0F, 4.0F});
+    SIMPLNX_RESULT_REQUIRE_VALID(writeSpacing);
+  }
+
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.invalidate(file);
+  cache.resetStats();
+  fs::last_write_time(file, fs::file_time_type::clock::now() - 2 * cache.k_MtimeTrustWindow);
+  const ReadDREAM3DFilter filter;
+  Arguments args;
+  Dream3dImportParameter::ImportData input(file);
+  input.ImportPolicy = Dream3dImportParameter::PathImportPolicy::IncludeList;
+  input.DataPaths = {goodCellData};
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
+
+  for(const bool useDefaults : {false, true})
+  {
+    args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, useDefaults);
+    DataStructure selected;
+    const auto result = filter.execute(selected, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    CHECK(result.result.warnings().empty());
+    CHECK(selected.containsData(goodCellData));
+    CHECK_FALSE(selected.containsData(badGeometry));
+  }
+  CHECK(cache.missCount() == 1);
+  CHECK(cache.hitCount() == 3);
+
+  // Direct tools still validate every image geometry, even when requesting one array.
+  auto strict = DREAM3D::LoadDataStructureArrays(file, {goodCellData});
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict);
+  CHECK(strict.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(strict.errors().front().message == fmt::format("Cannot read image geometry 'Invalid Image' from '{}'. Spacing on the Y axis must be finite and greater than zero. Received 0.", file.string()));
+  Dream3dImportParameter::AddImageGeometryImportHint(strict.errors());
+  CHECK(strict.errors().front().message.find("You can import it with the Read DREAM3D-NX File filter with 'Use Default Origin/Spacing for Invalid Values' enabled.") != std::string::npos);
+
+  // Standalone actions report the use of default values on cold and warm paths, regardless of action mode.
+  cache.invalidate(file);
+  cache.resetStats();
+  const ImportH5ObjectPathsAction action(file, {badGeometry}, true);
+  for(const auto mode : {IDataAction::Mode::Preflight, IDataAction::Mode::Execute})
+  {
+    DataStructure withDefaultValues;
+    const auto result = action.apply(withDefaultValues, mode);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(result.warnings().size() == 1);
+    CHECK(result.warnings().front().code == 502693);
+    UnitTest::RequireReaderGeometry(withDefaultValues, badGeometry, {0.0F, 0.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
+  }
+  CHECK(cache.missCount() == 1);
+  CHECK(cache.hitCount() == 1);
+
+  input.DataPaths = {badGeometry};
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
+  args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, false);
+  DataStructure destination;
+  const auto preflight = filter.preflight(destination, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  CHECK(preflight.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(cache.missCount() == 1);
+}
+
+namespace
+{
+void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCode)
+{
+  const usize tupleCount = errorCode == -4006 ? 1 : errorCode == RectGridGeom::k_NonscalarBounds ? 2 : 4;
+  const ShapeType tupleShape{tupleCount};
+  const ShapeType componentShape{4 / tupleShape.front()};
+  const std::array<float32, 4> validBounds{0.0F, 1.0F, 2.0F, 3.0F};
+  auto bounds = validBounds;
+  if(errorCode == -4007)
+  {
+    bounds[2] = 1.0F;
+  }
+  if(errorCode == -4008)
+  {
+    bounds[2] = std::numeric_limits<float32>::infinity();
+  }
+  if(legacy)
+  {
+    auto hdf = HDF5::FileIO::WriteFile(file);
+    REQUIRE(hdf.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    auto containers = hdf.createGroup("DataContainers");
+    REQUIRE(containers.createGroup("Selected").isValid());
+    auto container = containers.createGroup("Malformed Grid");
+    auto geometry = container.createGroup("_SIMPL_GEOMETRY");
+    REQUIRE(geometry.writeStringAttribute("GeometryTypeName", "RectGridGeometry").valid());
+    auto dimensions = geometry.createDataset("DIMENSIONS");
+    const std::array<int64, 3> dims{3, 3, 3};
+    REQUIRE(dimensions.writeSpan<int64>({3}, dims).valid());
+    for(const std::string axis : {"xBounds", "yBounds", "zBounds"})
+    {
+      const bool malformed = axis == "xBounds";
+      const auto tuples = malformed ? tupleShape : ShapeType{4};
+      const auto components = malformed ? componentShape : ShapeType{1};
+      auto dataset = geometry.createDataset(axis);
+      REQUIRE(dataset.writeSpan<float32>({tuples.front(), components.front()}, malformed ? bounds : validBounds).valid());
+      REQUIRE(dataset.writeVectorAttribute(IOConstants::k_TupleShapeTag, tuples).valid());
+      REQUIRE(dataset.writeVectorAttribute(IOConstants::k_ComponentShapeTag, components).valid());
+    }
+    return;
+  }
+
+  DataStructure source;
+  REQUIRE(DataGroup::Create(source, "Selected") != nullptr);
+  auto* gridPtr = CreateRectGridGeometry(source, "Malformed Grid", {});
+  auto* xBoundsPtr = UnitTest::CreateTestDataArray<float32>(source, "Stored X Bounds", {4}, {1}, gridPtr->getId());
+  REQUIRE(xBoundsPtr != nullptr);
+  for(usize i = 0; i < 4; ++i)
+  {
+    (*xBoundsPtr)[i] = static_cast<float32>(i);
+  }
+  const auto setBounds = gridPtr->setBounds(xBoundsPtr, gridPtr->getYBounds(), gridPtr->getZBounds());
+  SIMPLNX_RESULT_REQUIRE_VALID(setBounds);
+  const auto write = DREAM3D::WriteFile(file, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+
+  auto hdf = HDF5::FileIO::AppendFile(file);
+  auto gridGroup = hdf.openGroup("DataStructure").openGroup("Malformed Grid");
+  auto dataset = gridGroup.openDataset("Stored X Bounds");
+  const auto datasetId = dataset.getId();
+  REQUIRE(datasetId >= 0);
+  REQUIRE(H5Dwrite(datasetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, bounds.data()) >= 0);
+  REQUIRE(H5Adelete(datasetId, IOConstants::k_TupleShapeTag.c_str()) >= 0);
+  REQUIRE(H5Adelete(datasetId, IOConstants::k_ComponentShapeTag.c_str()) >= 0);
+  REQUIRE(dataset.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape).valid());
+  REQUIRE(dataset.writeVectorAttribute(IOConstants::k_ComponentShapeTag, componentShape).valid());
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear grids in current and legacy files", "[SimplnxCore][ReadDREAM3DFilter][RectGridGeom]")
+{
+  const auto file = fs::temp_directory_path() / "SelectedRectGridMetadata.dream3d";
+  const bool legacy = GENERATE(false, true);
+  const int32 errorCode = GENERATE(-4006, RectGridGeom::k_NonscalarBounds, -4007, -4008);
+  CAPTURE(legacy, errorCode);
+  WriteMalformedRectGridFile(file, legacy, errorCode);
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.invalidate(file);
+
+  const DataPath goodPath({"Selected"});
+  const DataPath badPath({"Malformed Grid"});
+  const auto metadata = cache.fetchSelectableMetadata(file);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  CHECK(metadata.value().dataStructure.containsData(goodPath));
+  CHECK(metadata.value().dataStructure.containsData(badPath));
+
+  auto strict = DREAM3D::LoadDataStructure(file);
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict);
+  CHECK(strict.errors().front().code == errorCode);
+  CHECK(strict.errors().front().message.find(badPath.toString()) != std::string::npos);
+  CHECK(strict.errors().front().message.find(file.string()) != std::string::npos);
+
+  const ReadDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(file, Dream3dImportParameter::PathImportPolicy::IncludeList, {goodPath}));
+  DataStructure selected;
+  const auto preflight = filter.preflight(selected, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(selected, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  CHECK(selected.containsData(goodPath));
+  CHECK_FALSE(selected.containsData(badPath));
+
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(file, Dream3dImportParameter::PathImportPolicy::IncludeList, {badPath}));
+  DataStructure rejected;
+  const auto badPreflight = filter.preflight(rejected, args);
+  if(errorCode == -4007 || errorCode == -4008)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(badPreflight.outputActions);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(badPreflight.outputActions);
+    CHECK(badPreflight.outputActions.errors().front().code == errorCode);
+  }
+  const auto badExecute = filter.execute(rejected, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(badExecute.result);
+  CHECK(badExecute.result.errors().front().code == errorCode);
+  CHECK_FALSE(rejected.containsData(badPath));
+}
+
+TEST_CASE("SimplnxCore::ImportH5ObjectPathsAction: validates imported grids without inspecting destination grids", "[SimplnxCore][ReadDREAM3DFilter][RectGridGeom]")
+{
+  const auto file = fs::temp_directory_path() / "ImportIntoExistingRectGrid.dream3d";
+  const DataPath importedPath({"Imported Grid"});
+  DataStructure source;
+  REQUIRE(CreateRectGridGeometry(source, importedPath.getTargetName(), {}) != nullptr);
+  const auto write = DREAM3D::WriteFile(file, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(write);
+
+  DataStructure destination;
+  auto* existingPtr = CreateRectGridGeometry(destination, "Existing Grid", {});
+  REQUIRE(existingPtr != nullptr);
+  existingPtr->getXBoundsRef()[1] = 0.0F;
+  const ImportH5ObjectPathsAction action(file, source.getAllDataPaths());
+  const auto result = action.apply(destination, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* importedPtr = destination.getDataAs<RectGridGeom>(importedPath);
+  REQUIRE(importedPtr != nullptr);
+  REQUIRE(importedPtr->getXBounds() != nullptr);
+  CHECK(importedPtr->getXBoundsRef()[1] == 1.0F);
+  CHECK(existingPtr->getXBoundsRef()[1] == 0.0F);
 }

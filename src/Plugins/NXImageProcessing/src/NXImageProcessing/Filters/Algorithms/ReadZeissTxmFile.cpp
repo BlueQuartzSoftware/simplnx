@@ -121,9 +121,15 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     // Create a temporary image geometry so that we can do some calculations on the source data
     DataStructure tmpDs;
     auto* srcImageGeom = ImageGeom::Create(tmpDs, "srcImageGeom");
-    srcImageGeom->setOrigin(metadata.Origin);
+    if(auto result = srcImageGeom->setOrigin(metadata.Origin); result.invalid())
+    {
+      return result;
+    }
     srcImageGeom->setDimensions(metadata.Dimensions);
-    srcImageGeom->setSpacing(metadata.Spacing);
+    if(auto result = srcImageGeom->setSpacing(metadata.Spacing); result.invalid())
+    {
+      return result;
+    }
 
     // Convert full source data dimensions to coordinates
     auto startCoords = srcImageGeom->getCoordsf(xStart, yStart, zStart);
@@ -248,6 +254,10 @@ Result<> ReadZeissTxmFile::operator()() const
     return ConvertResult(std::move(metadataResult));
   }
   ZeissTxmHeaderMetadata metaData = metadataResult.value();
+  if(auto geometryResult = m_InputValues->GeometryOverrides.apply(m_InputValues->TxmDataFile, metaData.Origin, metaData.Spacing); geometryResult.invalid())
+  {
+    return geometryResult;
+  }
 
   switch(metaData.DataType)
   {

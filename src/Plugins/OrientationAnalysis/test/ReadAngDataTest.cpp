@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 /*
  * This suite validates the ReadAngDataFilter value-add independently of EbsdLib parsing.
  * The inline oracle checks geometry construction, array creation, phase remapping,
@@ -498,4 +500,17 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility
       CHECK(args.value<std::string>(ReadAngDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "CellEnsembleData");
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ReadAngDataFilter: override invalid X step", "[OrientationAnalysis][ReadAngDataFilter]")
+{
+  std::string contents = k_HeaderPrefix + k_PhaseBlock + SqrGridBlock() + k_DataBlock;
+  const std::string goodStep = "# XSTEP: 0.250000";
+  contents.replace(contents.find(goodStep), goodStep.size(), "# XSTEP: 0");
+  const auto path = WriteAngFile("read_ang_metadata_override.ang", contents);
+  const ReadAngDataFilter filter;
+  auto args = MakeDefaultArgs(path);
+  UnitTest::RequireBadReaderMetadata(filter, args, path, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
 }

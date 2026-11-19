@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"
@@ -635,7 +637,7 @@ fs::path ReadImageOutputDir()
 
 // Writes an N-page uint8_t TIFF where every page has the same width/height/1-component layout.
 // pagePixels[p] is row-major (top-to-bottom), size == width*height.
-void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels)
+void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels, std::optional<double> xResolution = {})
 {
   TIFF* tif = TIFFOpen(path.string().c_str(), "w");
   REQUIRE(tif != nullptr);
@@ -644,6 +646,10 @@ void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, c
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height);
     REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
+    if(xResolution.has_value())
+    {
+      REQUIRE(TIFFSetField(tif, TIFFTAG_XRESOLUTION, *xResolution) != 0);
+    }
     REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
     REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
@@ -899,8 +905,8 @@ std::vector<uint8_t> GzipCompress(const std::vector<uint8_t>& data)
 
 // Builds a ReadImageFilter Arguments set for a NRRD input, mapping the retired NRRD reader's
 // keys onto ReadImageFilter's (file_name / cropping_options / output_geometry_path /
-// cell_attribute_matrix_name / image_data_array_name). The origin/spacing/data-type override
-// params are left at their defaults (the NRRD backend ignores them).
+// cell_attribute_matrix_name / image_data_array_name). Tests can add geometry overrides
+// after constructing these arguments.
 Arguments MakeReadImageNrrdArgs(const fs::path& inputFile, const DataPath& geomPath, const std::string& amName, const std::string& arrName,
                                 const CropGeometryParameter::ValueType& crop = CropGeometryParameter::ValueType{})
 {
@@ -1608,4 +1614,52 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", 
     }
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::ReadImageFilter: postprocessed override rescues physical cropping", "[NXImageProcessing][ReadImageFilter]")
+{
+  const auto file = ReadImageOutputDir() / "BadRasterSpacing.tif";
+  WriteMultiPageTiff(file, 3, 1, {{11, 22, 33}}, 0.0);
+  const DataPath geometry({"Crop with Override"});
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = false;
+  crop.cropZ = false;
+  crop.xBoundPhysical = {2.1F, 3.9F};
+  auto args = MakeReadImageNrrdArgs(file, geometry, "Cell Data", "Pixels", crop);
+  args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Postprocessed));
+  const ReadImageFilter filter;
+  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  DataStructure ds;
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  UnitTest::RequireReaderGeometry(ds, geometry, {4, -3, 8}, {2, 3, 4});
+  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, geometry.createChildPath("Cell Data").createChildPath("Pixels"));
+  REQUIRE(pixels.getSize() == 1);
+  CHECK(pixels[0] == 22);
+}
+
+TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD unknown spacing uses one and explicit invalid spacing errors", "[NXImageProcessing][ReadImageFilter]")
+{
+  const auto [spacing, usesDefault] = GENERATE(table<std::string, bool>({{"nan", true}, {"+NaN", true}, {"-nAN", true}, {"0", false}, {"-2", false}, {"inf", false}}));
+  CAPTURE(spacing);
+  const auto file = ReadImageOutputDir() / "NrrdSpacingMarkers.nrrd";
+  WriteNrrdRaw(file, {"NRRD0004", "type: uchar", "dimension: 3", "sizes: 1 1 1", "encoding: raw", "spacings: 2 " + spacing + " 4"}, {42});
+
+  const DataPath geometry({"NRRD Image"});
+  const ReadImageFilter filter;
+  auto args = MakeReadImageNrrdArgs(file, geometry, "Cell Data", "Pixels");
+  if(usesDefault)
+  {
+    UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {2, 1, 4});
+  }
+  else
+  {
+    UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+  }
+
+  UnitTest::SetReaderGeometryOverrides(args, {1, 2, 3}, {4, 5, 6});
+  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {1, 2, 3}, {4, 5, 6});
 }

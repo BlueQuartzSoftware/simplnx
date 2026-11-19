@@ -907,8 +907,8 @@ DataStructure CreateCornerFeatureInBox()
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   const std::vector<usize> dims = {SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim};
   imageGeomPtr->setDimensions(dims);
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);

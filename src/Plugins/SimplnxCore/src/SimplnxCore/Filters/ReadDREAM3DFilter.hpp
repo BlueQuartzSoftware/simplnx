@@ -27,6 +27,7 @@ public:
   ReadDREAM3DFilter& operator=(ReadDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static constexpr StringLiteral k_UseDefaultGeometryValues_Key = "use_default_geometry_values";
   static constexpr StringLiteral k_ImportFileData = "import_data_object";
 
   /**

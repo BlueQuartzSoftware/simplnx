@@ -1,5 +1,7 @@
 #include "ReadCtfData.hpp"
 
+#include "EbsdStepMetadata.hpp"
+
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -34,6 +36,13 @@ Result<> ReadCtfData::operator()()
 {
   m_MessageHandler.sendInfoMessage(fmt::format("Reading .ctf file '{}'", m_InputValues->InputFile.string()));
   ebsdlib::CtfReader reader;
+  if(m_InputValues->SpacingOverride.has_value())
+  {
+    const auto& spacing = *m_InputValues->SpacingOverride;
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::XStep, spacing[0]));
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::YStep, spacing[1]));
+    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::ZStep, spacing[2]));
+  }
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();
   if(err < 0)

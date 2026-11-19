@@ -780,8 +780,8 @@ DataStructure CreateDataStructure()
   DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, scanData->getId());
-  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
-  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+  REQUIRE(imageGeom->setSpacing({0.25f, 0.55f, 1.86}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 20.0f, 66.0f}).valid());
   SizeVec3 imageGeomDims = {40, 60, 80};
   imageGeom->setDimensions(imageGeomDims); // ImageGeom dimensions use {X, Y, Z} order.
 
@@ -881,8 +881,8 @@ void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDim
     throw std::runtime_error("UnitTestCommon: Unable to create ImageGeom");
   }
   imageGeom->setDimensions(imageGeomDims);
-  imageGeom->setSpacing(spacing);
-  imageGeom->setOrigin(origin);
+  REQUIRE(imageGeom->setSpacing(spacing).valid());
+  REQUIRE(imageGeom->setOrigin(origin).valid());
 }
 
 // -----------------------------------------------------------------------------

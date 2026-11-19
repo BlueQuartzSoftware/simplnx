@@ -244,8 +244,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Cell Feature Ids requires 1
   auto* imageGeom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({2, 1, 1});
-  imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);
@@ -318,8 +318,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
   auto* geometry = ImageGeom::Create(dataStructure, "Grid");
   REQUIRE(geometry != nullptr);
   geometry->setDimensions(dims[plane]);
-  geometry->setSpacing(spacing[plane]);
-  geometry->setOrigin(origin[plane]);
+  REQUIRE(geometry->setSpacing(spacing[plane]).valid());
+  REQUIRE(geometry->setOrigin(origin[plane]).valid());
   const ShapeType shape = {dims[plane][2], dims[plane][1], dims[plane][0]};
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", shape, geometry->getId());
   REQUIRE(cells != nullptr);
@@ -398,8 +398,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
   REQUIRE(geometry != nullptr);
   geometry->setDimensions({3, 3, 3});
   const std::array<FloatVec3, 3> spacings = {{{2, 4, 8}, {8, 2, 4}, {4, 2, 8}}};
-  geometry->setSpacing(spacings[transform]);
-  geometry->setOrigin({10, 20, 30});
+  REQUIRE(geometry->setSpacing(spacings[transform]).valid());
+  REQUIRE(geometry->setOrigin({10, 20, 30}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", {3, 3, 3}, geometry->getId());
   REQUIRE(cells != nullptr);
   geometry->setCellData(*cells);

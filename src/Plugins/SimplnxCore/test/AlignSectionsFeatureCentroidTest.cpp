@@ -149,7 +149,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);
@@ -195,7 +195,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   auto* geom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geom != nullptr);
   geom->setDimensions({3, 3, 4});
-  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
   REQUIRE(cells != nullptr);
   geom->setCellData(*cells);
@@ -265,7 +265,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   auto* geom = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geom != nullptr);
   geom->setDimensions({3, 3, 4});
-  geom->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geom->getId());
   REQUIRE(cells != nullptr);
   geom->setCellData(*cells);

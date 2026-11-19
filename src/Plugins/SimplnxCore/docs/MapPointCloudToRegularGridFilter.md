@@ -19,6 +19,8 @@ The *Sampling Grid Type* parameter controls how the target grid is defined:
 - **Manual [0]**: The user specifies the grid dimensions directly as voxel counts along X, Y, and Z (dimensionless counts). The filter creates a new **Image Geometry** with those dimensions to use as the sampling grid.
 - **Use Existing Image Geometry [1]**: The user selects a pre-existing **Image Geometry** from the data structure to use as the sampling grid.
 
+In **Manual** mode, the filter computes the origin and spacing from the point cloud. The filter reports an error if the computed origin is nonfinite or the computed spacing is nonfinite or less than or equal to zero.
+
 ### Out of Bounds Handling
 
 The *Out of Bounds Handling* parameter provides the following choices:

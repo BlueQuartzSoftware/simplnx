@@ -774,13 +774,29 @@ public:
     DataStructure tempDataStructure;
     ImageGeom* origImageGeomPtr = ImageGeom::Create(tempDataStructure, "Temp");
     origImageGeomPtr->setDimensions(m_Params.OriginalDims);
-    origImageGeomPtr->setSpacing(m_Params.OriginalSpacing);
-    origImageGeomPtr->setOrigin(m_Params.OriginalOrigin);
+    if(auto result = origImageGeomPtr->setSpacing(m_Params.OriginalSpacing); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
+    if(auto result = origImageGeomPtr->setOrigin(m_Params.OriginalOrigin); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
 
     ImageGeom* destImageGeomPtr = ImageGeom::Create(tempDataStructure, "dest image geom");
     destImageGeomPtr->setDimensions(m_Params.TransformedDims);
-    destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
-    destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
+    if(auto result = destImageGeomPtr->setSpacing(m_Params.TransformedSpacing); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
+    if(auto result = destImageGeomPtr->setOrigin(m_Params.TransformedOrigin); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
 
     const int64 srcDimX = static_cast<int64>(m_Params.OriginalDims[0]);
     const int64 srcDimY = static_cast<int64>(m_Params.OriginalDims[1]);
@@ -1061,13 +1077,29 @@ public:
     DataStructure tempDataStructure;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(tempDataStructure, "source image geom");
     srcImageGeomPtr->setDimensions(m_Params.OriginalDims);
-    srcImageGeomPtr->setSpacing(m_Params.OriginalSpacing);
-    srcImageGeomPtr->setOrigin(m_Params.OriginalOrigin);
+    if(auto result = srcImageGeomPtr->setSpacing(m_Params.OriginalSpacing); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
+    if(auto result = srcImageGeomPtr->setOrigin(m_Params.OriginalOrigin); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
 
     ImageGeom* destImageGeomPtr = ImageGeom::Create(tempDataStructure, "dest image geom");
     destImageGeomPtr->setDimensions(m_Params.TransformedDims);
-    destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
-    destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
+    if(auto result = destImageGeomPtr->setSpacing(m_Params.TransformedSpacing); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
+    if(auto result = destImageGeomPtr->setOrigin(m_Params.TransformedOrigin); result.invalid())
+    {
+      m_FilterCallback->storeResult(std::move(result), fmt::format("Cannot resample array '{}'", m_SourceArray->getName()));
+      return;
+    }
 
     const auto& oldDataStore = m_SourceArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();

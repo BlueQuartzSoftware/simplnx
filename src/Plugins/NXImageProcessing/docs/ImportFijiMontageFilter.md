@@ -38,7 +38,7 @@ The filter fails if no tile can be read.
 There is **no stitching or blending** — the tiles are imported side by side as
 independent geometries positioned at their montage coordinates.
 
-### Optional processing
+### Optional Processing
 
 - **Change Origin**: rebases the montage so its minimum corner lands on a
   user-supplied origin. `newOrigin = origin - (minCorner - userOrigin)`.
@@ -55,23 +55,9 @@ independent geometries positioned at their montage coordinates.
 - **Set Image Data Type**: casts every imported tile array to `uint8`,
   `uint16`, or `uint32`.
 
-## Parameters
+### Tile Coordinates
 
-| Name | Type | Description |
-|------|------|-------------|
-| Fiji Configuration File | Path | The `TileConfiguration[.registered].txt` file, alongside its tile images |
-| Length Unit | Enum | Length unit set into every created Image Geometry |
-| Change Origin | bool | Rebase the montage's minimum corner to a user origin |
-| Origin | float (3) | New origin of the montage's minimum corner |
-| Convert To GrayScale | bool | Convert eligible RGB and RGBA tiles to single-channel grayscale |
-| Color Weighting | float (3) | Luminosity R/G/B weights for grayscale conversion |
-| Set Image Data Type | bool | Cast every imported tile array to a chosen type |
-| Output Data Type | Enum | 0 = uint8, 1 = uint16, 2 = uint32 |
-| Parent Imported Images Under a DataGroup | bool | Group all tile geometries under one DataGroup |
-| Name of Created DataGroup | String | Name of the parent DataGroup |
-| Image Geometry Prefix | String | Prefix prepended to each tile's file-stem to name its Image Geometry |
-| Cell Attribute Matrix Name | String | Name of the created cell Attribute Matrix in each tile geometry |
-| Image DataArray Name | String | Name of the created image DataArray in each tile geometry |
+Each tile coordinate must be finite. If the file contains a nonfinite coordinate, the error identifies the TileConfiguration file and line. Rebasing the montage origin still requires valid tile coordinates.
 
 ## Required Geometry
 
@@ -93,3 +79,9 @@ references).
 ## References
 
 - Fiji / ImageJ: <https://imagej.net/software/fiji/>
+
+% Auto generated parameter table will be inserted here
+
+## Example Pipelines
+
++ 20_Fiji_Microscopy_Montage_Import.d3dpipeline

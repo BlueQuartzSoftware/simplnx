@@ -50,8 +50,8 @@ DataStructure InitializeImageDataStructure()
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr size_t dimsIn[3] = {5, 5, 1};
   imageGeom->setDimensions(dimsIn);
-  imageGeom->setOrigin({0, 0, 0});
-  imageGeom->setSpacing({1, 1, 1});
+  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
   std::vector<size_t> dims(3, 0);
   dims[0] = 1;
   dims[1] = 5;
@@ -154,8 +154,8 @@ void BuildBenchmarkDataStructure(DataStructure& dataStructure)
 
   auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
   imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
@@ -1148,7 +1148,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);
@@ -1213,8 +1213,8 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median ranks", "[SimplnxC
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
   geom->setDimensions({values.size(), 1, 1});
-  geom->setOrigin({0, 0, 0});
-  geom->setSpacing({1, 1, 1});
+  REQUIRE(geom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(geom->setSpacing({1, 1, 1}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geom->getId());
   geom->setCellData(*cells);
   auto* input = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cells->getId());
@@ -1255,8 +1255,8 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median of large values", 
   DataStructure dataStructure;
   auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
   geom->setDimensions({values.size(), 1, 1});
-  geom->setOrigin({0, 0, 0});
-  geom->setSpacing({1, 1, 1});
+  REQUIRE(geom->setOrigin({0, 0, 0}).valid());
+  REQUIRE(geom->setSpacing({1, 1, 1}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geom->getId());
   geom->setCellData(*cells);
   auto* input = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cells->getId());
@@ -1295,8 +1295,8 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median does not require m
   const usize count = evenCount ? 2 : 1;
   auto* geom = ImageGeom::Create(dataStructure, k_GeomName);
   geom->setDimensions({count, 1, 1});
-  geom->setSpacing({2, 3, 5});
-  geom->setOrigin({10, 20, 30});
+  REQUIRE(geom->setSpacing({2, 3, 5}).valid());
+  REQUIRE(geom->setOrigin({10, 20, 30}).valid());
   auto* cells = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, count}, geom->getId());
   geom->setCellData(*cells);
   auto* values = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, count}, ShapeType{1}, cells->getId());

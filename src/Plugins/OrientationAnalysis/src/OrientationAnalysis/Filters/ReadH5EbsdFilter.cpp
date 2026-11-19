@@ -1,5 +1,7 @@
 #include "ReadH5EbsdFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5Ebsd.hpp"
 #include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
 #include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
@@ -66,6 +68,9 @@ Parameters ReadH5EbsdFilter::parameters() const
   params.insert(std::make_unique<ReadH5EbsdFileParameter>(k_ReadH5EbsdParameter_Key, "Import H5Ebsd File", "Object that holds all relevant information to import data from the file.",
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -81,7 +86,8 @@ Parameters ReadH5EbsdFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadH5EbsdFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -124,6 +130,10 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   reader->getSpacing(spacing.at(0), spacing.at(1), spacing.at(2));
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pReadH5EbsdFilterValue.inputFilePath, origin, spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
 
@@ -146,7 +156,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
 
-    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3(spacing));
     EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else if(m_Manufacturer == ebsdlib::OEM::Oxford)
@@ -155,7 +165,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     reader = ebsdlib::H5CtfVolumeReader::New();
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
-    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3(spacing));
     EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else

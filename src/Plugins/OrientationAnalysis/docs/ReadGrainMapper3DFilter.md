@@ -12,6 +12,8 @@ This filter reads Version 4 and Version 5 **GrainMapper3D** HDF5 (`.h5`) files. 
 - The **Image Geometry** that is produced is in units of **millimeters**. This differs from the micron length-unit assumption made by many downstream DREAM3D-NX filters (for example, size and spacing computations). Be aware of this difference when chaining this reader into a pipeline.
 - The user has the opportunity to create DREAM3D-NX compatible Orientation Data and Phase data. See below.
 
+The filter can create one Image Geometry for LabDCT data and one for Absorption CT data. Invalid file origin or spacing produces an error. The filter has no origin or spacing override options.
+
 ## Parameter Discussion
 
 GrainMapper3D orientation convention is the same as used by [MTEX](https://mtex-toolbox.github.io), and the inverse of that adapted by DREAM3D-NX.

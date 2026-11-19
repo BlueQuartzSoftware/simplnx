@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/ReadVolumeGraphicsFileFilter.hpp"
@@ -224,4 +226,45 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 def
   {
     CHECK(density[index] == values[index]);
   }
+}
+
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: override missing or zero resolution", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
+{
+  const bool writeResolution = GENERATE(false, true);
+  const auto dir = k_VgiDestFile.parent_path();
+  const auto header = dir / "OverrideVolume.vgi";
+  const auto volume = dir / "OverrideVolume.vol";
+  {
+    std::ofstream stream(header);
+    stream << R"({volume1}
+[representation]
+size = 2 2 1
+[file1]
+Size = 2 2 1
+Name = OverrideVolume.vol
+Datatype = float
+BitsPerElement = 32
+{volumeprimitive1}
+[geometry]
+unit = mm
+)";
+    if(writeResolution)
+    {
+      stream << "resolution = 0 1 1\n";
+    }
+    REQUIRE(stream.good());
+  }
+  {
+    const std::array<float32, 4> values{1, 2, 3, 4};
+    std::ofstream bytes(volume, std::ios::binary);
+    bytes.write(reinterpret_cast<const char*>(values.data()), sizeof(values));
+    REQUIRE(bytes.good());
+  }
+
+  const ReadVolumeGraphicsFileFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, header);
+  UnitTest::RequireBadReaderMetadata(filter, args, header, true);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"VolumeGraphics"}), {4, -3, 8}, {2, 3, 4});
 }

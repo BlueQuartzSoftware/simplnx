@@ -70,8 +70,8 @@ TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the sca
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(image != nullptr);
   image->setDimensions({2, 3, 4});
-  image->setSpacing({2.0F, 3.0F, 5.0F});
-  image->setOrigin({1.0F, 2.0F, 3.0F});
+  REQUIRE(image->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(image->setOrigin({1.0F, 2.0F, 3.0F}).valid());
 
   // The matrix maps (x,y,z) to (-4z, 2x, 3y). It is a three-cycle with a reflection and a different scale on each source axis.
   ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
@@ -102,8 +102,8 @@ TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source ax
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(image != nullptr);
   image->setDimensions({2, 2, 2});
-  image->setSpacing({2.0F, 3.0F, 5.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
   transform(0, 1) = 5.0F;
@@ -133,8 +133,8 @@ TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spaci
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(image != nullptr);
   image->setDimensions({2, 3, 4});
-  image->setSpacing({2.0F, 3.0F, 5.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   const float32 c = std::sqrt(0.5F);
   ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
@@ -161,8 +161,8 @@ TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Samp
   ImageGeom* image = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(image != nullptr);
   image->setDimensions({2, 3, 4});
-  image->setSpacing({2.0F, 3.0F, 5.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   // 119.995 degrees about (111) differs from the exact three-cycle by about 5e-5 per entry.
   // Rotate Sample Reference Frame accepts it as a grid rotation (tolerance 1e-4).
@@ -185,8 +185,8 @@ TEST_CASE("ImageRotationUtilities: Raw grid tolerance accounts for column normal
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 4});
-  imageGeomPtr->setSpacing({2.0F, 3.0F, 5.0F});
-  imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeomPtr->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
   transform.block<3, 3>(0, 0) << 0.000099998F, 0.0F, 1.0F, 0.99995F, 0.0F, 0.0F, 0.0F, 1.00005F, 0.0F;

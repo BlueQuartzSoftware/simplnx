@@ -6,6 +6,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -463,7 +464,12 @@ int runDumpDataStructure(const CliOptions& options, OutputStreams streams, const
 
   const Result<DataStructure> readResult = [&options] {
     const ScopedHdf5ErrorHandler scopedHdf5ErrorHandler;
-    return DREAM3D::ImportDataStructureFromFile(options.InputFile, /*preflight=*/true);
+    auto result = DREAM3D::ImportDataStructureFromFile(options.InputFile, /*preflight=*/true);
+    if(result.invalid())
+    {
+      Dream3dImportParameter::AddImageGeometryImportHint(result.errors());
+    }
+    return result;
   }();
   if(readResult.invalid())
   {

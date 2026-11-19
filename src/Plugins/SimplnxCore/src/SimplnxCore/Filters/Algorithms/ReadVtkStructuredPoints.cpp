@@ -828,6 +828,10 @@ Result<> ReadVtkStructuredPoints::readFile()
     return ConvertResult(std::move(convertResultF32));
   }
   origin[2] = convertResultF32.value();
+  if(auto metadataResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFile, origin, spacing); metadataResult.invalid())
+  {
+    return metadataResult;
+  }
 
   // Center the one-voxel slab on the VTK point along each singleton axis.
   for(usize axis = 0; axis < 3; axis++)

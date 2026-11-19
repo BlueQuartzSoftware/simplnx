@@ -1,3 +1,5 @@
+#include "simplnx/UnitTest/ReaderGeometryTest.hpp"
+
 #include <catch2/catch.hpp>
 
 #include "NXImageProcessing/Filters/Algorithms/ReadMhaFile.hpp"
@@ -1262,4 +1264,18 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXI
   REQUIRE(croppedGeom.getDimensions() == dims);
   REQUIRE(croppedGeom.getOrigin() == origin);
   UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+}
+
+TEST_CASE("NXImageProcessing::ReadMhaFileFilter: override invalid stored image metadata", "[NXImageProcessing][ReadMhaFileFilter]")
+{
+  const bool badSpacing = GENERATE(false, true);
+  const fs::path path = MhaOutputDir() / "BadMetadata.mha";
+  WriteMhaAttached(path, {"ObjectType = Image", "NDims = 2", "DimSize = 2 2", badSpacing ? "ElementSpacing = 0 1" : "Offset = nan 0", "ElementType = MET_UCHAR", "ElementDataFile = LOCAL"},
+                   {1, 2, 3, 4});
+  const DataPath geometry({"Override MHA"});
+  auto args = MakeMhaArgs(path, geometry, "Cell Data", "Pixels");
+  const ReadMhaFileFilter filter;
+  UnitTest::RequireBadReaderMetadata(filter, args, path, badSpacing);
+  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

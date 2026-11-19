@@ -1,5 +1,7 @@
 #include "ReadVolumeGraphicsFileFilter.hpp"
 
+#include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
+
 #include "NXImageProcessing/Filters/Algorithms/ReadVolumeGraphicsFile.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -399,6 +401,9 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "Volume Graphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".vgi"}, FileSystemPathParameter::PathType::InputFile));
+  params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
+  ImageIO::InsertGeometryOverrideParameters(params);
+
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -412,7 +417,8 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadVolumeGraphicsFileFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added Set Origin and Set Spacing.
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -437,11 +443,16 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   }
 
   HeaderMetadata metadata = metadataResult.value();
+  FloatVec3 origin{0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pVGHeaderFileValue, origin, metadata.Spacing); geometryResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
-      pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, CreateImageGeometryAction::OriginType{0, 0, 0},
+      pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, origin.toContainer<std::vector<float32>>(),
       CreateImageGeometryAction::SpacingType{metadata.Spacing[0], metadata.Spacing[1], metadata.Spacing[2]}, pCellAttributeMatrixNameValue);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 

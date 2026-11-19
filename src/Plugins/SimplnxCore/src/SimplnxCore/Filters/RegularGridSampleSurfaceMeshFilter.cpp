@@ -193,12 +193,6 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
                                                                  pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
     }
 
-    DataStructure junk;
-    ImageGeom* srcImageGeomPtr = ImageGeom::Create(junk, "junk", {0});
-    srcImageGeomPtr->setDimensions({static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])});
-    srcImageGeomPtr->setSpacing(pSpacingValue);
-    srcImageGeomPtr->setOrigin(pOriginValue);
-    srcImageGeomPtr->setUnits(IGeometry::LengthUnit(pLengthUnitValue));
     tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
 
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
@@ -206,8 +200,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
     cellAttributeMatrixPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+    preflightUpdatedValues.push_back({"Input Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(tupleDims, pSpacingValue, pOriginValue, IGeometry::LengthUnit(pLengthUnitValue))});
     // Flip the dimensions
     tupleDims = {static_cast<usize>(pDimensionsValue[2]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[0])};
   }

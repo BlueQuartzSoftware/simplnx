@@ -456,7 +456,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[Simpln
     auto* geom = ImageGeom::Create(dataStructure, name);
     REQUIRE(geom != nullptr);
     geom->setDimensions({width, 2, 1});
-    geom->setSpacing({1.0F, 1.0F, 1.0F});
+    REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
     auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 2, width}, geom->getId());
     REQUIRE(cellData != nullptr);
     geom->setCellData(*cellData);

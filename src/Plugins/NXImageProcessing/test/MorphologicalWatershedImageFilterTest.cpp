@@ -199,8 +199,8 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
     auto* imageGeom = ImageGeom::Create(dataStructure, geomPath.getTargetName());
     REQUIRE(imageGeom != nullptr);
     imageGeom->setDimensions({3, 2, 1});
-    imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-    imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+    REQUIRE(imageGeom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+    REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
     auto* cellData = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imageGeom->getId());
     REQUIRE(cellData != nullptr);
     imageGeom->setCellData(*cellData);

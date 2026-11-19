@@ -192,15 +192,8 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   }
   md.dimensions = {static_cast<usize>(hdr.dim[1]), static_cast<usize>(hdr.dim[2]), static_cast<usize>(hdr.dim[3])};
 
-  // Default spacing from pixdim, fallback to 1.0 for zero values
+  // Use the spacing magnitude. Keep the signed pixdim values for orientation diagnostics.
   md.spacing = {std::fabs(hdr.pixdim[1]), std::fabs(hdr.pixdim[2]), std::fabs(hdr.pixdim[3])};
-  for(auto& s : md.spacing)
-  {
-    if(s == 0.0f)
-    {
-      s = 1.0f;
-    }
-  }
 
   md.niftiDatatype = hdr.datatype;
   md.bitpix = typeInfo->bitpix;
@@ -243,7 +236,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
       const float32 cy = hdr.srow_y[col];
       const float32 cz = hdr.srow_z[col];
       const float32 mag = std::sqrt(cx * cx + cy * cy + cz * cz);
-      if(mag > 0.0f)
+      if(mag != 0.0f)
       {
         md.spacing[col] = mag;
       }

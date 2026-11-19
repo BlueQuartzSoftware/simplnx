@@ -1,5 +1,9 @@
 #pragma once
 
+#include "simplnx/Common/Array.hpp"
+
+#include <optional>
+
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -19,6 +23,7 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
+  std::optional<FloatVec3> SpacingOverride;
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;

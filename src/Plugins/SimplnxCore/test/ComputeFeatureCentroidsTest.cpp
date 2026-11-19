@@ -186,8 +186,8 @@ inline Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3>
   Scaffold s;
   auto* imageGeom = ImageGeom::Create(s.ds, k_GeomName);
   imageGeom->setDimensions({dimX, dimY, dimZ});
-  imageGeom->setSpacing({spacing[0], spacing[1], spacing[2]});
-  imageGeom->setOrigin({origin[0], origin[1], origin[2]});
+  REQUIRE(imageGeom->setSpacing({spacing[0], spacing[1], spacing[2]}).valid());
+  REQUIRE(imageGeom->setOrigin({origin[0], origin[1], origin[2]}).valid());
 
   const ShapeType cellTupleShape{dimZ, dimY, dimX};
   auto* cellAM = AttributeMatrix::Create(s.ds, k_CellAMName, cellTupleShape, imageGeom->getId());
@@ -587,12 +587,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
     }
   }
 
-  SECTION("origin and signed nonunit spacing map the wrapped index mean")
+  SECTION("origin and nonunit spacing map the wrapped index mean")
   {
     const std::vector<int32> ids = {1, 2, 2, 1, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2};
-    auto fixture = Build(5, 3, 1, {-2.0F, 3.0F, 0.0F}, {10.0F, -4.0F, 7.0F}, 3, ids);
+    auto fixture = Build(5, 3, 1, {2.0F, 3.0F, 4.0F}, {10.0F, -4.0F, 7.0F}, 3, ids);
     auto actual = Run(fixture, true);
-    RequireCentroid(actual, 1, 0.6F, -1.3F, 7.0F);
+    // The wrapped center (4.7, 0.9, 0.5) maps through the supplied origin and spacing.
+    RequireCentroid(actual, 1, 19.4F, -1.3F, 9.0F);
   }
 
   SECTION("circular-anchor recentering is different from largest-gap arithmetic")
@@ -690,7 +691,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: sorted-coordinate periodi
   std::mt19937 generator(19077);
   std::uniform_int_distribution<int32> labels(0, 3);
   const std::array<float32, 3> origin = {10.0F, -3.0F, 7.0F};
-  const std::array<float32, 3> spacing = {-2.0F, 1.25F, 0.5F};
+  const std::array<float32, 3> spacing = {2.0F, 1.25F, 0.5F};
   for(usize trial = 0; trial < 48; trial++)
   {
     const std::array<usize, 3> dims = {2 + trial % 5, 2 + (trial / 5) % 4, 2 + (trial / 11) % 3};
@@ -1107,7 +1108,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Geometry cell tuple count
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F});
+  REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 3, 2}, imageGeomPtr->getId());
   REQUIRE(cellAMPtr != nullptr);
   imageGeomPtr->setCellData(*cellAMPtr);

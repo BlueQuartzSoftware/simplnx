@@ -24,6 +24,23 @@ public:
 
   static constexpr StringLiteral k_TypeName = "ImageGeom";
 
+  static constexpr int32 k_InvalidSpacing = -1556;
+  static constexpr int32 k_InvalidOrigin = -1557;
+
+  /**
+   * @brief Checks that spacing is finite and greater than zero on each axis.
+   * @param spacing Spacing in X, Y, Z order.
+   * @return Success or error -1556 with the first invalid axis and value.
+   */
+  [[nodiscard]] static Result<> ValidateSpacing(const FloatVec3& spacing);
+
+  /**
+   * @brief Checks that the origin is finite on each axis.
+   * @param origin Origin coordinates in X, Y, Z order.
+   * @return Success or error -1557 with the first invalid axis and value.
+   */
+  [[nodiscard]] static Result<> ValidateOrigin(const FloatVec3& origin);
+
   enum class ErrorType : EnumType
   {
     XOutOfBoundsLow = 0,
@@ -115,16 +132,18 @@ public:
   /**
    * @brief Sets the spacing (resolution) of the image geometry in X, Y, and Z dimensions.
    * @param spacing Vector containing the spacing values for each dimension
+   * @return Success or error -1556 if spacing is nonfinite or not greater than zero. The geometry is unchanged on error.
    */
-  void setSpacing(const FloatVec3& spacing);
+  [[nodiscard]] Result<> setSpacing(const FloatVec3& spacing);
 
   /**
    * @brief Sets the spacing (resolution) of the image geometry using individual components.
    * @param x Spacing in the X dimension
    * @param y Spacing in the Y dimension
    * @param z Spacing in the Z dimension
+   * @return Success or error -1556 if spacing is nonfinite or not greater than zero. The geometry is unchanged on error.
    */
-  void setSpacing(float32 x, float32 y, float32 z);
+  [[nodiscard]] Result<> setSpacing(float32 x, float32 y, float32 z);
 
   /**
    * @brief Gets the origin (lower-left corner) of the image geometry in 3D space.
@@ -135,16 +154,18 @@ public:
   /**
    * @brief Sets the origin (lower-left corner) of the image geometry in 3D space.
    * @param origin Vector containing the origin coordinates for each dimension
+   * @return Success or error -1557 if the origin is nonfinite. The geometry is unchanged on error.
    */
-  void setOrigin(const FloatVec3& origin);
+  [[nodiscard]] Result<> setOrigin(const FloatVec3& origin);
 
   /**
    * @brief Sets the origin (lower-left corner) of the image geometry using individual components.
    * @param x Origin coordinate in the X dimension
    * @param y Origin coordinate in the Y dimension
    * @param z Origin coordinate in the Z dimension
+   * @return Success or error -1557 if the origin is nonfinite. The geometry is unchanged on error.
    */
-  void setOrigin(float32 x, float32 y, float32 z);
+  [[nodiscard]] Result<> setOrigin(float32 x, float32 y, float32 z);
 
   /**
    * @brief Calculates and returns the 3D bounding box of the image geometry using 32-bit floats.
@@ -165,14 +186,10 @@ public:
   usize getNumberOfCells() const override;
 
   /**
-   * @brief !!! NOTE: This function will return areas for "2D" and volume for "3D" !!!
-   * This function calculates the sizes of each voxel in the geometry and
-   * store it in a new or existing array in the DataStructure. This function
-   * will error out if more than two dimensions have a size of `1` aka are empty (think about
-   * a geometry XYZ 1x1x5, do you use X or Y spacing for area).
-   * @param recalculate This will allow for skipping execution when an
-   * Element Sizes Array exists and recalculate is `false`
-   * @return Result<>
+   * @brief Fills the element sizes array with the product of the three spacing values.
+   * The product includes the spacing on axes with only one cell.
+   * @param recalculate Whether to refill an existing element sizes array.
+   * @return Success or error -1532 if the element sizes array cannot be created.
    */
   Result<> findElementSizes(bool recalculate) override;
 
@@ -365,8 +382,8 @@ protected:
   ImageGeom(DataStructure& dataStructure, std::string name, IdType importId);
 
 private:
-  FloatVec3 m_Spacing;
-  FloatVec3 m_Origin;
+  FloatVec3 m_Spacing = {1.0f, 1.0f, 1.0f};
+  FloatVec3 m_Origin = {0.0f, 0.0f, 0.0f};
   SizeVec3 m_Dimensions;
 };
 } // namespace nx::core

@@ -42,7 +42,10 @@ Result<> ApproximatePointCloudHull::operator()()
 
   DataStructure temp;
   auto* samplingGrid = ImageGeom::Create(temp, "Image Geometry");
-  samplingGrid->setSpacing(m_InputValues->GridResolution[0], m_InputValues->GridResolution[1], m_InputValues->GridResolution[2]);
+  if(auto result = samplingGrid->setSpacing(m_InputValues->GridResolution[0], m_InputValues->GridResolution[1], m_InputValues->GridResolution[2]); result.invalid())
+  {
+    return result;
+  }
 
   usize numVerts = source->getNumberOfVertices();
   auto& vertex = source->getVertices()->getDataStoreRef();

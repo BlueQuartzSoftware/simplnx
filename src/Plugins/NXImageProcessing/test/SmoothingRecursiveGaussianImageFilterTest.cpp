@@ -253,24 +253,6 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
     REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }
-  SECTION("degenerate spacing rejected")
-  {
-    DataStructure ds;
-    const std::vector<int16> field(8 * 8 * 8, int16{1}); // valid dims/type/sigma; only the X spacing is degenerate
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 8, 8, 8, field);
-    ds.getDataRefAs<ImageGeom>(inputPath.getParent().getParent()).setSpacing(FloatVec3{0.0f, 1.0f, 1.0f});
-    SmoothFilter filter;
-    const DataPath geomPath = inputPath.getParent().getParent();
-    Arguments args;
-    args.insertOrAssign(SmoothFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(SmoothFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(SmoothFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(SmoothFilter::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
-    args.insertOrAssign(SmoothFilter::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSpacing);
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -334,7 +316,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
   field[(c * d + c) * d + c] = 1.0;
   DataStructure ds;
   const DataPath input = rt::BuildImageFromPattern<float64>(ds, d, d, d, field);
-  ds.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}); // coarser X spacing
+  // Use coarser spacing on the X axis.
+  REQUIRE(ds.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
   SmoothFilter filter;
   RunSmooth(filter, ds, input, {2.0, 2.0, 2.0}, false); // isotropic physical sigma -> sigmad_x=1 < sigmad_y=sigmad_z=2
   const std::vector<float64> out = ReadArray<float64>(ds, DataPath({"Image Geometry", "CellData", "Output"}));
@@ -422,7 +405,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
 
   DataStructure directDs;
   const DataPath directInput = rt::BuildImageFromPattern<T>(directDs, 12, 11, dimZ, field);
-  directDs.getDataRefAs<ImageGeom>(directInput.getParent().getParent()).setSpacing(spacing);
+  REQUIRE(directDs.getDataRefAs<ImageGeom>(directInput.getParent().getParent()).setSpacing(spacing).valid());
   {
     const ForceInCoreAlgorithmGuard guard;
     ResetAlgorithmPathExecutionCounts();
@@ -435,7 +418,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
 
   DataStructure fusedDs;
   const DataPath fusedInput = rt::BuildImageFromPattern<T>(fusedDs, 12, 11, dimZ, field);
-  fusedDs.getDataRefAs<ImageGeom>(fusedInput.getParent().getParent()).setSpacing(spacing);
+  REQUIRE(fusedDs.getDataRefAs<ImageGeom>(fusedInput.getParent().getParent()).setSpacing(spacing).valid());
   {
     const ForceOocAlgorithmGuard guard(true);
     ResetAlgorithmPathExecutionCounts();

@@ -12,9 +12,9 @@ namespace nx::core
  * @class CreateRectGridGeometryAction
  * @brief Creates a RectGridGeom with axis-bound arrays.
  *
- * Copy, Move, and Reference attach supplied bounds. Create allocates three
- * bound arrays and a cell attribute matrix. Each bound count must be greater
- * than zero.
+ * Copy, Move, and Reference validate supplied bounds before attaching them.
+ * Create allocates a cell attribute matrix and three bound arrays with at
+ * least two values each. In execute, new bounds start at zero and increase.
  */
 class SIMPLNX_EXPORT CreateRectGridGeometryAction : public IDataCreationAction
 {
@@ -40,10 +40,13 @@ public:
 
   /**
    * @brief Creates and configures the RectGridGeom.
+   * The action checks requested counts and supplied bounds before creating the geometry in either mode.
+   * If these checks fail, the data structure is unchanged. A later creation or store error can leave a partial result.
    * @param dataStructure Destination data structure.
    * @param mode Preflight or execute action mode.
-   * @return Validation, allocation, or reparenting errors.
-   * @pre Existing bound arrays have at least one tuple.
+   * @return Success or a bounds error. Error -5914 indicates a requested count below two in Create mode.
+   * RectGridGeom::ValidateBounds() can return -4006, -4048, -4008, -4007, or a store read error.
+   * Other errors include path, allocation, copy, store write, and reparenting errors.
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 

@@ -292,8 +292,8 @@ TEST_CASE("SliceTriangleGeometryFilter: Slices a QuickSurfaceMesh output in a pi
   auto* imageGeom = ImageGeom::Create(dataStructure, imageGeomPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions({4, 4, 4});
-  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   auto* cellData = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {4, 4, 4}, imageGeom->getId());
   REQUIRE(cellData != nullptr);
   imageGeom->setCellData(*cellData);

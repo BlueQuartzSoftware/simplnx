@@ -235,7 +235,11 @@ Result<> ReadMhaFile::operator()()
   {
     return ConvertResult(std::move(metadataResult));
   }
-  const auto& md = metadataResult.value();
+  auto md = std::move(metadataResult).value();
+  if(auto geometryResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFilePath, md.origin, md.spacing); geometryResult.invalid())
+  {
+    return geometryResult;
+  }
 
   auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
   if(boundsResult.invalid())

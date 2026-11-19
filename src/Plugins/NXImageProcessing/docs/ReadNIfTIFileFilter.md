@@ -63,8 +63,9 @@ native storage order.
 This reader uses positive spacing. When **Use Stored Affine Transform** is on, the filter ignores a negative axis direction and gives a warning in these cases:
 
 - the sform is used (`sform_code` > 0) and one of its diagonal terms is negative;
-- the qform is used (`sform_code` <= 0 and `qform_code` > 0) and qfac is negative;
-- the sform is not used and a `pixdim[1..3]` value is negative.
+- the qform is used (`sform_code` <= 0 and `qform_code` > 0) and qfac is negative.
+
+When spacing comes from `pixdim[1..3]`, the filter uses the magnitude of each value. A negative value can indicate an axis flip. With **Use Stored Affine Transform** on, the filter can warn about ignored negative axis directions. If the effective stored spacing is zero, NaN, or infinite, enable **Set Spacing** and supply valid values.
 
 The voxels stay in their stored order, so the loaded image can be mirrored or rotated compared with the source orientation. When **Use Stored Affine Transform** is off, the filter does not check the axis directions and gives no warning.
 
@@ -102,10 +103,9 @@ Two cropping modes are supported:
   per axis. The range is zero-based and uses the source file's voxel
   grid.
 * **Physical Subvolume** — pick an inclusive physical coordinate range per
-  axis. The filter builds a temporary axis-aligned ImageGeom from the
-  source file's origin and spacing (the same values the Orientation
-  section would use) and converts the requested bounds to voxel indices
-  using the Image Geometry's origin and spacing.
+  axis. The filter converts these coordinates to voxel indices using the
+  origin and spacing selected in the Orientation section, with any enabled
+  replacements.
 
 A physical crop maximum equal to `origin + dimensions * spacing` on an axis includes the final cell on that axis. The maximum cell index is clamped to `dimensions - 1`. Physical coordinates use the Image Geometry's length units. A maximum beyond the upper bound still produces a warning and is clamped when the requested range overlaps the geometry. A physical crop bound that is NaN fails preflight with error `-50561`.
 
@@ -117,8 +117,8 @@ populated.
 #### How the cropped ImageGeom relates to the source
 
 * **Dimensions** equal the cropped voxel count on each axis.
-* **Spacing** is the same as the source file's spacing (cropping never
-  resamples).
+* **Spacing** is the spacing used for the crop. It comes from the file or
+  from **Spacing** when **Set Spacing** is enabled.
 * **Origin** is shifted so that the center of the first cropped voxel
   lands at its correct physical position, i.e. `new_origin[i] =
   source_origin[i] + start_voxel[i] * spacing[i]`. This is produced by
@@ -181,12 +181,20 @@ large compressed files read faster.
 
 None — this filter reads directly from a `.nii` or `.nii.gz` file on disk.
 
+### Geometry Metadata Overrides
+
+**Set Origin** replaces the input origin with the X, Y, and Z coordinates you provide. **Set Spacing** replaces the input spacing with the X, Y, and Z spacings you provide. Origins must be finite. Spacing must be finite and greater than zero. If a stored value is invalid, the reader reports the file and the invalid axis. Enable the corresponding setting to supply valid values. The filter uses these values before it computes the crop. When the file provides a valid affine, its direction and voxel order still follow the settings above.
+
 % Auto generated parameter table will be inserted here
 
 ## Reference
 
 * [NIfTI-1 Data Format (official NIMH reference)](https://nifti.nimh.nih.gov/nifti-1/)
 * [`nifti1.h` header (NITRC)](https://www.nitrc.org/docman/view.php/26/64/nifti1.h)
+
+## Example Pipelines
+
++ 17_Scientific_Volume_Interoperability.d3dpipeline
 
 ## License & Copyright
 

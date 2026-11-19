@@ -39,8 +39,8 @@ Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config)
   args.insertOrAssign(ReadImageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<BoolParameter::ValueType>(config.changeDataType));
   args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(ImageDataTypeToChoice(config.imageDataType)));
-  const bool forwardOrigin = config.changeOrigin && config.originSpacingProcessing == OriginSpacingProcessing::Preprocessed;
-  const bool forwardSpacing = config.changeSpacing && config.originSpacingProcessing == OriginSpacingProcessing::Preprocessed;
+  const bool forwardOrigin = config.changeOrigin;
+  const bool forwardSpacing = config.changeSpacing;
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(forwardOrigin));
   args.insertOrAssign(ReadImageFilter::k_CenterOrigin_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(ReadImageFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(config.origin));

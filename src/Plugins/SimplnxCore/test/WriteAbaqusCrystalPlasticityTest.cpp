@@ -46,8 +46,8 @@ DataStructure CreateDataStructure(const SizeVec3& dimensions, const std::vector<
   auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
   imageGeom->setDimensions(dimensions);
-  imageGeom->setSpacing({0.5F, 0.5F, 0.5F});
-  imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(imageGeom->setSpacing({0.5F, 0.5F, 0.5F}).valid());
+  REQUIRE(imageGeom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
   auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), cellShape, imageGeom->getId());
@@ -969,7 +969,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusCrystalPlasticityFilter: Tiny Spacing", "[Sim
   Arguments args = CreateArguments(outputPath, "Limits");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  imageGeom.setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F});
+  REQUIRE(imageGeom.setSpacing({1.0e-7F, 1.0e-7F, 1.0e-7F}).valid());
   auto result = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   std::ifstream nodes(outputPath / "Limits_nodes.inp");

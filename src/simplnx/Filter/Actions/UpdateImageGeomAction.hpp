@@ -20,9 +20,8 @@ public:
    * @param spacing The new spacing (optional)
    * @param path The path to the ImageGeometry to update
    * @param centerOrigin Whether to center the origin
-   * @param validateAssignedValues Checks assigned and centered results in Execute mode before either setter. Defaults to false.
    */
-  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin = false, bool validateAssignedValues = false);
+  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin = false);
 
   ~UpdateImageGeomAction() noexcept override;
 
@@ -33,10 +32,12 @@ public:
 
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
-   * Returns any warnings/errors. On a validation error, the geometry is unchanged. Preflight mode does not reject assigned values.
+   * Validates the spacing, origin, and centered origin before changing the geometry in either mode.
+   * On a validation error, the geometry is unchanged.
    * @param dataStructure The DataStructure to modify
    * @param mode The mode (Preflight or Execute)
-   * @return Result<> Result with any errors or warnings
+   * @return Success, -6701 if the ImageGeom is missing, -1556 for nonfinite or nonpositive spacing,
+   * or -1557 for a nonfinite origin, including the computed result of centering.
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
@@ -81,6 +82,5 @@ private:
   std::optional<FloatVec3> m_Spacing;
   DataPath m_Path;
   bool m_CenterOrigin;
-  bool m_ValidateAssignedValues;
 };
 } // namespace nx::core

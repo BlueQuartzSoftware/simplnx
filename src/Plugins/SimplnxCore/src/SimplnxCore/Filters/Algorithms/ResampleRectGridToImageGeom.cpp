@@ -48,8 +48,14 @@ Result<> ResampleRectGridToImageGeom::operator()()
   const std::vector<float32> max = {xGridValues->back(), yGridValues->back(), zGridValues->back()};
   const std::vector<float32> imageGeomSpacing = {(max[0] - origin[0]) / imageGeomDims[0], (max[1] - origin[1]) / imageGeomDims[1], (max[2] - origin[2]) / imageGeomDims[2]};
 
-  imageGeom.setSpacing(imageGeomSpacing);
-  imageGeom.setOrigin(origin);
+  if(auto result = imageGeom.setSpacing(imageGeomSpacing); result.invalid())
+  {
+    return result;
+  }
+  if(auto result = imageGeom.setOrigin(origin); result.invalid())
+  {
+    return result;
+  }
 
   if(m_ShouldCancel)
   {

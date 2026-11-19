@@ -609,8 +609,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Sp
   {
     scaleFactor = {0.4F, 0.4F, 0.4F};
   }
-  geom->setOrigin(origin);
-  geom->setSpacing(spacing);
+  REQUIRE(geom->setOrigin(origin).valid());
+  REQUIRE(geom->setSpacing(spacing).valid());
   AttributeMatrix* cellAM = AttributeMatrix::Create(ds, "Cell Data", {}, geom->getId());
 
   const ApplyTransformationToGeometryFilter filter;
@@ -1082,8 +1082,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Uneven scaling keep
   auto* image = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(image != nullptr);
   image->setDimensions({2, 2, 2});
-  image->setSpacing({2.0F, 3.0F, 5.0F});
-  image->setOrigin({0.0F, 0.0F, 0.0F});
+  REQUIRE(image->setSpacing({2.0F, 3.0F, 5.0F}).valid());
+  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_Cell_Data, {2, 2, 2}, image->getId());
   REQUIRE(cellAM != nullptr);
   image->setCellData(*cellAM);
@@ -1255,8 +1255,8 @@ ImageGeom* MakeValidationImage(DataStructure& ds, const SizeVec3& dims = {2, 2, 
   auto* geom = ImageGeom::Create(ds, "ValidationImage");
   REQUIRE(geom != nullptr);
   geom->setDimensions(dims);
-  geom->setSpacing(spacing);
-  geom->setOrigin(origin);
+  REQUIRE(geom->setSpacing(spacing).valid());
+  REQUIRE(geom->setOrigin(origin).valid());
   auto* cells = AttributeMatrix::Create(ds, "Cells", {dims[2], dims[1], dims[0]}, geom->getId());
   REQUIRE(cells != nullptr);
   geom->setCellData(*cells);
@@ -1345,17 +1345,35 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Result domain regression"
   auto pre = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
   REQUIRE_FALSE(pre.outputActions.warnings().empty());
-  CHECK(pre.outputActions.warnings()[0].code == (row == 2 ? -86005 : -86006));
-  CHECK(pre.outputActions.warnings()[0].message.find("X") != std::string::npos);
+  const auto& preflightWarning = pre.outputActions.warnings().front();
+  CHECK(preflightWarning.code == (row == 2 ? -86005 : -86006));
+  if(row == 2)
+  {
+    CHECK(preflightWarning.message.find("Translation' X value 3e+38 with origin 3e+38 produces result inf") != std::string::npos);
+  }
+  else
+  {
+    CHECK(preflightWarning.message.find("Scale' X value") != std::string::npos);
+    CHECK(preflightWarning.message.find(row == 0 ? "with spacing 2 and origin 0 produces spacing inf" : "with spacing 0.25 and origin 0 produces spacing 0") != std::string::npos);
+  }
+  const int32 expectedCode = row == 2 ? -1557 : -1556;
+  const std::string expectedValue = row == 1 ? "Received 0." : "Received inf.";
+  DataStructure preflightDs = ds;
+  const auto preflightActionResult = pre.outputActions.value().applyRegular(preflightDs, IDataAction::Mode::Preflight);
+  const auto& preflightGeom = preflightDs.getDataRefAs<ImageGeom>(DataPath({"ValidationImage"}));
+  CHECK(preflightGeom.getSpacing() == oldSpacing);
+  CHECK(preflightGeom.getOrigin() == oldOrigin);
   auto result = filter.execute(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-  REQUIRE(result.result.errors()[0].code == (row == 2 ? -86029 : -86028));
-  const auto& message = result.result.errors()[0].message;
-  CHECK(message.find("'ValidationImage'") != std::string::npos);
-  CHECK(message.find("X") != std::string::npos);
-  CHECK(message.find(row == 2 ? "existing origin 3e+38" : row == 0 ? "existing spacing 2" : "existing spacing 0.25") != std::string::npos);
-  CHECK(message.find(row == 2 ? "assigned origin inf" : row == 0 ? "assigned spacing inf" : "assigned spacing 0") != std::string::npos);
-  CHECK(message.find(row == 1 ? "computed result 0" : "computed result inf") != std::string::npos);
+  for(const auto* failure : std::array<const Result<>*, 2>{&preflightActionResult, &result.result})
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(*failure);
+    REQUIRE(failure->errors().size() == 1);
+    CHECK(failure->errors().front().code == expectedCode);
+    const auto& message = failure->errors().front().message;
+    CHECK(message.find("'ValidationImage'") != std::string::npos);
+    CHECK(message.find(row == 2 ? "Origin on the X axis" : "Spacing on the X axis") != std::string::npos);
+    CHECK(message.find(expectedValue) != std::string::npos);
+  }
   CHECK(geom->getSpacing() == oldSpacing);
   CHECK(geom->getOrigin() == oldOrigin);
 }
@@ -1498,7 +1516,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inact
   VertexGeom* vertices = nullptr;
   if(image)
   {
-    geom = MakeValidationImage(ds, {1, 1, 1}, {row == 5 ? 0.0f : 1.0f, 1, 1});
+    geom = MakeValidationImage(ds, {1, 1, 1}, {row == 5 ? 0.25f : 1.0f, 1, 1});
   }
   else
   {
@@ -1542,7 +1560,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inact
   }
   if(row == 5)
   {
-    CHECK(geom->getSpacing()[0] == 0);
+    CHECK(geom->getSpacing()[0] == 0.25f);
     CHECK(geom->getOrigin()[0] == 1);
   }
 }
@@ -1587,7 +1605,13 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Pipeline stand-in metadat
     }
     if(!execute)
     {
-      REQUIRE(pipeline.preflight(ds, false));
+      REQUIRE_FALSE(pipeline.preflight(ds, false));
+      const auto* downstream = dynamic_cast<const PipelineFilter*>(pipeline.at(1));
+      REQUIRE(downstream != nullptr);
+      const auto errors = downstream->getErrors();
+      REQUIRE(errors.size() == 1);
+      CHECK(errors.front().code == (row == 0 ? -1556 : -1557));
+      CHECK(errors.front().message.find("'ValidationImage'") != std::string::npos);
     }
     else
     {
