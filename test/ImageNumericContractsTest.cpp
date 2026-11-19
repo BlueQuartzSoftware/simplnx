@@ -156,11 +156,26 @@ TEST_CASE("Image terminal conversion: last finite Float32 rounding interval", "[
 TEST_CASE("Otsu histogram: inconsistent bounds cannot index a bin", "[simplnx][ImageNumericContracts]")
 {
   ImageProcessing::Histogram histogram{.counts = {0, 0}, .min = 2, .max = 4, .binWidth = 1};
-  const auto result = ImageProcessing::detail::AccumulateCheckedOtsuValue(histogram, 1.0, 0.0, 4.0);
+  const std::array<float64, 1> values{1.0};
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::detail::AccumulateOtsuBatch<float64, uint8>(histogram, 0.0, 4.0, 1.0, values, {}, shouldCancel);
   // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == ImageProcessing::k_OtsuInvalidBinCoordinate);
   REQUIRE(histogram.counts == std::vector<usize>{0, 0});
+  // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+}
+
+TEST_CASE("Otsu histogram: a positive bin width must have a finite reciprocal", "[simplnx][ImageNumericContracts]")
+{
+  ImageProcessing::Histogram histogram{.counts = std::vector<usize>(8), .min = 0.0, .max = std::numeric_limits<float64>::min()};
+  const std::atomic_bool shouldCancel{false};
+  const auto result = ImageProcessing::detail::ConfigureOtsuBinsAndGetInverseWidth(histogram, false, shouldCancel);
+  // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().front().code == ImageProcessing::k_OtsuInvalidBinWidth);
+  REQUIRE(histogram.binWidth > 0.0);
+  REQUIRE(histogram.binWidth < 1.0 / std::numeric_limits<float64>::max());
   // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 }
 
