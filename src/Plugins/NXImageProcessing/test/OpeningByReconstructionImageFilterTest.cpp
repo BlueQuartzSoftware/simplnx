@@ -165,3 +165,19 @@ TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: Ordinary Kerne
 {
   morph_test::RequireOrdinaryKernelRadius<OpeningByReconstructionImageFilter>({0, 0, 0});
 }
+
+// -----------------------------------------------------------------------------
+// 2D image (Z = 1) with an Annulus that has only Z offsets: the kernel is empty in the plane, so the filter copies
+// the input with Preserve Intensities on or off (#1908 L73).
+// -----------------------------------------------------------------------------
+TEST_CASE("NXImageProcessing::OpeningByReconstructionImageFilter: 2D out-of-plane Annulus passthrough", "[NXImageProcessing][OpeningByReconstructionImageFilter]")
+{
+  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  UnitTest::AlgorithmTestScope scope(scenario);
+  const uint32 radiusZ = GENERATE(1, 2);
+  const bool preserveIntensities = GENERATE(false, true);
+  const bool fullyConnected = GENERATE(false, true);
+  CAPTURE(radiusZ, preserveIntensities, fullyConnected);
+  rt::RequireZOnlyAnnulus2DPassthrough<OpeningByReconstructionImageFilter>(scope, radiusZ, preserveIntensities, fullyConnected);
+}

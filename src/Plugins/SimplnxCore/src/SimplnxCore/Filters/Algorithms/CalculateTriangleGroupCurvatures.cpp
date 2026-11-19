@@ -314,6 +314,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       size_t rows = patchCentroids->getNumberOfTuples();
       Eigen::MatrixXd A(rows, cols);
       Eigen::VectorXd b(rows);
+      usize usableRows = 0;
       double x = 0.0, y = 0.0, z = 0.0;
       for(size_t m = 0; m < rows; ++m)
       {
@@ -332,6 +333,17 @@ void CalculateTriangleGroupCurvatures::operator()() const
           A(m + rows * 6) = y * y * y;
         }
         b[m] = z; // The Z Values
+        if(m != 0 && A.row(m).allFinite() && !A.row(m).isZero(0.0) && std::isfinite(z))
+        {
+          ++usableRows;
+        }
+      }
+
+      // Translation makes the seed row zero. Each coefficient needs a usable neighbor row.
+      if(usableRows < cols)
+      {
+        markOutputsInvalid(triId);
+        continue;
       }
 
       Eigen::Matrix2d M;

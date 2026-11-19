@@ -16,6 +16,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -508,6 +509,47 @@ inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const 
   const Result<> compareResult = ip_golden::CompareImages(ds, baselineGeom, baselineData, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+/**
+ * @brief Runs an SE-based reconstruction filter (Opening/ClosingByReconstruction) on a 7x3x1 int32 image with an
+ *        Annulus of radius {0, 0, radiusZ} and requires that the output equals the input.
+ *
+ * On a single-slice image, the Z offsets of the kernel are ignored, so this kernel is empty and the filter copies
+ * the input. The oracle is the input itself, and the same filter with the empty Annulus {0, 0, 0} must give the same
+ * values. Before #1908 L73, Preserve Intensities on returned INT32_MIN (opening) or INT32_MAX (closing) everywhere.
+ */
+template <class FilterT>
+inline void RequireZOnlyAnnulus2DPassthrough(UnitTest::AlgorithmTestScope& scope, uint32 radiusZ, bool preserveIntensities, bool fullyConnected)
+{
+  const std::vector<int32> pattern = {3, 20, 8, 100, 40, 12, 80, 70, 2, 90, 15, 55, 22, 101, 30, 10, 99, 6, 77, 32, 64};
+  DataStructure ds;
+  const DataPath inputPath = BuildImageFromPattern<int32>(ds, 7, 3, 1, pattern);
+  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  const auto run = [&](const std::string& outputName, uint32 kernelRadiusZ) {
+    Arguments args;
+    args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
+    args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+    SEReconParamSetter<FilterT>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Annulus), {0, 0, kernelRadiusZ}, preserveIntensities)(args, fullyConnected, 0.0);
+    FilterT filter;
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = scope.executeFilter(filter, ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  };
+  run("Output", radiusZ);
+  run("Empty", 0);
+  const auto& output = ds.getDataRefAs<DataArray<int32>>(inputPath.replaceName("Output"));
+  const auto& empty = ds.getDataRefAs<DataArray<int32>>(inputPath.replaceName("Empty"));
+  REQUIRE(output.getSize() == pattern.size());
+  for(usize i = 0; i < pattern.size(); ++i)
+  {
+    CAPTURE(i);
+    REQUIRE(output[i] == pattern[i]);
+    REQUIRE(empty[i] == pattern[i]);
+  }
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 } // namespace recon_test

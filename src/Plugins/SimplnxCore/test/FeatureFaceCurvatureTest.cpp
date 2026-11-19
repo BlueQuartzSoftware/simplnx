@@ -364,6 +364,129 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Single triangle face", "[Sim
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Patch solvability", "[SimplnxCore][FeatureFaceCurvatureFilter][PatchSolvability]")
+{
+  const bool useNormals = GENERATE(false, true);
+  const bool optionalOutputs = GENERATE(false, true);
+  const usize nonSeedCount = GENERATE(1, 2, 3, 6, 7, 8);
+  const bool duplicateSeed = GENERATE(false, true);
+  const usize faceCount = nonSeedCount + 1 + (duplicateSeed ? 1 : 0);
+  CAPTURE(useNormals, optionalOutputs, nonSeedCount, duplicateSeed);
+
+  DataStructure dataStructure;
+  auto* geom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(geom != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "FaceData", {faceCount}, geom->getId());
+  REQUIRE(faceData != nullptr);
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* vertices = Float32Array::Create(dataStructure, "Vertices", std::make_unique<DataStore<float32>>(ShapeType{2 * faceCount + 1}, ShapeType{3}, 0.0F), geom->getId());
+  auto* faces = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, "Faces", std::make_unique<DataStore<IGeometry::MeshIndexType>>(ShapeType{faceCount}, ShapeType{3}, 0), geom->getId());
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  auto* labels = Int32Array::Create(dataStructure, "Labels", std::make_unique<DataStore<int32>>(ShapeType{faceCount}, ShapeType{2}, 1), faceData->getId());
+  auto* ids = Int32Array::Create(dataStructure, "Ids", std::make_unique<DataStore<int32>>(ShapeType{faceCount}, ShapeType{1}, 1), faceData->getId());
+  auto* normals = Float64Array::Create(dataStructure, "Normals", std::make_unique<DataStore<float64>>(ShapeType{faceCount}, ShapeType{3}, 0.0), faceData->getId());
+  auto* centroids = Float64Array::Create(dataStructure, "Centroids", std::make_unique<DataStore<float64>>(ShapeType{faceCount}, ShapeType{3}, 0.0), faceData->getId());
+  REQUIRE(labels != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(normals != nullptr);
+  REQUIRE(centroids != nullptr);
+
+  // All triangles share vertex 0, so the one-ring patch contains every face.
+  // Sample z=-(x*x+y*y)/(2R). At seed 0 the normal is +Z and both
+  // signed principal curvatures are +1/R. The quadratic is exact at this seed.
+  constexpr float64 radius = 10.0;
+  const std::array<std::array<float64, 2>, 9> samples = {{{0, 0}, {1, 0}, {0, 1}, {1, 1}, {-1, 1}, {2, 1}, {1, 2}, {-1, 2}, {2, -1}}};
+  vertices->setComponent(0, 2, 1.0F);
+  for(usize t = 0; t < faceCount; ++t)
+  {
+    const auto& sample = samples[t <= nonSeedCount ? t : 0];
+    const float64 x = sample[0];
+    const float64 y = sample[1];
+    const float64 z = -(x * x + y * y) / (2.0 * radius);
+    // Distinct vertices give each triangle the supplied centroid, including seed 0.
+    vertices->setComponent(2 * t + 1, 0, static_cast<float32>(3.0 * x + 1.0));
+    vertices->setComponent(2 * t + 1, 1, static_cast<float32>(3.0 * y + 1.0));
+    vertices->setComponent(2 * t + 1, 2, static_cast<float32>(3.0 * z - 0.5));
+    vertices->setComponent(2 * t + 2, 0, -1.0F);
+    vertices->setComponent(2 * t + 2, 1, -1.0F);
+    vertices->setComponent(2 * t + 2, 2, -0.5F);
+    faces->setComponent(t, 1, 2 * t + 1);
+    faces->setComponent(t, 2, 2 * t + 2);
+    labels->setComponent(t, 1, 2);
+    const float64 length = std::sqrt(1.0 + (x * x + y * y) / (radius * radius));
+    normals->setComponent(t, 0, x / (radius * length));
+    normals->setComponent(t, 1, y / (radius * length));
+    normals->setComponent(t, 2, 1.0 / length);
+    centroids->setComponent(t, 0, x);
+    centroids->setComponent(t, 1, y);
+    centroids->setComponent(t, 2, z);
+  }
+
+  const DataPath geomPath({"Triangles"});
+  const DataPath facePath = geomPath.createChildPath("FaceData");
+  Arguments args;
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceAttribMatrixPath_Key, std::make_any<DataPath>(facePath));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_NeighborhoodRing_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_UseFaceNormals_Key, std::make_any<bool>(useNormals));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputePrincipalDirection_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeGaussianCurvature_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeMeanCurvaturePath_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_ComputeWeingartenMatrix_Key, std::make_any<bool>(optionalOutputs));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceLabelsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Labels")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FeatureFaceIdsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Ids")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Normals")));
+  args.insertOrAssign(FeatureFaceCurvatureFilter::k_FaceCentroidsPath_Key, std::make_any<DataPath>(facePath.createChildPath("Centroids")));
+  const std::array outputKeys = {FeatureFaceCurvatureFilter::k_PrincipalCurvature1Path_Key, FeatureFaceCurvatureFilter::k_PrincipalCurvature2Path_Key,
+                                 FeatureFaceCurvatureFilter::k_GaussianCurvaturePath_Key,   FeatureFaceCurvatureFilter::k_MeanCurvaturePath_Key,
+                                 FeatureFaceCurvatureFilter::k_WeingartenMatrixPath_Key,    FeatureFaceCurvatureFilter::k_PrincipalDirection1Path_Key,
+                                 FeatureFaceCurvatureFilter::k_PrincipalDirection2Path_Key};
+  for(usize i = 0; i < outputKeys.size(); ++i)
+  {
+    args.insertOrAssign(outputKeys[i], std::make_any<DataPath>(facePath.createChildPath("Output" + std::to_string(i))));
+  }
+  FeatureFaceCurvatureFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  for(usize i = 0; i < (optionalOutputs ? outputKeys.size() : 2); ++i)
+  {
+    const auto* output = dataStructure.getDataAs<Float64Array>(facePath.createChildPath("Output" + std::to_string(i)));
+    REQUIRE(output != nullptr);
+    // Only seed 0 has a horizontal tangent plane and the closed-form 1/R fit.
+    for(usize c = 0; c < output->getNumberOfComponents(); ++c)
+    {
+      CAPTURE(i, c);
+      const float64 value = output->getDataStoreRef().getComponentValue(0, c);
+      if(nonSeedCount < (useNormals ? 7 : 3))
+      {
+        CHECK(std::isnan(value));
+      }
+      else if(i < 4)
+      {
+        const float64 expected = i == 2 ? 1.0 / (radius * radius) : 1.0 / radius;
+        // Exact polynomial fit at the origin, with absolute roundoff tolerance.
+        CHECK(value == Approx(expected).margin(1.0e-10));
+      }
+      else if(i == 4)
+      {
+        CHECK(value == Approx(c == 0 || c == 3 ? -1.0 / radius : 0.0).margin(1.0e-10));
+      }
+      else
+      {
+        CHECK(std::isfinite(value));
+      }
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 namespace
 {
 constexpr int32 k_InjectedError = -56991;
@@ -892,4 +1015,189 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: real store support ownership
   CheckCurvatureSuccess(incidence, false, false, true, true);
   std::cout << fmt::format(
       "Curvature ownership/save/recovery complete incidence={} vertices=HDF5-OOC faces=HDF5-OOC labels=HDF5-OOC ids=HDF5-OOC normals=HDF5-OOC centroids=HDF5-OOC outputs=HDF5-OOC\n", incidence);
+}
+
+namespace
+{
+void CheckMultiFeatureCurvature(bool diskBacked, bool optionalOutputs)
+{
+  const UnitTest::PreferencesSentinel preferences(diskBacked ? DataStorageMode::ForceOutOfCore : DataStorageMode::ForceInCore, 1);
+  constexpr usize featureCount = 8;
+  constexpr usize facesPerFeature = 9;
+  constexpr usize faceCount = featureCount * facesPerFeature;
+  const DataPath geomPath({"Triangles"});
+  const DataPath facePath = geomPath.createChildPath("FaceData");
+  DataStructure dataStructure;
+  auto* geom = TriangleGeom::Create(dataStructure, "Triangles");
+  REQUIRE(geom != nullptr);
+  auto* faceData = AttributeMatrix::Create(dataStructure, "FaceData", {faceCount}, geom->getId());
+  REQUIRE(faceData != nullptr);
+  geom->setFaceAttributeMatrix(*faceData);
+  auto* vertices =
+      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, geomPath.createChildPath("Vertices"), {featureCount * 19}, {3}), geom->getId());
+  auto* faces = DataArray<IGeometry::MeshIndexType>::Create(
+      dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, geomPath.createChildPath("Faces"), {faceCount}, {3}), geom->getId());
+  REQUIRE(vertices != nullptr);
+  REQUIRE(faces != nullptr);
+  geom->setVertices(*vertices);
+  geom->setFaceList(*faces);
+  auto* labels = Int32Array::Create(dataStructure, "Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, facePath.createChildPath("Labels"), {faceCount}, {2}), faceData->getId());
+  auto* ids = Int32Array::Create(dataStructure, "Ids", DataStoreUtilities::CreateDataStore<int32>(dataStructure, facePath.createChildPath("Ids"), {faceCount}, {1}), faceData->getId());
+  auto* normals = Float64Array::Create(dataStructure, "Normals", DataStoreUtilities::CreateDataStore<float64>(dataStructure, facePath.createChildPath("Normals"), {faceCount}, {3}), faceData->getId());
+  auto* centroids =
+      Float64Array::Create(dataStructure, "Centroids", DataStoreUtilities::CreateDataStore<float64>(dataStructure, facePath.createChildPath("Centroids"), {faceCount}, {3}), faceData->getId());
+  REQUIRE(labels != nullptr);
+  REQUIRE(ids != nullptr);
+  REQUIRE(normals != nullptr);
+  REQUIRE(centroids != nullptr);
+  for(usize f = 0; f < featureCount; ++f)
+  {
+    const usize base = f * 19;
+    vertices->setComponent(base, 0, 0.0F);
+    vertices->setComponent(base, 1, 0.0F);
+    vertices->setComponent(base, 2, static_cast<float32>(f));
+    for(usize t = 0; t < facesPerFeature; ++t)
+    {
+      const usize face = f * facesPerFeature + t;
+      const float64 x = 1.0 + static_cast<float64>(t % 3);
+      const float64 y = 1.0 + static_cast<float64>((t / 3) * (t / 3));
+      // Each feature is a disjoint patch of the plane z=f. All nine triangles
+      // share a vertex, have centroid (x,y,f), and normal +Z.
+      for(usize side = 0; side < 2; ++side)
+      {
+        const float64 sign = side == 0 ? 1.0 : -1.0;
+        vertices->setComponent(base + 2 * t + 1 + side, 0, static_cast<float32>(1.5 * x + sign * y));
+        vertices->setComponent(base + 2 * t + 1 + side, 1, static_cast<float32>(1.5 * y - sign * x));
+        vertices->setComponent(base + 2 * t + 1 + side, 2, static_cast<float32>(f));
+      }
+      faces->setComponent(face, 0, base);
+      faces->setComponent(face, 1, base + 2 * t + 1);
+      faces->setComponent(face, 2, base + 2 * t + 2);
+      labels->setComponent(face, 0, static_cast<int32>(2 * f + 1));
+      labels->setComponent(face, 1, static_cast<int32>(2 * f + 2));
+      ids->setComponent(face, 0, static_cast<int32>(f + 1));
+      normals->setComponent(face, 0, 0.0);
+      normals->setComponent(face, 1, 0.0);
+      normals->setComponent(face, 2, 1.0);
+      centroids->setComponent(face, 0, x);
+      centroids->setComponent(face, 1, y);
+      centroids->setComponent(face, 2, static_cast<float64>(f));
+    }
+  }
+  for(const IDataArray* array : std::array<const IDataArray*, 6>{vertices, faces, labels, ids, normals, centroids})
+  {
+    REQUIRE((array->getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore) == diskBacked);
+    if(diskBacked)
+    {
+      REQUIRE(array->getIDataStoreRef().getDataFormat() == "HDF5-OOC");
+    }
+  }
+  // Run the algorithm on output arrays that already hold a sentinel. The expected curvatures of a plane are 0, the
+  // same value an unwritten store returns, so the sentinel makes every lost or skipped write fail the checks below.
+  constexpr float64 k_Sentinel = 999.0;
+  constexpr usize k_OutputCount = 7;
+  const std::array<usize, k_OutputCount> outputComponents = {1, 1, 1, 1, 4, 3, 3};
+  std::array<DataPath, k_OutputCount> outputPaths;
+  for(usize i = 0; i < k_OutputCount; ++i)
+  {
+    outputPaths[i] = facePath.createChildPath("Output" + std::to_string(i));
+    if(i >= 2 && !optionalOutputs)
+    {
+      continue;
+    }
+    auto* output = Float64Array::Create(dataStructure, outputPaths[i].getTargetName(), DataStoreUtilities::CreateDataStore<float64>(dataStructure, outputPaths[i], {faceCount}, {outputComponents[i]}),
+                                        faceData->getId());
+    REQUIRE(output != nullptr);
+    output->fill(k_Sentinel);
+  }
+  FeatureFaceCurvatureInputValues inputValues;
+  inputValues.NRingCount = 1;
+  inputValues.useNormalsForCurveFitting = true;
+  inputValues.triangleGeomPath = geomPath;
+  inputValues.surfaceMeshFaceLabelsPath = facePath.createChildPath("Labels");
+  inputValues.surfaceMeshFeatureFaceIdsPath = facePath.createChildPath("Ids");
+  inputValues.surfaceMeshFaceNormalsPath = facePath.createChildPath("Normals");
+  inputValues.surfaceMeshTriangleCentroidsPath = facePath.createChildPath("Centroids");
+  inputValues.surfaceMeshPrincipalCurvature1Path = outputPaths[0];
+  inputValues.surfaceMeshPrincipalCurvature1sPath = outputPaths[0];
+  inputValues.surfaceMeshPrincipalCurvature2sPath = outputPaths[1];
+  inputValues.surfaceMeshGaussianCurvaturesPath = outputPaths[2];
+  inputValues.surfaceMeshMeanCurvaturesPath = outputPaths[3];
+  inputValues.surfaceMeshWeingartenMatrixPath = outputPaths[4];
+  inputValues.surfaceMeshPrincipalDirection1sPath = outputPaths[5];
+  inputValues.surfaceMeshPrincipalDirection2sPath = outputPaths[6];
+  // This existing status message is emitted only when tasks are queued to TBB.
+  // It witnesses the gate decision without relying on a race corrupting data.
+  std::atomic_bool queued = false;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    if(message.message.find("Feature Faces to the work queue") != std::string::npos)
+    {
+      queued = true;
+    }
+  }};
+  const std::atomic_bool shouldCancel = false;
+  const auto result = FeatureFaceCurvature(dataStructure, handler, shouldCancel, &inputValues)();
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+#ifdef SIMPLNX_ENABLE_MULTICORE
+  CHECK(queued.load() == !diskBacked);
+#else
+  CHECK_FALSE(queued.load());
+#endif
+  for(usize i = 0; i < (optionalOutputs ? k_OutputCount : 2); ++i)
+  {
+    const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPaths[i]);
+    REQUIRE((output.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore) == diskBacked);
+    if(diskBacked)
+    {
+      REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    }
+    for(usize t = 0; t < faceCount; ++t)
+    {
+      CAPTURE(i, t);
+      if(i < 5)
+      {
+        // Independent oracle: a plane has zero Hessian, hence zero principal,
+        // Gaussian and mean curvatures and a zero Weingarten matrix everywhere.
+        for(usize c = 0; c < output.getNumberOfComponents(); ++c)
+        {
+          CHECK(output.getDataStoreRef().getComponentValue(t, c) == Approx(0.0).margin(1.0e-12));
+        }
+      }
+      else
+      {
+        // Repeated eigenvalues do not define a unique direction. Both returned
+        // directions must still be unit vectors in the plane (up to sign).
+        const float64 x = output.getDataStoreRef().getComponentValue(t, 0);
+        const float64 y = output.getDataStoreRef().getComponentValue(t, 1);
+        CHECK(x * x + y * y == Approx(1.0).margin(1.0e-12));
+        CHECK(output.getDataStoreRef().getComponentValue(t, 2) == Approx(0.0).margin(1.0e-12));
+      }
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: multi-feature planes", "[SimplnxCore][FeatureFaceCurvatureFilter]")
+{
+  // Storage-aware array creation and the storage preferences need the application that LoadPlugins() creates.
+  UnitTest::LoadPlugins();
+  const bool optionalOutputs = GENERATE(false, true);
+  CheckMultiFeatureCurvature(false, optionalOutputs);
+}
+
+TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: multi-feature planes with real OOC stores", "[SimplnxCore][FeatureFaceCurvatureFilter][OOC]")
+{
+  UnitTest::LoadPlugins();
+  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  {
+#if SIMPLNX_TEST_ALGORITHM_PATH == 1
+    FAIL("The OOC-only build must register HDF5-OOC storage.");
+#else
+    WARN("Real-store body requires an OOC-enabled build.");
+    return;
+#endif
+  }
+  const bool optionalOutputs = GENERATE(false, true);
+  CheckMultiFeatureCurvature(true, optionalOutputs);
 }

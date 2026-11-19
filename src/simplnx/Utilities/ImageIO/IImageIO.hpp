@@ -4,12 +4,14 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
 
 #include <filesystem>
 #include <functional>
 #include <set>
 #include <span>
+#include <vector>
 
 namespace nx::core
 {
@@ -19,8 +21,8 @@ namespace nx::core
  * @brief Abstract interface for reading and writing 2D image files.
  *
  * Implementations use stb for PNG, JPEG, and BMP or libtiff for TIFF. This
- * interface has no DataStore or geometry dependency. Pixel methods operate on
- * the first image page.
+ * interface has no DataStore or geometry dependency. Pixel methods read one
+ * page, selected by its page index (single-image formats have only page 0).
  *
  * Buffers use packed, top-to-bottom row-major order. Each pixel contains
  * numComponents consecutive values. Each value uses the size of dataType.
@@ -28,6 +30,29 @@ namespace nx::core
 class SIMPLNX_EXPORT IImageIO
 {
 public:
+  /**
+   * @brief Kind of number stored in each sample of a page, independent of the file format.
+   */
+  enum class SampleFormat : uint8
+  {
+    Unsigned, ///< Unsigned integer
+    Signed,   ///< Signed integer
+    Float,    ///< IEEE floating point
+    Unknown   ///< Any other sample format that the backend reports
+  };
+
+  /**
+   * @brief Size and stored sample layout of one page: width, height, component count, bits per sample and sample format.
+   */
+  struct PageMetadata
+  {
+    usize width = 0;
+    usize height = 0;
+    usize numComponents = 0;
+    usize bitsPerSample = 0;
+    SampleFormat sampleFormat = SampleFormat::Unsigned;
+  };
+
   /**
    * @typedef ReadRowCallback
    * @brief Receives one contiguous segment of a decoded image row.
@@ -53,6 +78,41 @@ public:
    * @return Dimensions, type, components, optional spatial metadata, and page count.
    */
   virtual Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const = 0;
+
+  /**
+   * @brief Reads the layout of every logical page without decoding pixels.
+   *
+   * The default implementation is for single-page backends: it returns one layout built from readMetadata().
+   * Multi-page backends override it.
+   * @param filePath Identifies the image file.
+   * @return Layouts in readPixelDataRows() page order, or a metadata error.
+   */
+  virtual Result<std::vector<PageMetadata>> readPageLayouts(const std::filesystem::path& filePath) const
+  {
+    auto result = readMetadata(filePath);
+    if(result.invalid())
+    {
+      return ConvertResultTo<std::vector<PageMetadata>>(ConvertResult(std::move(result)), {});
+    }
+    const auto& metadata = result.value();
+    SampleFormat format = SampleFormat::Unsigned;
+    switch(metadata.dataType)
+    {
+    case DataType::int8:
+    case DataType::int16:
+    case DataType::int32:
+    case DataType::int64:
+      format = SampleFormat::Signed;
+      break;
+    case DataType::float32:
+    case DataType::float64:
+      format = SampleFormat::Float;
+      break;
+    default:
+      break;
+    }
+    return {std::vector<PageMetadata>{{metadata.width, metadata.height, metadata.numComponents, GetDataTypeSize(metadata.dataType) * 8, format}}};
+  }
 
   /**
    * @brief Reads pixel data for a single page/directory into a caller-owned byte buffer.
