@@ -47,7 +47,7 @@ namespace
 class SquareRangeReadStore : public DataStore<int64>
 {
 public:
-  explicit SquareRangeReadStore(std::function<void()> onFirstRead)
+  explicit SquareRangeReadStore(std::function<void(Result<>&)> onFirstRead)
   : DataStore<int64>(ShapeType{1, 1, 2}, ShapeType{1}, 5)
   , m_OnFirstRead(std::move(onFirstRead))
   {
@@ -69,7 +69,7 @@ public:
     auto result = DataStore<int64>::copyIntoBuffer(offset, values);
     if(result.valid() && ++m_ReadCount == 1)
     {
-      m_OnFirstRead();
+      m_OnFirstRead(result);
     }
     return result;
   }
@@ -80,7 +80,7 @@ public:
   }
 
 private:
-  std::function<void()> m_OnFirstRead;
+  std::function<void(Result<>&)> m_OnFirstRead;
   mutable usize m_ReadCount = 0;
 };
 
@@ -237,7 +237,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation during the 64-bit 
   const DataPath outputPath = inputPath.replaceName("Output");
   std::atomic_bool shouldCancel = false;
   constexpr int64 sentinel = -7;
-  auto inputStore = std::make_shared<SquareRangeReadStore>([&] {
+  auto inputStore = std::make_shared<SquareRangeReadStore>([&](Result<>&) {
     // Full-overwrite outputs can begin uninitialized. Set a known value before testing for writes.
     dataStructure.getDataRefAs<Int64Array>(outputPath).getDataStoreRef().fill(sentinel);
     shouldCancel = true;
@@ -254,6 +254,36 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: cancellation during the 64-bit 
   const auto& output = dataStructure.getDataRefAs<Int64Array>(outputPath).getDataStoreRef();
   REQUIRE(output.getValue(0) == sentinel);
   REQUIRE(output.getValue(1) == sentinel);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::SquareImageFilter: a failed 64-bit range read preserves its error and warnings", "[NXImageProcessing][Issue1874][SquareImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildScalarValuesImage<int64>(dataStructure, {5, 5});
+  auto inputStore = std::make_shared<SquareRangeReadStore>([](Result<>& result) {
+    result = MakeErrorResult(-101, "Injected range read error");
+    result.warnings().push_back(Warning{.code = -102, .message = "First read warning"});
+    result.warnings().push_back(Warning{.code = -103, .message = "Second read warning"});
+  });
+  Int64Array* inputPtr = nullptr;
+  REQUIRE_NOTHROW(inputPtr = &dataStructure.getDataRefAs<Int64Array>(inputPath));
+  const auto replace = inputPtr->setDataStore(inputStore);
+  SIMPLNX_RESULT_REQUIRE_VALID(replace);
+
+  const SquareImageFilter filter;
+  const auto result = filter.execute(dataStructure, ip_test::PointwiseFilterArguments<SquareImageFilter>(inputPath));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(inputStore->readCount() == 1);
+  REQUIRE(result.result.errors().size() == 1);
+  REQUIRE(result.result.errors().front().code == -101);
+  REQUIRE(result.result.warnings().size() == 2);
+  REQUIRE(result.result.warnings().front().code == -102);
+  REQUIRE(result.result.warnings().front().message == "First read warning");
+  REQUIRE(result.result.warnings().back().code == -103);
+  REQUIRE(result.result.warnings().back().message == "Second read warning");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)

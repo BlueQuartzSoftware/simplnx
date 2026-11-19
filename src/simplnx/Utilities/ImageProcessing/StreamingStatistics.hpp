@@ -588,7 +588,7 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
     const usize count = std::min(chunkValues, total - start);
     if(Result<> readResult = store.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); readResult.invalid())
     {
-      return {nonstd::make_unexpected(std::move(readResult.errors()))};
+      return ConvertInvalidResult<ArrayMinMax<T>>(std::move(readResult));
     }
     if(shouldCancel)
     {
