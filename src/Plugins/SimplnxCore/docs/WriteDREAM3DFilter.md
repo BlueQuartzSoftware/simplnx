@@ -45,7 +45,7 @@ The `.xdmf` file does not contain a copy of the data — it is a metadata wrappe
 
 Enabling XDMF costs almost nothing (the file is small and fast to write) and is the recommended setting whenever visualization outside DREAM3D-NX is a possibility. It can safely be left off for intermediate pipeline outputs that will only be re-read by DREAM3D-NX itself.
 
-Error `-78500` means the filter could not install the XDMF file. The DREAM3D file has already been installed. Error `-15785` means the DREAM3D file was replaced, but the system could not confirm that the data reached the disk. In that case, the filter still tries to install the XDMF file if requested.
+Error `-78500` means the filter could not install the XDMF file. The DREAM3D file has already been installed.
 
 ### Required Input Sources
 

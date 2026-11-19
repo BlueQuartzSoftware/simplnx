@@ -13,9 +13,10 @@
 
 #include <filesystem>
 #include <utility>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
+
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -45,8 +46,8 @@ Result<> WriteDREAM3D::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  auto exportFilePath = atomicFile.tempFilePath();
-  auto writeXdmf = m_InputValues->WriteXdmfFile;
+  const auto exportFilePath = atomicFile.tempFilePath();
+  const bool writeXdmf = m_InputValues->WriteXdmfFile;
 
   Pipeline pipeline;
 
@@ -64,41 +65,31 @@ Result<> WriteDREAM3D::operator()()
   nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
   writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
   auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
-  if(results.valid())
+  if(results.invalid())
   {
-    if(m_ShouldCancel)
+    return results;
+  }
+  if(m_ShouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
+  auto commitResult = atomicFile.commit();
+  if(commitResult.invalid())
+  {
+    return commitResult;
+  }
+
+  if(writeXdmf)
+  {
+    fs::path temporarySidecar = exportFilePath;
+    temporarySidecar.replace_extension(".xdmf");
+    fs::path destinationSidecar = m_InputValues->ExportFilePath;
+    destinationSidecar.replace_extension(".xdmf");
+    const auto outcome = InstallReplacementFile(temporarySidecar, destinationSidecar);
+    if(outcome.Error)
     {
-      return MakeErrorResult(-1, "Filter cancelled");
-    }
-    auto outputResult = finalizeOutput(atomicFile.commit(), atomicFile, m_InputValues->ExportFilePath, writeXdmf);
-    if(outputResult.invalid())
-    {
-      return outputResult;
+      return MakeErrorResult(k_XdmfReplacementError, DescribeFileReplacementFailure(outcome, destinationSidecar));
     }
   }
   return results;
-}
-
-// -----------------------------------------------------------------------------
-Result<> WriteDREAM3D::finalizeOutput(Result<> commitResult, const AtomicFile& atomicFile, const fs::path& destination, bool writeXdmf)
-{
-  if(!writeXdmf)
-  {
-    return commitResult;
-  }
-  if(commitResult.invalid() && commitResult.errors().front().code != AtomicFile::k_FlushAfterReplacementError)
-  {
-    return commitResult;
-  }
-
-  fs::path temporarySidecar = atomicFile.tempFilePath();
-  temporarySidecar.replace_extension(".xdmf");
-  fs::path destinationSidecar = destination;
-  destinationSidecar.replace_extension(".xdmf");
-  const auto outcome = InstallReplacementFile(temporarySidecar, destinationSidecar);
-  if(outcome.Error)
-  {
-    return MergeResults(std::move(commitResult), MakeErrorResult(k_XdmfReplacementError, DescribeFileReplacementFailure(outcome, destinationSidecar)));
-  }
-  return commitResult;
 }

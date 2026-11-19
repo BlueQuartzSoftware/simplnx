@@ -1,5 +1,7 @@
 #include "FileReplacement.hpp"
 
+#include "FileReplacementDetails.hpp"
+
 #include <fmt/format.h>
 #include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
 
@@ -41,17 +43,15 @@ std::error_code lastWindowsError()
   return {static_cast<int>(GetLastError()), std::system_category()};
 }
 
-FileReplacementAttempt tryWindowsPosixRename(const fs::path& replacement, const fs::path& absoluteDestination, bool writeThrough)
+std::error_code tryWindowsPosixRename(const fs::path& replacement, const fs::path& absoluteDestination, bool writeThrough)
 {
   const auto& name = absoluteDestination.native();
   const DWORD access = DELETE | SYNCHRONIZE | (writeThrough ? GENERIC_WRITE : 0u);
-  // On NTFS, FILE_FLAG_WRITE_THROUGH also flushes metadata changes from the rename.
   // Open a reparse point itself so the rename acts on the named entry.
-  const DWORD flags = FILE_FLAG_OPEN_REPARSE_POINT | (writeThrough ? FILE_FLAG_WRITE_THROUGH : 0u);
-  const HANDLE handle = CreateFileW(replacement.c_str(), access, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, flags, nullptr);
+  const HANDLE handle = CreateFileW(replacement.c_str(), access, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
   if(handle == INVALID_HANDLE_VALUE)
   {
-    return {.Error = lastWindowsError()};
+    return lastWindowsError();
   }
   const auto closeHandle = MakeScopeGuard([handle]() noexcept { CloseHandle(handle); });
 
@@ -68,47 +68,16 @@ FileReplacementAttempt tryWindowsPosixRename(const fs::path& replacement, const 
   std::memcpy(buffer.data(), &k_RenameFlags, sizeof(k_RenameFlags));
   std::memcpy(buffer.data() + k_NameOffset, name.c_str(), nameBytes + sizeof(wchar_t));
 
-  if(SetFileInformationByHandle(handle, k_FileRenameInfoEx, buffer.data(), static_cast<DWORD>(buffer.size())) == 0)
-  {
-    return {.Error = lastWindowsError()};
-  }
+  // Flush first so a flush failure leaves both paths available for the fallback.
   if(writeThrough && FlushFileBuffers(handle) == 0)
   {
-    return {.Error = lastWindowsError(), .Renamed = true};
+    return lastWindowsError();
   }
-  return {.Error = {}, .Renamed = true};
-}
-
-FileReplacementAttempt renameOnWindows(const fs::path& replacement, const fs::path& destination, FileReplacementDurability durability)
-{
-  std::error_code pathError;
-  fs::path absoluteDestination = fs::absolute(destination, pathError);
-  if(pathError)
+  if(SetFileInformationByHandle(handle, k_FileRenameInfoEx, buffer.data(), static_cast<DWORD>(buffer.size())) == 0)
   {
-    return {.Error = pathError};
+    return lastWindowsError();
   }
-  absoluteDestination.make_preferred();
-  constexpr std::size_t k_MaxPathUnitsWithTerminator = 32767;
-  if(absoluteDestination.native().size() >= k_MaxPathUnitsWithTerminator)
-  {
-    return {.Error = {ERROR_FILENAME_EXCED_RANGE, std::system_category()}};
-  }
-
-  const bool writeThrough = durability == FileReplacementDurability::WriteThrough;
-  const auto attempt = tryWindowsPosixRename(replacement, absoluteDestination, writeThrough);
-  // A file system or redirector can reject the flags on open or the extended rename request.
-  const int code = attempt.Error.value();
-  if(attempt.Renamed || (code != ERROR_INVALID_PARAMETER && code != ERROR_NOT_SUPPORTED && code != ERROR_INVALID_FUNCTION))
-  {
-    return attempt;
-  }
-
-  const DWORD flags = MOVEFILE_REPLACE_EXISTING | (writeThrough ? MOVEFILE_WRITE_THROUGH : 0u);
-  if(MoveFileExW(replacement.c_str(), absoluteDestination.c_str(), flags) == 0)
-  {
-    return {.Error = lastWindowsError()};
-  }
-  return {.Error = {}, .Renamed = true};
+  return {};
 }
 
 bool isWindowsRenameErrorTransient(const std::error_code& error, const fs::path& replacement, const fs::path& destination)
@@ -126,16 +95,54 @@ bool isWindowsRenameErrorTransient(const std::error_code& error, const fs::path&
       return false;
     }
     const DWORD replacementAttributes = GetFileAttributesW(replacement.c_str());
-    // A scanner without delete sharing, a mapped file section, and the MoveFileExW fallback can all give a temporary access-denied error.
+    // A conventional rename can return ERROR_ACCESS_DENIED while any destination handle is open.
+    // A mapped file section can also cause this error. Both conditions can be temporary.
     return replacementAttributes == INVALID_FILE_ATTRIBUTES || (replacementAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
   }
   return code == ERROR_SHARING_VIOLATION || code == ERROR_LOCK_VIOLATION;
 }
+
+std::error_code renameOnWindows(const fs::path& replacement, const fs::path& destination, FileReplacementDurability durability)
+{
+  std::error_code pathError;
+  fs::path absoluteDestination = fs::absolute(destination, pathError);
+  if(pathError)
+  {
+    return pathError;
+  }
+  absoluteDestination.make_preferred();
+  constexpr std::size_t k_MaxPathUnitsWithTerminator = 32767;
+  if(absoluteDestination.native().size() >= k_MaxPathUnitsWithTerminator)
+  {
+    return {ERROR_FILENAME_EXCED_RANGE, std::system_category()};
+  }
+
+  const bool writeThrough = durability == FileReplacementDurability::WriteThrough;
+  return detail::RenameWithFallback([&] { return tryWindowsPosixRename(replacement, absoluteDestination, writeThrough); },
+                                    [&] {
+                                      const DWORD flags = MOVEFILE_REPLACE_EXISTING | (writeThrough ? MOVEFILE_WRITE_THROUGH : 0u);
+                                      return MoveFileExW(replacement.c_str(), absoluteDestination.c_str(), flags) == 0 ? lastWindowsError() : std::error_code{};
+                                    },
+                                    [&replacement, &absoluteDestination](const std::error_code& error) { return isWindowsRenameErrorTransient(error, replacement, absoluteDestination); });
+}
 #endif
 } // namespace
 
-namespace nx::core
+namespace nx::core::detail
 {
+std::error_code RenameWithFallback(const std::function<std::error_code()>& primaryRename, const std::function<std::error_code()>& fallbackRename,
+                                   const std::function<bool(const std::error_code&)>& isTransient)
+{
+  const auto primaryError = primaryRename();
+  if(!primaryError)
+  {
+    return {};
+  }
+
+  const auto fallbackError = fallbackRename();
+  return fallbackError && isTransient(primaryError) ? primaryError : fallbackError;
+}
+
 FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability durability)
 {
   const auto wait = [](std::chrono::milliseconds duration) { std::this_thread::sleep_for(duration); };
@@ -149,7 +156,7 @@ FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability dura
               [](const fs::path& replacement, const fs::path& destination) {
                 std::error_code error;
                 fs::rename(replacement, destination, error);
-                return FileReplacementAttempt{.Error = error, .Renamed = !error};
+                return error;
               },
           .IsTransient = [](const std::error_code&, const fs::path&, const fs::path&) { return false; },
           .Wait = wait};
@@ -163,11 +170,9 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
   std::chrono::milliseconds nextWait = k_FileReplacementFirstWaitMs;
   while(true)
   {
-    const auto attempt = steps.Rename(replacement, destination);
-    outcome.Error = attempt.Error;
-    outcome.Renamed = attempt.Renamed;
+    outcome.Error = steps.Rename(replacement, destination);
     ++outcome.Attempts;
-    if(!outcome.Error || outcome.Renamed || !steps.IsTransient(outcome.Error, replacement, destination))
+    if(!outcome.Error || !steps.IsTransient(outcome.Error, replacement, destination))
     {
       return outcome;
     }
@@ -182,10 +187,13 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
     nextWait = (std::min)(nextWait * 2, k_FileReplacementLongestWaitMs);
   }
 }
+} // namespace nx::core::detail
 
+namespace nx::core
+{
 FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const fs::path& destination, FileReplacementDurability durability)
 {
-  return InstallReplacementFile(replacement, destination, PlatformFileReplacementSteps(durability));
+  return detail::InstallReplacementFile(replacement, destination, detail::PlatformFileReplacementSteps(durability));
 }
 
 std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& outcome)
@@ -201,11 +209,7 @@ std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& out
 std::string DescribeFileReplacementFailure(const FileReplacementOutcome& outcome, const fs::path& destination)
 {
   std::string description;
-  if(outcome.Renamed)
-  {
-    description = fmt::format("Output file '{}' was replaced, but the system could not confirm that the data reached the disk. Save the output again.", destination);
-  }
-  else if(outcome.RetriesExhausted)
+  if(outcome.RetriesExhausted)
   {
     description = fmt::format("Could not replace output file '{}'. The destination is unchanged. The file may be read-only or you may not have permission to replace it. "
                               "It may also be open in another program. Make sure the file is closed and writable.",

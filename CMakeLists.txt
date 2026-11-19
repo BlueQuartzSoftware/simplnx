@@ -377,6 +377,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Array.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/FileReplacement.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/FileReplacementDetails.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Bit.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
