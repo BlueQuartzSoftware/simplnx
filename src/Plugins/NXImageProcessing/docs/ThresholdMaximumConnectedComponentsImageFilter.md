@@ -1,40 +1,48 @@
 # Threshold Maximum Connected Components Image Filter
 
-Finds the threshold value of an image based on maximizing the number of objects in the image that are larger than a given minimal size.
-
 ## Group (Subgroup)
 
 NXImageProcessing (Segmentation)
 
 ## Description
 
-This filter is an iterative auto-thresholding method: it bisection-searches for the threshold value that **maximizes** the number of connected components (objects) in the image that are at least **Minimum Object Size In Pixels** in size, then outputs the binary threshold at that value. This method is based on Topological Stable State Thresholding and is particularly effective when there are a large number of objects in a microscopy image.
+This filter selects a lower intensity threshold with a **component-count heuristic**: it compares the numbers of connected regions at two candidate thresholds and narrows the interval. It does not guarantee a global maximum. The input is a scalar cell array in the selected image geometry. Integer and floating inputs produce the same fixed **uint8** output type, with one byte per pixel or voxel. Output values are **Inside Value** and **Outside Value**; the threshold itself is not saved as an image.
 
-At each step of the search, the image is binary-thresholded at a candidate threshold value (paired with the fixed **Upper Boundary**), the resulting foreground is labeled into connected components (face connectivity only), and the number of components at least **Minimum Object Size In Pixels** in size is counted. The bisection converges on the threshold value that maximizes this count.
+A pixel is inside when its native intensity is at or above the selected lower threshold and at or below **Upper Boundary**. Both bounds are inclusive. The search uses **face connectivity**, which joins pixels through shared edges in 2-D or shared faces in 3-D. Diagonal contact alone does not join regions.
 
-The input array must be single-component (scalar) and may be **any scalar type** (integer or floating point). The output is a fixed **uint8** binary image (**Inside Value** / **Outside Value**) regardless of the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Threshold Maximum Connected Components Image Filter, and matches it exactly (byte-identical binary output).
+### Search score and stopping units
 
-### Minimum Object Size In Pixels
+The score counts connected components of the would-be **nonzero output**, including components whose size is exactly **Minimum Object Size In Pixels**. This parameter counts pixels or voxels and defaults to *0*. Image spacing does not change the count or the two-intensity-unit stopping rule. Minimum Object Size In Pixels changes the search score. Small objects can remain in the final output.
 
-Set the minimum pixel area used to count objects on the image. Only objects that have a pixel area greater than or equal to the minimum pixel area are counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero.
+**Inside Value** defaults to *1* and **Outside Value** defaults to *0*. Both are dimensionless uint8 values. With these defaults, the score counts in-band regions. Inside 0/Outside 1 scores the complement. If both values are nonzero, all pixels participate as foreground. If both are zero, none participate. A nonzero Outside Value can connect regions that would otherwise be separate.
+
+The search stops when the interval is at most **2 input-intensity units** wide. This is an absolute rule for integers and floating inputs. It is not a relative tolerance or a measure of segmentation accuracy. For example, normalized values spanning 0 to 1 skip the search. For the values `[0,1,0,1]` at the default Inside and Outside settings, the integer midpoint rounds toward the lower endpoint to 0 and produces `[1,1,1,1]`. Floating-point input has midpoint 0.5 and produces `[0,1,0,1]`. In both cases the search stops before scoring alternate candidates. Scaling the intensities can change the selected mask. The right candidate wins only if its score is strictly greater; ties select the left candidate.
+
+For floating input, native rounding can repeat the complete search state while the interval is still wider than 2. The filter stops, retains the candidate selected by the normal comparison, and issues one precision warning. It does not choose a different endpoint or perform an exhaustive search.
 
 ### Upper Boundary
 
-This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside value can be defined by the user, however the standard values are used as default if not set by the user. Default is 65536.0.
+Upper Boundary is a Float64 parameter in input-intensity units. Its default is *65536*. Integer input truncates an in-range fractional request toward zero. Thus an unsigned request of *-0.5* becomes *0*; *-1* requests an empty native band. A signed request that truncates to the native minimum remains valid. In-range Float64-to-float32 conversion retains ordinary native rounding.
 
-### Inside Value
+A finite request above the native maximum, or positive infinity, selects the exact native maximum before conversion. For uint8, the default therefore becomes *255*. int64/uint64 limits are checked before casting; a rounded Float64 value at 2^63 or 2^64 is never cast into the corresponding integer. Float64 cannot express every exact 64-bit integer cutoff above 2^53, even though image bounds and integer search candidates remain exact native integers.
 
-The value assigned to voxels at or above the calculated threshold (and at or below the Upper Boundary). Default is 1.
+NaN is an invalid Upper Boundary. Pipeline JSON stores finite cutoffs as numbers and signed infinities as the strings `"+Infinity"` and `"-Infinity"`. An older file with a null cutoff has lost its original value. Enter the intended cutoff before loading that pipeline again. A finite request below the native range after integer truncation, a cap below the finite image minimum, or negative infinity produces an empty band. The filter skips search, fills Outside Value and issues an empty-band warning. It does not clamp a low cutoff upward or treat this output as an optimized threshold. Structurally valid zero-length input remains empty and is distinct from a nonempty all-nonfinite image.
 
-### Outside Value
+### Input with NaN or infinity
 
-The value assigned to voxels outside the calculated threshold range. Default is 0.
+Finite pixels set the native search bounds. A NaN or infinity lies outside the finite band and receives **Outside Value**. If there are no finite pixels, every output pixel receives **Outside Value**. A nonzero Outside Value can connect regions or make the entire image foreground. Clean invalid intensities upstream before relying on object counts, fractions or boundaries.
+
+### Numeric migration
+
+The starting midpoint now includes the image minimum, and interval arithmetic avoids native integer overflow. This corrects offset, negative and wide-range cases. For input `[100,102]`, a nonbinding cap and Inside 1/Outside 0, the old starting threshold 1 gave mask `[1,1]`; the corrected midpoint 101 gives `[0,1]`. The output type is unchanged, but segmentation and downstream measurements can change. Constant images use their actual constant as the threshold.
 
 ## Algorithm
 
-The filter performs a bisection search over candidate lower thresholds. For each candidate it raster-scans the image, encodes foreground runs, joins connected runs with union-find, and counts components meeting the minimum-size requirement. The union-find and component-size tables contain one entry per provisional object run. After selecting the threshold, the filter writes the requested binary inside and outside values in bounded chunks.
+One initial scan collects the native minimum and maximum of the finite pixels. Existing resident spans are reduced directly; other stores are read serially into bounded owned buffers, whose independent blocks can be reduced in parallel. The filter does not create a full-image finite mask or convert the integer image to Float64. Initial, left and right integer midpoint calculations retain native 64-bit distinctions and their left/right rounding rules.
 
-For images with more than one Z plane, each connected-component scan reads one Z plane at a time and retains the current and previous plane's run descriptions. For a true two-dimensional image (`Z=1`), a checked scheduler uses at most 64 MiB of full-width row blocks while retaining only two run-encoded rows. Exceptionally wide rows use bounded X tiles and a provisional label image to reconnect neighboring tiles and rows. With an out-of-core input, that scratch uses the registered raw temporary-record store when available and otherwise falls back to the selected array storage format. This keeps cell-scale state disk-backed for out-of-core inputs while preserving the exact threshold search, connectivity, and component-count results.
+Each iteration performs two connected-component scans and compares their scores. 3-D counting reads budget-derived bands with a one-plane fallback and retains current/previous run planes. True 2-D counting uses bounded row blocks; very wide rows use bounded X tiles and provisional scratch, using disk storage for out-of-core input. These are shared traversal routes for resident and disk-backed arrays, with serial store I/O and stable owned compute buffers. Final classification and all-Outside fills use bounded writes.
+
+Union-find and size tables still grow with the number of provisional foreground runs. Bounded staging is not a bound on total RAM. A provisional run ID beyond uint32 capacity, an allocation/addressability failure, or an I/O error stops execution. Search changes can change the number of full-image count passes and therefore CPU time and disk I/O. No fixed runtime improvement or legacy byte-parity guarantee is implied.
 
 % Auto generated parameter table will be inserted here
 

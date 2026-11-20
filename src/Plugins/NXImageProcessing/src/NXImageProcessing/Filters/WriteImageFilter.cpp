@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <memory>
 #include <set>
 
 namespace fs = std::filesystem;

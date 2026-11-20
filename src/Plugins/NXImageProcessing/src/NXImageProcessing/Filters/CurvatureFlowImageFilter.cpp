@@ -1,14 +1,23 @@
 #include "CurvatureFlowImageFilter.hpp"
 
 #include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/ImageProcessing/FiniteDifferenceEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+
+#include <fmt/format.h>
+#include <utility>
 
 using namespace nx::core;
 
@@ -76,6 +85,15 @@ IFilter::PreflightResult CurvatureFlowImageFilter::preflightImpl(const DataStruc
   // the legacy ScalarPixelIdTypeList), matching the legacy ITK filter, which has no minimum-dimension requirement.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
+  if(resultOutputActions.invalid())
+  {
+    return {.outputActions = std::move(resultOutputActions)};
+  }
+  const float64 timeStep = filterArgs.value<float64>(k_TimeStep_Key);
+  if(Result<> result = ImageProcessing::detail::ValidateCurvatureFlowTimeStep(timeStep); result.invalid())
+  {
+    return {.outputActions = MergeResults(std::move(resultOutputActions), ConvertResultTo<OutputActions>(std::move(result), OutputActions{}))};
+  }
   return {std::move(resultOutputActions)};
 }
 
@@ -90,7 +108,34 @@ Result<> CurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, con
   auto timeStep = filterArgs.value<float64>(k_TimeStep_Key);
   auto numberOfIterations = filterArgs.value<uint32>(k_NumberOfIterations_Key);
 
-  return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric>(
-      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  Result<> result =
+      ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::CurvatureFlowFn, ImageProcessing::AllNumeric, true, ImageProcessing::detail::ReportCurvatureFlowConversion>(
+          dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::detail::CurvatureFlowFn{}, timeStep, numberOfIterations, shouldCancel, messageHandler);
+  const auto appendOutput = [&](auto& diagnostic) {
+    const auto type = dataStructure.getDataRefAs<IDataArray>(outputArrayPath).getDataType();
+    diagnostic.message += fmt::format(" Output array '{}' has type '{}'.", outputArrayPath.toString(), DataTypeToString(type));
+  };
+  if(result.invalid())
+  {
+    for(auto& error : result.errors())
+    {
+      if(error.code == ImageProcessing::k_CurvatureFlowInvalidSpacing)
+      {
+        error.message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
+      }
+      else if(error.code == ImageProcessing::k_CurvatureFlowNonFiniteIntegerOutput)
+      {
+        appendOutput(error);
+      }
+    }
+  }
+  for(auto& warning : result.warnings())
+  {
+    if(warning.code == ImageProcessing::k_CurvatureFlowClippedIntegerOutput)
+    {
+      appendOutput(warning);
+    }
+  }
+  return ImageProcessing::detail::FinishCheckedImageExecution(std::move(result), shouldCancel);
 }
 } // namespace nx::core

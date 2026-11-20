@@ -2,7 +2,12 @@
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
@@ -12,10 +17,12 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <cmath>
 
@@ -27,6 +34,7 @@ namespace
 // its Height guards: -8553 (non-finite) and -8556 (negative).
 constexpr int32 k_NonFiniteHeight = -8553;
 constexpr int32 k_NegativeHeight = -8556;
+constexpr int32 k_FractionalIntegerHeight = -29101;
 } // namespace
 
 namespace nx::core
@@ -57,7 +65,7 @@ Parameters HConvexImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64Parameter>(k_Height_Key, "Height",
                                                    "The height (contrast) cap. Each regional maximum is transformed to its own height capped at this value (its dome height); the rest of the image "
-                                                   "becomes 0. Must be finite.",
+                                                   "becomes 0. Must be finite and nonnegative. Integer input requires a whole-number Height; floating input allows fractions.",
                                                    2.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the connected components are defined strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off. For "
@@ -92,8 +100,7 @@ IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& 
   auto height = filterArgs.value<float64>(k_Height_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  // The marker offsets every voxel by -Height through a saturating cast, which is undefined for a non-finite
-  // value; reject it here so the offset is always well-defined.
+  // The marker offset must be finite for reconstruction.
   if(!std::isfinite(height))
   {
     return {MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Convex requires a finite Height, but the supplied value was {}.", height))};
@@ -104,6 +111,14 @@ IFilter::PreflightResult HConvexImageFilter::preflightImpl(const DataStructure& 
   if(height < 0.0)
   {
     return {MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Convex requires a non-negative Height, but the supplied value was {}.", height))};
+  }
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(selectedInputArray);
+  if(inputArrayPtr != nullptr && ImageProcessing::GetIntegerScalarTypes().contains(inputArrayPtr->getDataType()) && std::trunc(height) != height)
+  {
+    return {.outputActions = MakeErrorResult<OutputActions>(
+                k_FractionalIntegerHeight, fmt::format("H Convex requires a whole-number Height for integer input array '{}', but received {}. Choose an intentional whole Height or explicitly "
+                                                       "convert the input to floating point before using a fractional Height.",
+                                                       selectedInputArray.toString(), height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
@@ -125,8 +140,9 @@ Result<> HConvexImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   // HConvex == input - HMaxima(input, Height): reconstruct-by-dilation of the saturating (input - Height) marker,
   // then subtract that h-maxima result from the input (the h-dome). FullyConnected selects the reconstruction
   // connectivity.
-  return ImageProcessing::ExecuteMorphologicalReconstructionImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Dilation, fullyConnected,
-                                                                        ImageProcessing::detail::ReconMarker::MinusHeight, height, shouldCancel, messageHandler, /*differenceFromInput=*/true);
+  return ImageProcessing::detail::ExecuteMorphologicalReconstructionWithValidatedHeight(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, ImageProcessing::ReconstructOp::Dilation,
+                                                                                        fullyConnected, ImageProcessing::detail::ReconMarker::MinusHeight, height, shouldCancel, messageHandler,
+                                                                                        /*differenceFromInput=*/true);
 }
 
 namespace

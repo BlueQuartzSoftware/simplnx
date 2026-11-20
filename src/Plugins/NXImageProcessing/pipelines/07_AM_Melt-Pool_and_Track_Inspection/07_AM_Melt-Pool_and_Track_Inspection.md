@@ -143,10 +143,13 @@ Key parameters:
 - `input_image_data_path`: `"Melt Pool Image/Cell Data/Sigmoid Contrast"`
 - `input_image_geometry_path`: `"Melt Pool Image"`
 - `label_offset`: `0`
+- `mask_array_path`: `""`
+- `masked_label`: `255`
 - `number_of_histogram_bins`: `128`
 - `number_of_thresholds`: `2`
 - `output_array_name`: `"Otsu Regions"`
 - `return_bin_midpoint`: `false`
+- `use_mask_array`: `false`
 - `valley_emphasis`: `true`
 
 Resolved inputs:
@@ -198,6 +201,7 @@ Key parameters:
 - `input_image_data_path`: `"Melt Pool Image/Cell Data/Track Mask"`
 - `input_image_geometry_path`: `"Melt Pool Image"`
 - `output_array_name`: `"Track Labels"`
+- `provisional_label_limit_handling_index`: `0`
 
 Resolved inputs:
 

@@ -8,6 +8,7 @@ Usage:
     print(generate_python_pipeline(pipeline))
 """
 
+import math
 import pathlib
 from dataclasses import dataclass, field
 from typing import Any
@@ -103,6 +104,8 @@ def _encode_simple_value(value: Any) -> str:
 
 def _encode_float(value: float) -> str:
     """Encode a float, rounding away float32 precision artifacts."""
+    if math.isinf(value):
+        return "float('-inf')" if value < 0 else "float('inf')"
     for digits in (6, 8, 10):
         rounded = round(value, digits)
         if abs(rounded - value) < abs(value) * 1e-7 or abs(rounded - value) < 1e-12:

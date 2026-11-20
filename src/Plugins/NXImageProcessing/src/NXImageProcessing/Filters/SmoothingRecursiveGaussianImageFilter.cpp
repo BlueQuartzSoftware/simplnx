@@ -1,6 +1,7 @@
 #include "SmoothingRecursiveGaussianImageFilter.hpp"
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+#include "NXImageProcessing/utils/TerminalConversionDiagnostics.hpp"
 
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -12,7 +13,10 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/RecursiveGaussianEngine.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <fmt/format.h>
 
 using namespace nx::core;
 
@@ -78,7 +82,7 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the recursive Gaussian is defined on scalar images. The output is SameAsInput (type-preserving),
-  // so an input type T produces a float32-free, T-typed output array. The SignedScalar policy admits only signed integer
+  // so an input type T produces a T-typed output array with float32 inter-pass precision. The SignedScalar policy admits only signed integer
   // + floating point types (the legacy SignedScalarPixelIdTypeList); unsigned types are rejected.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::SignedScalar, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
@@ -94,15 +98,11 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
   }
 
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
-  if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
+  // X and Y are always filtered. An upstream filter can still reduce the provisional grid to a single Z slice.
+  if(Result<> controls = ImageProcessing::detail::ValidateSmoothingGaussianSigma(sigma, 2); controls.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
-  }
-
-  if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSpacing, 1e-8);
-     spacingCheck.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+    controls.errors().front().message += fmt::format(" Image Geometry '{}'.", imageGeomPath.toString());
+    return {.outputActions = ConvertResultTo<OutputActions>(std::move(controls), OutputActions{})};
   }
   return {std::move(resultOutputActions)};
 }
@@ -118,7 +118,9 @@ Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataS
   auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
 
-  return ImageProcessing::ExecuteSmoothingRecursiveGaussianImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
+  return ImageProcessing::detail::FinishCheckedImageExecution(
+      ImageProcessing::ExecuteSmoothingRecursiveGaussianImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, sigma, normalizeAcrossScale, shouldCancel, messageHandler),
+      shouldCancel);
 }
 
 namespace

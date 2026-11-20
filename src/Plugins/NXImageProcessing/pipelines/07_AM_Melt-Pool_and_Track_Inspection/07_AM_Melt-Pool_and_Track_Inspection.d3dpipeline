@@ -183,6 +183,14 @@
           "value": 0,
           "version": 1
         },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "masked_label": {
+          "value": 255,
+          "version": 1
+        },
         "number_of_histogram_bins": {
           "value": 128,
           "version": 1
@@ -195,8 +203,12 @@
           "value": "Otsu Regions",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "return_bin_midpoint": {
+          "value": false,
+          "version": 1
+        },
+        "use_mask_array": {
           "value": false,
           "version": 1
         },
@@ -281,7 +293,11 @@
           "value": "Track Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "provisional_label_limit_handling_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "Label the melt pool and separated spatter regions.",
       "filter": {

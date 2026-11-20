@@ -9,13 +9,10 @@ namespace nx::core
 {
 /**
  * @class ThresholdMaximumConnectedComponentsImageFilter
- * @brief ITK-free, out-of-core-capable iterative auto-threshold that bisection-searches for the threshold value
- * that MAXIMIZES the number of connected components in the image (subject to a minimum object size), then outputs
- * the binary threshold at that value.
+ * @brief Searches native finite bounds with a component-count heuristic and an absolute two-intensity-unit stop.
  *
- * The input may be ANY scalar type; the output is a FIXED uint8 binary image (Inside Value / Outside Value)
- * regardless of the input element type. Matches the legacy ITK Threshold Maximum Connected Components Image
- * Filter exactly (byte-identical binary output). Out-of-core capable.
+ * Finite scalar input values define the search interval. The uint8 output uses Inside Value and Outside Value.
+ * The search counts nonzero output components. Component run tables grow with image topology.
  */
 class NXIMAGEPROCESSING_EXPORT ThresholdMaximumConnectedComponentsImageFilter : public IFilter
 {

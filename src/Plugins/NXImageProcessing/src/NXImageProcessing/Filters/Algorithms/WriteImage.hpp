@@ -62,7 +62,7 @@ public:
 
   /**
    * @brief Writes all slices for the selected plane.
-   * @return An error if slice extraction, compression, or file output fails.
+   * @return Warnings and errors from reading image data, encoding slices, or writing files.
    */
   Result<> operator()();
 
