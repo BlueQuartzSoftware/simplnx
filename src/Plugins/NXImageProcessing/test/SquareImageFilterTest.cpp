@@ -286,6 +286,47 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: a failed 64-bit range read pres
   REQUIRE(result.result.warnings().back().message == "Second read warning");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("NXImageProcessing::SquareImageFilter: a successful 64-bit range read preserves its warning", "[NXImageProcessing][Issue1874][SquareImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildScalarValuesImage<int64>(dataStructure, {5, 5});
+  auto inputStorePtr = std::make_shared<SquareRangeReadStore>([](Result<>& readResult) { readResult.warnings().push_back(Warning{.code = -102, .message = "Range scan read warning"}); });
+  const bool overflow = GENERATE(false, true);
+  CAPTURE(overflow);
+  if(overflow)
+  {
+    inputStorePtr->setValue(1, 3037000500LL);
+  }
+  auto* inputArrayPtr = dataStructure.getDataAs<Int64Array>(inputPath);
+  REQUIRE(inputArrayPtr != nullptr);
+  const auto replaceResult = inputArrayPtr->setDataStore(inputStorePtr);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
+
+  const SquareImageFilter filter;
+  const auto result = filter.execute(dataStructure, ip_test::PointwiseFilterArguments<SquareImageFilter>(inputPath));
+  if(overflow)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors().size() == 1);
+    REQUIRE(result.result.errors().front().code == -29002);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+    const auto* outputPtr = dataStructure.getDataAs<Int64Array>(inputPath.replaceName("Output"));
+    REQUIRE(outputPtr != nullptr);
+    REQUIRE((*outputPtr)[0] == 25);
+    REQUIRE((*outputPtr)[1] == 25);
+  }
+  REQUIRE(inputStorePtr->readCount() == 1);
+  REQUIRE(result.result.warnings().size() == 1);
+  REQUIRE(result.result.warnings().front().code == -102);
+  REQUIRE(result.result.warnings().front().message == "Range scan read warning");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
 // NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 // NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
