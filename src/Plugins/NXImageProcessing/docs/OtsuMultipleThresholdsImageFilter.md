@@ -34,7 +34,9 @@ can move the fitted thresholds and change the labels of finite pixels too.
 
 ### Precision and pipeline migration
 
-Histogram bounds, bin measurements, and threshold fitting use `float64`. The filter checks for detectable unusable range/bin geometry, nonfinite arithmetic, and objective underflow. For example, distinct adjacent large 64-bit integers can become equal after conversion to `float64`, and very small nonzero class means can square to zero. These conditions cause a numeric error. Rescale the finite data or use fewer bins where suitable. The checks do not establish exact arbitrary-precision Otsu accuracy. True finite constants retain the lower-class tie behavior.
+The filter uses `float64` for histogram bounds, bin measurements, threshold fitting, and comparisons between voxel intensities and thresholds. Adjacent large 64-bit integers can round to the same `float64` value and receive the same label without a warning or error. For example, the first two values in the `uint64` input `[2^53, 2^53 + 1, 2^53 + 4]` round to the same value. With two bins, one threshold, **ReturnBinMidpoint** enabled, and **Label Offset** 0, the output is `[0, 0, 1]`.
+
+The filter reports a numeric error when it detects an unusable histogram range, unusable bins, nonfinite threshold arithmetic, or objective underflow. For example, distinct selected minimum and maximum values can round to the same value, or a very small nonzero class mean can square to zero. Rescale the finite data or use fewer bins where suitable. The checks do not establish exact arbitrary-precision Otsu accuracy. True finite constants retain the lower-class tie behavior.
 
 The finite tie tolerance, ordinary threshold search, and Valley Emphasis behavior are retained. **ReturnBinMidpoint** selects a bin midpoint instead of its maximum for the returned threshold. These checks add no automatic normalization or new scientific fitting rule.
 
