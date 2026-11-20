@@ -78,8 +78,8 @@ Table* and select a format that supports the input type.
 #### Mask Array
 
 Enable *Use Mask Array* with *Create Color Table* to give excluded pixels the *Masked Color (RGB)*. Use a
-single-component boolean or uint8 mask with one tuple per image pixel. Every false or zero mask value selects
-the mask color, including at pixels that contain NaN or infinity.
+single-component `bool` or `uint8` mask with the same `[Z, Y, X]` tuple shape as the image array.
+Every false or zero mask value selects the mask color, including at pixels that contain NaN or infinity.
 
 ### Add Physical Scale Bar (Optional)
 
