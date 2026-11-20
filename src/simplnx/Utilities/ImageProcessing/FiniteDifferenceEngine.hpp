@@ -9,6 +9,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp" // CreateDataStoreWithFormat (update buffer)
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp" // CalculateChange in-plane parallelization
@@ -109,7 +110,7 @@ Result<> CopyCurvatureFlowInput(const AbstractDataStore<T>& input, AbstractDataS
       return result;
     }
     const usize count = std::min(capacity, input.getSize() - offset);
-    result = MergeResults(std::move(result), input.copyIntoBuffer(offset, nonstd::span<T>(buffer.data(), count)));
+    AccumulateTransferResult(result, input.copyIntoBuffer(offset, nonstd::span<T>(buffer.data(), count)));
     if(result.invalid())
     {
       return result;
@@ -118,7 +119,7 @@ Result<> CopyCurvatureFlowInput(const AbstractDataStore<T>& input, AbstractDataS
     {
       return result;
     }
-    result = MergeResults(std::move(result), output.copyFromBuffer(offset, nonstd::span<const T>(buffer.data(), count)));
+    AccumulateTransferResult(result, output.copyFromBuffer(offset, nonstd::span<const T>(buffer.data(), count)));
     if(result.invalid())
     {
       return result;

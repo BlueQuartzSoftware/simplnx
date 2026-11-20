@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/IDataStoreWritePreparation.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ConnectedComponentEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/TerminalImageConversion.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -149,8 +150,7 @@ Result<ArrayMinMax<T>> ScanThresholdMaxCC(const AbstractDataStore<T>& input, con
       const usize count = std::min(batchValues, total - start);
       if(!direct)
       {
-        auto readResult = input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count));
-        status = MergeResults(std::move(status), std::move(readResult));
+        AccumulateTransferResult(status, input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count)));
         if(status.invalid())
         {
           return ConvertInvalidResult<ArrayMinMax<T>>(std::move(status));
@@ -376,8 +376,7 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
       const usize count = std::min(chunkValues, total - start);
       if(!fillOutside)
       {
-        auto readResult = input.copyIntoBuffer(start, nonstd::span<T>(inputPtr.get(), count));
-        status = MergeResults(std::move(status), std::move(readResult));
+        AccumulateTransferResult(status, input.copyIntoBuffer(start, nonstd::span<T>(inputPtr.get(), count)));
         if(status.invalid() || shouldCancel)
         {
           return status;
@@ -387,8 +386,7 @@ Result<> WriteThresholdMaxCC(const AbstractDataStore<T>& input, AbstractDataStor
       {
         (*outputPtr)[index] = !fillOutside && inputPtr[index] >= threshold && inputPtr[index] <= cap ? options.InsideValue : options.OutsideValue;
       }
-      auto writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(outputPtr->data(), count));
-      status = MergeResults(std::move(status), std::move(writeResult));
+      AccumulateTransferResult(status, output.copyFromBuffer(start, nonstd::span<const uint8>(outputPtr->data(), count)));
       if(status.invalid())
       {
         return status;
