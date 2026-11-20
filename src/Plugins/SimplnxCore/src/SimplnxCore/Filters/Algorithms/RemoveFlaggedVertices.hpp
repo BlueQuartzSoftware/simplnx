@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -17,6 +19,10 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedVerticesInputValues
   GeometrySelectionParameter::ValueType InputVertexGeometryPath;
   ArraySelectionParameter::ValueType MaskPath;
   DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
+  BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
+  BoolParameter::ValueType RenumberFeatures = false;
+  ArraySelectionParameter::ValueType VertexFeatureIdsPath;
+  AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
 };
 
 /**

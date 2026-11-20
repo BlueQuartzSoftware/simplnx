@@ -36,9 +36,9 @@ Each padded cell is initialized to the *Default Value* for every cell-level **At
 
 ### Update Origin
 
-If *Update Origin* is **OFF** (the default), the geometry's origin stays at its current location. New cells appear at coordinates less than the original origin, so the original data effectively shifts to "the middle" of the new bounds.
+If *Update Origin* is **OFF** (the default), the origin stays where it is. The first cell of the padded geometry is at the old origin. The original data moves toward larger coordinates by the minimum-side padding multiplied by the spacing in each enabled dimension.
 
-If *Update Origin* is **ON**, the geometry's origin is shifted so that the original data stays in its original physical coordinates. New cells extend to coordinates below the original origin.
+If *Update Origin* is **ON**, the origin moves by minus the minimum-side padding multiplied by the spacing in each enabled dimension. The original data keeps its physical coordinates. New cells extend to coordinates below the original origin.
 
 ### Required Input Sources
 
@@ -49,6 +49,12 @@ If *Update Origin* is **ON**, the geometry's origin is shifted so that the origi
 For each enabled axis, **Min & Max Padding** must contain nonnegative cell counts. Disabled axes are ignored. Padded dimensions and their tuple count must fit the supported size type. When **Update Origin** is enabled, the computed origin must be finite. Preflight warns when the current geometry metadata produces an unrepresentable result. Execution checks the final metadata before copying data. Array creation also checks element and byte counts.
 
 % Auto generated parameter table will be inserted here
+
+## WARNING: Feature Data
+
+Every Cell Data Array receives the *Default Padding Value* in the added cells, including any **Feature Ids** array. Use *0* to add background cells. A nonzero value assigns the added cells to that Feature and makes its previously computed Feature data incorrect. A negative value or a value larger than the last Feature Id creates invalid Feature Ids. Warning *-67401* reports a nonzero padding value when the filter adds cells.
+
+Other **Attribute Matrices**, such as Feature and Ensemble data, are copied unchanged. When *Update Origin* is **OFF**, minimum-side padding in an enabled dimension moves the original cells in physical space. Values stored in physical coordinates in these copied matrices, such as Feature Centroids, no longer match the cells. Warning *-67402* reports this condition when at least one non-cell Attribute Matrix is copied. Turn on *Update Origin* to keep the original cells in place, or recompute those values.
 
 ## Example Pipelines
 

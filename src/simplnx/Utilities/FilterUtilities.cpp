@@ -3,14 +3,16 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 #include <system_error>
@@ -19,6 +21,33 @@ namespace fs = std::filesystem;
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_UnchangedAttributeMatricesWarning = -4041;
+
+void CollectAttributeMatrixPaths(const DataObject& object, const DataPath& path, const std::vector<DataObject::IdType>& excludedIds, std::vector<std::string>& paths)
+{
+  if(std::ranges::find(excludedIds, object.getId()) != excludedIds.end())
+  {
+    return;
+  }
+  if(dynamic_cast<const AttributeMatrix*>(&object) != nullptr)
+  {
+    paths.push_back(path.toString());
+    return;
+  }
+  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr)
+  {
+    for(const auto& [id, child] : *group)
+    {
+      if(dynamic_cast<const BaseGroup*>(child.get()) != nullptr)
+      {
+        CollectAttributeMatrixPaths(*child, path.createChildPath(child->getName()), excludedIds, paths);
+      }
+    }
+  }
+}
+} // namespace
 
 // -----------------------------------------------------------------------------
 Result<> CreateOutputDirectories(const fs::path& outputPath)
@@ -124,63 +153,60 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 }
 
 // -----------------------------------------------------------------------------
-void AppendRenumberedFeatureAMWarnings(const DataStructure& dataStructure, const DataPath& cellFeatureAmPath, const DataPath& featureIdsArrayPath,
-                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues, bool warnNeighborLists)
+void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
+                                            std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
-  const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
-  if(srcCellFeatureData == nullptr)
+  const auto* featureAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featureAttributeMatrix == nullptr)
   {
     return;
   }
 
-  std::string neighborListWarningMsg;
-  std::string arrayWarningMsg;
-  for(const auto& [identifier, object] : *srcCellFeatureData)
+  std::string list;
+  for(const auto& [identifier, object] : *featureAttributeMatrix)
   {
-    std::string objectText = "\n" + cellFeatureAmPath.toString() + "/" + object->getName();
     if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
     {
-      arrayWarningMsg += objectText;
-    }
-    else if(warnNeighborLists && dynamic_cast<const INeighborList*>(object.get()) != nullptr)
-    {
-      neighborListWarningMsg += objectText;
+      list += "\n" + featureAttributeMatrixPath.createChildPath(object->getName()).toString();
     }
   }
 
-  if(!neighborListWarningMsg.empty())
+  if(!list.empty())
   {
-    preflightUpdatedValues.push_back(
-        {"Invalidated NeighborLists",
-         fmt::format(
-             "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-             featureIdsArrayPath.toString(), neighborListWarningMsg)});
-  }
-  if(!arrayWarningMsg.empty())
-  {
-    preflightUpdatedValues.push_back(
-        {"Stale Arrays", fmt::format("This filter will modify the Cell Level Array(s) '{}', due to the dependent nature of feature level arrays, the pruning process will cause the data contained "
-                                     "within to be stale. It's highly recommended to recalculate the following:{}",
-                                     featureIdsArrayPath.toString(), arrayWarningMsg)});
+    preflightUpdatedValues.push_back({"Stale Arrays", fmt::format("This filter modifies '{}' and removes Features from '{}'. The values in the following Feature Data Arrays are not recomputed and "
+                                                                  "will be stale. Recompute any of the following Data Arrays:{}",
+                                                                  featureIdsPath.toString(), featureAttributeMatrixPath.toString(), list)});
   }
 }
 
 // -----------------------------------------------------------------------------
-void AppendCopiedAMStaleWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, nx::core::Result<OutputActions>& resultOutputActions)
+void AppendUnchangedAttributeMatricesWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, const std::vector<DataPath>& excludedPaths, std::string_view outputGeometry,
+                                             Result<OutputActions>& resultOutputActions, bool keptInPlace)
 {
-  std::string amWarningMsg;
-  for(const auto& childPath : childPaths)
+  std::vector<DataObject::IdType> excludedIds;
+  for(const auto& path : excludedPaths)
   {
-    if(dataStructure.getDataAs<AttributeMatrix>(childPath) != nullptr)
+    if(const auto* object = dataStructure.getData(path); object != nullptr)
     {
-      amWarningMsg += "\n" + childPath.toString();
+      excludedIds.push_back(object->getId());
     }
   }
-  if(!amWarningMsg.empty())
+
+  std::vector<std::string> paths;
+  for(const auto& path : childPaths)
   {
-    resultOutputActions.m_Warnings.emplace_back(
-        -4015,
-        fmt::format("Attribute Matrices with arrays dependent upon Cell Data will be copied across as-is. It's highly recommended to recalculate the child arrays in the following:{}", amWarningMsg));
+    if(const auto* object = dataStructure.getData(path); object != nullptr)
+    {
+      CollectAttributeMatrixPaths(*object, path, excludedIds, paths);
+    }
+  }
+  if(!paths.empty())
+  {
+    std::ranges::sort(paths);
+    resultOutputActions.warnings().push_back(
+        {k_UnchangedAttributeMatricesWarning, fmt::format("These Attribute Matrices are {} the {} unchanged:\n{}\n"
+                                                          "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.",
+                                                          keptInPlace ? "kept in" : "copied to", outputGeometry, fmt::join(paths, "\n"))});
   }
 }
 

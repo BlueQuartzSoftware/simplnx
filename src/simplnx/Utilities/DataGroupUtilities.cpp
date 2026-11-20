@@ -2,6 +2,9 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectExcludingAction.hpp"
+
+#include <algorithm>
 
 #include <nonstd/span.hpp>
 
@@ -20,7 +23,56 @@ constexpr int32 k_MissingFeatureGroupError = -46000;
  * @brief Reported when the supplied active-flag count does not match the feature tuple count.
  */
 constexpr int32 k_FeatureTupleCountMismatchError = -46001;
+
+bool PathContainsObject(const DataStructure& dataStructure, DataPath path, DataObject::IdType id)
+{
+  for(; !path.empty(); path = path.getParent())
+  {
+    if(dataStructure.getId(path) == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void AppendCopiedChildPaths(const BaseGroup& source, const DataPath& destination, std::optional<DataObject::IdType> excludedId, std::vector<DataPath>& createdPaths)
+{
+  for(const auto& [id, child] : source)
+  {
+    if(child->getId() == excludedId)
+    {
+      continue;
+    }
+    auto childPath = destination.createChildPath(child->getName());
+    createdPaths.push_back(childPath);
+    if(const auto* group = dynamic_cast<const BaseGroup*>(child.get()); group != nullptr)
+    {
+      AppendCopiedChildPaths(*group, childPath, excludedId, createdPaths);
+    }
+  }
+}
 } // namespace
+
+void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputActions& actions, const DataPath& source, const DataPath& destination, const DataPath& excludedPath)
+{
+  const auto excludedId = excludedPath.empty() ? std::nullopt : dataStructure.getId(excludedPath);
+  if(excludedId.has_value() && PathContainsObject(dataStructure, source, *excludedId))
+  {
+    return;
+  }
+  std::vector<DataPath> createdPaths = {destination};
+  if(const auto* group = dataStructure.getDataAs<BaseGroup>(source); group != nullptr)
+  {
+    AppendCopiedChildPaths(*group, destination, excludedId, createdPaths);
+    if(excludedId.has_value())
+    {
+      actions.appendAction(std::make_unique<CopyDataObjectExcludingAction>(source, destination, createdPaths, excludedPath));
+      return;
+    }
+  }
+  actions.appendAction(std::make_unique<CopyDataObjectAction>(source, destination, createdPaths));
+}
 
 FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bool>& activeObjects)
 {

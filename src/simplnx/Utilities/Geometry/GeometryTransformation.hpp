@@ -63,6 +63,10 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
   VectorFloat32Parameter::ValueType Scale;
 
   DataPath CellAttributeMatrixPath;
+  bool ClearFeatureAttributeMatrix = false;
+  bool RenumberFeatures = false;
+  DataPath FeatureAttributeMatrixPath = {};
+  DataPath FeatureIdsPath = {};
   DataPath TransformMatrixPath;
   bool RemoveOriginalGeometry;
   bool TranslateGeometryToGlobalOrigin;
@@ -75,6 +79,8 @@ struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
  *
  * Image translations and scales are metadata-only operations applied by
  * preflight actions. Other image transforms resample each numeric cell array.
+ * Optional clearing removes Feature AM children. Optional renumbering validates
+ * source IDs, compacts output IDs, and resizes the cleared Feature AM.
  * Resident arrays can run in parallel. Any out-of-core source or destination
  * selects serial array processing with bounded ImageRotationUtilities pages.
  *

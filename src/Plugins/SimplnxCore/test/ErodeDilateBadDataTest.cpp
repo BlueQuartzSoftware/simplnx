@@ -518,7 +518,6 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Preflight Feature Data Modific
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
   const auto& outputValues = preflightResult.outputValues;
   REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
-  REQUIRE(std::none_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Stale Arrays"; }));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
