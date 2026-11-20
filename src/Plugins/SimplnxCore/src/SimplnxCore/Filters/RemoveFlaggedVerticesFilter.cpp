@@ -209,9 +209,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
                                 featureIdsPath.toString(), featureIds.getNumberOfTuples(), vertexGeomPath.toString(), numVertices));
       }
     }
-    // Ignore every path to the Feature AM, so a selection through another parent is not copied too.
-    const auto featureAmPaths = sourceFeatureAm->getDataPaths();
-    ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+    ignorePaths.push_back(vertexGeomPath.createChildPath(sourceFeatureAm->getName()));
     const DataPath destFeatureAmPath = reducedVertexPath.createChildPath(featureAmPath.getTargetName());
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
 

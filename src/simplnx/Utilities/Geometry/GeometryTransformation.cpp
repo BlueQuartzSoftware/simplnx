@@ -12,7 +12,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CopyDataObjectExcludingAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -605,12 +604,10 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         }
       }
 
-      std::vector<DataPath> featureAmPaths;
+      const auto excludedPath = clearFeatureAttributeMatrix ? inputValues.FeatureAttributeMatrixPath : DataPath{};
       if(clearFeatureAttributeMatrix)
       {
-        // Exclude every alias so the copy cannot restore stale Feature arrays.
-        featureAmPaths = sourceFeatureAm->getDataPaths();
-        ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
+        ignorePaths.push_back(srcImagePath.createChildPath(sourceFeatureAm->getName()));
         const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAm->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
       }
@@ -622,43 +619,12 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "transformed geometry", resultOutputActions);
         for(const auto& childPath : childPaths.value())
         {
-          // Both traversals append child names below srcImagePath, so rebasing must succeed.
+          // The child path comes from the selected Image Geometry.
           const auto rebasedChildPath = childPath.rebase(srcImagePath, destImagePath);
           assert(rebasedChildPath.has_value());
           // NOLINTNEXTLINE(bugprone-unchecked-optional-access) -- Traversal constructs this descendant below srcImagePath.
           const DataPath& copiedChildPath = rebasedChildPath.value();
-          if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
-          {
-            std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-            auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
-            if(pathsToBeCopied.has_value())
-            {
-              for(const auto& sourcePath : pathsToBeCopied.value())
-              {
-                if(std::any_of(featureAmPaths.begin(), featureAmPaths.end(), [&sourcePath](const DataPath& alias) { return sourcePath.rebase(alias, DataPath{}).has_value(); }))
-                {
-                  continue;
-                }
-                const auto createdPath = sourcePath.rebase(srcImagePath, destImagePath);
-                assert(createdPath.has_value());
-                // NOLINTNEXTLINE(bugprone-unchecked-optional-access) -- Recursive traversal preserves the srcImagePath prefix.
-                allCreatedPaths.push_back(createdPath.value());
-              }
-            }
-            if(clearFeatureAttributeMatrix)
-            {
-              resultOutputActions.value().appendAction(
-                  std::make_unique<CopyDataObjectExcludingAction>(childPath, copiedChildPath, allCreatedPaths, srcImagePath.createChildPath(sourceFeatureAm->getName())));
-            }
-            else
-            {
-              resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
-            }
-          }
-          else
-          {
-            resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
-          }
+          AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, excludedPath);
         }
       }
 

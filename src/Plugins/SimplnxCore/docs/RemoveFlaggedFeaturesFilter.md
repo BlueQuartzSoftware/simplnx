@@ -42,6 +42,8 @@ A flagged **Feature** that owns no **Cells** has nothing to extract. The filter 
 
 Every value in *Cell Feature Ids* must be in the range 0 through (number of feature tuples - 1), and the array must hold one value per **Cell** of the selected geometry. A value outside that range stops the filter with error *-45435*, and a tuple-count mismatch stops it with error *-45437*, before any data is modified. Flagging every **Feature** stops the filter with error *-45433*.
 
+*Extract* and *Extract then Remove* stop in preflight with error *-67460* if any geometry uses the selected Feature **Attribute Matrix** for element data, such as vertex data. Select flags from a Feature **Attribute Matrix** that no geometry uses for element data.
+
 ### WARNING: Feature Data Will Become Invalid
 
 *Remove* and *Extract then Remove* change Feature IDs and compact the Feature **Attribute Matrix**. Existing feature values can become invalid. Recompute those values after this **Filter**. *Extract* alone does not change the source data.

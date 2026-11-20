@@ -276,9 +276,9 @@ Result<> ValidateFeatureAttributeMatrixNotElementData(const DataStructure& dataS
     {
       if(matrix != nullptr && matrix->getId() == features->getId())
       {
-        return MakeErrorResult(-67460, fmt::format("Feature Attribute Matrix '{}' is registered as element data by geometry '{}'. Clearing it would delete that geometry's element arrays. Select a "
-                                                   "Feature Attribute Matrix that is not registered as element data by any geometry, or turn off 'Clear Feature Attribute Matrix'.",
-                                                   featureAttributeMatrixPath.toString(), (geometry->getDataPaths().empty() ? geometry->getName() : geometry->getDataPaths().front().toString())));
+        const auto geometryPaths = geometry->getDataPaths();
+        return MakeErrorResult(-67460, fmt::format("Geometry '{}' uses Feature Attribute Matrix '{}' for element data. Select a Feature Attribute Matrix that no geometry uses for element data.",
+                                                   geometryPaths.empty() ? geometry->getName() : geometryPaths.front().toString(), featureAttributeMatrixPath.toString()));
       }
     }
   }
