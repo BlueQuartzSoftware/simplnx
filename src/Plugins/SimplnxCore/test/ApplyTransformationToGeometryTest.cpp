@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -1719,6 +1720,31 @@ const DataPath k_FeatureAMPath({"Geometry", "Feature Data"});
 const DataPath k_ElementAMPath({"Geometry", "Element Data"});
 const DataPath k_TransformFeatureIdsPath({"Geometry", "Element Data", "FeatureIds"});
 
+class FailOnRenumberReadStore : public DataStore<int32>
+{
+public:
+  using DataStore<int32>::DataStore;
+
+  ~FailOnRenumberReadStore() noexcept override = default;
+  FailOnRenumberReadStore(const FailOnRenumberReadStore&) = delete;
+  FailOnRenumberReadStore(FailOnRenumberReadStore&&) noexcept = delete;
+  FailOnRenumberReadStore& operator=(const FailOnRenumberReadStore&) = delete;
+  FailOnRenumberReadStore& operator=(FailOnRenumberReadStore&&) noexcept = delete;
+
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
+  {
+    // Let the source validation read succeed, then fail the post-transform read.
+    if(++m_ReadCount == 2)
+    {
+      return MakeErrorResult(-95102, "Injected post-transform Feature Ids read failure.");
+    }
+    return DataStore<int32>::copyIntoBuffer(startIndex, buffer);
+  }
+
+private:
+  mutable usize m_ReadCount = 0;
+};
+
 // Three cells or vertices carry sparse IDs 1, 3, 5. Feature data has a non-flat shape.
 DataStructure CreateTransformFeatureFixture(bool node = false)
 {
@@ -1817,10 +1843,19 @@ void CheckTransformFeatureData(const DataStructure& ds, bool clear, const ShapeT
     }
     const auto* names = ds.getDataAs<StringArray>(k_FeatureAMPath.createChildPath("Names"));
     REQUIRE(names != nullptr);
-    CHECK((*names)[5] == "five");
+    const std::array<std::string, 6> expectedNames = {"zero", "one", "two", "three", "four", "five"};
+    for(usize i = 0; i < expectedNames.size(); ++i)
+    {
+      CHECK((*names)[i] == expectedNames[i]);
+    }
     const auto* neighbors = ds.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath("Neighbors"));
     REQUIRE(neighbors != nullptr);
+    CHECK(neighbors->getList(0).empty());
+    CHECK(neighbors->getList(1) == std::vector<int32>{3});
+    CHECK(neighbors->getList(2).empty());
     CHECK(neighbors->getList(3) == std::vector<int32>{1, 5});
+    CHECK(neighbors->getList(4).empty());
+    CHECK(neighbors->getList(5) == std::vector<int32>{3});
   }
   const auto* phases = ds.getDataAs<Int32Array>(DataPath({"Geometry", "Ensemble", "Phases"}));
   REQUIRE(phases != nullptr);
@@ -1887,6 +1922,32 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM in place
   CHECK((*ids)[0] == 1);
   CHECK((*ids)[1] == (clear && renumber ? 2 : 3));
   CHECK((*ids)[2] == (clear && renumber ? 3 : 5));
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Renumber read failure preserves in-place Feature AM", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  auto ds = CreateTransformFeatureFixture();
+  auto& ids = ds.getDataRefAs<Int32Array>(k_TransformFeatureIdsPath);
+  auto store = std::make_shared<FailOnRenumberReadStore>(ids.getTupleShape(), ShapeType{1}, int32{0});
+  const std::array<int32, 3> inputIds = {1, 3, 5};
+  const auto writeResult = store->copyFromBuffer(0, inputIds);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const auto setStoreResult = ids.setDataStore(store);
+  SIMPLNX_RESULT_REQUIRE_VALID(setStoreResult);
+  const auto featureAmId = ds.getDataRefAs<AttributeMatrix>(k_FeatureAMPath).getId();
+
+  // An image translation stays in place and does not dispatch a resampling algorithm.
+  const ApplyTransformationToGeometryFilter filter;
+  const auto result = filter.execute(ds, MakeTransformFeatureArgs(true, true, 4));
+
+  const auto& image = ds.getDataRefAs<ImageGeom>(k_FeatureGeomPath);
+  CHECK(image.getOrigin() == FloatVec3{2, 3, 4});
+  REQUIRE(result.result.invalid());
+  REQUIRE(result.result.errors().size() == 1);
+  CHECK(result.result.errors().front().code == -95102);
+  CHECK(result.result.errors().front().message == "Injected post-transform Feature Ids read failure.");
+  CHECK(ds.getDataRefAs<AttributeMatrix>(k_FeatureAMPath).getId() == featureAmId);
+  CheckTransformFeatureData(ds, false, {2, 3});
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM rotation drops feature", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")

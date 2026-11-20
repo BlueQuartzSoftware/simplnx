@@ -152,8 +152,8 @@ Result<> RemoveFlaggedVertices::operator()()
   {
     // Validate all source IDs, including vertices removed by the mask, as Crop Image does.
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFeatureIdsPath);
-    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, false, m_MessageHandler);
-    if(validateResult.invalid())
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+    if(validateResult.invalid() || m_ShouldCancel)
     {
       return validateResult;
     }

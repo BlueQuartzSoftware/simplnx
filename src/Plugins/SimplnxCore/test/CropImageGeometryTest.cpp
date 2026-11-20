@@ -2482,6 +2482,45 @@ TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures negative destination
   CHECK(result.errors().front().message.find("resampled") == std::string::npos);
 }
 
+TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures scans destination Feature Ids in batches", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
+{
+  constexpr usize k_BatchSize = 40000;
+  constexpr usize k_NegativeIdIndex = k_BatchSize + 2;
+  constexpr usize k_TotalIds = k_NegativeIdIndex + 1;
+  DataStructure dataStructure;
+  const DataPath featureAmPath({"Feature Data"});
+  const DataPath featureIdsPath({"FeatureIds"});
+  auto* featureAm = AttributeMatrix::Create(dataStructure, featureAmPath.getTargetName(), ShapeType{2});
+  REQUIRE(featureAm != nullptr);
+  auto store = std::make_shared<CropProbeStore<int32>>(ShapeType{k_TotalIds}, ShapeType{1}, false, 1);
+  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), store);
+  REQUIRE(featureIds != nullptr);
+
+  SECTION("Preserves the first bulk-read diagnostic")
+  {
+    store->failRead = true;
+    const auto result = Sampling::RenumberFeatures(dataStructure, featureAmPath, featureIdsPath, featureIdsPath, {});
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -95100);
+    CHECK(result.errors().front().message == "Injected crop source read failure.");
+    CHECK(store->readCalls == 1);
+    CHECK(store->writeCalls == 0);
+  }
+
+  SECTION("Reports the global index in the second batch")
+  {
+    (*featureIds)[k_NegativeIdIndex] = -7;
+    const auto result = Sampling::RenumberFeatures(dataStructure, featureAmPath, featureIdsPath, featureIdsPath, {});
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().size() == 1);
+    CHECK(result.errors().front().code == -605);
+    CHECK(result.errors().front().message == "Feature Ids values must be zero or greater. Destination Feature Ids array 'FeatureIds' has the negative value -7 at index 40002.");
+    CHECK(store->readBytes == std::vector<usize>{k_BatchSize * sizeof(int32), (k_TotalIds - k_BatchSize) * sizeof(int32)});
+    CHECK(store->writeCalls == 0);
+  }
+}
+
 TEST_CASE("SimplnxCore::CropImageGeometry: RenumberFeatures missing destination Feature Ids throws", "[SimplnxCore][CropImageGeometryFilter][RenumberFeatures]")
 {
   // Guards exception handling for a missing destination Feature Ids array.

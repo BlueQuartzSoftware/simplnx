@@ -225,8 +225,8 @@ Result<> RegularizeZSpacing::operator()()
   if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
-    if(validateNumFeatResult.invalid())
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+    if(validateNumFeatResult.invalid() || m_ShouldCancel)
     {
       return validateNumFeatResult;
     }
