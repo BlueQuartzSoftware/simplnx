@@ -10,6 +10,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/ImageProcessing/HistogramEngine.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
@@ -197,7 +198,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
         return status;
       }
       const usize count = std::min(blockValues, total - start);
-      status = MergeResults(std::move(status), visitor(values.subspan(start, count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count), start));
+      AccumulateTransferResult(status, visitor(values.subspan(start, count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : maskValues.subspan(start, count), start));
       if(status.invalid())
       {
         return status;
@@ -220,8 +221,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
     const usize count = std::min(batchValues, total - start);
     if(maskPtr != nullptr)
     {
-      Result<> readMaskResult = maskPtr->copyIntoBuffer(start, nonstd::span<MaskT>(maskValuesPtr.get(), count));
-      status = MergeResults(std::move(status), std::move(readMaskResult));
+      AccumulateTransferResult(status, maskPtr->copyIntoBuffer(start, nonstd::span<MaskT>(maskValuesPtr.get(), count)));
       if(status.invalid())
       {
         return status;
@@ -231,8 +231,7 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
     {
       return status;
     }
-    Result<> readResult = input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count));
-    status = MergeResults(std::move(status), std::move(readResult));
+    AccumulateTransferResult(status, input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count)));
     if(status.invalid())
     {
       return status;
@@ -241,8 +240,8 @@ Result<> VisitOtsuValues(const AbstractDataStore<T>& input, const AbstractDataSt
     {
       return status;
     }
-    status = MergeResults(std::move(status),
-                          visitor(nonstd::span<const T>(valuesPtr.get(), count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : nonstd::span<const MaskT>(maskValuesPtr.get(), count), start));
+    AccumulateTransferResult(status,
+                             visitor(nonstd::span<const T>(valuesPtr.get(), count), maskPtr == nullptr ? nonstd::span<const MaskT>{} : nonstd::span<const MaskT>(maskValuesPtr.get(), count), start));
     if(status.invalid())
     {
       return status;
@@ -680,8 +679,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
         return result;
       }
       const usize count = std::min(plan.Values, input.getSize() - start);
-      Result<> maskReadResult = maskPtr->copyIntoBuffer(start, nonstd::span<MaskT>(maskValuesPtr.get(), count));
-      result = MergeResults(std::move(result), std::move(maskReadResult));
+      AccumulateTransferResult(result, maskPtr->copyIntoBuffer(start, nonstd::span<MaskT>(maskValuesPtr.get(), count)));
       if(result.invalid())
       {
         return result;
@@ -690,8 +688,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
       {
         return result;
       }
-      Result<> inputReadResult = input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count));
-      result = MergeResults(std::move(result), std::move(inputReadResult));
+      AccumulateTransferResult(result, input.copyIntoBuffer(start, nonstd::span<T>(valuesPtr.get(), count)));
       if(result.invalid())
       {
         return result;
@@ -720,8 +717,7 @@ Result<> ApplyOtsuImage(const AbstractDataStore<T>& input, AbstractDataStore<uin
       {
         return result;
       }
-      Result<> writeResult = output.copyFromBuffer(start, nonstd::span<const uint8>(labelsPtr->data(), count));
-      result = MergeResults(std::move(result), std::move(writeResult));
+      AccumulateTransferResult(result, output.copyFromBuffer(start, nonstd::span<const uint8>(labelsPtr->data(), count)));
       if(result.invalid())
       {
         return result;

@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -947,24 +948,23 @@ Result<> SubtractHConvexContrastChunked(const AbstractDataStore<T>& input, const
       return accumulatedResult;
     }
     const usize count = std::min(chunkValues, size - start);
-    accumulatedResult = MergeResults(std::move(accumulatedResult), input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer->data(), count)));
+    AccumulateTransferResult(accumulatedResult, input.copyIntoBuffer(start, nonstd::span<T>(inputBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer->data(), count)));
+    AccumulateTransferResult(accumulatedResult, reconstruction.copyIntoBuffer(start, nonstd::span<T>(reconstructionBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult =
-        MergeResults(std::move(accumulatedResult), SubtractHConvexContrastRange<T>(nonstd::span<const T>(inputBuffer->data(), count), nonstd::span<const T>(reconstructionBuffer->data(), count),
-                                                                                   nonstd::span<T>(inputBuffer->data(), count), start, inputPath));
+    AccumulateTransferResult(accumulatedResult, SubtractHConvexContrastRange<T>(nonstd::span<const T>(inputBuffer->data(), count), nonstd::span<const T>(reconstructionBuffer->data(), count),
+                                                                                nonstd::span<T>(inputBuffer->data(), count), start, inputPath));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
     }
-    accumulatedResult = MergeResults(std::move(accumulatedResult), output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer->data(), count)));
+    AccumulateTransferResult(accumulatedResult, output.copyFromBuffer(start, nonstd::span<const T>(inputBuffer->data(), count)));
     if(accumulatedResult.invalid())
     {
       return accumulatedResult;
@@ -1110,8 +1110,7 @@ struct WidenIntegerArrayToUInt32Fn
           return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
         }
         const usize count = std::min(chunkValues, total - start);
-        auto readResult = s.copyIntoBuffer(start, nonstd::span<S>(inputValues.data(), count));
-        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        AccumulateTransferResult(accumulated, s.copyIntoBuffer(start, nonstd::span<S>(inputValues.data(), count)));
         if(accumulated.invalid())
         {
           return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
@@ -1128,8 +1127,7 @@ struct WidenIntegerArrayToUInt32Fn
           }
           encodedValues[index] = encodedValue;
         }
-        auto writeResult = dst.copyFromBuffer(start, nonstd::span<const uint32>(encodedValues.data(), count));
-        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        AccumulateTransferResult(accumulated, dst.copyFromBuffer(start, nonstd::span<const uint32>(encodedValues.data(), count)));
         if(accumulated.invalid())
         {
           return conversionState.finish(srcPath, ConversionHandling, std::move(accumulated));
@@ -1194,8 +1192,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
           return accumulated;
         }
         const usize count = std::min(chunkValues, total - start);
-        auto readResult = src.copyIntoBuffer(start, nonstd::span<uint32>(encodedValues.data(), count));
-        accumulated = MergeResults(std::move(accumulated), std::move(readResult));
+        AccumulateTransferResult(accumulated, src.copyIntoBuffer(start, nonstd::span<uint32>(encodedValues.data(), count)));
         if(accumulated.invalid())
         {
           return accumulated;
@@ -1204,8 +1201,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
         {
           outputValues[index] = static_cast<D>(encodedValues[index]);
         }
-        auto writeResult = d.copyFromBuffer(start, nonstd::span<const D>(outputValues.data(), count));
-        accumulated = MergeResults(std::move(accumulated), std::move(writeResult));
+        AccumulateTransferResult(accumulated, d.copyFromBuffer(start, nonstd::span<const D>(outputValues.data(), count)));
         if(accumulated.invalid())
         {
           return accumulated;
