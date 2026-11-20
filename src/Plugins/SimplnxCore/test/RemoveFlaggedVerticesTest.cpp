@@ -105,6 +105,34 @@ Arguments MakeFeatureRemovalArgs(bool clear, bool renumber)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Preflight warns for unchanged Attribute Matrices", "[SimplnxCore][RemoveFlaggedVerticesFilter][UnchangedAttributeMatrices]")
+{
+  auto ds = CreateFeatureRemovalFixture();
+  const DataPath featurePath({"Vertex", "Vertex Feature Data"});
+  const DataPath ensemblePath({"Vertex", "Vertex Ensemble Data"});
+  const RemoveFlaggedVerticesFilter filter;
+
+  SECTION("Feature clearing leaves Ensemble data")
+  {
+    auto result = filter.preflight(ds, MakeFeatureRemovalArgs(true, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    REQUIRE(result.outputActions.warnings().size() == 1);
+    const auto& warning = result.outputActions.warnings().front();
+    CHECK(warning.code == -4041);
+    CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
+    CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
+  }
+
+  SECTION("Only the registered element data remains")
+  {
+    REQUIRE(ds.removeData(featurePath));
+    REQUIRE(ds.removeData(ensemblePath));
+    auto result = filter.preflight(ds, MakeFeatureRemovalArgs(false, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+  }
+}
+
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
   UnitTest::LoadPlugins();
@@ -433,7 +461,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON preflight", "[Simp
   const bool renumber = GENERATE(false, true);
   auto result = filter.preflight(ds, MakeFeatureRemovalArgs(true, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
@@ -453,7 +482,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear OFF preflight", "[Sim
   RemoveFlaggedVerticesFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRemovalArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
@@ -471,7 +501,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear OFF ignores stored re
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 

@@ -241,6 +241,34 @@ Arguments MakeFeatureCropArgs(bool clear, bool renumber)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Preflight warns for unchanged Attribute Matrices", "[SimplnxCore][CropEdgeGeometryFilter][UnchangedAttributeMatrices]")
+{
+  auto ds = CreateFeatureCropFixture();
+  const DataPath featurePath({"Edge", "Edge Feature Data"});
+  const DataPath ensemblePath({"Edge", "Edge Ensemble Data"});
+  const CropEdgeGeometryFilter filter;
+
+  SECTION("Feature clearing leaves Ensemble data")
+  {
+    auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    REQUIRE(result.outputActions.warnings().size() == 1);
+    const auto& warning = result.outputActions.warnings().front();
+    CHECK(warning.code == -4041);
+    CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
+    CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
+  }
+
+  SECTION("Only the registered element data remains")
+  {
+    REQUIRE(ds.removeData(featurePath));
+    REQUIRE(ds.removeData(ensemblePath));
+    auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+  }
+}
+
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][CropEdgeGeometryFilter]")
 {
   UnitTest::LoadPlugins();
@@ -715,7 +743,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear ON preflight", "[SimplnxCo
   const bool renumber = GENERATE(false, true);
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
@@ -735,7 +764,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF preflight", "[SimplnxC
   CropEdgeGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; });
   REQUIRE(it != result.outputValues.end());
@@ -754,7 +784,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Clear OFF ignores stored renumbe
   args.insertOrAssign(CropEdgeGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 

@@ -155,6 +155,34 @@ Arguments MakeFeatureRegularizeArgs(bool clear, bool renumber)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Preflight warns for unchanged Attribute Matrices", "[SimplnxCore][RegularizeZSpacingFilter][UnchangedAttributeMatrices]")
+{
+  auto ds = CreateFeatureRegularizeFixture();
+  const DataPath featurePath({"Image", "Cell Feature Data"});
+  const DataPath ensemblePath({"Image", "Cell Ensemble Data"});
+  const RegularizeZSpacingFilter filter;
+
+  SECTION("Feature clearing leaves Ensemble data")
+  {
+    auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    REQUIRE(result.outputActions.warnings().size() == 1);
+    const auto& warning = result.outputActions.warnings().front();
+    CHECK(warning.code == -4041);
+    CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
+    CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
+  }
+
+  SECTION("Only the registered element data remains")
+  {
+    REQUIRE(ds.removeData(featurePath));
+    REQUIRE(ds.removeData(ensemblePath));
+    auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(false, false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+  }
+}
+
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
   UnitTest::LoadPlugins();
@@ -645,7 +673,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF preflig
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
@@ -678,7 +707,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF preflight", "[Simpln
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
@@ -701,7 +731,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF ignores stored renum
   CHECK(am->getShape() == ShapeType{5});
   CHECK(am->getSize() == 3);
   UnitTest::CheckArraysInheritTupleDims(ds);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 

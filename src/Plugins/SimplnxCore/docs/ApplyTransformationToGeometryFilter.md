@@ -153,7 +153,10 @@ For *Translation*, each **Translation** component must be finite. For *Scale*, e
 
 **Cleared Feature Data** lists the arrays removed from the selected Feature Attribute Matrix.
 If Renumber is on, it also states that Feature Ids and the matrix size change.
-The preflight value **Feature Data Not Cleared** explains that retained Feature values can describe the original geometry. These values are information, not warnings.
+The preflight value **Feature Data Not Cleared** explains that retained Feature values can describe the original geometry.
+
+Warning **-4041** lists the source paths of Attribute Matrices that this filter copies or keeps unchanged. The list excludes the registered element Attribute Matrices and any Feature Attribute Matrix that the filter clears. Recompute Feature values in the listed matrices for the output geometry. Ensemble data is not affected.
+With *No Transform*, the warning applies only when Feature Ids are renumbered.
 
 Errors -67451 and -67452 are checked whenever Clear is on, also when Renumber is off.
 Errors -67453 and -67454 are checked only when Clear and Renumber are both on.

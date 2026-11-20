@@ -440,8 +440,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 2);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    const auto& unchangedWarning = preflightResult.outputActions.warnings()[1];
+    CHECK(unchangedWarning.code == -4041);
+    CHECK(unchangedWarning.message.find("\n" + inputGeometryPath.createChildPath("Precomputed AM").toString() + "\n") != std::string::npos);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -501,8 +504,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 2);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    const auto& unchangedWarning = preflightResult.outputActions.warnings()[1];
+    CHECK(unchangedWarning.code == -4041);
+    CHECK(unchangedWarning.message.find("\n" + inputGeometryPath.createChildPath("Precomputed AM").toString() + "\n") != std::string::npos);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -549,8 +555,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 2);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    const auto& unchangedWarning = preflightResult.outputActions.warnings()[1];
+    CHECK(unchangedWarning.code == -4041);
+    CHECK(unchangedWarning.message.find("\n" + inputGeometryPath.createChildPath("Precomputed AM").toString() + "\n") != std::string::npos);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -658,8 +667,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 2);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    const auto& unchangedWarning = preflightResult.outputActions.warnings()[1];
+    CHECK(unchangedWarning.code == -4041);
+    CHECK(unchangedWarning.message.find("\n" + inputGeometryPath.createChildPath("Precomputed AM").toString() + "\n") != std::string::npos);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -710,8 +722,11 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 2);
     REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    const auto& unchangedWarning = preflightResult.outputActions.warnings()[1];
+    CHECK(unchangedWarning.code == -4041);
+    CHECK(unchangedWarning.message.find("\n" + inputGeometryPath.createChildPath("Precomputed AM").toString() + "\n") != std::string::npos);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -1899,6 +1914,37 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM rotation
     CHECK((*ids)[i] == expected[i]);
   }
   CheckTransformFeatureData(ds, true, renumber ? ShapeType{3} : ShapeType{2, 3});
+}
+
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Preflight warns for unchanged Attribute Matrices", "[SimplnxCore][ApplyTransformationToGeometryFilter][UnchangedAttributeMatrices]")
+{
+  const bool node = GENERATE(false, true);
+  const auto transform = node ? 4 : GENERATE(3, 4, 5);
+  auto ds = CreateTransformFeatureFixture(node);
+  const DataPath ensemblePath({"Geometry", "Ensemble"});
+  const ApplyTransformationToGeometryFilter filter;
+
+  SECTION("Feature clearing leaves Ensemble data")
+  {
+    auto result = filter.preflight(ds, MakeTransformFeatureArgs(true, false, transform, node));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    REQUIRE(result.outputActions.warnings().size() == 1);
+    const auto& warning = result.outputActions.warnings().front();
+    CHECK(warning.code == -4041);
+    CHECK(warning.message.find(transform == 3 ? "copied to the transformed geometry" : "kept in the transformed geometry") != std::string::npos);
+    CHECK(warning.message.find("\nGeometry/Ensemble\n") != std::string::npos);
+    CHECK(warning.message.find("\nGeometry/Feature Data\n") == std::string::npos);
+    CHECK(warning.message.find("\nGeometry/Element Data\n") == std::string::npos);
+  }
+
+  SECTION("Only the registered element data remains")
+  {
+    REQUIRE(ds.removeData(k_FeatureAMPath));
+    REQUIRE(ds.removeData(ensemblePath));
+    auto result = filter.preflight(ds, MakeTransformFeatureArgs(false, false, transform, node));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+  }
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM preflight", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")

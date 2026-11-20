@@ -384,6 +384,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
+    AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "resampled geometry", resultOutputActions);
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();

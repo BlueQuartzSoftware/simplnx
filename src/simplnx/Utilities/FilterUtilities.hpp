@@ -12,6 +12,7 @@
 
 #include <filesystem>
 #include <stdexcept>
+#include <string_view>
 
 namespace nx::core
 {
@@ -350,5 +351,17 @@ SIMPLNX_EXPORT IFilter::PreflightResult NeighborListRemovalPreflightCode(const D
  */
 SIMPLNX_EXPORT void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, const DataPath& featureAttributeMatrixPath, const DataPath& featureIdsPath,
                                                            std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
+
+/**
+ * @brief Appends one warning if the operation copies or keeps any Attribute Matrix unchanged.
+ * @param dataStructure The source DataStructure.
+ * @param childPaths The source paths of the copied or retained children, including roots of copied or retained groups.
+ * @param excludedPaths Paths to the element matrices and any Feature Attribute Matrix that is cleared. All links to each object are excluded by ID.
+ * @param outputGeometry A short description such as "cropped geometry".
+ * @param resultOutputActions The preflight result that receives the warning.
+ * @param keptInPlace True if the operation keeps the matrices in the source geometry.
+ */
+SIMPLNX_EXPORT void AppendUnchangedAttributeMatricesWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, const std::vector<DataPath>& excludedPaths,
+                                                            std::string_view outputGeometry, Result<OutputActions>& resultOutputActions, bool keptInPlace = false);
 
 } // namespace nx::core
