@@ -1084,6 +1084,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Uneven scaling keep
   const DynamicTableParameter::ValueType matrix{{1.0, 5.0, 0.0, 0.0}, {0.0, 100000.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}};
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(matrix));
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<bool>(false));
+  // This fixture has no Feature Attribute Matrix.
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -1278,6 +1280,8 @@ Arguments ValidationTransformArgs(usize type, bool image)
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, DataPath({"ValidationImage", "Cells"}));
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, ChoicesParameter::ValueType{image ? 0ULL : 2ULL});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, static_cast<ChoicesParameter::ValueType>(type));
+  // The validation fixtures have no Feature Attribute Matrix.
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key, false);
   return args;
 }
 } // namespace
