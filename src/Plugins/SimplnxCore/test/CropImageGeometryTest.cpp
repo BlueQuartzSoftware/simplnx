@@ -692,10 +692,17 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear ON, renumber OFF prefligh
 {
   UnitTest::LoadPlugins();
   DataStructure ds = CreateFeatureCropFixture();
+  REQUIRE(AttributeMatrix::Create(ds, "Other Feature Data", {5}, ds.getId(DataPath({"Image"}))) != nullptr);
   CropImageGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  const auto& warning = result.outputActions.warnings().front();
+  CHECK(warning.code == -4041);
+  CHECK(warning.message == "These Attribute Matrices are copied to the cropped geometry unchanged:\n"
+                           "Image/Cell Ensemble Data\n"
+                           "Image/Other Feature Data\n"
+                           "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.");
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
@@ -713,7 +720,10 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF preflight", "[Simplnx
   CropImageGeometryFilter filter;
   auto result = filter.preflight(ds, MakeFeatureCropArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  const auto& warning = result.outputActions.warnings().front();
+  CHECK(warning.code == -4041);
+  CHECK(warning.message.find("\nImage/Cell Feature Data\n") != std::string::npos);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
@@ -729,7 +739,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Clear OFF ignores stored renumb
   args.insertOrAssign(CropImageGeometryFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 

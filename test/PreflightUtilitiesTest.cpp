@@ -1,8 +1,11 @@
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Geometry/GeometryTransformation.hpp"
 #include "simplnx/Utilities/ImageProcessing/ColorToGrayScale.hpp"
 
@@ -10,6 +13,41 @@
 #include <fmt/format.h>
 
 using namespace nx::core;
+
+TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source paths and excludes aliases by ID", "[simplnx][FilterUtilities]")
+{
+  DataStructure dataStructure;
+  const auto* source = DataGroup::Create(dataStructure, "Source");
+  REQUIRE(source != nullptr);
+  const auto* nested = DataGroup::Create(dataStructure, "Nested", source->getId());
+  REQUIRE(nested != nullptr);
+  const auto* selected = AttributeMatrix::Create(dataStructure, "Selected Features", {3}, source->getId());
+  REQUIRE(selected != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(selected->getId(), nested->getId()));
+
+  const DataPath selectedPath({"Source", "Selected Features"});
+  const DataPath nestedPath({"Source", "Nested"});
+  Result<OutputActions> result;
+
+  SECTION("Copied matrices appear in path order")
+  {
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Other Features", {2}, nested->getId()) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble", {2}, source->getId()) != nullptr);
+    AppendUnchangedAttributeMatricesWarning(dataStructure, {selectedPath, nestedPath, DataPath({"Source", "Ensemble"})}, {selectedPath}, "cropped geometry", result);
+    REQUIRE(result.warnings().size() == 1);
+    CHECK(result.warnings().front().code == -4041);
+    CHECK(result.warnings().front().message == "These Attribute Matrices are copied to the cropped geometry unchanged:\n"
+                                               "Source/Ensemble\n"
+                                               "Source/Nested/Other Features\n"
+                                               "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.");
+  }
+
+  SECTION("Only excluded matrices are present")
+  {
+    AppendUnchangedAttributeMatricesWarning(dataStructure, {nestedPath}, {selectedPath}, "cropped geometry", result);
+    CHECK(result.warnings().empty());
+  }
+}
 
 TEST_CASE("simplnx::PreflightColorToGrayScale: rejects inputs with fewer than three color components", "[simplnx][PreflightColorToGrayScale]")
 {

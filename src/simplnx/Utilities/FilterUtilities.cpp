@@ -3,13 +3,16 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 #include <system_error>
@@ -18,6 +21,33 @@ namespace fs = std::filesystem;
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_UnchangedAttributeMatricesWarning = -4041;
+
+void CollectAttributeMatrixPaths(const DataObject& object, const DataPath& path, const std::vector<DataObject::IdType>& excludedIds, std::vector<std::string>& paths)
+{
+  if(std::ranges::find(excludedIds, object.getId()) != excludedIds.end())
+  {
+    return;
+  }
+  if(dynamic_cast<const AttributeMatrix*>(&object) != nullptr)
+  {
+    paths.push_back(path.toString());
+    return;
+  }
+  if(const auto* group = dynamic_cast<const BaseGroup*>(&object); group != nullptr)
+  {
+    for(const auto& [id, child] : *group)
+    {
+      if(dynamic_cast<const BaseGroup*>(child.get()) != nullptr)
+      {
+        CollectAttributeMatrixPaths(*child, path.createChildPath(child->getName()), excludedIds, paths);
+      }
+    }
+  }
+}
+} // namespace
 
 // -----------------------------------------------------------------------------
 Result<> CreateOutputDirectories(const fs::path& outputPath)
@@ -146,6 +176,37 @@ void AppendStaleFeatureArraysPreflightValue(const DataStructure& dataStructure, 
     preflightUpdatedValues.push_back({"Stale Arrays", fmt::format("This filter modifies '{}' and removes Features from '{}'. The values in the following Feature Data Arrays are not recomputed and "
                                                                   "will be stale. Recompute any of the following Data Arrays:{}",
                                                                   featureIdsPath.toString(), featureAttributeMatrixPath.toString(), list)});
+  }
+}
+
+// -----------------------------------------------------------------------------
+void AppendUnchangedAttributeMatricesWarning(const DataStructure& dataStructure, const std::vector<DataPath>& childPaths, const std::vector<DataPath>& excludedPaths, std::string_view outputGeometry,
+                                             Result<OutputActions>& resultOutputActions, bool keptInPlace)
+{
+  std::vector<DataObject::IdType> excludedIds;
+  for(const auto& path : excludedPaths)
+  {
+    if(const auto* object = dataStructure.getData(path); object != nullptr)
+    {
+      excludedIds.push_back(object->getId());
+    }
+  }
+
+  std::vector<std::string> paths;
+  for(const auto& path : childPaths)
+  {
+    if(const auto* object = dataStructure.getData(path); object != nullptr)
+    {
+      CollectAttributeMatrixPaths(*object, path, excludedIds, paths);
+    }
+  }
+  if(!paths.empty())
+  {
+    std::ranges::sort(paths);
+    resultOutputActions.warnings().push_back(
+        {k_UnchangedAttributeMatricesWarning, fmt::format("These Attribute Matrices are {} the {} unchanged:\n{}\n"
+                                                          "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.",
+                                                          keptInPlace ? "kept in" : "copied to", outputGeometry, fmt::join(paths, "\n"))});
   }
 }
 

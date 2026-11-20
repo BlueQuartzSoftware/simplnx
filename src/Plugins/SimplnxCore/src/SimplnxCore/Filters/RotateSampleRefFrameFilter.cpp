@@ -21,6 +21,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -368,6 +369,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
+    AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "rotated geometry", resultOutputActions);
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();

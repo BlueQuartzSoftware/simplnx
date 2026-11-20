@@ -19,6 +19,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -357,6 +358,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   auto childPaths = GetAllChildDataPaths(dataStructure, srcEdgeGeomPath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
+    AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "cropped geometry", resultOutputActions);
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcEdgeGeomPath, destEdgeGeomPath).value();

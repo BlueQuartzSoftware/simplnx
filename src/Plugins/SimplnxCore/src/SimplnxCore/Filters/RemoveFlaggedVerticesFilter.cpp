@@ -242,17 +242,10 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   auto childPaths = GetAllChildDataPaths(dataStructure, vertexGeomPath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
+    std::erase_if(childPaths.value(), [&dataStructure, &verticesId](const DataPath& path) { return dataStructure.getId(path) == verticesId; });
+    AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "reduced geometry", resultOutputActions);
     for(const auto& childPath : childPaths.value())
     {
-      // Specifically check if we are about to copy the original Shared Vertex List
-      // because we do not want to do that.
-      auto dataObjectId = dataStructure.getId(childPath);
-      if(dataObjectId == verticesId.value())
-      {
-        continue;
-      }
-
-      // If we got past that check, then keep going.
       const DataPath copiedChildPath = childPath.rebase(vertexGeomPath, reducedVertexPath).value();
       AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, clearFeatureAttributeMatrix ? featureAmPath : DataPath{});
     }

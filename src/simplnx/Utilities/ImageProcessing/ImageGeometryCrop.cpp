@@ -11,6 +11,7 @@
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <fmt/ranges.h>
@@ -347,6 +348,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
+    AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "cropped geometry", resultOutputActions);
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();

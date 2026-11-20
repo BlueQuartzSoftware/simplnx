@@ -1035,6 +1035,34 @@ void CheckClearedFeatureData(const DataStructure& ds, const DataPath& geomPath)
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Preflight warns for unchanged Attribute Matrices", "[SimplnxCore][RotateSampleRefFrameFilter][UnchangedAttributeMatrices]")
+{
+  auto ds = CreateFeatureRotateFixture();
+  const DataPath featurePath({"Input", "Cell Feature Data"});
+  const DataPath ensemblePath({"Input", "Cell Ensemble Data"});
+  const RotateSampleRefFrameFilter filter;
+
+  SECTION("Feature clearing leaves Ensemble data")
+  {
+    auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    REQUIRE(result.outputActions.warnings().size() == 1);
+    const auto& warning = result.outputActions.warnings().front();
+    CHECK(warning.code == -4041);
+    CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
+    CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
+  }
+
+  SECTION("Only the registered element data remains")
+  {
+    REQUIRE(ds.removeData(featurePath));
+    REQUIRE(ds.removeData(ensemblePath));
+    auto result = filter.preflight(ds, MakeFeatureRotateArgs(false));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    CHECK(result.outputActions.warnings().empty());
+  }
+}
+
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON preflight", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();
@@ -1044,7 +1072,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON preflight", "[SimplnxCore
   CHECK(filter.getDefaultArguments().value<BoolParameter::ValueType>(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key));
   auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   const auto info = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
   REQUIRE(info != result.outputValues.end());
   CHECK(info->value.find("Input/Cell Feature Data/NumElements") != std::string::npos);
@@ -1073,7 +1102,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear OFF copies Feature AM unchan
   args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Missing"})));
   auto preflight = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  CHECK(preflight.outputActions.warnings().empty());
+  REQUIRE(preflight.outputActions.warnings().size() == 1);
+  CHECK(preflight.outputActions.warnings().front().code == -4041);
   CHECK(std::any_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
   CHECK(std::none_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; }));
   auto result = scope.executeFilter(filter, ds, args);

@@ -123,6 +123,50 @@ bool ResamplesImageGeometry(const ApplyTransformationToGeometryInputValues& inpu
   return inputValues.TransformationSelection != detail::k_NoTransformIdx && inputValues.TransformationSelection != detail::k_TranslationIdx &&
          inputValues.TransformationSelection != detail::k_ScaleIdx;
 }
+
+void AppendRetainedAttributeMatricesWarning(const DataStructure& dataStructure, const DataPath& geometryPath, const AttributeMatrix* clearedMatrix, Result<OutputActions>& resultOutputActions)
+{
+  const auto childPaths = GetAllChildDataPaths(dataStructure, geometryPath);
+  if(!childPaths.has_value())
+  {
+    return;
+  }
+
+  std::vector<DataPath> excludedPaths;
+  const auto excludeMatrix = [&excludedPaths](const AttributeMatrix* matrix) {
+    if(matrix != nullptr)
+    {
+      const auto paths = matrix->getDataPaths();
+      if(!paths.empty())
+      {
+        excludedPaths.push_back(paths.front());
+      }
+    }
+  };
+  excludeMatrix(clearedMatrix);
+  const auto* geometry = dataStructure.getDataAs<IGeometry>(geometryPath);
+  if(const auto* grid = dynamic_cast<const IGridGeometry*>(geometry); grid != nullptr)
+  {
+    excludeMatrix(grid->getCellData());
+  }
+  if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(geometry); nodes != nullptr)
+  {
+    excludeMatrix(nodes->getVertexAttributeMatrix());
+  }
+  if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(geometry); edges != nullptr)
+  {
+    excludeMatrix(edges->getEdgeAttributeMatrix());
+  }
+  if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(geometry); faces != nullptr)
+  {
+    excludeMatrix(faces->getFaceAttributeMatrix());
+  }
+  if(const auto* polyhedra = dynamic_cast<const INodeGeometry3D*>(geometry); polyhedra != nullptr)
+  {
+    excludeMatrix(polyhedra->getPolyhedraAttributeMatrix());
+  }
+  AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), excludedPaths, "transformed geometry", resultOutputActions, true);
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -575,6 +619,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
       if(childPaths.has_value())
       {
+        AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), ignorePaths, "transformed geometry", resultOutputActions);
         for(const auto& childPath : childPaths.value())
         {
           // Both traversals append child names below srcImagePath, so rebasing must succeed.
@@ -638,6 +683,11 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
 
     // For non-ImageGeom geometries, vertex data is modified in place
     nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pSelectedGeometryPathValue, {});
+  }
+
+  if(!replacesImageGeometry && (pTransformationMatrixTypeValue != detail::k_NoTransformIdx || renumberFeatures))
+  {
+    AppendRetainedAttributeMatricesWarning(dataStructure, pSelectedGeometryPathValue, sourceFeatureAm, resultOutputActions);
   }
 
   // Are we saving the transform matrix

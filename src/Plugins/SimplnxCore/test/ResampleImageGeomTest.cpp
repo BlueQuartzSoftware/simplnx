@@ -219,10 +219,17 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF prefligh
 {
   UnitTest::LoadPlugins();
   DataStructure ds = CreateFeatureResampleFixture();
+  REQUIRE(AttributeMatrix::Create(ds, "Other Feature Data", {5}, ds.getId(DataPath({"Image"}))) != nullptr);
   ResampleImageGeomFilter filter;
   auto result = filter.preflight(ds, MakeFeatureResampleArgs(true, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  const auto& unchangedWarning = result.outputActions.warnings().front();
+  CHECK(unchangedWarning.code == -4041);
+  CHECK(unchangedWarning.message == "These Attribute Matrices are copied to the resampled geometry unchanged:\n"
+                                    "Image/Cell Ensemble Data\n"
+                                    "Image/Other Feature Data\n"
+                                    "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble data is not affected.");
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
   REQUIRE(it != result.outputValues.end());
@@ -253,7 +260,10 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF preflight", "[Simplnx
   ResampleImageGeomFilter filter;
   auto result = filter.preflight(ds, MakeFeatureResampleArgs(false, false));
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  const auto& warning = result.outputActions.warnings().front();
+  CHECK(warning.code == -4041);
+  CHECK(warning.message.find("\nImage/Cell Feature Data\n") != std::string::npos);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
   CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
@@ -276,7 +286,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF ignores stored renumb
   CHECK(am->getShape() == ShapeType{5});
   CHECK(am->getSize() == 3);
   UnitTest::CheckArraysInheritTupleDims(ds);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 
@@ -523,7 +534,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Shared utility defaults preserve Feat
   inputValues.Spacing = {2.0F, 1.0F, 1.0F};
   auto result = PreflightImageGeometryResample(ds, inputValues);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  CHECK(result.outputActions.warnings().empty());
+  REQUIRE(result.outputActions.warnings().size() == 1);
+  CHECK(result.outputActions.warnings().front().code == -4041);
   CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(),
                      [](const auto& value) { return value.name == "Feature Data Not Cleared" || value.name == "Cleared Feature Data" || value.name == "Invalidated NeighborLists"; }));
   auto applyResult = result.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
