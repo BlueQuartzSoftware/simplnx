@@ -491,8 +491,8 @@ Result<> CropEdgeGeometry::operator()()
   {
     // Validate all source IDs, including edges removed by the crop, as Crop Image does.
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->edgeFeatureIdsPath);
-    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->featureAttributeMatrixPath, featureIds, false, m_MessageHandler);
-    if(validateResult.invalid())
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->featureAttributeMatrixPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+    if(validateResult.invalid() || m_ShouldCancel)
     {
       return validateResult;
     }

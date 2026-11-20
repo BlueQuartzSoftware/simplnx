@@ -942,8 +942,8 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
   {
     // Validate the source before resampling can discard cells with invalid IDs.
     const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsPath);
-    auto validation = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, inputValues.FeatureAttributeMatrixPath, featureIds, false, messageHandler);
-    if(validation.invalid())
+    auto validation = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, inputValues.FeatureAttributeMatrixPath, featureIds, false, messageHandler, &shouldCancel);
+    if(validation.invalid() || shouldCancel)
     {
       return validation;
     }
@@ -954,26 +954,39 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
     return result;
   }
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath);
-  if(inputValues.ClearFeatureAttributeMatrix && (imageGeom == nullptr || !ResamplesImageGeometry(inputValues)))
-  {
-    // Clear after transformation inputs are consumed, but before renumbering resizes the Feature AM.
-    ClearFeatureAttributeMatrix(dataStructure, inputValues.FeatureAttributeMatrixPath);
-  }
+  const bool resamplesImage = imageGeom != nullptr && ResamplesImageGeometry(inputValues);
   if(!renumberFeatures)
   {
+    if(inputValues.ClearFeatureAttributeMatrix && !resamplesImage)
+    {
+      ClearFeatureAttributeMatrix(dataStructure, inputValues.FeatureAttributeMatrixPath);
+    }
     return result;
   }
 
-  auto destFeatureAmPath = inputValues.FeatureAttributeMatrixPath;
-  auto destFeatureIdsPath = inputValues.FeatureIdsPath;
-  if(imageGeom != nullptr && ResamplesImageGeometry(inputValues))
+  if(resamplesImage)
   {
     // Renumber before deferred actions delete the source and rename the replacement geometry.
     auto pathVector = inputValues.SelectedGeometryPath.getPathVector();
     pathVector.back() = "." + pathVector.back();
     const DataPath destImagePath(pathVector);
-    destFeatureAmPath = destImagePath.createChildPath(inputValues.FeatureAttributeMatrixPath.getTargetName());
-    destFeatureIdsPath = destImagePath.createChildPath(imageGeom->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
+    const auto destFeatureAmPath = destImagePath.createChildPath(inputValues.FeatureAttributeMatrixPath.getTargetName());
+    const auto destFeatureIdsPath = destImagePath.createChildPath(imageGeom->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
+    return MergeResults(std::move(result), Sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.FeatureIdsPath, destFeatureIdsPath, messageHandler, shouldCancel));
   }
-  return MergeResults(std::move(result), Sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.FeatureIdsPath, destFeatureIdsPath, messageHandler, shouldCancel));
+
+  const auto& featureAmPath = inputValues.FeatureAttributeMatrixPath;
+  const auto& featureIdsPath = inputValues.FeatureIdsPath;
+  std::vector<bool> activeObjects;
+  auto scanResult = Sampling::FindActiveFeatures(dataStructure, featureAmPath, featureIdsPath, featureIdsPath, activeObjects, shouldCancel);
+  result = MergeResults(std::move(result), std::move(scanResult));
+  if(result.invalid() || shouldCancel)
+  {
+    return result;
+  }
+
+  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+  ClearFeatureAttributeMatrix(dataStructure, featureAmPath);
+  // A store write can still fail after the clear, leaving the Feature Ids partly rewritten.
+  return MergeResults(std::move(result), RemoveInactiveObjects(dataStructure, featureAmPath, activeObjects, featureIds, activeObjects.size(), messageHandler, shouldCancel));
 }
