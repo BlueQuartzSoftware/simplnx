@@ -3195,6 +3195,65 @@ TEST_CASE("CopyDataObjectExcludingAction: helper with a missing excluded object 
   CHECK(ds.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
 
+TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a root placement", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  auto ds = CreateExcludedLinkStructure();
+  const auto* geom = ds.getData(DataPath({"Geom"}));
+  const auto* outside = ds.getData(DataPath({"Outside"}));
+  REQUIRE(ds.setAdditionalParent(geom->getId(), outside->getId()));
+  const DataPath featurePath({"Geom", "Feature"});
+  const auto featureId = ds.getData(featurePath)->getId();
+  const DataPath sourcePath({"Geom", "Misc"});
+  const DataPath copyPath({"Copy", "Misc"});
+  const std::array placements = {featurePath, sourcePath.createChildPath("Feature"), sourcePath.createChildPath("Sub").createChildPath("Feature"),
+                                 DataPath({"Outside", "Geom", "Misc", "Sub", "Feature"}), DataPath({"Outside", "Feature"})};
+
+  OutputActions actions;
+  AppendCopyDataObjectAction(ds, actions, sourcePath, copyPath, featurePath);
+  REQUIRE(actions.actions.size() == 1);
+  const auto clonedAction = actions.actions.front()->clone();
+  const auto* copy = dynamic_cast<const CopyDataObjectExcludingAction*>(clonedAction.get());
+  REQUIRE(copy != nullptr);
+  auto created = copy->getAllCreatedPaths();
+  std::sort(created.begin(), created.end());
+  CHECK(created == std::vector<DataPath>{copyPath, copyPath.createChildPath("Keep"), copyPath.createChildPath("Sub")});
+
+  OutputActions excludedCopies;
+  AppendCopyDataObjectAction(ds, excludedCopies, sourcePath.createChildPath("Feature").createChildPath("Counts"), DataPath({"Copied Counts"}), featurePath);
+  CHECK(excludedCopies.actions.empty());
+
+  std::vector<DataObject::IdType> prunedFeatureIds;
+  const nod::scoped_connection connection(ds.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
+    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    {
+      const auto removed = std::static_pointer_cast<DataRemovedMessage>(message);
+      if(removed->getName() == "Feature")
+      {
+        prunedFeatureIds.push_back(removed->getId());
+      }
+    }
+  }));
+  const auto result = copy->apply(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(prunedFeatureIds.size() == 2);
+  for(const auto prunedId : prunedFeatureIds)
+  {
+    CHECK(prunedId != featureId);
+    CHECK(ds.getData(prunedId) == nullptr);
+  }
+  CHECK(ds.getData(copyPath.createChildPath("Feature")) == nullptr);
+  CHECK(ds.getData(copyPath.createChildPath("Sub").createChildPath("Feature")) == nullptr);
+  const auto* counts = ds.getDataAs<Int32Array>(featurePath.createChildPath("Counts"));
+  REQUIRE(counts != nullptr);
+  CHECK((*counts)[2] == 7);
+  for(const auto& placement : placements)
+  {
+    CHECK(ds.getId(placement) == featureId);
+    CHECK(ds.getData(placement.createChildPath("Counts")) == counts);
+  }
+}
+
 TEST_CASE("CopyDataObjectExcludingAction: missing excluded object copies everything", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
   DataStructure ds = CreateExcludedLinkStructure();

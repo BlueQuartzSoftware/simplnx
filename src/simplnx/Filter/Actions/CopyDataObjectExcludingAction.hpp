@@ -6,9 +6,9 @@
 namespace nx::core
 {
 /**
- * @brief Copies an object without any links to a selected object. Source links are restored even if copying throws.
- * If excludedPath does not resolve, this is a plain CopyDataObjectAction.
- * @pre allCreatedPaths omits the aliases of the excluded object and their descendants.
+ * @brief Deep-copies a subtree and removes copies of the excluded object by matching its source ID.
+ * The source links stay intact. An unresolved exclusion path gives a plain copy.
+ * @pre The source path is outside the excluded subtree and allCreatedPaths omits each excluded placement and its descendants.
  */
 class SIMPLNX_EXPORT CopyDataObjectExcludingAction : public CopyDataObjectAction
 {

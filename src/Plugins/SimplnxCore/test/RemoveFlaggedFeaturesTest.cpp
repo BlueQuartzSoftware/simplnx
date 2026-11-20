@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -1756,4 +1757,27 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
   }
   CHECK(ds.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeatures);
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature AM registered as vertex data", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
+{
+  const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
+  DataStructure ds;
+  BuildFixture(ds, FixtureSpec{{3, 1, 1}, {1, 2, 3}, 4, {false, true, false, true}});
+  const auto* sourceFeatures = ds.getDataAs<AttributeMatrix>(k_FeatureAMPath);
+  REQUIRE(sourceFeatures != nullptr);
+  auto* nested = VertexGeom::Create(ds, "Nested Mesh", ds.getData(k_ImageGeomPath)->getId());
+  REQUIRE(nested != nullptr);
+  auto* vertices = UnitTest::CreateTestDataArray<float32>(ds, VertexGeom::k_SharedVertexListName, {4}, {3}, nested->getId());
+  REQUIRE(vertices != nullptr);
+  nested->setVertices(*vertices);
+  REQUIRE(ds.setAdditionalParent(sourceFeatures->getId(), nested->getId()));
+  nested->setVertexAttributeMatrix(*sourceFeatures);
+
+  RemoveFlaggedFeaturesFilter filter;
+  const auto result = filter.preflight(ds, MakeArgs(operation, false));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  REQUIRE(result.outputActions.errors().size() == 1);
+  CHECK(result.outputActions.errors().front().code == -67460);
+  CHECK(result.outputActions.errors().front().message.find(k_ImageGeomPath.createChildPath("Nested Mesh").toString()) != std::string::npos);
 }

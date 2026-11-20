@@ -2159,6 +2159,44 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM nested a
   CHECK(original->getSize() == 3);
 }
 
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Copy actions through a linked root placement", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
+{
+  const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
+  auto ds = CreateTransformFeatureFixture();
+  const auto* geometry = ds.getData(k_FeatureGeomPath);
+  auto* outside = DataGroup::Create(ds, "Outside");
+  auto* nested = DataGroup::Create(ds, "Misc", geometry->getId());
+  REQUIRE(outside != nullptr);
+  REQUIRE(nested != nullptr);
+  REQUIRE(ds.setAdditionalParent(geometry->getId(), outside->getId()));
+  const auto featureId = ds.getData(k_FeatureAMPath)->getId();
+  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  const auto parents = ds.getData(k_FeatureAMPath)->getParentIds();
+
+  ApplyTransformationToGeometryFilter filter;
+  const auto preflight = filter.preflight(ds, MakeTransformFeatureArgs(true, false));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = preflight.outputActions.value().applyRegular(ds, mode);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  const auto* replacement = ds.getDataAs<AttributeMatrix>(DataPath({".Geometry", "Feature Data"}));
+  REQUIRE(replacement != nullptr);
+  CHECK(replacement->getId() != featureId);
+  CHECK(replacement->getSize() == 0);
+  CHECK(ds.getData(DataPath({".Geometry", "Misc"})) != nullptr);
+  CHECK(ds.getData(DataPath({".Geometry", "Misc", "Feature Data"})) == nullptr);
+  const auto* sourceFeature = ds.getData(k_FeatureAMPath);
+  REQUIRE(sourceFeature != nullptr);
+  CHECK(sourceFeature->getParentIds() == parents);
+  for(const auto& placement :
+      {k_FeatureAMPath, DataPath({"Geometry", "Misc", "Feature Data"}), DataPath({"Outside", "Geometry", "Feature Data"}), DataPath({"Outside", "Geometry", "Misc", "Feature Data"})})
+  {
+    CHECK(ds.getId(placement) == featureId);
+    const auto* values = ds.getDataAs<Int32Array>(placement.createChildPath("Values"));
+    REQUIRE(values != nullptr);
+    CHECK((*values)[5] == 15);
+  }
+}
+
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Feature AM shared input survives", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();

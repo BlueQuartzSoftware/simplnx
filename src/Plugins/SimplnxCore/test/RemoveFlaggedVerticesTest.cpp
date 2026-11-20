@@ -659,6 +659,60 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON, renumber OFF exec
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON through a linked root placement", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")
+{
+  auto ds = CreateFeatureRemovalFixture();
+  const auto* vertex = ds.getData(DataPath({"Vertex"}));
+  auto* linked = DataGroup::Create(ds, "Linked");
+  auto* nested = DataGroup::Create(ds, "Nested", vertex->getId());
+  REQUIRE(linked != nullptr);
+  REQUIRE(nested != nullptr);
+  REQUIRE(ds.setAdditionalParent(vertex->getId(), linked->getId()));
+  const DataPath featurePath({"Vertex", "Vertex Feature Data"});
+  const auto featureId = ds.getData(featurePath)->getId();
+  REQUIRE(ds.setAdditionalParent(featureId, nested->getId()));
+  const auto parents = ds.getData(featurePath)->getParentIds();
+
+  RemoveFlaggedVerticesFilter filter;
+  const auto args = MakeFeatureRemovalArgs(true, false);
+  const auto preflight = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto result = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  const DataPath reducedFeaturePath({"Reduced", "Vertex Feature Data"});
+  const auto* replacement = ds.getDataAs<AttributeMatrix>(reducedFeaturePath);
+  REQUIRE(replacement != nullptr);
+  CHECK(replacement->getId() != featureId);
+  CHECK(replacement->getSize() == 0);
+  CHECK(ds.getData(DataPath({"Reduced", "Nested", "Vertex Feature Data"})) == nullptr);
+  const auto* sourceFeature = ds.getData(featurePath);
+  REQUIRE(sourceFeature != nullptr);
+  CHECK(sourceFeature->getParentIds() == parents);
+
+  for(const auto& placement :
+      {featurePath, DataPath({"Vertex", "Nested", "Vertex Feature Data"}), DataPath({"Linked", "Vertex", "Vertex Feature Data"}), DataPath({"Linked", "Vertex", "Nested", "Vertex Feature Data"})})
+  {
+    CHECK(ds.getId(placement) == featureId);
+    const auto* counts = ds.getDataAs<Int32Array>(placement.createChildPath("NumElements"));
+    const auto* names = ds.getDataAs<StringArray>(placement.createChildPath("Names"));
+    const auto* neighbors = ds.getDataAs<NeighborList<int32>>(placement.createChildPath("NeighborList"));
+    REQUIRE(counts != nullptr);
+    REQUIRE(names != nullptr);
+    REQUIRE(neighbors != nullptr);
+    const std::array<int32, 5> expectedCounts = {0, 2, 2, 2, 2};
+    const std::array<std::string, 5> expectedNames = {"Background", "One", "Two", "Three", "Four"};
+    const std::array<std::vector<int32>, 5> expectedNeighbors = {{{}, {2}, {1, 3}, {2, 4}, {3}}};
+    for(usize i = 0; i < expectedCounts.size(); ++i)
+    {
+      CHECK((*counts)[i] == expectedCounts[i]);
+      CHECK((*names)[i] == expectedNames[i]);
+      CHECK(neighbors->getList(i) == expectedNeighbors[i]);
+    }
+  }
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Clear ON, renumber ON execute", "[SimplnxCore][RemoveFlaggedVerticesFilter][ClearFeatureAM]")
 {
   UnitTest::LoadPlugins();

@@ -1,10 +1,36 @@
 #include "CopyDataObjectExcludingAction.hpp"
 
-#include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 
+#include <cassert>
+
 using namespace nx::core;
+
+namespace
+{
+void PruneCopiedLinks(DataStructure& dataStructure, const BaseGroup& source, BaseGroup& copy, DataObject::IdType excludedId)
+{
+  for(const auto& [id, child] : source)
+  {
+    if(child->getId() == excludedId)
+    {
+      if(const auto* copiedChild = copy[child->getName()]; copiedChild != nullptr)
+      {
+        [[maybe_unused]] const bool removed = dataStructure.removeParent(copiedChild->getId(), copy.getId());
+        assert(removed);
+      }
+    }
+    else if(const auto* sourceGroup = dynamic_cast<const BaseGroup*>(child.get()); sourceGroup != nullptr)
+    {
+      if(auto* copiedGroup = dynamic_cast<BaseGroup*>(copy[child->getName()]); copiedGroup != nullptr)
+      {
+        PruneCopiedLinks(dataStructure, *sourceGroup, *copiedGroup, excludedId);
+      }
+    }
+  }
+}
+} // namespace
 
 CopyDataObjectExcludingAction::CopyDataObjectExcludingAction(const DataPath& source, const DataPath& destination, const std::vector<DataPath>& allCreatedPaths, DataPath excludedPath)
 : CopyDataObjectAction(source, destination, allCreatedPaths)
@@ -16,30 +42,17 @@ CopyDataObjectExcludingAction::~CopyDataObjectExcludingAction() noexcept = defau
 
 Result<> CopyDataObjectExcludingAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  const auto excluded = dataStructure.getSharedData(m_ExcludedPath);
-  if(excluded == nullptr)
+  const auto excludedId = m_ExcludedPath.empty() ? std::nullopt : dataStructure.getId(m_ExcludedPath);
+  auto result = CopyDataObjectAction::apply(dataStructure, mode);
+  if(result.valid() && excludedId.has_value())
   {
-    // Nothing links to a missing object, so a plain copy excludes it.
-    return CopyDataObjectAction::apply(dataStructure, mode);
-  }
-  std::vector<BaseGroup*> parents;
-  for(const auto parentId : excluded->getParentIds())
-  {
-    auto* parent = dataStructure.getDataAs<BaseGroup>(parentId);
-    parents.push_back(parent);
-  }
-  // Keep parent IDs intact. Only this copy reads the temporary view.
-  const auto restore = MakeScopeGuard([&parents, &excluded]() noexcept {
-    for(auto* parent : parents)
+    if(const auto* source = dataStructure.getDataAs<BaseGroup>(path()); source != nullptr)
     {
-      parent->getDataMap().insert(excluded);
+      auto& copy = dataStructure.getDataRefAs<BaseGroup>(newPath());
+      PruneCopiedLinks(dataStructure, *source, copy, *excludedId);
     }
-  });
-  for(auto* parent : parents)
-  {
-    parent->getDataMap().remove(excluded->getId());
   }
-  return CopyDataObjectAction::apply(dataStructure, mode);
+  return result;
 }
 
 IDataAction::UniquePointer CopyDataObjectExcludingAction::clone() const

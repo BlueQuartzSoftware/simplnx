@@ -138,11 +138,21 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
+  const auto cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
   auto featureAttributeMatrixResult =
-      ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, pFlaggedFeaturesArrayPathValue.getParent(), -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
+      ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, cellFeatureAttributeMatrixPath, -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+  }
+
+  if(operationType == to_underlying(Functionality::Extract) || operationType == to_underlying(Functionality::ExtractThenRemove))
+  {
+    auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
+    if(elementDataResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
+    }
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -150,8 +160,6 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   pFeatureIdsArrayPathValue = MapToGeometryCellDataPath(cellDataPath, pFeatureIdsArrayPathValue);
 
   nx::core::Result<OutputActions> resultOutputActions;
-
-  DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
 
   std::vector<PreflightValue> preflightUpdatedValues;
 

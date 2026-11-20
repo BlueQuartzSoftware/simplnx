@@ -14,9 +14,9 @@
 namespace nx::core
 {
 /**
- * @brief Appends a recursive copy action, excluding every alias of excludedPath and its descendants from the copy and created paths.
- * If source is itself an alias of excludedPath, or is inside one, nothing is appended.
- * @param dataStructure Source structure used to enumerate paths.
+ * @brief Appends a recursive copy action that excludes every placement of the selected object and its descendants.
+ * Matches the excluded object by ID. If the source path passes through that object, the function appends no action.
+ * @param dataStructure Supplies the source objects and their placements.
  * @param actions Receives the copy action, if one is appended.
  * @param source Source object to copy.
  * @param destination Path of the new copy.

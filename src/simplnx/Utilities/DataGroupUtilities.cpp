@@ -23,38 +23,49 @@ constexpr int32 k_MissingFeatureGroupError = -46000;
  * @brief Reported when the supplied active-flag count does not match the feature tuple count.
  */
 constexpr int32 k_FeatureTupleCountMismatchError = -46001;
+
+bool PathContainsObject(const DataStructure& dataStructure, DataPath path, DataObject::IdType id)
+{
+  for(; !path.empty(); path = path.getParent())
+  {
+    if(dataStructure.getId(path) == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void AppendCopiedChildPaths(const BaseGroup& source, const DataPath& destination, std::optional<DataObject::IdType> excludedId, std::vector<DataPath>& createdPaths)
+{
+  for(const auto& [id, child] : source)
+  {
+    if(child->getId() == excludedId)
+    {
+      continue;
+    }
+    auto childPath = destination.createChildPath(child->getName());
+    createdPaths.push_back(childPath);
+    if(const auto* group = dynamic_cast<const BaseGroup*>(child.get()); group != nullptr)
+    {
+      AppendCopiedChildPaths(*group, childPath, excludedId, createdPaths);
+    }
+  }
+}
 } // namespace
 
 void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputActions& actions, const DataPath& source, const DataPath& destination, const DataPath& excludedPath)
 {
-  const DataObject* excluded = excludedPath.empty() ? nullptr : dataStructure.getData(excludedPath);
-  std::vector<DataPath> aliases;
-  if(excluded != nullptr)
-  {
-    aliases = excluded->getDataPaths();
-  }
-  const auto isExcluded = [&aliases](const DataPath& path) {
-    return std::any_of(aliases.begin(), aliases.end(), [&path](const DataPath& alias) { return path.rebase(alias, DataPath{}).has_value(); });
-  };
-  if(isExcluded(source))
+  const auto excludedId = excludedPath.empty() ? std::nullopt : dataStructure.getId(excludedPath);
+  if(excludedId.has_value() && PathContainsObject(dataStructure, source, *excludedId))
   {
     return;
   }
   std::vector<DataPath> createdPaths = {destination};
-  if(dataStructure.getDataAs<BaseGroup>(source) != nullptr)
+  if(const auto* group = dataStructure.getDataAs<BaseGroup>(source); group != nullptr)
   {
-    const auto children = GetAllChildDataPathsRecursive(dataStructure, source);
-    if(children.has_value())
-    {
-      for(const auto& child : children.value())
-      {
-        if(!isExcluded(child))
-        {
-          createdPaths.push_back(child.rebase(source, destination).value());
-        }
-      }
-    }
-    if(excluded != nullptr)
+    AppendCopiedChildPaths(*group, destination, excludedId, createdPaths);
+    if(excludedId.has_value())
     {
       actions.appendAction(std::make_unique<CopyDataObjectExcludingAction>(source, destination, createdPaths, excludedPath));
       return;
