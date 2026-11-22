@@ -10,8 +10,29 @@
 #include <map>
 #include <stdexcept>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#endif
+
 namespace nx::core::UnitTest
 {
+#ifdef _WIN32
+bool VolumeSupportsPosixRename(const fs::path& directory)
+{
+  std::array<wchar_t, 32768> volumePath{};
+  const auto absoluteDirectory = fs::absolute(directory);
+  REQUIRE((GetVolumePathNameW(absoluteDirectory.c_str(), volumePath.data(), static_cast<DWORD>(volumePath.size())) != 0));
+  DWORD flags = 0;
+  REQUIRE((GetVolumeInformationW(volumePath.data(), nullptr, 0, nullptr, nullptr, &flags, nullptr, 0) != 0));
+  // FILE_SUPPORTS_POSIX_UNLINK_RENAME, also usable with older SDK headers.
+  constexpr DWORD k_SupportsPosixUnlinkRename = 0x00000400;
+  return (flags & k_SupportsPosixUnlinkRename) != 0;
+}
+#endif
+
 void RequireDiskBackedStore(const IDataArray& array)
 {
   const auto& store = array.getIDataStoreRef();

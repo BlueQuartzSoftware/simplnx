@@ -10,11 +10,11 @@
 
 namespace nx::core::detail
 {
-/** @brief Wait before the second rename attempt. */
+/** @brief Wait before the second attempt. */
 inline constexpr std::chrono::milliseconds k_FileReplacementFirstWaitMs{1};
-/** @brief Maximum wait between two rename attempts. */
+/** @brief Maximum wait between two attempts. */
 inline constexpr std::chrono::milliseconds k_FileReplacementLongestWaitMs{64};
-/** @brief Total wait budget before the last rename attempt. */
+/** @brief Total wait budget before the last attempt. */
 inline constexpr std::chrono::milliseconds k_FileReplacementTotalWaitLimitMs{2000};
 
 /**
@@ -25,10 +25,12 @@ struct FileReplacementSteps
 {
   /** @brief Attempts the rename with the replacement and destination paths, in that order. Returns an empty error code on success. */
   std::function<std::error_code(const std::filesystem::path&, const std::filesystem::path&)> Rename;
-  /** @brief Tests if the error permits a retry for the given replacement and destination paths, in that order. */
+  /** @brief Tests if a definite refusal permits a retry for the replacement and destination paths, in that order. */
   std::function<bool(const std::error_code&, const std::filesystem::path&, const std::filesystem::path&)> IsTransient;
   /** @brief Waits for the specified duration before the next attempt. */
   std::function<void(std::chrono::milliseconds)> Wait;
+  /** @brief Optional prerequisite. Transient errors share the rename retry budget. Never called again after success. */
+  std::function<std::error_code(const std::filesystem::path&)> Flush = {};
 };
 
 /**
@@ -53,11 +55,14 @@ struct FileReplacementSteps
  * @brief Installs a complete file at the destination with a bounded retry loop.
  * @param replacement Path to the complete replacement file.
  * @param destination Path that receives the replacement file. The destination can be absent.
- * @param steps Supplies the rename, error classification and wait operations.
+ * @param steps Supplies the rename, error classification, wait and optional prerequisite flush operations.
  * @return Final error and retry history. An empty error code indicates success.
  * @pre The paths refer to different files on the same filesystem. The caller closed the writer of the replacement file.
- * @pre All three steps are callable. A failed rename step leaves the destination and replacement paths unchanged.
- * @post Success removes the replacement path. Failure leaves the destination and replacement paths unchanged.
+ * @pre Rename, IsTransient and Wait are callable. IsTransient accepts only errors that preserve both paths.
+ * Flush is optional and does not change either path.
+ * @post Success removes the replacement path. No rename runs until the flush succeeds.
+ * Pre-rename failures and definite refusals preserve both paths. Other rename errors can leave the final state uncertain.
+ * FileReplacementLeftDestinationUnchanged() identifies failures known to preserve the destination.
  */
 [[nodiscard]] SIMPLNX_EXPORT FileReplacementOutcome InstallReplacementFile(const std::filesystem::path& replacement, const std::filesystem::path& destination, const FileReplacementSteps& steps);
 } // namespace nx::core::detail

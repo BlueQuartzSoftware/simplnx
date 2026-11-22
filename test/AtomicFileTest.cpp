@@ -143,13 +143,33 @@ TEST_CASE("AtomicFile::CommitReplacesFileWithFullSharingHandle", "[simplnx]")
   AtomicFile atomicFile = std::move(atomicFileResult.value());
   writeTemporaryFile(atomicFile, "new contents");
 
-  const HANDLE held = CreateFileW(outputPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-  REQUIRE(held != INVALID_HANDLE_VALUE);
-  const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
-
-  const auto commitResult = atomicFile.commit();
-  SIMPLNX_RESULT_REQUIRE_VALID(commitResult); // NOLINT(cppcoreguidelines-avoid-do-while) Project Result assertion macro.
-  CHECK((readTextFile(outputPath) == "new contents"));
+  const bool supportsPosixRename = UnitTest::VolumeSupportsPosixRename(directory);
+  {
+    const HANDLE held = CreateFileW(outputPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    REQUIRE(held != INVALID_HANDLE_VALUE);
+    const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
+    const auto commitResult = atomicFile.commit();
+    if(supportsPosixRename)
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(commitResult);
+      CHECK((readTextFile(outputPath) == "new contents"));
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(commitResult);
+      REQUIRE((commitResult.errors().size() == 1));
+      CHECK((commitResult.errors().front().code == -15782));
+      CHECK((readTextFile(outputPath) == "old contents"));
+      CHECK((readTextFile(atomicFile.tempFilePath()) == "new contents"));
+    }
+  }
+  if(!supportsPosixRename)
+  {
+    const auto retry = atomicFile.commit();
+    SIMPLNX_RESULT_REQUIRE_VALID(retry);
+    CHECK((readTextFile(outputPath) == "new contents"));
+    CHECK_FALSE(fs::exists(atomicFile.tempFilePath()));
+  }
 }
 #endif
 

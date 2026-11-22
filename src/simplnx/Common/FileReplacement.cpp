@@ -44,10 +44,21 @@ std::error_code lastWindowsError()
   return {static_cast<int>(GetLastError()), std::system_category()};
 }
 
-std::error_code tryWindowsPosixRename(const fs::path& replacement, const fs::path& absoluteDestination, bool writeThrough)
+std::error_code flushOnWindows(const fs::path& replacement)
+{
+  const HANDLE handle = CreateFileW(replacement.c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+  if(handle == INVALID_HANDLE_VALUE)
+  {
+    return lastWindowsError();
+  }
+  const auto closeHandle = MakeScopeGuard([handle]() noexcept { CloseHandle(handle); });
+  return FlushFileBuffers(handle) == 0 ? lastWindowsError() : std::error_code{};
+}
+
+std::error_code tryWindowsPosixRename(const fs::path& replacement, const fs::path& absoluteDestination)
 {
   const auto& name = absoluteDestination.native();
-  const DWORD access = DELETE | SYNCHRONIZE | (writeThrough ? GENERIC_WRITE : 0u);
+  const DWORD access = DELETE | SYNCHRONIZE;
   // Open a reparse point itself so the rename acts on the named entry.
   const HANDLE handle = CreateFileW(replacement.c_str(), access, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
   if(handle == INVALID_HANDLE_VALUE)
@@ -69,11 +80,6 @@ std::error_code tryWindowsPosixRename(const fs::path& replacement, const fs::pat
   std::memcpy(buffer.data(), &k_RenameFlags, sizeof(k_RenameFlags));
   std::memcpy(buffer.data() + k_NameOffset, name.c_str(), nameBytes + sizeof(wchar_t));
 
-  // Flush first so a flush failure leaves both paths available for the fallback.
-  if(writeThrough && FlushFileBuffers(handle) == 0)
-  {
-    return lastWindowsError();
-  }
   if(SetFileInformationByHandle(handle, k_FileRenameInfoEx, buffer.data(), static_cast<DWORD>(buffer.size())) == 0)
   {
     return lastWindowsError();
@@ -119,7 +125,7 @@ std::error_code renameOnWindows(const fs::path& replacement, const fs::path& des
   }
 
   const bool writeThrough = durability == FileReplacementDurability::WriteThrough;
-  return detail::RenameWithFallback([&] { return tryWindowsPosixRename(replacement, absoluteDestination, writeThrough); },
+  return detail::RenameWithFallback([&] { return tryWindowsPosixRename(replacement, absoluteDestination); },
                                     [&] {
                                       const DWORD flags = MOVEFILE_REPLACE_EXISTING | (writeThrough ? MOVEFILE_WRITE_THROUGH : 0u);
                                       return MoveFileExW(replacement.c_str(), absoluteDestination.c_str(), flags) == 0 ? lastWindowsError() : std::error_code{};
@@ -150,7 +156,8 @@ FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability dura
 #ifdef _WIN32
   return {.Rename = [durability](const fs::path& replacement, const fs::path& destination) { return renameOnWindows(replacement, destination, durability); },
           .IsTransient = isWindowsRenameErrorTransient,
-          .Wait = wait};
+          .Wait = wait,
+          .Flush = durability == FileReplacementDurability::WriteThrough ? flushOnWindows : std::function<std::error_code(const fs::path&)>{}};
 #else
   static_cast<void>(durability);
   return {.Rename =
@@ -168,11 +175,21 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
 {
   assert(steps.Rename && steps.IsTransient && steps.Wait);
   FileReplacementOutcome outcome;
+  bool flushed = !steps.Flush;
   std::chrono::milliseconds nextWait = k_FileReplacementFirstWaitMs;
   while(true)
   {
-    outcome.Error = steps.Rename(replacement, destination);
     ++outcome.Attempts;
+    if(!flushed)
+    {
+      outcome.Error = steps.Flush(replacement);
+      flushed = !outcome.Error;
+    }
+    if(flushed)
+    {
+      outcome.RenameAttempted = true;
+      outcome.Error = steps.Rename(replacement, destination);
+    }
     if(!outcome.Error || !steps.IsTransient(outcome.Error, replacement, destination))
     {
       return outcome;
@@ -207,20 +224,47 @@ std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& out
   return fmt::format("Operating system error: {}", outcome.Error.message());
 }
 
+bool FileReplacementLeftDestinationUnchanged(const FileReplacementOutcome& outcome)
+{
+  assert(outcome.Error);
+  if(!outcome.RenameAttempted || outcome.RetriesExhausted)
+  {
+    return true;
+  }
+  const auto& error = outcome.Error;
+  if(error == std::errc::permission_denied || error == std::errc::operation_not_permitted || error == std::errc::read_only_file_system || error == std::errc::is_a_directory ||
+     error == std::errc::not_a_directory || error == std::errc::directory_not_empty || error == std::errc::file_exists || error == std::errc::no_such_file_or_directory ||
+     error == std::errc::cross_device_link || error == std::errc::filename_too_long || error == std::errc::device_or_resource_busy || error == std::errc::text_file_busy)
+  {
+    return true;
+  }
+#ifdef _WIN32
+  // MSVC maps access denied and sharing violation to permission_denied, but lock violation to no_lock_available.
+  // Check the native codes too, without treating unrelated no_lock_available errors as definite refusals.
+  return error.category() == std::system_category() && (error.value() == ERROR_ACCESS_DENIED || error.value() == ERROR_SHARING_VIOLATION || error.value() == ERROR_LOCK_VIOLATION);
+#else
+  return false;
+#endif
+}
+
 std::string DescribeFileReplacementFailure(const FileReplacementOutcome& outcome, const fs::path& destination)
 {
   std::string description;
-  if(outcome.RetriesExhausted)
+  if(!FileReplacementLeftDestinationUnchanged(outcome))
   {
-    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. "
-                              "It may be open in another program, or you may not have permission to replace it. Close it and run again.",
-                              destination);
+    description = fmt::format("Could not confirm that output file '{}' was replaced. Check the file before you run again.", destination);
   }
   else
   {
-    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. "
-                              "The file or the output folder may be read-only, or you may not have permission to replace the file.",
-                              destination);
+    description = fmt::format("Could not replace output file '{}'. The destination is unchanged. ", destination);
+    if(outcome.RetriesExhausted)
+    {
+      description += "It may be open in another program, or you may not have permission to replace it. Close it and run again.";
+    }
+    else
+    {
+      description += "The file or the output folder may be read-only, or you may not have permission to replace the file.";
+    }
   }
   return fmt::format("{} {}", description, DescribeFileReplacementSystemError(outcome));
 }
