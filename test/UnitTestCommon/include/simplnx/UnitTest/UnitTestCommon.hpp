@@ -277,6 +277,11 @@ inline const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
  */
 namespace UnitTest
 {
+#ifdef _WIN32
+/** @brief Queries the POSIX unlink/rename capability of the volume containing an existing directory. */
+[[nodiscard]] bool VolumeSupportsPosixRename(const std::filesystem::path& directory);
+#endif
+
 /**
  * @brief Gets a required object and reports lookup exceptions as test failures.
  * @tparam T Specifies the required DataObject type.

@@ -45,6 +45,13 @@ The `.xdmf` file does not contain a copy of the data — it is a metadata wrappe
 
 Enabling XDMF costs almost nothing (the file is small and fast to write) and is the recommended setting whenever visualization outside DREAM3D-NX is a possibility. It can safely be left off for intermediate pipeline outputs that will only be re-read by DREAM3D-NX itself.
 
+If the filter reports error `-78500`, it saved the `.dream3d` file and could not save its `.xdmf` file.
+An existing `.xdmf` file at that path may not match the new `.dream3d` file.
+
+- If the message says the file may be open in another program, close programs that use the file and run the filter again.
+  This message can also appear if you do not have permission to replace the file.
+- If the message says the file or output folder may be read-only, fix any read-only settings or permissions and run the filter again.
+
 ### Required Input Sources
 
 None — this filter writes whatever currently exists in the **DataStructure** to the output file. If the file already exists it is overwritten. The one exception is geometry connectivity: the vertex-incidence and element-neighbor lists that some filters build for an Edge, Triangle, Quad, Tetrahedral or Hexahedral geometry. These lists are not saved. Filters that need them rebuild them after the file is read. The geometry's vertex, edge, face and cell lists are always saved.

@@ -1,5 +1,6 @@
 #include "AtomicFile.hpp"
 
+#include "simplnx/Common/FileReplacement.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
@@ -17,10 +18,6 @@
 
 #if defined(_WIN32)
 #include <fstream>
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
 #endif
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -233,20 +230,11 @@ Result<> AtomicFile::commit()
     return MakeErrorResult(-15781, fmt::format("Temporary output file '{}' does not exist. Write the output before calling commit().", m_TempFilePath.string()));
   }
 
-#if defined(_WIN32)
-  if(MoveFileExW(m_TempFilePath.c_str(), m_FilePath.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == 0)
+  const auto outcome = InstallReplacementFile(m_TempFilePath, m_FilePath, FileReplacementDurability::WriteThrough);
+  if(outcome.Error)
   {
-    const std::error_code renameError(static_cast<int>(GetLastError()), std::system_category());
-    return MakeErrorResult(-15782, fmt::format("Could not replace output file '{}' with temporary file '{}': {}.", m_FilePath.string(), m_TempFilePath.string(), renameError.message()));
+    return MakeErrorResult(-15782, DescribeFileReplacementFailure(outcome, m_FilePath));
   }
-#else
-  std::error_code renameError;
-  fs::rename(m_TempFilePath, m_FilePath, renameError);
-  if(renameError)
-  {
-    return MakeErrorResult(-15782, fmt::format("Could not replace output file '{}' with temporary file '{}': {}.", m_FilePath.string(), m_TempFilePath.string(), renameError.message()));
-  }
-#endif
 
   return {};
 }

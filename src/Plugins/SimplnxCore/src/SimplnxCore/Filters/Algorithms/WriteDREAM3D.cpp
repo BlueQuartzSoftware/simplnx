@@ -1,6 +1,9 @@
 #include "WriteDREAM3D.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/FileReplacement.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -8,14 +11,21 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <fmt/format.h>
+#include <fmt/std.h> // IWYU pragma: keep (filesystem path formatter)
+
 #include <filesystem>
-namespace fs = std::filesystem;
+#include <string_view>
+#include <utility>
 
 using namespace nx::core;
+
+namespace fs = std::filesystem;
 
 namespace
 {
 constexpr int32 k_FailedFindPipelineError = -15;
+constexpr int32 k_XdmfReplacementError = -78500;
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -40,8 +50,8 @@ Result<> WriteDREAM3D::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  auto exportFilePath = atomicFile.tempFilePath();
-  auto writeXdmf = m_InputValues->WriteXdmfFile;
+  const auto exportFilePath = atomicFile.tempFilePath();
+  const bool writeXdmf = m_InputValues->WriteXdmfFile;
 
   Pipeline pipeline;
 
@@ -59,27 +69,37 @@ Result<> WriteDREAM3D::operator()()
   nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
   writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
   auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
-  if(results.valid())
+  if(results.invalid())
   {
-    if(m_ShouldCancel)
+    return results;
+  }
+  if(m_ShouldCancel)
+  {
+    return MakeErrorResult(-1, "Filter cancelled");
+  }
+  auto commitResult = atomicFile.commit();
+  if(commitResult.invalid())
+  {
+    return MergeResults(std::move(results), std::move(commitResult));
+  }
+
+  if(writeXdmf)
+  {
+    fs::path temporarySidecar = exportFilePath;
+    temporarySidecar.replace_extension(".xdmf");
+    fs::path destinationSidecar = m_InputValues->ExportFilePath;
+    destinationSidecar.replace_extension(".xdmf");
+    const auto outcome = InstallReplacementFile(temporarySidecar, destinationSidecar);
+    if(outcome.Error)
     {
-      return MakeErrorResult(-1, "Filter cancelled");
-    }
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
-    if(writeXdmf)
-    {
-      fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
-      std::error_code errorCode;
-      fs::rename(xdmfFilePath, m_InputValues->ExportFilePath.parent_path() / m_InputValues->ExportFilePath.stem().concat(".xdmf"), errorCode);
-      if(errorCode)
-      {
-        std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
-        return MakeErrorResult(errorCode.value(), ss);
-      }
+      const std::string_view recoveryAdvice = outcome.RetriesExhausted ? "The .xdmf file may be open in another program, or you may not have permission to replace it. "
+                                                                         "Close programs that use the .xdmf file and run the filter again." :
+                                                                         "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
+                                                                         "Fix any read-only settings or permissions and run the filter again.";
+      const auto message = fmt::format("The .dream3d file '{}' was saved. Its .xdmf file '{}' could not be saved. "
+                                       "An existing .xdmf file at that path may not match the new .dream3d file. {} {}",
+                                       m_InputValues->ExportFilePath, destinationSidecar, recoveryAdvice, DescribeFileReplacementSystemError(outcome));
+      return MergeResults(std::move(results), MakeErrorResult(k_XdmfReplacementError, message));
     }
   }
   return results;

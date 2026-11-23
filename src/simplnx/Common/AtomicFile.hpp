@@ -57,7 +57,13 @@ public:
 
   /**
    * @brief Atomically replaces the destination with the temporary file.
-   * @return Valid result on success or a detailed filesystem error.
+   *
+   * On Windows, this operation retries transient flush and rename errors and requests write-through.
+   * @return Valid result on success or a detailed filesystem error. Error -15782 reports a failed replacement.
+   * @post Failures before a rename and definite refusals leave the destination unchanged. A rename error on a network
+   * filesystem may leave the final state uncertain. The diagnostic states preservation only when known.
+   * Check the destination before retrying an uncertain failure. Any remaining temporary
+   * file is available until removal or destruction.
    */
   [[nodiscard]] Result<> commit();
 

@@ -57,6 +57,7 @@ set(SIMPLNX_TEST_SRCS
   GeometryUtilitiesTest.cpp
   ImageRotationUtilitiesTest.cpp
   FilePathGeneratorTest.cpp
+  FileReplacementTest.cpp
   FileUtilitiesTest.cpp
   FilterTest.cpp
   FloatArrayComparisonTest.cpp
