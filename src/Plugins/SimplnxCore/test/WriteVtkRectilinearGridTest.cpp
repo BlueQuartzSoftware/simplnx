@@ -1,6 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -43,20 +44,103 @@ const DataPath k_BulkImagePath({"BulkImage"});
 const DataPath k_BulkCellDataPath = k_BulkImagePath.createChildPath("CellData");
 const DataPath k_BulkBoolPath = k_BulkCellDataPath.createChildPath("BoolValues");
 
-bool CompareVtkAsciiFiles(std::istream& computedFile, std::istream& exemplarFile)
+using GridBoundaries = std::array<std::vector<float32>, 3>;
+
+GridBoundaries GetInputGridBoundaries(const ImageGeom& image)
+{
+  GridBoundaries boundaries;
+  const SizeVec3 dimensions = image.getDimensions();
+  for(usize axis = 0; axis < boundaries.size(); axis++)
+  {
+    std::array<usize, 3> index{};
+    for(usize i = 0; i <= dimensions[axis]; i++)
+    {
+      index[axis] = i;
+      boundaries[axis].push_back(image.getPlaneCoordsf(index.data())[axis]);
+    }
+  }
+  return boundaries;
+}
+
+void CheckVtkGridHeader(std::istream& computedFile, std::istream& exemplarFile, const GridBoundaries& boundaries, bool binary)
+{
+  std::string computedLine;
+  std::string exemplarLine;
+  // The archived preamble ends with DIMENSIONS. Its second line names the historical writer.
+  for(usize line = 0; line < 6; line++)
+  {
+    REQUIRE(std::getline(computedFile, computedLine));
+    REQUIRE(std::getline(exemplarFile, exemplarLine));
+    if(line != 1)
+    {
+      REQUIRE(computedLine == exemplarLine);
+    }
+  }
+
+  constexpr std::array<char, 3> k_Axes = {'X', 'Y', 'Z'};
+  for(usize axis = 0; axis < boundaries.size(); axis++)
+  {
+    CAPTURE(k_Axes[axis], binary);
+    REQUIRE(std::getline(computedFile, computedLine));
+    REQUIRE(std::getline(exemplarFile, exemplarLine));
+    REQUIRE(computedLine == exemplarLine);
+    REQUIRE(computedLine == fmt::format("{}_COORDINATES {} float", k_Axes[axis], boundaries[axis].size()));
+
+    // Only the archived coordinate values are obsolete. They precede the verified cell arrays.
+    for(usize i = 0; i < boundaries[axis].size(); i++)
+    {
+      CAPTURE(i);
+      float32 actual = 0;
+      if(binary)
+      {
+        REQUIRE(computedFile.read(reinterpret_cast<char*>(&actual), sizeof(actual)));
+        REQUIRE(exemplarFile.ignore(sizeof(actual)));
+        if constexpr(endian::native == endian::little)
+        {
+          actual = nx::core::byteswap(actual);
+        }
+      }
+      else
+      {
+        float32 archived = 0;
+        REQUIRE(computedFile >> actual);
+        REQUIRE(exemplarFile >> archived);
+      }
+      REQUIRE(actual == boundaries[axis][i]);
+    }
+    REQUIRE(std::getline(computedFile, computedLine));
+    REQUIRE(std::getline(exemplarFile, exemplarLine));
+    REQUIRE(computedLine == exemplarLine);
+  }
+}
+
+void CheckVtkBinaryCellData(std::istream& computedFile, std::istream& exemplarFile)
+{
+  std::array<char, 16 * 1024> computedBytes;
+  std::array<char, 16 * 1024> exemplarBytes;
+  do
+  {
+    computedFile.read(computedBytes.data(), computedBytes.size());
+    exemplarFile.read(exemplarBytes.data(), exemplarBytes.size());
+    REQUIRE(computedFile.gcount() == exemplarFile.gcount());
+    REQUIRE(std::equal(exemplarBytes.begin(), exemplarBytes.begin() + exemplarFile.gcount(), computedBytes.begin()));
+  } while(computedFile && exemplarFile);
+  REQUIRE(computedFile.eof());
+  REQUIRE_FALSE(computedFile.bad());
+  REQUIRE(exemplarFile.eof());
+  REQUIRE_FALSE(exemplarFile.bad());
+}
+
+bool CompareVtkAsciiData(std::istream& computedFile, std::istream& exemplarFile)
 {
   std::string computedLine;
   std::string exemplarLine;
   std::string sectionType;
-  for(usize lineIndex = 0; std::getline(exemplarFile, exemplarLine); lineIndex++)
+  while(std::getline(exemplarFile, exemplarLine))
   {
     if(!std::getline(computedFile, computedLine))
     {
       return false;
-    }
-    if(lineIndex == 1) // Skip the version line, as in the binary comparison.
-    {
-      continue;
     }
     std::istringstream header(exemplarLine);
     std::string headerName;
@@ -182,7 +266,7 @@ void AppendCoordinatesAscii(std::string& expected, const std::string& axis, usiz
   expected += fmt::format("{} {} float\n", axis, count);
   for(usize idx = 0; idx < count; idx++)
   {
-    expected += fmt::format("{:.9g} ", static_cast<float32>(idx) - 0.5F);
+    expected += fmt::format("{:.9g} ", static_cast<float32>(idx));
     if(idx % 20 == 0 && idx != 0)
     {
       expected += "\n";
@@ -205,7 +289,7 @@ void AppendCoordinatesBinary(std::string& expected, const std::string& axis, usi
   expected += fmt::format("{} {} float\n", axis, count);
   for(usize idx = 0; idx < count; idx++)
   {
-    AppendBigEndianFloat(expected, static_cast<float32>(idx) - 0.5F);
+    AppendBigEndianFloat(expected, static_cast<float32>(idx));
   }
   expected += "\n";
 }
@@ -255,13 +339,13 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII comparison preserve
   const auto compare = [](const std::string& computed, const std::string& exemplar) {
     std::istringstream computedFile(computed);
     std::istringstream exemplarFile(exemplar);
-    return CompareVtkAsciiFiles(computedFile, exemplarFile);
+    return CompareVtkAsciiData(computedFile, exemplarFile);
   };
   const auto compareData = [&compare](const std::string& computed, const std::string& exemplar) {
-    const std::string header = "SCALARS Values double 1\nversion\n";
+    const std::string header = "SCALARS Values double 1\nLOOKUP_TABLE default\n";
     return compare(header + computed, header + exemplar);
   };
-  CHECK(compare("SCALARS Values float 1\nnew version\n -1 1e-7 1.2345674\n", "SCALARS Values float 1\nold version\n -1.000000 0.000000 1.234567\n"));
+  CHECK(compare("SCALARS Values float 1\n -1 1e-7 1.2345674\n", "SCALARS Values float 1\n -1.000000 0.000000 1.234567\n"));
   CHECK_FALSE(compareData("1.234568\n", "1.234567\n"));
   CHECK_FALSE(compareData("1 2\n", "1.000000\n"));
   CHECK_FALSE(compareData("1\n", "1.000000 2.000000\n"));
@@ -274,28 +358,27 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII comparison preserve
   CHECK_FALSE(compareData("invalid\n", "1.000000\n"));
   CHECK_FALSE(compareData("1e999\n", "1.000000\n"));
 
-  CHECK(compare("SCALARS Values float 1\nversion\n3.5833335\n", "SCALARS Values float 1\nversion\n3.583333\n"));
-  CHECK_FALSE(compare("SCALARS Values float 1\nversion\n3.5833335\n", "SCALARS Values float 1\nversion\n3.583334\n"));
+  CHECK(compare("SCALARS Values float 1\n3.5833335\n", "SCALARS Values float 1\n3.583333\n"));
+  CHECK_FALSE(compare("SCALARS Values float 1\n3.5833335\n", "SCALARS Values float 1\n3.583334\n"));
   CHECK(compareData("3.5833335\n", "3.583334\n"));
   CHECK_FALSE(compareData("3.5833335\n", "3.583333\n"));
 
   for(const std::string axis : {"X_COORDINATES", "Y_COORDINATES", "Z_COORDINATES"})
   {
     CAPTURE(axis);
-    const std::string header = axis + " 1 float\nversion\n";
+    const std::string header = axis + " 1 float\n";
     CHECK(compare(header + "3.5833335\n", header + "3.583333\n"));
   }
   for(const std::string type : {"char", "unsigned_char", "short", "unsigned_short", "int", "unsigned_int", "long", "unsigned_long"})
   {
     CAPTURE(type);
-    const std::string header = "SCALARS Values " + type + " 1\nversion\n";
+    const std::string header = "SCALARS Values " + type + " 1\n";
     CHECK(compare(header + "1\n", header + "1\n"));
     CHECK_FALSE(compare(header + "1\n", header + "1.000000\n"));
   }
-  CHECK(compare("X_COORDINATES 1 float\nversion\n3.5833335\nSCALARS Values double 1\nLOOKUP_TABLE default\n3.5833335\n",
-                "X_COORDINATES 1 float\nversion\n3.583333\nSCALARS Values double 1\nLOOKUP_TABLE default\n3.583334\n"));
-  CHECK_FALSE(compare("SCALARS Values float 1\nversion\n3.5833335\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1\n",
-                      "SCALARS Values float 1\nversion\n3.583333\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1.000000\n"));
+  CHECK(compare("X_COORDINATES 1 float\n3.5833335\nSCALARS Values double 1\nLOOKUP_TABLE default\n3.5833335\n",
+                "X_COORDINATES 1 float\n3.583333\nSCALARS Values double 1\nLOOKUP_TABLE default\n3.583334\n"));
+  CHECK_FALSE(compare("SCALARS Values float 1\n3.5833335\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1\n", "SCALARS Values float 1\n3.583333\nSCALARS Ids int 1\nLOOKUP_TABLE default\n1.000000\n"));
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiCoordinates]")
@@ -336,11 +419,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
   {
   }
   REQUIRE(line == "X_COORDINATES 4 float");
-  // The writer uses origin + (i - 1/2) * spacing for its coordinates.
-  // The half-cell shift is tracked separately in #1878 (WriteVtkRectilinearGridFilter#1).
-  // For origin zero and spacing 1e-7, hand calculation gives these four values.
-  // The tolerance allows float arithmetic rounding, but not six-place truncation.
-  constexpr std::array<double, 4> k_Expected = {-5.0e-8, 5.0e-8, 1.5e-7, 2.5e-7};
+  // Three cells beginning at zero have four boundaries, one spacing apart.
+  constexpr std::array<double, 4> k_Expected = {0.0, 1.0e-7, 2.0e-7, 3.0e-7};
   for(const std::string axis : {"X", "Y", "Z"})
   {
     if(axis != "X")
@@ -436,6 +516,9 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  const auto* inputImage = dataStructure.getDataAs<ImageGeom>(k_DataContainerPath);
+  REQUIRE(inputImage != nullptr);
+  const GridBoundaries boundaries = GetInputGridBoundaries(*inputImage);
 
   // Instantiate the filter, and an Arguments Object
   WriteVtkRectilinearGridFilter filter;
@@ -470,15 +553,18 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::vector<size_t> linesToSkip{1}; // skip the version line
-  std::ifstream computedFile(computedOutputPath);
-  std::ifstream exemplarFile(exemplarOutputPath);
-  REQUIRE(computedFile.is_open());
-  REQUIRE(exemplarFile.is_open());
-  REQUIRE(CompareVtkAsciiFiles(computedFile, exemplarFile));
-  std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
-  std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
-  UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
+  {
+    std::ifstream computedFile(computedOutputPath);
+    std::ifstream exemplarFile(exemplarOutputPath);
+    CheckVtkGridHeader(computedFile, exemplarFile, boundaries, false);
+    REQUIRE(CompareVtkAsciiData(computedFile, exemplarFile));
+  }
+  {
+    std::ifstream computedFile(computedBinaryOutputPath, std::ios::binary);
+    std::ifstream exemplarFile(exemplarBinaryOutputPath, std::ios::binary);
+    CheckVtkGridHeader(computedFile, exemplarFile, boundaries, true);
+    CheckVtkBinaryCellData(computedFile, exemplarFile);
+  }
 
   // Remove the test files since they can get quite large.
   std::error_code errorCode;

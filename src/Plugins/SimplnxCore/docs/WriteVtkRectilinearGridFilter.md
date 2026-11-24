@@ -14,6 +14,8 @@ Although the input to this filter is an **Image Geometry** (which has a single u
 
 The user selects which **Cell** **Data Array**s from the **Image Geometry** are written into the file. Each selected array becomes a cell-data field in the VTK file.
 
+The exported coordinates are cell boundaries. On each axis the first coordinate is the image origin and the last is the origin plus the number of cells times their spacing.
+
 The *Write Binary File* parameter controls the on-disk encoding. When *false* (the default), the data is written as plain ASCII text, which is portable and easy to inspect but larger and slower to read. When *true*, the data is written in VTK's binary form, producing smaller files that load faster.
 
 ASCII coordinates retain the precision of the computed float values, including small spacing such as `1e-7`. This corrects the six-decimal rounding in DREAM3D 6.5.171, so ASCII coordinate output can differ from that version.
