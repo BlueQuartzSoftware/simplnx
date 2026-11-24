@@ -71,19 +71,20 @@ constexpr usize k_InvalidAxisIndex = std::numeric_limits<usize>::max();
  */
 std::vector<usize> ComputeAxisSrcIndices(usize destDimSize, float64 destOriginComp, float64 destSpacingComp, usize srcDimSize, float64 srcOriginComp, float64 srcSpacingComp)
 {
+  // Preflight retains at least one cell per axis. If its center reaches or passes the far face of a
+  // thinner same-origin source, the last source cell is the closest measured sample.
+  if(destDimSize == 1 && srcDimSize > 0 && destOriginComp == srcOriginComp && 0.5 * destSpacingComp >= static_cast<float64>(srcDimSize) * srcSpacingComp)
+  {
+    return {srcDimSize - 1};
+  }
   std::vector<usize> srcIndices(destDimSize, k_InvalidAxisIndex);
-  const float64 srcMaxCoord = static_cast<float64>(srcDimSize) * srcSpacingComp + srcOriginComp;
+  const float64 originOffset = destOriginComp - srcOriginComp;
   for(usize i = 0; i < destDimSize; i++)
   {
-    const float64 destCoord = static_cast<float64>(i) * destSpacingComp + destOriginComp;
-    if(destCoord < srcOriginComp || destCoord > srcMaxCoord)
+    const float64 sourcePosition = (originOffset + (static_cast<float64>(i) + 0.5) * destSpacingComp) / srcSpacingComp;
+    if(sourcePosition >= 0 && sourcePosition < static_cast<float64>(srcDimSize))
     {
-      continue;
-    }
-    const auto srcIdx = static_cast<usize>(std::floor((destCoord - srcOriginComp) / srcSpacingComp));
-    if(srcIdx < srcDimSize)
-    {
-      srcIndices[i] = srcIdx;
+      srcIndices[i] = static_cast<usize>(sourcePosition);
     }
   }
   return srcIndices;

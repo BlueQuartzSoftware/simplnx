@@ -43,7 +43,8 @@ struct SIMPLNX_EXPORT ResampleImageGeomInputValues
  * @class ResampleImageGeom
  * @brief Copies Image Geometry cell data to a preflight-created regular grid.
  *
- * Each destination cell uses the source cell that contains its minimum corner. A corner outside the source bounds produces a zero tuple.
+ * Each destination cell samples its physical center in the source grid. If a same-origin axis retains one oversized cell
+ * whose center reaches or passes the far source boundary, it uses the last source cell on that axis. Other unmapped positions produce a zero tuple.
  * Axis lookup tables avoid repeated coordinate division. Each array uses one source-row buffer and one destination-row buffer.
  *
  * Cell arrays run as independent parallel tasks. Each task checks cancellation between destination Z slices.
