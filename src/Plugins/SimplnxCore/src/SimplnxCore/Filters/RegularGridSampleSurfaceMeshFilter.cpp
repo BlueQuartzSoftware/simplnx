@@ -200,7 +200,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
     cellAttributeMatrixPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(tupleDims, pSpacingValue, pOriginValue, IGeometry::LengthUnit(pLengthUnitValue))});
+    preflightUpdatedValues.push_back(
+        {"Input Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(tupleDims, pSpacingValue, pOriginValue, IGeometry::GetLengthUnitFromChoiceIndex(pLengthUnitValue))});
     // Flip the dimensions
     tupleDims = {static_cast<usize>(pDimensionsValue[2]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[0])};
   }

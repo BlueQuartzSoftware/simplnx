@@ -114,6 +114,24 @@ void RequireSmallGridFeatureIds(const DataStructure& dataStructure)
 
 } // namespace
 
+TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Geometry description uses the selected unit", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
+{
+  DataStructure dataStructure;
+  BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
+  const RegularGridSampleSurfaceMeshFilter filter;
+  auto args = MakeSmallGridArguments();
+  const auto choice = GENERATE(ChoicesParameter::ValueType{7}, ChoicesParameter::ValueType{27}, ChoicesParameter::ValueType{28});
+  CAPTURE(choice);
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, choice);
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  auto description = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Input Geometry Info"; });
+  REQUIRE(description != result.outputValues.end());
+  CHECK((description->value.find("Millimeter") != std::string::npos) == (choice == 7));
+  // The geometry description leaves nonphysical units blank.
+  CHECK(description->value.find("Unknown") == std::string::npos);
+}
+
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive or nonfinite spacing when creating geometry", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
