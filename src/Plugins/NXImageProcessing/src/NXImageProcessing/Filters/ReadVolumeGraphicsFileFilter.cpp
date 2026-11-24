@@ -461,7 +461,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
       pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, origin.toContainer<std::vector<float32>>(),
-      CreateImageGeometryAction::SpacingType{metadata.Spacing[0], metadata.Spacing[1], metadata.Spacing[2]}, pCellAttributeMatrixNameValue);
+      CreateImageGeometryAction::SpacingType{metadata.Spacing[0], metadata.Spacing[1], metadata.Spacing[2]}, pCellAttributeMatrixNameValue, metadata.Units);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   const fs::path fiData = fs::path(metadata.DataFilePath);

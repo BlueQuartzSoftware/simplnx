@@ -43,7 +43,7 @@ void writeVolTestFile()
   REQUIRE_NOTHROW(fs::copy(k_VgiSrcFile, k_VgiDestFile, copyOptions)); // copy vgi file
 }
 
-TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ReadVolumeGraphicsFileFilter]")
+TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execution", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -67,6 +67,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execut
 
     DataPath dap = DataPath({"VolumeGraphics"});
     const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(dap);
+    CHECK(imageGeom.getUnits() == IGeometry::LengthUnit::Millimeter);
     SizeVec3 dims = imageGeom.getDimensions();
     REQUIRE(dims[0] == 50);
     REQUIRE(dims[1] == 20);
